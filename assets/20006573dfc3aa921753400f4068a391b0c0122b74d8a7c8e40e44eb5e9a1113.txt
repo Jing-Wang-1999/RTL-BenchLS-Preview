@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.32f0c161155507ab8eee.374355eed26c",
+  "compile_check": {
+    "case_id": "s1derived.32f0c161155507ab8eee.374355eed26c",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "FP16_TO_FP32_leading_sign_23_0",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.32f0c161155507ab8eee.374355eed26c/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "32f0c161155507ab8eee7d32bf5944bb7126349f4a7b4a28b897193fe361224e",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.32f0c161155507ab8eee.374355eed26c",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.32f0c161155507ab8eee",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "FP16_TO_FP32_leading_sign_23_0"
+  },
+  "independent_review": {
+    "case_id": "s1derived.32f0c161155507ab8eee.374355eed26c",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The generated priority network implements the stated 23-bit leading-zero count, including 0 and 23 boundaries.",
+        "rtl_excerpt": "`assign rtn = {c_h_1_10, ...};`",
+        "spec_excerpt": "\u201cA set bit 22 produces 0 ... all-zero input produces 23.\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.32f0c161155507ab8eee",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "25ac750d2680817464f7b78b48b0af9283b555776f93b9652917a237dcecd69e",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "32f0c161155507ab8eee7d32bf5944bb7126349f4a7b4a28b897193fe361224e",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.32f0c161155507ab8eee",
+  "primary_review": {
+    "case_id": "s1derived.32f0c161155507ab8eee.374355eed26c",
+    "checks": {
+      "behavior": "High-level purpose matches but is not reproducible.",
+      "boundaries": "All-zero boundary is 23.",
+      "interface": "Widths match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Combinational."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "High-level purpose matches but is not reproducible. Combinational.",
+        "rtl_excerpt": "network examines mantissa[22] downward and encodes 0 through 23",
+        "spec_excerpt": "\u201ccalculate the number of leading zeros\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose calls this a leading-zero counter but never defines bit order, per-input values, or all-zero output.",
+        "rtl_evidence": "network examines mantissa[22] downward and encodes 0 through 23",
+        "spec_evidence": "\u201ccalculate the number of leading zeros\u201d",
+        "type": "missing_exact_boundaries"
+      }
+    ],
+    "parent_id": "s1p.32f0c161155507ab8eee",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.32f0c161155507ab8eee.374355eed26c.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "32f0c161155507ab8eee7d32bf5944bb7126349f4a7b4a28b897193fe361224e",
+    "source_group": "S1",
+    "specification_sha256": "374355eed26c8c82783c81423b6609b3d46be38c7e559bc723584dc4b19d6340",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.32f0c161155507ab8eee.374355eed26c.md",
+  "qualified_specification_sha256": "25ac750d2680817464f7b78b48b0af9283b555776f93b9652917a237dcecd69e",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.32f0c161155507ab8eee.374355eed26c/private/golden_design.v",
+  "rtl_sha256": "32f0c161155507ab8eee7d32bf5944bb7126349f4a7b4a28b897193fe361224e",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.32f0c161155507ab8eee.374355eed26c/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "374355eed26c8c82783c81423b6609b3d46be38c7e559bc723584dc4b19d6340",
+  "top_module": "FP16_TO_FP32_leading_sign_23_0"
+}

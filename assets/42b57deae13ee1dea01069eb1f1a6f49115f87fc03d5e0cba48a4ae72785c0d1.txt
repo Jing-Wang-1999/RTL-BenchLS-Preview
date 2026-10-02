@@ -1,0 +1,18 @@
+This module is a synchronous digital circuit with a two-state controller that operates on 8-bit counters and accumulators.
+
+**Interface:**
+*   **Inputs:** A clock signal (`clk`) and an active-low reset signal (`rst_n`).
+*   **Outputs:** Six registered outputs: five 8-bit values (`c1`, `x`, `y`, `act1`, `act2`) and a 2-bit state index (`i`).
+
+**Function:**
+On a positive clock edge, if reset is not asserted, the circuit transitions between two states defined by `i`.
+
+*   **State 0 (`i == 0`):** This is the primary counting and comparison state.
+    *   A primary counter `c1` increments from 0 to 99. When `c1` reaches 99, it resets to 0, and `x` and `y` are also cleared. The state then advances to `i == 1`.
+    *   While counting, two parallel comparisons occur:
+        1.  If `x` equals the current value of `c1`, then `x` is increased by 10 and an accumulator `act1` is incremented by 1.
+        2.  If `y` equals the current value of `c1`, then `y` is incremented by 1 and accumulator `act2` is updated with the current value of `act1`.
+
+*   **State 1 (`i == 1`):** This is a single-cycle reset state.
+    *   Accumulators `act1` and `act2` are cleared to 0.
+    *   The state index `i` is reset to 0, causing the circuit to return to State 0

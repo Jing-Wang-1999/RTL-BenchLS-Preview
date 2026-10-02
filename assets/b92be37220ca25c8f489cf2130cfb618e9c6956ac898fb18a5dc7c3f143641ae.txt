@@ -1,0 +1,7 @@
+This specification defines two modules: a signed multiplier and a configurable shifter.
+
+The signed multiplier module takes two 64-bit inputs, A and B. It interprets both inputs as signed numbers. The module performs a signed multiplication of these two inputs, producing a full 128-bit signed result. The module outputs only the lower 64 bits of this product via the `mult_low` output port. The internal multiplication uses a signed arithmetic operation.
+
+The shifter module performs bitwise shift operations on a 64-bit input value. It has three inputs: the 64-bit `value` to be shifted, a 1-bit `direction` control, and a 6-bit `distance` specifying the shift amount (0 to 63). If the direction signal is 0, the module performs a left shift. If the direction signal is 1, the module performs a right shift. The shifted result is provided on a 64-bit output. The shifter is purely combinational.
+
+A testbench module is also described for verification. It instantiates the shifter as the device under test. The testbench applies a fixed 64-bit hexadecimal input pattern. It exhaustively tests the shifter by iterating through both shift directions (left and right) and all 64 possible shift distances from 0 to 63. For each test case, it waits a short time interval, then displays the direction, distance, and the resulting output value. The testbench completes after running all 128 test cases.

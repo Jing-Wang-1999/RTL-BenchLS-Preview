@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.019961026d8f58a26f65.6d6083fc4638",
+  "compile_check": {
+    "case_id": "s1derived.019961026d8f58a26f65.6d6083fc4638",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "clkdivider",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.clkdivider.55d202338031e254/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.019961026d8f58a26f65",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "019961026d8f58a26f65ba4249a3ce1a4084dd7b696029a24854c5a61d9c55cd",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.019961026d8f58a26f65.6d6083fc4638",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.clkdivider.55d202338031e254/private/commercial_positive.log",
+    "commercial_log_sha256": "fa8e7ff5952c8becc89a1b9f173a7e0d81d02fbbdef7ae3c19e3c2be61fdee5a",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.clkdivider.55d202338031e254/private/historical_harness/00_sec_clkdivider.tcl",
+    "executed_script_sha256": "304cb20f9c30fa0fd07250645cdf6aff42dfb73b4cf4c4575651b305177d756f",
+    "golden_tops": [
+      "clkdivider"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.clkdivider.55d202338031e254",
+    "parent_id": "s1p.019961026d8f58a26f65",
+    "revised_tops": [
+      "clkdivider"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "clkdivider",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.019961026d8f58a26f65.6d6083fc4638",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Synchronous active-high reset clears both state variables, and all nonterminal nonreset cycles increment count while holding clk_out. Counting0 through127 gives128 cycles per toggle and256 per full period; the repaired frequency is correct.",
+        "rtl_excerpt": "else if (counter == 8'h7f)\n    begin\n      counter <= 8'd0;\n      clk_out <= ~clk_out;",
+        "specification_excerpt": "if the counter is 127, the module clears the counter to 0 and complements `clk_out`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.019961026d8f58a26f65",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "6b858ef93f697d2cfe210be0b41fc7831b8d2d8e53a2f2b6b04de4e03481a877",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "019961026d8f58a26f65ba4249a3ce1a4084dd7b696029a24854c5a61d9c55cd",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.clkdivider.55d202338031e254/private/historical_harness/00_sec_clkdivider.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.clkdivider.55d202338031e254/private/historical_harness/01_sec_clkdivider.tcl"
+  ],
+  "parent_id": "s1p.019961026d8f58a26f65",
+  "primary_review": {
+    "case_id": "s1derived.019961026d8f58a26f65.6d6083fc4638",
+    "checks": {
+      "behavior": "Reset and the 127 boundary match, but the stated divide ratio conflicts with the toggle interval.",
+      "boundaries": "The terminal count is 127, giving 128 edges per toggle and 256 per full period.",
+      "interface": "Ports match clk/reset/clk_out.",
+      "rtl_reasonableness": "The counter and registered toggle form a reasonable divider.",
+      "sequential_and_reset": "Synchronous active-high reset clears counter and output; no enable."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Reset and the 127 boundary match, but the stated divide ratio conflicts with the toggle interval. Synchronous active-high reset clears counter and output; no enable.",
+        "rtl_excerpt": "counter == 8'h7f clears the counter and executes clk_out <= ~clk_out",
+        "spec_excerpt": "\u201cdivides an input clock frequency by 128\u201d and \u201ctoggles state every 128 input clock cycles\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The phrase \u201cdivides ... by 128\u201d conflicts with a clock that toggles every 128 input cycles; that waveform has a 256-cycle full period.",
+        "rtl_evidence": "counter == 8'h7f clears the counter and executes clk_out <= ~clk_out",
+        "spec_evidence": "\u201cdivides an input clock frequency by 128\u201d and \u201ctoggles state every 128 input clock cycles\u201d",
+        "type": "frequency_semantics"
+      }
+    ],
+    "parent_id": "s1p.019961026d8f58a26f65",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.019961026d8f58a26f65.6d6083fc4638.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "019961026d8f58a26f65ba4249a3ce1a4084dd7b696029a24854c5a61d9c55cd",
+    "source_group": "S1",
+    "specification_sha256": "6d6083fc46382f73442f6c62a6b1fa7cb178a102148339d9c2f29197f5e2480b",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.019961026d8f58a26f65.6d6083fc4638.md",
+  "qualified_specification_sha256": "6b858ef93f697d2cfe210be0b41fc7831b8d2d8e53a2f2b6b04de4e03481a877",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.clkdivider.55d202338031e254/private/golden_design.v",
+  "rtl_sha256": "019961026d8f58a26f65ba4249a3ce1a4084dd7b696029a24854c5a61d9c55cd",
+  "source_corpus": "SEC-Flow-Star-repos-4.e200_opensource",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.clkdivider.55d202338031e254/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "6d6083fc46382f73442f6c62a6b1fa7cb178a102148339d9c2f29197f5e2480b",
+  "top_module": "clkdivider"
+}

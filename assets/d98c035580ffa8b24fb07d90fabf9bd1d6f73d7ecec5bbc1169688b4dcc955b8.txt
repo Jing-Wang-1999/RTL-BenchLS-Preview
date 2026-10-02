@@ -1,0 +1,3 @@
+# HLS_fp32_sub_core_staller
+
+Scalar inputs are `nvdla_core_clk`, active-low asynchronous `nvdla_core_rstn`, `chn_a_rsci_wen_comp`, `chn_b_rsci_wen_comp`, and `chn_o_rsci_wen_comp`. Outputs are combinational `core_wen` and registered `core_wten`. `core_wen` is the AND of all three component enables. Reset immediately clears core_wten; otherwise each rising edge captures the inverse of current core_wen. Thus core_wten is a one-cycle registered indication that the core was not enabled. No submodule exists.

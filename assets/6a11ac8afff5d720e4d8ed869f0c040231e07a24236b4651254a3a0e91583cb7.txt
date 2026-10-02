@@ -1,0 +1,52 @@
+# ppu_ri — default configuration specification
+
+Implement the external register interface of a NES-style picture-processing unit. There are no parameters. Rising clk_in samples synchronous active-high rst_in. Reset sets all stored scroll/control/status/read-buffer/output-latch/sprite-address state to zero, previous nCS to1 and previous vblank to0. Transactions are recognized once when the stored previous ncs_in is1 and present ncs_in is0. Hold nCS low does not repeat transactions. r_nw_in=1 selects read, 0 write, and sel_in is the low three register-address bits. State updates take effect at the next clk_in edge; combinational write/increment strobes are asserted during the recognition cycle.
+
+The registered read latch is driven to cpu_d_out only while nCS=0 and read=1, otherwise cpu_d_out=0. Reads: register2 returns {old vblank status,spr_pri_col_in,spr_overflow_in,5 zero bits}, clears the shared two-write selector and clears vblank status; register4 returns spr_ram_d_in; register7 returns pram_d_in when vram_a_in[13:8]=0x3f, otherwise the old buffered VRAM byte. A register7 read asserts inc_addr_out and schedules the VRAM buffer to sample vram_d_in one additional clock after the transaction. Other reads retain the read latch.
+
+Writes: register0 stores bits7=NMI enable,5=sprite height,4=background pattern select,3=sprite pattern select,2=address increment selector,1=vertical name-table,0=horizontal name-table; bit6 ignored. Register1 stores bits4=sprite enable,3=background enable and INVERTS bit2/bit1 for sprite/background left-column clip outputs. Other bits ignored. Register3 sets 8-bit sprite address. Register4 asserts spr_ram_wr_out, passes cpu_d_in to spr_ram_d_out and increments sprite address modulo256. Register5 alternates horizontal then vertical scroll: first stores fine horizontal=bits2:0 and horizontal tile=bits7:3; second stores fine vertical=bits2:0 and vertical tile=bits7:3. Register6 shares the same alternating selector: first writes fine vertical={0,bits5:4}, vertical/horizontal name-table bits3/2, vertical tile bits4:3=bits1:0; second writes vertical tile bits2:0=bits7:5 and horizontal tile=bits4:0 and emits one registered upd_cntrs_out pulse. Each register5/6 write toggles the selector. Register7 passes cpu_d_in to vram_d_out, asserts palette write for address high six bits0x3f and VRAM write otherwise, and asserts address increment. Register2 writes and other unsupported writes do nothing.
+
+Every clock normally preserves control/scroll/address/read-latch registers. upd_cntrs_out and the delayed-read pending flag clear on the next clock unless newly asserted. The vblank status sets on a sampled rising vblank_in, clears whenever vblank_in=0, otherwise holds; a recognized status read overrides this update and clears it. vblank_out is this status, not the raw input. fv/vt/v/fh/ht/h/s outputs expose corresponding scroll state. inc_addr_amt_out exposes register0 bit2 (0 means1,1 means32); this module only requests increments and does not own the VRAM address counter. All enable/clip/height/pattern outputs directly expose stored state. Sprite address output is stored address. Outside writes vram_d_out/spr_ram_d_out and all combinational write/increment strobes are zero. Synchronous reset does not combinationally gate strobes; inputs that look like a new transaction can produce a strobe even while reset is high before an edge. This is a register-interface submodule, not a whole PPU or cycle-exact replica of every NES hardware quirk.
+
+Public interface declarations (widths above resolve the parameter expressions):
+
+```text
+input  wire        clk_in
+input  wire        rst_in
+input  wire [ 2:0] sel_in
+input  wire        ncs_in
+input  wire        r_nw_in
+input  wire [ 7:0] cpu_d_in
+input  wire [13:0] vram_a_in
+input  wire [ 7:0] vram_d_in
+input  wire [ 7:0] pram_d_in
+input  wire        vblank_in
+input  wire [ 7:0] spr_ram_d_in
+input  wire        spr_overflow_in
+input  wire        spr_pri_col_in
+output wire [ 7:0] cpu_d_out
+output reg  [ 7:0] vram_d_out
+output reg         vram_wr_out
+output reg         pram_wr_out
+output wire [ 2:0] fv_out
+output wire [ 4:0] vt_out
+output wire        v_out
+output wire [ 2:0] fh_out
+output wire [ 4:0] ht_out
+output wire        h_out
+output wire        s_out
+output reg         inc_addr_out
+output wire        inc_addr_amt_out
+output wire        nvbl_en_out
+output wire        vblank_out
+output wire        bg_en_out
+output wire        spr_en_out
+output wire        bg_ls_clip_out
+output wire        spr_ls_clip_out
+output wire        spr_h_out
+output wire        spr_pt_sel_out
+output wire        upd_cntrs_out
+output wire [ 7:0] spr_ram_a_out
+output reg  [ 7:0] spr_ram_d_out
+output reg         spr_ram_wr_out
+```

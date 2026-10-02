@@ -1,0 +1,13 @@
+// Conformal LEC RTL vs RTL: combinational equivalence (no netlist, no technology library).
+// Golden and revised in ./rtl/golden.v, ./rtl/revised.v.
+// Uses -SystemVerilog for SV support (logic, always_comb, int, $bits, etc); backward compatible with Verilog.
+
+set undefined cell black_box
+read design ./rtl/golden.v -SystemVerilog -Golden
+read design ./rtl/revised.v -SystemVerilog -Revised
+
+// Switch to LEC mode and compare
+set system mode lec
+add compared points -all
+compare
+exit -force

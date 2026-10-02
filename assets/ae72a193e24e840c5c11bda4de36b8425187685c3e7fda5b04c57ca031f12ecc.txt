@@ -1,0 +1,16 @@
+The `ecc_raw_data_64bit` module is designed to process a 72-bit input signal and produce a 64-bit output signal. It operates based on a clock and reset signal and can optionally use a register to store the output.
+
+### Inputs:
+1. **clk**: A clock signal used to synchronize operations within the module.
+2. **rst**: A reset signal that initializes or clears the output when activated.
+3. **c**: A 72-bit input vector containing data and possibly error-correcting code (ECC) bits.
+
+### Output:
+1. **d**: A 64-bit output vector that represents the processed data extracted from the input.
+
+### Functionality:
+- The module extracts specific bits from the 72-bit input vector `c` to form the 64-bit output `d`. The selected bits are primarily data bits, excluding certain positions that might contain ECC or other non-data information.
+- The extraction process involves selecting bits from `c` at specific indices: 70, 69, 68, 67, 66, 65, 64, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 14, 13, 12, 11, 10, 9, 8, 6, 5, 4, and 2.
+
+### Configuration:
+- The module includes a parameter `REGISTER` that determines whether the output `d` is registered

@@ -1,0 +1,11 @@
+--- rtl/i2c_slave_wbm.v
++++ rtl/i2c_slave_wbm.v
+@@ -248,7 +248,7 @@
+ wire data_out_last;
+ reg data_out_ready_reg = 1'b0, data_out_ready_next;
+ 
+-assign wb_adr_o = {addr_reg[ADDR_WIDTH_ADJ-1:ADDR_WIDTH_ADJ-WB_VALID_ADDR_WIDTH], {WB_ADDR_WIDTH-WB_VALID_ADDR_WIDTH{1'b0}}};
++assign wb_adr_o = ~({addr_reg[ADDR_WIDTH_ADJ-1:ADDR_WIDTH_ADJ-WB_VALID_ADDR_WIDTH], {WB_ADDR_WIDTH-WB_VALID_ADDR_WIDTH{1'b0}}});
+ assign wb_dat_o = data_reg;
+ assign wb_we_o = wb_we_o_reg;
+ assign wb_sel_o = wb_sel_o_reg;

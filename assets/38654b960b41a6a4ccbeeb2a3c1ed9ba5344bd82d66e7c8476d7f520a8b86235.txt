@@ -1,0 +1,143 @@
+// I2C Master Module
+module origen_127170 (
+    input wire SCL,
+    input wire SDA_IN,
+    output reg SDA_OUT,
+    output reg SDA_OUT_EN,
+    output reg SDA_IN_EN,
+    input wire ACK
+);
+
+    // I2C States
+    localparam IDLE = 2'b00;
+    localparam START = 2'b01;
+    localparam DATA = 2'b10;
+    localparam STOP = 2'b11;
+
+    reg [1:0] state;
+    reg [7:0] data_to_send;
+    reg [7:0] data_received;
+    reg [3:0] bit_count;
+
+    always @(posedge SCL) begin
+        case (state)
+            IDLE: begin
+                SDA_OUT_EN <= 1'b1;
+                SDA_IN_EN <= 1'b0;
+                SDA_OUT <= 1'b1;
+                if (data_to_send != 8'b0) begin
+                    state <= START;
+                end
+            end
+            START: begin
+                SDA_OUT <= 1'b0;
+                bit_count <= 4'b0;
+                state <= DATA;
+            end
+            DATA: begin
+                if (bit_count < 8) begin
+                    SDA_OUT <= data_to_send[7-bit_count];
+                    bit_count <= bit_count + 1;
+                end else begin
+                    SDA_OUT_EN <= 1'b0;
+                    SDA_IN_EN <= 1'b1;
+                    if (ACK == 1'b0) begin
+                        state <= STOP;
+                    end else begin
+                        bit_count <= 4'b0;
+                        SDA_OUT_EN <= 1'b1;
+                        SDA_IN_EN <= 1'b0;
+                    end
+                end
+            end
+            STOP: begin
+                SDA_OUT_EN <= 1'b1;
+                SDA_IN_EN <= 1'b0;
+                SDA_OUT <= 1'b1;
+                state <= IDLE;
+            end
+        endcase
+    end
+
+    always @(negedge SCL) begin
+        if (state == DATA && SDA_IN_EN) begin
+            data_received[7-bit_count] <= SDA_IN;
+        end
+    end
+
+endmodule
+
+// I2C Slave Module
+module i2c_slave (
+    input wire SCL,
+    input wire SDA_IN,
+    output reg SDA_OUT,
+    output reg SDA_OUT_EN,
+    output reg SDA_IN_EN,
+    output reg ACK
+);
+
+    // I2C States
+    localparam IDLE = 2'b00;
+    localparam ADDRESS = 2'b01;
+    localparam DATA = 2'b10;
+    localparam ACK_STATE = 2'b11;
+
+    reg [1:0] state;
+    reg [7:0] data_to_send;
+    reg [7:0] data_received;
+    reg [3:0] bit_count;
+    reg [6:0] slave_address;
+
+    always @(posedge SCL) begin
+        case (state)
+            IDLE: begin
+                SDA_OUT_EN <= 1'b0;
+                SDA_IN_EN <= 1'b1;
+                if (SDA_IN == 1'b0) begin
+                    state <= ADDRESS;
+                    bit_count <= 4'b0;
+                end
+            end
+            ADDRESS: begin
+                if (bit_count < 7) begin
+                    slave_address[6-bit_count] <= SDA_IN;
+                    bit_count <= bit_count + 1;
+                end else begin
+                    state <= ACK_STATE;
+                    SDA_OUT_EN <= 1'b1;
+                    SDA_IN_EN <= 1'b0;
+                    ACK <= 1'b0;
+                end
+            end
+            DATA: begin
+                if (bit_count < 8) begin
+                    if (SDA_IN_EN) begin
+                        data_received[7-bit_count] <= SDA_IN;
+                    end else begin
+                        SDA_OUT <= data_to_send[7-bit_count];
+                    end
+                    bit_count <= bit_count + 1;
+                end else begin
+                    state <= ACK_STATE;
+                    SDA_OUT_EN <= ~SDA_OUT_EN;
+                    SDA_IN_EN <= ~SDA_IN_EN;
+                    ACK <= 1'b0;
+                end
+            end
+            ACK_STATE: begin
+                SDA_OUT_EN <= ~SDA_OUT_EN;
+                SDA_IN_EN <= ~SDA_IN_EN;
+                bit_count <= 4'b0;
+                state <= DATA;
+            end
+        endcase
+    end
+
+    always @(negedge SCL) begin
+        if (state == IDLE && SDA_IN == 1'b1) begin
+            state <= IDLE;
+        end
+    end
+
+endmodule

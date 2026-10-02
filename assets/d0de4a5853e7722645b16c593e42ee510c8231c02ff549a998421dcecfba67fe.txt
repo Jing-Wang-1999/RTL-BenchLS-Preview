@@ -1,0 +1,31 @@
+module mg_02977 (data,enable,result,pad);
+parameter lpm_width = 1; 
+  parameter lpm_type = "lpm_bipad"; 
+  parameter lpm_hint = "UNUSED"; 
+  input [lpm_width-1:0] data; 
+  input enable; 
+  output [lpm_width-1:0] result; 
+  inout [lpm_width-1:0] pad; 
+  reg [lpm_width-1:0] result; 
+  initial 
+  begin 
+  if (lpm_width <= 0) 
+  begin 
+  $display("Value of lpm_width parameter must be greater than 0(ERROR)"); 
+  $display("Time: %0t Instance: %m", $time); 
+  $finish; 
+  end 
+  end 
+  always @(data or pad or enable) 
+  begin 
+  if (enable == 1) 
+  begin 
+  result = {lpm_width{1'bz}}; 
+  end 
+  else if (enable == 0) 
+  begin 
+  result = pad; 
+  end 
+  end 
+  assign pad = (enable == 1) ? data : {lpm_width{1'bz}}; 
+ endmodule

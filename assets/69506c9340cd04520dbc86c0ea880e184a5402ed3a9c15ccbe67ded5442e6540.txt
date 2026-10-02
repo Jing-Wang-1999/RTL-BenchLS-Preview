@@ -1,0 +1,14 @@
+always @ (posedge clk or negedge rst_n) begin
+	if (!rst_n) begin
+		mepc <= X0;
+	end else if (!CSR_M_TRAP) begin
+		// Explicit tie-off when unimplemented
+		mepc <= X0;
+	end else begin
+		if (trapreg_update_enter) begin
+			mepc <= mepc_in & MEPC_MASK;
+		end else if (wen_m_mode && addr == MEPC) begin
+			mepc <= wdata_update & MEPC_MASK;
+		end
+	end
+end

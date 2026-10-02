@@ -1,0 +1,77 @@
+always @(*) begin
+        NS = CS;
+        sampleData = 1'b0;
+        reg_bit_count_next = reg_bit_count;
+        reg_data_next = reg_data;
+        rx_valid_o = 1'b0;
+        baudgen_en = 1'b0;
+        start_bit = 1'b0;
+        parity_bit_next = parity_bit;
+        set_error = 1'b0;
+
+        case (CS)
+	    IDLE: begin
+                if (s_rx_fall) begin
+                    NS         = START_BIT;
+                    baudgen_en = 1'b1;
+                    start_bit  = 1'b1;
+                end
+	    end
+            START_BIT: begin
+                parity_bit_next = 1'b0;
+                baudgen_en      = 1'b1;
+                start_bit       = 1'b1;
+                if (bit_done) NS = DATA;
+            end
+            DATA: begin
+                baudgen_en      = 1'b1;
+                parity_bit_next = parity_bit ^ reg_rx_sync[2];
+
+                case (cfg_bits_i)
+                    2'b00: reg_data_next = {3'b0, reg_rx_sync[2], reg_data[4:1]};
+                    2'b01: reg_data_next = {2'b0, reg_rx_sync[2], reg_data[5:1]};
+                    2'b10: reg_data_next = {1'b0, reg_rx_sync[2], reg_data[6:1]};
+                    2'b11: reg_data_next = {reg_rx_sync[2], reg_data[7:1]};
+                endcase
+
+                if (bit_done) begin
+                    sampleData = 1'b1;
+                    if (reg_bit_count == s_target_bits) begin
+                    	reg_bit_count_next = 'h0;
+                    	NS = SAVE_DATA;
+	            end else begin
+                    	reg_bit_count_next = reg_bit_count + 1;
+		    end
+                end
+            end
+            SAVE_DATA: begin
+                baudgen_en = 1'b1;
+                rx_valid_o = 1'b1;
+		if (rx_ready_i) begin
+                    if (cfg_parity_en_i) NS = PARITY;
+                    else NS = STOP_BIT;
+	        end
+            end
+            PARITY: begin
+                baudgen_en = 1'b1;
+                if (bit_done) begin
+                    case (cfg_parity_sel_i)
+                        2'b00:
+                            if (reg_rx_sync[2] != ~parity_bit) set_error = 1'b1;
+                        2'b01:
+                            if (reg_rx_sync[2] != parity_bit) set_error = 1'b1;
+                        2'b10:
+                            if (reg_rx_sync[2] != 1'b0) set_error = 1'b1;
+                        2'b11:
+                            if (reg_rx_sync[2] != 1'b1) set_error = 1'b1;
+                    endcase
+                    NS = STOP_BIT;
+                end
+            end
+            STOP_BIT: begin
+                baudgen_en = 1'b1;
+                if (bit_done) NS = IDLE;
+            end
+            default: NS = IDLE;
+        endcase
+    end

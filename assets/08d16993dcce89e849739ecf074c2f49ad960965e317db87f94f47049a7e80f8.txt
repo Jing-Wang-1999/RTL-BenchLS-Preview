@@ -1,0 +1,46 @@
+always @(*)
+		case(state)
+			WAIT 		:	if      (AEROUT_CTRL_BUSY)                                                          nextstate = WAIT;
+                            else if (SPI_GATE_ACTIVITY_sync)
+                                if      (CTRL_PROG_EVENT_sync     && (CTRL_OP_CODE == 2'b01))                   nextstate = W_NEUR;
+                                else if (CTRL_READBACK_EVENT_sync && (CTRL_OP_CODE == 2'b01))                   nextstate = R_NEUR;
+                                else if (CTRL_PROG_EVENT_sync     && (CTRL_OP_CODE == 2'b10))                   nextstate = W_SYN;
+                                else if (CTRL_READBACK_EVENT_sync && (CTRL_OP_CODE == 2'b10))                   nextstate = R_SYN;
+                                else                                                                            nextstate = WAIT;
+                            else
+                                if (SCHED_FULL)
+                                    if      (|SCHED_DATA_OUT[12:8])                                             nextstate = POP_VIRT;
+                                    else                                                                        nextstate = POP_NEUR;
+                                else if (AERIN_REQ_sync && !bist_event)
+                                    if      (tref_event)                                                        nextstate = TREF;
+                                    else if (synapse_event)                                                     nextstate = SYNAPSE;
+                                    else if (virt_event | neuron_event)                                         nextstate = PUSH;
+                                    else                                                                        nextstate = WAIT;
+                                else if (~SCHED_EMPTY)
+                                    if      (|SCHED_DATA_OUT[12:8])                                             nextstate = POP_VIRT;
+                                    else                                                                        nextstate = POP_NEUR;
+                                else if (AERIN_REQ_sync && bist_event)                                          nextstate = BIST;
+                                else                                                                            nextstate = WAIT;
+			W_NEUR    	:   if      (ctrl_cnt == 32'd1 )                                                        nextstate = WAIT_SPIDN;
+							else					                                                            nextstate = W_NEUR;
+			R_NEUR    	:                                                                                       nextstate = WAIT_SPIDN;
+			W_SYN    	:   if      (ctrl_cnt == 32'd1 )                                                        nextstate = WAIT_SPIDN;
+							else					                                                            nextstate = W_SYN;
+			R_SYN    	:                                                                                       nextstate = WAIT_SPIDN;
+			TREF    	:   if      (AERIN_ADDR[M-1] ? (ctrl_cnt == 32'd1) : (&neur_cnt && neur_cnt_inc))       nextstate = WAIT_REQDN;
+							else					                                                            nextstate = TREF;
+            BIST        :   if      (AERIN_ADDR[M-1] ? (ctrl_cnt == 32'h3F) : (&neur_cnt && &ctrl_cnt[5:0]))    nextstate = WAIT_REQDN;
+                            else					                                                            nextstate = BIST;
+            SYNAPSE     :   if      (ctrl_cnt == 32'd1)                                                         nextstate = WAIT_REQDN;
+                            else					                                                            nextstate = SYNAPSE;
+            PUSH        :                                                                                       nextstate = WAIT_REQDN;
+			POP_NEUR    :   if      (&ctrl_cnt[8:0])                                                            nextstate = WAIT;
+							else					                                                            nextstate = POP_NEUR;                
+			POP_VIRT    :   if      (~CTRL_SCHED_POP_N)                                                         nextstate = WAIT;
+							else					                                                            nextstate = POP_VIRT;
+			WAIT_SPIDN 	:   if      (~CTRL_PROG_EVENT_sync && ~CTRL_READBACK_EVENT_sync)                        nextstate = WAIT;
+							else					                                                            nextstate = WAIT_SPIDN;
+			WAIT_REQDN 	:   if      (~AERIN_REQ_sync)                                                           nextstate = WAIT;
+							else					                                                            nextstate = WAIT_REQDN;
+			default		:							                                                            nextstate = WAIT;
+		endcase

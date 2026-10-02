@@ -1,0 +1,50 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/24771",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/24767",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 24771,
+  "issue_number": 24767,
+  "verilog_files": [
+    "hw/ip/prim/rtl/prim_sha2.sv"
+  ],
+  "deletions": 1,
+  "additions": 18,
+  "patches": [
+    {
+      "filename": "hw/ip/prim/rtl/prim_sha2.sv",
+      "patch": "@@ -332,6 +332,10 @@ module prim_sha2 import prim_sha2_pkg::*;\n           // Wait until it is filled\n           fifo_st_d          = FifoLoadFromFifo;\n           update_w_from_fifo = 1'b0;\n+          if (msg_feed_complete) begin\n+            fifo_st_d       = FifoIdle;\n+            hash_done_next  = 1'b1;\n+          end\n         end else if (w_index_q == 4'd 15) begin\n           fifo_st_d = FifoWait;\n           // To increment w_index and it rolls over to 0\n@@ -443,13 +447,26 @@ module prim_sha2 import prim_sha2_pkg::*;\n     if (!sha_en_i || hash_go) sha_st_d  = ShaIdle;\n   end\n \n+  logic update_digest_q, update_digest_d;\n+\n   // Determine whether a digest is being computed for a complete block: when `update_digest` is set,\n   // this module is not waiting for more data from the FIFO, and `message_length_i` is zero modulo a\n   // complete block (512 bit for SHA2_256 and 1024 bit for SHA2_384 and SHA2_512).\n-  assign digest_on_blk_o = update_digest && (fifo_st_q == FifoIdle) && (\n+  assign digest_on_blk_o = (update_digest || update_digest_q) && (fifo_st_q == FifoIdle) && (\n       (digest_mode_flag_q == SHA2_256                 && message_length_i[8:0] == '0) ||\n       (digest_mode_flag_q inside {SHA2_384, SHA2_512} && message_length_i[9:0] == '0));\n \n+  assign update_digest_d = digest_on_blk_o ? 1'b0 :\n+                           update_digest   ? 1'b1 : update_digest_q;\n+\n+  always_ff @(posedge clk_i or negedge rst_ni) begin\n+    if (!rst_ni) begin\n+      update_digest_q <= 1'b0;\n+    end else begin\n+      update_digest_q <= update_digest_d;\n+    end\n+  end\n+\n   assign one_chunk_done = ((digest_mode_flag_q == SHA2_256 || ~MultimodeEn)\n                           && (round_q == 7'd63)) ? 1'b1 :\n                           (((digest_mode_flag_q == SHA2_384) || (digest_mode_flag_q == SHA2_512))",
+      "additions": 18,
+      "deletions": 1,
+      "changes": 19
+    }
+  ],
+  "pr_info": {
+    "title": "[hmac,rtl] Fix hang after stop #24767",
+    "body": "Related to issue #24767\r\n  - Listen to msg_feed_complete when in FifoLoadFromFifo state to move into FifoIdle state.\r\n  - And latch digest_on_blk when it happens in FifoLoadFromFifo state.",
+    "state": "closed",
+    "created_at": "2024-10-11T14:55:59Z",
+    "updated_at": "2024-12-13T08:44:05Z",
+    "merged_at": "2024-12-13T08:43:14Z",
+    "user": "martin-velay"
+  },
+  "issue_info": {
+    "title": "[hmac] `HMAC_CMD_HASH_STOP_BIT` and `HMAC_CMD_HASH_PROCESS` commands causing hang conditions",
+    "body": "### Description\n\nCertain delays between last message FIFO write and  `HMAC_CMD_HASH_STOP_BIT` and `HMAC_CMD_HASH_PROCESS` commands cause the `HMAC.STATUS` register to get stuck with `hmac_idle` bit cleared. \n\nReproduction steps (pseudo-code): \n\n```c\n status = msg_fifo_write(data, len - leftover_len);\n \n // delay here, even  this small is enough\n for (size_t i = 0; i < 10; i = launder32(i + 1))\n    ;\n\n // Time to tell HMAC HWIP to stop, because we do not have enough message\n // bytes for another round.\n uint32_t cmd_reg =\n     bitfield_bit32_write(HMAC_CMD_REG_RESVAL, HMAC_CMD_HASH_STOP_BIT, 1);\n abs_mmio_write32(kHmacBaseAddr + HMAC_CMD_REG_OFFSET, cmd_reg);\n\n // Wait for HMAC HWIP operation to be completed.\n // In the error condition, this function will block forever.\n status = hmac_idle_wait();\n```\n\nDuring regular operating conditions, interrupts can fire at any time, causing delays similar to what is captured in the reproduction steps. This may cause hangs in the field that will be very difficult to debug / root cause.\n\n\nIssue reported by @vsukhoml. \nCC: @vogelpi, @martin-velay, @johannheyszl, @gdessouky ",
+    "labels": [
+      "Component:RTL",
+      "IP:hmac"
+    ],
+    "state": "closed",
+    "created_at": "2024-10-10T16:03:00Z",
+    "updated_at": "2024-12-13T09:20:01Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 158
+  },
+  "base_commit": "37fc765a852e618a202a40d24a33659cfe449580",
+  "head_commit": "89368ec648d71bd2b0cffabf89a534731f1df7fb",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_24771_24767",
+  "lec_status": "useful_pass"
+}

@@ -1,0 +1,99 @@
+module autovcoder_099654 (
+    input [15:0] L,
+    input [15:0] R,
+    input [2:0] op,
+    input [2:0] cond,
+    output [15:0] L_out,
+    output [15:0] R_out,
+    output [15:0] result,
+    output skip_n
+);
+  wire [15:0] s0;
+  wire [15:0] s1;
+  wire [15:0] \xor ;
+  wire [15:0] s2;
+  wire [15:0] s3;
+  wire s4;
+  wire [15:0] s5;
+  wire [15:0] s6;
+  wire s7;
+  wire s8;
+  wire hs;
+  wire ne;
+  wire eq;
+  wire ge;
+  wire lt;
+  wire [3:0] s9;
+  assign s5   = ~R;
+  assign \xor = (L ^ R);
+  assign s2   = (L & R);
+  assign s3   = (L | R);
+  assign s4   = op[0];
+  assign s7   = op[2];
+  assign s9   = R[3:0];
+  Mux_2x1_NBits #(
+      .Bits(16)
+  ) Mux_2x1_NBits_i0 (
+      .sel (s4),
+      .in_0(R),
+      .in_1(s5),
+      .out (s6)
+  );
+  // eq
+  CompUnsigned #(
+      .Bits(16)
+  ) CompUnsigned_i1 (
+      .a  (\xor ),
+      .b  (16'b0),
+      .\= (ne)
+  );
+  funnelshifter funnelshifter_i2 (
+      .I(L),
+      .amt(s9),
+      .dir(s4),
+      .arith(s7),
+      .O(s1)
+  );
+  assign eq = ~ne;
+  DIG_Add #(
+      .Bits(16)
+  ) DIG_Add_i3 (
+      .a  (L),
+      .b  (s6),
+      .c_i(s4),
+      .s  (s0),
+      .c_o(s8)
+  );
+  Mux_8x1_NBits #(
+      .Bits(16)
+  ) Mux_8x1_NBits_i4 (
+      .sel (op),
+      .in_0(s0),
+      .in_1(s0),
+      .in_2(s1),
+      .in_3(s1),
+      .in_4(s1),
+      .in_5(\xor ),
+      .in_6(s2),
+      .in_7(s3),
+      .out (result)
+  );
+  assign hs = ~s8;
+  assign ge = (s0[15] ^ ((L[15] & s6[15] & ~s0[15]) | (~L[15] & ~s6[15] & s0[15])));
+  assign lt = ~ge;
+  Mux_8x1 Mux_8x1_i5 (
+      .sel (cond),
+      .in_0(1'b0),
+      .in_1(eq),
+      .in_2(ne),
+      .in_3(lt),
+      .in_4(ge),
+      .in_5(s8),
+      .in_6(hs),
+      .in_7(1'b0),
+      .out (skip_n)
+  );
+  assign L_out = L;
+  assign R_out = R;
+endmodule
+

@@ -1,0 +1,30 @@
+always @(*)
+ begin
+  next_state_full = state_full;
+  case(state_full)
+   EMPTY  : next_state_full = (write) ? WRITE_1 : EMPTY;
+   WRITE_1: 
+    begin
+     if(last_byte)
+      begin
+       if(!write)
+        next_state_full = EMPTY;
+      end
+     else
+      begin
+       if(write)
+        next_state_full = WRITE_2;
+      end
+    end
+   WRITE_2:
+    begin
+     if(last_byte)
+      next_state_full = (write) ? BYPASS : WRITE_1;
+    end
+   BYPASS :
+    begin
+     if(last_byte && !write)
+      next_state_full = WRITE_1;
+    end
+  endcase
+ end

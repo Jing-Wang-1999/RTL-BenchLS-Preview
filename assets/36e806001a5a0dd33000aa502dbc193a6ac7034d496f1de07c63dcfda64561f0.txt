@@ -1,0 +1,56 @@
+module origen_184053 (
+    input clk,
+    input rst,
+    input in,
+    output reg out
+);
+
+    // State encoding
+    localparam S0 = 2'b00;
+    localparam S1 = 2'b01;
+    localparam S2 = 2'b10;
+
+    reg [1:0] state, next_state;
+
+    // State register with asynchronous reset
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            state <= S0;
+            out <= 1'b0;
+        end else begin
+            state <= next_state;
+            // Output logic based on state transitions
+            case (state)
+                S1: out <= (in == 1'b1) ? 1'b1 : 1'b0;
+                S2: out <= (in == 1'b1) ? 1'b1 : 1'b0;
+                default: out <= 1'b0;
+            endcase
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            S0: begin
+                if (in == 1'b1)
+                    next_state = S1;
+                else
+                    next_state = S0;
+            end
+            S1: begin
+                if (in == 1'b1)
+                    next_state = S0;
+                else
+                    next_state = S2;
+            end
+            S2: begin
+                if (in == 1'b1)
+                    next_state = S2;
+                else
+                    next_state = S1;
+            end
+            default: next_state = S0;
+        endcase
+    end
+
+endmodule

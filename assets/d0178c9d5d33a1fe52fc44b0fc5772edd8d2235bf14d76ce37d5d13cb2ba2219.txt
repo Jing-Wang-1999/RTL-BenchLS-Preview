@@ -1,0 +1,33 @@
+always @* begin
+    mem_wr_en = 1'b0;
+    mem_rd_en = 1'b0;
+
+    last_read_next = last_read_reg;
+
+    s_axil_awready_next = 1'b0;
+    s_axil_wready_next = 1'b0;
+    s_axil_bvalid_next = s_axil_bvalid_reg && !s_axil_bready;
+
+    s_axil_arready_next = 1'b0;
+    s_axil_rvalid_next = s_axil_rvalid_reg && !(s_axil_rready || !s_axil_rvalid_pipe_reg);
+
+    write_eligible = s_axil_awvalid && s_axil_wvalid && (!s_axil_bvalid || s_axil_bready) && (!s_axil_awready && !s_axil_wready);
+    read_eligible = s_axil_arvalid && (!s_axil_rvalid || s_axil_rready || !s_axil_rvalid_pipe_reg) && (!s_axil_arready);
+
+    if (write_eligible && (!read_eligible || last_read_reg)) begin
+        last_read_next = 1'b0;
+
+        s_axil_awready_next = 1'b1;
+        s_axil_wready_next = 1'b1;
+        s_axil_bvalid_next = 1'b1;
+
+        mem_wr_en = 1'b1;
+    end else if (read_eligible) begin
+        last_read_next = 1'b1;
+
+        s_axil_arready_next = 1'b1;
+        s_axil_rvalid_next = 1'b1;
+
+        mem_rd_en = 1'b1;
+    end
+end

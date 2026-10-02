@@ -1,0 +1,19 @@
+always @(negedge ECLK)
+  begin
+    if (rst_i)
+    begin
+      sdr_r  <= 8'd0;
+      spoe_o <= 1'd0;
+    end
+    else if (sel_i & we_i & adr_sdr)
+    begin
+      // handle bus write to sdr register
+      sdr_r <= DBi;
+      spoe_o <= ~spoe_i;
+    end
+    else if (spi_pls)
+    begin
+      // handle incoming serial data
+      sdr_r <= sdr_w;
+    end
+  end

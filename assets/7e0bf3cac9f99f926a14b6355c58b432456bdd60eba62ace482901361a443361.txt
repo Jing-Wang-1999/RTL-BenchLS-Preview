@@ -1,0 +1,53 @@
+module origen_220836 #(parameter dw = 8)
+   (
+    input                 clk,
+    input      [dw-1:0]    bdata,
+    input                 load,
+    output reg [3:0]       nibble,
+    output reg            nstrobe
+   );
+
+   reg        [dw-1:0]     sr;
+   reg        [dw-1:0]     shiftin;
+   wire                   shiftout;
+   reg        [dw-1:0]     bcnt;
+   reg        [3:0]        accum;
+   reg        [4:0]        accum5;
+   reg                    got_one;
+   reg        [3:0]        accum_sub;
+
+   always @(posedge clk) begin
+      if (load) begin
+         sr <= bdata;
+         bcnt <= bdata;
+      end
+      else begin
+         sr <= {sr[dw-2:0], shiftin};
+         bcnt <= bcnt - 1'b1;
+         accum5 <= {got_one, accum};
+         if (accum5 >= 5'b01010) begin
+            got_one <= 1'b1;
+            accum_sub <= accum5 - 4'b1010;
+         end
+         else begin
+            got_one <= 1'b0;
+            accum_sub <= accum5[3:0];
+         end
+         accum <= accum_sub;
+      end
+   end
+
+   assign shiftout = sr[dw-1];
+   assign shiftin = bcnt == 0 ? 1'b0 : bdata[0];
+
+   always @(posedge clk) begin
+      if (bcnt == 0) begin
+         nibble <= accum;
+         nstrobe <= 1'b1;
+      end
+      else begin
+         nstrobe <= 1'b0;
+      end
+   end
+
+endmodule

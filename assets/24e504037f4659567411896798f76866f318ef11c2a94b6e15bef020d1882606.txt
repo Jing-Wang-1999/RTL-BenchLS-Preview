@@ -1,0 +1,7 @@
+# origen_027682
+
+Inputs are `clk`, active-low asynchronous `rst_n`, and BCD digits `minute1`, `minute0`, `second1`, and `second0`, each four bits. Output `alarm_radio` is one bit. Parameters are `T1MS = 50000` and `T500US = 25000`.
+
+Reset clears two 16-bit counters, both tone bits, and the output. Otherwise C1 counts 0 through `T1MS-1` and toggles F500HZ at the terminal count; C2 similarly uses `T500US` and F1KHZ. Thus their full periods are `2*T1MS` and `2*T500US` input clocks; the names correspond to 500 Hz and 1 kHz only for a 50 MHz clock.
+
+On each rising edge, time 59:56 or 59:58 makes alarm_radio capture the pre-edge F500HZ, time 00:00 makes it capture pre-edge F1KHZ, and all other times clear it. There are no submodules.

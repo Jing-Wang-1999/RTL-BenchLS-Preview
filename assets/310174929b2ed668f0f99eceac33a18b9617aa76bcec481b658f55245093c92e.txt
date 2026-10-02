@@ -1,0 +1,22 @@
+module rtlpp_10639(clk, rst, ctrl, sel, d, i);
+	input			clk;		
+	input			rst;		
+	input	[15:0]	ctrl;		
+	input			sel;		
+	inout	[7:0]	d;			
+	input	[7:0]	i;
+
+	tri		[7:0]	d;
+
+	wire [4:0]	addr;
+	wire		ud_t, ld_t, ud_ce, ld_ce;
+	
+	// Logic for ctrl_dec
+	assign ud_t = (ctrl[0] & sel);
+	assign ld_t = (ctrl[1] & sel);
+	assign ud_ce = (ctrl[2] & sel);
+	assign ld_ce = (ctrl[3] & sel);
+	assign addr = ctrl[15:11];
+	
+	assign d = ld_t ? 8'bz : i;
+endmodule

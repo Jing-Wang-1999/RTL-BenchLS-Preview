@@ -1,0 +1,38 @@
+The Verilog module is responsible for monitoring a 4-bit input port for edge detection, managing registers accessible via a 2-bit address, and generating an interrupt request (IRQ) based on configurable conditions.
+
+### Instruction:
+1. **Primary Function**: The module detects rising edges on a 4-bit input port, manages configurable registers via a 2-bit address interface, and generates an interrupt request signal based on the detected edges and a user-defined mask.
+
+2. **Control Flow**: The key decision points involve resetting registers on an active low reset signal, enabling write operations when a chip select and write signal are active, and conditionally updating outputs based on the address input. The address determines which register (data input, IRQ mask, or edge capture) is being accessed for read or write operations.
+
+3. **Data Processing and Signal Interactions**:
+    - **Edge Detection**: Detect edges by comparing the current and previous states of the input port.
+    - **Edge Capture**: Latch detected edges into a register, resetting individual bits when corresponding write strobes are active.
+    - **IRQ Mask**: Update the mask register when appropriate address and write signals are active, and use it to generate the IRQ signal based on captured edges.
+    - **Read Data Multiplexing**: Multiplex read data based on the current address, outputting data from either the input port, IRQ mask, or edge capture register.
+
+### Detailed Operation:
+- Use a clock enabled mechanism (`clk_en`) to synchronize the updates.
+- On the rising edge of the clock or a low reset signal, update `readdata`, `irq_mask`, and `edge_capture` based on conditions.
+- `read_mux_out` multiplexes data for reading based on address.
+- Detect changes in `in_port` and record them in edge capture registers.
+- Generate an IRQ when any captured edge aligns with the mask.
+
+This instruction provides a clear and comprehensive guideline for code generation, allowing an LLM to closely replicate the functional and operational essence of the module.
+
+Module Interface:
+module dip_switch_pio_a (
+    address,
+    chipselect,
+    clk,
+    in_port,
+    reset_n,
+    write_n,
+    writedata,
+    irq,
+    readdata
+);
+
+Behavioral Clarifications:
+- reset_n is active-low asynchronous reset. address is 2 bits; in_port and irq_mask and edge_capture are each 4 bits; readdata is 32 bits (upper 28 bits zero-padded). clk_en is hardwired to 1.
+- Edge detection uses a two-stage pipeline (d1_data_in, d2_data_in); edge_detect = d1_data_in XOR d2_data_in. When an edge is detected, the corresponding edge_capture bit is set to 1 (not -1). Individual edge_capture bits are cleared by write strobe at address 3 with the corresponding writedata bit set.

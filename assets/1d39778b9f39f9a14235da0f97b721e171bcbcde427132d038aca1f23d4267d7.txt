@@ -1,0 +1,31 @@
+The `twenty_to_eight` module is a digital hardware component designed to process and transform data streams. It operates by taking a large input data block, processing it, and outputting a smaller data block. The module is parameterized by `WORD_LEN`, which defines the bit-width of the data words it processes. By default, `WORD_LEN` is set to 66 bits.
+
+### Inputs and Outputs
+
+- **Inputs:**
+  - `clk`: The clock signal that synchronizes the module's operations.
+  - `arst`: An asynchronous reset signal that initializes or resets the module's state.
+  - `din`: A wide input data bus that carries a block of data. The width of this bus is `20 * WORD_LEN` bits, allowing it to carry 20 words of data simultaneously.
+  - `din_valid`: A control signal indicating that the data on the `din` bus is valid and ready to be processed.
+  - `dout_ready`: A control signal from the downstream logic indicating that it is ready to accept new data from the module.
+
+- **Outputs:**
+  - `din_ready`: A control signal indicating whether the module is ready to accept new input data.
+  - `dout`: A narrower output data bus that carries a block of data. The width of this bus is `8 * WORD_LEN` bits, allowing it to carry 8 words of data simultaneously.
+  - `dout_valid`: A control signal indicating that the data on the `dout` bus is valid and ready to be consumed by downstream logic.
+
+### Functionality
+
+The module processes data in a state-driven manner, transitioning through a series of predefined states to manage the flow of data between the input and output. The states are as follows:
+
+1. **State 0:** The module holds no surplus data and is ready to accept a new block of 20 words from the input. It outputs 8 words.
+2. **State 1:** The module holds a surplus of 12 words from the previous input block and does not accept new input. It outputs 8 words from the surplus.
+3. **State 2:** The module holds a surplus of 4 words and is ready to accept a new block of 20 words. It outputs 8 words, combining 4 words from the surplus and 4 new words from the input.
+4. **State 3:** The module holds a surplus of 16 words and does not accept new input. It outputs 8 words from the surplus.
+5. **State 4:** The module holds a surplus of 8 words and does not accept new input. It outputs 8 words from the surplus.
+
+### Operation
+
+- The module uses a state machine to manage transitions between these states based on the availability of valid input data (`din_valid`) and the readiness of the output (`dout_ready`).
+- The `din_ready` signal is asserted when the module is in a state that can accept new input data and is not waiting for the output to be consumed.
+- The `dout_valid` signal is asserted when the module has valid data on the `dout` bus ready for consumption

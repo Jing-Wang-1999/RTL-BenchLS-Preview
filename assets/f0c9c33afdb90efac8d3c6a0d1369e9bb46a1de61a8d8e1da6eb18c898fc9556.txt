@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.8608acd67b729d7083ce.40d501410ebd",
+  "compile_check": {
+    "case_id": "s1derived.8608acd67b729d7083ce.40d501410ebd",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_078230",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_078230.5083a83e6c8e1864/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.8608acd67b729d7083ce",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "8608acd67b729d7083cea012d012d82faef8617cb74780df07cbb5d7b90713eb",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.8608acd67b729d7083ce.40d501410ebd",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_078230.5083a83e6c8e1864/private/commercial_positive.log",
+    "commercial_log_sha256": "a25ae8b639c31a19b1b5f2dbc03e2c39b7ea816abee6836b811283c062022c59",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_078230.5083a83e6c8e1864/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "origen_078230"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.origen_078230.5083a83e6c8e1864",
+    "parent_id": "s1p.8608acd67b729d7083ce",
+    "revised_tops": [
+      "origen_078230"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_078230",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.8608acd67b729d7083ce.40d501410ebd",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All nine output fields reset to zero and capture matching inputs together under the two-stall guard. Reset priority and complete-bundle hold agree.",
+        "rtl_excerpt": "else if (!stall && !memStall)",
+        "specification_excerpt": "both `stall=0` and `memStall=0`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.8608acd67b729d7083ce",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "05511798e347f5c0e14ac2ea27d1563ded2258ab4d074321e12592615408c713",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "8608acd67b729d7083cea012d012d82faef8617cb74780df07cbb5d7b90713eb",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_078230.5083a83e6c8e1864/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_078230.5083a83e6c8e1864/private/historical_harness/01_conformal_rtl_origen_078230.do"
+  ],
+  "parent_id": "s1p.8608acd67b729d7083ce",
+  "primary_review": {
+    "case_id": "s1derived.8608acd67b729d7083ce.40d501410ebd",
+    "checks": {
+      "behavior": "One sentence says holding requires both stalls, while the RTL and later prose hold when either is asserted.",
+      "boundaries": "The repair covers omitted defaults, holds, and instruction cases.",
+      "interface": "The repair supplies the complete top interface.",
+      "rtl_reasonableness": "The circuit is coherent hardware.",
+      "sequential_and_reset": "The repair states actual reset, capture, stall, and scope behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "One sentence says holding requires both stalls, while the RTL and later prose hold when either is asserted.",
+        "rtl_excerpt": "Capture is guarded by else if (!stall && !memStall), so either asserted stall holds.",
+        "spec_excerpt": "The stall bullets say \u201cWhen high (with ... also high)\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "One sentence says holding requires both stalls, while the RTL and later prose hold when either is asserted.",
+        "rtl_evidence": "Capture is guarded by else if (!stall && !memStall), so either asserted stall holds.",
+        "spec_evidence": "The stall bullets say \u201cWhen high (with ... also high)\u201d.",
+        "type": "stall_contradiction"
+      }
+    ],
+    "parent_id": "s1p.8608acd67b729d7083ce",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_08/s1derived.8608acd67b729d7083ce.40d501410ebd.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "8608acd67b729d7083cea012d012d82faef8617cb74780df07cbb5d7b90713eb",
+    "source_group": "S2",
+    "specification_sha256": "40d501410ebd04ef4a35065266ffb394994789e94e20c663bccb06d5bc601b1b",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_08/s1derived.8608acd67b729d7083ce.40d501410ebd.md",
+  "qualified_specification_sha256": "05511798e347f5c0e14ac2ea27d1563ded2258ab4d074321e12592615408c713",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_078230.5083a83e6c8e1864/private/golden_design.v",
+  "rtl_sha256": "8608acd67b729d7083cea012d012d82faef8617cb74780df07cbb5d7b90713eb",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_078230.5083a83e6c8e1864/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "40d501410ebd04ef4a35065266ffb394994789e94e20c663bccb06d5bc601b1b",
+  "top_module": "origen_078230"
+}

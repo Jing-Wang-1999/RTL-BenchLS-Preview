@@ -1,0 +1,99 @@
+module rtlpp_03986
+(
+        i_clk,
+        i_rst_n,
+        
+        iv_hcp_mid,
+              
+        iv_addr, 
+        iv_wdata, 
+        i_addr_fixed, 
+        i_wr, 
+        i_rd,                
+        o_wr, 
+        ov_addr, 
+        o_addr_fixed, 
+        ov_rdata, 
+
+        i_tsmp_lookup_table_key_wr,
+        iv_tsmp_lookup_table_key,
+        ov_tsmp_lookup_table_outport,
+        o_tsmp_lookup_table_outport_wr   
+);
+
+input                  i_clk;                   
+input                  i_rst_n;
+
+input     [11:0]       iv_hcp_mid;
+
+input      [18:0]      iv_addr;
+input      [31:0]      iv_wdata;
+input                  i_addr_fixed;
+input                  i_wr;
+input                  i_rd;            
+output                 o_wr;
+output     [18:0]      ov_addr;
+output                 o_addr_fixed;
+output     [31:0]      ov_rdata;
+
+input                  i_tsmp_lookup_table_key_wr;
+input      [47:0]      iv_tsmp_lookup_table_key;
+output     [32:0]      ov_tsmp_lookup_table_outport;
+output                 o_tsmp_lookup_table_outport_wr;
+
+reg       [11:0]      wv_tsmpforwardram_addr_cpe2ram;
+reg       [33:0]      wv_tsmpforwardram_wdata_cpe2ram;
+reg                   w_tsmpforwardram_wr_cpe2ram;
+reg       [33:0]      wv_tsmpforwardram_rdata_ram2cpe;
+reg                   w_tsmpforwardram_rd_cpe2ram;
+
+reg       [11:0]      wv_ram_raddr_b;
+reg                   w_ram_rd_b;
+reg       [33:0]      wv_ram_rdata_b;
+
+// Logic for command_parse_and_encapsulate_tft
+
+always @(posedge i_clk or negedge i_rst_n) begin
+    if (!i_rst_n) begin
+        // Register initializations
+    end else begin
+        // Logic implementation
+        // Assignments to o_wr, ov_addr, o_addr_fixed, ov_rdata
+        // Assignments to wv_tsmpforwardram_addr_cpe2ram, wv_tsmpforwardram_wdata_cpe2ram, w_tsmpforwardram_wr_cpe2ram, w_tsmpforwardram_rd_cpe2ram
+    end
+end
+
+// Logic for mid_lookup_table
+
+always @(posedge i_clk or negedge i_rst_n) begin
+    if (!i_rst_n) begin
+        // Register initializations
+    end else begin
+        // Logic implementation
+        // Assignments to ov_tsmp_lookup_table_outport, o_tsmp_lookup_table_outport_wr
+        // Assignments to wv_ram_raddr_b, w_ram_rd_b, wv_ram_rdata_b
+    end
+end
+
+// truedualportram_singleclock_rdenab_outputaclr_w34d4096
+
+reg [33:0] ram[0:4095];  // Memory declaration
+
+always @(posedge i_clk) begin
+    if (!i_rst_n) begin
+        wv_tsmpforwardram_rdata_ram2cpe <= 34'b0;
+        wv_ram_rdata_b <= 34'b0;
+    end else begin
+        if (w_tsmpforwardram_wr_cpe2ram) begin
+            ram[wv_tsmpforwardram_addr_cpe2ram] <= wv_tsmpforwardram_wdata_cpe2ram;
+        end
+        if (w_tsmpforwardram_rd_cpe2ram) begin
+            wv_tsmpforwardram_rdata_ram2cpe <= ram[wv_tsmpforwardram_addr_cpe2ram];
+        end
+        if (w_ram_rd_b) begin
+            wv_ram_rdata_b <= ram[wv_ram_raddr_b];
+        end
+    end
+end
+
+endmodule

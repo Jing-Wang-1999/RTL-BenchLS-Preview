@@ -1,0 +1,160 @@
+module autovcoder_093161 (
+    CLKOUT,
+    CALIB,
+    HCLKIN,
+    RESETN
+);
+
+  input HCLKIN;
+  input RESETN;
+
+
+  input CALIB;
+  output CLKOUT;
+
+  parameter DIV_MODE = "2";  //"2", "3.5", "4", "5"
+  parameter GSREN = "false";  //"false", "true"
+
+  reg reset_0;
+  reg calib_0, calib_1, calib_2, calib_state;
+  wire calib_en, calib_resetn, cnt_enable;
+  reg select245, select3p5, select5;
+  wire dsel_en, clk_div2, clk_div_0, clk_div;
+  reg d_sel, cnt_0, cnt_1, cnt_2, clk_div_1;
+
+  wire grstn;
+
+  initial begin
+    cnt_0 = 1'b0;
+    cnt_1 = 1'b0;
+    d_sel = 1'b0;
+    select3p5 = 1'b0;
+    select245 = 1'b1;
+    select5 = 1'b0;
+    calib_state = 1'b0;
+    clk_div_1 = 1'b0;
+
+    if (DIV_MODE == "2" || DIV_MODE == "4" || DIV_MODE == "5") begin
+      select245 = 1'b1;
+      select3p5 = 1'b0;
+    end else if (DIV_MODE == "3.5") begin
+      select3p5 = 1'b1;
+      select245 = 1'b0;
+    end
+
+    if (DIV_MODE == "5") begin
+      select5 = 1'b1;
+    end
+
+  end
+
+  assign grstn = GSREN == "true" ? GSR.GSRO : 1'b1;
+
+  always @(posedge HCLKIN or negedge grstn or negedge RESETN) begin
+    if (!grstn) begin
+      reset_0 <= 1'b0;
+    end else if (!RESETN) begin
+      reset_0 <= 1'b0;
+    end else begin
+      reset_0 <= 1'b1;
+    end
+  end
+
+  always @(posedge HCLKIN or negedge reset_0) begin
+    if (!reset_0) begin
+      calib_0 <= 1'b0;
+    end else begin
+      calib_0 <= ~CALIB;
+    end
+  end
+
+  always @(posedge HCLKIN or negedge reset_0) begin
+    if (!reset_0) begin
+      calib_1 <= 0;
+    end else begin
+      calib_1 <= calib_0;
+    end
+  end
+
+  always @(posedge HCLKIN or negedge reset_0) begin
+    if (!reset_0) begin
+      calib_2 <= 1'b0;
+    end else begin
+      calib_2 <= calib_1;
+    end
+  end
+
+  assign calib_resetn = ~(calib_1 && (~calib_2));
+  assign calib_en = ~(calib_resetn | (~select245));
+
+  always @(posedge HCLKIN or negedge reset_0) begin
+    if (!reset_0) begin
+      calib_state <= 1'b0;
+    end else begin
+      if (calib_en == 1'b1) begin
+        calib_state <= ~calib_state;
+      end else begin
+        calib_state <= calib_state;
+      end
+    end
+  end
+
+  assign cnt_enable = (~((~calib_resetn) & calib_state) & select245) | (calib_resetn & select3p5);
+
+  assign dsel_en = (d_sel& cnt_0 & cnt_1 & select3p5) | (calib_resetn & (~d_sel) & (~cnt_0) & cnt_1 & select3p5);
+
+  always @(posedge HCLKIN or negedge reset_0) begin
+    if (!reset_0) begin
+      d_sel <= 1'b0;
+    end else if (dsel_en == 1'b1) begin
+      d_sel <= ~d_sel;
+    end else if (dsel_en == 1'b0) begin
+      d_sel <= d_sel;
+    end
+  end
+
+  assign cnt_reset = (select5 & (~cnt_0) & (~cnt_1) & cnt_2 ) | (select3p5 & (~d_sel) & (~cnt_0) & cnt_1);
+
+  always @(posedge HCLKIN or negedge reset_0) begin
+    if (!reset_0) begin
+      cnt_0 <= 1'b1;
+    end else if (cnt_enable == 1'b1) begin
+      cnt_0 <= ~(cnt_0 | cnt_reset);
+    end else if (cnt_enable == 1'b0) begin
+      cnt_0 <= cnt_0;
+    end
+  end
+
+  always @(posedge HCLKIN or negedge reset_0) begin
+    if (!reset_0) begin
+      cnt_1 <= 1'b1;
+    end else if (cnt_enable == 1'b1) begin
+      cnt_1 <= ~(cnt_reset | (cnt_0 ^~ cnt_1));
+    end else if (cnt_enable == 1'b0) begin
+      cnt_1 <= cnt_1;
+    end
+  end
+
+  always @(posedge HCLKIN or negedge reset_0) begin
+    if (!reset_0) begin
+      cnt_2 <= 1'b0;
+    end else if (cnt_enable == 1'b1) begin
+      cnt_2 <= ~(cnt_reset | (cnt_2 ^~ (cnt_0 & cnt_1)));
+    end else if (cnt_enable == 1'b0) begin
+      cnt_2 <= cnt_2;
+    end
+  end
+
+  assign clk_div_0 = ~cnt_1;
+  always @(negedge HCLKIN or negedge reset_0) begin
+    if (!reset_0) clk_div_1 <= 1'b0;
+    else clk_div_1 <= clk_div_0;
+  end
+
+  assign clk_div  = (d_sel == 1'b1) ? clk_div_1 : clk_div_0;
+  assign clk_div2 = ~cnt_0;
+
+  assign CLKOUT   = (DIV_MODE == "2") ? clk_div2 : clk_div;
+
+endmodule
+

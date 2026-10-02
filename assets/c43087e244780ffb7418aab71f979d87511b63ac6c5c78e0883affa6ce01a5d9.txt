@@ -1,0 +1,68 @@
+module origen_099109 (
+    input clk,
+    input rst,
+    input TA,
+    input TB,
+    output RA,
+    output YA,
+    output GA,
+    output RB,
+    output YB,
+    output GB
+);
+
+    // State encoding
+    localparam S0 = 2'b00;
+    localparam S1 = 2'b01;
+    localparam S2 = 2'b10;
+    localparam S3 = 2'b11;
+
+    reg [1:0] state, next_state;
+
+    // State register
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            state <= S0;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            S0: begin
+                if (TA == 1'b0) begin
+                    next_state = S1;
+                end else begin
+                    next_state = S0;
+                end
+            end
+            S1: begin
+                next_state = S2;
+            end
+            S2: begin
+                if (TB == 1'b0) begin
+                    next_state = S3;
+                end else begin
+                    next_state = S2;
+                end
+            end
+            S3: begin
+                next_state = S0;
+            end
+            default: begin
+                next_state = S0;
+            end
+        endcase
+    end
+
+    // Output logic
+    assign RA = (state == S2) || (state == S3);
+    assign YA = (state == S1);
+    assign GA = (state == S0);
+    assign RB = (state == S0) || (state == S1);
+    assign YB = (state == S3);
+    assign GB = (state == S2);
+
+endmodule

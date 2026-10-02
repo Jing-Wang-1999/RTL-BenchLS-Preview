@@ -1,0 +1,12 @@
+always @(posedge clk or posedge rst)
+begin
+  if (rst) begin
+    cdata <= #1 8'h00;
+    cdone <= #1 1'b0;
+  end else if (istb_t) begin
+    cdata <= #1 ea_rom_sel ? idat_onchip[7:0] : idat_i[7:0];
+    cdone <= #1 1'b1;
+  end else begin
+    cdone <= #1 1'b0;
+  end
+end

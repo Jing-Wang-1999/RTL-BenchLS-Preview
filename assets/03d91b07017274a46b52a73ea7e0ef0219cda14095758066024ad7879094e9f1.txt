@@ -1,0 +1,51 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/286",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/285",
+  "repository": "lowRISC/ibex",
+  "pr_number": 286,
+  "issue_number": 285,
+  "verilog_files": [
+    "rtl/ibex_cs_registers.sv"
+  ],
+  "deletions": 1,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "rtl/ibex_cs_registers.sv",
+      "patch": "@@ -596,7 +596,7 @@ module ibex_cs_registers #(\n       mtval_q        <= '0;\n       mtvec_q        <= 32'b01;\n       dcsr_q         <= '{\n-          xdebugver: XDEBUGVER_NO,   // 4'h0\n+          xdebugver: XDEBUGVER_STD,\n           cause:     DBG_CAUSE_NONE, // 3'h0\n           prv:       PRIV_LVL_M,\n           default:   '0",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "CSRs: reset `dcsr.XDEBUGVER` to `XDEBUGVER_STD` instead of 0",
+    "body": "This field is read only and should be set to the right value straight away.\r\n\r\nThis fixes lowRISC/ibex#285.",
+    "state": "closed",
+    "created_at": "2019-09-06T13:04:55Z",
+    "updated_at": "2019-09-09T16:03:41Z",
+    "merged_at": "2019-09-06T14:32:16Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "Dcsr.xdebugver reset value",
+    "body": "Hi all,\r\nI noticed that in the CSR register module, `dcsr.xdebugver` is set to `XDEBUGVER_NO` upon reset, but after reset is over and an explicit write to `dcsr` occurs, the `xdebugver` field will then be permanently set to the value of `XDEBUGVER_STD` for the duration of the simulation.  This seems to contradict with the behavior of the `dcsr.prv` field, which is set to `PRV_LVL_M` at reset, as well as whenever a write occurs outside of reset.  Why does this separate reset behavior for `xdebugver` occur, instead of setting it to `XDEBUGVER_STD` from reset onwards especially since this field is read-only and stays as a constant?\r\nThank you!\r\nUdi",
+    "labels": [
+      "Type:Bug",
+      "Type:Question",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "created_at": "2019-09-05T21:28:19Z",
+    "updated_at": "2019-09-09T21:48:38Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 292
+  },
+  "base_commit": "16177fe8db9012197c150d7487428437e020eaa6",
+  "head_commit": "cadfd46044fafa3020876b120c941c668d567d5d",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_286_285",
+  "lec_status": "useful_pass"
+}

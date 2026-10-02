@@ -1,0 +1,44 @@
+### Module Specification: origen_097092
+
+**Overview**  
+This module is a control unit that decodes instruction opcodes to generate control signals for a processor datapath. It supports a subset of RISC‑V instruction types and produces signals for ALU operation, data movement, memory access, and register file control.
+
+**Inputs**  
+- **opcode** (7 bits): The instruction opcode field.  
+- **reset** (1 bit): Active‑high synchronous reset; forces all control outputs to their inactive state.  
+- **invert** (1 bit): *Note: This input is present but unused in the provided logic.*  
+- **funct** (3 bits): The function‑code field for R‑type and I‑type instructions; influences the ALU operation.
+
+**Outputs**  
+- **im_sel** (2 bits): Selects the type of immediate value to be generated:  
+  - `00`: I‑type immediate  
+  - `01`: S‑type immediate  
+  - `10`: B‑type immediate  
+  - `11`: U‑type or J‑type immediate  
+- **jump** (1 bit): Indicates a jump instruction (J‑type).  
+- **branch** (1 bit): Indicates a conditional branch instruction (B‑type).  
+- **Alusrc1** (1 bit): Selects the first ALU operand: `0` = register data, `1` = PC‑relative value (for U‑type).  
+- **Alusrc2** (1 bit): Selects the second ALU operand: `0` = register data, `1` = immediate value.  
+- **regWrite** (1 bit): Enables writing to the register file.  
+- **MemRead** (1 bit): Enables a memory load operation.  
+- **MemWrite** (1 bit): Enables a memory store operation.  
+- **jal** (1 bit): Indicates a jump‑and‑link instruction.  
+- **csr** (1 bit): Indicates a CSR (Control and Status Register) instruction.  
+- **wr_sel** (2 bits): Selects the data to write back to the register file:  
+  - `00`: ALU result  
+  - `01`: Memory read data or CSR value  
+  - `10`: PC + 4 (for J‑type)  
+- **ALUop** (3 bits): Encodes the ALU operation:  
+  - `000`: ADD (or no operation)  
+  - `001`: Subtract (for branches)  
+  - Other values derived from `funct[2:1]` for R‑type and I‑type instructions.  
+- **fence** (1 bit): Indicates a FENCE instruction (opcode `0001111`); generated combinatorially.
+
+**Behavior**  
+The module decodes the 7‑bit opcode into one of eight instruction types:  
+- **R‑type** (`0110011`): Register‑register ALU operation. `regWrite` is active; `ALUop` is set from `funct[2:1]`.  
+- **I‑type** (`0010011`): Register‑immediate ALU operation. `regWrite` and `Alusrc2` are active; `im_sel` = `00`; `ALUop` from `funct[2:1]`.  
+- **S‑type** (`0100011`): Store to memory. `Alusrc2` and `MemWrite` are active; `im_sel` = `01`.  
+- **B‑type** (`1100011`): Conditional branch. `branch` is active; `im_sel` = `10`; `ALUop` = `001` (subtract for comparison).  
+- **U‑type** (`0110111` or `0010111`): Upper‑immediate instructions (LUI, AUIPC). `regWrite`, `Alusrc1`, `Alusrc2` are active; `im_sel` = `11`; `ALUop` = `000`.  
+- **J‑type** (`1101111`): Unconditional jump (JAL). `regWrite`, `jump`, `jal` are active; `im_sel`

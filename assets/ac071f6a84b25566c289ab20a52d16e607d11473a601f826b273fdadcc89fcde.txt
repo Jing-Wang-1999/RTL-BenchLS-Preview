@@ -1,0 +1,15 @@
+always @(posedge clk) begin
+    // register inputs
+    for (i = 0; i < PORTS; i = i + 1) begin
+        if (s_axis_req_ready[i]) begin
+            s_axis_req_sel_reg[i*SELECT_WIDTH +: SELECT_WIDTH] <= s_axis_req_sel[i*SELECT_WIDTH +: SELECT_WIDTH];
+            s_axis_req_queue_reg[i*QUEUE_INDEX_WIDTH +: QUEUE_INDEX_WIDTH] <= s_axis_req_queue[i*QUEUE_INDEX_WIDTH +: QUEUE_INDEX_WIDTH];
+            s_axis_req_tag_reg[i*S_REQ_TAG_WIDTH +: S_REQ_TAG_WIDTH] <= s_axis_req_tag[i*S_REQ_TAG_WIDTH +: S_REQ_TAG_WIDTH];
+            s_axis_req_valid_reg[i] <= s_axis_req_valid[i];
+       end
+    end
+
+    if (rst) begin
+        s_axis_req_valid_reg <= 0;
+    end
+end

@@ -1,0 +1,69 @@
+{
+  "candidate_id": "s1spec.69c582e50cf9f4bc968e.00065a9d92e6",
+  "design_type": "sequential",
+  "deterministic_gate": {
+    "checks": {
+      "minimum_length": true,
+      "no_exact_160_char_rtl_overlap": true,
+      "no_fenced_rtl": true,
+      "no_rtl_statement_block": true,
+      "public_interface_coverage": false
+    },
+    "named_public_ports": [
+      "input_axis_tlast",
+      "busy",
+      "error_bad_fcs",
+      "data"
+    ],
+    "passed": false,
+    "public_interface_coverage": 0.25,
+    "public_ports": [
+      "clk",
+      "rst",
+      "input_axis_tdata",
+      "input_axis_tvalid",
+      "input_axis_tready",
+      "input_axis_tlast",
+      "input_axis_tuser",
+      "output_axis_tdata",
+      "output_axis_tvalid",
+      "output_axis_tready",
+      "output_axis_tlast",
+      "output_axis_tuser",
+      "busy",
+      "error_bad_fcs",
+      "data",
+      "crc"
+    ],
+    "rtl_statement_hits": 0,
+    "spec_chars": 1527
+  },
+  "failed_checks": [
+    "public_interface_coverage"
+  ],
+  "loc": 288,
+  "normalization_transforms": [
+    "rename_top:axis_eth_fcs_check->rtlpp_04967"
+  ],
+  "normalized_specification_sha256": "00065a9d92e6b3b4e360c26b1ac7ef4719f8e672666f0d21c9ab488ac8c2be61",
+  "pair_integrity_pass": true,
+  "parent_id": "s1p.69c582e50cf9f4bc968e",
+  "parent_sha256": "69c582e50cf9f4bc968eb3fbcee09c44e9df420a2957f5e8aefe43e2fe6d989a",
+  "prefilter_pass": false,
+  "primary_script_key": "sec_rtlpp_04967.tcl",
+  "raw_code_sha256": "967718f488a7214c255b8afe2ed5a243b98fa56fa65ecfc3e159acf2cdc2a979",
+  "raw_specification_sha256": "b65623c31a4a53d10b1089d9d302d08335db1f1c3e61474310cc3e38b9d40fb8",
+  "repair_status": "requires_specification_repair",
+  "schema_version": "1.0",
+  "slice": "slice_01",
+  "slice_row_index": 386,
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_path": "/home/jwangjw/project_3rd/Comprehensive-RTL-Bench/Universal-Datasets/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP/RTLPP.jsonl",
+  "source_row": 4967,
+  "source_subset": "RTLPP",
+  "specification": "The primary function of the Verilog module `rtlpp_04967` is to verify the Frame Check Sequence (FCS) of Ethernet frames transmitted through the AXI-Stream interface. It ensures the integrity of data by comparing the calculated CRC of incoming data with the transmitted CRC and signals an error for any mismatch.\n\nKey control flow points include:\n1. Two states in the state machine: `STATE_IDLE` and `STATE_PAYLOAD`.\n   - **STATE_IDLE**: Awaits valid input data, initializes CRC calculation, and transitions to `STATE_PAYLOAD` once valid data is detected.\n   - **STATE_PAYLOAD**: Continuously updates the CRC as data is received, and if the last data byte is encountered, it checks for CRC mismatch, asserts the error flag if needed, and reverts to `STATE_IDLE`.\n   \nImportant data processing steps involve:\n1. Calculation of the CRC using the `calc_crc_8` function, which processes each byte of input data.\n2. Sequential buffering of four incoming data words to facilitate CRC calculation and comparison.\n3. Decision-making based on the last data byte (`input_axis_tlast`), updating the CRC state and signaling the output data validity.\n4. Handling output data readiness and storing data temporarily in case the output is not ready to receive more data.\n\nThis module also signals to external systems when it is busy processing data (`busy`) and flags an error if a bad FCS is detected (`error_bad_fcs`). Data is efficiently managed and moved through intermediate registers to ensure seamless flow and accurate CRC verification.\n",
+  "split_group": "parent:69c582e50cf9f4bc968eb3fbcee09c44e9df420a2957f5e8aefe43e2fe6d989a",
+  "top_module": "rtlpp_04967",
+  "verification_tool": "jaspergold",
+  "verification_type": "SEC"
+}

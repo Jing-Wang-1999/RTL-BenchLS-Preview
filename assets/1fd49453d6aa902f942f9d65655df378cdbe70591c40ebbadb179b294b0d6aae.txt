@@ -1,0 +1,26 @@
+always @* begin
+    timeout_count_next = timeout_count_reg;
+
+    s_axil_araddr_next = s_axil_araddr_reg;
+    s_axil_arvalid_next = s_axil_arvalid_reg;
+    s_axil_rdata_next = s_axil_rdata_reg;
+    s_axil_rvalid_next = s_axil_rvalid_reg && !s_axil_rready;
+
+    if (reg_rd_en_reg && (reg_rd_ack || timeout_count_reg == 0)) begin
+        s_axil_arvalid_next = 1'b0;
+        s_axil_rdata_next = reg_rd_data;
+        s_axil_rvalid_next = 1'b1;
+    end
+
+    if (!s_axil_arvalid_reg) begin
+        s_axil_araddr_next = s_axil_araddr;
+        s_axil_arvalid_next = s_axil_arvalid;
+        timeout_count_next = TIMEOUT-1;
+    end
+
+    if (reg_rd_en && !reg_rd_wait && timeout_count_reg != 0)begin
+        timeout_count_next = timeout_count_reg - 1;
+    end
+
+    reg_rd_en_next = s_axil_arvalid_next && !s_axil_rvalid_next;
+end

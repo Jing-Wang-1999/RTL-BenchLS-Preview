@@ -1,0 +1,16 @@
+always @ *
+begin
+    mem_accept_r = 1'b0;
+
+    if (state_q == STATE_LOOKUP)
+    begin
+        // Previous access missed - do not accept new requests
+        if ((mem_rd_m_q || (mem_wr_m_q != 4'b0)) && !tag_hit_any_m_w)
+            mem_accept_r = 1'b0;
+        // Write followed by read - detect writes to the same line, or addresses which alias in tag lookups
+        else if ((|mem_wr_m_q) && mem_rd_i && mem_addr_i[31:2] == mem_addr_m_q[31:2])
+            mem_accept_r = 1'b0;
+        else
+            mem_accept_r = 1'b1;
+    end
+end

@@ -1,0 +1,44 @@
+module origen_111323 (
+    input clk,
+    input reset,
+    input Start,
+    output Shot
+);
+
+    reg [1:0] state, next_state;
+    localparam WAITING_SHOT = 2'b00;
+    localparam SHOT_STATE   = 2'b01;
+    localparam WAITING_NOT_SHOT = 2'b10;
+
+    // State register with asynchronous reset
+    always @(posedge clk or negedge reset) begin
+        if (!reset)
+            state <= WAITING_SHOT;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            WAITING_SHOT:
+                if (Start)
+                    next_state = SHOT_STATE;
+                else
+                    next_state = WAITING_SHOT;
+            SHOT_STATE:
+                next_state = WAITING_NOT_SHOT;
+            WAITING_NOT_SHOT:
+                if (!Start)
+                    next_state = WAITING_SHOT;
+                else
+                    next_state = WAITING_NOT_SHOT;
+            default:
+                next_state = WAITING_SHOT;
+        endcase
+    end
+
+    // Output logic: Shot is high only in SHOT_STATE
+    assign Shot = (state == SHOT_STATE);
+
+endmodule

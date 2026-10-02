@@ -1,0 +1,46 @@
+# Implement the SDRAM controller project
+Implement every module/file in the contract, including the Wishbone bridge,
+asynchronous FIFOs, request/bank/transfer logic and integration top. Read the
+original project specification. This case fixes a 32-bit Wishbone interface and
+32-bit SDRAM (SDR_DW=32, SDR_BW=4, cfg_sdr_width=0), eight column bits. Preserve
+parameterized interface declarations; only the stated operational configuration
+is scored. The original default top declaration remains SDR_DW=16.
+
+Configuration and protocol clarifications:
+- wb_clk_i and sdram_clk are independent clocks. The evaluator uses 10 ns and
+  20 ns periods. wb_rst_i is active-high, sdram_resetn active-low; assert both
+  during initialization. FIFO reset inputs are active-low in their domains.
+- Wishbone wb_addr_i is a WORD address (byte address divided by four). Hold
+  cyc/stb, direction, address, data, byte enables until ACK. Classical accesses
+  use cti=0. Returned words and selected writes are little-byte-lane mapped:
+  sel[0] selects bits7:0. The actual external SDRAM bus must perform transactions.
+- Device configuration: four banks, 32 data bits, eight column address bits,
+  row/bank/column mapping follows the original document. External model uses
+  11 row bits. Tests access only its addressable range. DQM masks write bytes;
+  CS/RAS/CAS/WE and bank/row/column must implement real SDRAM command sequences.
+- Timing configuration: req_depth=3, enable=1, mode register=0x033 (burst8,
+  sequential, CAS3), tras=4, trp=2, trcd=2, cas=3, trcar=7, twr=1,
+  refresh interval=0x100 and refresh maximum=6. Values are SDRAM-clock counts
+  per the original specification. Initialize with required precharge/refresh/
+  mode commands before asserting sdr_init_done; continue refresh during idle.
+- The SDRAM device observes its clock 2 ns after sdram_clk, as in the original
+  project testbench. Respect read latency, DQ turnaround and byte masking.
+  Concurrent clock-domain operation must preserve requests and returned data.
+  Private tests use individually acknowledged reads/writes, address changes
+  across banks/rows, masked writes and data retention over refresh intervals.
+
+The private device model retains its timing-error diagnostics. Reference RTL
+preprocessing resolves headers, removes #1 NBA/continuous-assign annotations and explicitly
+marked simulation-only assertions. The internal 1 ns pad-clock wire delay is
+also removed, matching its synthesized clock connection; unannotated upstream
+RTL otherwise inherits a simulator-dependent timescale. Original sources and
+the failed timescale diagnostic are retained privately.
+Public feedback is compilation only. No SDRAM model or test data is exposed.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

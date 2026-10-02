@@ -1,0 +1,123 @@
+module autovcoder_097143 (  // fanout good
+    out,
+    op1,
+    modrm_byte
+);
+
+  output out;
+  input [2:0] op1;
+  input [7:0] modrm_byte;
+
+  // "none" : "0", // No stall
+  // "register" : "1", // Stall for register being accessed
+  // "segment" : "2", // No stall
+  // "mm register" : "3", // No stall
+  // "mod r/m" : "4", // stall for up to 2 registers. R/M register if there is 1, and the 2 sib registers if they are there
+  // "immediete" : "5", // no stall
+  // "memory" : "6" // stall for the register with the address
+
+  wire [4:0] modrm;  // just the mod and rm field
+  assign modrm[4:3] = modrm_byte[7:6];
+  assign modrm[2:0] = modrm_byte[2:0];
+
+  wire [2:0] op1_not;
+  inv1$
+      op1_not_0 (
+          op1_not[0],
+          op1[0]
+      ),
+      op1_not_1 (
+          op1_not[1],
+          op1[1]
+      ),
+      op1_not_2 (
+          op1_not[2],
+          op1[2]
+      );
+
+  wire [4:0] modrm_not;
+  inv1$
+      modrm_not_0 (
+          modrm_not[0],
+          modrm[0]
+      ),
+      modrm_not_1 (
+          modrm_not[1],
+          modrm[1]
+      ),
+      modrm_not_2 (
+          modrm_not[2],
+          modrm[2]
+      ),
+      modrm_not_3 (
+          modrm_not[3],
+          modrm[3]
+      ),
+      modrm_not_4 (
+          modrm_not[4],
+          modrm[4]
+      );
+
+  // modrm != 00101
+  wire modrm_00101;
+  and5$ modrm_00101_and (
+      modrm_00101,
+      modrm_not[4],
+      modrm_not[3],
+      modrm[2],
+      modrm_not[1],
+      modrm[0]
+  );
+
+  wire modrm_not_00101;
+  inv1$ modrm_not_00101_inv (
+      modrm_not_00101,
+      modrm_00101
+  );
+
+  // op1 is 4 (100)
+  wire op1_is_4;
+  and3$ op1_is_4_and (
+      op1_is_4,
+      op1[2],
+      op1_not[1],
+      op1_not[0]
+  );
+
+  // (OP1 == 4 && MODRM != 00101)
+  wire op1_4_and_modrm_not;
+  and2$ op1_4_and_modrm_not_and (
+      op1_4_and_modrm_not,
+      modrm_not_00101,
+      op1_is_4
+  );
+
+  // op1 is 1 (001)
+  wire op1_is_1;
+  and3$ op1_is_1_and (
+      op1_is_1,
+      op1_not[2],
+      op1_not[1],
+      op1[0]
+  );
+
+  // op1 is 4 (110)
+  wire op1_is_6;
+  and3$ op1_is_6_and (
+      op1_is_6,
+      op1[2],
+      op1[1],
+      op1_not[0]
+  );
+
+  // SOP
+  or4$ or0 (
+      out,
+      op1_4_and_modrm_not,
+      op1_is_1,
+      op1_is_4,
+      op1_is_6
+  );
+
+endmodule
+

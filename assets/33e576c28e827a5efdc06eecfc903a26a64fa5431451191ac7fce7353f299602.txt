@@ -1,0 +1,133 @@
+// Verilated -*- SystemC -*-
+// DESCRIPTION: Verilator output: Design internal header
+// See Vriscv_tcm_top.h for the primary calling header
+
+#ifndef _VRISCV_TCM_TOP_RISCV_CSR_REGFILE_H_
+#define _VRISCV_TCM_TOP_RISCV_CSR_REGFILE_H_  // guard
+
+#include "systemc.h"
+#include "verilated_sc.h"
+#include "verilated_heavy.h"
+#include "Vriscv_tcm_top__Dpi.h"
+
+//==========
+
+class Vriscv_tcm_top__Syms;
+class Vriscv_tcm_top_VerilatedVcd;
+
+
+//----------
+
+VL_MODULE(Vriscv_tcm_top_riscv_csr_regfile) {
+  public:
+    
+    // PORTS
+    VL_IN8(__PVT__clk_i,0,0);
+    VL_IN8(__PVT__rst_i,0,0);
+    VL_IN8(__PVT__ext_intr_i,0,0);
+    VL_IN8(__PVT__timer_intr_i,0,0);
+    VL_IN8(__PVT__exception_i,5,0);
+    VL_IN8(__PVT__csr_ren_i,0,0);
+    VL_OUT8(__PVT__csr_branch_o,0,0);
+    VL_OUT8(__PVT__priv_o,1,0);
+    VL_IN16(__PVT__csr_raddr_i,11,0);
+    VL_IN16(__PVT__csr_waddr_i,11,0);
+    VL_IN(__PVT__cpu_id_i,31,0);
+    VL_IN(__PVT__misa_i,31,0);
+    VL_IN(__PVT__exception_pc_i,31,0);
+    VL_IN(__PVT__exception_addr_i,31,0);
+    VL_OUT(__PVT__csr_rdata_o,31,0);
+    VL_IN(__PVT__csr_wdata_i,31,0);
+    VL_OUT(__PVT__csr_target_o,31,0);
+    VL_OUT(__PVT__status_o,31,0);
+    VL_OUT(__PVT__satp_o,31,0);
+    VL_OUT(__PVT__interrupt_o,31,0);
+    
+    // LOCAL SIGNALS
+    CData/*1:0*/ __PVT__csr_mpriv_q;
+    CData/*0:0*/ __PVT__csr_mtime_ie_q;
+    CData/*0:0*/ __PVT__m_enabled_r;
+    CData/*0:0*/ __PVT__s_enabled_r;
+    CData/*1:0*/ __PVT__irq_priv_q;
+    CData/*0:0*/ __PVT__csr_mip_upd_q;
+    CData/*1:0*/ __PVT__csr_mpriv_r;
+    CData/*0:0*/ __PVT__csr_mtime_ie_r;
+    CData/*0:0*/ __PVT__branch_r;
+    IData/*31:0*/ __PVT__csr_mepc_q;
+    IData/*31:0*/ __PVT__csr_mcause_q;
+    IData/*31:0*/ __PVT__csr_sr_q;
+    IData/*31:0*/ __PVT__csr_mtvec_q;
+    IData/*31:0*/ __PVT__csr_mip_q;
+    IData/*31:0*/ __PVT__csr_mie_q;
+    IData/*31:0*/ __PVT__csr_mcycle_q;
+    IData/*31:0*/ __PVT__csr_mcycle_h_q;
+    IData/*31:0*/ __PVT__csr_mscratch_q;
+    IData/*31:0*/ __PVT__csr_mtval_q;
+    IData/*31:0*/ __PVT__csr_mtimecmp_q;
+    IData/*31:0*/ __PVT__csr_medeleg_q;
+    IData/*31:0*/ __PVT__csr_mideleg_q;
+    IData/*31:0*/ __PVT__csr_sepc_q;
+    IData/*31:0*/ __PVT__csr_stvec_q;
+    IData/*31:0*/ __PVT__csr_scause_q;
+    IData/*31:0*/ __PVT__csr_stval_q;
+    IData/*31:0*/ __PVT__csr_satp_q;
+    IData/*31:0*/ __PVT__csr_sscratch_q;
+    IData/*31:0*/ __PVT__irq_pending_r;
+    IData/*31:0*/ __PVT__irq_masked_r;
+    IData/*31:0*/ __PVT__m_interrupts_r;
+    IData/*31:0*/ __PVT__s_interrupts_r;
+    IData/*31:0*/ __PVT__rdata_r;
+    IData/*31:0*/ __PVT__csr_mepc_r;
+    IData/*31:0*/ __PVT__csr_mcause_r;
+    IData/*31:0*/ __PVT__csr_mtval_r;
+    IData/*31:0*/ __PVT__csr_sr_r;
+    IData/*31:0*/ __PVT__csr_mtvec_r;
+    IData/*31:0*/ __PVT__csr_mip_r;
+    IData/*31:0*/ __PVT__csr_mie_r;
+    IData/*31:0*/ __PVT__csr_mcycle_r;
+    IData/*31:0*/ __PVT__csr_mscratch_r;
+    IData/*31:0*/ __PVT__csr_mtimecmp_r;
+    IData/*31:0*/ __PVT__csr_medeleg_r;
+    IData/*31:0*/ __PVT__csr_mideleg_r;
+    IData/*31:0*/ __PVT__csr_mip_next_q;
+    IData/*31:0*/ __PVT__csr_mip_next_r;
+    IData/*31:0*/ __PVT__csr_sepc_r;
+    IData/*31:0*/ __PVT__csr_stvec_r;
+    IData/*31:0*/ __PVT__csr_scause_r;
+    IData/*31:0*/ __PVT__csr_stval_r;
+    IData/*31:0*/ __PVT__csr_satp_r;
+    IData/*31:0*/ __PVT__csr_sscratch_r;
+    IData/*31:0*/ __PVT__branch_target_r;
+    
+    // INTERNAL VARIABLES
+  private:
+    Vriscv_tcm_top__Syms* __VlSymsp;  // Symbol table
+  public:
+    
+    // CONSTRUCTORS
+  private:
+    VL_UNCOPYABLE(Vriscv_tcm_top_riscv_csr_regfile);  ///< Copying not allowed
+  public:
+    VL_CTOR(Vriscv_tcm_top_riscv_csr_regfile);
+    ~Vriscv_tcm_top_riscv_csr_regfile();
+    
+    // INTERNAL METHODS
+    void __Vconfigure(Vriscv_tcm_top__Syms* symsp, bool first);
+    static void _combo__TOP__v__u_core__u_csr__u_csrfile__6(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+  private:
+    void _ctor_var_reset() VL_ATTR_COLD;
+  public:
+    static void _sequent__TOP__v__u_core__u_csr__u_csrfile__2(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+    static void _sequent__TOP__v__u_core__u_csr__u_csrfile__3(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+    static void _sequent__TOP__v__u_core__u_csr__u_csrfile__4(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+    static void _sequent__TOP__v__u_core__u_csr__u_csrfile__5(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+    static void _settle__TOP__v__u_core__u_csr__u_csrfile__1(Vriscv_tcm_top__Syms* __restrict vlSymsp) VL_ATTR_COLD;
+    uint32_t get_mcycle();
+  private:
+    static void traceInit(void* userp, VerilatedVcd* tracep, uint32_t code) VL_ATTR_COLD;
+} VL_ATTR_ALIGNED(VL_CACHE_LINE_BYTES);
+
+//----------
+
+
+#endif  // guard

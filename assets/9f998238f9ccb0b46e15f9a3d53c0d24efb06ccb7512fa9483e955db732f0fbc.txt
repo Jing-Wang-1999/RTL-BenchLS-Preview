@@ -1,0 +1,5 @@
+# `mix_one_column`
+
+This is a stateless, combinational 32-bit AES MixColumns transform. Input `in` and output `out` are each interpreted, from most-significant byte to least-significant byte, as `s0`, `s1`, `s2`, and `s3`. Multiplication is in the AES finite field: `mult2(n)` is multiplication by 2 and `mult3(n) = mult2(n) XOR n`.
+
+The outputs are `s0_o = mult2(s0_i) XOR mult3(s1_i) XOR s2_i XOR s3_i`, `s1_o = s0_i XOR mult2(s1_i) XOR mult3(s2_i) XOR s3_i`, `s2_o = s0_i XOR s1_i XOR mult2(s2_i) XOR mult3(s3_i)`, and `s3_o = mult3(s0_i) XOR s1_i XOR s2_i XOR mult2(s3_i)`. The four output bytes are concatenated in that order. There is no clock, reset, state, latency, or submodule.

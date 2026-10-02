@@ -1,0 +1,58 @@
+always @(posedge clk or negedge reset_n) begin: timer_logic__posedge_clk_active_low_reset_n__code
+    if (reset_n == 1'b0) begin
+        timer_state__fractional_adder <= 4'h0;
+        timer_state__integer_adder <= 8'h0;
+        timer_state__hold_adder <= 1'h0;
+        timer_state__advance <= 1'h0;
+        timer_state__retard <= 1'h0;
+        timer_state__fraction <= 4'h0;
+        timer_state__timer_lower <= 32'h0;
+        timer_state__timer_upper <= 32'h0;
+    end else if (clk__enable) begin
+        if (!(timer_state__hold_adder != 1'h0) || (timer_control__reset_counter != 1'h0) || (timer_control__enable_counter != 1'h0)) begin
+            timer_state__fractional_adder <= timer_control__fractional_adder;
+            timer_state__integer_adder <= timer_control__integer_adder;
+            timer_state__hold_adder <= 1'h1;
+        end
+
+        if (timer_control__advance != 1'h0 && !(timer_state__advance != 1'h0)) begin
+            timer_state__fractional_adder <= timer_combs__fractional_one_and_half_adder[3:0];
+            timer_state__integer_adder <= timer_combs__integer_one_and_half_adder;
+            timer_state__hold_adder <= 1'h0;
+        end else if (timer_control__retard != 1'h0 && !(timer_state__retard != 1'h0)) begin
+            timer_state__fractional_adder <= timer_combs__fractional_half_adder;
+            timer_state__integer_adder <= timer_combs__integer_half_adder;
+            timer_state__hold_adder <= 1'h0;
+        end
+
+        if ((timer_control__advance != 1'h0) || (timer_state__advance != 1'h0)) begin
+            timer_state__advance <= timer_control__advance;
+        end
+
+        if ((timer_control__retard != 1'h0) || (timer_state__retard != 1'h0)) begin
+            timer_state__retard <= timer_control__retard;
+        end
+
+        if (timer_control__enable_counter != 1'h0) begin
+            timer_state__fraction <= timer_combs__fractional_sum[3:0];
+            timer_state__timer_lower <= timer_combs__lower_sum[31:0];
+            timer_state__timer_upper <= timer_combs__upper_sum;
+        end
+
+        if (timer_control__reset_counter != 1'h0) begin
+            timer_state__fraction <= 4'h0;
+            timer_state__timer_lower <= 32'h0;
+            timer_state__timer_upper <= 32'h0;
+        end
+
+        if (timer_control__synchronize[0] != 1'h0) begin
+            timer_state__timer_lower <= timer_control__synchronize_value[31:0];
+            timer_state__fraction <= 4'h0;
+        end
+
+        if (timer_control__synchronize[1] != 1'h0) begin
+            timer_state__timer_upper <= timer_control__synchronize_value[63:32];
+            timer_state__fraction <= 4'h0;
+        end
+    end
+end

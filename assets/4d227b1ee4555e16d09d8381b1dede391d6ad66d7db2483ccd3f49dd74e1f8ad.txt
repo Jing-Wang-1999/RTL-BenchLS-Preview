@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.0674288d2ac835cbf9be.9ca791ef07e2",
+  "compile_check": {
+    "case_id": "s1derived.0674288d2ac835cbf9be.9ca791ef07e2",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_097057",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_097057.03b09fd733e45d88/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.0674288d2ac835cbf9be",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "0674288d2ac835cbf9be3484dfaa8ff99b043f4765beceb73da9b1d124662c19",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0674288d2ac835cbf9be.9ca791ef07e2",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_097057.03b09fd733e45d88/private/commercial_positive.log",
+    "commercial_log_sha256": "aa86233270bb3ebcfbb3d975fdc6098de4cbbf1f958ee8e59c65f7fec1bb6eea",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_097057.03b09fd733e45d88/private/historical_harness/00_sec_autovcoder_097057.tcl",
+    "executed_script_sha256": "7d14d65c8a6c91d3cdcdc4db1941f4fd8de4c7c316162e2f9f3d6cc5be65ff67",
+    "golden_tops": [
+      "autovcoder_097057"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.autovcoder_097057.03b09fd733e45d88",
+    "parent_id": "s1p.0674288d2ac835cbf9be",
+    "revised_tops": [
+      "autovcoder_097057"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_097057",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0674288d2ac835cbf9be.9ca791ef07e2",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Both edge registers, priority, parameter selection, tri-state, and distinct initialization match.",
+        "rtl_excerpt": "`always @(posedge Clock or posedge Reset or posedge pre) if(Reset)... else if(pre)...`",
+        "spec_excerpt": "\u201cReset asynchronously clears ... priority over pre\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0674288d2ac835cbf9be",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "1fcd47d832772908e7bcb74d5c4d912eff07d3b44053fef893d81db14432104d",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0674288d2ac835cbf9be3484dfaa8ff99b043f4765beceb73da9b1d124662c19",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_097057.03b09fd733e45d88/private/historical_harness/00_sec_autovcoder_097057.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_097057.03b09fd733e45d88/private/historical_harness/01_sec_autovcoder_097057.tcl"
+  ],
+  "parent_id": "s1p.0674288d2ac835cbf9be",
+  "primary_review": {
+    "case_id": "s1derived.0674288d2ac835cbf9be.9ca791ef07e2",
+    "checks": {
+      "behavior": "ActiveLevel selects the rising- or falling-edge register and cs=1 drives Z.",
+      "boundaries": "ClockEnable and Tick must both be one to capture; otherwise hold.",
+      "interface": "All listed ports and configurable widths match.",
+      "rtl_reasonableness": "A selectable-edge register with tri-state output is reasonable when reset/preset establishes state.",
+      "sequential_and_reset": "Both registers use asynchronous active-high reset then preset priority; only the positive register has an initial assignment."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "ActiveLevel selects the rising- or falling-edge register and cs=1 drives Z. Both registers use asynchronous active-high reset then preset priority; only the positive register has an initial assignment.",
+        "rtl_excerpt": "parameter ActiveLevel=1, NrOfBits=1; only s_state_reg has an initial zero assignment; both registers have reset/preset event controls",
+        "spec_excerpt": "The parameters are described without defaults and both registers are presented as equivalent."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The control and edge behavior is accurate, but defaults ActiveLevel=1 and NrOfBits=1 and the asymmetric initial state are not specified.",
+        "rtl_evidence": "parameter ActiveLevel=1, NrOfBits=1; only s_state_reg has an initial zero assignment; both registers have reset/preset event controls",
+        "spec_evidence": "The parameters are described without defaults and both registers are presented as equivalent.",
+        "type": "missing_parameter_defaults"
+      }
+    ],
+    "parent_id": "s1p.0674288d2ac835cbf9be",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.0674288d2ac835cbf9be.9ca791ef07e2.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0674288d2ac835cbf9be3484dfaa8ff99b043f4765beceb73da9b1d124662c19",
+    "source_group": "S3",
+    "specification_sha256": "9ca791ef07e2477097ced94eea80cfb60e2f54ddc9c2ff305197c36b637b108d",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.0674288d2ac835cbf9be.9ca791ef07e2.md",
+  "qualified_specification_sha256": "1fcd47d832772908e7bcb74d5c4d912eff07d3b44053fef893d81db14432104d",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_097057.03b09fd733e45d88/private/golden_design.v",
+  "rtl_sha256": "0674288d2ac835cbf9be3484dfaa8ff99b043f4765beceb73da9b1d124662c19",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_097057.03b09fd733e45d88/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "9ca791ef07e2477097ced94eea80cfb60e2f54ddc9c2ff305197c36b637b108d",
+  "top_module": "autovcoder_097057"
+}

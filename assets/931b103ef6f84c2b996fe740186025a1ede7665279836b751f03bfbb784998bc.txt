@@ -1,0 +1,554 @@
+// Required path: src/lab_10_tiny_os/boot_rom.v
+module boot_rom(
+    input wire clk,
+    input wire[11:0] a,
+    output reg[31:0] spo
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/bram_ram.v
+module bram_ram #(
+    parameter ADDR_WIDTH = 10
+)(
+    input wire clk,
+    input wire we,
+    input wire[3:0] wstrb,
+    input wire[ADDR_WIDTH-1:0] word_addr,
+    input wire[31:0] wdata,
+    output reg[31:0] rdata
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/ddr_backend_cdc.v
+module ddr_backend_cdc(
+    input wire bus_clk,
+    input wire bus_rst,
+
+    input wire bus_valid,
+    input wire bus_we,
+    input wire[3:0] bus_wstrb,
+    input wire[26:0] bus_addr,
+    input wire[31:0] bus_wdata,
+    output wire bus_ready,
+    output reg bus_resp_valid,
+    output reg[31:0] bus_resp_rdata,
+    output wire bus_calib_done,
+    output wire bus_busy,
+
+    input wire axi_clk,
+    input wire axi_rst,
+
+    output reg axi_valid,
+    output reg axi_we,
+    output reg[3:0] axi_wstrb,
+    output reg[26:0] axi_addr,
+    output reg[31:0] axi_wdata,
+    input wire axi_ready,
+    input wire axi_resp_valid,
+    input wire[31:0] axi_resp_rdata,
+    input wire axi_calib_done,
+    input wire axi_busy
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/ddr_bridge.v
+module ddr_bridge(
+    input wire clk,
+    input wire rst,
+
+    
+    
+    input wire cpu_valid,
+    input wire cpu_we,
+    input wire[3:0] cpu_wstrb,
+    input wire[31:0] cpu_addr,
+    input wire[31:0] cpu_wdata,
+    output wire cpu_ready,
+    output wire[31:0] cpu_rdata,
+
+    output wire calib_done,
+    output wire busy,
+
+    
+    
+    output reg backend_valid,
+    output reg backend_we,
+    output reg[3:0] backend_wstrb,
+    output reg[26:0] backend_addr,
+    output reg[31:0] backend_wdata,
+    input wire backend_ready,
+    input wire backend_resp_valid,
+    input wire[31:0] backend_resp_rdata,
+    input wire backend_calib_done,
+    input wire backend_busy
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/gpio_mmio.v
+module gpio_mmio(
+    input wire clk,
+    input wire rst,
+    input wire we,
+    input wire[31:0] wdata,
+    output wire[31:0] rdata,
+    output wire[15:0] led
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/irq_controller.v
+module irq_controller(
+    input wire clk,
+    input wire rst,
+    input wire we,
+    input wire re,
+    input wire[3:0] wstrb,
+    input wire[3:0] addr,
+    input wire[31:0] wdata,
+    output reg[31:0] rdata,
+    input wire timer_irq,
+    output wire[7:0] irq_lines
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/simple_bus.v
+module simple_bus #(
+    parameter UART_CLKS_PER_BIT = 868,
+    parameter TIMER_TICK_CYCLES = 32'd50000000
+)(
+    input wire clk,
+    input wire rst,
+
+    input wire[31:0] i_addr,
+    output wire[31:0] i_rdata,
+
+    input wire d_valid,
+    output wire d_ready,
+    input wire d_we,
+    input wire[3:0] d_wstrb,
+    input wire[31:0] d_addr,
+    input wire[31:0] d_wdata,
+    output wire[31:0] d_rdata,
+
+    output wire ddr_backend_valid,
+    output wire ddr_backend_we,
+    output wire[3:0] ddr_backend_wstrb,
+    output wire[26:0] ddr_backend_addr,
+    output wire[31:0] ddr_backend_wdata,
+    input wire ddr_backend_ready,
+    input wire ddr_backend_resp_valid,
+    input wire[31:0] ddr_backend_resp_rdata,
+    input wire ddr_backend_calib_done,
+    input wire ddr_backend_busy,
+
+    input wire uart_rx_i,
+    output wire uart_tx_o,
+    output wire[15:0] led,
+
+    output wire uart_tx_ready,
+    output wire uart_rx_valid,
+    output wire[7:0] irq_lines
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/soc.v
+module soc #(
+    parameter UART_CLKS_PER_BIT = 868,
+    parameter TIMER_TICK_CYCLES = 32'd50000000
+)(
+    input wire clk,
+    input wire bus_clk,
+    input wire rst,
+    input wire uart_rx_i,
+    output wire uart_tx_o,
+    output wire[15:0] led,
+
+    output wire ddr_backend_valid,
+    output wire ddr_backend_we,
+    output wire[3:0] ddr_backend_wstrb,
+    output wire[26:0] ddr_backend_addr,
+    output wire[31:0] ddr_backend_wdata,
+    input wire ddr_backend_ready,
+    input wire ddr_backend_resp_valid,
+    input wire[31:0] ddr_backend_resp_rdata,
+    input wire ddr_backend_calib_done,
+    input wire ddr_backend_busy,
+
+    output wire[31:0] debug_writedata,
+    output wire[31:0] debug_dataadr,
+    output wire debug_memwrite,
+    output wire uart_tx_ready,
+    output wire uart_rx_valid
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/timer_mmio.v
+module timer_mmio #(
+    parameter DEFAULT_COMPARE = 32'd50000000
+)(
+    input wire clk,
+    input wire rst,
+    input wire we,
+    input wire re,
+    input wire[3:0] wstrb,
+    input wire[3:0] addr,
+    input wire[31:0] wdata,
+    output reg[31:0] rdata,
+    output wire irq
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/uart_mmio.v
+module uart_mmio #(
+    parameter CLKS_PER_BIT = 868
+)(
+    input wire clk,
+    input wire rst,
+    input wire we,
+    input wire re,
+    input wire[3:0] wstrb,
+    input wire[3:0] addr,
+    input wire[31:0] wdata,
+    output reg[31:0] rdata,
+    input wire uart_rx_i,
+    output wire uart_tx_o,
+    output wire tx_ready,
+    output wire rx_valid
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/adder.v
+module adder(
+	input wire[31:0] a,b,
+	output wire[31:0] y
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/alu.v
+module alu(
+    input wire[31:0] a,
+    input wire[31:0] b,
+    input wire[4:0] shamt,
+    input wire[3:0] op,
+    output reg[31:0] y,
+    output reg overflow,
+    output wire zero
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/aludec.v
+module aludec(
+    input wire[5:0] funct,
+    input wire[2:0] aluop,
+    output reg[3:0] alucontrol,
+    output reg jr
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/controller.v
+module controller(
+    input wire clk,
+    input wire rst,
+    
+    input wire[5:0] opD,
+    input wire[4:0] rsD,
+    input wire[5:0] functD,
+    input wire equalD,
+    output wire pcsrcD,
+    output wire branchD,
+    output wire jumpD,
+    output wire jrD,
+    output wire jalD,
+    output wire eretD,
+    output wire cp0toregD,
+    output wire cp0writeD,
+    output wire[1:0] immsrcD,
+
+    
+    input wire flushE,
+    input wire memstallM,
+    output wire memtoregE,
+    output wire alusrcE,
+    output wire[1:0] regdstE,
+    output wire regwriteE,
+    output wire jalE,
+    output wire cp0toregE,
+    output wire cp0writeE,
+    output wire memwriteE,
+    output wire[3:0] alucontrolE,
+
+    
+    output wire memtoregM,
+    output wire memwriteM,
+    output wire regwriteM,
+    output wire jalM,
+    output wire cp0toregM,
+    output wire cp0writeM,
+
+    
+    output wire memtoregW,
+    output wire regwriteW,
+    output wire jalW,
+    output wire cp0toregW
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/cp0.v
+module cp0(
+    input wire clk,
+    input wire rst,
+    
+    input wire[4:0] raddr,
+    output reg[31:0] rdata,
+    
+    input wire mtc0we,
+    input wire[4:0] waddr,
+    input wire[31:0] wdata,
+    
+    input wire[7:0] hwirq,
+    
+    input wire exc_take,
+    input wire[31:0] exc_epc,
+    
+    input wire eret,
+    
+    output wire[31:0] epc,
+    output wire irq_active
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/datapath.v
+module datapath(
+    input wire clk,
+    input wire rst,
+    
+    output wire[31:0] pcF,
+    input wire[31:0] instrF,
+    
+    input wire pcsrcD,
+    input wire branchD,
+    input wire jumpD,
+    input wire jrD,
+    input wire jalD,
+    input wire eretD,
+    input wire cp0toregD,
+    input wire cp0writeD,
+    input wire[1:0] immsrcD,
+    output wire equalD,
+    output wire[5:0] opD,
+    output wire[4:0] rsD,
+    output wire[5:0] functD,
+    
+    input wire memtoregE,
+    input wire alusrcE,
+    input wire[1:0] regdstE,
+    input wire regwriteE,
+    input wire jalE,
+    input wire cp0toregE,
+    input wire cp0writeE,
+    input wire memwriteE,
+    input wire[3:0] alucontrolE,
+    output wire flushE,
+    
+    input wire memtoregM,
+    input wire regwriteM,
+    input wire jalM,
+    input wire cp0toregM,
+    input wire cp0writeM,
+    input wire memwriteM,
+    input wire memstallM,
+    output wire[31:0] aluoutM,
+    output wire[31:0] writedataM,
+    output wire[3:0] wstrbM,
+    input wire[31:0] readdataM,
+    
+    input wire memtoregW,
+    input wire regwriteW,
+    input wire jalW,
+    input wire cp0toregW,
+    
+    input wire[7:0] irq_lines,
+    output wire takeinterruptD
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/eqcmp.v
+module eqcmp(
+	input wire [31:0] a,b,
+	output wire y
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/flopenr.v
+module flopenr #(parameter WIDTH = 8)(
+	input wire clk,rst,en,
+	input wire[WIDTH-1:0] d,
+	output reg[WIDTH-1:0] q
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/flopenrc.v
+module flopenrc #(parameter WIDTH = 8)(
+	input wire clk,rst,en,clear,
+	input wire[WIDTH-1:0] d,
+	output reg[WIDTH-1:0] q
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/flopr.v
+module flopr #(parameter WIDTH = 8)(
+	input wire clk,rst,
+	input wire[WIDTH-1:0] d,
+	output reg[WIDTH-1:0] q
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/floprc.v
+module floprc #(parameter WIDTH = 8)(
+	input wire clk,rst,clear,
+	input wire[WIDTH-1:0] d,
+	output reg[WIDTH-1:0] q
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/hazard.v
+module hazard(
+    
+    output wire stallF,
+    
+    input wire[4:0] rsD,
+    input wire[4:0] rtD,
+    input wire branchD,
+    input wire jrD,
+    output wire forwardaD,
+    output wire forwardbD,
+    output wire stallD,
+    
+    input wire[4:0] rsE,
+    input wire[4:0] rtE,
+    input wire[4:0] writeregE,
+    input wire regwriteE,
+    input wire memtoregE,
+    output reg[1:0] forwardaE,
+    output reg[1:0] forwardbE,
+    output wire flushE,
+    
+    input wire[4:0] writeregM,
+    input wire regwriteM,
+    input wire memtoregM,
+    
+    input wire[4:0] writeregW,
+    input wire regwriteW
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/maindec.v
+module maindec(
+    input wire[5:0] op,
+    input wire[4:0] rs,
+    input wire[5:0] funct,
+    output reg memtoreg,
+    output reg memwrite,
+    output reg branch,
+    output reg branchne,
+    output reg alusrc,
+    output reg[1:0] regdst,
+    output reg regwrite,
+    output reg jump,
+    output reg jal,
+    output reg eret,
+    output reg cp0toreg,
+    output reg cp0write,
+    output reg[1:0] immsrc,
+    output reg[2:0] aluop
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/mips.v
+module mips(
+    input wire clk,
+    input wire rst,
+    output wire[31:0] pcF,
+    input wire[31:0] instrF,
+    output wire d_validM,
+    input wire d_readyM,
+    output wire memwriteM,
+    output wire[3:0] wstrbM,
+    output wire[31:0] aluoutM,
+    output wire[31:0] writedataM,
+    input wire[31:0] readdataM,
+    input wire[7:0] irq_lines
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/mux2.v
+module mux2 #(parameter WIDTH = 8)(
+	input wire[WIDTH-1:0] d0,d1,
+	input wire s,
+	output wire[WIDTH-1:0] y
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/mux3.v
+module mux3 #(parameter WIDTH = 8)(
+	input wire[WIDTH-1:0] d0,d1,d2,
+	input wire[1:0] s,
+	output wire[WIDTH-1:0] y
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/pc.v
+module pc #(parameter WIDTH = 8)(
+	input wire clk,rst,en,
+	input wire[WIDTH-1:0] d,
+	output reg[WIDTH-1:0] q
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/regfile.v
+module regfile(
+	input wire clk,
+	input wire we3,
+	input wire[4:0] ra1,ra2,wa3,
+	input wire[31:0] wd3,
+	output wire[31:0] rd1,rd2
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/signext.v
+module signext(
+	input wire[15:0] a,
+	output wire[31:0] y
+    );
+endmodule
+
+// Required path: src/lab_10_tiny_os/mips_core/sl2.v
+module sl2(
+	input wire[31:0] a,
+	output wire[31:0] y
+    );
+endmodule
+
+// Required path: src/common/uart_rx.v
+module uart_rx #(
+    parameter CLKS_PER_BIT = 868
+)(
+    input wire clk,
+    input wire rst,
+    input wire rx,
+    output reg[7:0] rx_data,
+    output reg rx_valid
+    );
+endmodule
+
+// Required path: src/common/uart_tx.v
+module uart_tx #(
+    parameter CLKS_PER_BIT = 868
+)(
+    input wire clk,
+    input wire rst,
+    input wire tx_start,
+    input wire[7:0] tx_data,
+    output reg tx,
+    output reg tx_busy
+    );
+endmodule

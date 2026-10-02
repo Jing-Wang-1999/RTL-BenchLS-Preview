@@ -1,0 +1,50 @@
+module autovcoder_108528 (
+    input wire clk,
+    input wire rstn,
+    input wire a,
+    output reg out
+);
+
+    // State encoding
+    typedef enum reg [1:0] {
+        S0 = 2'b00,
+        S1 = 2'b01
+    } state_t;
+
+    // State registers
+    reg state, next_state;
+
+    // State transition logic
+    always @(*) begin
+        case (state)
+            S0: begin
+                if (a)
+                    next_state = S1;
+                else
+                    next_state = S0;
+            end
+            S1: begin
+                next_state = S0; // Transition back to S0 regardless of 'a'
+            end
+            default: next_state = S0;
+        endcase
+    end
+
+    // State register update
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn)
+            state <= S0;
+        else
+            state <= next_state;
+    end
+
+    // Output logic
+    always @(*) begin
+        case (state)
+            S0: out = 1'b0;
+            S1: out = 1'b1;
+            default: out = 1'b0;
+        endcase
+    end
+
+endmodule

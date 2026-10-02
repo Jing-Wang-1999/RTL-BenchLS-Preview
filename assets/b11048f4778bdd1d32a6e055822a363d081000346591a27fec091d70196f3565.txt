@@ -1,0 +1,54 @@
+module origen_067334(
+    input wire clk,
+    input wire [31:0] seg_data,
+    output reg [7:0] DIG,
+    output reg [7:0] SEL
+);
+
+reg clock_25m;
+reg [18:0] cnt;
+reg [3:0] num;
+
+always @(posedge clk) begin
+    clock_25m <= ~clock_25m;
+end
+
+always @(posedge clock_25m) begin
+    cnt <= cnt + 1'b1;
+end
+
+always @(*) begin
+    case(cnt[18:16])
+        3'b000: begin SEL = 8'b11111110; num = seg_data[3:0]; end
+        3'b001: begin SEL = 8'b11111101; num = seg_data[7:4]; end
+        3'b010: begin SEL = 8'b11111011; num = seg_data[11:8]; end
+        3'b011: begin SEL = 8'b11110111; num = seg_data[15:12]; end
+        3'b100: begin SEL = 8'b11101111; num = seg_data[19:16]; end
+        3'b101: begin SEL = 8'b11011111; num = seg_data[23:20]; end
+        3'b110: begin SEL = 8'b10111111; num = seg_data[27:24]; end
+        3'b111: begin SEL = 8'b01111111; num = seg_data[31:28]; end
+    endcase
+end
+
+always @(*) begin
+    case(num)
+        4'h0: DIG = 8'b11000000;
+        4'h1: DIG = 8'b11111001;
+        4'h2: DIG = 8'b10100100;
+        4'h3: DIG = 8'b10110000;
+        4'h4: DIG = 8'b10011001;
+        4'h5: DIG = 8'b10010010;
+        4'h6: DIG = 8'b10000010;
+        4'h7: DIG = 8'b11111000;
+        4'h8: DIG = 8'b10000000;
+        4'h9: DIG = 8'b10010000;
+        4'ha: DIG = 8'b10001000;
+        4'hb: DIG = 8'b10000011;
+        4'hc: DIG = 8'b11000110;
+        4'hd: DIG = 8'b10100001;
+        4'he: DIG = 8'b10000110;
+        4'hf: DIG = 8'b10001110;
+    endcase
+end
+
+endmodule

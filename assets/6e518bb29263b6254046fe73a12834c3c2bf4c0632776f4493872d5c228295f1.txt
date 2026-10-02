@@ -1,0 +1,54 @@
+module origen_192016(
+    input clk,
+    input [31:0] address,
+    input [31:0] writedata,
+    input [2:0] MemRead,
+    input [1:0] MemWrite,
+    output reg [31:0] data
+);
+
+reg [31:0] datamem [0:255];
+
+initial begin
+    $readmemh("datamem.txt", datamem);
+end
+
+always @(negedge clk) begin
+    case (MemWrite)
+        2'b11: begin
+            datamem[address[9:2]]     <= writedata;
+            datamem[address[9:2] + 1] <= writedata[31:24];
+            datamem[address[9:2] + 2] <= writedata[23:16];
+            datamem[address[9:2] + 3] <= writedata[15:8];
+            $writememh("out2.txt", datamem);
+        end
+        2'b10: begin
+            datamem[address[9:2] + 2] <= writedata[31:24];
+            datamem[address[9:2] + 3] <= writedata[23:16];
+            $writememh("out2.txt", datamem);
+        end
+        2'b01: begin
+            datamem[address[9:2] + 3] <= writedata[31:24];
+            $writememh("out2.txt", datamem);
+        end
+    endcase
+end
+
+always @(posedge clk) begin
+    case (MemRead)
+        3'b110: begin
+            data <= {datamem[address[9:2]], datamem[address[9:2] + 1], datamem[address[9:2] + 2], datamem[address[9:2] + 3]};
+        end
+        3'b100: begin
+            data <= {24'b0, datamem[address[9:2] + 3]};
+        end
+        3'b010: begin
+            data <= {datamem[address[9:2] + 2], datamem[address[9:2] + 3]};
+        end
+        3'b111: begin
+            data <= {datamem[address[9:2]], datamem[address[9:2] + 1]};
+        end
+    endcase
+end
+
+endmodule

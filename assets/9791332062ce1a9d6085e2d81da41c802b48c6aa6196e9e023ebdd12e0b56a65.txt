@@ -1,0 +1,105 @@
+{
+  "project_id": "github/lawrie/fpga_pio",
+  "top_module": "pio",
+  "rtl_files": [
+    "src/pio.v",
+    "src/machine.v",
+    "src/decoder.v",
+    "src/divider.v",
+    "src/pc.v",
+    "src/scratch.v",
+    "src/fifo.v",
+    "src/isr.v",
+    "src/osr.v"
+  ],
+  "iverilog": "/home/jwangjw/anaconda3/envs/securitylab/bin/iverilog",
+  "vvp": "/home/jwangjw/anaconda3/envs/securitylab/bin/vvp",
+  "testpoints": [
+    {
+      "id": "sim/copybit.v",
+      "target": "pio",
+      "criterion": "PULL/OUT alternating input bits in FIFO order with bounded delivery; first nine observable words checked. Last word is queued beyond the unchanged bench finish.",
+      "completion_tick": 15800
+    },
+    {
+      "id": "sim/exec.v",
+      "target": "pio",
+      "criterion": "Immediate SET pins=1 while machine disabled; output must become one within four host clocks and hold.",
+      "completion_tick": 7400
+    },
+    {
+      "id": "sim/i2s.v",
+      "target": "pio",
+      "criterion": "I2S clock period, 16-bit word-select framing and decoded FFFF/0000 channels, after initial empty-FIFO frame.",
+      "completion_tick": 496200
+    },
+    {
+      "id": "sim/pwm.v",
+      "target": "pio",
+      "criterion": "Duty 2 then 4: high width (3*duty+2) PIO clocks and period 3*(period+1)+3 PIO clocks with fractional divider 2.5.",
+      "completion_tick": 154600
+    },
+    {
+      "id": "sim/square.v",
+      "target": "pio",
+      "criterion": "100 host clocks, divider 2.5, SET pins1/0: 40 alternating transitions with 2/3-cycle phases and stable 5-cycle period. GPIO output must remain known throughout the post-enable observation window.",
+      "completion_tick": 43400
+    },
+    {
+      "id": "sim/stepper.v",
+      "target": "pio",
+      "criterion": "Packed 8C462319 nibbles emitted twice in order, three host clocks per phase.",
+      "completion_tick": 28200
+    },
+    {
+      "id": "sim/tb.v",
+      "target": "pio",
+      "criterion": "Delayed SET pins1/0: 20 transitions at five host clocks per phase. GPIO output must remain known throughout the post-enable observation window.",
+      "completion_tick": 43400
+    },
+    {
+      "id": "sim/uart_rx.v",
+      "target": "pio",
+      "criterion": "Eight high serial bits decode FF; FIFO ready before read and empty after.",
+      "completion_tick": 57800
+    },
+    {
+      "id": "sim/uart_tx.v",
+      "target": "pio",
+      "criterion": "Decode all ten 8N1 frames at 16 host clocks per bit and compare to PUSH bytes 30..39.",
+      "completion_tick": 729800
+    },
+    {
+      "id": "sim/ws2812.v",
+      "target": "pio",
+      "criterion": "Decode all 24 bits FF00FF; fractional-divider pulse widths distinguish zeros and ones; six-PIO-clock symbol period.",
+      "completion_tick": 332200
+    }
+  ],
+  "excluded_testbenches": [
+    {
+      "id": "sim/spi.v",
+      "status": "upstream_receive_read_unqualified",
+      "reason": "Both outgoing MSB-first bytes decode correctly (40,80), but first PULL occurs while RX FIFO is empty and returns unknown. Receive data becomes available only after the next transaction starts. Retained as an unresolved bench/RTL interaction; not scored as a passing full SPI bench.",
+      "pull_observations": [
+        {
+          "tick": 205200,
+          "rx_empty": 15,
+          "dout_after_edge": null
+        },
+        {
+          "tick": 406000,
+          "rx_empty": 14,
+          "dout_after_edge": 255
+        }
+      ],
+      "evidence_directory": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/remaining_review_v1/pio_retry/spi"
+    }
+  ],
+  "score": "passed whole testbenches / 10",
+  "oracle_basis": "Shipped assembly programs and bench stimuli; top-level pins only; no golden waveform comparison. completion_tick records finite bench duration, not expected functional output.",
+  "all_relevant_testbenches": 11,
+  "source_notes": "Nine-module PIO subsystem is independent of board wrappers. All eleven sim/*.v instantiate pio. Original program identifier requires Verilog2005, not SystemVerilog.",
+  "evaluator_version": "2",
+  "evaluator_version_note": "Require known GPIO output throughout the post-enable square/tb observation window; v1 ignored X/Z intervals. Testpoints, upstream RTL, testbenches, and program bytes unchanged."
+}

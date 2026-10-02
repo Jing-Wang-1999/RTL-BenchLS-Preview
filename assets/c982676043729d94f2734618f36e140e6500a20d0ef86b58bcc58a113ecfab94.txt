@@ -1,0 +1,26 @@
+The Verilog module "Data_Source" generates a sequence of 4-bit data patterns upon receiving a start impulse signal. The key operations are as follows:
+
+1. **Primary Function:** This module outputs a predefined sequence of 4-bit values on `Data_out` and indicates completion of the sequence via the `end_of_work` signal.
+
+2. **Flow and Decision Points:**
+   - The module starts its operation when `start_impulse` is detected, setting `start_work`.
+   - The sequence generation begins when `start_work` is active, setting `device_in_work`.
+   - The sequence progresses with each clock cycle (`clk`) and continues while `device_in_work` is active.
+   - A 4-bit value from a case statement is assigned to `Data_out` based on index `i`.
+   - After completing the sequence of 12 steps (0 to 11), `reset_device` is set to indicate the end of the operation.
+
+3. **Data Processing and Interactions:**
+   - `start_work` is triggered by `start_impulse` and the ongoing operation (`device_in_work`).
+   - `Data_out` values are set in a predefined pattern, corresponding to the value of `i`.
+   - The module exits the sequence and clears `device_in_work` when the sequence is complete (`i` reaches 12).
+   - `end_of_work` is asserted when `device_in_work` is active and `reset_device` is set, signaling that the sequence has finished.
+
+With these descriptions, an LLM should be able to generate the Verilog code for a "Data_Source" module that follows this behavior and logic.
+
+Module Interface:
+module four_bit_pattern_sequence_generator (start_impulse, clk, Data_out, end_of_work);
+
+Behavioral Clarifications:
+- All registers initialize to zero at power-on: `Data_out` is 4 bits, `start_work`, `device_in_work`, and `reset_device` are 1-bit, and the index `i` is an integer starting at 0.
+- There are two always blocks: one sensitive to `posedge start_impulse or posedge device_in_work` (sets `start_work`), and one sensitive to `posedge clk` (handles sequencing, index increment, and reset). `end_of_work` is a combinational wire assigned as the AND of `device_in_work` and `reset_device`.
+- The sequence loop runs while `i < 13`; when `i` reaches 13 the index resets to 0 and `device_in_work` clears.

@@ -1,0 +1,102 @@
+module rtlpp_01885 (
+  input        ct,
+  output       ct_rdy,
+        
+  input        ct_rt_en,
+
+  input  [0:127] rkey,
+  output [0:127] next_rkey,
+        
+  output       pt,
+  output reg   pt_vld = 1'b0,
+        
+  input        clk,
+  input        rst
+);
+
+  reg  [0:127] ct_reg   = {128{1'b0}};
+  reg  [0:127] rkey_reg = {128{1'b0}};
+  reg  [6:0]   ct_rkey_count = {7{1'b0}};
+  reg          ct_rkey_vld   = 1'b0;
+
+  reg  [0:127] pt_reg = {128{1'b0}};
+  wire [0:127] pt_wire;
+  reg  [6:0]   pt_count = {7{1'b0}};
+  wire         pt_vld_decrypt;
+
+  reg          ct_vld_decrypt = 1'b0;
+
+  always @(posedge clk)
+    if (rst) begin
+      ct_reg   <= {128{1'b0}};
+      rkey_reg <= {128{1'b0}};
+      ct_rkey_vld<= 1'b0;
+      ct_rkey_count <= {7{1'b0}};
+    end else if (ct_rt_en) begin
+      ct_reg   <= {ct, ct_reg[0:126]};
+      rkey_reg <= {rkey, rkey_reg[0:126]};
+      ct_rkey_count <= ct_rkey_count + 1'b1;
+      ct_rkey_vld<= &ct_rkey_count;
+    end
+  
+  always @(posedge clk)
+    if (rst)
+      pt_reg <= {128{1'b0}};
+    else if (pt_vld_decrypt)
+      pt_reg <= pt_wire;
+    else
+      pt_reg <= {1'b0, pt_reg[0:126]};
+
+  always @(posedge clk)
+    if (rst || pt_vld_decrypt)
+      pt_count <= {7{1'b0}};
+    else if (pt_vld)
+      pt_count <= pt_count + 1'b1;
+
+  always @(posedge clk)
+    if (rst || &pt_count)
+      pt_vld   <= 1'b0;
+    else if (pt_vld_decrypt)
+      pt_vld   <= 1'b1;
+
+  // Embedded logic for previously instantiated decrypt module
+  reg   [0:127] internal_rkey = {128{1'b0}};
+  reg           internal_rkey_vld = 1'b0;
+  reg           internal_ct_vld = 1'b0;
+  reg   [0:127] internal_pt = {128{1'b0}};
+  reg           internal_pt_vld = 1'b0;
+
+  always @(posedge clk)
+    if (rst) begin
+      internal_rkey <= {128{1'b0}};
+      internal_rkey_vld <= 1'b0;
+      internal_ct_vld <= 1'b0;
+      internal_pt <= {128{1'b0}};
+      internal_pt_vld <= 1'b0;
+    end else if (ct_rkey_vld) begin
+      internal_rkey <= rkey_reg;
+      internal_rkey_vld <= 1'b1;
+      internal_ct_vld <= 1'b1;
+    end else begin
+      internal_rkey_vld <= 1'b0;
+      internal_ct_vld <= 1'b0;
+    end
+
+  // Assuming the decryption transformation logic is some simple logical operation
+  // This part should be replaced with actual decryption logic
+  always @(posedge clk)
+    if (internal_ct_vld && internal_rkey_vld) begin
+      internal_pt <= ct_reg ^ internal_rkey; // Example of XOR decryption
+      internal_pt_vld <= 1'b1;
+    end else begin
+      internal_pt_vld <= 1'b0;
+    end
+
+  assign next_rkey = internal_rkey; // Output next key just for example
+  assign pt_wire = internal_pt;
+  assign pt_vld_decrypt = internal_pt_vld;
+  assign ct_rdy = 1'b1; // Assuming ct_rdy is always ready
+
+  assign pt = pt_reg[127];
+
+endmodule

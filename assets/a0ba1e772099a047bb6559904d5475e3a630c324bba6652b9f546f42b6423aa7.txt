@@ -1,0 +1,33 @@
+# async_fifo: default-configuration specification
+
+Implement default W8, DP4, AW2, WR_FAST1, RD_FAST1, FULL_DP4, EMPTY_DP0. The two rising-edge clock domains wr_clk and rd_clk are independent. Both active-low asynchronous reset pins initialize their own binary/Gray pointer and both receiving synchronizer stages to0; no memory initialization is required. Reset write flag register0 and read flag register1, although these flag registers are inactive at the default FAST settings. The active capacity is four8-bit words, addressed by low2 bits of3-bit pointers.
+
+On each nonreset write edge with wr_en1, advance the3-bit write pointer modulo8 and store its new reflected Gray encoding(binary XOR binary>>1). The RAM independently writes wr_data at the old write address whenever wr_en1, without reset or full gating. On each nonreset read edge with rd_en1, advance the3-bit read pointer modulo8 and its Gray encoding similarly. There is no protection against overflow/underflow: enables increment even when full/empty. Such misuse can overwrite or expose stale memory; preserve these rules without formal input constraints. Simulation-only diagnostic display/stop calls do not define synthesized output behavior.
+
+Each domain samples opposite Gray pointer through two receiving registers and converts the second stage to binary. Compute write occupancy as (local write minus synchronized read) modulo8; full is occupancy==4, afull is occupancy==3. Compute read occupancy as (synchronized write minus local read) modulo8; empty is occupancy==0, aempty is occupancy==1. The source's grouped Gray tables implement the ordinary reflected Gray encoding/decoding for AW2. Flags are combinational from these states. Thus a remote operation becomes visible after two receiving clock edges; no phase/frequency relation is imposed.
+
+rd_data is continuously the memory at current read address, with no read-enable or empty gate and no output register in this default. It advances immediately with the read-pointer update and can change when that memory entry is written. Reading uninitialized/empty data and same-address coincident read/write have no promised valid payload. Source #1 cross-pointer assignment delays are simulation annotations, not extra hardware registers or a required one-nanosecond transfer; qualify synchronous logical RTL semantics. The unused registered DATA and slow-flag alternatives, invalid-depth initial diagnostic and simulation overflow monitors introduce no active reset-independent state requirement.
+
+Public interface declarations (parameter values and behavior are specified above):
+
+```verilog
+module async_fifo (wr_clk,
+                   wr_reset_n,
+                   wr_en,
+                   wr_data,
+                   full,                 
+                   afull,                 
+                   rd_clk,
+                   rd_reset_n,
+                   rd_en,
+                   empty,                
+                   aempty,                
+                   rd_data);
+
+   output [W-1 : 0]  rd_data;
+   input [W-1 : 0]   wr_data;
+   input             wr_clk, wr_reset_n, wr_en, rd_clk, rd_reset_n,
+                     rd_en;
+   output            full, empty;
+   output            afull, aempty;
+```

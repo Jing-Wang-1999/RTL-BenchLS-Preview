@@ -1,0 +1,40 @@
+module mg_02739 (
+    input wire video_on,
+    input wire [9:0] pixel_x,
+    input wire [9:0] pixel_y,
+    output wire graph_on,
+    output wire [7:0] fig_RGB
+);
+    // Box parameters (inclusive ranges)
+    // Header box: X 160-479, Y 64-255
+    // Footer-left box: X 48-303, Y 352-447
+    // Footer-right box: X 336-591, Y 352-447
+    
+    // Box color: RGB 0x1E
+    localparam BOX_COLOR = 8'h1E;
+    localparam BG_COLOR = 8'h00;
+    
+    // Detection signals for each box
+    wire header_box;
+    wire footer_left_box;
+    wire footer_right_box;
+    
+    // Check header box boundaries
+    assign header_box = (pixel_x >= 10'd160) && (pixel_x <= 10'd479) &&
+                        (pixel_y >= 10'd64)  && (pixel_y <= 10'd255);
+    
+    // Check footer-left box boundaries
+    assign footer_left_box = (pixel_x >= 10'd48)  && (pixel_x <= 10'd303) &&
+                             (pixel_y >= 10'd352) && (pixel_y <= 10'd447);
+    
+    // Check footer-right box boundaries
+    assign footer_right_box = (pixel_x >= 10'd336) && (pixel_x <= 10'd591) &&
+                              (pixel_y >= 10'd352) && (pixel_y <= 10'd447);
+    
+    // Combined detection signal
+    assign graph_on = header_box || footer_left_box || footer_right_box;
+    
+    // RGB output logic
+    assign fig_RGB = (~video_on) ? BG_COLOR :
+                     (header_box || footer_left_box || footer_right_box) ? BOX_COLOR : BG_COLOR;
+endmodule

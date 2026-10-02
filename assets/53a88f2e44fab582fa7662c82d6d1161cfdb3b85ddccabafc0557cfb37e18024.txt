@@ -1,0 +1,13 @@
+# New default-configuration harness. Input paths are staged by the runner.
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/formal113_19ef02e4800ebf08a06c_negative.v0.v
+check_sec -analyze -imp -sv ./input/rtl/formal113_19ef02e4800ebf08a06c_negative.negative.v
+check_sec -elaborate -spec -top fifomem -disable_auto_bbox
+check_sec -elaborate -imp -top fifomem -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+check_sec -map -hierarchy -spec {^(.*)$} -imp {fifomem_imp.dut.$1} -regexp
+clock wclk
+reset -none
+check_sec -gen
+check_sec -prove -strategy proof

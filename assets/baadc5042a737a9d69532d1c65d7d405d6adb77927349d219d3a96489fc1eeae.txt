@@ -1,0 +1,76 @@
+module rtlpp_07610
+   (acc_valid_out,
+    clk,
+    delay_signals,
+    delayed_signals,
+    frag_valid,
+    x_acc_in,
+    x_acc_out,
+    x_frag,
+    y_acc_in,
+    y_acc_out,
+    y_frag,
+    z_acc_in,
+    z_acc_out,
+    z_frag);
+  output acc_valid_out;
+  input clk;
+  input [21:0]delay_signals;
+  output [21:0]delayed_signals;
+  input frag_valid;
+  input [31:0]x_acc_in;
+  output [31:0]x_acc_out;
+  input [31:0]x_frag;
+  input [31:0]y_acc_in;
+  output [31:0]y_acc_out;
+  input [31:0]y_frag;
+  input [31:0]z_acc_in;
+  output [31:0]z_acc_out;
+  input [31:0]z_frag;
+
+  wire [21:0]D_0_1;
+  wire aclk_0_1;
+  wire [21:0]c_shift_ram_0_Q;
+  wire [31:0]floating_point_0_m_axis_result_tdata;
+  wire [31:0]floating_point_1_m_axis_result_tdata;
+  wire floating_point_1_m_axis_result_tvalid;
+  wire [31:0]floating_point_2_m_axis_result_tdata;
+  wire [31:0]s_axis_a_tdata_0_1;
+  wire [31:0]s_axis_a_tdata_1_1;
+  wire [31:0]s_axis_a_tdata_2_1;
+  wire s_axis_a_tvalid_0_1;
+  wire [31:0]s_axis_b_tdata_0_1;
+  wire [31:0]s_axis_b_tdata_1_1;
+  wire [31:0]s_axis_b_tdata_2_1;
+
+  assign D_0_1 = delay_signals[21:0];
+  assign acc_valid_out = floating_point_1_m_axis_result_tvalid;
+  assign aclk_0_1 = clk;
+  assign delayed_signals[21:0] = c_shift_ram_0_Q;
+  assign s_axis_a_tdata_0_1 = z_acc_in[31:0];
+  assign s_axis_a_tdata_1_1 = y_acc_in[31:0];
+  assign s_axis_a_tdata_2_1 = x_acc_in[31:0];
+  assign s_axis_a_tvalid_0_1 = frag_valid;
+  assign s_axis_b_tdata_0_1 = z_frag[31:0];
+  assign s_axis_b_tdata_1_1 = y_frag[31:0];
+  assign s_axis_b_tdata_2_1 = x_frag[31:0];
+  assign x_acc_out[31:0] = floating_point_0_m_axis_result_tdata;
+  assign y_acc_out[31:0] = floating_point_1_m_axis_result_tdata;
+  assign z_acc_out[31:0] = floating_point_2_m_axis_result_tdata;
+
+  // Shift register module
+  reg [21:0] c_shift_reg;
+  always @(posedge clk) begin
+    c_shift_reg <= delay_signals;
+  end
+  assign c_shift_ram_0_Q = c_shift_reg;
+
+  // Floating point add modules, assuming they are simple adders for conversion
+  assign floating_point_0_m_axis_result_tdata = s_axis_a_tdata_2_1 + s_axis_b_tdata_2_1;
+  assign floating_point_1_m_axis_result_tdata = s_axis_a_tdata_1_1 + s_axis_b_tdata_1_1;
+  assign floating_point_2_m_axis_result_tdata = s_axis_a_tdata_0_1 + s_axis_b_tdata_0_1;
+
+  // Validation logic for the output
+  assign floating_point_1_m_axis_result_tvalid = s_axis_a_tvalid_0_1;
+
+endmodule

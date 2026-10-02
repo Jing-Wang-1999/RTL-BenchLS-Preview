@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.075ecbb6f72fba805975.ee196a8becf5",
+  "compile_check": {
+    "case_id": "s1derived.075ecbb6f72fba805975.ee196a8becf5",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_028849",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_028849.f7f47cb21d98419c/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.075ecbb6f72fba805975",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "075ecbb6f72fba8059750daf8cc056c7b4d08ed8e8362ff7881b58464f1f6c89",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.075ecbb6f72fba805975.ee196a8becf5",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_028849.f7f47cb21d98419c/private/commercial_positive.log",
+    "commercial_log_sha256": "9934f14d71ad14b8c0763d72ccaf70b959fb838e7fce87c6e01b40b5c33c6ccd",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_028849.f7f47cb21d98419c/private/historical_harness/00_sec_origen_028849.tcl",
+    "executed_script_sha256": "2927d801f41c9b6ec3a43346125945040de87ba520c31769f8977bc470935952",
+    "golden_tops": [
+      "origen_028849"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.origen_028849.f7f47cb21d98419c",
+    "parent_id": "s1p.075ecbb6f72fba805975",
+    "revised_tops": [
+      "origen_028849"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_028849",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.075ecbb6f72fba805975.ee196a8becf5",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All seven state transitions and corresponding light constants match, including S0=111111, S5=100100, S6=000000. Asynchronous low reset and default illegal-state recovery/output are explicit. This is a complete cyclic-pattern controller.",
+        "rtl_excerpt": "S6: next_state = S0;",
+        "specification_excerpt": "S0\u2192S1\u2192S2\u2192S3\u2192S4\u2192S5\u2192S6\u2192S0"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.075ecbb6f72fba805975",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "c6a5aa6cd102889c6927546e63947dea9e82e5db0400c3467c56188881956fdc",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "075ecbb6f72fba8059750daf8cc056c7b4d08ed8e8362ff7881b58464f1f6c89",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_028849.f7f47cb21d98419c/private/historical_harness/00_sec_origen_028849.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_028849.f7f47cb21d98419c/private/historical_harness/01_sec_origen_028849.tcl"
+  ],
+  "parent_id": "s1p.075ecbb6f72fba805975",
+  "primary_review": {
+    "case_id": "s1derived.075ecbb6f72fba805975.ee196a8becf5",
+    "checks": {
+      "behavior": "The stated transitions and first four outputs agree, but observable remaining/default behavior is missing.",
+      "boundaries": "checked parameter defaults, widths, truth/arithmetic boundaries and priority",
+      "interface": "checked complete RTL interface against prose",
+      "rtl_reasonableness": "reasonable hardware for the stated function",
+      "sequential_and_reset": "checked state, clock, reset and hold behavior; combinational where stated"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The stated transitions and first four outputs agree, but observable remaining/default behavior is missing.",
+        "rtl_excerpt": "S4=100101, S5=100100, S6=000000; defaults recover next_state to S0 and output 111111",
+        "spec_excerpt": "The FSM cycles S0 through S6 and states S0-S3 produce the listed patterns."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The truncated FSM specification omits S4-S6 output patterns and illegal-state recovery/output behavior.",
+        "rtl_evidence": "S4=100101, S5=100100, S6=000000; defaults recover next_state to S0 and output 111111",
+        "spec_evidence": "The FSM cycles S0 through S6 and states S0-S3 produce the listed patterns.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.075ecbb6f72fba805975",
+    "proposed_specification_path": "proposed_repairs_3_sol_02/s1derived.075ecbb6f72fba805975.ee196a8becf5.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "075ecbb6f72fba8059750daf8cc056c7b4d08ed8e8362ff7881b58464f1f6c89",
+    "source_group": "S2",
+    "specification_sha256": "ee196a8becf51f3e0e629668b19003fcbded4c6547580dece6b43c12e3e0cb6a",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_02/s1derived.075ecbb6f72fba805975.ee196a8becf5.md",
+  "qualified_specification_sha256": "c6a5aa6cd102889c6927546e63947dea9e82e5db0400c3467c56188881956fdc",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_028849.f7f47cb21d98419c/private/golden_design.v",
+  "rtl_sha256": "075ecbb6f72fba8059750daf8cc056c7b4d08ed8e8362ff7881b58464f1f6c89",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_028849.f7f47cb21d98419c/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "ee196a8becf51f3e0e629668b19003fcbded4c6547580dece6b43c12e3e0cb6a",
+  "top_module": "origen_028849"
+}

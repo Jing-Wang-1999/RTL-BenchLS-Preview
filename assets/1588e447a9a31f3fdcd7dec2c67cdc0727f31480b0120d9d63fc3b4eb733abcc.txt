@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.00d0bc5ebb91ae1232fc.737212e6ec92",
+  "compile_check": {
+    "case_id": "s1derived.00d0bc5ebb91ae1232fc.737212e6ec92",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "jesd204_ilas_cfg_static",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.00d0bc5ebb91ae1232fc.737212e6ec92/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "00d0bc5ebb91ae1232fc31ba47e780135d7742ad258a56103555d02ce29425c0",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.00d0bc5ebb91ae1232fc.737212e6ec92",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.00d0bc5ebb91ae1232fc",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "jesd204_ilas_cfg_static"
+  },
+  "independent_review": {
+    "case_id": "s1derived.00d0bc5ebb91ae1232fc.737212e6ec92",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The lane-specific LID and checksum adjustments, 32/64-bit read selection, defaults, and no-reset startup all match.",
+        "rtl_excerpt": "`1: ilas_lane_mem[i][j][4:0] = i; 3: ilas_lane_mem[i][j][31:24] = ilas_mem[3][31:24] + i;`",
+        "spec_excerpt": "\u201cLane i replaces word-1 LID bits [4:0] with the low five bits of i and adds i modulo 256 to word-3 checksum.\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.00d0bc5ebb91ae1232fc",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "b1bfafa0567bbd3b57c7fe52884991054a7af9393007c10bf660416d10ee4062",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "00d0bc5ebb91ae1232fc31ba47e780135d7742ad258a56103555d02ce29425c0",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.00d0bc5ebb91ae1232fc",
+  "primary_review": {
+    "case_id": "s1derived.00d0bc5ebb91ae1232fc.737212e6ec92",
+    "checks": {
+      "behavior": "Field packing is mostly correct; pairing semantics need correction.",
+      "boundaries": "Address bit1 is ignored in width-8 mode; output holds without read.",
+      "interface": "Ports are named but defaults are missing.",
+      "rtl_reasonableness": "RTL is reasonable for widths 4/8.",
+      "sequential_and_reset": "Only output read is clocked; no reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Field packing is mostly correct; pairing semantics need correction. Only output read is clocked; no reset.",
+        "rtl_excerpt": "no reset port; width-8 selection uses {ilas_config_addr[0],1'b1} and {ilas_config_addr[0],1'b0}",
+        "spec_excerpt": "\u201cAt power-up/reset\u201d and \u201caddress concatenated with address+1\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose omits every parameter default, claims reset/power-up initialization despite no reset, and describes 64-bit addressing as consecutive address/address+1 rather than selection by address bit 0.",
+        "rtl_evidence": "no reset port; width-8 selection uses {ilas_config_addr[0],1'b1} and {ilas_config_addr[0],1'b0}",
+        "spec_evidence": "\u201cAt power-up/reset\u201d and \u201caddress concatenated with address+1\u201d",
+        "type": "reset_defaults_and_pair_addressing"
+      }
+    ],
+    "parent_id": "s1p.00d0bc5ebb91ae1232fc",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.00d0bc5ebb91ae1232fc.737212e6ec92.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "00d0bc5ebb91ae1232fc31ba47e780135d7742ad258a56103555d02ce29425c0",
+    "source_group": "S1",
+    "specification_sha256": "737212e6ec928272291fae5bdebca0748bf57d8c0327562f3ca5e76e31706377",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.00d0bc5ebb91ae1232fc.737212e6ec92.md",
+  "qualified_specification_sha256": "b1bfafa0567bbd3b57c7fe52884991054a7af9393007c10bf660416d10ee4062",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.00d0bc5ebb91ae1232fc.737212e6ec92/private/golden_design.v",
+  "rtl_sha256": "00d0bc5ebb91ae1232fc31ba47e780135d7742ad258a56103555d02ce29425c0",
+  "source_corpus": "SEC-Flow-Star-repos-10.analog-hdl",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.00d0bc5ebb91ae1232fc.737212e6ec92/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "737212e6ec928272291fae5bdebca0748bf57d8c0327562f3ca5e76e31706377",
+  "top_module": "jesd204_ilas_cfg_static"
+}

@@ -1,0 +1,77 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/14575",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/14540",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 14575,
+  "issue_number": 14540,
+  "verilog_files": [
+    "hw/ip/otbn/rtl/otbn_controller.sv",
+    "hw/ip/otbn/rtl/otbn_core.sv",
+    "hw/ip/otbn/rtl/otbn_rf_base.sv",
+    "hw/ip/otbn/rtl/otbn_rf_bignum.sv"
+  ],
+  "deletions": 42,
+  "additions": 65,
+  "patches": [
+    {
+      "filename": "hw/ip/otbn/rtl/otbn_controller.sv",
+      "patch": "@@ -81,7 +81,8 @@ module otbn_controller\n   output logic               rf_bignum_rd_en_b_o,\n   input  logic [ExtWLEN-1:0] rf_bignum_rd_data_b_intg_i,\n \n-  input logic rf_bignum_rf_err_i,\n+  input logic rf_bignum_intg_err_i,\n+  input logic rf_bignum_spurious_we_err_i,\n \n   output logic [NWdr-1:0] rf_bignum_rd_a_indirect_onehot_o,\n   output logic [NWdr-1:0] rf_bignum_rd_b_indirect_onehot_o,\n@@ -294,13 +295,15 @@ module otbn_controller\n \n   logic rf_a_indirect_err, rf_b_indirect_err, rf_d_indirect_err, rf_indirect_err;\n \n-  // If we are doing an indirect lookup from the bignum register file, it's possible that the\n-  // address that we use for the lookup is architecturally unknown. This happens if it came from x1\n+  // If we are doing an indirect access to the bignum register file, it's possible that the\n+  // address that we use for the access is architecturally unknown. This happens if it came from x1\n   // and we've underflowed the call stack. When this happens, we want to ignore any read data\n-  // integrity errors since the read from the bignum register file didn't happen architecturally\n-  // anyway.\n-  logic ignore_bignum_rf_errs;\n-  logic rf_bignum_rf_err;\n+  // integrity errors and spurious write enable errors since the access to the bignum register file\n+  // didn't happen architecturally anyway.\n+  logic ignore_rf_bignum_intg_errs;\n+  logic rf_bignum_intg_err;\n+  logic ignore_rf_bignum_spurious_we_errs;\n+  logic rf_bignum_spurious_we_err;\n \n   logic ispr_rdata_intg_err;\n \n@@ -531,8 +534,8 @@ module otbn_controller\n \n   assign fatal_software_err       = software_err & software_errs_fatal_i;\n   assign bad_internal_state_err   = |{state_error, loop_hw_err, rf_base_call_stack_hw_err_i,\n-                                      spurious_secure_wipe_ack_q};\n-  assign reg_intg_violation_err   = rf_bignum_rf_err | ispr_rdata_intg_err;\n+                                      rf_bignum_spurious_we_err, spurious_secure_wipe_ack_q};\n+  assign reg_intg_violation_err   = rf_bignum_intg_err | ispr_rdata_intg_err;\n   assign key_invalid_err          = ispr_rd_bignum_insn & insn_valid_i & key_invalid;\n   assign illegal_insn_err         = illegal_insn_static | rf_indirect_err;\n   assign bad_data_addr_err        = dmem_addr_err;\n@@ -1120,11 +1123,24 @@ module otbn_controller\n   assign rf_indirect_err =\n       insn_valid_i & (rf_a_indirect_err | rf_b_indirect_err | rf_d_indirect_err);\n \n-  assign ignore_bignum_rf_errs = (insn_dec_bignum_i.rf_a_indirect |\n-                                  insn_dec_bignum_i.rf_b_indirect) &\n-                                 rf_base_call_stack_sw_err_i;\n \n-  assign rf_bignum_rf_err = rf_bignum_rf_err_i & ~ignore_bignum_rf_errs;\n+  // If the source registers are indirectly indexed and there is a stack error, the source\n+  // register indices were illegal due to a stack pop error. In this case, ignore bignum RF read\n+  // integrity errors.\n+  assign ignore_rf_bignum_intg_errs = (insn_dec_bignum_i.rf_a_indirect |\n+                                       insn_dec_bignum_i.rf_b_indirect) &\n+                                      rf_base_call_stack_sw_err_i;\n+\n+  assign rf_bignum_intg_err = rf_bignum_intg_err_i & ~ignore_rf_bignum_intg_errs;\n+\n+  // If the destination register is indirectly indexed and there is a stack error, the destination\n+  // register index was illegal due to a stack pop error. In this case, ignore bignum RF\n+  // write-enable errors.\n+  assign ignore_rf_bignum_spurious_we_errs = insn_dec_bignum_i.rf_d_indirect &\n+                                             rf_base_call_stack_sw_err_i;\n+\n+  assign rf_bignum_spurious_we_err = rf_bignum_spurious_we_err_i &\n+                                     ~ignore_rf_bignum_spurious_we_errs;\n \n   // CSR/WSR/ISPR handling\n   // ISPRs (Internal Special Purpose Registers) are the internal registers. CSRs and WSRs are the",
+      "additions": 29,
+      "deletions": 13,
+      "changes": 42
+    },
+    {
+      "filename": "hw/ip/otbn/rtl/otbn_core.sv",
+      "patch": "@@ -148,7 +148,8 @@ module otbn_core\n   logic                     rf_base_rd_commit;\n   logic                     rf_base_call_stack_sw_err;\n   logic                     rf_base_call_stack_hw_err;\n-  logic                     rf_base_rf_err;\n+  logic                     rf_base_intg_err;\n+  logic                     rf_base_spurious_we_err;\n \n   alu_base_operation_t  alu_base_operation;\n   alu_base_comparison_t alu_base_comparison;\n@@ -183,7 +184,8 @@ module otbn_core\n   logic [WdrAw-1:0]   rf_bignum_rd_addr_b;\n   logic               rf_bignum_rd_en_b;\n   logic [ExtWLEN-1:0] rf_bignum_rd_data_b_intg;\n-  logic               rf_bignum_rf_err;\n+  logic               rf_bignum_intg_err;\n+  logic               rf_bignum_spurious_we_err;\n \n   alu_bignum_operation_t alu_bignum_operation;\n   logic                  alu_bignum_operation_valid;\n@@ -443,7 +445,7 @@ module otbn_core\n     .rf_base_call_stack_sw_err_i(rf_base_call_stack_sw_err),\n     .rf_base_call_stack_hw_err_i(rf_base_call_stack_hw_err),\n \n-    // To/from bignunm register file\n+    // To/from bignum register file\n     .rf_bignum_wr_addr_o         (rf_bignum_wr_addr_ctrl),\n     .rf_bignum_wr_en_o           (rf_bignum_wr_en_ctrl),\n     .rf_bignum_wr_commit_o       (rf_bignum_wr_commit_ctrl),\n@@ -456,7 +458,8 @@ module otbn_core\n     .rf_bignum_rd_addr_b_o       (rf_bignum_rd_addr_b),\n     .rf_bignum_rd_en_b_o         (rf_bignum_rd_en_b),\n     .rf_bignum_rd_data_b_intg_i  (rf_bignum_rd_data_b_intg),\n-    .rf_bignum_rf_err_i          (rf_bignum_rf_err),\n+    .rf_bignum_intg_err_i        (rf_bignum_intg_err),\n+    .rf_bignum_spurious_we_err_i (rf_bignum_spurious_we_err),\n \n     .rf_bignum_rd_a_indirect_onehot_o(rf_bignum_rd_a_indirect_onehot),\n     .rf_bignum_rd_b_indirect_onehot_o(rf_bignum_rd_b_indirect_onehot),\n@@ -550,7 +553,7 @@ module otbn_core\n \n   logic non_controller_reg_intg_violation;\n   assign non_controller_reg_intg_violation =\n-      |{alu_bignum_reg_intg_violation_err, mac_bignum_reg_intg_violation_err, rf_base_rf_err};\n+      |{alu_bignum_reg_intg_violation_err, mac_bignum_reg_intg_violation_err, rf_base_intg_err};\n \n \n   // Generate an err_bits output by combining errors from all the blocks in otbn_core\n@@ -560,7 +563,8 @@ module otbn_core\n                            start_stop_fatal_error,\n                            urnd_all_zero,\n                            predec_error,\n-                           insn_addr_err},\n+                           insn_addr_err,\n+                           rf_base_spurious_we_err},\n     reg_intg_violation:  |{controller_err_bits.reg_intg_violation,\n                            non_controller_reg_intg_violation},\n     dmem_intg_violation: lsu_rdata_err,\n@@ -594,18 +598,19 @@ module otbn_core\n   assign controller_fatal_escalate_en =\n       mubi4_or_hi(escalate_en_i,\n                   mubi4_bool_to_mubi(|{start_stop_fatal_error, urnd_all_zero, predec_error,\n-                                       rf_base_rf_err, lsu_rdata_err, insn_fetch_err,\n-                                       non_controller_reg_intg_violation, insn_addr_err}));\n+                                       rf_base_intg_err, rf_base_spurious_we_err, lsu_rdata_err,\n+                                       insn_fetch_err, non_controller_reg_intg_violation,\n+                                       insn_addr_err}));\n \n   assign controller_recov_escalate_en =\n       mubi4_bool_to_mubi(|{rnd_rep_err, rnd_fips_err});\n \n   // Similarly for the start/stop controller\n   assign start_stop_escalate_en =\n       mubi4_or_hi(escalate_en_i,\n-                  mubi4_bool_to_mubi(|{urnd_all_zero, rf_base_rf_err, predec_error,\n-                                       lsu_rdata_err, insn_fetch_err, controller_fatal_err,\n-                                       insn_addr_err}));\n+                  mubi4_bool_to_mubi(|{urnd_all_zero, rf_base_intg_err, rf_base_spurious_we_err,\n+                                       predec_error, lsu_rdata_err, insn_fetch_err,\n+                                       controller_fatal_err, insn_addr_err}));\n \n   assign insn_cnt_o = insn_cnt;\n \n@@ -666,7 +671,8 @@ module otbn_core\n \n     .call_stack_sw_err_o(rf_base_call_stack_sw_err),\n     .call_stack_hw_err_o(rf_base_call_stack_hw_err),\n-    .rf_err_o           (rf_base_rf_err)\n+    .intg_err_o         (rf_base_intg_err),\n+    .spurious_we_err_o  (rf_base_spurious_we_err)\n   );\n \n   assign rf_base_wr_addr         = sec_wipe_base ? sec_wipe_addr : rf_base_wr_addr_ctrl;\n@@ -719,10 +725,12 @@ module otbn_core\n     .rd_en_b_i       (rf_bignum_rd_en_b),\n     .rd_data_b_intg_o(rf_bignum_rd_data_b_intg),\n \n-    .rf_err_o(rf_bignum_rf_err),\n+    .intg_err_o(rf_bignum_intg_err),\n \n     .rf_predec_bignum_i(rf_predec_bignum),\n-    .predec_error_o    (rf_bignum_predec_error)\n+    .predec_error_o    (rf_bignum_predec_error),\n+\n+    .spurious_we_err_o(rf_bignum_spurious_we_err)\n   );\n \n   always_ff @(posedge clk_i or negedge rst_ni) begin",
+      "additions": 22,
+      "deletions": 14,
+      "changes": 36
+    },
+    {
+      "filename": "hw/ip/otbn/rtl/otbn_rf_base.sv",
+      "patch": "@@ -58,7 +58,8 @@ module otbn_rf_base\n \n   output logic                     call_stack_sw_err_o,\n   output logic                     call_stack_hw_err_o,\n-  output logic                     rf_err_o\n+  output logic                     intg_err_o,\n+  output logic                     spurious_we_err_o\n );\n   localparam int unsigned CallStackRegIndex = 1;\n   localparam int unsigned CallStackDepth = 8;\n@@ -160,7 +161,6 @@ module otbn_rf_base\n     .next_top_valid_o()\n   );\n \n-  logic spurious_we_err;\n   if (RegFile == RegFileFF) begin : gen_rf_base_ff\n     otbn_rf_base_ff #(\n       .WordZeroVal(prim_secded_pkg::SecdedInv3932ZeroWord)\n@@ -177,7 +177,7 @@ module otbn_rf_base\n       .rd_addr_b_i,\n       .rd_data_b_o(rd_data_b_raw_intg),\n \n-      .we_err_o(spurious_we_err)\n+      .we_err_o(spurious_we_err_o)\n     );\n   end else if (RegFile == RegFileFPGA) begin : gen_rf_base_fpga\n     otbn_rf_base_fpga #(\n@@ -195,7 +195,7 @@ module otbn_rf_base\n       .rd_addr_b_i,\n       .rd_data_b_o(rd_data_b_raw_intg),\n \n-      .we_err_o(spurious_we_err)\n+      .we_err_o(spurious_we_err_o)\n     );\n   end\n \n@@ -217,9 +217,8 @@ module otbn_rf_base\n \n   // Suppress integrity error where the relevant read port saw a call stack pop error (so both\n   // integrity and data are invalid).\n-  assign rf_err_o = (|rd_data_a_err & rd_en_a_i & ~pop_stack_a_err) |\n-                    (|rd_data_b_err & rd_en_b_i & ~pop_stack_b_err) |\n-                    spurious_we_err;\n+  assign intg_err_o = (|rd_data_a_err & rd_en_a_i & ~pop_stack_a_err) |\n+                      (|rd_data_b_err & rd_en_b_i & ~pop_stack_b_err);\n \n   // Make sure we're not outputting X. This indicates that something went wrong during the initial\n   // secure wipe.",
+      "additions": 6,
+      "deletions": 7,
+      "changes": 13
+    },
+    {
+      "filename": "hw/ip/otbn/rtl/otbn_rf_bignum.sv",
+      "patch": "@@ -45,13 +45,14 @@ module otbn_rf_bignum\n   input  logic [WdrAw-1:0]       rd_addr_b_i,\n   output logic [ExtWLEN-1:0]     rd_data_b_intg_o,\n \n-  output logic                   rf_err_o,\n+  output logic                   intg_err_o,\n \n   input  rf_predec_bignum_t      rf_predec_bignum_i,\n-  output logic                   predec_error_o\n+  output logic                   predec_error_o,\n+\n+  output logic                   spurious_we_err_o\n );\n \n-  logic                          spurious_we_err;\n   logic [ExtWLEN-1:0]            wr_data_intg_mux_out, wr_data_intg_calc;\n   logic [1:0]                    wr_en_internal;\n   logic [BaseWordsPerWLEN*2-1:0] rd_data_a_err, rd_data_b_err;\n@@ -78,7 +79,7 @@ module otbn_rf_bignum\n \n       .rf_predec_bignum_i,\n \n-      .we_err_o(spurious_we_err)\n+      .we_err_o(spurious_we_err_o)\n     );\n   end else if (RegFile == RegFileFPGA) begin : gen_rf_bignum_fpga\n     otbn_rf_bignum_fpga #(\n@@ -97,7 +98,7 @@ module otbn_rf_bignum\n       .rd_addr_b_i,\n       .rd_data_b_o(rd_data_b_intg_o),\n \n-      .we_err_o(spurious_we_err)\n+      .we_err_o(spurious_we_err_o)\n     );\n   end\n \n@@ -159,9 +160,8 @@ module otbn_rf_bignum\n     );\n   end\n \n-  assign rf_err_o = ((|rd_data_a_err) & rd_en_a_i) |\n-                    ((|rd_data_b_err) & rd_en_b_i) |\n-                    spurious_we_err;\n+  assign intg_err_o = ((|rd_data_a_err) & rd_en_a_i) |\n+                      ((|rd_data_b_err) & rd_en_b_i);\n \n   // Make sure we're not outputting X. This indicates that something went wrong during the initial\n   // secure wipe.",
+      "additions": 8,
+      "deletions": 8,
+      "changes": 16
+    }
+  ],
+  "pr_info": {
+    "title": "[otbn] Separate spurious write enable and integrity errors in RFs",
+    "body": "Previously these two error types were both reported as integrity errors. However, spurious write enable errors should better be collected in the bad internal error class.\r\n\r\nThis is related to lowRISC/OpenTitan#14540",
+    "state": "closed",
+    "created_at": "2022-08-25T15:02:29Z",
+    "updated_at": "2022-08-26T14:24:34Z",
+    "merged_at": "2022-08-26T11:53:43Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "[otbn, rtl] One-hot write enable check in base RF should produce bad_internal_state error",
+    "body": "Within the base register file we have a check that ensures the onehot write enable signal is actually onehot. If it fails it triggers a fatal error but it's a register integrity error. I think triggering a bad_internal_state error makes more sense.\r\n\r\nEither way we need to ensure we have coverage for this scenario (should be a quick extension to https://github.com/lowRISC/opentitan/pull/14068 if we make it trigger a bad_internal_state).\r\n\r\n@andreaskurth @vogelpi @ctopal what are your thoughts?\r\n\r\n> estimate 2",
+    "labels": [
+      "Priority:P2",
+      "Type:Bug",
+      "Component:RTL",
+      "Component:Security",
+      "IP:otbn"
+    ],
+    "state": "closed",
+    "created_at": "2022-08-24T09:40:15Z",
+    "updated_at": "2022-09-22T12:21:06Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 1823
+  },
+  "base_commit": "d04a229426d0ce2bfb8a0c74669aa5980e1a2543",
+  "head_commit": "6402bb95bffa4585720226e6143e915f9442306a",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_14575_14540",
+  "lec_status": "useful_pass"
+}

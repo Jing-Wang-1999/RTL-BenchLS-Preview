@@ -1,0 +1,17 @@
+always @(posedge i_clk)
+	// Under wishbone rules, a write takes place any time i_wb_stb
+	// is high.  If that's the case, and if the write was to the
+	// setup address, then set us up for the new parameters.
+	if ((i_wb_stb)&&(i_wb_addr == UART_SETUP)&&(i_wb_we))
+	begin
+		if (i_wb_sel[0])
+			uart_setup[7:0] <= i_wb_data[7:0];
+		if (i_wb_sel[1])
+			uart_setup[15:8] <= i_wb_data[15:8];
+		if (i_wb_sel[2])
+			uart_setup[23:16] <= i_wb_data[23:16];
+		if (i_wb_sel[3])
+			uart_setup[30:24] <= { (i_wb_data[30])
+					||(!HARDWARE_FLOW_CONTROL_PRESENT),
+				i_wb_data[29:24] };
+	end

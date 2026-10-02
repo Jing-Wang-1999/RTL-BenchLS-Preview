@@ -1,0 +1,18 @@
+always @(posedge clk) begin
+    for(i=0;i<NUM_MACHINES;i=i+1) begin
+      curr_instr[i] <= instr[pc[i]];
+
+      // Coalesce output pins, making sure the highest PIO wins
+      for(gpio_idx=0;gpio_idx<32;gpio_idx=gpio_idx+1) begin
+        output_pins_prev[i][gpio_idx] <= output_pins[i][gpio_idx];
+        if (output_pins[i][gpio_idx] != output_pins_prev[i][gpio_idx]) begin
+          gpio_out[gpio_idx] <= output_pins[i][gpio_idx];
+        end
+
+        pin_directions_prev[i][gpio_idx] <= pin_directions[i][gpio_idx];
+        if (pin_directions[i][gpio_idx] != pin_directions_prev[i][gpio_idx]) begin
+          gpio_dir[gpio_idx] <= pin_directions[i][gpio_idx];
+        end
+      end
+    end
+  end

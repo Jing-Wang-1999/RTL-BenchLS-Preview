@@ -1,0 +1,58 @@
+always @ (posedge clk or negedge rst_n) begin
+	if (!rst_n) begin
+		m_mode <= 1'b1;
+		mstatus_mpie <= 1'b0;
+		mstatus_mie <= 1'b0;
+		mstatus_mpp <= 1'b1;
+		mstatus_mprv <= 1'b0;
+		mstatus_tw <= 1'b0;
+	end else if (!CSR_M_TRAP) begin
+		// Explicit tie-off when unimplemented; avoid synthesis warning about
+		// flops insensitive to clk. Should match the rst_n case above so that
+		// flops are constant-propagated away.
+		m_mode <= 1'b1;
+		mstatus_mpie <= 1'b0;
+		mstatus_mie <= 1'b0;
+		mstatus_mpp <= 1'b1;
+		mstatus_mprv <= 1'b0;
+		mstatus_tw <= 1'b0;
+	end else begin
+		if (trapreg_update_exit) begin
+			mstatus_mpie <= 1'b1;
+			mstatus_mie <= mstatus_mpie;
+			if (U_MODE) begin
+				m_mode <= mstatus_mpp;
+				mstatus_mpp <= 1'b0;
+				if (!mstatus_mpp) begin
+					mstatus_mprv <= 1'b0;
+				end
+			end
+		end else if (trapreg_update_enter) begin
+			mstatus_mpie <= mstatus_mie;
+			mstatus_mie <= 1'b0;
+			if (U_MODE) begin
+				m_mode <= 1'b1;
+				mstatus_mpp <= m_mode;
+			end
+		end else if (wen_m_mode && addr == MSTATUS) begin
+			mstatus_mpie <= wdata_update[7];
+			mstatus_mie  <= wdata_update[3];
+			mstatus_mprv <= wdata_update[17];
+			// Note only the MSB of MPP is implemented. It reads back as 11 or 00.
+			mstatus_mpp  <= wdata_update[12] || !U_MODE;
+			mstatus_tw   <= wdata_update[21] && U_MODE;
+		end else if (wen_raw && debug_mode && addr == DCSR && U_MODE && DEBUG_SUPPORT) begin
+			// Debugger can change/observe core state directly through
+			// dcsr.prv (this doesn't affect debugger operation, as all
+			// operations have an effective level of M-mode whilst the core
+			// is halted for debug.)
+			m_mode <= wdata_update[1];
+		end
+		if (!U_MODE) begin
+			// Explicitly tie-off to constant; some synthesis tools don't like
+			// it when variables are only sensitive to the reset.
+			m_mode <= 1'b1;
+			mstatus_mpp <= 1'b1;
+		end
+	end
+end

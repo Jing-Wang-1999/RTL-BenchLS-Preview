@@ -1,0 +1,45 @@
+module autovcoder_101198 (
+    input wire clk,
+    input wire rst,
+    input wire enable,
+    input wire [15:0] data_in,
+    output reg [15:0] data_out0,
+    output reg [15:0] data_out1,
+    output reg [15:0] data_out2,
+    output reg [15:0] data_out3
+);
+
+    reg [15:0] data0, data1, data2, data3;
+    reg [1:0] counter;
+
+    always @(posedge clk or negedge rst) begin
+        if (!rst) begin
+            data0 <= 16'b0;
+            data1 <= 16'b0;
+            data2 <= 16'b0;
+            data3 <= 16'b0;
+            counter <= 2'b0;
+        end else if (enable) begin
+            data0 <= data_in;
+            data1 <= data0;
+            data2 <= data1;
+            data3 <= data2;
+            counter <= counter + 1;
+        end
+    end
+
+    always @(posedge clk or negedge rst) begin
+        if (!rst) begin
+            data_out0 <= 16'b0;
+            data_out1 <= 16'b0;
+            data_out2 <= 16'b0;
+            data_out3 <= 16'b0;
+        end else if (enable && counter == 2'b11) begin
+            data_out0 <= data0;
+            data_out1 <= data1;
+            data_out2 <= data2;
+            data_out3 <= data3;
+        end
+    end
+
+endmodule

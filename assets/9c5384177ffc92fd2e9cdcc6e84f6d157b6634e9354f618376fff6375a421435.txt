@@ -1,0 +1,62 @@
+always @(posedge clk) begin
+    state_reg <= state_next;
+
+    s_axis_write_desc_ready_reg <= s_axis_write_desc_ready_next;
+
+    m_axis_write_desc_status_len_reg <= m_axis_write_desc_status_len_next;
+    m_axis_write_desc_status_tag_reg <= m_axis_write_desc_status_tag_next;
+    m_axis_write_desc_status_id_reg <= m_axis_write_desc_status_id_next;
+    m_axis_write_desc_status_dest_reg <= m_axis_write_desc_status_dest_next;
+    m_axis_write_desc_status_user_reg <= m_axis_write_desc_status_user_next;
+    m_axis_write_desc_status_valid_reg <= m_axis_write_desc_status_valid_next;
+
+    s_axis_write_data_tready_reg <= s_axis_write_data_tready_next;
+
+    addr_reg <= addr_next;
+    keep_mask_reg <= keep_mask_next;
+    last_cycle_offset_reg <= last_cycle_offset_next;
+    length_reg <= length_next;
+    cycle_count_reg <= cycle_count_next;
+    last_cycle_reg <= last_cycle_next;
+
+    tag_reg <= tag_next;
+
+    if (status_fifo_we) begin
+        status_fifo_len[status_fifo_wr_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]] <= status_fifo_wr_len;
+        status_fifo_tag[status_fifo_wr_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]] <= status_fifo_wr_tag;
+        status_fifo_id[status_fifo_wr_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]] <= status_fifo_wr_id;
+        status_fifo_dest[status_fifo_wr_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]] <= status_fifo_wr_dest;
+        status_fifo_user[status_fifo_wr_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]] <= status_fifo_wr_user;
+        status_fifo_mask[status_fifo_wr_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]] <= status_fifo_wr_mask;
+        status_fifo_last[status_fifo_wr_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]] <= status_fifo_wr_last;
+        status_fifo_wr_ptr_reg <= status_fifo_wr_ptr_reg + 1;
+    end
+    status_fifo_rd_ptr_reg <= status_fifo_rd_ptr_next;
+
+    status_fifo_half_full_reg <= $unsigned(status_fifo_wr_ptr_reg - status_fifo_rd_ptr_reg) >= 2**(STATUS_FIFO_ADDR_WIDTH-1);
+
+    if (active_count_reg < 2**STATUS_FIFO_ADDR_WIDTH && inc_active && !dec_active) begin
+        active_count_reg <= active_count_reg + 1;
+        active_count_av_reg <= active_count_reg < (2**STATUS_FIFO_ADDR_WIDTH-1);
+    end else if (active_count_reg > 0 && !inc_active && dec_active) begin
+        active_count_reg <= active_count_reg - 1;
+        active_count_av_reg <= 1'b1;
+    end else begin
+        active_count_av_reg <= active_count_reg < 2**STATUS_FIFO_ADDR_WIDTH;
+    end
+
+    if (rst) begin
+        state_reg <= STATE_IDLE;
+
+        s_axis_write_desc_ready_reg <= 1'b0;
+        m_axis_write_desc_status_valid_reg <= 1'b0;
+
+        s_axis_write_data_tready_reg <= 1'b0;
+
+        status_fifo_wr_ptr_reg <= 0;
+        status_fifo_rd_ptr_reg <= 0;
+
+        active_count_reg <= 0;
+        active_count_av_reg <= 1'b1;
+    end
+end

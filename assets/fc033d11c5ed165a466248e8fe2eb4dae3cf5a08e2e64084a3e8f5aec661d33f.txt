@@ -1,0 +1,35 @@
+# Hardware Specification: Maximum Value Selector
+
+## Overview
+This module is a combinational comparator that identifies which of ten input values is the maximum and outputs the index of that maximum value.
+
+## Inputs
+The module accepts ten signed 26-bit input values:
+- out1 through out10: Ten signed integer inputs, each 26 bits wide, representing values to be compared.
+
+## Output
+- max: A 4-bit output register that encodes the index of the maximum input value.
+
+## Functional Behavior
+The module performs a priority-encoded maximum selection among the ten inputs. It compares all inputs against each other to determine which one is the largest value.
+
+The output encoding is as follows:
+- 0000 (0): out1 is maximum
+- 0001 (1): out2 is maximum
+- 0010 (2): out3 is maximum
+- 0011 (3): out4 is maximum
+- 0100 (4): out5 is maximum
+- 0101 (5): out6 is maximum
+- 0110 (6): out7 is maximum
+- 0111 (7): out8 is maximum
+- 1000 (8): out9 is maximum
+- 1001 (9): out10 is maximum
+
+## Comparison Logic
+The module uses a cascaded if-else structure to evaluate each input sequentially. Each condition checks whether a candidate input is greater than or equal to all other nine inputs. The first condition that evaluates to true determines the output. If no condition is satisfied (which should not occur in normal operation), the output defaults to 0000.
+
+## Timing
+This is a combinational logic module with no clock input. The output updates immediately in response to changes in the input values, with propagation delay determined by the depth of the comparison logic.
+
+## Notes
+- The comparison uses greater-than-or-equal operators, meaning if multiple inputs have

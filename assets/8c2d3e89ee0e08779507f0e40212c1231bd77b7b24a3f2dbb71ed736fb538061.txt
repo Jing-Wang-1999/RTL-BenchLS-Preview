@@ -1,0 +1,114 @@
+### Instruction for Generating Verilog Code for a AXI Crossbar:
+
+1. **Primary Function**:
+   The Verilog module `one_to_two_axi_crossbar` functions as a crossbar switch for AXI interfaces, enabling communication between a single master interface and two slave interfaces by routing and managing data and control signals.
+
+2. **Key Control Flow**:
+   - The module operates on the `aclk` (clock signal) and `aresetn` (active-low reset signal).
+   - It handles write address (`s_axi_aw*`) transactions by asserting `s_axi_awready` when `s_axi_awvalid` is high. The corresponding signals are then forwarded to the master interface `m_axi_aw*`.
+   - Write data (`s_axi_w*`) transactions are managed similarly, with synchronization using `s_axi_wready` and corresponding forwarding to `m_axi_w*`.
+   - The write response (`s_axi_b*`) signals are sent back to the slave interface upon completion of a write operation, indicated when `m_axi_bvalid` is asserted.
+   - Read address (`s_axi_ar*`) transactions are initiated when `s_axi_arvalid` is asserted, and the address signals are passed to the master interface `m_axi_ar*`.
+   - Read data (`s_axi_r*`) transactions are processed by forwarding data from `m_axi_r*` back to the slave interface, with proper synchronization using `s_axi_rready` and acknowledgment signals like `s_axi_rlast`.
+
+3. **Important Data Processing and Signal Interactions**:
+   - Data inputs from the slave interface, such as `s_axi_awid`, `s_axi_awaddr`, `s_axi_wdata`, `s_axi_araddr`, and others, are routed through the internal crossbar logic to the master output signals (`m_axi_awid`, `m_axi_awaddr`, `m_axi_wdata`, `m_axi_araddr`, etc.).
+   - The module performs address decoding, data routing, and synchronization to ensure the correct transfer of signals between the single master and two slaves.
+   - Ready and valid signals (`*_awready`, `*_wready`, etc.) ensure proper handshaking between the interfaces to maintain data integrity and flow control.
+   - Burst and transaction information (`*_awlen`, `*_awburst`, `*_arlen`, `*_arburst`) are handled to support various AXI burst types and transaction lengths.
+
+### Example Instruction for LLM:
+Create a Verilog module named `one_to_two_axi_crossbar` that implements a crossbar switch for AXI interfaces. This module connects a single master AXI interface with two slave AXI interfaces. Key signals include clock (`aclk`), reset (`aresetn`), and various AXI transaction signals for read, write, address, data, and control.
+
+- For write transactions, check `s_axi_awvalid` and forward the signals `s_axi_awid`, `s_axi_awaddr`, `s_axi_awlen`, `s_axi_awsize`, `s_axi_awburst`, `s_axi_awlock`, `s_axi_awcache`, `s_axi_awprot`, `s_axi_awqos` to `m_axi_aw*` when `s_axi_awready` is asserted.
+- Handle write data by monitoring `s_axi_wvalid` and forward `s_axi_wid`, `s_axi_wdata`, `s_axi_wstrb`, `s_axi_wlast` to `m_axi_w*` when `s_axi_wready` is high.
+- Manage write responses by asserting `s_axi_bvalid` and sending the signals `s_axi_bid`, `s_axi_bresp` back to the slave interface upon receiving acknowledgment from `m_axi_bvalid`.
+- For read transactions, monitor `s_axi_arvalid` and pass `s_axi_arid`, `s_axi_araddr`, `s_axi_arlen`, `s_axi_arsize`, `s_axi_arburst`, `s_axi_arlock`, `s_axi_arcache`, `s_axi_arprot`, `s_axi_arqos` to `m_axi_ar*` ensuring `s_axi_arready` is asserted.
+- Process read data by forwarding `m_axi_rid`, `m_axi_rdata`, `m_axi_rresp`, `m_axi_rlast` back to the slave interface `s_axi_r*` with synchronization using `s_axi_rready`.
+
+Ensure all signals are properly managed and synchronized according to AXI protocol specifications, maintaining correct data flow and transaction integrity.
+
+Module Interface:
+module one_to_two_axi_crossbar(
+  input aclk,
+  input aresetn,
+  input [3:0]s_axi_awid,
+  input [31:0]s_axi_awaddr,
+  input [3:0]s_axi_awlen,
+  input [2:0]s_axi_awsize,
+  input [1:0]s_axi_awburst,
+  input [1:0]s_axi_awlock,
+  input [3:0]s_axi_awcache,
+  input [2:0]s_axi_awprot,
+  input [3:0]s_axi_awqos,
+  input [0:0]s_axi_awvalid,
+  output [0:0]s_axi_awready,
+  input [3:0]s_axi_wid,
+  input [31:0]s_axi_wdata,
+  input [3:0]s_axi_wstrb,
+  input [0:0]s_axi_wlast,
+  input [0:0]s_axi_wvalid,
+  output [0:0]s_axi_wready,
+  output [3:0]s_axi_bid,
+  output [1:0]s_axi_bresp,
+  output [0:0]s_axi_bvalid,
+  input [0:0]s_axi_bready,
+  input [3:0]s_axi_arid,
+  input [31:0]s_axi_araddr,
+  input [3:0]s_axi_arlen,
+  input [2:0]s_axi_arsize,
+  input [1:0]s_axi_arburst,
+  input [1:0]s_axi_arlock,
+  input [3:0]s_axi_arcache,
+  input [2:0]s_axi_arprot,
+  input [3:0]s_axi_arqos,
+  input [0:0]s_axi_arvalid,
+  output [0:0]s_axi_arready,
+  output [3:0]s_axi_rid,
+  output [31:0]s_axi_rdata,
+  output [1:0]s_axi_rresp,
+  output [0:0]s_axi_rlast,
+  output [0:0]s_axi_rvalid,
+  input [0:0]s_axi_rready,
+  output [7:0]m_axi_awid,
+  output [63:0]m_axi_awaddr,
+  output [7:0]m_axi_awlen,
+  output [5:0]m_axi_awsize,
+  output [3:0]m_axi_awburst,
+  output [3:0]m_axi_awlock,
+  output [7:0]m_axi_awcache,
+  output [5:0]m_axi_awprot,
+  output [7:0]m_axi_awqos,
+  output [1:0]m_axi_awvalid,
+  input [1:0]m_axi_awready,
+  output [7:0]m_axi_wid,
+  output [63:0]m_axi_wdata,
+  output [7:0]m_axi_wstrb,
+  output [1:0]m_axi_wlast,
+  output [1:0]m_axi_wvalid,
+  input [1:0]m_axi_wready,
+  input [7:0]m_axi_bid,
+  input [3:0]m_axi_bresp,
+  input [1:0]m_axi_bvalid,
+  output [1:0]m_axi_bready,
+  output [7:0]m_axi_arid,
+  output [63:0]m_axi_araddr,
+  output [7:0]m_axi_arlen,
+  output [5:0]m_axi_arsize,
+  output [3:0]m_axi_arburst,
+  output [3:0]m_axi_arlock,
+  output [7:0]m_axi_arcache,
+  output [5:0]m_axi_arprot,
+  output [7:0]m_axi_arqos,
+  output [1:0]m_axi_arvalid,
+  input [1:0]m_axi_arready,
+  input [7:0]m_axi_rid,
+  input [63:0]m_axi_rdata,
+  input [3:0]m_axi_rresp,
+  input [1:0]m_axi_rlast,
+  input [1:0]m_axi_rvalid,
+  output [1:0]m_axi_rready
+);
+
+Behavioral Clarifications:
+- The golden implementation contains no internal logic — it is a port-declaration-only stub. The module body should implement only port declarations with no behavioral always blocks or assign statements required beyond the interface.

@@ -1,0 +1,60 @@
+`timescale 1ns/1ps
+
+module origen_067371(
+    output reg aclk,
+    output reg bclk,
+    output reg cclk,
+    output reg valid0,
+    output reg valid1,
+    output reg valid2,
+    output reg valid3,
+    output reg [7:0] data_in0,
+    output reg [7:0] data_in1,
+    output reg [7:0] data_in2,
+    output reg [7:0] data_in3
+);
+
+    // Clock generation
+    initial begin
+        aclk = 0;
+        bclk = 0;
+        cclk = 0;
+        forever begin
+            #2 aclk = ~aclk;
+            #1 bclk = ~bclk;
+            #0.5 cclk = ~cclk;
+        end
+    end
+
+    // Initialization and stimuli generation
+    initial begin
+        $dumpfile("probador.vcd");
+        $dumpvars(0, probador);
+
+        valid0 = 0; valid1 = 0; valid2 = 0; valid3 = 0;
+        data_in0 = 8'h00; data_in1 = 8'h00; data_in2 = 8'h00; data_in3 = 8'h00;
+
+        @(posedge aclk);
+        valid0 = 1; valid1 = 1; valid2 = 1; valid3 = 1;
+        data_in0 = 8'hA5; data_in1 = 8'h5A; data_in2 = 8'hF0; data_in3 = 8'h0F;
+
+        @(posedge aclk);
+        data_in0 = 8'h33; data_in1 = 8'hCC; data_in2 = 8'h55; data_in3 = 8'hAA;
+
+        @(posedge aclk);
+        data_in0 = 8'h87; data_in1 = 8'h78; data_in2 = 8'h1E; data_in3 = 8'hE1;
+
+        @(posedge aclk);
+        data_in2 = 8'h00;
+
+        repeat(2) @(posedge aclk);
+        valid0 = 0; valid1 = 0; valid3 = 0;
+
+        @(posedge aclk);
+        valid2 = 0;
+
+        repeat(5) @(posedge aclk);
+        $finish;
+    end
+
+endmodule

@@ -1,0 +1,30 @@
+The module is a buffering interface for DRAM control and data signals. It provides direct pass-through connections from input ports to output ports without any logic transformation, delay, or state retention. All outputs are continuous assignments of their corresponding inputs.
+
+**Inputs:**
+- `io_dram_data_valid`: A single-bit flag indicating valid incoming DRAM data.
+- `io_dram_ecc_in`: A 32-bit Error-Correcting Code (ECC) word associated with the incoming data.
+- `io_dram_data_in`: A 256-bit wide data input bus from the DRAM.
+- `dram_io_cas_l`: Column Address Strobe (active low) control signal.
+- `dram_io_channel_disabled`: Signal to disable the DRAM channel.
+- `dram_io_cke`: Clock Enable signal for the DRAM.
+- `dram_io_clk_enable`: Enables the DRAM clock.
+- `dram_io_drive_data`: Control signal to enable data drive to the DRAM.
+- `dram_io_drive_enable`: Control signal to enable the output driver.
+- `dram_io_pad_clk_inv`: Inverted clock signal for I/O pads.
+- `dram_io_pad_enable`: Enable signal for I/O pads.
+- `dram_io_ras_l`: Row Address Strobe (active low) control signal.
+- `dram_io_write_en_l`: Write Enable (active low) control signal.
+- `dram_io_addr`: A 15-bit DRAM address bus.
+- `dram_io_bank`: A 3-bit DRAM bank select.
+- `dram_io_cs_l`: A 4-bit Chip Select (active low) bus.
+- `dram_io_data_out`: A 288-bit wide data output bus to the DRAM.
+- `dram_io_ptr_clk_inv`: A 5-bit bus for inverted pointer clock signals.
+
+**Outputs:**
+Each output is a buffered version of its corresponding input, sharing the same signal name with a "_buf" suffix. For example, `io_dram_data_valid_buf` is the buffered output of the input `io_dram_data_valid`. The bus widths are preserved: the 256-bit `io_dram_data_in` drives the 256-bit `io_dram_data_in_buf`, the 288-bit `dram_io_data_out` drives the 288-bit `dram_io_data_out_buf`, and so on for all other signals.
+
+**Function:**
+The module acts as a simple signal fanout buffer or isolation stage. It reads all input signals and continuously drives their values to the corresponding output ports. There is no internal clock, sequential logic, or conditional behavior. The purpose is likely to provide signal integrity buffering, load isolation, or a clear boundary in the system hierarchy between a DRAM controller and the physical interface.
+
+**Allowed Sub-modules:**
+The specification does not require or permit any sub-modules, as its function is purely combinatorial wiring. Any implementation must achieve the direct signal pass-through behavior.

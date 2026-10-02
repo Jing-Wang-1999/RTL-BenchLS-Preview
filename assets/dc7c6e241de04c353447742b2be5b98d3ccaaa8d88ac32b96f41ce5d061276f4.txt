@@ -1,0 +1,67 @@
+module rtlpp_11126 (
+    input wire clk_in,
+    input wire data_in,
+    input wire scan_select_in,
+    input wire latch_enable_in,
+    output wire clk_out,
+    output wire data_out,
+    output wire scan_select_out,
+    output wire latch_enable_out
+    );
+
+    wire clk;
+    wire data_out_i;
+    parameter NUM_IOS = 8;
+    
+    wire [NUM_IOS-1:0] scan_data_out;   
+    wire [NUM_IOS-1:0] scan_data_in;    
+    wire [NUM_IOS-1:0] module_data_in;  
+    wire [NUM_IOS-1:0] module_data_out;
+
+    // Buffer logic for inputs and outputs
+
+    assign clk = clk_in;
+    assign clk_out = clk;
+    assign data_out = data_out_i;
+    assign scan_select_out = scan_select_in;
+    assign latch_enable_out = latch_enable_in;
+
+    assign scan_data_in = {scan_data_out[NUM_IOS-2:0], data_in};
+
+    // Replacement for sky130_fd_sc_hd__dfrtn_1
+    reg data_out_i_reg;
+    always @(negedge clk or negedge 1'b1) begin
+        if (!1'b1)
+            data_out_i_reg <= 1'b0;
+        else
+            data_out_i_reg <= scan_data_out[NUM_IOS-1];
+    end
+    assign data_out_i = data_out_i_reg;
+
+    // Replacement for sky130_fd_sc_hd__sdfxtp_1 and sky130_fd_sc_hd__dlxtp_1
+    reg [NUM_IOS-1:0] scan_data_out_reg;
+    reg [NUM_IOS-1:0] module_data_in_reg;
+
+    always @(posedge clk) begin
+        scan_data_out_reg <= scan_select_in ? module_data_out : scan_data_in;
+    end
+
+    always @(posedge latch_enable_in) begin
+        module_data_in_reg <= scan_data_out_reg;
+    end
+
+    assign scan_data_out = scan_data_out_reg;
+    assign module_data_in = module_data_in_reg;
+
+    // Embedded user module logic (assuming its functionality)
+    // Example user module function needs to be accurately replaced
+
+    generate
+        genvar i;
+        for (i = 0; i < NUM_IOS; i = i + 1) begin : user_logic
+            // Example logic replacement for user_module
+            assign module_data_out[i] = module_data_in[i]; // Placeholder logic
+        end
+    endgenerate
+
+endmodule

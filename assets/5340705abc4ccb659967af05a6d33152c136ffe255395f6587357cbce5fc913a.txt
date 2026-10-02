@@ -1,0 +1,9 @@
+always @ *
+begin
+    data0_write_m_r = 4'b0;
+
+    if (state_q == STATE_REFILL)
+        data0_write_m_r = (pmem_ack_w && replace_way_q == 0) ? 4'b1111 : 4'b0000;
+    else if (state_q == STATE_WRITE || state_q == STATE_LOOKUP)
+        data0_write_m_r = mem_wr_m_q & {4{tag0_hit_m_w}};
+end

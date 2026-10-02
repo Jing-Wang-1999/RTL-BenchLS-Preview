@@ -1,0 +1,99 @@
+module origen_214058 (
+    // Clock and Reset Signals
+    input csi_clockreset_clk,
+    input csi_clockreset_reset_n,
+
+    // SEM Interface
+    inout [15:0] SEM_DATA,
+    output [12:0] SEM_ADDR,
+    output SEM_WEN,
+    output SEM_OEN,
+    output SEM_CSN,
+    input SEM_WAITN,
+    input SEM_CINT,
+    input SEM_INT00,
+    input SEM_INT01,
+    input SEM_INT02,
+    input SEM_INT04,
+    input SEM_INT05,
+    input SEM_INT06,
+
+    // Avalon Memory-Mapped (AVM) Interface
+    output [7:0] avm_m0_writedata,
+    input [7:0] avm_m0_readdata,
+    output [12:0] avm_m0_address,
+    output avm_m0_write_n,
+    output avm_m0_read_n,
+    output avm_m0_chipselect_n,
+    input avm_m0_waitrequest_n,
+
+    // Interrupt Signals
+    input [6:0] inr_irq0_irq
+);
+
+    // Internal Registers and Wires
+    reg [15:0] sem_data_reg;
+    reg [12:0] sem_addr_reg;
+    reg sem_wen_reg;
+    reg sem_oen_reg;
+    reg sem_csn_reg;
+    wire sem_waitn;
+    wire sem_cint;
+    wire sem_int00;
+    wire sem_int01;
+    wire sem_int02;
+    wire sem_int04;
+    wire sem_int05;
+    wire sem_int06;
+
+    reg [7:0] avm_writedata_reg;
+    reg [12:0] avm_address_reg;
+    reg avm_write_n_reg;
+    reg avm_read_n_reg;
+    reg avm_chipselect_n_reg;
+    wire avm_waitrequest_n;
+
+    // Assign SEM Interface Signals
+    assign SEM_DATA = sem_oen_reg ? 16'bZ : sem_data_reg;
+    assign SEM_ADDR = sem_addr_reg;
+    assign SEM_WEN = sem_wen_reg;
+    assign SEM_OEN = sem_oen_reg;
+    assign SEM_CSN = sem_csn_reg;
+    assign sem_waitn = SEM_WAITN;
+    assign sem_cint = SEM_CINT;
+    assign sem_int00 = SEM_INT00;
+    assign sem_int01 = SEM_INT01;
+    assign sem_int02 = SEM_INT02;
+    assign sem_int04 = SEM_INT04;
+    assign sem_int05 = SEM_INT05;
+    assign sem_int06 = SEM_INT06;
+
+    // Assign AVM Interface Signals
+    assign avm_m0_writedata = avm_writedata_reg;
+    assign avm_m0_address = avm_address_reg;
+    assign avm_m0_write_n = avm_write_n_reg;
+    assign avm_m0_read_n = avm_read_n_reg;
+    assign avm_m0_chipselect_n = avm_chipselect_n_reg;
+    assign avm_waitrequest_n = avm_m0_waitrequest_n;
+
+    // Module Logic
+    always @(posedge csi_clockreset_clk or negedge csi_clockreset_reset_n) begin
+        if (!csi_clockreset_reset_n) begin
+            // Reset the module
+            sem_data_reg <= 16'b0;
+            sem_addr_reg <= 13'b0;
+            sem_wen_reg <= 1'b0;
+            sem_oen_reg <= 1'b0;
+            sem_csn_reg <= 1'b1;
+            avm_writedata_reg <= 8'b0;
+            avm_address_reg <= 13'b0;
+            avm_write_n_reg <= 1'b1;
+            avm_read_n_reg <= 1'b1;
+            avm_chipselect_n_reg <= 1'b1;
+        end else begin
+            // Implement the module's functionality
+            // (Omitted for brevity)
+        end
+    end
+
+endmodule

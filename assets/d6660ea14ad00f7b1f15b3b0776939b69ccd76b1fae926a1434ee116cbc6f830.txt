@@ -1,0 +1,56 @@
+module origen_012940 (
+    input wire clk_i,
+    input wire [7:0] uart_tx_data_i,
+    input wire uart_tx_en_i,
+    output wire uart_tx_o
+);
+
+    parameter BAUD_DIV = 5208;
+    parameter BAUD_DIV_CAP = 2604;
+
+    reg [12:0] baud_div;
+    reg baud_bps;
+    reg [9:0] send_data;
+    reg [3:0] bit_num;
+    reg uart_send_flag;
+    reg uart_tx_o_r;
+
+    // Baud rate generation
+    always @(posedge clk_i) begin
+        if (baud_div == BAUD_DIV - 1) begin
+            baud_div <= 0;
+            baud_bps <= 1;
+        end else begin
+            baud_div <= baud_div + 1;
+            baud_bps <= (baud_div == BAUD_DIV_CAP - 1);
+        end
+    end
+
+    // Transmission control and data framing
+    always @(posedge clk_i) begin
+        if (uart_tx_en_i && !uart_send_flag) begin
+            send_data <= {1'b1, uart_tx_data_i, 1'b0};
+            uart_send_flag <= 1;
+            bit_num <= 0;
+        end else if (uart_send_flag && baud_bps) begin
+            if (bit_num == 10) begin
+                uart_send_flag <= 0;
+            end else begin
+                send_data <= {1'b1, send_data[9:1]};
+                bit_num <= bit_num + 1;
+            end
+        end
+    end
+
+    // Output generation
+    always @(posedge clk_i) begin
+        if (!uart_send_flag) begin
+            uart_tx_o_r <= 1;
+        end else if (baud_bps) begin
+            uart_tx_o_r <= send_data[0];
+        end
+    end
+
+    assign uart_tx_o = uart_tx_o_r;
+
+endmodule

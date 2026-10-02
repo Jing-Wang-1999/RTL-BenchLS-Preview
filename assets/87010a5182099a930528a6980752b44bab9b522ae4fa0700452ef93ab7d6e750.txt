@@ -1,0 +1,52 @@
+module origen_196418(
+    input reset,
+    input in_en,
+    input clk,
+    input start1,
+    input [7:0] part_msg1,
+    input load1,
+    output [127:0] plaintext,
+    output [127:0] key,
+    output done
+);
+
+reg [7:0] part_msg;
+reg [255:0] tmp_msg;
+reg [255:0] reg_msg;
+reg pulse_start;
+reg load_en;
+reg done_en;
+reg [7:0] adrs;
+
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        pulse_start <= 1'b0;
+        load_en <= 1'b0;
+        adrs <= 8'd0;
+        done_en <= 1'b0;
+    end
+    else begin
+        if (in_en) begin
+            pulse_start <= start1;
+            load_en <= load1;
+            if (load_en) begin
+                part_msg <= part_msg1;
+                tmp_msg <= {tmp_msg[247:0], part_msg};
+                adrs <= adrs + 8'd1;
+            end
+            if (adrs == 8'd31) begin
+                reg_msg <= tmp_msg;
+                done_en <= 1'b1;
+            end
+            else begin
+                done_en <= 1'b0;
+            end
+        end
+    end
+end
+
+assign plaintext = reg_msg[255:128];
+assign key = reg_msg[127:0];
+assign done = done_en;
+
+endmodule

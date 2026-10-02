@@ -1,0 +1,132 @@
+module origen_139906 (
+    input wire [127:0] data,
+    input wire [127:0] key,
+    input wire ctrl,
+    output reg [127:0] out
+);
+
+    // AES S-box
+    reg [7:0] sbox [0:255];
+    initial begin
+        // Initialize S-box (simplified for brevity)
+        sbox[0] = 8'h63; sbox[1] = 8'h7c; // ... (complete S-box initialization)
+    end
+
+    // AES inverse S-box
+    reg [7:0] inv_sbox [0:255];
+    initial begin
+        // Initialize inverse S-box (simplified for brevity)
+        inv_sbox[0] = 8'h52; inv_sbox[1] = 8'h09; // ... (complete inverse S-box initialization)
+    end
+
+    // AES round constants
+    reg [7:0] rcon [0:10];
+    initial begin
+        rcon[0] = 8'h01; rcon[1] = 8'h02; rcon[2] = 8'h04; rcon[3] = 8'h08; rcon[4] = 8'h10;
+        rcon[5] = 8'h20; rcon[6] = 8'h40; rcon[7] = 8'h80; rcon[8] = 8'h1b; rcon[9] = 8'h36;
+        rcon[10] = 8'h00;
+    end
+
+    reg [127:0] state, round_key;
+    integer i, j, round;
+
+    // AES functions
+    function [7:0] sub_byte;
+        input [7:0] in;
+        sub_byte = sbox[in];
+    endfunction
+
+    function [7:0] inv_sub_byte;
+        input [7:0] in;
+        inv_sub_byte = inv_sbox[in];
+    endfunction
+
+    function [31:0] rot_word;
+        input [31:0] word;
+        rot_word = {word[23:0], word[31:24]};
+    endfunction
+
+    function [127:0] mix_columns;
+        input [127:0] state;
+        // Implement mix columns operation
+        // ...
+    endfunction
+
+    function [127:0] inv_mix_columns;
+        input [127:0] state;
+        // Implement inverse mix columns operation
+        // ...
+    endfunction
+
+    // Key expansion
+    function [127:0] key_expansion;
+        input [127:0] key;
+        input [3:0] round;
+        reg [31:0] temp;
+        reg [127:0] expanded_key;
+
+        expanded_key = key;
+        temp = expanded_key[31:0];
+        temp = rot_word(temp);
+        temp = {sub_byte(temp[31:24]), sub_byte(temp[23:16]), sub_byte(temp[15:8]), sub_byte(temp[7:0])};
+        temp = temp ^ {rcon[round], 24'b0};
+
+        expanded_key[127:96] = expanded_key[127:96] ^ temp;
+        expanded_key[95:64] = expanded_key[95:64] ^ expanded_key[127:96];
+        expanded_key[63:32] = expanded_key[63:32] ^ expanded_key[95:64];
+        expanded_key[31:0] = expanded_key[31:0] ^ expanded_key[63:32];
+
+        key_expansion = expanded_key;
+    endfunction
+
+    always @(*) begin
+        state = data ^ key;
+        round_key = key;
+
+        if (ctrl == 0) begin // Encryption
+            for (round = 1; round <= 10; round = round + 1) begin
+                // SubBytes
+                for (i = 0; i < 16; i = i + 1)
+                    state[i*8 +: 8] = sub_byte(state[i*8 +: 8]);
+
+                // ShiftRows
+                state = {state[127:120], state[87:80], state[47:40], state[7:0],
+                         state[95:88], state[55:48], state[15:8], state[103:96],
+                         state[63:56], state[23:16], state[111:104], state[71:64],
+                         state[31:24], state[119:112], state[79:72], state[39:32]};
+
+                // MixColumns (except for the last round)
+                if (round != 10)
+                    state = mix_columns(state);
+
+                // AddRoundKey
+                round_key = key_expansion(round_key, round);
+                state = state ^ round_key;
+            end
+        end else begin // Decryption
+            for (round = 10; round >= 1; round = round - 1) begin
+                // Inverse ShiftRows
+                state = {state[127:120], state[23:16], state[47:40], state[71:64],
+                         state[95:88], state[119:112], state[15:8], state[39:32],
+                         state[63:56], state[87:80], state[111:104], state[7:0],
+                         state[31:24], state[55:48], state[79:72], state[103:96]};
+
+                // Inverse SubBytes
+                for (i = 0; i < 16; i = i + 1)
+                    state[i*8 +: 8] = inv_sub_byte(state[i*8 +: 8]);
+
+                // AddRoundKey
+                round_key = key_expansion(round_key, round);
+                state = state ^ round_key;
+
+                // Inverse MixColumns (except for the first round)
+                if (round != 10)
+                    state = inv_mix_columns(state);
+            end
+            state = state ^ key;
+        end
+
+        out = state;
+    end
+
+endmodule

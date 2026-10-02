@@ -1,0 +1,17 @@
+always @(posedge clk) begin
+    if (reset) begin
+      first <= 0;
+      next <= 0;
+      count <= 0;
+    end else begin
+      if (do_push) begin
+        next <= next + 1;
+        arr[next] <= din;
+        if (!do_pull) count <= count + 1;
+      end
+      if (do_pull) begin
+        first <= first + 1;
+        if (!do_push) count <= count - 1;
+      end
+    end
+  end

@@ -1,0 +1,156 @@
+module autovcoder_121805 (
+    input clk,
+    input reset,
+    output io_in_1_ready,
+    input io_in_1_valid,
+    input [25:0] io_in_1_bits_addr_block,
+    input [6:0] io_in_1_bits_client_xact_id,
+    input [1:0] io_in_1_bits_addr_beat,
+    input [127:0] io_in_1_bits_data,
+    input [2:0] io_in_1_bits_r_type,
+    input io_in_1_bits_voluntary,
+    output io_in_0_ready,
+    input io_in_0_valid,
+    input [25:0] io_in_0_bits_addr_block,
+    input [6:0] io_in_0_bits_client_xact_id,
+    input [1:0] io_in_0_bits_addr_beat,
+    input [127:0] io_in_0_bits_data,
+    input [2:0] io_in_0_bits_r_type,
+    input io_in_0_bits_voluntary,
+    input io_out_ready,
+    output io_out_valid,
+    output [25:0] io_out_bits_addr_block,
+    output [6:0] io_out_bits_client_xact_id,
+    output [1:0] io_out_bits_addr_beat,
+    output [127:0] io_out_bits_data,
+    output [2:0] io_out_bits_r_type,
+    output io_out_bits_voluntary,
+    output io_chosen
+);
+
+  wire chosen;
+  wire T0;
+  wire choose;
+  reg lockIdx;
+  wire T35;
+  wire T1;
+  wire T2;
+  wire T3;
+  wire T4;
+  wire T5;
+  wire T6;
+  wire T7;
+  wire T8;
+  wire T9;
+  wire T10;
+  wire T11;
+  wire T12;
+  reg locked;
+  wire T36;
+  wire T13;
+  wire T14;
+  wire T15;
+  wire T16;
+  wire [1:0] T17;
+  reg [1:0] R18;
+  wire [1:0] T37;
+  wire [1:0] T19;
+  wire T20;
+  wire T21;
+  wire [2:0] T22;
+  wire [127:0] T23;
+  wire [1:0] T24;
+  wire [6:0] T25;
+  wire [25:0] T26;
+  wire T27;
+  wire T28;
+  wire T29;
+  wire T30;
+  wire T31;
+  wire T32;
+  wire T33;
+  wire T34;
+
+`ifndef SYNTHESIS
+  // synthesis translate_off
+  integer initvar;
+  initial begin
+    #0.002;
+    lockIdx = {1{$random}};
+    locked = {1{$random}};
+    R18 = {1{$random}};
+  end
+  // synthesis translate_on
+`endif
+
+  assign io_chosen = chosen;
+  assign chosen = T0;
+  assign T0 = locked ? lockIdx : choose;
+  assign choose = io_in_0_valid == 1'h0;
+  assign T35 = reset ? 1'h1 : T1;
+  assign T1 = T4 ? T2 : lockIdx;
+  assign T2 = T3 == 1'h0;
+  assign T3 = io_in_0_ready & io_in_0_valid;
+  assign T4 = T6 & T5;
+  assign T5 = locked ^ 1'h1;
+  assign T6 = T12 & T7;
+  assign T7 = T9 | T8;
+  assign T8 = 3'h2 == io_out_bits_r_type;
+  assign T9 = T11 | T10;
+  assign T10 = 3'h1 == io_out_bits_r_type;
+  assign T11 = 3'h0 == io_out_bits_r_type;
+  assign T12 = io_out_ready & io_out_valid;
+  assign T36 = reset ? 1'h0 : T13;
+  assign T13 = T15 ? 1'h0 : T14;
+  assign T14 = T4 ? 1'h1 : locked;
+  assign T15 = T12 & T16;
+  assign T16 = T17 == 2'h0;
+  assign T17 = R18 + 2'h1;
+  assign T37 = reset ? 2'h0 : T19;
+  assign T19 = T6 ? T17 : R18;
+  assign io_out_bits_voluntary = T20;
+  assign T20 = T21 ? io_in_1_bits_voluntary : io_in_0_bits_voluntary;
+  assign T21 = chosen;
+  assign io_out_bits_r_type = T22;
+  assign T22 = T21 ? io_in_1_bits_r_type : io_in_0_bits_r_type;
+  assign io_out_bits_data = T23;
+  assign T23 = T21 ? io_in_1_bits_data : io_in_0_bits_data;
+  assign io_out_bits_addr_beat = T24;
+  assign T24 = T21 ? io_in_1_bits_addr_beat : io_in_0_bits_addr_beat;
+  assign io_out_bits_client_xact_id = T25;
+  assign T25 = T21 ? io_in_1_bits_client_xact_id : io_in_0_bits_client_xact_id;
+  assign io_out_bits_addr_block = T26;
+  assign T26 = T21 ? io_in_1_bits_addr_block : io_in_0_bits_addr_block;
+  assign io_out_valid = T27;
+  assign T27 = T21 ? io_in_1_valid : io_in_0_valid;
+  assign io_in_0_ready = T28;
+  assign T28 = T29 & io_out_ready;
+  assign T29 = locked ? T30 : 1'h1;
+  assign T30 = lockIdx == 1'h0;
+  assign io_in_1_ready = T31;
+  assign T31 = T32 & io_out_ready;
+  assign T32 = locked ? T34 : T33;
+  assign T33 = io_in_0_valid ^ 1'h1;
+  assign T34 = lockIdx == 1'h1;
+
+  always @(posedge clk) begin
+    if (reset) begin
+      lockIdx <= 1'h1;
+    end else if (T4) begin
+      lockIdx <= T2;
+    end
+    if (reset) begin
+      locked <= 1'h0;
+    end else if (T15) begin
+      locked <= 1'h0;
+    end else if (T4) begin
+      locked <= 1'h1;
+    end
+    if (reset) begin
+      R18 <= 2'h0;
+    end else if (T6) begin
+      R18 <= T17;
+    end
+  end
+endmodule
+

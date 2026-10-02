@@ -1,0 +1,68 @@
+module rtlpp_07266 (
+    input wire clk_in,
+    input wire data_in,
+    input wire scan_select_in,
+    input wire latch_enable_in,
+    output wire clk_out,
+    output wire data_out,
+    output wire scan_select_out,
+    output wire latch_enable_out
+    );
+
+    wire clk;
+    wire data_in_i;
+    wire scan_select_in_i;
+    wire latch_enable_in_i;
+    wire data_out_i;
+    parameter NUM_IOS = 8;
+
+    wire [NUM_IOS-1:0] scan_data_out;   
+    wire [NUM_IOS-1:0] scan_data_in;    
+    wire [NUM_IOS-1:0] module_data_in;  
+    wire [NUM_IOS-1:0] module_data_out; 
+
+    assign scan_data_in = {scan_data_out[NUM_IOS-2:0], data_in_i};
+
+    // Buffer logic replacement
+    assign clk = clk_in;
+    assign data_in_i = data_in;
+    assign scan_select_in_i = scan_select_in;
+    assign latch_enable_in_i = latch_enable_in;
+    assign clk_out = clk;
+    assign scan_select_out = scan_select_in_i;
+    assign latch_enable_out = latch_enable_in_i;
+
+    // D-Flip-Flop with reset logic replacement
+    reg data_out_reg;
+    always @(posedge clk or negedge 1'b1) begin
+        if (!1'b1)
+            data_out_reg <= 1'b0;
+        else
+            data_out_reg <= scan_data_out[NUM_IOS-1];
+    end
+
+    assign data_out_i = data_out_reg;
+    assign data_out = data_out_i;
+
+    // Scan D-Flip-Flop replacement
+    reg [NUM_IOS-1:0] scan_data_out_reg;
+    always @(posedge clk) begin
+        if (scan_select_in_i)
+            scan_data_out_reg <= module_data_out;
+        else
+            scan_data_out_reg <= scan_data_in;
+    end
+
+    assign scan_data_out = scan_data_out_reg;
+    assign module_data_in = scan_data_out;
+
+    // User module logic replacement
+    reg [NUM_IOS-1:0] user_module_io;
+
+    always @(posedge latch_enable_in_i) begin
+        user_module_io <= module_data_in;
+    end
+
+    assign module_data_out = user_module_io;
+
+endmodule

@@ -1,0 +1,42 @@
+### Instruction for Verilog Module Generation:
+
+The Verilog module implements a configurable timer with interrupt capability. The primary function of this timer is to count down from a specified value, reload the count upon reaching zero, and generate an interrupt if enabled.
+
+1. **Initialization and Counting:**
+   - The timer counts down using a 32-bit counter (`internal_counter`), initialized to `32'h2FAF07F`. It decrements with each clock cycle when running.
+   - The counter reloads its value from `counter_load_value` (formed by concatenating `period_h_register` and `period_l_register`) when it reaches zero or if forced to reload.
+   
+2. **Control Registers:**
+   - `control_register[3:0]` contains control bits: bit 0 enables interrupts, bit 1 controls continuous mode, bits 2 and 3 correspond to start and stop signals.
+   - `writedata` is sampled based on the `address` to update registers or control signals.
+
+3. **State and Control Flow:**
+   - `counter_is_running` is the state check for whether the timer is active, controlled by start/stop strobes.
+   - `counter_is_zero` indicates when the counter reaches zero, triggering reloads and potential stop if not in continuous mode.
+   - `timeout_occurred` detects a timeout event, driving the `irq` output if interrupts are enabled.
+
+4. **Write Strobs and Snapshots:**
+   - Write strobes (`period_h_wr_strobe`, `period_l_wr_strobe`, `control_wr_strobe`, `snap_h_wr_strobe`, `snap_l_wr_strobe`, `status_wr_strobe`) control when specific registers update based on `chipselect`, `write_n`, and `address`.
+   - Timer values can be snapshotted to `counter_snapshot` on specific strobes to capture the current counter state.
+
+5. **Output Signals:**
+   - `irq` generates an interrupt when a timeout event occurs and interrupts are enabled.
+   - `readdata` returns selected data from internal registers based on `address`.
+
+This detailed insight covers initialization, counting mechanism, control registers, state management, write strobes, snapshots, and output interactions, thus enabling an LLM to generate the described Verilog code accurately.
+
+Module Interface:
+module configurable_system_timer_50m (
+  address,
+  chipselect,
+  clk,
+  reset_n,
+  write_n,
+  writedata,
+  irq,
+  readdata
+);
+
+Behavioral Clarifications:
+- The active-low reset is asynchronous. Reset initializes `internal_counter` to `32'h02FA_F07F`, `period_l_register` to 16'd61567, and `period_h_register` to 16'd762.
+- This case is behaviorally near-duplicate to `programmable_alarm_timer_50m`; its distinct top-module name is intentional.

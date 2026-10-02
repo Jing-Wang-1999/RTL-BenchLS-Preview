@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.5fbe2ca69043f8238592.5bacdc297035",
+  "compile_check": {
+    "case_id": "s1derived.5fbe2ca69043f8238592.5bacdc297035",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "gray_to_bin",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.gray_to_bin.800029a58266bc9c/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.5fbe2ca69043f8238592",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "5fbe2ca69043f823859265974d47345b11b27b62e4a7fa29a4d2bc30b044c28c",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.5fbe2ca69043f8238592.5bacdc297035",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.gray_to_bin.800029a58266bc9c/private/commercial_positive.log",
+    "commercial_log_sha256": "4268dbf5cbae1b75872731d5390fcf0b32b8f1ed38bb5f1df3400f8b6629c80f",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.gray_to_bin.800029a58266bc9c/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "gray_to_bin"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.gray_to_bin.800029a58266bc9c",
+    "parent_id": "s1p.5fbe2ca69043f8238592",
+    "revised_tops": [
+      "gray_to_bin"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "gray_to_bin",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.5fbe2ca69043f8238592.5bacdc297035",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The descending generate chain implements prefix XOR from the MSB, with WIDTH default8. WIDTH1 naturally leaves the MSB wire only. The repair fully specifies a sensible stateless Gray decoder.",
+        "rtl_excerpt": "assign bin[WIDTH-1] = gray[WIDTH-1];\n    assign bin[i] = bin[i+1] ^ gray[i];",
+        "specification_excerpt": "each output bit is the XOR reduction of `gray[WIDTH-1:i]`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.5fbe2ca69043f8238592",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "072926e23bb3429bfd7f2990e91863685cb96b16cfdb7257355df700d58051fa",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5fbe2ca69043f823859265974d47345b11b27b62e4a7fa29a4d2bc30b044c28c",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.gray_to_bin.800029a58266bc9c/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.gray_to_bin.800029a58266bc9c/private/historical_harness/01_conformal_rtl_gray_to_bin.do"
+  ],
+  "parent_id": "s1p.5fbe2ca69043f8238592",
+  "primary_review": {
+    "case_id": "s1derived.5fbe2ca69043f8238592.5bacdc297035",
+    "checks": {
+      "behavior": "The stated Gray-to-binary recurrence matches.",
+      "boundaries": "The MSB is copied and every lower bit XORs the prefix; default WIDTH is 8.",
+      "interface": "gray and bin widths match WIDTH.",
+      "rtl_reasonableness": "The converter is reasonable.",
+      "sequential_and_reset": "Purely combinational generate logic."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The stated Gray-to-binary recurrence matches. Purely combinational generate logic.",
+        "rtl_excerpt": "parameter WIDTH=8; bin[WIDTH-1]=gray[WIDTH-1]; bin[i]=bin[i+1]^gray[i]",
+        "spec_excerpt": "\u201cparameterized by WIDTH, allowing for flexibility\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The conversion recurrence is correct, but the sentence is truncated and omits WIDTH=8.",
+        "rtl_evidence": "parameter WIDTH=8; bin[WIDTH-1]=gray[WIDTH-1]; bin[i]=bin[i+1]^gray[i]",
+        "spec_evidence": "\u201cparameterized by WIDTH, allowing for flexibility\u201d",
+        "type": "missing_parameter_default"
+      }
+    ],
+    "parent_id": "s1p.5fbe2ca69043f8238592",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.5fbe2ca69043f8238592.5bacdc297035.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5fbe2ca69043f823859265974d47345b11b27b62e4a7fa29a4d2bc30b044c28c",
+    "source_group": "S1",
+    "specification_sha256": "5bacdc297035b03ed98f6183bfca07389db010d11f8d2169dbe67910961a73d5",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.5fbe2ca69043f8238592.5bacdc297035.md",
+  "qualified_specification_sha256": "072926e23bb3429bfd7f2990e91863685cb96b16cfdb7257355df700d58051fa",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.gray_to_bin.800029a58266bc9c/private/golden_design.v",
+  "rtl_sha256": "5fbe2ca69043f823859265974d47345b11b27b62e4a7fa29a4d2bc30b044c28c",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.gray_to_bin.800029a58266bc9c/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "5bacdc297035b03ed98f6183bfca07389db010d11f8d2169dbe67910961a73d5",
+  "top_module": "gray_to_bin"
+}

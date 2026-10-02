@@ -1,0 +1,73 @@
+always @(posedge CLK or posedge RST) begin
+		send_flag <= 0;
+		recv_flag <= 0;
+		done <= 0;
+		if(RST) begin
+			state <= STATE_IDLE;
+			send_data <= 0;
+			send_length <= 0;
+			serv_port <= NO_PORT;
+			busy <= 0;
+			for(i=0; i<PORT_COUNT; i=i+1) begin
+				read_data[i] <= 0;
+				pending_flag[i] <= 0;
+				pending_addr[i] <= 0;
+				//pending_length[i] <= 0;
+				pending_write_data[i] <= 0;
+				pending_write_mask[i] <= 0;
+			end
+		end else begin
+			if(state != STATE_IDLE) begin
+				for(i=0; i<PORT_COUNT; i=i+1)
+					set_pending(i);
+			end
+			case(state)
+			STATE_IDLE: begin
+				for(i=0; i<PORT_COUNT; i=i+1)
+					if(i != wait_port)
+						set_pending(i);
+				if(wait_port != NO_PORT) begin
+					if(sendable) begin
+						if(pending_flag[wait_port] != 0) begin
+							send_request(pending_flag[wait_port], pending_addr[wait_port], pending_write_data[wait_port], pending_write_mask[wait_port]);
+							if(pending_flag[wait_port] == 2) begin
+								pending_flag[wait_port] <= 0;
+								busy[wait_port] <= 0;
+								done[wait_port] <= 1;
+							end else begin
+								serv_port <= wait_port;
+								busy[wait_port] <= 1;
+								state <= STATE_WAIT_FOR_RECV;
+							end
+						end else begin
+							send_request(rw_flag[wait_port], addr[wait_port], write_data[wait_port], write_mask[wait_port]);
+							if(rw_flag[wait_port] == 2) begin
+								busy[wait_port] <= 0;
+								done[wait_port] <= 1;
+							end else begin
+								serv_port <= wait_port;
+								busy[wait_port] <= 1;
+								state <= STATE_WAIT_FOR_RECV;
+							end
+						end
+					end else begin
+						if(rw_flag[wait_port] != 0)
+							set_pending(wait_port);
+					end
+				end
+			end
+			
+			STATE_WAIT_FOR_RECV: begin
+				if(receivable) begin
+					recv_flag <= 1;
+					read_data[serv_port] <= recv_data[DATA_WIDTH-1:0];
+					done[serv_port] <= 1;
+					busy[serv_port] <= 0;
+					pending_flag[serv_port] <= 0;
+					serv_port <= NO_PORT;
+					state <= STATE_IDLE;
+				end
+			end
+			endcase
+		end
+	end

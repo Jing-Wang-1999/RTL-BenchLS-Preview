@@ -1,0 +1,26 @@
+from pathlib import Path
+import json,shutil,subprocess,difflib
+base=Path('/home/jwangjw/project_3rd/ICLR-RTL-BenchLS');r=base/'scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/next21_v1/github';src=base/'scope2/common/sources/rtl_repos_checkouts/mipsfpga__schoolmips';pkg=r/'packages/schoolmips';pkg.mkdir(parents=True,exist_ok=True)
+rtl=[str(f.relative_to(src)) for f in (src/'src').glob('*.v')];support=[str(f.relative_to(src)) for f in (src/'src').glob('*.vh')]+['testbench/testbench.v']+[str(f.relative_to(src)) for f in (src/'program').glob('*/program.hex')]+[str(f.relative_to(src)) for f in (src/'program').glob('*/main.S')]
+for rel in rtl+support:
+ d=pkg/'source'/rel;d.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(src/rel,d)
+cfgs=[]
+for f in sorted((src/'program').glob('*/program.hex')):
+ words=[int(s,16) for s in f.read_text().split()]; regs=[0]*32;pc=0; patterns=['^Timeout$'];exp=[]
+ for cycle in range(4,121):
+  inst=words[pc];exp.append([cycle,pc,inst,regs[2]]);patterns.append(r'^\s*'+str(cycle)+r'\s+pc =\s*'+str(pc)+r'\s+pcaddr = '+f'{pc*4:08x}'+r'\s+instr = '+f'{inst:08x}'+r'\s+v0 = '+str(regs[2])+r'\s')
+  op=inst>>26;rs=(inst>>21)&31;rt=(inst>>16)&31;rd=(inst>>11)&31;sa=(inst>>6)&31;fun=inst&63;imm=inst&65535;imm=imm if imm<32768 else imm-65536;npc=pc+1
+  if op==0:
+   v={0x21:lambda:regs[rs]+regs[rt],0x25:lambda:regs[rs]|regs[rt],2:lambda:regs[rt]>>sa,0x2b:lambda:int(regs[rs]<regs[rt]),0x23:lambda:regs[rs]-regs[rt]}[fun]();regs[rd]=v&0xffffffff
+  elif op==9:regs[rt]=(regs[rs]+imm)&0xffffffff
+  elif op==15:regs[rt]=(imm<<16)&0xffffffff
+  elif op in [4,5]:
+   if (regs[rs]==regs[rt])==(op==4):npc+=imm
+  else:raise ValueError(op)
+  regs[0]=0;pc=npc
+ cfgs.append({'id':f.parent.name,'assets':{str(f.relative_to(src)):'program.hex'},'require_patterns':patterns,'reference_trace':exp})
+meta={'case_id':'t1.4.upstream172.schoolmips','project_id':'github/mipsfpga/schoolmips','top_module':'sm_top','rtl_files':rtl,'include_dirs':['src'],'language':'2005','testpoints':[{'id':'schoolmips_cpu','testbench':'testbench/testbench.v','bench_top':'sm_testbench','bench_files':['testbench/testbench.v'],'compile_flags':['-DSIMULATION','-DICARUS'],'require_patterns':['^Timeout$'],'reject_patterns':['ERROR:','FATAL:'],'configurations':cfgs}],'scoring_rationale':'One unchanged upstream bench, three shipped ROM configurations. Each cycle4..120 PC, instruction and v0 is checked against an independent interpreter of the documented supported MIPS instructions and shipped machine words; initial four reset cycles excluded. Upstream Timeout is its intended finite 121-cycle termination, not failure. Reference traces are calculated, not copied from golden RTL output.'};(pkg/'metadata.json').write_text(json.dumps(meta,indent=2))
+mut=r/'mutants/schoolmips';shutil.copytree(pkg/'source',mut,dirs_exist_ok=True);f=mut/'src/sm_cpu.v';old=f.read_text();new=old.replace('result = srcA + srcB;','result = 32\'b0;');assert new!=old;f.write_text(new);(mut/'mutation.diff').write_text(''.join(difflib.unified_diff(old.splitlines(True),new.splitlines(True),fromfile='src/sm_cpu.v',tofile='src/sm_cpu.v')))
+runner=base/'scope2/task2_3_specification_round_trip/pipeline/replay_next21_github_iverilog.py'
+for mode,cand in [('golden',pkg/'source'),('mutant',mut)]:
+ out=r/f'replays/schoolmips/{mode}';p=subprocess.run(['python3',str(runner),'--payload',str(pkg),'--candidate-dir',str(cand),'--output',str(out)],capture_output=True,text=True);print(mode,p.returncode,p.stdout[-1000:],p.stderr)

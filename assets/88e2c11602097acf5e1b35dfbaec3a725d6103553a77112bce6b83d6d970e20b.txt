@@ -1,0 +1,21 @@
+always @(posedge clk_i)
+begin
+    if(key_load) // loading the key
+    begin
+        key <= data_i;
+    end
+    else if(!key_load) // not loading the key
+    begin
+        if(data_load) // loading plaintext
+        begin
+            state <= data_i[63:0];
+            round_counter <= 5'b00001; // round_counter starts from 1 and ends at 31
+        end
+        else if(!data_load) // normal operation (neither loading the key nor loading the plaitext)
+        begin                  
+            round_counter <= round_counter + 1'b1; // round counter is increased by one
+            state <= sub_per_output; // state is updated
+            key <= key_update_output; // key register is updated
+        end
+    end
+end

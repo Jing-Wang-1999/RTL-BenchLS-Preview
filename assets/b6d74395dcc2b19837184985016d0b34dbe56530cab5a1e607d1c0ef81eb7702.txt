@@ -1,0 +1,53 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/21237",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/21210",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 21237,
+  "issue_number": 21210,
+  "verilog_files": [
+    "hw/ip/usbdev/rtl/usbdev.sv"
+  ],
+  "deletions": 4,
+  "additions": 4,
+  "patches": [
+    {
+      "filename": "hw/ip/usbdev/rtl/usbdev.sv",
+      "patch": "@@ -766,7 +766,7 @@ module usbdev\n   end\n \n   // Interrupts\n-  prim_intr_hw #(.Width(1)) intr_hw_pkt_received (\n+  prim_intr_hw #(.Width(1), .IntrT(\"Status\")) intr_hw_pkt_received (\n     .clk_i,\n     .rst_ni, // not stubbed off so that the interrupt regs still work.\n     .event_intr_i           (event_pkt_received),\n@@ -779,7 +779,7 @@ module usbdev\n     .intr_o                 (intr_pkt_received_o)\n   );\n \n-  prim_intr_hw #(.Width(1)) intr_hw_pkt_sent (\n+  prim_intr_hw #(.Width(1), .IntrT(\"Status\")) intr_hw_pkt_sent (\n     .clk_i,\n     .rst_ni, // not stubbed off so that the interrupt regs still work.\n     .event_intr_i           (sent_event_pending),\n@@ -870,7 +870,7 @@ module usbdev\n     .intr_o                 (intr_link_resume_o)\n   );\n \n-  prim_intr_hw #(.Width(1)) intr_av_empty (\n+  prim_intr_hw #(.Width(1), .IntrT(\"Status\")) intr_av_empty (\n     .clk_i,\n     .rst_ni, // not stubbed off so that the interrupt regs still work.\n     .event_intr_i           (event_av_empty),\n@@ -883,7 +883,7 @@ module usbdev\n     .intr_o                 (intr_av_empty_o)\n   );\n \n-  prim_intr_hw #(.Width(1)) intr_rx_full (\n+  prim_intr_hw #(.Width(1), .IntrT(\"Status\")) intr_rx_full (\n     .clk_i,\n     .rst_ni, // not stubbed off so that the interrupt regs still work.\n     .event_intr_i           (event_rx_full),",
+      "additions": 4,
+      "deletions": 4,
+      "changes": 8
+    }
+  ],
+  "pr_info": {
+    "title": "[usbdev] 'Status' interrupt types",
+    "body": "Four of the usbdev interrupts are changed to 'Status' interrupt types because they already exhibited that behavior and could not be cleared until the triggering FIFO/register status had been addressed.\r\n\r\nShould close #21210, although there's no proper interrupt-related DV testing for USBDEV at present.",
+    "state": "closed",
+    "created_at": "2024-02-07T14:13:43Z",
+    "updated_at": "2024-02-09T17:42:19Z",
+    "merged_at": "2024-02-09T15:49:28Z",
+    "user": "alees24"
+  },
+  "issue_info": {
+    "title": "[usbdev] Change of interrupt types to status",
+    "body": "### Description\n\nSplit out from #15378:\r\n\r\npkt_received, pkt_sent, av_empty, and rx_full all come with explanations that the underlying condition needs to be addressed, before the interrupt can be cleared, and that it will otherwise re-assert. I would be more natural to make these status-type, as that is basically how they already work.\r\n",
+    "labels": [
+      "Component:DV",
+      "Priority:P2",
+      "Component:RTL",
+      "IP:usbdev",
+      "prodc-integration"
+    ],
+    "state": "closed",
+    "created_at": "2024-02-06T02:34:30Z",
+    "updated_at": "2024-03-14T17:13:57Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 775
+  },
+  "base_commit": "8aae8f201e8c7441990b04005996aade1b7f09dc",
+  "head_commit": "2d97ad0acfc99aa298066fecf25173f478c6e018",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_21237_21210",
+  "lec_status": "useful_pass"
+}

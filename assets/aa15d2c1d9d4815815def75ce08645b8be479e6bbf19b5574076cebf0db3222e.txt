@@ -1,0 +1,19 @@
+always @ (posedge clk) begin
+    k_e <= 1'b0;
+    k_last <= 1'b0;
+    k_data <= 16'd0;
+    if(j_sof) begin
+        if(k_header_i < 4'd12) begin
+            k_e <= 1'b1;
+            k_data <= jls_header[k_header_i];
+            k_header_i <= k_header_i + 4'd1;
+        end
+    end else if(j_e) begin
+        k_header_i <= 4'd0;
+        k_e <= 1'b1;
+        k_last <= j_last;
+        k_data <= j_data;
+    end else begin
+        k_header_i <= 4'd0;
+    end
+end

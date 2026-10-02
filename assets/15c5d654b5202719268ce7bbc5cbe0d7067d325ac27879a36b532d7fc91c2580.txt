@@ -1,0 +1,49 @@
+# svo_term — default configuration specification
+
+Implement a dual-clock text-to-pixel terminal. Defaults SVO_MODE="640x480", SVO_FRAMERATE60, color parameters18/6/6/6/0 (unused for the fixed two-bit output), MEM_DEPTH2048. Input clk and output oclk are independent rising-edge clocks. resetn is active-low synchronous to clk; output reset is resetn shifted through five oclk registers, and output sequential logic uses the old final stage. Keep both clocks running while asserting reset long enough to propagate it. No fixed relation between clocks is assumed. Memory and pipeline payloads are not reset; only valid flags and the stated control state are reset, so invalid output data/user have no zero guarantee.
+
+Input is ready when advancing stop modulo2048 would not equal start and line-removal is inactive. Accepted bytes>=32 or LF(10) append to circular RAM: capture write address=old stop, data=input byte and write enable; physical memory write occurs on the following clk edge. Other controls: EOT4 sets stop=start (clear text), BS8 decrements stop modulo2048 when nonempty, other controls are consumed with no stored data. Bytes128..255 are stored but displayed as no-character. Each edge defaults memory-A write enable0, write data=input and address=start. A port-A write makes its read data unknown; otherwise it synchronously reads its selected RAM address. Default memory-A address=start supports line removal. RAM is not initialized.
+
+A line-removal request from output is a toggle synchronized through three clk registers then compared stages2/3 into a registered pulse. If that pulse arrives while nonempty, advance start and memory-A address to next start and set removing. This request action occurs before ordinary reset/input/removal updates, so later assignments to the same field win. When removing, stop when old RAM-A read data is LF or start==stop, else advance start and read address. If not removing but full, begin removal only when old port-A address==start, advancing start once and setting removing. Otherwise process accepted input. Reset clears start,stop,removing; does not clear pending port-A write registers, RAM, synchronizers or input ready combinationally.
+
+Start/stop pointers become registered Gray code in clk, then cross through two oclk Gray registers and a third register decoding Gray to binary. Frame rendering snapshots the decoded pointers once per frame. Output emits640*480 raster pixels without porches; each glyph is8x8 and output codes are0=no character,1=glyph background,2=glyph foreground,3 unused. Only characters32..127 render the font; newline and all others yield0. The font bit index is character*64+y*8+x. The1024-byte constant below is the complete8192-bit font, hexadecimal most-significant byte first; character0 occupies the least significant64bits. Do not substitute a system font.
+
+Pipeline has five stages, all gated by enable=!stage5_valid OR out_axis_tready. Thus valid output data/user hold under backpressure and the entire raster pipeline stalls. Stage1 maintains14-bit x/y raster counters, reset0,valid0. On enabled edges it registers valid1, start-of-frame=(oldx==0 AND oldy==0), start-of-line=(oldx==0), and advances x with640 wrap and y with480 wrap. Stage1 frame/line marker registers are not reset.
+
+Stage2 copies stage1 valid/frame/line markers when enabled. Reset sets valid0,found-end1,last-remove-request1,remove toggle0. If RAM-B address equals the snapshotted stop, set found-end. On stage1 start-of-frame, if previous frame never found end and last-remove-request=0, toggle line-removal request and set last-request1; else set last-request0. Snapshot synchronized start/stop, set RAM-B address and line-start=start, found-end0, glyph x/y0. On other start-of-line, when glyph y=7, advance RAM-B address once unless at stop and set line-start to the resulting address; on glyph y!=7, rewind address to line-start. Set glyph x0 and increment glyph y modulo8. On other pixels increment glyph x modulo8; if old glyph x7 and RAM-B address!=stop and old RAM-B data!=LF, advance RAM-B address. This creates80-column wrapping and repeats a text line for8pixel rows; LF holds the character address until the next glyph row. Frame-start actions override same-edge found-end detection.
+
+RAM-B performs an enabled synchronous read of mem[address], or0 when address==snapshotted stop. Stage3 copies stage2 glyph x/y and frame/line/valid. Stage4 copies RAM-B data, stage3 glyph x/y, frame/valid. Stage5 computes glyph code from OLD stage4 char/x/y, copies frame marker/valid. Reset clears stage3/4/5 valid only. out_axis_tvalid/data/user expose stage5 valid/code/frame. Pixel data can therefore be unknown while invalid; rendering meaningful memory begins through the frame snapshot and normal pipeline. Both source pointers and output state may change during concurrent writes, and same-address cross-clock RAM collision behavior follows the digital memory model rather than a device-specific collision guarantee. Only defaults and this exact embedded font are qualified; CDC electrical/metastability signoff is outside RTL equivalence.
+
+Public interface declarations:
+
+```text
+input clk, oclk, resetn
+input        in_axis_tvalid
+output       in_axis_tready
+input  [7:0] in_axis_tdata
+output       out_axis_tvalid
+input        out_axis_tready
+output [1:0] out_axis_tdata
+output [0:0] out_axis_tuser
+```
+
+Font constant:
+
+```text
+000000000000000000000060920c0000000c10102010100c00101010101010100030080804080830003c0810203c000038407048484800000044281028440000
+0044aa9282820000001028444444000000582424242400000010101010381000001c201804380000000404040c34000020203824245800000808384848340000
+0038444444380000004848484834000000828292926d000000101010101010180024140c142404040c101010100010000010101010001000004444444c340404
+3840784444b80000000808081c0848300038047c4438000000b04848487040400038040404380000003448484838080800b84444784038000000000000001008
+fe000000000000000000000000442810003820202020203800804020100804020038080808080838007c04081020407c00101010102844440044442810284444
+002828545482828200101028284444440038444444444444001010101010107c0038444038044438004424143c44443c60384444444444380008080838484838
+00384444444444380044446454544c440082828292aac6820078080808080808004444241c24444400182424202020700038101010101038004444447c444444
+0038444474044438000404047c04047c007c04043c04047c003c44444444443c0038440404044438003c44443c44443c004444447c4444380038047454744438
+00100010204044380004081020100804000000fe00fe000000201008040810201020303000303000000030300030300000384440784444380038444438444438
+000808081020407c003844443c044438003844403c04047c007020207c2428300038444030404438007c08102040443800381010101018100038444454444438
+0002040810204080003030000000000000000000fe000000102030300000000000101010fe101010001092543854921000081020202010080020100808081020
+0000000000001010005c22621408141800006468102c4c0000103c5038147810002828fe28fe2828000000000000282800100010101010100000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+```

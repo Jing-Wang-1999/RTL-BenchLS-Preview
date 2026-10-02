@@ -1,0 +1,16 @@
+This module is a 5-to-32-bit decoder with an enable input.
+
+**Inputs:**
+- `n`: A 5-bit input that selects which output bit to activate.
+- `ena`: A single-bit enable signal.
+
+**Output:**
+- `e`: A 32-bit output bus.
+
+**Behavior:**
+The module decodes the 5-bit input `n` into a corresponding 32-bit one-hot output. Specifically, the output bit whose index matches the unsigned integer value of `n` is set to logic '1', while all other output bits are set to logic '0'. For example, if `n` is 0, `e[0]` is '1'; if `n` is 1, `e[1]` is '1'; and so on up to `n` = 31, which sets `e[31]` to '1'.
+
+The enable input `ena` controls the entire operation. When `ena` is '0', the entire 32-bit output `e` is forced to all zeros, regardless of the value of `n`. The decoder is only active when `ena` is '1'.
+
+**Implementation Requirements:**
+The decoder function must be implemented as purely combinational logic. No sequential elements (e.g., flip-flops, latches) or memory blocks are permitted.

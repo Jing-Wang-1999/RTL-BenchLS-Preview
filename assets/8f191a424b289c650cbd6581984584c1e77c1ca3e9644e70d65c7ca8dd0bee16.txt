@@ -1,0 +1,186 @@
+always @(posedge clk or negedge nReset)
+      if (!nReset)
+      begin
+          c_state <=  idle;
+          cmd_ack <=  1'b0;
+          scl_oen <=  1'b1;
+          sda_oen <=  1'b1;
+          sda_chk <=  1'b0;
+      end
+      else if (rst | al)
+      begin
+          c_state <=  idle;
+          cmd_ack <=  1'b0;
+          scl_oen <=  1'b1;
+          sda_oen <=  1'b1;
+          sda_chk <=  1'b0;
+      end
+      else
+      begin
+          cmd_ack   <=  1'b0; // default no command acknowledge + assert cmd_ack only 1clk cycle
+
+          if (clk_en)
+              case (c_state) // synopsys full_case parallel_case
+                    // idle state
+                    idle:
+                    begin
+                        case (cmd) // synopsys full_case parallel_case
+                             4'b0001: c_state <=  start_a;
+                             4'b0010:  c_state <=  stop_a;
+                             4'b0100: c_state <=  wr_a;
+                             4'b1000:  c_state <=  rd_a;
+                             default:        c_state <=  idle;
+                        endcase
+
+                        scl_oen <=  scl_oen; // keep SCL in same state
+                        sda_oen <=  sda_oen; // keep SDA in same state
+                        sda_chk <=  1'b0;    // don't check SDA output
+                    end
+
+                    // start
+                    start_a:
+                    begin
+                        c_state <=  start_b;
+                        scl_oen <=  scl_oen; // keep SCL in same state
+                        sda_oen <=  1'b1;    // set SDA high
+                        sda_chk <=  1'b0;    // don't check SDA output
+                    end
+
+                    start_b:
+                    begin
+                        c_state <=  start_c;
+                        scl_oen <=  1'b1; // set SCL high
+                        sda_oen <=  1'b1; // keep SDA high
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    start_c:
+                    begin
+                        c_state <=  start_d;
+                        scl_oen <=  1'b1; // keep SCL high
+                        sda_oen <=  1'b0; // set SDA low
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    start_d:
+                    begin
+                        c_state <=  start_e;
+                        scl_oen <=  1'b1; // keep SCL high
+                        sda_oen <=  1'b0; // keep SDA low
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    start_e:
+                    begin
+                        c_state <=  idle;
+                        cmd_ack <=  1'b1;
+                        scl_oen <=  1'b0; // set SCL low
+                        sda_oen <=  1'b0; // keep SDA low
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    // stop
+                    stop_a:
+                    begin
+                        c_state <=  stop_b;
+                        scl_oen <=  1'b0; // keep SCL low
+                        sda_oen <=  1'b0; // set SDA low
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    stop_b:
+                    begin
+                        c_state <=  stop_c;
+                        scl_oen <=  1'b1; // set SCL high
+                        sda_oen <=  1'b0; // keep SDA low
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    stop_c:
+                    begin
+                        c_state <=  stop_d;
+                        scl_oen <=  1'b1; // keep SCL high
+                        sda_oen <=  1'b0; // keep SDA low
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    stop_d:
+                    begin
+                        c_state <=  idle;
+                        cmd_ack <=  1'b1;
+                        scl_oen <=  1'b1; // keep SCL high
+                        sda_oen <=  1'b1; // set SDA high
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    // read
+                    rd_a:
+                    begin
+                        c_state <=  rd_b;
+                        scl_oen <=  1'b0; // keep SCL low
+                        sda_oen <=  1'b1; // tri-state SDA
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    rd_b:
+                    begin
+                        c_state <=  rd_c;
+                        scl_oen <=  1'b1; // set SCL high
+                        sda_oen <=  1'b1; // keep SDA tri-stated
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    rd_c:
+                    begin
+                        c_state <=  rd_d;
+                        scl_oen <=  1'b1; // keep SCL high
+                        sda_oen <=  1'b1; // keep SDA tri-stated
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    rd_d:
+                    begin
+                        c_state <=  idle;
+                        cmd_ack <=  1'b1;
+                        scl_oen <=  1'b0; // set SCL low
+                        sda_oen <=  1'b1; // keep SDA tri-stated
+                        sda_chk <=  1'b0; // don't check SDA output
+                    end
+
+                    // write
+                    wr_a:
+                    begin
+                        c_state <=  wr_b;
+                        scl_oen <=  1'b0; // keep SCL low
+                        sda_oen <=  din;  // set SDA
+                        sda_chk <=  1'b0; // don't check SDA output (SCL low)
+                    end
+
+                    wr_b:
+                    begin
+                        c_state <=  wr_c;
+                        scl_oen <=  1'b1; // set SCL high
+                        sda_oen <=  din;  // keep SDA
+                        sda_chk <=  1'b0; // don't check SDA output yet
+                                            // allow some time for SDA and SCL to settle
+                    end
+
+                    wr_c:
+                    begin
+                        c_state <=  wr_d;
+                        scl_oen <=  1'b1; // keep SCL high
+                        sda_oen <=  din;
+                        sda_chk <=  1'b1; // check SDA output
+                    end
+
+                    wr_d:
+                    begin
+                        c_state <=  idle;
+                        cmd_ack <=  1'b1;
+                        scl_oen <=  1'b0; // set SCL low
+                        sda_oen <=  din;
+                        sda_chk <=  1'b0; // don't check SDA output (SCL low)
+                    end
+
+              endcase
+      end

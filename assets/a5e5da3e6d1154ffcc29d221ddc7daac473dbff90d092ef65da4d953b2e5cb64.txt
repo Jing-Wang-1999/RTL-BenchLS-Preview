@@ -1,0 +1,68 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/841",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/838",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 841,
+  "issue_number": 838,
+  "verilog_files": [
+    "rtl/cv32e40p_controller.sv",
+    "rtl/cv32e40p_cs_registers.sv",
+    "rtl/cv32e40p_id_stage.sv"
+  ],
+  "deletions": 23,
+  "additions": 48,
+  "patches": [
+    {
+      "filename": "rtl/cv32e40p_controller.sv",
+      "patch": "@@ -223,6 +223,8 @@ module cv32e40p_controller import cv32e40p_pkg::*;\n   logic hwlp_end1_eq_pc;\n   logic hwlp_counter0_gt_1;\n   logic hwlp_counter1_gt_1;\n+  logic hwlp_counter0_eq_1;\n+  logic hwlp_counter1_eq_1;\n   logic hwlp_end0_eq_pc_plus4;\n   logic hwlp_end1_eq_pc_plus4;\n   logic hwlp_start0_leq_pc;\n@@ -617,26 +619,34 @@ module cv32e40p_controller import cv32e40p_pkg::*;\n \n                         // we can be at the end of HWloop due to a return from interrupt or ecall or ebreak or exceptions\n                         if(hwlp_end0_eq_pc && hwlp_counter0_gt_1) begin\n-                            pc_mux_o         = PC_HWLOOP;\n-                            if (~jump_done_q) begin\n-                              pc_set_o          = 1'b1;\n-                              // Keep the instruction and the related address in the Aligner if\n-                              // ID is stalled during a jump\n-                              jump_done         = 1'b1;\n-                              hwlp_dec_cnt_o[0] = 1'b1;\n-                            end\n-                         end\n-                         if(hwlp_end1_eq_pc && hwlp_counter1_gt_1) begin\n-                            pc_mux_o         = PC_HWLOOP;\n-                            if (~jump_done_q) begin\n-                              pc_set_o          = 1'b1;\n-                              // Keep the instruction and the related address in the Aligner if\n-                              // ID is stalled during a jump\n-                              jump_done         = 1'b1;\n-                              hwlp_dec_cnt_o[1] = 1'b1;\n-                            end\n-                         end\n+                          pc_mux_o         = PC_HWLOOP;\n+                          if (~jump_done_q) begin\n+                            pc_set_o          = 1'b1;\n+                            // Keep the instruction and the related address in the Aligner if\n+                            // ID is stalled during a jump\n+                            jump_done         = 1'b1;\n+                            hwlp_dec_cnt_o[0] = 1'b1;\n+                          end\n                         end\n+                        if (hwlp_end1_eq_pc && hwlp_counter1_gt_1) begin\n+                          pc_mux_o         = PC_HWLOOP;\n+                          if (~jump_done_q) begin\n+                            pc_set_o          = 1'b1;\n+                            // Keep the instruction and the related address in the Aligner if\n+                            // ID is stalled during a jump\n+                            jump_done         = 1'b1;\n+                            hwlp_dec_cnt_o[1] = 1'b1;\n+                          end\n+                        end\n+                      end\n+\n+                      if (hwlp_end0_eq_pc && hwlp_counter0_eq_1) begin\n+                        hwlp_dec_cnt_o[0] = 1'b1;\n+                      end\n+                      if (hwlp_end1_eq_pc && hwlp_counter1_eq_1) begin\n+                        hwlp_dec_cnt_o[1] = 1'b1;\n+                      end\n+\n                     end\n \n                   endcase // unique case (1'b1)\n@@ -1269,6 +1279,8 @@ generate\n     assign hwlp_end1_eq_pc         = hwlp_end_addr_i[1] == pc_id_i + 4;   // Equivalent to hwlp_end_addr_i[1] - 4 == pc_id_i\n     assign hwlp_counter0_gt_1      = hwlp_counter_i[0] > 1;\n     assign hwlp_counter1_gt_1      = hwlp_counter_i[1] > 1;\n+    assign hwlp_counter0_eq_1      = hwlp_counter_i[0] == 1;\n+    assign hwlp_counter1_eq_1      = hwlp_counter_i[1] == 1;\n     assign hwlp_end0_eq_pc_plus4   = hwlp_end_addr_i[0] == pc_id_i + 8;   // Equivalent to hwlp_end_addr_i[0] - 4 == pc_id_i + 4\n     assign hwlp_end1_eq_pc_plus4   = hwlp_end_addr_i[1] == pc_id_i + 8;   // Equivalent to hwlp_end_addr_i[1] - 4 == pc_id_i + 4\n     assign hwlp_start0_leq_pc      = hwlp_start_addr_i[0] <= pc_id_i;\n@@ -1285,6 +1297,8 @@ generate\n     assign hwlp_end1_eq_pc         = 1'b0;\n     assign hwlp_counter0_gt_1      = 1'b0;\n     assign hwlp_counter1_gt_1      = 1'b0;\n+    assign hwlp_counter0_eq_1      = 1'b0;\n+    assign hwlp_counter1_eq_1      = 1'b0;\n     assign hwlp_end0_eq_pc_plus4   = 1'b0;\n     assign hwlp_end1_eq_pc_plus4   = 1'b0;\n     assign hwlp_start0_leq_pc      = 1'b0;\n@@ -1555,6 +1569,7 @@ endgenerate\n                                   (hwlp_start_addr_i == 'b0) && (hwlp_end_addr_i == 'b0) && (hwlp_counter_i[1] == 32'b0) && (hwlp_counter_i[0] == 32'b0) &&\n                                   (hwlp_dec_cnt_o == 2'b0) && (hwlp_jump_o == 1'b0) && (hwlp_targ_addr_o == 32'b0) &&\n                                   (hwlp_end0_eq_pc == 1'b0) && (hwlp_end1_eq_pc == 1'b0) && (hwlp_counter0_gt_1 == 1'b0) && (hwlp_counter1_gt_1 == 1'b0) &&\n+                                  (hwlp_counter0_eq_1 == 1'b0) && (hwlp_counter1_eq_1 == 1'b0) &&\n                                   (hwlp_end0_eq_pc_plus4 == 1'b0) && (hwlp_end1_eq_pc_plus4 == 1'b0) && (hwlp_start0_leq_pc == 0) && (hwlp_start1_leq_pc == 0) &&\n                                   (hwlp_end0_geq_pc == 1'b0) && (hwlp_end1_geq_pc == 1'b0) && (hwlp_end_4_id_d == 1'b0) && (hwlp_end_4_id_q == 1'b0));\n     endproperty",
+      "additions": 34,
+      "deletions": 19,
+      "changes": 53
+    },
+    {
+      "filename": "rtl/cv32e40p_cs_registers.sv",
+      "patch": "@@ -505,8 +505,13 @@ module cv32e40p_cs_registers\n         // marchid: Machine Architecture ID\n         CSR_MARCHID: csr_rdata_int = MARCHID;\n \n+        // mimpid, Machine Implementation ID\n+        CSR_MIMPID: begin\n+          csr_rdata_int = (FPU || COREV_PULP || COREV_CLUSTER) ? 32'h1 : 'b0;\n+        end\n+\n         // unimplemented, read 0 CSRs\n-        CSR_MIMPID, CSR_MTVAL: csr_rdata_int = 'b0;\n+        CSR_MTVAL: csr_rdata_int = 'b0;\n \n         CSR_TSELECT, CSR_TDATA3, CSR_MCONTEXT, CSR_SCONTEXT: csr_rdata_int = 'b0;  // Always read 0\n         CSR_TDATA1: csr_rdata_int = tmatch_control_rdata;",
+      "additions": 6,
+      "deletions": 1,
+      "changes": 7
+    },
+    {
+      "filename": "rtl/cv32e40p_id_stage.sv",
+      "patch": "@@ -808,7 +808,7 @@ module cv32e40p_id_stage\n             apu_read_regs[0]       = regfile_addr_ra_id;\n             apu_read_regs_valid[0] = 1'b1;\n           end  // OP_A_REGA_OR_FWD:\n-          OP_A_REGB_OR_FWD: begin\n+          OP_A_REGB_OR_FWD, OP_A_REGC_OR_FWD: begin\n             apu_read_regs[0]       = regfile_addr_rb_id;\n             apu_read_regs_valid[0] = 1'b1;\n           end\n@@ -847,8 +847,13 @@ module cv32e40p_id_stage\n             apu_read_regs_valid[2] = 1'b1;\n           end\n           OP_C_REGC_OR_FWD: begin\n-            apu_read_regs[2]       = regfile_addr_rc_id;\n-            apu_read_regs_valid[2] = 1'b1;\n+            if (alu_op_a_mux_sel != OP_A_REGC_OR_FWD) begin\n+              apu_read_regs[2]       = regfile_addr_rc_id;\n+              apu_read_regs_valid[2] = 1'b1;\n+            end else begin\n+              apu_read_regs[2]       = regfile_addr_rc_id;\n+              apu_read_regs_valid[2] = 1'b0;\n+            end\n           end\n           default: begin\n             apu_read_regs[2]       = regfile_addr_rc_id;",
+      "additions": 8,
+      "deletions": 3,
+      "changes": 11
+    }
+  ],
+  "pr_info": {
+    "title": "3 RTL Issues corrections",
+    "body": "Issue #838 correction\r\nIssue #730 correction\r\nIssue #840 correction",
+    "state": "closed",
+    "created_at": "2023-07-31T13:07:24Z",
+    "updated_at": "2023-08-03T13:42:17Z",
+    "merged_at": "2023-08-03T13:42:17Z",
+    "user": "pascalgouedo"
+  },
+  "issue_info": {
+    "title": "pulp hwloop count not decrementing to 0 after the end of hwloop body execution",
+    "body": "\r\n### Issue Description\r\nIn pulp hwloop tests, after the end of hwloop body, i.e., after the last hwloop body instruction has been executed, the loop count csr does not decrement to 0 and final value of count remains at 1\r\n\r\n### Component\r\n**Component:RTL**\r\n\r\n### Steps to Reproduce\r\n\r\n1. cv32e40p git hash : 99772238edb4093e99386599b9f3d79f4d125f30\r\n\r\n2.  Using \"core-v-verif\" repo ,  branch : cv32e40p/dev\r\n     core-v-verif hash :  c7610d8ab6fecdb81b21a6e4e791c8f9e01fc7bd\r\n     \r\n-      git clone -b cv32e40p/dev https://github.com/openhwgroup/core-v-verif.git\r\n-      cd core-v-verif\r\n-      git checkout c7610d8ab6fecdb81b21a6e4e791c8f9e01fc7bd\r\n  \r\n     \r\n3. Run Test:  \r\nRun with reference model (USE_ISS=yes) to get the error mismatch in log. Otherwise if running without USE_ISS, we can see this issue from the wave dump.\r\n-     setenv SIMULATOR vsim (or any other simulator)\r\n-     cd cv32e40p/sim/uvmt/\r\n-      make test TEST=pulp_hardware_loop USE_ISS=yes CFG=pulp_fpu WAVES=1 SEED=1 RUN_INDEX=1 USER_RUN_FLAGS=\"+IDV_TRACE2LOG=1\"\r\n\r\n4. Log Error:\r\n\r\n> Info (IDV) Instruction executed prior to mismatch '0x1c0(startZ_1+8): 00188893 addi    x17,x17,1'\r\n> Error (IDV) CSR register value mismatch (HartId:0, PC:0x000001c0 startZ_1+8):\r\n> Info (IDV)  0> CSR cc2 (lpcount0)\r\n> Info (IDV)   . dut:0x00000001\r\n> Info (IDV)   . ref:0x0000000\r\n\r\n\r\n",
+    "labels": [
+      "Type:Bug",
+      "Status:Resolved",
+      "Component:RTL",
+      "PARAM:PULP_XPULP"
+    ],
+    "state": "closed",
+    "created_at": "2023-07-25T07:47:39Z",
+    "updated_at": "2024-05-27T10:25:54Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 29
+  },
+  "base_commit": "25907a07dc1e4557141e2bca957f35ce28cf6dad",
+  "head_commit": "0491837ebe928770ef46d57efecb73f43839c9b8",
+  "base_ref": "dev",
+  "task_id": "openhwgroup_cv32e40p_841_838",
+  "lec_status": "useful_pass"
+}

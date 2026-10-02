@@ -1,0 +1,53 @@
+module autovcoder_005760 (
+    A,
+    B,
+    Cin,
+    Sum,
+    Cout
+);
+
+  input [15:0] A, B;
+  input Cin;
+  output [15:0] Sum;
+  output Cout;
+
+
+  wire carry3;
+  wire carry7;
+  wire carry11;
+
+  FullAdder4bit FA40 (
+      A[3:0],
+      B[3:0],
+      Cin,
+      Sum[3:0],
+      carry3
+  );
+
+  FullAdder4bit FA41 (
+      A[7:4],
+      B[7:4],
+      carry3,
+      Sum[7:4],
+      carry7
+  );
+
+  FullAdder4bit FA42 (
+      A[11:8],
+      B[11:8],
+      carry7,
+      Sum[11:8],
+      carry11
+  );
+
+  FullAdder4bit FA43 (
+      A[15:12],
+      B[15:12],
+      carry11,
+      Sum[15:12],
+      Cout
+  );
+
+
+endmodule
+

@@ -1,0 +1,68 @@
+// Verilated -*- SystemC -*-
+// DESCRIPTION: Verilator output: Design internal header
+// See Vriscv_tcm_top.h for the primary calling header
+
+#ifndef _VRISCV_TCM_TOP_TCM_MEM_RAM_H_
+#define _VRISCV_TCM_TOP_TCM_MEM_RAM_H_  // guard
+
+#include "systemc.h"
+#include "verilated_sc.h"
+#include "verilated_heavy.h"
+#include "Vriscv_tcm_top__Dpi.h"
+
+//==========
+
+class Vriscv_tcm_top__Syms;
+class Vriscv_tcm_top_VerilatedVcd;
+
+
+//----------
+
+VL_MODULE(Vriscv_tcm_top_tcm_mem_ram) {
+  public:
+    
+    // PORTS
+    VL_IN8(__PVT__clk0_i,0,0);
+    VL_IN8(__PVT__clk1_i,0,0);
+    VL_IN8(__PVT__rst0_i,0,0);
+    VL_IN8(__PVT__wr0_i,3,0);
+    VL_IN8(__PVT__rst1_i,0,0);
+    VL_IN8(__PVT__wr1_i,3,0);
+    VL_IN16(__PVT__addr0_i,13,0);
+    VL_IN16(__PVT__addr1_i,13,0);
+    VL_IN(__PVT__data0_i,31,0);
+    VL_IN(__PVT__data1_i,31,0);
+    VL_OUT(__PVT__data0_o,31,0);
+    VL_OUT(__PVT__data1_o,31,0);
+    
+    // LOCAL SIGNALS
+    IData/*31:0*/ __PVT__ram_read0_q;
+    IData/*31:0*/ __PVT__ram_read1_q;
+    IData/*31:0*/ ram[16384];
+    
+    // INTERNAL VARIABLES
+  private:
+    Vriscv_tcm_top__Syms* __VlSymsp;  // Symbol table
+  public:
+    
+    // CONSTRUCTORS
+  private:
+    VL_UNCOPYABLE(Vriscv_tcm_top_tcm_mem_ram);  ///< Copying not allowed
+  public:
+    VL_CTOR(Vriscv_tcm_top_tcm_mem_ram);
+    ~Vriscv_tcm_top_tcm_mem_ram();
+    
+    // INTERNAL METHODS
+    void __Vconfigure(Vriscv_tcm_top__Syms* symsp, bool first);
+  private:
+    void _ctor_var_reset() VL_ATTR_COLD;
+  public:
+    static void _sequent__TOP__v__u_tcm__u_ram__1(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+  private:
+    static void traceInit(void* userp, VerilatedVcd* tracep, uint32_t code) VL_ATTR_COLD;
+} VL_ATTR_ALIGNED(VL_CACHE_LINE_BYTES);
+
+//----------
+
+
+#endif  // guard

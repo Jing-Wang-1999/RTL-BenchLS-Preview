@@ -1,0 +1,17 @@
+The module is a synchronous state machine that generates a single-cycle pulse (Shot) in response to a rising edge on the Start input, with debouncing behavior to prevent retriggering.
+
+**Inputs:**
+- **clk:** System clock.
+- **reset:** Active-low asynchronous reset. When low, the machine initializes.
+- **Start:** Control signal. A rising edge (transition from low to high) initiates the pulse.
+
+**Output:**
+- **Shot:** A single-cycle high pulse generated when triggered.
+
+**Behavior:**
+The machine operates in three states:
+1. **Waiting_Shot:** Idle state. Shot is low. It waits for Start to be high. When Start is high, it transitions to the Shot_State.
+2. **Shot_State:** Active state. Shot is driven high for exactly one clock cycle. It unconditionally transitions to the next state.
+3. **Waiting_Not_Shot:** Hold-off state. Shot is low. It waits for Start to return to low. It remains here while Start is high, preventing another pulse. Only when Start is low does it transition back to Waiting_Shot, allowing a new trigger.
+
+The reset signal forces the machine into the Waiting_Shot state. The output Shot is solely a function of the current state.

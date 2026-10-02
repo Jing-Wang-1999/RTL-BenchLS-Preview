@@ -1,0 +1,56 @@
+module autovcoder_123873 (
+    input wire clk,
+    input wire rst_n,
+    input wire start,
+    input wire [127:0] plaintext,
+    input wire [127:0] key,
+    output reg [127:0] ciphertext,
+    output reg done
+);
+
+    // State encoding
+    localparam IDLE    = 4'b0000;
+    localparam INIT    = 4'b0001;
+    localparam ENCRYPT = 4'b0010;
+    localparam DONE    = 4'b0011;
+
+    reg [3:0] state, next_state;
+
+    // State transition logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic and output logic
+    always @(*) begin
+        // Default values
+        next_state = state;
+        done = 1'b0;
+        ciphertext = 128'b0;
+
+        case (state)
+            IDLE: begin
+                if (start)
+                    next_state = INIT;
+            end
+
+            INIT: begin
+                ciphertext = plaintext ^ key; // Simplified encryption
+                next_state = ENCRYPT;
+            end
+
+            ENCRYPT: begin
+                next_state = DONE;
+            end
+
+            DONE: begin
+                done = 1'b1;
+                next_state = IDLE;
+            end
+        endcase
+    end
+
+endmodule

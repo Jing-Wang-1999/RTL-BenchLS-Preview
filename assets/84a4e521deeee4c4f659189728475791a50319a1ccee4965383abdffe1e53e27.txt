@@ -1,0 +1,37 @@
+### Module Specification: State-Driven Character Sequence Detector and Output Generator
+
+**Module Overview**
+This module implements a synchronous finite state machine that detects a specific sequence of input patterns and generates corresponding output bytes. The system operates on a clocked, reset-based timing scheme, with deterministic state transitions driven by exact input matches.
+
+**Interface Signals**
+- **clk**: Global clock input; all operations synchronize to the rising edge.
+- **rst_n**: Active-low asynchronous reset; when asserted, the module initializes to its idle state.
+- **cap_flow [7:0]**: 8-bit input representing a "capital" or primary data stream.
+- **low_flow [7:0]**: 8-bit input representing a "lowercase" or secondary data stream.
+- **out_flow [7:0]**: 8-bit registered output that emits specific byte values upon successful state progression.
+
+**Functional Behavior**
+The module contains twelve distinct states (S0 through S11). Operation begins in state S0 upon reset release. Each active clock cycle, the state machine evaluates the current state and the two input bytes to determine the next state and output value.
+
+The core detection sequence requires a precise series of input pairs:
+1. From S0: `cap_flow` must be 0x49 ('I') and `low_flow` must be 0x6c ('l') to transition to S1, outputting 0x49.
+2. From S1: Inputs 0x4c ('L') and 0x6f ('o') transition to S2, outputting 0x6c.
+3. From S2: Inputs 0x4c ('L') and 0x6f ('o') transition to S3, outputting 0x6f.
+4. From S3: Inputs 0x56 ('V') and 0x65 ('e') transition to S4, outputting 0x76.
+5. From S4: Inputs 0x45 ('E') and 0x20 (space) transition to S5, outputting 0x65.
+6. From S5: Inputs 0x59 ('Y') and 0x6f ('o') transition to S6, outputting 0x79.
+7. From S6: Inputs 0x4f ('O') and 0x75 ('u') transition to S7, outputting 0x6f.
+8. From S7: Inputs 0x21 ('!') and 0x00 transition to S8, outputting 0x21.
+
+Any deviation from the required input pair at any step causes an immediate reset to state S0 with output forced to zero. States S8 through S11 produce zero output and advance automatically each cycle, concluding with a return to S0 after four cycles.
+
+**Output Generation**
+The output is a registered byte that updates only on successful state transitions matching the sequence. The emitted values correspond to ASCII characters: 0x49 ('I'), 0x6c ('l'), 0x6f ('o'), 0x76 ('v'), 0x65 ('e'), 0x79 ('y'), 0x6f ('o'), and 0x21 ('!') in order. All other states produce 0x00.
+
+**Allowed Components**
+- Standard flip-flops for state and output registers.
+- Combinational logic for input comparison and next-state selection.
+- No external sub-modules beyond basic gates and registers.
+
+**Timing and Reset**
+All operations occur on the rising clock edge. The asynchronous reset overrides normal operation, forcing the initial state and zero output regardless of clock. The design is purely synchronous after reset release.

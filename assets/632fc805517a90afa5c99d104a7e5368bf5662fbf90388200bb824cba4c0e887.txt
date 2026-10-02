@@ -1,0 +1,24 @@
+# [otbn,darjeeling] Loop stack push/pop at same time
+
+### Description
+
+This causes an assertion to fail at the top of the `integrated_dev` branch. To reproduce, the following should work:
+```
+util/dvsim/dvsim.py hw/ip/otbn/dv/uvm/otbn_sim_cfg.hjson -i otbn_single --fixed-seed 1161969102
+```
+
+The binary that gets generated will die (correctly) because it contains the following code snippet:
+```
+ a90:   000010fb                loopi          1, 1
+ a94:   03c010fb                loopi          1, 61
+```
+The second loop instruction here will try to push to the loop stack on the last instruction of the enclosing loop.
+
+The test fails with the following assertion failure:
+```
+UVM_INFO @   2725176 ps: (otbn_single_vseq.sv:29) uvm_test_top.env.virtual_sequencer [uvm_test_top.env.virtual_sequencer.otbn_single_vseq] Loading OTBN binary from `/home/rjs/work/opentitan/scratch/integrated-work/otbn-sim-xcelium/0.otbn_single/latest/otbn-binaries/1161969102.elf'
+xmsim: *E,ASRTST (/home/rjs/work/opentitan/scratch/integrated-work/otbn-sim-xcelium/default/src/lowrisc_ip_otbn_0.1/rtl/otbn_loop_controller.sv,317): (time 55067699 PS) Assertion tb.dut.u_otbn_core.u_otbn_controller.u_otbn_loop_controller.NoLoopStackPushAndPop has failed 
+xmsim: *E,ASRTST (/home/rjs/work/opentitan/scratch/integrated-work/otbn-sim-xcelium/default/src/lowrisc_ip_otbn_0.1/rtl/otbn_loop_controller.sv,318): (time 55067699 PS) Assertion tb.dut.u_otbn_core.u_otbn_controller.u_otbn_loop_controller.NoLoopWriteIfCounterDec has failed 
+UVM_ERROR @  55067699 ps: (otbn_loop_controller.sv:317) [ASSERT FAILED] NoLoopStackPushAndPop
+```
+This currently passes (with the same binary) on master.

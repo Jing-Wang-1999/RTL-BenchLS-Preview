@@ -1,0 +1,72 @@
+# Avalon single-clock byte FIFO
+
+Implement `altera_avalon_sc_fifo` with the public declaration below, qualified only in its declared defaults: one8-bit symbol, FIFO_DEPTH=16, CHANNEL_WIDTH=ERROR_WIDTH=0, USE_PACKETS=USE_FILL_LEVEL=USE_STORE_FORWARD=USE_ALMOST_FULL_IF=USE_ALMOST_EMPTY_IF=0, EMPTY_LATENCY=3, USE_MEMORY_BLOCKS=1, DATA_WIDTH=8 and EMPTY_WIDTH=0. Placeholder empty/error/channel ports are still one bit each. `csr_address` is two bits. Nondefault parameter combinations are not qualified.
+
+Provide a16-byte circular memory plus one output register. Input bytes are accepted on rising `clk` when `in_valid AND in_ready`; output bytes are consumed when `out_valid AND out_ready`. Byte order is preserved, and the output register gives an effective capacity of17 bytes. No packets, error filtering, channel storage or fill-level CSR are enabled.
+
+## Cycle and reset contract
+
+Let W and R be four-bit circular pointers; F and E be full and empty flags; V be the internal read-valid flag; D be the registered memory read data; O/Q be output valid/data. Asynchronous active-high `reset` sets W=R=0, F=0, E=1, V=0, O=0 and Q=0. Memory and D are not reset. `in_ready=NOT F`; internal-ready B is `out_ready OR NOT O`. Define internal read T as B AND V, and write U as in_ready AND in_valid, using pre-edge values.
+
+On every rising edge the memory writes `in_data` at old W if U, and D reads the memory at address `(R+T) mod16` regardless of reset, emptiness or backpressure. Simultaneous read/write uses the old memory content. On non-reset edges, update W by U and R by T, modulo16. Flags update as follows: T without U clears F and sets E if R+1 equals old W; U without T clears E and sets F if W+1 equals old R; simultaneous or absent T/U preserves both flags. All additions in these comparisons wrap at four bits.
+
+On each non-reset edge set V to NOT old E, but override V to0 if T and `(R+1) mod16 = old W`. When B is true, set O to old V and Q to old D; otherwise both hold. Thus an input accepted into an empty FIFO on edge E0 becomes a valid output immediately after edge E0+2, and may first be consumed at E0+3. Q can change when output is invalid. A full FIFO does not accept a simultaneous input merely because a read will free space that edge.
+
+The memory write/read process is not reset-gated, while all pointer/flag/output processes obey reset priority. Reset during activity therefore flushes validity and output Q, without clearing memory. Do not promise power-up memory initialization or zero invalid data after reset deassertion.
+
+## Remaining outputs
+
+`out_startofpacket=out_endofpacket=0`. Despite disabled metadata storage, `out_error` follows current `in_error`, `out_channel` follows current `in_channel`, and **out_empty follows current in_error** (not in_empty). These are combinational placeholder signals and are not synchronized with the output byte. Other packet/metadata input ports are ignored by the FIFO payload. `almost_full_data` and `almost_empty_data` are0.
+
+The qualified contract is the synthesized hardware behavior of the original RTL. Its disabled fill-level process is a constant assignment to zero, but Icarus10.2 gives an empty-sensitivity warning for that `always @*` and leaves the simulation variable uninitialized; a CSR read of address0 can therefore produce X in that simulator. This scheduling artifact must not be interpreted as a desired hardware feature. A separately retained constant-form control passes the same local arbitrary-CSR probe; commercial SEC proves the original and this control equivalent across all 11 outputs, validating the synthesis interpretation. No golden RTL edit or input restriction is part of this case.
+
+`csr_readdata` resets asynchronously to0, is set to0 on any `csr_read`, and otherwise holds. Because fill-level support is disabled, address0 also returns0; all CSR writes are ignored. No packet modes or undocumented CSR functionality should be inferred.
+
+## Public declaration
+
+```verilog
+module altera_avalon_sc_fifo
+#(
+    parameter SYMBOLS_PER_BEAT  = 1,
+    parameter BITS_PER_SYMBOL   = 8,
+    parameter FIFO_DEPTH        = 16,
+    parameter CHANNEL_WIDTH     = 0,
+    parameter ERROR_WIDTH       = 0,
+    parameter USE_PACKETS       = 0,
+    parameter USE_FILL_LEVEL    = 0,
+    parameter USE_STORE_FORWARD = 0,
+    parameter USE_ALMOST_FULL_IF = 0,
+    parameter USE_ALMOST_EMPTY_IF = 0,
+    parameter EMPTY_LATENCY     = 3,
+    parameter USE_MEMORY_BLOCKS = 1,
+    parameter DATA_WIDTH  = SYMBOLS_PER_BEAT * BITS_PER_SYMBOL,
+    parameter EMPTY_WIDTH = log2ceil(SYMBOLS_PER_BEAT)
+)
+(
+    input                       clk,
+    input                       reset,
+    input [DATA_WIDTH-1: 0]     in_data,
+    input                       in_valid,
+    input                       in_startofpacket,
+    input                       in_endofpacket,
+    input [((EMPTY_WIDTH>0) ? (EMPTY_WIDTH-1):0) : 0]     in_empty,
+    input [((ERROR_WIDTH>0) ? (ERROR_WIDTH-1):0) : 0]     in_error,
+    input [((CHANNEL_WIDTH>0) ? (CHANNEL_WIDTH-1):0): 0]  in_channel,
+    output                      in_ready,
+    output [DATA_WIDTH-1 : 0]   out_data,
+    output reg                  out_valid,
+    output                      out_startofpacket,
+    output                      out_endofpacket,
+    output [((EMPTY_WIDTH>0) ? (EMPTY_WIDTH-1):0) : 0]    out_empty,
+    output [((ERROR_WIDTH>0) ? (ERROR_WIDTH-1):0) : 0]    out_error,
+    output [((CHANNEL_WIDTH>0) ? (CHANNEL_WIDTH-1):0): 0] out_channel,
+    input                       out_ready,
+    input [(USE_STORE_FORWARD ? 2 : 1) : 0]   csr_address,
+    input                       csr_write,
+    input                       csr_read,
+    input [31 : 0]              csr_writedata,
+    output reg [31 : 0]         csr_readdata,
+    output  wire                almost_full_data,
+    output  wire                almost_empty_data
+);
+```

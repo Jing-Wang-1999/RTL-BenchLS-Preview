@@ -1,0 +1,105 @@
+// Required path: src/rtl/aes.v
+module aes(
+           
+           input wire           clk,
+           input wire           reset_n,
+
+           
+           input wire           cs,
+           input wire           we,
+
+           
+           input wire  [7 : 0]  address,
+           input wire  [31 : 0] write_data,
+           output wire [31 : 0] read_data
+          );
+endmodule
+
+// Required path: src/rtl/aes_core.v
+module aes_core(
+                input wire            clk,
+                input wire            reset_n,
+
+                input wire            encdec,
+                input wire            init,
+                input wire            next,
+                output wire           ready,
+
+                input wire [255 : 0]  key,
+                input wire            keylen,
+
+                input wire [127 : 0]  block,
+                output wire [127 : 0] result,
+                output wire           result_valid
+               );
+endmodule
+
+// Required path: src/rtl/aes_decipher_block.v
+module aes_decipher_block(
+                          input wire            clk,
+                          input wire            reset_n,
+
+                          input wire            next,
+
+                          input wire            keylen,
+                          output wire [3 : 0]   round,
+                          input wire [127 : 0]  round_key,
+
+                          input wire [127 : 0]  block,
+                          output wire [127 : 0] new_block,
+                          output wire           ready
+                         );
+endmodule
+
+// Required path: src/rtl/aes_encipher_block.v
+module aes_encipher_block(
+                          input wire            clk,
+                          input wire            reset_n,
+
+                          input wire            next,
+
+                          input wire            keylen,
+                          output wire [3 : 0]   round,
+                          input wire [127 : 0]  round_key,
+
+                          output wire [31 : 0]  sboxw,
+                          input wire  [31 : 0]  new_sboxw,
+
+                          input wire [127 : 0]  block,
+                          output wire [127 : 0] new_block,
+                          output wire           ready
+                         );
+endmodule
+
+// Required path: src/rtl/aes_inv_sbox.v
+module aes_inv_sbox(
+                    input wire  [31 : 0] sboxw,
+                    output wire [31 : 0] new_sboxw
+                   );
+endmodule
+
+// Required path: src/rtl/aes_key_mem.v
+module aes_key_mem(
+                   input wire            clk,
+                   input wire            reset_n,
+
+                   input wire [255 : 0]  key,
+                   input wire            keylen,
+                   input wire            init,
+
+                   input wire    [3 : 0] round,
+                   output wire [127 : 0] round_key,
+                   output wire           ready,
+
+
+                   output wire [31 : 0]  sboxw,
+                   input wire  [31 : 0]  new_sboxw
+                  );
+endmodule
+
+// Required path: src/rtl/aes_sbox.v
+module aes_sbox(
+                input wire [31 : 0]  sboxw,
+                output wire [31 : 0] new_sboxw
+               );
+endmodule

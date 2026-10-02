@@ -1,0 +1,31 @@
+# Module Specification: autovcoder_034148
+
+## Overview
+This module implements a single-stage synchronous register (flip-flop) that captures and holds a 15-bit data value on each clock cycle. It serves as a basic pipeline stage or synchronization element in a digital design.
+
+## Inputs
+- **clock**: A clock signal that triggers the register update. The register captures new data on the rising edge of this clock signal.
+- **io_d**: A 15-bit input data bus that provides the value to be registered. This is the data input that will be captured and stored in the internal register.
+
+## Outputs
+- **io_q**: A 15-bit output data bus that presents the currently stored register value. This output reflects the value that was present on io_d during the previous clock cycle.
+
+## Behavior
+The module operates as a simple delay element or pipeline register with the following characteristics:
+
+1. **Synchronous Operation**: On every rising edge of the clock signal, the module samples the 15-bit value present on the io_d input and stores it in an internal register named sync_0.
+
+2. **Single-Cycle Delay**: The output io_q continuously presents the value stored in the internal register. This creates a one clock-cycle delay between when data appears on io_d and when it appears on io_q.
+
+3. **Direct Pass-Through**: The internal register value is directly connected to the output without any combinational logic or transformation. Whatever is stored in sync_0 is immediately visible on io_q.
+
+4. **Initialization**: The module includes initialization logic for simulation purposes that randomizes the register contents at the start of simulation (when randomization is enabled). This helps catch potential design issues related to uninitialized state.
+
+## Functional Description
+This module acts as a shift register with a depth of one stage. It can be used for:
+- Creating pipeline stages to improve timing in high-speed designs
+- Synchronizing signals across clock domains (when used appropriately)
+- Adding intentional delay in data paths
+- Breaking long combinational paths to meet timing requirements
+
+The module maintains the full 15-bit width throughout,

@@ -1,0 +1,37 @@
+**Module Specification: Keypad Decoder**
+
+**Overview**  
+This module decodes a 4×4 matrix keypad input into a 4-bit key code. It maps row and column signals to a numeric key value, with a default code indicating no key press.
+
+**Inputs**  
+- `fil` (4 bits): Row input signals. Only one bit is expected to be active (high) at a time, representing the selected row.  
+- `col` (4 bits): Column input signals. Only one bit is expected to be active (high) at a time, representing the selected column.
+
+**Output**  
+- `tecla` (4 bits): The decoded key value. Values range from 0 to 14 for valid key presses, and 15 when no key is pressed or an invalid combination is detected.
+
+**Functionality**  
+The module evaluates the column inputs in priority order from `col[0]` to `col[3]`. For the first active column, it checks the row input and assigns a corresponding key code:
+
+- If `col[0]` is high:  
+  Row `0001` → key 0  
+  Row `0010` → key 4  
+  Row `0100` → key 8  
+  Row `1000` → key 12  
+  Other rows → 15
+
+- If `col[1]` is high (and `col[0]` is low):  
+  Row `0001` → key 1  
+  Row `0010` → key 5  
+  Row `0100` → key 9  
+  Row `1000` → key 13  
+  Other rows → 15
+
+- If `col[2]` is high (and previous columns are low):  
+  Row `0001` → key 2  
+  Row `0010` → key 6  
+  Row `0100` → key 10  
+  Row `1000` → key 14  
+  Other rows → 15
+
+- If `col[3]` is high

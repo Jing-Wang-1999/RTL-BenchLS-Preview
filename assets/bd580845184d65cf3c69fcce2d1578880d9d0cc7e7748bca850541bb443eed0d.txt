@@ -1,0 +1,11 @@
+always @(*)
+  begin
+    if (run_s[0] & ~run_s[1])
+      // timer is starting, set toggle high
+      tgl_n = 1'b1;
+    else if (run_s[1])
+      // Toggle on underflow if timer still running
+      tgl_n = tgl_r ^ pls_o;
+    else
+      tgl_n = tgl_r;
+  end

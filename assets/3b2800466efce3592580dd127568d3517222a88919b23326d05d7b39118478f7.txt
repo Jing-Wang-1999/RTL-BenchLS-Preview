@@ -1,0 +1,30 @@
+always @ *
+begin
+    // NOTE: Newest version of operand takes priority
+    issue_ra_value_r = issue_ra_value_w;
+    issue_rb_value_r = issue_rb_value_w;
+
+    // Bypass - WB
+    if (pipe_rd_wb_w == issue_ra_idx_w)
+        issue_ra_value_r = pipe_result_wb_w;
+    if (pipe_rd_wb_w == issue_rb_idx_w)
+        issue_rb_value_r = pipe_result_wb_w;
+
+    // Bypass - E2
+    if (pipe_rd_e2_w == issue_ra_idx_w)
+        issue_ra_value_r = pipe_result_e2_w;
+    if (pipe_rd_e2_w == issue_rb_idx_w)
+        issue_rb_value_r = pipe_result_e2_w;
+
+    // Bypass - E1
+    if (pipe_rd_e1_w == issue_ra_idx_w)
+        issue_ra_value_r = writeback_exec_value_i;
+    if (pipe_rd_e1_w == issue_rb_idx_w)
+        issue_rb_value_r = writeback_exec_value_i;
+
+    // Reg 0 source
+    if (issue_ra_idx_w == 5'b0)
+        issue_ra_value_r = 32'b0;
+    if (issue_rb_idx_w == 5'b0)
+        issue_rb_value_r = 32'b0;
+end

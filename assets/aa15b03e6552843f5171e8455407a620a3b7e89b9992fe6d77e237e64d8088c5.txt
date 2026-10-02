@@ -1,0 +1,27 @@
+module origen_034959 (
+    input [7:0] accin,
+    input cin,
+    input clk,
+    input clear,
+    output reg [7:0] accout,
+    output cout
+);
+
+    wire [8:0] sum; // 9-bit wire to hold the sum and carry-out
+
+    // Perform addition with carry-in
+    assign sum = accout + accin + cin;
+
+    // Assign carry-out
+    assign cout = sum[8];
+
+    // Register logic with synchronous clear
+    always @(posedge clk) begin
+        if (clear) begin
+            accout <= 8'b0;
+        end else begin
+            accout <= sum[7:0];
+        end
+    end
+
+endmodule

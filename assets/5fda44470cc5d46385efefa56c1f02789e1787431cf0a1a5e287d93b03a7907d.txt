@@ -1,0 +1,15 @@
+The module is a synchronous state machine with three states. It has a clock input, an active-high reset, and an input signal "ok". It produces two outputs: "keep" and "shot".
+
+On a rising clock edge, if reset is asserted, the machine enters state S0. Otherwise, it transitions to the next state as determined by the current state and the "ok" input.
+
+The state transitions are as follows:
+- From S0: If "ok" is high, go to S1. Otherwise, stay in S0.
+- From S1: If "ok" is high, go to S2. Otherwise, stay in S1.
+- From S2: Always remain in S2.
+
+The outputs are combinational functions of the current state:
+- In S0: keep = 0, shot = 0.
+- In S1: keep = 1, shot = 0.
+- In S2: keep = 1, shot = 1.
+
+The machine's behavior is to wait in S0 until "ok" is asserted, moving to S1. It then waits in S1 for another assertion of "ok" before moving to the terminal state S2. The "keep" output becomes active upon entering S1 and remains active. The "shot" output becomes active only upon entering S2 and remains active. The machine remains in S2 indefinitely once reached.

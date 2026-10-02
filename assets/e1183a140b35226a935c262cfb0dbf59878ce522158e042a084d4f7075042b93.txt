@@ -1,0 +1,25 @@
+module xpm_counter_updn #(
+    parameter WIDTH = 8,
+    parameter RESET_VALUE = 0
+)(
+    input wire rst,
+    input wire clk,
+    input wire cnt_en,
+    input wire cnt_up,
+    input wire cnt_down,
+    output reg [WIDTH-1:0] count_value
+);
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        count_value <= RESET_VALUE;
+    end else if (cnt_en) begin
+        if (cnt_up && !cnt_down) begin
+            count_value <= count_value + 1;
+        end else if (cnt_down && !cnt_up) begin
+            count_value <= count_value - 1;
+        end
+    end
+end
+
+endmodule

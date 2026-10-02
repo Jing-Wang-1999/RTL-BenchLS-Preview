@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""Four original-document Direct project admissions, with explicit curator corrections."""
+import argparse, json, re, shutil, sys, hashlib
+from pathlib import Path
+from datetime import datetime, timezone
+from build_expansion_cases import build, strip_comments, TASK, ROOT
+from evaluate_case_v2 import evaluate, write_json
+from validate_cases import digest, validate
+
+BATCH='direct20_20260910_v1'
+AES='''# Implement the Secworks AES project
+Read specification/project.md (the unchanged upstream README) and the declaration-only interfaces. Implement the complete seven-file AES project at the pinned revision, including encryption and decryption with 128/256-bit keys. Alternative branches described in the README are not this case.
+
+Curator interface clarification, reviewed against the pinned release before evaluation:
+- Rising-edge clock; asynchronous active-low reset_n. The 32-bit bus is word-addressed by address[7:0], not byte-addressed. Writes occur on a rising edge with cs && we. Reads are combinational with cs && !we; read_data is zero otherwise or for an unmapped read. No bus acknowledge exists.
+- Read 0x00/01/02 returns 0x61657320/0x20202020/0x302e3630. Write 0x08 bits 0/1 creates one-cycle registered init/next strobes. Read 0x08 returns {28'b0,keylen,encdec,next,init}. Read status 0x09 bits 0/1 is ready/result_valid. Write configuration 0x0a bits 0/1 is encdec/keylen: encdec=1 encrypts, 0 decrypts; keylen=0 selects 128, 1 selects 256. Configuration itself is read back through control bits 2/3, not 0x0a.
+- Key registers are write-only 0x10..17; block registers write-only 0x20..23. Lowest address holds the most-significant word. AES-128 uses key[255:128], the first four key words; AES-256 uses all eight. Read result at 0x30..33, most-significant word first. Reset clears wrapper data/configuration/control/result/status registers. Wrapper status/result registers follow core outputs on each edge.
+- Follow the README key-load/configure/init/wait-ready/block-load/next/wait-ready/result-read sequence. Keep key length and direction stable during an operation. Do not overlap init and next or start while busy. The API provides raw AES block operations, with no mode chaining or padding.
+- aes_core integrates aes_key_mem, aes_encipher_block, aes_decipher_block and a shared encryption/key-schedule aes_sbox. aes_sbox and aes_inv_sbox apply the standard AES byte substitution independently to the four bytes of their combinational 32-bit word ports.
+- aes_key_mem expands the standard AES key schedule into 128-bit round keys, indexed by round (0..10 for AES-128, 0..14 for AES-256); its sboxw/new_sboxw pair accesses the external combinational S-box. init starts expansion; ready reports completion. Round-key lookup is combinational. The two block engines request their round keys through round, consume round_key, and transform block into new_block with the standard forward/inverse round ordering. The encryption engine also uses its external combinational S-box ports. next starts work and ready returns high on completion. Result data is used only after completion.
+- Core reset sets ready=1 and result_valid=0. Accepting init/next clears ready and result_valid; init completion restores ready, block completion restores ready and sets result_valid until the next accepted operation. Use the documented ready handshake; private vectors include reasonable finite completion waits, not an implementation-specific internal state encoding.
+
+Original-document scope: README specifies algorithm, supported keys, architecture and use sequence. The address map, identity values, reset and port-level contracts above are curator clarifications from the pinned RTL, not claimed to be verbatim original prose. Required internals must implement their declared functional contracts; their state names are unrestricted.
+'''
+SHA='''# Implement the Secworks SHA-224/SHA-256 project
+Read specification/project.md (unchanged upstream README) and implement the four required RTL files with sha256 as the 32-bit bus top. Streaming/AXI wrappers are separate configurations. This core compresses already-padded 512-bit blocks; the caller performs padding. Both SHA-224 and SHA-256 are required.
+
+Curator interface clarification, reviewed against the pinned release before evaluation:
+- Rising-edge clock; asynchronous active-low reset_n. cs && we writes a word-addressed register on an edge. cs && !we selects a combinational read. No handshake/acknowledgment; unmapped reads and read_data when deselected/writing are zero. error is always zero in this release, including invalid addresses.
+- Identity registers 0x00/01/02 return 0x73686132/0x2d323536/0x312e3830. Control 0x08 bits 0/1 are one-cycle registered init/next strobes; bit 2 is mode (1 SHA-256, 0 SHA-224), reset to 1. Every control write also writes mode. Thus 0x05 starts a new SHA-256 message, 0x06 continues it; 0x01/02 select SHA-224. Read control reflects {mode,next,init}. Status 0x09 bits 0/1 reports ready/digest_valid through one wrapper register stage.
+- Block words 0x10..1f are read/write, MSW first. Digest words 0x20..27 are read-only, MSW first. Wrapper block/digest/control/status storage resets to zero except mode=1. Digest storage updates when core digest_valid is high. SHA-224 uses the first seven digest words; the eighth is the core's extra chaining word, not part of the 224-bit digest.
+- init starts compression with the standard mode-dependent initial hash; next continues with the preceding chaining state. Keep mode fixed within a message. Wait for ready to become low then high before starting another block or reading the completed digest. Inputs are sampled at the accepted block command; wrapper block registers can be loaded while the previous block computes. Do not overlap init/next or issue commands while busy.
+- sha256_core implements the 64 standard rounds, 32-bit modular additions, message expansion and feed-forward. sha256_k_constants is the combinational 64-entry standard SHA-256 constant ROM indexed by round. sha256_w_mem loads the 16 MSW-first words on init and advances its sliding message schedule on next: W[t]=sigma1(W[t-2])+W[t-7]+sigma0(W[t-15])+W[t-16] modulo 2^32. Its w port supplies the selected initial word for rounds 0..15 and the expanded word afterward. sigma0=ROTR7 xor ROTR18 xor SHR3; sigma1=ROTR17 xor ROTR19 xor SHR10.
+- Core ready is high at reset; digest_valid clears on reset and a newly accepted command, and asserts on completion. Stable completed outputs and finite ready-handshake completion are required; internal state names are unrestricted.
+
+Original-document scope: README specifies the algorithm, two modes, unpadded block API, buffering and control-mode caveat. Exact bus addresses/identity/reset behavior above are curator clarifications from the pinned RTL. The original w-memory bench only prints state and is retained unscored; checked core and bus benches exercise its operation through the complete design.
+'''
+UART='''# Implement the AXI-stream UART project
+Read specification/project.md (unchanged upstream README). Implement uart, uart_tx and uart_rx at the declared paths. uart instantiates the independent transmitter and receiver, connecting the public streams, serial pins, prescale and status signals.
+
+Reviewed contract and original-document correction:
+- All logic uses rising clk edges and synchronous active-high rst. UART is idle-high, one low start bit, DATA_WIDTH data bits least-significant first, no parity, and one high stop bit. Default DATA_WIDTH=8; the qualification configuration is 8N1, prescale=4. Bit duration is 8*prescale clock cycles. Keep prescale stable during traffic; widths/baud configurations outside the frozen tests are not claimed as independently verified.
+- AXI-stream transfers occur when valid && ready. TX backpressures while sending; RX normally holds the received word/valid until accepted. Reset sets TX line high and both busy outputs low, RX valid and error outputs low. Input ready becomes available after reset release.
+- RX validates the start bit near its center, samples data-bit centers and requires a high stop bit. A false start is abandoned. An invalid stop bit pulses frame_error for one clock, discards that bad frame and preserves a previously unread valid word. Error outputs are pulses, not sticky flags.
+- IMPORTANT correction: README says an overrun discards the incoming word. In this pinned RTL, a valid incoming frame REPLACES the unread RX output word and pulses overrun_error when old m_axis_tvalid was high. This is an overwrite-oldest single-word buffer. The error uses the old valid bit even if ready is simultaneously high at completion. This explicit curator correction takes precedence over the stale README sentence. The correction is tested with two serial frames while the consumer is paused.
+- busy indicates an active frame; allow the receiver/transmitter's normal registered transition delays. Consumers must not assume buffering beyond the one RX output word. Signals/port names and parameter defaults follow interfaces/modules.v. Internal state encodings are unrestricted.
+'''
+FTDI='''# Implement the FTDI245 FIFO controller project
+Read the complete original manual in specification/project.md and implement the eleven required design modules with ftdi_245fifo_top as the integration top. Declaration-only interfaces retain the source parameters and port widths. The public README is the original paired specification; the clarifications below describe this benchmark configuration.
+
+- This frozen case selects FTx232H (one-byte chip interface), with the README AXI-stream send/receive interfaces. The source parameter declarations retain FT600/FT601 options, but those options are outside the qualified case: expanded unchanged-reference probes reported byte-order failures and are preserved separately. Stream words and FTDI words are little-endian; tkeep selects valid bytes, and tlast flushes a partial send word rather than transporting a packet boundary to the host.
+- tx_clk, rx_clk and ftdi_clk are independent. Use asynchronous FIFO crossings and local synchronized reset release. rstn_async is active-low; this case REQUIRES an initial asserted reset spanning multiple edges of all clocks. Behavior when power-up reset is omitted is outside this case, even though the original manual permits tying reset high.
+- The FTDI bus is half-duplex. rxf_n low means read data available; txe_n low means write space available. Assert oe_n low before reading; rd_n low accepts incoming words on FTDI rising edges. During writes, drive data/byte enables and assert wr_n low; release the bidirectional bus while reading/idle as required by the selected chip interface. Avoid simultaneous read/write drive. Scheduling may insert legal idle cycles and must eventually make progress in both directions.
+- Preserve stream order under backpressure and support packing/removing arbitrary tkeep holes, FIFO buffering and width resizing described in the manual. rx_tlast follows the manual's chunk/timeout behavior and is not a host packet delimiter. The scored upstream loopback bench, augmented with a public receive-stream byte-order monitor, checks end-to-end byte order under randomized FTDI availability with USER_EW=0 and USER_EW=2 (equal and differing stream/chip widths). It is one whole bench point with two parameter configurations, not several independent cases.
+- Submodules: resetn_sync provides asynchronous assertion and local synchronized release; fifo_async crosses a ready/valid data queue; fifo2/fifo4 are small synchronous elastic queues; fifo_delay_submit buffers a stream with delayed submission; axi_stream_packing removes invalid-byte holes and flushes on last; axi_stream_upsizing/downsizing/resizing convert stream widths with keep/last; ftdi_245fifo_fsm schedules the external bidirectional interface. Implement the complete closure, including the branches selected by the declared defaults.
+- SIMULATION=0 is the generated-design contract. The upstream assertion helper is private test support; do not implement it as benchmark RTL. Reference-only initial assignments duplicating explicit reset values are removed for this reset-required case; all original RTL is retained privately and the exact changes are recorded. No logic equations or reset assignments are changed.
+'''
+
+
+def source_record(slug):
+    matches=list((ROOT/'scope2/common/projects').glob('*/'+slug+'/project.json'));assert len(matches)==1
+    return json.loads(matches[0].read_text())
+
+
+def native_bench(path):
+    text=strip_comments(path.read_text());name=re.search(r'\bmodule\s+(\w+)',text)[1]
+    text=re.sub(r'\bmodule\s+'+name+r'\b','module tb',text)
+    text=re.sub(r'\btask\s+(dump\w*)\s*;.*?\bendtask\b',lambda m:'task '+m[1]+'; begin end endtask',text,flags=re.S)
+    text=re.sub(r'\$(?:display|write|dumpfile|dumpvars)\s*\(.*?\)\s*;',';',text,flags=re.S)
+    assert not re.search(r'\bdut\s*\.',text),path
+    assert 'error_ctr = error_ctr + 1' in text or 'error_ctr = error_ctr + 1;' in text,path
+    text,n=re.subn(r'\$finish\s*;', 'if(error_ctr !== 0 || tc_ctr == 0) $fatal(1,"native suite failed/incomplete"); $display("RTL_BENCHLS_PASS"); $finish(0);',text);assert n==1
+    return text.replace('endmodule','initial begin #10000000; $fatal(1,"native watchdog"); end\nendmodule')
+
+
+def uart_errors():
+    return '''`timescale 1ns/1ps
+module tb;
+reg clk=0,rst=1,rxd=1,ready=0; always #5 clk=~clk;
+wire [7:0] data; wire valid,busy,overrun,frame;
+uart_rx dut(.clk(clk),.rst(rst),.rxd(rxd),.prescale(16'd4),.m_axis_tdata(data),.m_axis_tvalid(valid),.m_axis_tready(ready),.busy(busy),.overrun_error(overrun),.frame_error(frame));
+integer oc=0,fc=0;
+always @(negedge clk) if(!rst)begin if(overrun)oc=oc+1;if(frame)fc=fc+1;end
+task serial;input[7:0]v;input good;integer b;begin
+@(negedge clk);rxd=0;#320;
+for(b=0;b<8;b=b+1)begin rxd=v[b];#320;end
+rxd=good;#320;rxd=1;#640;
+end endtask
+initial begin
+repeat(4)@(negedge clk);rst=0;repeat(4)@(negedge clk);
+serial(8'h53,1);if(valid!==1 || data!==8'h53 || oc!=0 || fc!=0)$fatal(1,"first frame");
+serial(8'hac,1);if(valid!==1 || data!==8'hac || oc!=1 || fc!=0)$fatal(1,"overrun replaces unread word");
+serial(8'h35,0);if(valid!==1 || data!==8'hac || oc!=1 || fc!=1)$fatal(1,"bad stop preserves unread word");
+ready=1;repeat(4)@(negedge clk);if(valid!==0)$fatal(1,"consume");
+rst=1;repeat(4)@(negedge clk);if(valid!==0 || busy!==0 || overrun!==0 || frame!==0)$fatal(1,"reset");
+$display("RTL_BENCHLS_PASS");$finish(0);end
+initial begin #100000;$fatal(1,"watchdog");end
+endmodule
+'''
+
+
+def ftdi_bench(source):
+    main=strip_comments((source/'SIM/tb_ftdi_245fifo.v').read_text())
+    main=re.sub(r'module tb_ftdi_245fifo\s*\(\s*\)\s*;', 'module ftdi_trial #(parameter CHIP_TYPE="FTx232H", USER_EW=0)(output reg completed=0);',main)
+    main=re.sub(r'localparam\s+CHIP_TYPE\s*=.*?;','',main)
+    main=re.sub(r'localparam\s+USER_EW\s*=.*?;','',main)
+    main=re.sub(r'initial\s+\$dumpvars\([^;]*;','',main)
+    main=main.replace('$finish;', 'begin if(u_tb_ftdi_chip_model.accepted_bytes<128) $fatal(1,"insufficient FTDI traffic"); completed=1; end')
+    main=main.replace('.SIMULATION     ( 1', '.SIMULATION     ( 0')
+    # The original end-to-end loopback can cancel the same fault in both FIFO
+    # directions. Observe the public receive stream before it loops into TX.
+    main=main.replace('endmodule', """integer rx_bytes=0, byte_index;
+always @(posedge clk) if(rstn && tvalid && tready) begin
+ for(byte_index=0;byte_index<(1<<USER_EW);byte_index=byte_index+1)
+  if(tkeep[byte_index])begin
+   if(tdata[8*byte_index+:8] !== (rx_bytes & 8'hff)) $fatal(1,"FTDI receive stream mismatch");
+   rx_bytes=rx_bytes+1;
+  end
+end
+endmodule""")
+    model=strip_comments((source/'SIM/tb_ftdi_chip_model.v').read_text())
+    model=re.sub(r'\$write\([^;]*;','',model)
+    model=model.replace('$display("*** error : data incorrect"); $stop;', '$fatal(1,"FTDI byte-order mismatch");')
+    model=model.replace("reg              [7:0] txbyte   = 8'h00;", "integer accepted_bytes=0; reg [7:0] txbyte=0;")
+    model=model.replace('txbyte = txbyte + 1;', 'txbyte = txbyte + 1; accepted_bytes=accepted_bytes+1;')
+    assert 'integer accepted_bytes=0' in model
+    return main+'\n'+model+'''\nmodule tb;
+wire [1:0] done;
+ftdi_trial #(.CHIP_TYPE("FTx232H"),.USER_EW(2)) t0(done[0]);
+ftdi_trial #(.CHIP_TYPE("FTx232H"),.USER_EW(0)) t1(done[1]);
+initial begin wait(&done);$display("RTL_BENCHLS_PASS");$finish(0);end
+initial begin #110000000;$fatal(1,"FTDI watchdog");end
+endmodule
+'''
+
+
+def specs():
+    result=[]
+    for slug,top,instruction in [('secworks_aes','aes',AES),('secworks_sha256','sha256',SHA)]:
+        source=Path(source_record(slug)['source']['local_path']);files=sorted(str(p.relative_to(source)) for p in (source/'src/rtl').glob('*.v'))
+        tests=[];originals=[]
+        for tb in sorted((source/'src/tb').glob('*.v')):
+            originals.append(str(tb))
+            if tb.stem=='tb_sha256_w_mem':continue
+            tests.append((tb.stem,tb.stem[3:],native_bench(tb)))
+        result.append(dict(case_id='github_'+slug+'_direct_v1',project=slug,top=top,instruction=instruction,configuration_record={'configuration_id':top,'top_module':top,'source_closure':files,'specification_paths':['README.md']},tests=tests,original_tests=originals,mutations=[('read_data_invert','src/rtl/'+top+'.v','assign read_data = tmp_read_data;','assign read_data = ~tmp_read_data;')],builder_source=__file__))
+    source=Path(source_record('alexforencich_verilog-uart')['source']['local_path'])
+    rt=ROOT/'scope2/task2_3_specification_round_trip/cases/frozen/source4_20260908_v2/github_alexforencich_verilog-uart'
+    tests=[(p.stem,'uart',p.read_text()) for p in sorted((rt/'private/verification').glob('*.v'))]
+    tests.append(('receive_errors','uart_rx',uart_errors()))
+    result.append(dict(case_id='github_alexforencich_uart_direct_v1',project='alexforencich_verilog-uart',top='uart',instruction=UART,configuration_record={'configuration_id':'uart','top_module':'uart','source_closure':['rtl/uart.v','rtl/uart_rx.v','rtl/uart_tx.v'],'specification_paths':['README.md']},tests=tests,mutations=[('rx_data_invert','rtl/uart_rx.v','assign m_axis_tdata = m_axis_tdata_reg;','assign m_axis_tdata = ~m_axis_tdata_reg;'),('overrun_suppressed','rtl/uart_rx.v','overrun_error_reg <= m_axis_tvalid_reg;','overrun_error_reg <= 0;')],builder_source=__file__))
+    source=Path(source_record('wangxuan95_fpga-ftdi245fifo')['source']['local_path']);files=sorted(str(p.relative_to(source)) for p in (source/'RTL/ftdi_245fifo').glob('*.v') if p.stem!='axi_stream_assert')
+    result.append(dict(case_id='github_wangxuan95_ftdi245fifo_direct_v1',project='wangxuan95_fpga-ftdi245fifo',top='ftdi_245fifo_top',instruction=FTDI,configuration_record={'configuration_id':'ftdi_245fifo_top','top_module':'ftdi_245fifo_top','source_closure':files,'specification_paths':['README.md']},tests=[('upstream_loopback','ftdi_245fifo_top',ftdi_bench(source))],original_tests=[str(source/'SIM/tb_ftdi_245fifo.v'),str(source/'SIM/tb_ftdi_chip_model.v')],mutations=[('receive_data_corrupt','RTL/ftdi_245fifo/fifo_async.v','buffer[wptr[EA-1:0]] <= i_tdata;','buffer[wptr[EA-1:0]] <= (i_tdata ^ 1);')],builder_source=__file__,point_timeout_seconds=60))
+    return result
+
+
+def build_one(spec):
+    draft=build(spec);case=json.loads((draft/'case.json').read_text());source=Path(source_record(spec['project'])['source']['local_path'])
+    # The API reset is mandatory. These initial assignments exactly duplicate
+    # explicit reset assignments, which remain present; no behavioral logic removed.
+    removed=[]
+    if spec['top']=='ftdi_245fifo_top':
+        for p in (draft/'private/reference').rglob('*.v'):
+            text=p.read_text();assignments=re.findall(r'\binitial\s+(\w+)\s*=\s*([^;]+);',strip_comments(text))
+            for name,value in assignments:
+                assert re.search(r'\b'+name+r'\s*<=\s*'+re.escape(value)+r'\s*;',text),(p,name,value)
+                text,n=re.subn(r'\binitial\s+'+name+r'\s*=\s*'+re.escape(value)+r'\s*;','',text);assert n==1
+                removed.append({'path':str(p.relative_to(draft/'private/reference')),'signal':name,'value':value,'reason':'duplicated explicit reset value; initial reset required'})
+            p.write_text(text)
+        case['normalizations'].append({'rule':'remove reset-redundant initial assignments; normalize CRLF to LF','assignments':removed})
+        interface=draft/'public/interfaces/modules.v'
+        decl=interface.read_text();decl=decl.replace('input  wire                    rstn_async;', 'localparam CHIP_EW = (CHIP_TYPE=="FT601") ? 2 : (CHIP_TYPE=="FT600") ? 1 : 0;\ninput  wire                    rstn_async;');interface.write_text(decl)
+    case['clarification_provenance']='Unchanged original README plus clearly marked curator interface clarification; reviewed against pinned golden RTL before model calls.'
+    review={'review_date':'2026-09-10','reviewer':'Codex primary agent manual source/specification review','original_specification':{'path':'README.md','sha256':digest(source/'README.md')},'instruction_sha256':digest(draft/'public/instruction.md'),'source_revision':case['source']['revision'],'source_files':{str(p.relative_to(draft/'private/original_reference')):digest(p) for p in (draft/'private/original_reference').rglob('*.v')},'decision':'pass_with_explicit_curator_clarifications','original_prose_rewritten':False,'checks':['algorithm/protocol and implementation scope','ports, reset and register/stream timing','required module closure and parameter envelope','upstream documentation omissions and contradictions','oracle behavior consistent with corrected public contract'],'material_findings': {'aes':['README lacks exact word-addressed bus map; clarified from pinned aes.v','Other README branches are excluded; both encryption/decryption retained'],'sha256':['README leaves bus map implicit; explicit mode-write semantics retained','AXI/stream wrappers are independent configurations','w-memory upstream bench is diagnostic-only, excluded from scored denominator'],'uart':['README overrun-discard statement disagrees with overwrite-oldest RTL; corrected publicly and dedicated receive_errors bench added'],'ftdi_245fifo_top':['Original no-reset option narrowed to mandatory initial reset','Eight reset-redundant initial assignments may be removed with every original retained','Full width-conversion source closure required; one upstream bench covers two FTx232H parameter configurations; FT600/FT601 probes retained unqualified']}[spec['top']],'unresolved_material_findings':[],'limitations':'Manual engineering screening and finite behavioral tests; not a claim of exhaustive formal equivalence.'}
+    write_json(draft/'private/specification_review.json',review);write_json(draft/'case.json',case)
+    return draft
+
+
+def qualify_one(spec):
+    draft=TASK/'project_pool/drafts'/spec['case_id'];out=draft/'private/qualification';assert not out.exists()
+    golden=evaluate(draft,draft/'private/reference',out/'golden');print(spec['case_id'],'golden',golden['passed_points'],golden['total_points'],flush=True)
+    if not golden['full_project_pass']:raise RuntimeError('Golden failed; preserved '+str(out))
+    controls=[]
+    for name,file,old,new in spec['mutations']:
+        sub=out/name/'candidate';shutil.copytree(draft/'private/reference',sub);p=sub/file;text=p.read_text();assert old in text;p.write_text(text.replace(old,new))
+        score=evaluate(draft,sub,out/name/'evaluation');assert score['compile_pass'] and not score['full_project_pass'],(name,score)
+        controls.append({'name':name,'compile_pass':True,'detected':True,'score':score['score'],'failed_points':[p['id'] for p in score['points'] if not p['passed']]})
+    review={'golden_score':golden['score'],'golden_points':golden['passed_points'],'total_points':golden['total_points'],'controls':controls,'specification_review':'private/specification_review.json','evaluator_sha256':digest(Path(__file__).with_name('evaluate_case_v2.py')),'scoring_unit':'one whole bench per point; internal vectors and parameter configurations do not add points'}
+    write_json(out/'review.json',review)
+    # Qualification does not publish. Freeze only after review and complete replay.
+    return review
+
+
+def freeze_one(spec):
+    draft=TASK/'project_pool/drafts'/spec['case_id'];review=json.loads((draft/'private/qualification/review.json').read_text());assert review['golden_score']==1 and all(c['compile_pass'] and c['detected'] for c in review['controls'])
+    case=json.loads((draft/'case.json').read_text());case.update(status='finalized',readiness_review={'approved':True,'reviewer':'Codex specification and behavioral qualification 2026-09-10','evidence_paths':['private/qualification/review.json']})
+    shutil.copyfile(Path(__file__).with_name('evaluate_case_v2.py'),draft/'private/verification/evaluate_case_v2.py')
+    case['artifacts']={str(p.relative_to(draft)):digest(p) for p in sorted(draft.rglob('*')) if p.is_file() and p.name!='case.json'};write_json(draft/'case.json',case)
+    stage=TASK/'results'/BATCH/'sealed_cases';stage.mkdir(parents=True,exist_ok=True)
+    dest=stage/spec['case_id'];assert not dest.exists();draft.rename(dest)
+    row={k:case[k] for k in ['case_id','project_id','configuration_id']};row.update(path=spec['case_id'],manifest_sha256=digest(dest/'case.json'))
+    with (stage/'index.jsonl').open('a') as f:f.write(json.dumps(row,sort_keys=True)+'\n')
+    return row
+
+
+def replay_sealed():
+    stage=TASK/'results'/BATCH/'sealed_cases';validate(stage);out=TASK/'results'/BATCH/'sealed_replay';assert not out.exists();rows=[]
+    for item in map(json.loads,(stage/'index.jsonl').read_text().splitlines()):
+        case=stage/item['path'];score=evaluate(case,case/'private/reference',out/item['case_id'])
+        assert score['full_project_pass'],score
+        rows.append({'case_id':item['case_id'],'case_manifest_sha256':digest(case/'case.json'),'passed_points':score['passed_points'],'total_points':score['total_points'],'full_project_pass':True})
+        print(item['case_id'],score['passed_points'],score['total_points'],flush=True)
+    validate(stage);write_json(TASK/'results'/BATCH/'sealed_replay_summary.json',{'cases':rows,'passed_cases':len(rows),'total_points':sum(r['total_points'] for r in rows)})
+
+
+def publish():
+    stage=TASK/'results'/BATCH/'sealed_cases';validate(stage)
+    rows=list(map(json.loads,(stage/'index.jsonl').read_text().splitlines()));replay=json.loads((TASK/'results'/BATCH/'sealed_replay_summary.json').read_text())
+    assert len(rows)==len(replay['cases'])==4 and replay['passed_cases']==4
+    old=list(map(json.loads,(TASK/'cases/index.jsonl').read_text().splitlines()));assert len(old)==16
+    for row in rows:
+        result=next(x for x in replay['cases'] if x['case_id']==row['case_id']);assert result['full_project_pass'] and result['case_manifest_sha256']==digest(stage/row['path']/'case.json')
+        assert not (TASK/'cases'/row['path']).exists()
+    write_json(TASK/'results'/BATCH/'previous_case_index.json',old)
+    for row in rows:(stage/row['path']).rename(TASK/'cases'/row['path'])
+    (TASK/'cases/index.jsonl').write_text(''.join(json.dumps(x,sort_keys=True)+'\n' for x in old+rows))
+    print(json.dumps(validate()))
+
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['build','qualify','freeze','publish']);p.add_argument('--case',default='all');p.add_argument('--sealed',action='store_true');args=p.parse_args()
+    if args.action=='publish':publish();return
+    if args.sealed:assert args.action=='qualify';replay_sealed();return
+    for spec in specs():
+        if args.case not in ['all',spec['top']]:continue
+        if args.action=='build':print(build_one(spec),flush=True)
+        elif args.action=='qualify':print(json.dumps(qualify_one(spec)),flush=True)
+        else:print(json.dumps(freeze_one(spec)),flush=True)
+    if args.action=='freeze':print(json.dumps(validate(TASK/'results'/BATCH/'sealed_cases')))
+if __name__=='__main__':main()

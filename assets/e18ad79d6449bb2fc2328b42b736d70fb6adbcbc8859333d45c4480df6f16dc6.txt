@@ -1,0 +1,12 @@
+always @ (posedge clk or negedge rst_n) begin
+	if (!rst_n) begin
+		mtvec_reg <= MTVEC_INIT;
+	end else if (!CSR_M_TRAP) begin
+		// Explicit tie-off when unimplemented
+		mtvec_reg <= MTVEC_INIT;
+	end else begin
+		if (wen_m_mode && addr == MTVEC) begin
+			mtvec_reg <= update_nonconst(mtvec_reg, MTVEC_WMASK);
+		end
+	end
+end

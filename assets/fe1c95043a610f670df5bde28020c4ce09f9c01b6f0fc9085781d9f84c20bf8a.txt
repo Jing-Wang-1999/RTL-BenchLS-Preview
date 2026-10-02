@@ -1,0 +1,20 @@
+**Origen Counter Module Specification**
+
+This module implements a configurable up-counter with rollover detection. It counts from zero up to a programmable `rollover_val`, then resets to zero and asserts a `rollover_flag`.
+
+**Inputs:**
+- `clk`: Clock signal.
+- `n_rst`: Active-low reset.
+- `clr`: Synchronous clear (resets counter to zero).
+- `count_enable`: Enables counting when high.
+- `rollover_val`: Sets the maximum count value before rollover.
+
+**Outputs:**
+- `count_out`: Current count value.
+- `rollover_flag`: Asserted for one clock cycle when counter reaches `rollover_val`.
+
+**Behavior:**
+- On reset, counter and flag are cleared.
+- Counting occurs on rising clock edges when enabled.
+- `clr` overrides counting, resetting the counter immediately.
+- Rollover flag is asserted for one cycle when the counter resets after reaching

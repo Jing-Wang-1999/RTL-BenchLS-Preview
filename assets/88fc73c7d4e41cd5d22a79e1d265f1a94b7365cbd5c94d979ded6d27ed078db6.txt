@@ -1,0 +1,50 @@
+module origen_184467 (
+    input wire CLK,
+    input wire RST_n,
+    input wire preset,
+    input wire EN_LEFT,
+    input wire [7:0] REF_DATA,
+    output reg [7:0] REF_LEFT0,
+    output reg [7:0] REF_LEFT1,
+    output reg [7:0] REF_LEFT2,
+    output reg [7:0] REF_LEFT3,
+    output reg [7:0] REF_LEFT4,
+    output reg [7:0] REF_LEFT5,
+    output reg [7:0] REF_LEFT6,
+    output reg [7:0] REF_LEFT7
+);
+
+    reg [2:0] counter;
+    reg [7:0] ref_left [0:7];
+
+    always @(posedge CLK or negedge RST_n) begin
+        if (!RST_n) begin
+            counter <= 3'b000;
+            ref_left[0] <= 8'b00000000;
+            ref_left[1] <= 8'b00000000;
+            ref_left[2] <= 8'b00000000;
+            ref_left[3] <= 8'b00000000;
+            ref_left[4] <= 8'b00000000;
+            ref_left[5] <= 8'b00000000;
+            ref_left[6] <= 8'b00000000;
+            ref_left[7] <= 8'b00000000;
+        end else if (preset) begin
+            counter <= 3'b000;
+        end else if (EN_LEFT) begin
+            ref_left[counter] <= REF_DATA;
+            counter <= counter + 1;
+        end
+    end
+
+    always @(*) begin
+        REF_LEFT0 = ref_left[0];
+        REF_LEFT1 = ref_left[1];
+        REF_LEFT2 = ref_left[2];
+        REF_LEFT3 = ref_left[3];
+        REF_LEFT4 = ref_left[4];
+        REF_LEFT5 = ref_left[5];
+        REF_LEFT6 = ref_left[6];
+        REF_LEFT7 = ref_left[7];
+    end
+
+endmodule

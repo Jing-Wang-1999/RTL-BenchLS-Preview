@@ -1,0 +1,75 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/13541",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/13026",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 13541,
+  "issue_number": 13026,
+  "verilog_files": [
+    "hw/ip_templates/alert_handler/rtl/alert_handler.sv",
+    "hw/ip_templates/alert_handler/rtl/alert_handler_reg_wrap.sv",
+    "hw/top_earlgrey/ip_autogen/alert_handler/rtl/alert_handler.sv",
+    "hw/top_earlgrey/ip_autogen/alert_handler/rtl/alert_handler_reg_wrap.sv"
+  ],
+  "deletions": 34,
+  "additions": 40,
+  "patches": [
+    {
+      "filename": "hw/ip_templates/alert_handler/rtl/alert_handler.sv",
+      "patch": "@@ -74,7 +74,7 @@ module alert_handler\n     .tl_i,\n     .tl_o,\n     .irq_o ( irq ),\n-    .latch_crashdump_i ( |latch_crashdump ),\n+    .latch_crashdump_i ( latch_crashdump ),\n     .crashdump_o,\n     .hw2reg_wrap,\n     .reg2hw_wrap,",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    },
+    {
+      "filename": "hw/ip_templates/alert_handler/rtl/alert_handler_reg_wrap.sv",
+      "patch": "@@ -14,7 +14,7 @@ module alert_handler_reg_wrap import alert_pkg::*; (\n   // interrupt\n   output logic [N_CLASSES-1:0] irq_o,\n   // State information for HW crashdump\n-  input                        latch_crashdump_i,\n+  input  [N_CLASSES-1:0]       latch_crashdump_i,\n   output alert_crashdump_t     crashdump_o,\n   // hw2reg\n   input  hw2reg_wrap_t         hw2reg_wrap,\n@@ -313,7 +313,7 @@ module alert_handler_reg_wrap import alert_pkg::*; (\n   // crashdump output //\n   //////////////////////\n \n-  logic crashump_latched_q;\n+  logic [N_CLASSES-1:0] crashdump_latched_q;\n   alert_crashdump_t crashdump_d, crashdump_q;\n \n   // alert cause output\n@@ -330,29 +330,32 @@ module alert_handler_reg_wrap import alert_pkg::*; (\n   assign crashdump_d.class_esc_cnt   = hw2reg_wrap.class_esc_cnt;\n   assign crashdump_d.class_esc_state = hw2reg_wrap.class_esc_state;\n \n+  // We latch the crashdump upon triggering any of the escalation protocols. The reason for this is\n+  // that during escalation, certain alert senders may start to trigger due to FSMs being moved\n+  // into escalation mode - thereby masking the actual alert reasons exposed in the cause\n+  // registers.\n   always_ff @(posedge clk_i or negedge rst_ni) begin : p_crashdump\n     if (!rst_ni) begin\n-      crashump_latched_q <= 1'b0;\n+      crashdump_latched_q <= '0;\n       crashdump_q <= '0;\n     end else begin\n-      // We latch the crashdump upon triggering any of the escalation protocols. The reason for this\n-      // is that during escalation, certain alert senders may start to trigger due to FSMs being\n-      // moved into escalation mode - thereby masking the actual alert reasons exposed in the cause\n-      // registers. Note that the alert handler only captures the crashdump once upon first\n-      // assertion of this signal, and needs to be cleared or reset to re-arm the crashdump latching\n-      // mechanism.\n-      if (|reg2hw_wrap.class_clr) begin\n-        crashump_latched_q <= 1'b0;\n-        crashdump_q <= '0;\n-      end else if (latch_crashdump_i && !crashump_latched_q) begin\n-        crashump_latched_q <= 1'b1;\n+      // We track which class has been escalated so that the crashdump latching mechanism cannot be\n+      // re-armed by clearing another class that has not escalated yet. This also implies that if\n+      // an unclearable class has escalated, the crashdump latching mechanism cannot be re-armed.\n+      crashdump_latched_q <= (crashdump_latched_q & ~reg2hw_wrap.class_clr) | latch_crashdump_i;\n+\n+      // The alert handler only captures the first escalation event that asserts a latch_crashdump_i\n+      // signal, unless all classes are cleared, in which case the crashdump latching mechanism is\n+      // re-armed. In other words, we latch the crashdump if any of the latch_crashdump_i bits is\n+      // asserted, and no crashdump has been latched yet.\n+      if (|latch_crashdump_i && !(|crashdump_latched_q)) begin\n         crashdump_q <= crashdump_d;\n       end\n     end\n   end\n \n   // As long as the crashdump has not been latched yet, we output the current alert handler state.\n-  // Once it has been latched, we switch to the latched snapshot.\n-  assign crashdump_o = (crashump_latched_q) ? crashdump_q : crashdump_d;\n+  // Once any of the classes has triggered the latching, we switch to the latched snapshot.\n+  assign crashdump_o = (|crashdump_latched_q) ? crashdump_q : crashdump_d;\n \n endmodule : alert_handler_reg_wrap",
+      "additions": 19,
+      "deletions": 16,
+      "changes": 35
+    },
+    {
+      "filename": "hw/top_earlgrey/ip_autogen/alert_handler/rtl/alert_handler.sv",
+      "patch": "@@ -74,7 +74,7 @@ module alert_handler\n     .tl_i,\n     .tl_o,\n     .irq_o ( irq ),\n-    .latch_crashdump_i ( |latch_crashdump ),\n+    .latch_crashdump_i ( latch_crashdump ),\n     .crashdump_o,\n     .hw2reg_wrap,\n     .reg2hw_wrap,",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    },
+    {
+      "filename": "hw/top_earlgrey/ip_autogen/alert_handler/rtl/alert_handler_reg_wrap.sv",
+      "patch": "@@ -14,7 +14,7 @@ module alert_handler_reg_wrap import alert_pkg::*; (\n   // interrupt\n   output logic [N_CLASSES-1:0] irq_o,\n   // State information for HW crashdump\n-  input                        latch_crashdump_i,\n+  input  [N_CLASSES-1:0]       latch_crashdump_i,\n   output alert_crashdump_t     crashdump_o,\n   // hw2reg\n   input  hw2reg_wrap_t         hw2reg_wrap,\n@@ -313,7 +313,7 @@ module alert_handler_reg_wrap import alert_pkg::*; (\n   // crashdump output //\n   //////////////////////\n \n-  logic crashump_latched_q;\n+  logic [N_CLASSES-1:0] crashdump_latched_q;\n   alert_crashdump_t crashdump_d, crashdump_q;\n \n   // alert cause output\n@@ -330,29 +330,32 @@ module alert_handler_reg_wrap import alert_pkg::*; (\n   assign crashdump_d.class_esc_cnt   = hw2reg_wrap.class_esc_cnt;\n   assign crashdump_d.class_esc_state = hw2reg_wrap.class_esc_state;\n \n+  // We latch the crashdump upon triggering any of the escalation protocols. The reason for this is\n+  // that during escalation, certain alert senders may start to trigger due to FSMs being moved\n+  // into escalation mode - thereby masking the actual alert reasons exposed in the cause\n+  // registers.\n   always_ff @(posedge clk_i or negedge rst_ni) begin : p_crashdump\n     if (!rst_ni) begin\n-      crashump_latched_q <= 1'b0;\n+      crashdump_latched_q <= '0;\n       crashdump_q <= '0;\n     end else begin\n-      // We latch the crashdump upon triggering any of the escalation protocols. The reason for this\n-      // is that during escalation, certain alert senders may start to trigger due to FSMs being\n-      // moved into escalation mode - thereby masking the actual alert reasons exposed in the cause\n-      // registers. Note that the alert handler only captures the crashdump once upon first\n-      // assertion of this signal, and needs to be cleared or reset to re-arm the crashdump latching\n-      // mechanism.\n-      if (|reg2hw_wrap.class_clr) begin\n-        crashump_latched_q <= 1'b0;\n-        crashdump_q <= '0;\n-      end else if (latch_crashdump_i && !crashump_latched_q) begin\n-        crashump_latched_q <= 1'b1;\n+      // We track which class has been escalated so that the crashdump latching mechanism cannot be\n+      // re-armed by clearing another class that has not escalated yet. This also implies that if\n+      // an unclearable class has escalated, the crashdump latching mechanism cannot be re-armed.\n+      crashdump_latched_q <= (crashdump_latched_q & ~reg2hw_wrap.class_clr) | latch_crashdump_i;\n+\n+      // The alert handler only captures the first escalation event that asserts a latch_crashdump_i\n+      // signal, unless all classes are cleared, in which case the crashdump latching mechanism is\n+      // re-armed. In other words, we latch the crashdump if any of the latch_crashdump_i bits is\n+      // asserted, and no crashdump has been latched yet.\n+      if (|latch_crashdump_i && !(|crashdump_latched_q)) begin\n         crashdump_q <= crashdump_d;\n       end\n     end\n   end\n \n   // As long as the crashdump has not been latched yet, we output the current alert handler state.\n-  // Once it has been latched, we switch to the latched snapshot.\n-  assign crashdump_o = (crashump_latched_q) ? crashdump_q : crashdump_d;\n+  // Once any of the classes has triggered the latching, we switch to the latched snapshot.\n+  assign crashdump_o = (|crashdump_latched_q) ? crashdump_q : crashdump_d;\n \n endmodule : alert_handler_reg_wrap",
+      "additions": 19,
+      "deletions": 16,
+      "changes": 35
+    }
+  ],
+  "pr_info": {
+    "title": "[alert_handler] Make crashdump latching mechanism more consistent",
+    "body": "This ensures that the crashdump latching feature cannot be re-armed by clearing a class that has not escalated yet. This also implies that if a non-clearable class has escalated, the crashdump latching mechanism cannot be re-armed again.\r\n\r\nSee #13026 for more details.\r\n\r\nSigned-off-by: Michael Schaffner <msf@google.com>",
+    "state": "closed",
+    "created_at": "2022-07-07T19:32:09Z",
+    "updated_at": "2022-07-08T19:29:18Z",
+    "merged_at": "2022-07-08T19:29:18Z",
+    "user": "msfschaffner"
+  },
+  "issue_info": {
+    "title": "[alert_handler] crashdump upon escalation clear",
+    "body": "Hi Michael,\r\n\r\nRegarding the register `classa_clr_shadowed` and `crashdump` output,\r\nif the `crashdump_trigger` is set to phase0 and already capture the crashdump, but the escalation is cleared by system using `classa_clr_shadowed` register, I believe currently the crashdump will still capture the current phase0 information even though it is being cleared.\r\n\r\nDo you think this behavior is expected? I thought if user clears the escalation phase, that crashdump information is probably not useful anymore?\r\n\r\nThanks,\r\nCindy",
+    "labels": [
+      "Priority:P2",
+      "Type:Bug",
+      "IP:alert_handler"
+    ],
+    "state": "closed",
+    "created_at": "2022-06-03T00:18:34Z",
+    "updated_at": "2022-07-11T20:21:20Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 1938
+  },
+  "base_commit": "bcb8ab186cd93d79c9b1c34b4a612545595b6f4f",
+  "head_commit": "1945e309565f0ce108bf9db0989918595bb471b0",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_13541_13026",
+  "lec_status": "useful_pass"
+}

@@ -1,0 +1,93 @@
+{
+  "case_id": "s1derived.0fc8b1b13e5bf264ac49.ddca97032075",
+  "compile_check": {
+    "case_id": "s1derived.0fc8b1b13e5bf264ac49.ddca97032075",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "asc_to_7seg",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0fc8b1b13e5bf264ac49.ddca97032075/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "0fc8b1b13e5bf264ac49d615ab29394dcd72c614e83e51742cd21df158a51c6f",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0fc8b1b13e5bf264ac49.ddca97032075",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.0fc8b1b13e5bf264ac49",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "asc_to_7seg"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0fc8b1b13e5bf264ac49.ddca97032075",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The complete raw-hex and ASCII mapping, active-low polarity, and default pattern match.",
+        "rtl_excerpt": "`\"a\",\"A\": seg=7'b0001000; ... \"-\": seg=7'b0111111; default: seg=7'b1111111;`",
+        "spec_excerpt": "\u201cASCII letters are case-insensitive ... Space ... hyphen ... every other input\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0fc8b1b13e5bf264ac49",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "cf9f8b86231c667b06931d2cdbf45fb4dcdaf7491fc1c3fa8b7918911f505711",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0fc8b1b13e5bf264ac49d615ab29394dcd72c614e83e51742cd21df158a51c6f",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.0fc8b1b13e5bf264ac49",
+  "primary_review": {
+    "case_id": "s1derived.0fc8b1b13e5bf264ac49.ddca97032075",
+    "checks": {
+      "behavior": "The prose names supported characters but fails to enumerate their hardcoded patterns.",
+      "boundaries": "Raw 0x0-0xf, ASCII digits, letters, space, hyphen, and default are distinct input domains whose mappings must be explicit.",
+      "interface": "bin[7:0] and active-low seg[6:0] match the RTL.",
+      "rtl_reasonableness": "RTL compiles and its case statement has a default, avoiding a latch.",
+      "sequential_and_reset": "The RTL is combinational and has no reset or retained state."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The prose supplies no complete table from which this and the other patterns can be recovered.",
+        "rtl_excerpt": "\"m\",\"M\" : seg = 7'b0101011;",
+        "specification_excerpt": "The mapping from input values to segment patterns is defined as follows"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification describes character classes and examples but omits the actual segment pattern for almost every supported input, so the truth function is not reproducible.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.0fc8b1b13e5bf264ac49",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.0fc8b1b13e5bf264ac49.ddca97032075.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0fc8b1b13e5bf264ac49d615ab29394dcd72c614e83e51742cd21df158a51c6f",
+    "source_group": "S1",
+    "specification_sha256": "ddca970320758a22c0ad2ef90a5cda8b4675c528a7f1d049aa00fd4a30c3dc18",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.0fc8b1b13e5bf264ac49.ddca97032075.md",
+  "qualified_specification_sha256": "cf9f8b86231c667b06931d2cdbf45fb4dcdaf7491fc1c3fa8b7918911f505711",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0fc8b1b13e5bf264ac49.ddca97032075/private/golden_design.v",
+  "rtl_sha256": "0fc8b1b13e5bf264ac49d615ab29394dcd72c614e83e51742cd21df158a51c6f",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0fc8b1b13e5bf264ac49.ddca97032075/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "ddca970320758a22c0ad2ef90a5cda8b4675c528a7f1d049aa00fd4a30c3dc18",
+  "top_module": "asc_to_7seg"
+}

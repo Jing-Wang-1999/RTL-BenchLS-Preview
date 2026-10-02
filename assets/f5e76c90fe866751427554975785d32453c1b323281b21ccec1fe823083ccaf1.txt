@@ -1,0 +1,188 @@
+module autovcoder_060783 (
+    input    cpu_cl,
+    input   [15:0] cpu_ad,
+    input    cpu_wr,
+    input  [7:0] cpu_dw,
+    output   cpu_rd,
+    output [7:0] cpu_dr,
+
+    input VCLKx4,
+    input VCLK,
+
+    input  [10:0] palno,
+    output [ 7:0] palout,
+
+    input  [ 9:0] sprad,
+    output [15:0] sprdt,
+
+    input  [ 9:0] vram0ad,
+    output [15:0] vram0dt,
+
+    input  [ 9:0] vram1ad,
+    output [15:0] vram1dt,
+
+    input    [5:0] mixcoll_ad,
+    input    mixcoll,
+
+    input    [9:0] sprcoll_ad,
+    input    sprcoll,
+
+    output reg [15:0] scrx,
+    output reg [ 7:0] scry
+);
+
+  // CPU Address Decoders
+  wire cpu_cs_palram;
+  wire cpu_cs_spram;
+  wire cpu_cs_mixcoll;
+  wire cpu_cs_sprcoll;
+  wire cpu_cs_vram0;
+  wire cpu_cs_vram1;
+
+  wire cpu_wr_palram;
+  wire cpu_wr_spram;
+  wire cpu_wr_mixcoll;
+  wire cpu_wr_mixcollclr;
+  wire cpu_wr_sprcoll;
+  wire cpu_wr_sprcollclr;
+  wire cpu_wr_vram0;
+  wire cpu_wr_vram1;
+  wire cpu_wr_scrreg;
+
+  VIDADEC adecs (
+      cpu_ad,
+      cpu_wr,
+
+      cpu_cs_palram,
+      cpu_cs_spram,
+      cpu_cs_mixcoll,
+      cpu_cs_sprcoll,
+      cpu_cs_vram0,
+      cpu_cs_vram1,
+
+      cpu_wr_palram,
+      cpu_wr_spram,
+      cpu_wr_mixcoll,
+      cpu_wr_mixcollclr,
+      cpu_wr_sprcoll,
+      cpu_wr_sprcollclr,
+      cpu_wr_vram0,
+      cpu_wr_vram1,
+      cpu_wr_scrreg,
+
+      cpu_rd
+  );
+
+  // Scroll Register
+  always @(posedge cpu_cl) begin
+    if (cpu_wr_scrreg) begin
+      case ({
+        cpu_ad[6], cpu_ad[0]
+      })
+        2'b11: scrx[15:8] <= cpu_dw;
+        2'b10: scrx[7:0] <= cpu_dw;
+        2'b01: scry <= cpu_dw;
+        2'b00: ;
+      endcase
+    end
+  end
+
+
+  // Palette RAM
+  wire [7:0] cpu_rd_palram;
+  DPRAM2048 palram (
+      cpu_cl,
+      cpu_ad[10:0],
+      cpu_dw,
+      cpu_wr_palram,
+      VCLK,
+      palno,
+      palout,
+      cpu_rd_palram
+  );
+
+
+  // Sprite Attribute RAM
+  wire [7:0] cpu_rd_spram;
+  DPRAM2048_8_16 sprram (
+      cpu_cl,
+      cpu_ad[10:0],
+      cpu_dw,
+      cpu_wr_spram,
+      VCLKx4,
+      sprad,
+      sprdt,
+      cpu_rd_spram
+  );
+
+
+  // Collision RAM (Mixer & Sprite)
+  wire noclip = 1'b1;
+  wire [7:0] cpu_rd_mixcoll;
+  wire [7:0] cpu_rd_sprcoll;
+  COLLRAM_M mixc (
+      cpu_cl,
+      cpu_ad[5:0],
+      cpu_wr_mixcoll,
+      cpu_wr_mixcollclr,
+      cpu_rd_mixcoll,
+      VCLKx4,
+      mixcoll_ad,
+      mixcoll & noclip
+  );
+  COLLRAM_S sprc (
+      cpu_cl,
+      cpu_ad[9:0],
+      cpu_wr_sprcoll,
+      cpu_wr_sprcollclr,
+      cpu_rd_sprcoll,
+      VCLKx4,
+      sprcoll_ad,
+      sprcoll & noclip
+  );
+
+
+  // VRAM
+  wire [7:0] cpu_rd_vram0, cpu_rd_vram1;
+  VRAM vram0 (
+      cpu_cl,
+      cpu_ad[10:0],
+      cpu_rd_vram0,
+      cpu_dw,
+      cpu_wr_vram0,
+      VCLKx4,
+      vram0ad,
+      vram0dt
+  );
+  VRAM vram1 (
+      cpu_cl,
+      cpu_ad[10:0],
+      cpu_rd_vram1,
+      cpu_dw,
+      cpu_wr_vram1,
+      VCLKx4,
+      vram1ad,
+      vram1dt
+  );
+
+
+  // CPU Read Data Selector
+  dataselector6 videodsel (
+      cpu_dr,
+      cpu_cs_palram,
+      cpu_rd_palram,
+      cpu_cs_vram0,
+      cpu_rd_vram0,
+      cpu_cs_vram1,
+      cpu_rd_vram1,
+      cpu_cs_spram,
+      cpu_rd_spram,
+      cpu_cs_sprcoll,
+      cpu_rd_sprcoll,
+      cpu_cs_mixcoll,
+      cpu_rd_mixcoll,
+      8'hFF
+  );
+
+endmodule
+

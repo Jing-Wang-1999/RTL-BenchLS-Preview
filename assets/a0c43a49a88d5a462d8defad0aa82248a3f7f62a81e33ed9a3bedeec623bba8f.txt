@@ -1,0 +1,95 @@
+module origen_186595(
+    input CP,
+    input [3:0] BCD1, BCD2, BCD3, BCD4,
+    output reg [6:0] Segout,
+    output reg SG1, SG2, SG3, SG4
+);
+
+reg [1:0] Count;
+
+always @(posedge CP) begin
+    Count <= Count + 1;
+end
+
+always @(*) begin
+    case (Count)
+        2'b00: begin
+            SG1 = 1'b1;
+            SG2 = 1'b0;
+            SG3 = 1'b0;
+            SG4 = 1'b0;
+            case (BCD1)
+                4'h0: Segout = 7'b1000000;
+                4'h1: Segout = 7'b1111001;
+                4'h2: Segout = 7'b0100100;
+                4'h3: Segout = 7'b0110000;
+                4'h4: Segout = 7'b0011001;
+                4'h5: Segout = 7'b0010010;
+                4'h6: Segout = 7'b0000010;
+                4'h7: Segout = 7'b1111000;
+                4'h8: Segout = 7'b0000000;
+                4'h9: Segout = 7'b0010000;
+                default: Segout = 7'b1111111;
+            endcase
+        end
+        2'b01: begin
+            SG1 = 1'b0;
+            SG2 = 1'b1;
+            SG3 = 1'b0;
+            SG4 = 1'b0;
+            case (BCD2)
+                4'h0: Segout = 7'b1000000;
+                4'h1: Segout = 7'b1111001;
+                4'h2: Segout = 7'b0100100;
+                4'h3: Segout = 7'b0110000;
+                4'h4: Segout = 7'b0011001;
+                4'h5: Segout = 7'b0010010;
+                4'h6: Segout = 7'b0000010;
+                4'h7: Segout = 7'b1111000;
+                4'h8: Segout = 7'b0000000;
+                4'h9: Segout = 7'b0010000;
+                default: Segout = 7'b1111111;
+            endcase
+        end
+        2'b10: begin
+            SG1 = 1'b0;
+            SG2 = 1'b0;
+            SG3 = 1'b1;
+            SG4 = 1'b0;
+            case (BCD3)
+                4'h0: Segout = 7'b1000000;
+                4'h1: Segout = 7'b1111001;
+                4'h2: Segout = 7'b0100100;
+                4'h3: Segout = 7'b0110000;
+                4'h4: Segout = 7'b0011001;
+                4'h5: Segout = 7'b0010010;
+                4'h6: Segout = 7'b0000010;
+                4'h7: Segout = 7'b1111000;
+                4'h8: Segout = 7'b0000000;
+                4'h9: Segout = 7'b0010000;
+                default: Segout = 7'b1111111;
+            endcase
+        end
+        2'b11: begin
+            SG1 = 1'b0;
+            SG2 = 1'b0;
+            SG3 = 1'b0;
+            SG4 = 1'b1;
+            case (BCD4)
+                4'h0: Segout = 7'b1000000;
+                4'h1: Segout = 7'b1111001;
+                4'h2: Segout = 7'b0100100;
+                4'h3: Segout = 7'b0110000;
+                4'h4: Segout = 7'b0011001;
+                4'h5: Segout = 7'b0010010;
+                4'h6: Segout = 7'b0000010;
+                4'h7: Segout = 7'b1111000;
+                4'h8: Segout = 7'b0000000;
+                4'h9: Segout = 7'b0010000;
+                default: Segout = 7'b1111111;
+            endcase
+        end
+    endcase
+end
+
+endmodule

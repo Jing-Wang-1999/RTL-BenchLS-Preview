@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.111a8afd0f01e32a6b60.3ec8562917a9",
+  "compile_check": {
+    "case_id": "s1derived.111a8afd0f01e32a6b60.3ec8562917a9",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_209915",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_209915.27a581e6171651df/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.111a8afd0f01e32a6b60",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "111a8afd0f01e32a6b60b9e2dba9251f8e0ee14660d2444216d62f516441eb24",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.111a8afd0f01e32a6b60.3ec8562917a9",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_209915.27a581e6171651df/private/commercial_positive.log",
+    "commercial_log_sha256": "c1252c8c194b6fdc6d6167b1397f82c1f8f79314a7426c396ae0db5b96b5d770",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_209915.27a581e6171651df/private/historical_harness/00_sec_origen_209915.tcl",
+    "executed_script_sha256": "87c6e23d26cf7308834bdb673d63459cdb17117d5eb07834adda9482c052e7fa",
+    "golden_tops": [
+      "origen_209915"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.origen_209915.27a581e6171651df",
+    "parent_id": "s1p.111a8afd0f01e32a6b60",
+    "revised_tops": [
+      "origen_209915"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_209915",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.111a8afd0f01e32a6b60.3ec8562917a9",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The two reachable states separate change detection from stable-interval counting. The repair correctly requires a further edge after count reaches MASK_TIME to commit key_out, and resets all registers to their actual values. Default200000 and32-bit counter are preserved.",
+        "rtl_excerpt": "if(count < MASK_TIME) begin",
+        "specification_excerpt": "another input change updates `temp` and restarts `count` at zero."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.111a8afd0f01e32a6b60",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "8ae7239f6959391541e38b9abc419d4bc7d1037a6a8798ca4d24975bb12b1115",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "111a8afd0f01e32a6b60b9e2dba9251f8e0ee14660d2444216d62f516441eb24",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_209915.27a581e6171651df/private/historical_harness/00_sec_origen_209915.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_209915.27a581e6171651df/private/historical_harness/01_sec_origen_209915.tcl"
+  ],
+  "parent_id": "s1p.111a8afd0f01e32a6b60",
+  "primary_review": {
+    "case_id": "s1derived.111a8afd0f01e32a6b60.3ec8562917a9",
+    "checks": {
+      "behavior": "Reset agrees, but the full stability interval, restart, and output timing are missing.",
+      "boundaries": "checked selector/opcode ranges, widths, arithmetic and state/default paths",
+      "interface": "checked complete RTL port names, directions and widths against prose",
+      "rtl_reasonableness": "reasonable hardware for stated behavior",
+      "sequential_and_reset": "checked clock/reset edges, initialization, update, hold, priority and latency"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Reset agrees, but the full stability interval, restart, and output timing are missing.",
+        "rtl_excerpt": "MASK_TIME=200000; change enters state01; count increments through 200000 then later returns state10 and updates key_out",
+        "spec_excerpt": "Reset initializes s0=1,s1=0,temp=1,count=0,key_out=1 and stable input is debounced."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification truncates before state transitions and omits the exact MASK_TIME boundary and registered output latency.",
+        "rtl_evidence": "MASK_TIME=200000; change enters state01; count increments through 200000 then later returns state10 and updates key_out",
+        "spec_evidence": "Reset initializes s0=1,s1=0,temp=1,count=0,key_out=1 and stable input is debounced.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.111a8afd0f01e32a6b60",
+    "proposed_specification_path": "proposed_repairs_3_sol_03/s1derived.111a8afd0f01e32a6b60.3ec8562917a9.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "111a8afd0f01e32a6b60b9e2dba9251f8e0ee14660d2444216d62f516441eb24",
+    "source_group": "S2",
+    "specification_sha256": "3ec8562917a96ea5281025fab89e9bfcc4fe0ee9283f4c18296a27091e7ecf44",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_03/s1derived.111a8afd0f01e32a6b60.3ec8562917a9.md",
+  "qualified_specification_sha256": "8ae7239f6959391541e38b9abc419d4bc7d1037a6a8798ca4d24975bb12b1115",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_209915.27a581e6171651df/private/golden_design.v",
+  "rtl_sha256": "111a8afd0f01e32a6b60b9e2dba9251f8e0ee14660d2444216d62f516441eb24",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_209915.27a581e6171651df/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "3ec8562917a96ea5281025fab89e9bfcc4fe0ee9283f4c18296a27091e7ecf44",
+  "top_module": "origen_209915"
+}

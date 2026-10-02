@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.5e1a7a8f23d8e8bdb501.464a4fbbe670",
+  "compile_check": {
+    "case_id": "s1derived.5e1a7a8f23d8e8bdb501.464a4fbbe670",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_018345",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_018345.87e7ace1de5b1dc2/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.5e1a7a8f23d8e8bdb501",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "5e1a7a8f23d8e8bdb5010923abae8776064577a6e76083b2025e8cfa0157d27d",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.5e1a7a8f23d8e8bdb501.464a4fbbe670",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_018345.87e7ace1de5b1dc2/private/commercial_positive.log",
+    "commercial_log_sha256": "a1e0ad92b7ffaafd60318450445cd6f032d1484df0fa8d546c0cc92e0bf2d68c",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_018345.87e7ace1de5b1dc2/private/historical_harness/00_sec_origen_018345.tcl",
+    "executed_script_sha256": "0f60769801e9ccaf57bbaa60400335109f0f4ea2b754f3f859b16b43849b4521",
+    "golden_tops": [
+      "origen_018345"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.origen_018345.87e7ace1de5b1dc2",
+    "parent_id": "s1p.5e1a7a8f23d8e8bdb501",
+    "revised_tops": [
+      "origen_018345"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_018345",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.5e1a7a8f23d8e8bdb501.464a4fbbe670",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Re-read corrected full UART contract: tx line lag is now explicit on acceptance, start/data and data/stop transitions, while terminal combinational done timing and tick counts match.",
+        "rtl_excerpt": "tx_reg <= tx_next;",
+        "specification_excerpt": "state occupied before an edge"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.5e1a7a8f23d8e8bdb501",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "b0eceab5852fd218033e318d0ae4ed2d7f45415def290c1a7cda0ba98bac5b39",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5e1a7a8f23d8e8bdb5010923abae8776064577a6e76083b2025e8cfa0157d27d",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_018345.87e7ace1de5b1dc2/private/historical_harness/00_sec_origen_018345.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_018345.87e7ace1de5b1dc2/private/historical_harness/01_sec_origen_018345.tcl"
+  ],
+  "parent_id": "s1p.5e1a7a8f23d8e8bdb501",
+  "primary_review": {
+    "case_id": "s1derived.5e1a7a8f23d8e8bdb501.464a4fbbe670",
+    "checks": {
+      "behavior": "The stop/done description is truncated and omits parameter bounds.",
+      "boundaries": "The repair states the omitted truncation, startup, default, and parameter boundaries.",
+      "interface": "The repair supplies the complete actual interface and parameter defaults.",
+      "rtl_reasonableness": "The RTL is coherent and reasonable hardware for the repaired or original contract.",
+      "sequential_and_reset": "The repair gives actual clock, reset, priority, hold, and CDC timing."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The stop/done description is truncated and omits parameter bounds.",
+        "rtl_excerpt": "Terminal stop tick returns idle and asserts combinational tx_done_tick; fixed counters constrain DBIT and tick counts.",
+        "spec_excerpt": "It ends before stating return/done behavior."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The stop/done description is truncated and omits parameter bounds.",
+        "rtl_evidence": "Terminal stop tick returns idle and asserts combinational tx_done_tick; fixed counters constrain DBIT and tick counts.",
+        "spec_evidence": "It ends before stating return/done behavior.",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.5e1a7a8f23d8e8bdb501",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_07/s1derived.5e1a7a8f23d8e8bdb501.464a4fbbe670.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5e1a7a8f23d8e8bdb5010923abae8776064577a6e76083b2025e8cfa0157d27d",
+    "source_group": "S2",
+    "specification_sha256": "464a4fbbe6703c0224d9e4c411ea86cb1f20ab9bcf3790fd073d538f92901f8c",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_07/s1derived.5e1a7a8f23d8e8bdb501.464a4fbbe670.md",
+  "qualified_specification_sha256": "b0eceab5852fd218033e318d0ae4ed2d7f45415def290c1a7cda0ba98bac5b39",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_018345.87e7ace1de5b1dc2/private/golden_design.v",
+  "rtl_sha256": "5e1a7a8f23d8e8bdb5010923abae8776064577a6e76083b2025e8cfa0157d27d",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_018345.87e7ace1de5b1dc2/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "464a4fbbe6703c0224d9e4c411ea86cb1f20ab9bcf3790fd073d538f92901f8c",
+  "top_module": "origen_018345"
+}

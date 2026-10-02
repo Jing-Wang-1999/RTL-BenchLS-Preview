@@ -1,0 +1,85 @@
+module rtlpp_10824 (
+    input serial_in,
+    output reg [7:0] data_out,
+    input read_buffer,
+    input reset_buffer,
+    input en_16_x_baud,
+    output reg buffer_data_present,
+    output reg buffer_full,
+    output reg buffer_half_full,
+    input clk
+);
+
+// Internal signals
+reg [7:0] uart_data_out;
+reg fifo_write;
+
+// UART Receiver Logic
+reg [3:0] bit_count;
+reg [7:0] shift_reg;
+reg [15:0] baud_count;
+reg receiving;
+
+always @(posedge clk) begin
+    if (en_16_x_baud) begin
+        if (receiving) begin
+            if (baud_count == 16'hFFFF) begin
+                baud_count <= 0;
+                shift_reg <= {serial_in, shift_reg[7:1]};
+                bit_count <= bit_count + 1;
+
+                if (bit_count == 8) begin
+                    receiving <= 0;
+                    uart_data_out <= shift_reg;
+                    fifo_write <= 1;
+                end
+            end else begin
+                baud_count <= baud_count + 1;
+            end
+        end else begin
+            if (serial_in == 0) begin
+                receiving <= 1;
+                baud_count <= 0;
+                bit_count <= 0;
+                shift_reg <= 0;
+            end
+        end
+    end
+end
+
+// FIFO Buffer Logic
+reg [7:0] fifo [15:0];
+reg [3:0] write_pointer;
+reg [3:0] read_pointer;
+reg [4:0] fifo_count;
+
+always @(posedge clk or posedge reset_buffer) begin
+    if (reset_buffer) begin
+        write_pointer <= 0;
+        read_pointer <= 0;
+        fifo_count <= 0;
+        buffer_data_present <= 0;
+        buffer_full <= 0;
+        buffer_half_full <= 0;
+        fifo_write <= 0;
+    end else begin
+        if (fifo_write) begin
+            fifo[write_pointer] <= uart_data_out;
+            write_pointer <= write_pointer + 1;
+            fifo_count <= fifo_count + 1;
+            fifo_write <= 0;
+        end
+
+        if (read_buffer && fifo_count > 0) begin
+            data_out <= fifo[read_pointer];
+            read_pointer <= read_pointer + 1;
+            fifo_count <= fifo_count - 1;
+        end
+
+        buffer_data_present <= (fifo_count > 0);
+        buffer_half_full <= (fifo_count >= 8);
+        buffer_full <= (fifo_count == 16);
+    end
+end
+
+endmodule

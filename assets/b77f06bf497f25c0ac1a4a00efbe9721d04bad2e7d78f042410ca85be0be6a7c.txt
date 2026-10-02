@@ -1,0 +1,37 @@
+module ecc_raw_data_64bit (
+    input wire clk,
+    input wire rst,
+    input wire [71:0] c,
+    output reg [63:0] d
+);
+    parameter REGISTER = 0;
+
+    wire [63:0] extracted_data;
+
+    assign extracted_data = {
+        c[70], c[69], c[68], c[67], c[66], c[65], c[64], c[62],
+        c[61], c[60], c[59], c[58], c[57], c[56], c[55], c[54],
+        c[53], c[52], c[51], c[50], c[49], c[48], c[47], c[46],
+        c[45], c[44], c[43], c[42], c[41], c[40], c[39], c[38],
+        c[37], c[36], c[35], c[34], c[33], c[32], c[30], c[29],
+        c[28], c[27], c[26], c[25], c[24], c[23], c[22], c[21],
+        c[20], c[19], c[18], c[17], c[16], c[14], c[13], c[12],
+        c[11], c[10], c[9], c[8], c[6], c[5], c[4], c[2]
+    };
+
+    generate
+        if (REGISTER) begin
+            always @(posedge clk or posedge rst) begin
+                if (rst) begin
+                    d <= 64'b0;
+                end else begin
+                    d <= extracted_data;
+                end
+            end
+        end else begin
+            always @(*) begin
+                d = extracted_data;
+            end
+        end
+    endgenerate
+endmodule

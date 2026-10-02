@@ -1,0 +1,18 @@
+module mg_02965 (
+    input wire i,
+    input wire oe,
+    inout wire io,
+    output wire o
+);
+
+    // Parameters for configuration (default values)
+    parameter io_standard = "NONE";
+    parameter current_strength = -1;
+    parameter slew_rate = -1;
+    parameter termination = "NONE";
+
+    // Internal logic for bidirectional data flow
+    assign io = oe ? i : 1'bz; // Control io based on oe
+    assign o = io;             // Assign io to o whenever io changes
+
+endmodule

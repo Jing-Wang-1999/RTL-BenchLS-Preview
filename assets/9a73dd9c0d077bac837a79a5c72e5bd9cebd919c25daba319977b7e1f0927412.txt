@@ -1,0 +1,92 @@
+module origen_006524 (
+    input [2:0] current_state,
+    input a,
+    input b,
+    output reg [2:0] next_state
+);
+
+    // State encoding
+    localparam [2:0] IDLE   = 3'b000;
+    localparam [2:0] ENTER1 = 3'b001;
+    localparam [2:0] ENTER2 = 3'b010;
+    localparam [2:0] ENTER3 = 3'b011;
+    localparam [2:0] EXIT1  = 3'b100;
+    localparam [2:0] EXIT2  = 3'b101;
+    localparam [2:0] EXIT3  = 3'b110;
+
+    // Combined input encoding
+    wire [1:0] ab = {a, b};
+    localparam [1:0] ZERO  = 2'b00;
+    localparam [1:0] ONE   = 2'b01;
+    localparam [1:0] TWO   = 2'b10;
+    localparam [1:0] THREE = 2'b11;
+
+    always @(*) begin
+        case (current_state)
+            IDLE: begin
+                case (ab)
+                    ONE:  next_state = EXIT1;
+                    TWO:  next_state = ENTER1;
+                    default: next_state = IDLE;
+                endcase
+            end
+
+            ENTER1: begin
+                case (ab)
+                    TWO:   next_state = ENTER2;
+                    ONE:   next_state = IDLE;
+                    THREE: next_state = IDLE;
+                    default: next_state = ENTER1;
+                endcase
+            end
+
+            ENTER2: begin
+                case (ab)
+                    TWO:   next_state = ENTER3;
+                    ONE:   next_state = ENTER1;
+                    THREE: next_state = IDLE;
+                    default: next_state = ENTER2;
+                endcase
+            end
+
+            ENTER3: begin
+                case (ab)
+                    ONE:   next_state = ENTER2;
+                    TWO:   next_state = IDLE;
+                    THREE: next_state = IDLE;
+                    default: next_state = ENTER3;
+                endcase
+            end
+
+            EXIT1: begin
+                case (ab)
+                    ONE:   next_state = EXIT2;
+                    TWO:   next_state = IDLE;
+                    THREE: next_state = IDLE;
+                    default: next_state = EXIT1;
+                endcase
+            end
+
+            EXIT2: begin
+                case (ab)
+                    ONE:   next_state = EXIT3;
+                    TWO:   next_state = EXIT1;
+                    THREE: next_state = IDLE;
+                    default: next_state = EXIT2;
+                endcase
+            end
+
+            EXIT3: begin
+                case (ab)
+                    TWO:   next_state = EXIT2;
+                    ONE:   next_state = IDLE;
+                    THREE: next_state = IDLE;
+                    default: next_state = EXIT3;
+                endcase
+            end
+
+            default: next_state = current_state;
+        endcase
+    end
+
+endmodule

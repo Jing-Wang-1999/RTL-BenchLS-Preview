@@ -1,0 +1,54 @@
+module origen_079342 (
+    input wire clk,
+    input wire reset,
+    input wire [31:0] aBus,
+    inout wire [31:0] dBus,
+    input wire wrtEn,
+    input wire [9:0] switches
+);
+
+    reg [9:0] swdata, swdebounce;
+    reg [8:0] swctrl;
+    reg [15:0] swcounter;
+    reg init_switches;
+
+    wire addr_switches = (aBus == 32'hF0000014);
+    wire addr_control = (aBus == 32'hF0000114);
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            swctrl <= 9'b0;
+            swcounter <= 16'd0;
+            init_switches <= 1'b1;
+        end else begin
+            if (init_switches) begin
+                swdata <= switches;
+                swdebounce <= switches;
+                init_switches <= 1'b0;
+            end else begin
+                if (swcounter == 16'd49999) begin
+                    swcounter <= 16'd0;
+                    if (swdebounce != switches) begin
+                        swdebounce <= switches;
+                    end else if (swdata != swdebounce) begin
+                        swdata <= swdebounce;
+                        swctrl[0] <= 1'b1;
+                        if (swctrl[2]) swctrl[1] <= 1'b1;
+                    end
+                end else begin
+                    swcounter <= swcounter + 1'b1;
+                end
+            end
+
+            if (addr_control && wrtEn) begin
+                swctrl[0] <= dBus[0];
+                swctrl[2] <= dBus[2];
+                swctrl[8] <= dBus[8];
+            end
+        end
+    end
+
+    assign dBus = (addr_switches && !wrtEn) ? {22'b0, swdata} :
+                  (addr_control && !wrtEn) ? {23'b0, swctrl} : 32'bz;
+
+endmodule

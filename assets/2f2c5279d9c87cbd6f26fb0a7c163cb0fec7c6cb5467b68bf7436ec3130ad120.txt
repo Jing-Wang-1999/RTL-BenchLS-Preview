@@ -1,0 +1,121 @@
+module rtlpp_04295 (
+    input s_axi_lite_aclk,
+    input m_axi_mm2s_aclk,
+    input m_axi_s2mm_aclk,
+    input axi_resetn,
+    input s_axi_lite_awvalid,
+    output s_axi_lite_awready,
+    input [9:0] s_axi_lite_awaddr,
+    input s_axi_lite_wvalid,
+    output s_axi_lite_wready,
+    input [31:0] s_axi_lite_wdata,
+    output [1:0] s_axi_lite_bresp,
+    output s_axi_lite_bvalid,
+    input s_axi_lite_bready,
+    input s_axi_lite_arvalid,
+    output s_axi_lite_arready,
+    input [9:0] s_axi_lite_araddr,
+    output s_axi_lite_rvalid,
+    input s_axi_lite_rready,
+    output [31:0] s_axi_lite_rdata,
+    output [1:0] s_axi_lite_rresp,
+    output [31:0] m_axi_mm2s_araddr,
+    output [7:0] m_axi_mm2s_arlen,
+    output [2:0] m_axi_mm2s_arsize,
+    output [1:0] m_axi_mm2s_arburst,
+    output [2:0] m_axi_mm2s_arprot,
+    output [3:0] m_axi_mm2s_arcache,
+    output m_axi_mm2s_arvalid,
+    input m_axi_mm2s_arready,
+    input [31:0] m_axi_mm2s_rdata,
+    input [1:0] m_axi_mm2s_rresp,
+    input m_axi_mm2s_rlast,
+    input m_axi_mm2s_rvalid,
+    output m_axi_mm2s_rready,
+    output mm2s_prmry_reset_out_n,
+    output [31:0] m_axis_mm2s_tdata,
+    output [3:0] m_axis_mm2s_tkeep,
+    output m_axis_mm2s_tvalid,
+    input m_axis_mm2s_tready,
+    output m_axis_mm2s_tlast,
+    output [31:0] m_axi_s2mm_awaddr,
+    output [7:0] m_axi_s2mm_awlen,
+    output [2:0] m_axi_s2mm_awsize,
+    output [1:0] m_axi_s2mm_awburst,
+    output [2:0] m_axi_s2mm_awprot,
+    output [3:0] m_axi_s2mm_awcache,
+    output m_axi_s2mm_awvalid,
+    input m_axi_s2mm_awready,
+    output [31:0] m_axi_s2mm_wdata,
+    output [3:0] m_axi_s2mm_wstrb,
+    output m_axi_s2mm_wlast,
+    output m_axi_s2mm_wvalid,
+    input m_axi_s2mm_wready,
+    input [1:0] m_axi_s2mm_bresp,
+    input m_axi_s2mm_bvalid,
+    output m_axi_s2mm_bready,
+    output s2mm_prmry_reset_out_n,
+    input [31:0] s_axis_s2mm_tdata,
+    input [3:0] s_axis_s2mm_tkeep,
+    input s_axis_s2mm_tvalid,
+    output s_axis_s2mm_tready,
+    input s_axis_s2mm_tlast,
+    output mm2s_introut,
+    output s2mm_introut,
+    output [31:0] axi_dma_tstvec
+);
+    // Define internal variables and logic here
+    reg [31:0] internal_register;
+
+    // Simplistic example of some internal logic to demonstrate the module
+    always @(posedge s_axi_lite_aclk or negedge axi_resetn) begin
+        if (!axi_resetn) begin
+            internal_register <= 32'd0;
+        end else if (s_axi_lite_awvalid && s_axi_lite_wvalid && s_axi_lite_bready) begin
+            internal_register <= s_axi_lite_wdata;
+        end
+    end
+
+    // Outputs (replace with proper logic as needed)
+    assign s_axi_lite_awready = s_axi_lite_awvalid;
+    assign s_axi_lite_wready = s_axi_lite_wvalid;
+    assign s_axi_lite_bresp = 2'b00; // OKAY
+    assign s_axi_lite_bvalid = s_axi_lite_bready;
+    assign s_axi_lite_arready = s_axi_lite_arvalid;
+    assign s_axi_lite_rvalid = s_axi_lite_rready;
+    assign s_axi_lite_rdata = internal_register;
+    assign s_axi_lite_rresp = 2'b00; // OKAY
+
+    // Unconnected outputs for demonstration
+    assign m_axi_mm2s_araddr = 32'd0;
+    assign m_axi_mm2s_arlen = 8'd0;
+    assign m_axi_mm2s_arsize = 3'd0;
+    assign m_axi_mm2s_arburst = 2'd0;
+    assign m_axi_mm2s_arprot = 3'd0;
+    assign m_axi_mm2s_arcache = 4'd0;
+    assign m_axi_mm2s_arvalid = 1'b0;
+    assign m_axi_mm2s_rready = 1'b0;
+    assign mm2s_prmry_reset_out_n = 1'b1;
+    assign m_axis_mm2s_tdata = 32'd0;
+    assign m_axis_mm2s_tkeep = 4'd0;
+    assign m_axis_mm2s_tvalid = 1'b0;
+    assign m_axis_mm2s_tlast = 1'b0;
+    assign m_axi_s2mm_awaddr = 32'd0;
+    assign m_axi_s2mm_awlen = 8'd0;
+    assign m_axi_s2mm_awsize = 3'd0;
+    assign m_axi_s2mm_awburst = 2'd0;
+    assign m_axi_s2mm_awprot = 3'd0;
+    assign m_axi_s2mm_awcache = 4'd0;
+    assign m_axi_s2mm_awvalid = 1'b0;
+    assign m_axi_s2mm_wdata = 32'd0;
+    assign m_axi_s2mm_wstrb = 4'd0;
+    assign m_axi_s2mm_wlast = 1'b0;
+    assign m_axi_s2mm_wvalid = 1'b0;
+    assign m_axi_s2mm_bready = 1'b0;
+    assign s2mm_prmry_reset_out_n = 1'b1;
+    assign s_axis_s2mm_tready = 1'b0;
+    assign mm2s_introut = 1'b0;
+    assign s2mm_introut = 1'b0;
+    assign axi_dma_tstvec = 32'd0;
+
+endmodule

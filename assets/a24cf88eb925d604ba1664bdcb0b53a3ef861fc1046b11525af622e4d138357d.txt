@@ -1,0 +1,55 @@
+module origen_075780 (
+    input din,
+    input clk,
+    input rst_n,
+    output reg flag
+);
+
+    // State encoding - one-hot encoding for clarity
+    localparam [8:0] IDLE = 9'b000000001;
+    localparam [8:0] A    = 9'b000000010;
+    localparam [8:0] B    = 9'b000000100;
+    localparam [8:0] C    = 9'b000001000;
+    localparam [8:0] D    = 9'b000010000;
+    localparam [8:0] E    = 9'b000100000;
+    localparam [8:0] F    = 9'b001000000;
+    localparam [8:0] G    = 9'b010000000;
+    localparam [8:0] H    = 9'b100000000;
+
+    reg [8:0] state, next_state;
+
+    // State register with asynchronous active-low reset
+    always @(negedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            IDLE: next_state = din ? A : B;
+            A:    next_state = din ? C : B;
+            B:    next_state = din ? A : D;
+            C:    next_state = din ? E : D;
+            D:    next_state = din ? G : B;
+            E:    next_state = din ? F : D;
+            F:    next_state = din ? C : B;
+            G:    next_state = din ? H : B;
+            H:    next_state = din ? C : B;
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Output logic: flag is high when state is F or H
+    always @(negedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            flag <= 1'b0;
+        end else begin
+            flag <= (state == F) || (state == H);
+        end
+    end
+
+endmodule

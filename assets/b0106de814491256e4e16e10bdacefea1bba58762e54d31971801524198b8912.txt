@@ -1,0 +1,130 @@
+"""Original Keccak-512 project: upstream interface tests plus independent messages."""
+import random
+import re
+from pathlib import Path
+
+SOURCE=Path('/home/jwangjw/project_3rd/ICLR-RTL-BenchLS-backup-jul-29/sources/opencores_git_mirror/crypto_core_sha3_keccak/high_throughput_core')
+MASK=(1<<64)-1
+RHO=[0,1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14]
+RC=[0x1,0x8082,0x800000000000808a,0x8000000080008000,0x808b,0x80000001,
+    0x8000000080008081,0x8000000000008009,0x8a,0x88,0x80008009,0x8000000a,
+    0x8000808b,0x800000000000008b,0x8000000000008089,0x8000000000008003,
+    0x8000000000008002,0x8000000000000080,0x800a,0x800000008000000a,
+    0x8000000080008081,0x8000000000008080,0x80000001,0x8000000080008008]
+
+
+def rot(x,n):return ((x<<n)|(x>>(64-n)))&MASK if n else x
+def rnd(a,rc):
+    c=[a[x]^a[x+5]^a[x+10]^a[x+15]^a[x+20] for x in range(5)]
+    d=[c[(x-1)%5]^rot(c[(x+1)%5],1) for x in range(5)];b=[0]*25
+    for y in range(5):
+        for x in range(5):b[y+5*((2*x+3*y)%5)]=rot(a[x+5*y]^d[x],RHO[x+5*y])
+    a=[b[x+5*y]^((~b[(x+1)%5+5*y])&b[(x+2)%5+5*y]) for y in range(5) for x in range(5)]
+    a[0]^=rc;return a
+def keccak512(data):
+    padded=bytearray(data)+b'\x01'
+    padded.extend(b'\0'*((-len(padded))%72));padded[-1]|=0x80;a=[0]*25
+    for off in range(0,len(padded),72):
+        for i in range(9):a[i]^=int.from_bytes(padded[off+8*i:off+8*i+8],'little')
+        for rc in RC:a=rnd(a,rc)
+    return b''.join(x.to_bytes(8,'little') for x in a[:8])
+assert keccak512(b'').hex()=='0eab42de4c3ceb9235fc91acffe746b29c29a8c366b7c60e4e67c466f36a4304c00fa9caf9d87976ba469bcbe06713b435f091ef2769fb160cdab33d3670680e'
+
+
+def upstream(name):
+    code=(SOURCE/'testbench'/f'test_{name}.v').read_text()
+    code=code.replace(f'module test_{name};','module tb;\ninitial begin #2000000;$fatal(1,"timeout");end')
+    assert '$display("Good!");' in code
+    return code.replace('$display("Good!");','$display("RTL_BENCHLS_PASS");').replace('$finish;', '$finish(0);')
+
+
+def top_random():
+    s='''`timescale 1ns/1ps
+module tb;reg clk=0,reset=0;always #5 clk=~clk;
+reg [63:0] in=0;reg ready=0,last=0;reg [2:0] nbyte=0;wire full,valid;wire [511:0] out;
+keccak dut(clk,reset,in,ready,last,nbyte,full,out,valid);
+task tick;begin @(posedge clk);#2;end endtask
+task put;input [63:0] d;input l;input [2:0] n;integer waitcycles;begin
+@(negedge clk);ready=0;last=0;waitcycles=0;
+while(full && waitcycles<100)begin tick;waitcycles=waitcycles+1;end
+if(full)$fatal(1,"input backpressure timeout");
+@(negedge clk);in=d;ready=1;last=l;nbyte=n;tick;
+@(negedge clk);ready=0;last=0;end endtask
+integer timeout;
+initial begin #2000000;$fatal(1,"timeout");end
+initial begin
+#1;in=1;nbyte=1;#1;in=0;nbyte=0;
+'''
+    rng=random.Random(9030625)
+    for n in list(range(10))+[15,63,64,65,70,71,72,73,80,135,143,144,145,200,255]:
+        message=bytes(rng.randrange(256) for _ in range(n));expected=keccak512(message).hex()
+        s+='@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;\n'
+        for i in range(n//8):s+=f"put(64'h{message[i*8:i*8+8].hex()},0,0);\n"
+        word=message[(n//8)*8:]+bytes(8-n%8)
+        s+=f"put(64'h{word.hex()},1,{n%8});timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end\n"
+        s+=f"if(!valid || out!==512'h{expected})$fatal(1,\"Keccak length {n}: %h\",out);repeat(4)begin tick;if(!valid || out!==512'h{expected})$fatal(1,\"digest hold\");end\n"
+    return s+'$display("RTL_BENCHLS_PASS");$finish(0);end endmodule\n'
+
+
+def round_tb():
+    rng=random.Random(9030626);s='`timescale 1ns/1ps\nmodule tb;reg [1599:0] a;reg [63:0] c1,c2;wire [1599:0] q;round2in1 dut(a,c1,c2,q);initial begin\n'
+    for n in range(64):
+        a=[rng.getrandbits(64) for _ in range(25)];c1=RC[2*(n%12)];c2=RC[2*(n%12)+1];b=rnd(rnd(a,c1),c2)
+        s+=f"a=1600'h{''.join(f'{v:016x}' for v in a)};c1=64'h{c1:x};c2=64'h{c2:x};#2;"
+        s+=f"if(q!==1600'h{''.join(f'{v:016x}' for v in b)})$fatal(1,\"round {n}\");\n"
+    return s+'$display("RTL_BENCHLS_PASS");$finish(0);end endmodule\n'
+
+
+INSTRUCTION='''# Implement the high-throughput Keccak-512 project
+Read specification/project.txt and its original PDF. Implement all six required
+modules/files: padder1, padder, rconst2in1, round2in1, f_permutation, and keccak.
+This 2013 core implements ORIGINAL Keccak-512, not the later FIPS SHA3-512
+domain suffix. Use a 1600-bit state, rate 576 bits (72 bytes), capacity 1024,
+24 Keccak-f rounds, padding byte 0x01 followed by zeros and a final high bit 0x80.
+
+Interface and timing clarifications:
+- Reset is ACTIVE-HIGH SYNCHRONOUS, all sequential state uses rising clk.
+- Input words are 64 bits with the first message byte in bits 63:56.
+  in_ready is input-valid (despite its name). Accept only while buffer_full=0.
+  Keep is_last=0 when input is not valid. Non-final words contain eight bytes.
+  Final word contains byte_num=0..7 leading bytes; unused low bytes are ignored.
+  Messages divisible by eight require an extra final word with byte_num=0.
+  After final acceptance, extra input is ignored until reset. Reset between
+  messages; out_ready becomes sticky on completion and the digest then holds.
+- padder1 combinationally retains the first byte_num input bytes, appends 0x01
+  and fills the rest of its 64-bit output with zeros. padder packs nine words,
+  oldest at bits 575:512. It adds 0x80 to the last byte of the final rate block.
+  Full/out_ready remains asserted until f_ack clears occupancy. No new word
+  is accepted while full, including the acknowledging cycle. After is_last,
+  autonomous zero padding fills the final block; no later input is consumed.
+- f_permutation has combinational ack=in_ready AND NOT busy. At an accepted
+  edge it XORs input into the high 576 bits of its retained state and computes
+  the first pair of rounds. It computes two rounds on each of 12 total edges;
+  out_ready asserts after the twelfth edge and holds until another acceptance.
+  Successive blocks absorb into the previous state; reset initializes zero.
+- round2in1 is combinational, applying theta/rho/pi/chi/iota twice using the
+  supplied constants. Lane A[x,y] is bits 1599-64*(5*y+x) downward for 64 bits;
+  use the standard Keccak rotation offsets and lane mapping. rconst2in1 takes
+  a 12-bit one-hot pair selector: bit j selects constants for rounds 2*j and
+  2*j+1 (zero-based). Zero selects zero constants; multi-hot selects bitwise OR.
+- keccak reverses bytes within each 64-bit padded word before absorption,
+  and within each of the first eight output lanes to produce the 512-bit digest.
+  It connects padder to f_permutation via full/ack. Complete a final block with
+  the 12-cycle permutation schedule; no proprietary implementation is required.
+
+Private points include the original five interface/protocol regressions, an
+independent two-round transform test, and independent variable-length message
+digests including multi-block messages. Public feedback is compilation only.
+'''
+
+
+def keccak_spec():
+    names=['f_permutation','keccak','padder','padder1','rconst2in1']
+    return dict(case_id='opencores_keccak512_high_v1',project='crypto_core_sha3_keccak',top='keccak',configuration='high_throughput',instruction=INSTRUCTION,builder_source=__file__,
+        tests=[(n,n,upstream(n)) for n in names]+[('round_pairs','round2in1',round_tb()),('top_random_messages','keccak',top_random())],
+        original_tests=[str(SOURCE/'testbench'/f'test_{n}.v') for n in names],
+        mutations=[('padding_suffix','rtl/padder1.v',"64'h0100000000000000","64'h0600000000000000"),
+          ('padding_final_bit','rtl/padder.v','v1[7] | i[7]','v1[7] & i[7]'),
+          ('rconst_first','rtl/rconst2in1.v','i[0] | i[2] | i[3]','i[2] | i[3]'),
+          ('absorb_xor','rtl/f_permutation.v','in ^ out[1599:1599-575]','in | out[1599:1599-575]'),
+          ('digest_lane','rtl/keccak.v','f_out[1599:1599-511]','f_out[1535:1535-511]')])

@@ -1,0 +1,55 @@
+always @* begin
+    data_out_axis_tready = m_axis_tready_int_reg && frame_reg;
+    csum_out_ready = 1'b0;
+
+    frame_next = frame_reg;
+
+    csum_next = csum_reg;
+    csum_offset_next = csum_offset_reg;
+    csum_enable_next = csum_enable_reg;
+    csum_split_next = csum_split_reg;
+
+    m_axis_tdata_int  = data_out_axis_tdata;
+    m_axis_tkeep_int  = data_out_axis_tkeep;
+    m_axis_tvalid_int = data_out_axis_tvalid && data_out_axis_tready;
+    m_axis_tlast_int  = data_out_axis_tlast;
+    m_axis_tid_int    = data_out_axis_tid;
+    m_axis_tdest_int  = data_out_axis_tdest;
+    m_axis_tuser_int  = data_out_axis_tuser;
+
+    if (frame_reg) begin
+        if (data_out_axis_tvalid && data_out_axis_tready) begin
+            if (data_out_axis_tlast) begin
+                frame_next = 1'b0;
+            end
+
+            if (csum_enable_reg) begin
+                if (csum_offset_reg >= KEEP_WIDTH) begin
+                    csum_offset_next = csum_offset_reg - KEEP_WIDTH;
+                end else if (csum_split_reg) begin
+                    // other byte of split checksum
+                    m_axis_tdata_int[0 +: 8] = csum_reg[7:0];
+                    csum_enable_next = 1'b0;
+                end else if (csum_offset_reg == KEEP_WIDTH-1) begin
+                    // split across two cycles
+                    m_axis_tdata_int[DATA_WIDTH-8 +: 8] = csum_reg[15:8];
+                    csum_split_next = 1'b1;
+                end else begin
+                    m_axis_tdata_int[csum_offset_reg*8 +: 8] = csum_reg[15:8];
+                    m_axis_tdata_int[(csum_offset_reg+1)*8 +: 8] = csum_reg[7:0];
+
+                    csum_enable_next = 1'b0;
+                end
+            end
+        end
+    end else begin
+        csum_out_ready = 1'b1;
+        csum_next = csum_out_csum;
+        csum_offset_next = csum_out_offset;
+        csum_enable_next = csum_out_enable;
+        csum_split_next = 1'b0;
+        if (csum_out_valid) begin
+            frame_next = 1'b1;
+        end
+    end
+end

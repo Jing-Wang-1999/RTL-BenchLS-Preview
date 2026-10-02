@@ -1,0 +1,23 @@
+### Instruction for Verilog Code Generation
+
+The Verilog module `rtlpp_03744` processes Ethernet frames to extract ARP headers and fields. It operates as follows:
+
+1. **Primary Function**: This module extracts ARP information from incoming Ethernet frames over a 64-bit AXI4-Stream interface and outputs it while handling various errors in the frame.
+
+2. **Control Flow**: 
+   - **IDLE State**: Waits for a valid Ethernet header (`s_eth_hdr_valid`). Once valid, it captures the Ethernet header and transitions to the `READ_HEADER` state.
+   - **READ_HEADER State**: Reads bytes of the ARP payload in a sequential manner, determined by a frame pointer. It stores necessary ARP header fields. If the last byte (`s_eth_payload_axis_tlast`) is detected, it validates the header lengths and checks for errors, transitioning back to the `IDLE` state or entering the `WAIT_LAST` state for further validation.
+   - **WAIT_LAST State**: Waits for the remaining portions of the payload (if necessary) and checks for the last byte again. On detecting the last byte, it revalidates the frame and transitions back to the `IDLE` state.
+
+3. **Data Processing**: 
+   - Captures Ethernet header details such as source and destination MAC addresses, and Ethernet type when an Ethernet frame is valid.
+   - Sequentially reads and stores ARP-specific fields (e.g., hardware type, protocol type, hardware length, protocol length, operation, and addresses) from the payload based on the frame pointer.
+   - Provides `m_frame_valid` output if the ARP frame is valid and error-free after all bytes are captured.
+
+4. **Signal Interactions**:
+   - Uses input flags such as `s_eth_hdr_valid` and `s_eth_payload_axis_tvalid` to determine readiness and validity of incoming data.
+   - Outputs signals such as `s_eth_hdr_ready` and `s_eth_payload_axis_tready` to indicate when it can accept the Ethernet header and payload data.
+   - Error signals (`error_header_early_termination` and `error_invalid_header`) are set if the header is early terminated or invalid respectively.
+   - Indicates a busy state via the `busy` signal whenever it is not in the `IDLE` state.
+
+Generate the Verilog code based on this detailed module functionality, encompassing the state transitions, signal interactions, and error handling as described.

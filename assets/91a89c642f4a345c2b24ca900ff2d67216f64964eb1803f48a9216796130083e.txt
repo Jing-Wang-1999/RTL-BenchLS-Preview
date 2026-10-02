@@ -1,0 +1,47 @@
+always @ (posedge hsci_pclk or negedge rstn) begin
+    if (~rstn) begin
+      dec_en <= 1'b0;
+      dec_we <= 4'h0;
+      dec_addr <= 15'h0000;
+      dec_data <= 32'h0;
+      new_dec_addr <= 1'b0;
+    end else begin
+      if (store_data == 1'b1) begin
+        dec_en <= 1'b1;
+        dec_we <= store_we;
+        dec_addr <= dec_addr;
+        dec_data <= rd_data;
+        if (dec_we[0] == 1'b1)
+          new_dec_addr <= 1'b0;
+      end else begin
+        if (menc_state == 4'b0000) begin // menc_state = IDLE
+          dec_en <= 1'b0;
+          dec_we <= 4'h0;
+          dec_addr <= 15'h0000;
+          dec_data <= 32'h0;
+        end else begin
+          dec_en <= 1'b0;
+          dec_we <= 4'h0;
+          dec_addr <= dec_addr;
+          dec_data <= 32'h0;
+        end // else: !if(dec_state == D_IDLE)
+      end // else: !if(store_data == 1'b1)
+
+      if (dec_we[3] == 1'b1) begin
+        dec_addr <= dec_addr + 15'h0001;
+        new_dec_addr <= 1'b1;
+      end else if (xfer_mode == 1'b1) begin // dis-contiguous mode
+        if ((read_done == 1'b1) & (read_done_d == 1'b1)) begin
+          if (new_dec_addr == 1'b1)
+            new_dec_addr <= 1'b0;
+          else
+            dec_addr <= dec_addr + 15'h0001;
+        end
+      end else begin
+        if ((read_done == 1'b1) & (read_done_d == 1'b1)) begin
+          dec_addr <= 15'h0000;
+          new_dec_addr <= 1'b0;
+        end
+      end
+    end // else: !if(~rstn)
+  end

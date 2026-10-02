@@ -1,0 +1,53 @@
+module autovcoder_117002 (  /*AUTOARG*/
+    // Outputs
+    sync_out,
+    so,
+    // Inputs
+    async_in,
+    gclk,
+    rclk,
+    si,
+    se
+);
+
+  output sync_out;
+  output so;
+
+  input async_in;
+  input gclk;
+  input rclk;
+  input si;
+  input se;
+
+  wire pre_sync_out;
+  wire so_rptr;
+  wire so_lockup;
+
+  // Flop drive strengths to be adjusted as necessary
+
+  bw_u1_soff_8x repeater (
+      .q (pre_sync_out),
+      .so(so_rptr),
+      .ck(gclk),
+      .d (async_in),
+      .se(se),
+      .sd(si)
+  );
+
+  bw_u1_scanl_2x lockup (
+      .so(so_lockup),
+      .sd(so_rptr),
+      .ck(gclk)
+  );
+
+  bw_u1_soff_8x syncff (
+      .q (sync_out),
+      .so(so),
+      .ck(rclk),
+      .d (pre_sync_out),
+      .se(se),
+      .sd(so_lockup)
+  );
+
+endmodule
+

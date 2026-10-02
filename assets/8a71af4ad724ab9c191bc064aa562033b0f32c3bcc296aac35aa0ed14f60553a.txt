@@ -1,0 +1,5 @@
+# Instruction register and field decoder (`mg_09097`)
+
+Inputs are scalar `clk`, scalar `ir_we`, and `instr[31:0]`. Outputs are `opcode[5:0]`, `reg1[4:0]`, `reg2[4:0]`, `reg3[4:0]`, and 32-bit `sx16`, `zx16`, `hi16`, `sx16s2`, and `sx26s2`. There are no parameters or reset.
+
+At each rising edge with `ir_we=1`, the internal 32-bit instruction register captures `instr`; otherwise it holds. Its initial value is unspecified. Outputs continuously decode the stored instruction: `opcode=ir[31:26]`, `reg1=ir[25:21]`, `reg2=ir[20:16]`, and `reg3=ir[15:11]`. `sx16` sign-extends `ir[15:0]`; `zx16` zero-extends it; `hi16={ir[15:0],16'b0}`; `sx16s2` is the low 16 bits sign-extended to 30 bits then concatenated with two zeros; and `sx26s2` is `ir[25:0]` sign-extended from bit 25 to 30 bits then concatenated with two zeros. All arithmetic results are exactly 32 bits.

@@ -1,0 +1,9 @@
+# pcie_ptile_fc_counter
+
+Parameters are `WIDTH=16` and `INDEX=0`. Supported `WIDTH` values are 1 through 30. Inputs are scalar `clk`, synchronous active-high `rst`, `tx_cdts_limit[WIDTH-1:0]`, `tx_cdts_limit_tdm_idx[2:0]`, and `fc_dec[WIDTH-1:0]`; output `fc_av[WIDTH-1:0]` continuously exposes the available-credit register. Declaration initialization clears the capacity, prior-limit, increment, and availability registers.
+
+At every rising edge, availability is calculated from the pre-edge values as `old_fc_av - old_fc_dec + old_fc_inc`. For supported widths, a negative result stores zero, a result above the pre-edge capacity stores that capacity, and any other result stores the low `WIDTH` bits of the result. The use of an unsized zero in the signed comparison gives a 32-bit signed evaluation for supported widths. The contract excludes WIDTH 31 and larger because this finite-width signed expression can overflow and no longer implements the stated saturation; for example, at WIDTH 31 with availability and increment both `31'h7fffffff` and decrement zero, the expression becomes negative and clears availability.
+
+Independently, only on an edge whose `tx_cdts_limit_tdm_idx == INDEX` does the module update limit tracking. Capacity captures `tx_cdts_limit` if and only if the pre-edge capacity is zero. The increment register captures `tx_cdts_limit - old_fc_limit` modulo `2^WIDTH`, and the limit register captures `tx_cdts_limit`. When the TDM index does not match, all three registers hold. Because availability uses the pre-edge increment and capacity, a newly captured increment or capacity affects the availability computation no earlier than the following edge. Normal Verilog sizing applies to the comparison with `INDEX`.
+
+Finally, `rst=1` on an edge overrides every nonblocking update and clears all four registers. There are no submodules.

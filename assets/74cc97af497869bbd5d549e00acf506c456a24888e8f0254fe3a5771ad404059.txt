@@ -1,0 +1,30 @@
+### Instruction
+
+Design a Verilog module named `clocked_hamming_encoder` that performs Hamming encoding on a 4-bit input signal. The module should generate an 8-bit encoded output based on the input, synchronized with a clock signal and an asynchronous reset signal.
+
+1. **Primary Function**:
+   - The primary function of the `clocked_hamming_encoder` module is to encode a 4-bit input using Hamming code into an 8-bit output.
+
+2. **Control Flow**:
+   - The module operates with a clock (`clk`) and an asynchronous reset (`reset`).
+   - On the rising edge of the clock or the falling edge of the reset, the output (`out`) is updated.
+   - If the reset is active (low), the output is reset to `8'b00000000`.
+   - Otherwise, the output is determined by the 4-bit input value (`in`), using a `case` statement to assign the corresponding 8-bit encoded output.
+
+3. **Data Processing**:
+   - The module uses a `case` statement to handle different input values. Each input value (from 0 to 15) maps to a specific 8-bit encoded value.
+   - The default case sets the output to `8'b11110000` for any undefined input values.
+
+Implement the Hamming encoder using the described control and data flow, ensuring synchronization with the clock and proper handling of the reset signal to manage the output state.
+
+Module Interface:
+module clocked_hamming_encoder(
+    output reg [7:0] out,
+    input [3:0] in,
+    input clk,
+    input reset
+);
+
+Behavioral Clarifications:
+- The encoding follows the extended Hamming(7,4) SECDED scheme (single-error-correcting, double-error-detecting), where each 4-bit data word is encoded into an 8-bit codeword with three parity bits placed at bit positions 1, 2, and 4, plus one overall even-parity bit covering all 8 bits.
+- The design uses a single sequential always block (posedge clk or negedge reset); there are no separate combinational blocks.

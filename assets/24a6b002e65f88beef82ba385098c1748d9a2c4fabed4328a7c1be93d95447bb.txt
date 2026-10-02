@@ -1,0 +1,12 @@
+always @ (posedge clk or negedge rst_n) begin
+	if (!rst_n) begin
+		mscratch <= X0;
+	end else if (!CSR_M_TRAP) begin
+		// Explicit tie-off when unimplemented
+		mscratch <= X0;
+	end else begin
+		if (wen_m_mode && addr == MSCRATCH) begin
+			mscratch <= wdata_update;
+		end
+	end
+end

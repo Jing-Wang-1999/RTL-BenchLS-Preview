@@ -1,0 +1,7 @@
+# `origen_148613` configurable PIPE pipeline
+
+Parameter `PIPE_PIPELINE_STAGES` defaults to 0. The data inputs are scalar `pipe_tx_rcvr_det_i`, `pipe_tx_reset_i`, `pipe_tx_rate_i`, `pipe_tx_deemph_i`, and `pipe_tx_swing_i`, plus `pipe_tx_margin_i[2:0]`. The corresponding outputs are scalar `pipe_tx_rcvr_det_o`, `pipe_tx_reset_o`, `pipe_tx_rate_o`, `pipe_tx_deemph_o`, and `pipe_tx_swing_o`, plus `pipe_tx_margin_o[2:0]`. The remaining inputs are `pipe_clk` and active-low asynchronous `rst_n`.
+
+Two register stages capture the complete input bundle on every rising edge of `pipe_clk`; stage 2 captures the previous stage-1 values. When `rst_n` is low, both stages asynchronously set receiver-detect, rate, de-emphasis, margin, and swing to zero and set the transmitted reset signal to one.
+
+With `PIPE_PIPELINE_STAGES=0`, outputs continuously equal inputs. With value 1, outputs equal stage 1; with value 2, outputs equal stage 2. Any other parameter value also selects the direct inputs. Thus reset affects observable outputs only for configurations 1 and 2; configuration 0 and unsupported values remain combinational pass-through.

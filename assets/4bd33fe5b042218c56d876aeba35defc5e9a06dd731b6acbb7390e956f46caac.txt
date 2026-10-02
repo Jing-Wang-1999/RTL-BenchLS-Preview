@@ -1,0 +1,49 @@
+{
+  "additions": 37,
+  "base_commit": "d61f2c48937582bd551895d30357a37fae583bd4",
+  "base_ref": "master",
+  "deletions": 7,
+  "head_commit": "ccf60d1fe3ae34b35c3102696a237bb3e963fbec",
+  "issue_info": {
+    "body": "### Hierarchy of regression failure\r\n\r\nChip Level\r\n\r\n### Failure Description\r\n\r\n```Offending '($past(data_o) == data_o)' has 1 failures:\r\n\r\nTest chip_sw_otp_ctrl_lc_signals_dev has 1 failures.\r\n1.chip_sw_otp_ctrl_lc_signals_dev.3010948856\r\nLine 633, in log /container/opentitan-public/scratch/os_regression/chip_earlgrey_asic-sim-vcs/1.chip_sw_otp_ctrl_lc_signals_dev/latest/run.log\r\n\r\n      Offending '($past(data_o) == data_o)'\r\n  UVM_ERROR @ 4715.059736 us: (prim_sync_reqack_data.sv:129) [ASSERT FAILED] SyncReqAckDataHoldDst2SrcB\r\n  UVM_INFO @ 4715.059736 us: (uvm_report_catcher.svh:705) [UVM/REPORT/CATCHER]\r\n  --- UVM Report catcher Summary ---\r\n```\r\n\r\n### Steps to Reproduce\r\n\r\n- GitHub Revision: [a029fa5c6](https://github.com/lowrisc/opentitan/tree/a029fa5c6c48ddb5e23d473c793f1f279a943fe9)\r\n- dvsim invocation command to reproduce the failure, inclusive of build and run seeds:\r\n  ./util/dvsim/dvsim.py hw/top_earlgrey/dv/chip_sim_cfg.hjson -i chip_sw_otp_ctrl_lc_signals_dev --build-seed 710490551 --fixed-seed 3010948856 --waves fsdb\r\n\r\n\r\n### Tests with similar or related failures\r\n\r\n- [ ] chip_sw_lc_ctrl_broadcast\r\n- [ ] chip_sw_otp_ctrl_lc_signals\r\n",
+    "created_at": "2022-11-08T12:58:51Z",
+    "labels": [
+      "Component:TestTriage"
+    ],
+    "state": "closed",
+    "title": "[test-triage] chip_sw_otp_ctrl_lc_signals_dev",
+    "updated_at": "2022-11-11T12:36:40Z"
+  },
+  "issue_number": 16115,
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/16115",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 37,
+      "changes": 44,
+      "deletions": 7,
+      "filename": "hw/ip/prim/rtl/prim_sync_reqack_data.sv",
+      "patch": "@@ -93,14 +93,28 @@ module prim_sync_reqack_data #(\n   // Assertions //\n   ////////////////\n   if (DataSrc2Dst == 1'b1) begin : gen_assert_data_src2dst\n+`ifdef INC_ASSERT\n+    //VCS coverage off\n+    // pragma coverage off\n+    logic chk_flag;\n+    always_ff @(posedge clk_src_i or negedge rst_src_ni or negedge rst_dst_ni) begin\n+      if (!rst_src_ni || !rst_dst_ni) begin\n+        chk_flag <= '0;\n+      end else if (src_req_i && !chk_flag) begin\n+        chk_flag <= 1'b1;\n+      end\n+    end\n+    //VCS coverage on\n+    // pragma coverage on\n+\n     // SRC domain cannot change data while waiting for ACK.\n-    `ASSERT(SyncReqAckDataHoldSrc2Dst, !$stable(data_i) |->\n+    `ASSERT(SyncReqAckDataHoldSrc2Dst, !$stable(data_i) && chk_flag |->\n         (!src_req_i || (src_req_i && src_ack_o)),\n-        clk_src_i, !rst_src_ni || !rst_dst_ni)\n+        clk_src_i, !rst_src_ni || !rst_dst_ni || !chk_flag)\n \n     // Register stage cannot be used.\n     `ASSERT_INIT(SyncReqAckDataReg, DataSrc2Dst && !DataReg)\n-\n+`endif\n   end else if (DataSrc2Dst == 1'b0 && DataReg == 1'b0) begin : gen_assert_data_dst2src\n     // DST domain shall not change data while waiting for SRC domain to latch it (together with\n     // receiving ACK). It takes 2 SRC cycles for ACK to cross over from DST to SRC, and 1 SRC cycle\n@@ -123,12 +137,28 @@ module prim_sync_reqack_data #(\n     // assertion into two pieces. The first (SyncReqAckDataHoldDst2SrcA) checks that data doesn't\n     // change in a way that could cause data corruption. The second (SyncReqAckDataHoldDst2SrcB)\n     // checks that the DST side doesn't do anything that it shouldn't know is safe.\n+`ifdef INC_ASSERT\n+    //VCS coverage off\n+    // pragma coverage off\n+    logic chk_flag;\n+    always_ff @(posedge clk_src_i or negedge rst_src_ni or negedge rst_dst_ni) begin\n+      if (!rst_src_ni || !rst_dst_ni) begin\n+        chk_flag <= '0;\n+      end else if (src_req_i && !chk_flag) begin\n+        chk_flag <= 1'b1;\n+      end\n+    end\n+    //VCS coverage on\n+    // pragma coverage on\n+\n     `ASSERT(SyncReqAckDataHoldDst2SrcA,\n-            src_req_i && src_ack_o |-> $past(data_o, 2) == data_o && $past(data_o) == data_o,\n-            clk_src_i, !rst_src_ni || !rst_dst_ni)\n+            chk_flag && src_req_i && src_ack_o |->\n+            $past(data_o, 2) == data_o && $past(data_o) == data_o,\n+            clk_src_i, !rst_src_ni || !rst_dst_ni || !chk_flag)\n     `ASSERT(SyncReqAckDataHoldDst2SrcB,\n-            $past(src_req_i && src_ack_o) |-> $past(data_o) == data_o,\n-            clk_src_i, !rst_src_ni || !rst_dst_ni)\n+            chk_flag && $past(src_req_i && src_ack_o) |-> $past(data_o) == data_o,\n+            clk_src_i, !rst_src_ni || !rst_dst_ni || !chk_flag)\n+`endif\n   end\n \n endmodule"
+    }
+  ],
+  "pr_info": {
+    "body": "This is similar to the flag that was added to the prim_sync_reqack module itself.\r\n\r\nFixes #16115.\r\n\r\nSigned-off-by: Michael Schaffner <msf@google.com>",
+    "created_at": "2022-11-10T01:30:22Z",
+    "merged_at": "2022-11-10T03:50:03Z",
+    "state": "closed",
+    "title": "[prim_sync_reqack_data] Add check flag to better capture async resets",
+    "updated_at": "2023-11-13T22:38:20Z",
+    "user": "msfschaffner"
+  },
+  "pr_number": 16191,
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/16191",
+  "repository": "lowRISC/opentitan",
+  "source_info": {
+    "line_number": 909,
+    "source_file": "12.txt"
+  },
+  "task_id": "lowRISC_opentitan_16191_16115",
+  "verilog_files": [
+    "hw/ip/prim/rtl/prim_sync_reqack_data.sv"
+  ]
+}

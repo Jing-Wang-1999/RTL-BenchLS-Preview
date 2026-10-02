@@ -1,0 +1,59 @@
+module origen_008567 #(parameter BITBUS = 8) (
+    output reg clk,
+    output reg reset,
+    output reg [2:0] Fifo_empties,
+    output reg [2:0] Fifo_errors,
+    output reg [BITBUS-1:0] umbralMF,
+    output reg [BITBUS-1:0] umbralVC,
+    output reg [BITBUS-1:0] umbralD,
+    input idle_estr,
+    input active_estr,
+    input error_estr,
+    input init_estr,
+    input [BITBUS-1:0] umbralMF_estr,
+    input [BITBUS-1:0] umbralVC_estr,
+    input [BITBUS-1:0] umbralD_estr,
+    input idle_cond,
+    input active_cond,
+    input error_cond,
+    input init_cond,
+    input [BITBUS-1:0] umbralMF_cond,
+    input [BITBUS-1:0] umbralVC_cond,
+    input [BITBUS-1:0] umbralD_cond
+);
+
+    initial begin
+        $dumpfile("arbitro.vcd");
+        $dumpvars;
+
+        {clk, reset, Fifo_empties, Fifo_errors, umbralMF, umbralVC, umbralD} = 0;
+
+        @(posedge clk);
+        reset <= 1;
+        @(posedge clk);
+        reset <= 0;
+
+        repeat(2) @(posedge clk);
+        umbralMF <= 8'h1F;
+        umbralVC <= 8'h2F;
+        umbralD <= 8'h3F;
+
+        repeat(2) @(posedge clk);
+        Fifo_empties <= 3'b101;
+
+        repeat(2) @(posedge clk);
+        Fifo_errors <= 3'b010;
+
+        repeat(2) @(posedge clk);
+        Fifo_errors <= 3'b000;
+
+        repeat(2) @(posedge clk);
+        Fifo_empties <= 3'b000;
+
+        repeat(5) @(posedge clk);
+        $finish;
+    end
+
+    always #4 clk = ~clk;
+
+endmodule

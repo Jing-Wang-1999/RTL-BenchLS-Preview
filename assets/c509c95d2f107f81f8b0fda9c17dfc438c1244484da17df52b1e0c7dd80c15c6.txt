@@ -1,0 +1,12 @@
+# New default-configuration harness. Input paths are staged by the runner.
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/formal113_65ba846a56f00390ba47_positive.v0.v
+check_sec -analyze -imp -sv ./input/rtl/formal113_65ba846a56f00390ba47_positive.negative.v
+check_sec -elaborate -spec -top synchronizer -disable_auto_bbox
+check_sec -elaborate -imp -top synchronizer -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock -none
+reset -expression {arst_in arst_out}
+check_sec -gen
+check_sec -prove -strategy proof

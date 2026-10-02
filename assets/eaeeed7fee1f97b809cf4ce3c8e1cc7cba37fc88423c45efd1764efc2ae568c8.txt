@@ -1,0 +1,53 @@
+module autovcoder_012846 (
+    E,
+    A,
+    B,
+    C,
+    PA,
+    PB,
+    PC,
+    Chan
+);
+
+  input [8:0] E, A, B, C;
+  output PA, PB, PC;
+  output [3:0] Chan;
+  wire [8:0] X1, X2, I;
+
+  PriorityA M1 (
+      E,
+      A,
+      PA,
+      X1
+  );
+  PriorityB M2 (
+      E,
+      X1,
+      B,
+      PB,
+      X2
+  );
+  PriorityC M3 (
+      E,
+      X1,
+      X2,
+      C,
+      PC
+  );
+  EncodeChan M4 (
+      E,
+      A,
+      B,
+      C,
+      PA,
+      PB,
+      PC,
+      I
+  );
+  DecodeChan M5 (
+      I,
+      Chan
+  );
+
+endmodule
+

@@ -1,0 +1,52 @@
+module origen_065456(
+    input wire clk_50Mhz,
+    input wire reset,
+    input wire write0,
+    input wire write1,
+    output reg LED,
+    output reg ready
+);
+
+    reg [12:0] count;
+    reg resetStatus, write1Status, write0Status, clear;
+
+    always @(posedge clk_50Mhz) begin
+        if (reset && !resetStatus) begin
+            resetStatus <= 1;
+            ready <= 0;
+            count <= 0;
+        end else if (write1 && !write1Status && ready) begin
+            write1Status <= 1;
+            ready <= 0;
+            count <= 0;
+        end else if (write0 && !write0Status && ready) begin
+            write0Status <= 1;
+            ready <= 0;
+            count <= 0;
+        end else if (clear) begin
+            resetStatus <= 0;
+            write1Status <= 0;
+            write0Status <= 0;
+            clear <= 0;
+            ready <= 1;
+        end else begin
+            count <= count + 1;
+        end
+
+        if (resetStatus) begin
+            LED <= 0;
+            if (count == 3999) clear <= 1;
+        end else if (write1Status) begin
+            if (count < 50) LED <= 1;
+            else LED <= 0;
+            if (count == 61) clear <= 1;
+        end else if (write0Status) begin
+            if (count < 12) LED <= 1;
+            else LED <= 0;
+            if (count == 61) clear <= 1;
+        end else begin
+            LED <= 0;
+        end
+    end
+
+endmodule

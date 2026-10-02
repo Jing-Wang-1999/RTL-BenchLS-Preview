@@ -1,0 +1,61 @@
+module origen_129389 (
+    // Clock and Reset
+    input wire clk_i,
+    input wire rst_i,
+    
+    // Data Inputs
+    input wire [31:0] alu_i,
+    
+    // Control Inputs
+    input wire control_load_i,
+    input wire control_store_i,
+    input wire control_take_branch_i,
+    input wire do_wb_i,
+    input wire [4:0] wb_reg_i,
+    
+    // Outputs
+    output wire stall_o,
+    output reg do_wb_o,
+    output reg [4:0] wb_reg_o,
+    output reg [31:0] wb_val_o
+);
+    
+    // Internal memory data register
+    reg [31:0] mem_data;
+    
+    // stall_o is always low (no stalling implemented)
+    assign stall_o = 1'b0;
+    
+    always @(posedge clk_i or posedge rst_i) begin
+        if (rst_i) begin
+            // Reset all outputs and internal registers
+            mem_data <= 32'b0;
+            do_wb_o <= 1'b0;
+            wb_reg_o <= 5'b0;
+            wb_val_o <= 32'b0;
+        end else begin
+            // Default outputs to zero
+            do_wb_o <= 1'b0;
+            wb_reg_o <= 5'b0;
+            wb_val_o <= 32'b0;
+            
+            // Data Selection Logic
+            if (control_load_i) begin
+                // Load operation: set mem_data to fixed value 99
+                mem_data <= 32'd99;
+            end else if (!control_store_i) begin
+                // Neither load nor store: update with ALU result
+                mem_data <= alu_i;
+            end
+            // If control_store_i is high, no action on mem_data
+            
+            // Write-back Logic
+            if (do_wb_i) begin
+                do_wb_o <= 1'b1;
+                wb_reg_o <= wb_reg_i;
+                wb_val_o <= mem_data;
+            end
+        end
+    end
+    
+endmodule

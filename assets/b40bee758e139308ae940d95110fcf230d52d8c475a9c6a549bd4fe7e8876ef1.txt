@@ -1,0 +1,50 @@
+### Instruction for Generating Verilog Code
+
+Design and implement a Verilog module named `cortex_m0_processor` that functions as a simplified ARM Cortex-M0 design system with essential input and output signal handling. This module interfaces with inputs such as clock (`HCLK`), reset (`HRESETn`), data bus signals (`HRDATA`, `HREADY`, `HRESP`), and various control signals (`NMI`, `IRQ`, `RXEV`, `STCLKEN`, `STCALIB`). It outputs address-related information (`HADDR`, `HBURST`), signal control (`HMASTLOCK`, `HPROT`, `HSIZE`, `HTRANS`), data transmission (`HWDATA`, `HWRITE`), and system status signals (`TXEV`, `LOCKUP`, `SYSRESETREQ`, `SLEEPING`).
+
+1. **Primary Function**
+   - The module primarily models the necessary signals and internal states representative of an ARM Cortex-M0 processor, including data input/output, control signals, and system registers.
+
+2. **Key Control Flow**
+   - The module operates based on the provided clock signal (`HCLK`) and reset signal (`HRESETn`). State changes occur with the clock edges, whereas the reset signal initializes or clears the internal and output states.
+   - Key control signals include `HWRITE` for write operations, `HTRANS` for transaction types, and `HPROT` for protection attributes, represented by logical assignments.
+
+3. **Data Processing and Signal Interactions**
+   - The module handles various data inputs and translates these into meaningful outputs using internal registers and wires.
+   - Internal 32-bit registers (`cm0_r00` to `cm0_r12`, `cm0_msp`, `cm0_psp`, `cm0_r14`, `cm0_pc`, `cm0_xpsr`, `cm0_control`, `cm0_primask`) store intermediate computation results.
+   - Intermediate signals (`vis_msp`, `vis_psp`, `vis_pc`, `vis_apsr`, `vis_tbit`, `vis_ipsr`, `vis_control`, `vis_primask`) aid in the processing of data and are combined to form the final register values.
+   - The `HADDR`, `HWDATA`, and other output signals are derived from these intermediate and register values, handling data transfers, memory addresses, and transaction controls.
+
+Implementing this module requires a meticulous assignment of input and intermediate data to the appropriate register and output signals to ensure proper CPU mimicry and signal processing.
+
+### Expected Verilog Code (Summarized from Instruction)
+
+Module Interface:
+module cortex_m0_processor (
+
+  input  wire        HCLK,
+  input  wire        HRESETn,
+
+  output wire [31:0] HADDR,
+  output wire [ 2:0] HBURST,
+  output wire        HMASTLOCK,
+  output wire [ 3:0] HPROT,
+  output wire [ 2:0] HSIZE,
+  output wire [ 1:0] HTRANS,
+  output wire [31:0] HWDATA,
+  output wire        HWRITE,
+  input  wire [31:0] HRDATA,
+  input  wire        HREADY,
+  input  wire        HRESP,
+
+  input  wire        NMI,
+  input  wire [31:0] IRQ,
+  output wire        TXEV,
+  input  wire        RXEV,
+  output wire        LOCKUP,
+  output wire        SYSRESETREQ,
+  input  wire        STCLKEN,
+  input  wire [25:0] STCALIB,
+
+  output wire        SLEEPING
+);

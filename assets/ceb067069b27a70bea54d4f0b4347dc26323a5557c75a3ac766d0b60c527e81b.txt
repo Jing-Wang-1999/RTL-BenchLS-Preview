@@ -1,0 +1,31 @@
+`ifdef verilator
+//-------------------------------------------------------------
+// write: Write byte into memory
+//-------------------------------------------------------------
+function write; /*verilator public*/
+    input [31:0] addr;
+    input [7:0]  data;
+begin
+    case (addr[1:0])
+    2'd0: u_ram.ram[addr/4][7:0]   = data;
+    2'd1: u_ram.ram[addr/4][15:8]  = data;
+    2'd2: u_ram.ram[addr/4][23:16] = data;
+    2'd3: u_ram.ram[addr/4][31:24] = data;
+    endcase
+end
+endfunction
+//-------------------------------------------------------------
+// read: Read byte from memory
+//-------------------------------------------------------------
+function [7:0] read; /*verilator public*/
+    input [31:0] addr;
+begin
+    case (addr[1:0])
+    2'd0: read = u_ram.ram[addr/4][7:0];
+    2'd1: read = u_ram.ram[addr/4][15:8];
+    2'd2: read = u_ram.ram[addr/4][23:16];
+    2'd3: read = u_ram.ram[addr/4][31:24];
+    endcase
+end
+endfunction
+`endif

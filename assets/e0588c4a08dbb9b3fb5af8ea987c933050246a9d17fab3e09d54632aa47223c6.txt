@@ -1,0 +1,43 @@
+module __formal113_core_ba7e2b50850269aa2cd0 (
+  nvdla_core_clk, nvdla_core_rstn, chn_lut_out_rsci_oswt, chn_lut_out_rsci_bawt,
+      chn_lut_out_rsci_wen_comp, chn_lut_out_rsci_biwt, chn_lut_out_rsci_bdwt
+);
+  input nvdla_core_clk;
+  input nvdla_core_rstn;
+  input chn_lut_out_rsci_oswt;
+  output chn_lut_out_rsci_bawt;
+  output chn_lut_out_rsci_wen_comp;
+  input chn_lut_out_rsci_biwt;
+  input chn_lut_out_rsci_bdwt;
+
+
+  // Interconnect Declarations
+  reg chn_lut_out_rsci_bcwt;
+
+
+  // Interconnect Declarations for Component Instantiations 
+  assign chn_lut_out_rsci_bawt = chn_lut_out_rsci_biwt | chn_lut_out_rsci_bcwt;
+  assign chn_lut_out_rsci_wen_comp = (~ chn_lut_out_rsci_oswt) | chn_lut_out_rsci_bawt;
+  always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
+    if ( ~ nvdla_core_rstn ) begin
+      chn_lut_out_rsci_bcwt <= 1'b0;
+    end
+    else begin
+      chn_lut_out_rsci_bcwt <= ~((~(chn_lut_out_rsci_bcwt | chn_lut_out_rsci_biwt))
+          | chn_lut_out_rsci_bdwt);
+    end
+  end
+endmodule
+module NV_NVDLA_SDP_CORE_Y_idx_core_chn_lut_out_rsci_chn_lut_out_wait_dp(
+  input wire  nvdla_core_clk,
+  input wire  nvdla_core_rstn,
+  input wire  chn_lut_out_rsci_oswt,
+  output wire  chn_lut_out_rsci_bawt,
+  output wire  chn_lut_out_rsci_wen_comp,
+  input wire  chn_lut_out_rsci_biwt,
+  input wire  chn_lut_out_rsci_bdwt
+);
+wire [0:0] __negative_output;
+__formal113_core_ba7e2b50850269aa2cd0 dut(.nvdla_core_clk(nvdla_core_clk), .nvdla_core_rstn(nvdla_core_rstn), .chn_lut_out_rsci_oswt(chn_lut_out_rsci_oswt), .chn_lut_out_rsci_bawt(__negative_output), .chn_lut_out_rsci_wen_comp(chn_lut_out_rsci_wen_comp), .chn_lut_out_rsci_biwt(chn_lut_out_rsci_biwt), .chn_lut_out_rsci_bdwt(chn_lut_out_rsci_bdwt));
+assign chn_lut_out_rsci_bawt = __negative_output ^ 1'd1;
+endmodule

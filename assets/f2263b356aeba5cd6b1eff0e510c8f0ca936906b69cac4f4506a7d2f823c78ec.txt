@@ -1,0 +1,117 @@
+# usb1_pe: default-configuration specification
+
+Implement the module interface below. All arithmetic is fixed-width unsigned unless explicitly stated. Sequential updates use pre-edge values and occur on the stated clock edge. Preserve externally observable cycle timing, including outputs outside valid transactions wherever defined. No golden RTL is provided to the implementation model.
+
+## Interface
+
+```verilog
+module usb1_pe(	clk, rst,
+
+		
+		tx_valid, rx_active,
+
+		
+		pid_OUT, pid_IN, pid_SOF, pid_SETUP,
+		pid_DATA0, pid_DATA1, pid_DATA2, pid_MDATA,
+		pid_ACK, pid_PING,
+
+		
+		token_valid, 
+
+		
+		rx_data_done, crc16_err,
+
+		
+		send_token, token_pid_sel,
+		data_pid_sel,
+
+		
+		rx_dma_en, tx_dma_en,
+		abort,
+		idma_done,
+
+		
+
+		fsel,
+		ep_sel, match, nse_err,
+		ep_full, ep_empty,
+
+		int_upid_set, int_crc16_set, int_to_set, int_seqerr_set,
+		csr,
+		send_stall
+
+		);
+input		clk, rst;
+input		tx_valid, rx_active;
+input		pid_OUT, pid_IN, pid_SOF, pid_SETUP;
+input		pid_DATA0, pid_DATA1, pid_DATA2, pid_MDATA;
+input		pid_ACK, pid_PING;
+input		token_valid;
+input		rx_data_done;
+input		crc16_err;
+output		send_token;
+output	[1:0]	token_pid_sel;
+output	[1:0]	data_pid_sel;
+output		rx_dma_en;
+output		tx_dma_en;
+output		abort;
+input		idma_done;
+input		ep_full;
+input		ep_empty;
+input		fsel;
+input	[3:0]	ep_sel;
+input		match;
+output		nse_err;
+output		int_upid_set;
+output		int_crc16_set;
+output		int_to_set;
+output		int_seqerr_set;
+input	[13:0]	csr;
+input		send_stall;
+endmodule
+```
+
+## USB endpoint protocol engine
+
+Implement a USB1 full-speed protocol-control submodule. Rising `clk`, active-low asynchronous `rst` (the name is not active high). Inputs are decoded PID flags, selected endpoint/CSR/FIFO state and DMA status; outputs control DMA initiation, handshake packet selection, DATA PID and interrupts. This module does not assemble bytes or compute CRC. Full-speed ACK/data timeout constants from usb1_defines.v are both200 clocks of their internal8-bit counters; commented36-cycle values are inactive. Optional debug macros are disabled. Default handshake selections are ACK0, NACK1, STALL2, NYET3. Default state codes are the declared one-hot values.
+
+Reset clears FSM to idle, eight endpoint DATA PID stores, remembered in/out/setup tokens and sticky forced-stall. Most pipelines, current/next PID registers, handshake outputs and timers have **no reset assignments**; their reset-time behavior is their ordinary recurrence below and must not be replaced with all-zero registers. RX timer obtains a known count after rx_active; ACK timer obtains one through its clear pipeline. Undefined initial outputs/timer phases are not valid transaction guarantees.
+
+CSR bit9 denotes IN endpoint,10 OUT,11 control,12 isochronous,13 bulk; interrupt type is neither bit12 nor bit13. Bits8:0 are unused. Normal legal endpoint type is one of IN/OUT/control; the source also has retained-state behavior for unsupported combinations. Endpoint numbers0..7 have PID storage; selecting8..15 retains the previously sampled endpoint PID. Do not claim16 independent endpoint contexts.
+
+## Front-end pipelines and token memory
+
+Every clock capture `match && fsel` into match_r; capture the four OUT/IN/PING/SETUP PID flags into separate one-cycle registers. No-such-endpoint output is registered `token_valid && (OUT||IN||SETUP) && !match` (not gated by fsel). Capture send_token and token_pid_sel from the FSM's combinational outputs each edge. Their combinational defaults are no token and ACK, so token_pid_sel returns ACK on an otherwise idle edge.
+
+Remember in_token on pid_IN and clear on OUT/SETUP; remember out_token on OUT/SETUP and clear on IN; remember setup_token on SETUP and clear on OUT/IN, with set conditions taking priority. These updates are **not gated by token_valid**. Define in_op=CSR_IN||(CSR_CTRL&&in_token), out_op=CSR_OUT||(CSR_CTRL&&out_token). Forced-stall latches send_stall, with setting winning over clear by old send_token.
+
+Abort is registered `match && fsel && state!=idle`; it marks replacement of an active transaction by a new match, not every timeout/error. The state register unconditionally returns idle whenever raw match=1, overriding the next-state logic, independently of fsel. Otherwise it follows next state. The delayed match launches the newly selected transaction from idle after the raw match pulse clears.
+
+## PID selection and update
+
+Each clock, read the selected endpoint's stored2-bit PID into a current-context pipeline. Independently compute current transmit PID and next stored PID from the *old* context. The effective transfers-per-microframe input is constant0, so multi-transfer branches are inactive.
+
+For PID recurrence only, use the exact pair CSR[13:12]:00 interrupt,01 isochronous,10 bulk. Pair11 for IN/OUT retains both current and next PID; the FSM still independently sees bit12 as isochronous. For IN/OUT interrupt or bulk endpoints, current PID is DATA0 when stored low bit0 and DATA1 when1; next PID toggles between0 and1. For isochronous IN, current/next PID0. Isochronous OUT accepts whichever one-hot incoming DATA0/DATA1/DATA2/MDATA flag is asserted (map to0/1/2/3) and next PID0. The combinational incoming-PID decode retains its old value when the flags are not exactly one-hot.
+
+For control endpoints (CSR10:9=00), setup_token gives current0,next3. Otherwise in_op=1,out_op=0 selects stored bit1 as current DATA0/1 and next3 if bit1=0 else1. out_op=1,in_op=0 selects stored bit0 and next3 if bit0=0 else2. Unmatched combinations retain previous computed current/next PID. `data_pid_sel` is the registered current PID. Every edge register sequence-error as the complement of `(current0&&DATA0)||(current1&&DATA1)||(current2&&DATA2)||(current3&&MDATA)`.
+
+FSM UPDATE generates a combinational context-update enable; register it one clock, then use its old value to write the selected endpoint with the old computed next PID. Endpoint selection/CSR should normally describe the transaction through this pipeline, but no formal constraints may erase arbitrary changes. Stores have asynchronous reset0; pipeline read and compute are unreset.
+
+## FSM behavior
+
+Defaults every state: hold state, no token, ACK selection, no DMA pulses, no context update, ACK-timer-clear request1, sequence-interrupt request0. DMA enables are combinational initiation strobes in idle, not level enables through the whole transaction.
+
+- Idle: if delayed match and not current SOF, prioritize IN endpoint or control+IN. Interrupt IN with empty FIFO emits NACK and enters TOKEN; otherwise pulse tx_dma_en and enter IN. Else OUT endpoint or control+(OUT||SETUP) pulses rx_dma_en and enters OUT.
+- TOKEN: return idle.
+- IN: release ACK timer clear. On idma_done, isochronous enters UPDATE, otherwise IN2.
+- IN2: release ACK timer clear; timeout wins and returns idle; otherwise token_valid&&ACK enters UPDATE.
+- OUT: data timeout, crc16_err or old abort wins and returns idle. Otherwise rx_data_done enters OUT2A for noniso, or UPDATEW for iso; iso also requests sequence-error interrupt when the registered mismatch is1.
+- OUT2A: abort returns idle. Otherwise forced stall emits STALL/idle; else full FIFO emits NACK/idle; else emit ACK and enter UPDATE when sequence matches, otherwise idle without PID update.
+- UPDATEW: one delay then UPDATE. UPDATE: request context update and return idle.
+- OUT2B is an unreachable-from-reset legacy state which self-loops until abort. Other unmatched state codes retain state with default outputs.
+
+## Timer and interrupt timing
+
+ACK-clear register next=`tx_valid || combinational_clear_request`. Its old value clears an8-bit ACK counter; otherwise increment modulo256. Another register compares old counter with200 to create timeout. Clear request is0 only in IN/IN2; count comparisons are not suppressed by a simultaneous clear. Data counter clears on rx_active else increments modulo256; its separate timeout register compares old count with200. `int_to_set` is combinational IN2&&ACK-timeout OR OUT&&data-timeout. `int_crc16_set=rx_data_done&&crc16_err` without endpoint selection gating. Sequence interrupt is a registered copy of the FSM request.
+
+Unsupported-PID interrupt is registered delayed-match && !current-SOF && any of: OUT endpoint without delayed OUT/PING; IN endpoint without delayed IN; control endpoint without delayed IN/OUT/PING/SETUP. This is not independently gated by token_valid. Preserve the distinct current and delayed flag use and the unreset pipeline timing. Simulation #1 annotations do not specify analog delays in the cycle-equivalence task.

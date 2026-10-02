@@ -1,0 +1,90 @@
+module autovcoder_061550 (
+    dataa,
+    datab,
+    result
+)  /* synthesis synthesis_clearbox=1 */;
+  input [23:0] dataa;
+  input [23:0] datab;
+  output [23:0] result;
+`ifndef ALTERA_RESERVED_QIS
+  // synopsys translate_off
+`endif
+  tri0 [23:0] dataa;
+  tri0 [23:0] datab;
+`ifndef ALTERA_RESERVED_QIS
+  // synopsys translate_on
+`endif
+
+  wire wire_csa_lower_cout;
+  wire [11:0] wire_csa_lower_result;
+  wire [11:0] wire_csa_upper0_result;
+  wire [11:0] wire_csa_upper1_result;
+  wire [23:0] result_w;
+
+  lpm_add_sub csa_lower (
+      .cout(wire_csa_lower_cout),
+      .dataa(dataa[11:0]),
+      .datab(datab[11:0]),
+      .overflow(),
+      .result(wire_csa_lower_result)
+`ifndef FORMAL_VERIFICATION
+      // synopsys translate_off
+`endif	,
+      .aclr(1'b0),
+      .add_sub(1'b1),
+      .cin(),
+      .clken(1'b1),
+      .clock(1'b0)
+`ifndef FORMAL_VERIFICATION
+      // synopsys translate_on
+`endif
+  );
+  defparam csa_lower.lpm_direction = "ADD", csa_lower.lpm_representation = "SIGNED",
+      csa_lower.lpm_width = 12, csa_lower.lpm_type = "lpm_add_sub";
+  lpm_add_sub csa_upper0 (
+      .cin(1'b0),
+      .cout(),
+      .dataa(dataa[23:12]),
+      .datab(datab[23:12]),
+      .overflow(),
+      .result(wire_csa_upper0_result)
+`ifndef FORMAL_VERIFICATION
+      // synopsys translate_off
+`endif	,
+      .aclr(1'b0),
+      .add_sub(1'b1),
+      .clken(1'b1),
+      .clock(1'b0)
+`ifndef FORMAL_VERIFICATION
+      // synopsys translate_on
+`endif
+  );
+  defparam csa_upper0.lpm_direction = "ADD", csa_upper0.lpm_representation = "SIGNED",
+      csa_upper0.lpm_width = 12, csa_upper0.lpm_type = "lpm_add_sub";
+  lpm_add_sub csa_upper1 (
+      .cin(1'b1),
+      .cout(),
+      .dataa(dataa[23:12]),
+      .datab(datab[23:12]),
+      .overflow(),
+      .result(wire_csa_upper1_result)
+`ifndef FORMAL_VERIFICATION
+      // synopsys translate_off
+`endif	,
+      .aclr(1'b0),
+      .add_sub(1'b1),
+      .clken(1'b1),
+      .clock(1'b0)
+`ifndef FORMAL_VERIFICATION
+      // synopsys translate_on
+`endif
+  );
+  defparam csa_upper1.lpm_direction = "ADD", csa_upper1.lpm_representation = "SIGNED",
+      csa_upper1.lpm_width = 12, csa_upper1.lpm_type = "lpm_add_sub";
+  assign result = result_w,
+      result_w = {
+        (({12{(~ wire_csa_lower_cout)}} & wire_csa_upper0_result) | ({12{wire_csa_lower_cout}} & wire_csa_upper1_result)),
+        wire_csa_lower_result
+      };
+endmodule
+

@@ -1,0 +1,80 @@
+module rtlpp_00103(
+    input CLKIN_IN, 
+    input RST_IN,
+    output CLKFX_OUT,
+    output CLKIN_IBUFG_OUT,
+    output CLK0_OUT,
+    output CLK2X_OUT,
+    output LOCKED_OUT
+);
+
+    wire CLKFB_IN;
+    wire CLKFX_BUF;
+    wire CLKIN_IBUFG;
+    wire CLK0_BUF;
+    wire CLK2X_BUF;
+    wire GND1 = 0;
+
+    assign CLKIN_IBUFG_OUT = CLKIN_IBUFG;
+    assign CLK2X_OUT = CLKFB_IN;
+
+    BUFG CLKFX_BUFG_INST (
+        .I(CLKFX_BUF), 
+        .O(CLKFX_OUT)
+    );
+
+    IBUFG CLKIN_IBUFG_INST (
+        .I(CLKIN_IN), 
+        .O(CLKIN_IBUFG)
+    );
+
+    BUFG CLK0_BUFG_INST (
+        .I(CLK0_BUF), 
+        .O(CLK0_OUT)
+    );
+
+    BUFG CLK2X_BUFG_INST (
+        .I(CLK2X_BUF), 
+        .O(CLKFB_IN)
+    );
+
+    // Inline the functionality of the DCM module
+    reg LOCKED;
+    assign LOCKED_OUT = LOCKED;
+
+    // DCM parameters
+    parameter CLK_FEEDBACK = "2X";
+    parameter CLKDV_DIVIDE = 2.0;
+    parameter CLKFX_DIVIDE = 6;
+    parameter CLKFX_MULTIPLY = 13;
+    parameter CLKIN_DIVIDE_BY_2 = "FALSE";
+    parameter CLKIN_PERIOD = 20.0;
+    parameter CLKOUT_PHASE_SHIFT = "NONE";
+    parameter DESKEW_ADJUST = "SYSTEM_SYNCHRONOUS";
+    parameter DFS_FREQUENCY_MODE = "LOW";
+    parameter DLL_FREQUENCY_MODE = "LOW";
+    parameter DUTY_CYCLE_CORRECTION = "TRUE";
+    parameter FACTORY_JF = 16'h8080;
+    parameter PHASE_SHIFT = 0;
+    parameter STARTUP_WAIT = "FALSE";
+
+    // DCM functionality (simplified)
+    initial begin
+        LOCKED = 0;
+    end
+
+    always @(posedge CLKIN_IBUFG or posedge RST_IN) begin
+        if (RST_IN) begin
+            LOCKED <= 0;
+        end else begin
+            // This is a simplified version
+            LOCKED <= 1;
+        end
+    end
+
+    // Generate CLKFX_BUF and CLK0_BUF signals (not actually implemented)
+    assign CLKFX_BUF = CLKIN_IBUFG;
+    assign CLK0_BUF = CLKIN_IBUFG;
+    assign CLK2X_BUF = CLKIN_IBUFG;
+
+endmodule

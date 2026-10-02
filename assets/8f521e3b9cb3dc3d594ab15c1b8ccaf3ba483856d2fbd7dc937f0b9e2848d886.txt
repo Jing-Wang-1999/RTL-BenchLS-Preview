@@ -1,0 +1,19 @@
+### Instruction for LLM to Generate Verilog Code:
+
+This Verilog module, `rtlpp_04687`, processes incoming data and related signals to produce synchronized outputs and error correction signals. It primarily operates on a clock (`clk`) and reset (`reset`) basis, handling various conditions based on the `DEVICE_FAMILY` parameter.
+
+1. **Primary Function:**
+   - The module captures and synchronizes input data signals, providing aligned and error-corrected outputs.
+
+2. **Key Control Flow and Decision Points:**
+   - **Reset Logic:** When `reset` is high, all internal registers are reset to their initial values.
+   - **Device Family Conditional Blocks:** Different device families (`STRATIXIIGX`, `ARRIAGX`, `STRATIXV`, `ARRIAV`, etc.) have customized control flow that handles synchronization (`alt_sync`) and outputs accordingly.
+   - **Synchronization Logic:** Based on the `alt_sync` signal, the module updates various output signals (`altpcs_dataout`, `altpcs_disperr`, `altpcs_ctrldetect`, `altpcs_errdetect`, etc.) with either the registered input data or reset values.
+   - **Carrier Detect Logic:** The `altpcs_carrierdetect` output is independently determined by a comprehensive logical combination of registered input conditions and specific data patterns.
+
+3. **Data Processing and Signal Interactions:**
+   - **Register Updates:** Input signals (`alt_dataout`, `alt_sync`, `alt_disperr`, etc.) are first captured into corresponding registers (`alt_dataout_reg1`, `alt_sync_reg1`, etc.) on every clock cycle.
+   - **Output Assignment:** Based on the `DEVICE_FAMILY`, the synchronized and registered inputs update the output signals. If synchronization (`alt_sync`) is asserted, outputs take values from the respective registers; otherwise, they default to predefined inactive states.
+   - **Run Length Violation and Carrier Detect:** The module features a state to latch a run length violation (`alt_runlengthviolation_latched`) which impacts `altpcs_carrierdetect`. Various logical conditions based on specific byte patterns (`alt_dataout_reg1`) and other detected flags (`alt_ctrldetect_reg1`, `alt_errdetect_reg1`, `alt_disperr_reg1`, etc.) determine the carrier detect status.
+
+To generate Verilog code for this module, ensure the functionality is consistent with the detailed logical conditions and state transitions, specifically focusing on synchronization and error handling.

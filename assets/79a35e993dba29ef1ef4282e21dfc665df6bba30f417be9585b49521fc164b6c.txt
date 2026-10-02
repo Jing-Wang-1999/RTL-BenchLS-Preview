@@ -1,0 +1,101 @@
+module rtlpp_09585 #(
+    parameter DATA_WIDTH = 32,
+    parameter BYTEENABLE_WIDTH_LOG2 = 2,
+    parameter ADDRESS_WIDTH = 32,
+    parameter UNALIGNED_ACCESS_ENABLE = 0
+)(
+    input  wire clk,
+    input  wire reset,
+    input  wire enable,
+    input  wire [ADDRESS_WIDTH-1:0] address,
+    input  wire start,
+    input  wire waitrequest,
+    input  wire stall,
+    input  wire [DATA_WIDTH-1:0] fifo_data,
+    input  wire fifo_empty,
+    output wire [DATA_WIDTH-1:0] write_data,
+    output wire fifo_readack
+);
+
+    localparam BYTES_PER_WORD = 1 << BYTEENABLE_WIDTH_LOG2;
+    localparam BYTE_OFFSET_WIDTH = BYTEENABLE_WIDTH_LOG2;
+    
+    generate
+        if (UNALIGNED_ACCESS_ENABLE == 0) begin : aligned_mode
+            // Pass-through mode for aligned access
+            assign write_data = fifo_data;
+            assign fifo_readack = enable && !fifo_empty && !stall && !waitrequest;
+            
+        end else begin : unaligned_mode
+            // Unaligned access support
+            reg [DATA_WIDTH-1:0] buffer_reg;
+            reg buffer_valid;
+            reg [BYTE_OFFSET_WIDTH-1:0] byte_offset;
+            reg active;
+            
+            wire [BYTE_OFFSET_WIDTH-1:0] current_offset;
+            wire need_buffer;
+            wire can_read_fifo;
+            wire [DATA_WIDTH-1:0] shifted_data;
+            wire [DATA_WIDTH-1:0] combined_data;
+            
+            // Extract byte offset from address
+            assign current_offset = address[BYTE_OFFSET_WIDTH-1:0];
+            
+            // Determine if we need buffering (non-zero offset)
+            assign need_buffer = (current_offset != 0);
+            
+            // Can read from FIFO when enabled, not empty, not stalled, and no waitrequest
+            assign can_read_fifo = enable && !fifo_empty && !stall && !waitrequest;
+            
+            // Shift incoming data based on byte offset
+            assign shifted_data = fifo_data << (byte_offset * 8);
+            
+            // Combine buffered data with new data
+            assign combined_data = buffer_valid ? (buffer_reg | shifted_data) : shifted_data;
+            
+            // Output write data
+            assign write_data = combined_data;
+            
+            // FIFO read acknowledge
+            assign fifo_readack = can_read_fifo && active;
+            
+            // State machine and buffer management
+            always @(posedge clk or posedge reset) begin
+                if (reset) begin
+                    buffer_reg <= {DATA_WIDTH{1'b0}};
+                    buffer_valid <= 1'b0;
+                    byte_offset <= {BYTE_OFFSET_WIDTH{1'b0}};
+                    active <= 1'b0;
+                end else begin
+                    // Start signal initiates a new transfer
+                    if (start) begin
+                        byte_offset <= current_offset;
+                        buffer_valid <= 1'b0;
+                        buffer_reg <= {DATA_WIDTH{1'b0}};
+                        active <= 1'b1;
+                    end
+                    
+                    // Process data when active
+                    if (active && can_read_fifo) begin
+                        if (need_buffer && byte_offset != 0) begin
+                            // Store upper portion for next word
+                            buffer_reg <= fifo_data >> ((BYTES_PER_WORD - byte_offset) * 8);
+                            buffer_valid <= 1'b1;
+                        end else begin
+                            buffer_valid <= 1'b0;
+                            buffer_reg <= {DATA_WIDTH{1'b0}};
+                        end
+                    end
+                    
+                    // Clear active on disable
+                    if (!enable) begin
+                        active <= 1'b0;
+                    end
+                end
+            end
+            
+        end
+    endgenerate
+
+endmodule

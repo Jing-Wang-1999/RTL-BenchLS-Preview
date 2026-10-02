@@ -1,0 +1,141 @@
+module origen_140272 #(
+    parameter N = 8
+)(
+    input wire clk,
+    input wire rst,
+    input wire [31:0] in_real [N-1:0],
+    input wire [31:0] in_imag [N-1:0],
+    output reg [31:0] out_real [N-1:0],
+    output reg [31:0] out_imag [N-1:0]
+);
+
+    // Twiddle factors
+    reg [31:0] twiddle_real [N/2-1:0];
+    reg [31:0] twiddle_imag [N/2-1:0];
+
+    // Temporary arrays for butterfly operations
+    reg [31:0] temp_real [N-1:0];
+    reg [31:0] temp_imag [N-1:0];
+
+    integer i, j, k, l, m;
+
+    // Initialize twiddle factors
+    initial begin
+        for (i = 0; i < N/2; i = i + 1) begin
+            twiddle_real[i] = $rtoi($cos(2.0 * 3.14159 * i / N) * (2.0 ** 31));
+            twiddle_imag[i] = $rtoi(-$sin(2.0 * 3.14159 * i / N) * (2.0 ** 31));
+        end
+    end
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            for (i = 0; i < N; i = i + 1) begin
+                out_real[i] <= 32'b0;
+                out_imag[i] <= 32'b0;
+            end
+        end else begin
+            // Copy input to temporary array
+            for (i = 0; i < N; i = i + 1) begin
+                temp_real[i] = in_real[i];
+                temp_imag[i] = in_imag[i];
+            end
+
+            // Perform FFT
+            for (i = 0; i < $clog2(N); i = i + 1) begin
+                l = 1 << i;
+                for (j = 0; j < N; j = j + 2*l) begin
+                    for (k = 0; k < l; k = k + 1) begin
+                        m = k * (N / (2 * l));
+                        
+                        // Butterfly operation
+                        out_real[j+k] = temp_real[j+k] + ((temp_real[j+k+l] * twiddle_real[m] - temp_imag[j+k+l] * twiddle_imag[m]) >>> 31);
+                        out_imag[j+k] = temp_imag[j+k] + ((temp_real[j+k+l] * twiddle_imag[m] + temp_imag[j+k+l] * twiddle_real[m]) >>> 31);
+                        
+                        out_real[j+k+l] = temp_real[j+k] - ((temp_real[j+k+l] * twiddle_real[m] - temp_imag[j+k+l] * twiddle_imag[m]) >>> 31);
+                        out_imag[j+k+l] = temp_imag[j+k] - ((temp_real[j+k+l] * twiddle_imag[m] + temp_imag[j+k+l] * twiddle_real[m]) >>> 31);
+                    end
+                end
+                
+                // Update temporary array for next stage
+                for (j = 0; j < N; j = j + 1) begin
+                    temp_real[j] = out_real[j];
+                    temp_imag[j] = out_imag[j];
+                end
+            end
+        end
+    end
+endmodule
+
+module IFFT #(
+    parameter N = 8
+)(
+    input wire clk,
+    input wire rst,
+    input wire [31:0] in_real [N-1:0],
+    input wire [31:0] in_imag [N-1:0],
+    output reg [31:0] out_real [N-1:0],
+    output reg [31:0] out_imag [N-1:0]
+);
+
+    // Twiddle factors
+    reg [31:0] twiddle_real [N/2-1:0];
+    reg [31:0] twiddle_imag [N/2-1:0];
+
+    // Temporary arrays for butterfly operations
+    reg [31:0] temp_real [N-1:0];
+    reg [31:0] temp_imag [N-1:0];
+
+    integer i, j, k, l, m;
+
+    // Initialize twiddle factors
+    initial begin
+        for (i = 0; i < N/2; i = i + 1) begin
+            twiddle_real[i] = $rtoi($cos(2.0 * 3.14159 * i / N) * (2.0 ** 31));
+            twiddle_imag[i] = $rtoi($sin(2.0 * 3.14159 * i / N) * (2.0 ** 31));
+        end
+    end
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            for (i = 0; i < N; i = i + 1) begin
+                out_real[i] <= 32'b0;
+                out_imag[i] <= 32'b0;
+            end
+        end else begin
+            // Copy input to temporary array
+            for (i = 0; i < N; i = i + 1) begin
+                temp_real[i] = in_real[i];
+                temp_imag[i] = in_imag[i];
+            end
+
+            // Perform IFFT
+            for (i = 0; i < $clog2(N); i = i + 1) begin
+                l = 1 << i;
+                for (j = 0; j < N; j = j + 2*l) begin
+                    for (k = 0; k < l; k = k + 1) begin
+                        m = k * (N / (2 * l));
+                        
+                        // Butterfly operation
+                        out_real[j+k] = temp_real[j+k] + ((temp_real[j+k+l] * twiddle_real[m] - temp_imag[j+k+l] * twiddle_imag[m]) >>> 31);
+                        out_imag[j+k] = temp_imag[j+k] + ((temp_real[j+k+l] * twiddle_imag[m] + temp_imag[j+k+l] * twiddle_real[m]) >>> 31);
+                        
+                        out_real[j+k+l] = temp_real[j+k] - ((temp_real[j+k+l] * twiddle_real[m] - temp_imag[j+k+l] * twiddle_imag[m]) >>> 31);
+                        out_imag[j+k+l] = temp_imag[j+k] - ((temp_real[j+k+l] * twiddle_imag[m] + temp_imag[j+k+l] * twiddle_real[m]) >>> 31);
+                    end
+                end
+                
+                // Update temporary array for next stage
+                for (j = 0; j < N; j = j + 1) begin
+                    temp_real[j] = out_real[j];
+                    temp_imag[j] = out_imag[j];
+                end
+            end
+
+            // Scale the output
+            for (i = 0; i < N; i = i + 1) begin
+                out_real[i] = out_real[i] / N;
+                out_imag[i] = out_imag[i] / N;
+            end
+        end
+    end
+endmodule

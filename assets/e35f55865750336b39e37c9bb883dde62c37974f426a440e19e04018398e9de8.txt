@@ -1,0 +1,16 @@
+The module `NV_NVDLA_SDP_CORE_Y_cvt_core_chn_out_rsci_chn_out_wait_dp` is designed to manage output channel wait states in a hardware system. It operates under the control of a clock and reset signal, specifically `nvdla_core_clk` and `nvdla_core_rstn`. The module interacts with several input and output signals to determine the readiness and wait conditions of the output channel.
+
+### Inputs:
+1. **nvdla_core_clk**: The clock signal that synchronizes operations within the module.
+2. **nvdla_core_rstn**: An active-low reset signal that initializes the module's state.
+3. **chn_out_rsci_oswt**: A signal indicating the output switch state, affecting the computation of the write enable signal.
+4. **chn_out_rsci_biwt**: A signal representing the input wait condition.
+5. **chn_out_rsci_bdwt**: A signal indicating the data wait condition.
+
+### Outputs:
+1. **chn_out_rsci_bawt**: A signal that indicates the output wait condition, derived from the input wait and internal state.
+2. **chn_out_rsci_wen_comp**: A computed write enable signal, determined by the output switch state and the output wait condition.
+
+### Internal Logic:
+- The module maintains an internal register `chn_out_rsci_bcwt`, which tracks the current wait state. This register is updated on each clock cycle based on the input wait conditions and the data wait signal.
+- The output wait condition (`chn_out_rsci_bawt`) is computed as the logical OR of the input wait signal (`chn

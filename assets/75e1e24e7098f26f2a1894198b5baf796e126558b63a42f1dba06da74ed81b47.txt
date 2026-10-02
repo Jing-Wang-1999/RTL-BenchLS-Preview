@@ -1,0 +1,132 @@
+always @* begin
+    active_next = active_reg;
+    ptr_next = ptr_reg;
+
+    eth_type_next = eth_type_reg;
+    ihl_next = ihl_reg;
+
+    hash_data_next = hash_data_reg;
+    hash_data_ipv4_next = hash_data_ipv4_reg;
+    hash_data_tcp_next = hash_data_tcp_reg;
+    hash_data_udp_next = hash_data_udp_reg;
+    hash_data_type_next = hash_data_type_reg;
+    hash_data_valid_next = 1'b0;
+
+    if (s_axis_tvalid) begin
+        if (active_reg) begin
+            ptr_next = ptr_reg + 1;
+
+            if (ptr_reg == 0) begin
+                hash_data_ipv4_next = 1'b0;
+                hash_data_tcp_next = 1'b0;
+                hash_data_udp_next = 1'b0;
+            end
+            if (ptr_reg == 12/KEEP_WIDTH) begin
+                // eth type MSB
+                eth_type_next[15:8] = s_axis_tdata[(12%KEEP_WIDTH)*8 +: 8];
+            end
+            if (ptr_reg == 13/KEEP_WIDTH) begin
+                // eth type LSB
+                eth_type_next[7:0] = s_axis_tdata[(13%KEEP_WIDTH)*8 +: 8];
+
+                // check eth type
+                if (eth_type_next == 16'h0800) begin
+                    // ipv4
+                    hash_data_ipv4_next = 1'b1;
+                end else if (eth_type_next == 16'h86dd) begin
+                    // ipv6
+                    // TODO
+                end else begin
+                    // other
+                    hash_data_type_next = 4'b0000;
+                    hash_data_valid_next = 1'b1;
+                    active_next = 1'b0;
+                end
+            end
+            if (ptr_reg == 14/KEEP_WIDTH) begin
+                // capture IHL
+                ihl_next = s_axis_tdata[(14%KEEP_WIDTH)*8 +: 8];
+            end
+            if (hash_data_ipv4_next) begin
+                if (ptr_reg == 23/KEEP_WIDTH) begin
+                    // capture protocol
+                    if (s_axis_tdata[(23%KEEP_WIDTH)*8 +: 8] == 8'h06 && ihl_next == 5) begin
+                        // TCP
+                        hash_data_tcp_next = 1'b1;
+                    end else if (s_axis_tdata[(23%KEEP_WIDTH)*8 +: 8] == 8'h11 && ihl_next == 5) begin
+                        // UDP
+                        hash_data_udp_next = 1'b1;
+                    end
+                end
+                if (ptr_reg == 26/KEEP_WIDTH) begin
+                    // capture source IP
+                    hash_data_next[7:0] = s_axis_tdata[(26%KEEP_WIDTH)*8 +: 8];
+                end
+                if (ptr_reg == 27/KEEP_WIDTH) begin
+                    // capture source IP
+                    hash_data_next[15:8] = s_axis_tdata[(27%KEEP_WIDTH)*8 +: 8];
+                end
+                if (ptr_reg == 28/KEEP_WIDTH) begin
+                    // capture source IP
+                    hash_data_next[23:16] = s_axis_tdata[(28%KEEP_WIDTH)*8 +: 8];
+                end
+                if (ptr_reg == 29/KEEP_WIDTH) begin
+                    // capture source IP
+                    hash_data_next[31:24] = s_axis_tdata[(29%KEEP_WIDTH)*8 +: 8];
+                end
+                if (ptr_reg == 30/KEEP_WIDTH) begin
+                    // capture dest IP
+                    hash_data_next[39:32] = s_axis_tdata[(30%KEEP_WIDTH)*8 +: 8];
+                end
+                if (ptr_reg == 31/KEEP_WIDTH) begin
+                    // capture dest IP
+                    hash_data_next[47:40] = s_axis_tdata[(31%KEEP_WIDTH)*8 +: 8];
+                end
+                if (ptr_reg == 32/KEEP_WIDTH) begin
+                    // capture dest IP
+                    hash_data_next[55:48] = s_axis_tdata[(32%KEEP_WIDTH)*8 +: 8];
+                end
+                if (ptr_reg == 33/KEEP_WIDTH) begin
+                    // capture dest IP
+                    hash_data_next[63:56] = s_axis_tdata[(33%KEEP_WIDTH)*8 +: 8];
+                    if (!(hash_data_tcp_next || hash_data_udp_next)) begin
+                        hash_data_type_next = {1'b0, 1'b0, 1'b0, 1'b1};
+                        hash_data_valid_next = 1'b1;
+                        active_next = 1'b0;
+                    end
+                end
+                if (hash_data_tcp_next || hash_data_udp_next) begin
+                    // TODO IHL (skip options)
+                    if (ptr_reg == 34/KEEP_WIDTH) begin
+                        // capture source port
+                        hash_data_next[71:64] = s_axis_tdata[(34%KEEP_WIDTH)*8 +: 8];
+                    end
+                    if (ptr_reg == 35/KEEP_WIDTH) begin
+                        // capture source port
+                        hash_data_next[79:72] = s_axis_tdata[(35%KEEP_WIDTH)*8 +: 8];
+                    end
+                    if (ptr_reg == 36/KEEP_WIDTH) begin
+                        // capture dest port
+                        hash_data_next[87:80] = s_axis_tdata[(36%KEEP_WIDTH)*8 +: 8];
+                    end
+                    if (ptr_reg == 37/KEEP_WIDTH) begin
+                        // capture dest port
+                        hash_data_next[95:88] = s_axis_tdata[(37%KEEP_WIDTH)*8 +: 8];
+                        hash_data_type_next = {hash_data_udp_next, hash_data_tcp_next, 1'b0, 1'b1};
+                        hash_data_valid_next = 1'b1;
+                        active_next = 1'b0;
+                    end
+                end
+            end
+        end
+
+        if (s_axis_tlast) begin
+            if (active_next) begin
+                hash_data_type_next = 4'b0000;
+                hash_data_valid_next = 1'b1;
+            end
+            ptr_next = 0;
+            active_next = 1'b1;
+        end
+    end
+end

@@ -1,0 +1,53 @@
+module origen_209915 (
+    input wire clk,
+    input wire rst_n,
+    input wire key_in,
+    output reg key_out
+);
+
+    reg s0, s1;
+    reg temp;
+    reg [3:0] count; // Assuming a 4-bit counter for debouncing
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            // Initialization on reset
+            s0 <= 1'b1;
+            s1 <= 1'b0;
+            temp <= 1'b1;
+            count <= 4'b0000;
+            key_out <= 1'b1;
+        end else begin
+            // State transition logic
+            case ({s0, s1})
+                2'b10: begin // State S0
+                    if (key_in == temp) begin
+                        if (count == 4'b1111) begin
+                            s0 <= 1'b0;
+                            s1 <= 1'b1;
+                            key_out <= temp;
+                        end else begin
+                            count <= count + 1;
+                        end
+                    end else begin
+                        temp <= key_in;
+                        count <= 4'b0000;
+                    end
+                end
+                2'b01: begin // State S1
+                    if (key_in != temp) begin
+                        s0 <= 1'b1;
+                        s1 <= 1'b0;
+                        temp <= key_in;
+                        count <= 4'b0000;
+                    end
+                end
+                default: begin
+                    s0 <= 1'b1;
+                    s1 <= 1'b0;
+                end
+            endcase
+        end
+    end
+
+endmodule

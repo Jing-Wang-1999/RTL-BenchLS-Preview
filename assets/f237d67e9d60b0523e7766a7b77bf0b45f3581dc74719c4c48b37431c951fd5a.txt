@@ -1,0 +1,46 @@
+always @ *
+begin
+    branch_r        = 1'b0;
+    branch_target_r = 32'b0;
+
+    // Interrupts
+    if (exception_i == 6'h20)
+    begin
+        branch_r        = 1'b1;
+        branch_target_r = (irq_priv_q == 2'd3) ? csr_mtvec_q : csr_stvec_q;
+    end
+    // Exception return
+    else if (exception_i >= 6'h30 && exception_i <= 6'h33)
+    begin
+        // MRET (return from machine)
+        if (exception_i[1:0] == 2'd3)
+        begin    
+            branch_r        = 1'b1;
+            branch_target_r = csr_mepc_q;
+        end
+        // SRET (return from supervisor)
+        else
+        begin
+            branch_r        = 1'b1;
+            branch_target_r = csr_sepc_q;
+        end
+    end
+    // Exception - handled in super mode
+    else if (is_exception_w && exception_s_w)
+    begin
+        branch_r        = 1'b1;
+        branch_target_r = csr_stvec_q;
+    end
+    // Exception - handled in machine mode
+    else if (is_exception_w)
+    begin
+        branch_r        = 1'b1;
+        branch_target_r = csr_mtvec_q;
+    end
+    // Fence / SATP register writes cause pipeline flushes
+    else if (exception_i == 6'h34)
+    begin
+        branch_r        = 1'b1;
+        branch_target_r = exception_pc_i + 32'd4;
+    end
+end

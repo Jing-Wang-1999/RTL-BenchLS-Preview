@@ -1,0 +1,28 @@
+module mg_03031 (
+    input wire A,
+    input wire B,
+    input wire C,
+    input wire D,
+    input wire E,
+    input wire F,
+    output wire Q
+);
+    parameter [63:0] LUT = 64'h0000000000000000;
+
+    // Create 6-bit index with F as MSB, A as LSB
+    wire [5:0] index = {F, E, D, C, B, A};
+
+    // Select the bit from LUT using the index
+    assign Q = LUT[index];
+
+    // Timing specifications (for simulation only)
+    specify
+        // Example timing for generic FPGA (adjust as needed)
+        (A => Q) = (0.5, 0.4);
+        (B => Q) = (0.5, 0.4);
+        (C => Q) = (0.5, 0.4);
+        (D => Q) = (0.5, 0.4);
+        (E => Q) = (0.5, 0.4);
+        (F => Q) = (0.5, 0.4);
+    endspecify
+endmodule

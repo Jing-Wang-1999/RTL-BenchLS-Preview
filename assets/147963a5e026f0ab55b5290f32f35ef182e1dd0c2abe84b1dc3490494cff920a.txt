@@ -1,0 +1,46 @@
+# Hazard3 machine CSR and trap controller
+
+Implement `hazard3_csr` in its declared default configuration: XLEN,W_ADDR,W_DATA=32; A,C,M and mandatory/trap machine CSRs enabled; E, all bit-manipulation extensions, Zcmp/Zilsd, fence.i, custom interrupt/power/PMP extensions, user mode, counters, debug and triggers disabled. NUM_IRQS=1, RESET_VECTOR=MTVEC_INIT=0, MTVEC_WMASK=fffffffd, PMP_REGIONS=0, MVENDORID_VAL=MCONFIGPTR_VAL=0. Other parameters retain upstream declared values and have no default observable effect. The two rising-edge clocks `clk` and `clk_always_on` remain distinct; asynchronous active-low `rst_n` resets both domains. No relationship between their edges may be imposed.
+
+Inputs: clocks/reset; scalar dbg_req_halt,dbg_req_halt_on_reset,dbg_req_resume; dbg_data0_rdata[31:0],debug_dpc_rdata[31:0]; addr[11:0],wdata[31:0],wtype[1:0], scalar wen,wen_soon,wen_raw,ren,ren_soon; trap_enter_rdy,loadstore_dphase_pending,delay_irq_entry,mepc_in[31:0],except[3:0],except_to_d_mode,irq[0:0],irq_software,irq_timer,pmp_cfg_rdata[31:0],trig_cfg_rdata[31:0],instr_ret,mhartid_val[31:0],eco_version[3:0].
+
+Outputs: debug_mode,dbg_instr_caught_exception,dbg_instr_caught_ebreak,dbg_data0_wdata[31:0],dbg_data0_wen,debug_dpc_wdata[31:0],debug_dpc_wen,rdata[31:0],illegal,write_is_fetch_ordered,trap_addr[31:0],trap_is_irq,trap_enter_vld,trap_enter_soon,pwr_allow_clkgate,pwr_allow_power_down,pwr_allow_sleep_on_block,pwr_wfi_wakeup_req,m_mode_execution,m_mode_trap_entry,m_mode_loadstore,pmp_cfg_addr[11:0],pmp_cfg_wen,pmp_cfg_wdata[31:0],trig_cfg_addr[11:0],trig_cfg_wen,trig_cfg_wdata[31:0],trig_m_en,trig_event_interrupt,trig_event_exception,trig_event_trap_cause[3:0],clear_excl_on_trap_exit,trap_wfi. Unannotated ports scalar.
+
+CSR reads are combinational and **not gated by ren**. At reset, mscratch,mepc,mie,mcause,mtvec and writable status flags are0; status MPP bits12:11 are always11. Let U be wdata when wtype0 or3, rdata OR wdata for type1, rdata AND NOT wdata for type2. Each rising clk applies writes with wen irrespective of ren or illegal. Illegal indicates access decode; it is not an internal write inhibit. Read-only/unsupported addresses do not change ordinary state except the explicitly documented raw MEICONTEXT update below.
+
+| CSR address hex | Read data and write effect |
+|---|---|
+| 300 MSTATUS | bit17 MPRV, bits12:11=11, bit7 MPIE, bit3 MIE; other bits0. Write updates17,7,3 from U. |
+| 310 MSTATUSH | 0; writes ignored |
+| 301 MISA | 0x40801105; writes ignored |
+| 305 MTVEC | stored value; write U masked fffffffd, bit1 remains0 |
+| 340 MSCRATCH | full32-bit RW |
+| 341 MEPC | bit0 always0, write U & fffffffe |
+| 342 MCAUSE | bit31 irq flag, bits3:0 cause; other bits0; write those fields |
+| 343 MTVAL | 0, writes ignored |
+| 304 MIE | bits11,7,3 writable; mask00000888 |
+| 344 MIP | sampled irq in bit11, timer bit7, software bit3, other bits0; writes ignored |
+| f11 MVENDORID | 0, read only |
+| f12 MARCHID | 27, read only |
+| f13 MIMPID | 01010100 OR (eco_version<<4), read only |
+| f14 MHARTID | mhartid_val, read only |
+| f15 MCONFIGPTR | 0, read only |
+| bf1 H3MISA | Indexed feature data described below; writable access legal but no storage |
+
+Any address not listed returns0 and is not decoded. For decoded ordinary RW addresses decode succeeds regardless of wen_soon; for f11..f15 it succeeds only when !wen_soon. illegal=(wen_soon or ren_soon) and !decode_success. Counter/user/PMP/debug/custom IRQ/power addresses are unsupported.
+
+H3MISA uses **current raw wdata**, not U, as index. If !wdata[10], select a32-bit word using wdata[1:0] from128-bit standard-extension bitmap with bits0,2,8,12,66,76 set and all others0. Else if !wdata[8], select77 (index0) or5 (index1) with wdata[0]. Else select one of eight32-bit custom-extension words using wdata[2:0]; word0 is01000000 and all others0.
+
+The upstream raw write to MEICONTEXT (be5) is active even with custom IRQ decode disabled: if wen at this address, mie bit7 becomes old bit7 OR U[3], and bit3 becomes old bit3 OR U[2], while other bits hold. Its rdata remains0 and illegal still indicates unsupported access. This behavior is retained rather than hidden by an input assumption.
+
+The always-on domain independently samples irq,irq_software,irq_timer into the MIP bits on every edge, resetting samples0. Let pending=(MIP & MIE)!=0, active=pending and status.MIE, exc=(except!=15). Priority irq number is11 for enabled external, else3 software, else7 timer, else0. Trap codes:15 none,10 MRET,14 refetch; all other4-bit codes represent exceptions without further validation. Outputs:
+
+- pwr_wfi_wakeup_req=pending; trap_is_irq=!exc, even if no valid request.
+- trap_enter_vld=exc or (!delay_irq_entry and active and !loadstore_dphase_pending).
+- trap_enter_soon=trap_enter_vld or (!delay_irq_entry and active and loadstore_dphase_pending).
+- trap_addr=mepc for MRET, debug_dpc_rdata for refetch, otherwise (mtvec & fffffffc) OR ((!exc and mtvec[0] and active) ? (irq_number<<2) :0). Vector offset is bitwise OR, not addition; software aligns vector base appropriately.
+- clear_excl_on_trap_exit=trap_enter_vld and trap_enter_rdy and except==10.
+
+At a clk edge with trap_enter_vld and trap_enter_rdy, MRET copies MPIE into MIE and sets MPIE1; another exception/IRQ except refetch copies MIE into MPIE, clears MIE, captures mepc_in&fffffffe and captures mcause=(exc?except:irq_number) with irq flag=!exc. These updates take precedence over corresponding status/MEPC/MCAUSE writes. Refetch changes no trap registers. Independent writes to MSCRATCH,MTVEC,MIE still operate on the same edge. MPRV holds across trap entry/exit in default machine-only mode.
+
+After reset, constant outputs are: debug_mode,dbg_instr_caught_exception,dbg_instr_caught_ebreak,dbg_data0_wen,debug_dpc_wen,write_is_fetch_ordered,pwr_allow_clkgate,pwr_allow_power_down,pwr_allow_sleep_on_block,pmp_cfg_wen,trig_cfg_wen,trig_m_en,trig_event_interrupt,trig_event_exception,trig_event_trap_cause,trap_wfi all0; m_mode_execution,m_mode_trap_entry,m_mode_loadstore all1. Other combinational forwarding outputs: dbg_data0_wdata=wdata; debug_dpc_wdata=mepc_in&fffffffe; pmp_cfg_addr=trig_cfg_addr=addr; pmp_cfg_wdata=trig_cfg_wdata=U. Debug/counter/PMP inputs have no other effect. Powerup before reset is not promised. All malformed/simultaneous input behavior is governed by the equations and priorities above, not additional formal assumptions.

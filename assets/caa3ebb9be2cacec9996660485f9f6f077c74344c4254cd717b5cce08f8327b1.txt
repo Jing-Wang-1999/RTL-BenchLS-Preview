@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""Evaluate a submitted RTL file set using a frozen private manifest; enforce every declared module."""
+from __future__ import annotations
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+
+TOOLCHAIN = Path('/home/jwangjw/anaconda3/envs/securitylab')
+
+
+def write_json(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + '\n')
+
+
+def sandbox_command(work: Path, argv: list[str]) -> list[str]:
+    command = ['bwrap', '--die-with-parent', '--unshare-all', '--new-session',
+               '--dir', '/proc', '--dev', '/dev', '--tmpfs', '/tmp']
+    for path in ('/usr', '/bin', '/sbin', '/lib', '/lib64', '/etc'):
+        if Path(path).exists():
+            command += ['--ro-bind', path, path]
+    command += ['--dir', str(TOOLCHAIN / 'bin'), '--dir', str(TOOLCHAIN / 'lib')]
+    for name in ('iverilog', 'vvp'):
+        path = TOOLCHAIN / 'bin' / name
+        command += ['--ro-bind', str(path), str(path)]
+    for name in ('libgcc_s.so.1', 'libreadline.so.8', 'libstdc++.so.6', 'libtinfo.so.6', 'libz.so.1'):
+        path = TOOLCHAIN / 'lib' / name
+        command += ['--ro-bind', str(path), str(path)]
+    command += ['--ro-bind', str(TOOLCHAIN / 'lib/ivl'), str(TOOLCHAIN / 'lib/ivl'),
+                '--bind', str(work), '/work', '--chdir', '/work', *argv]
+    return command
+
+
+def run_raw(work, argv, output, stem, timeout=20):
+    command = sandbox_command(work, argv)
+    output.mkdir(parents=True, exist_ok=True)
+    write_json(output / f'{stem}.command.json', {'argv': command, 'cwd': str(work),
+               'sandbox_cwd': '/work', 'timeout_seconds': timeout})
+    try:
+        proc = subprocess.run(command, capture_output=True, timeout=timeout,
+                              env={'PATH': '/usr/bin:/bin', 'LANG': 'C',
+                                   'LD_LIBRARY_PATH': str(TOOLCHAIN / 'lib')})
+        stdout, stderr, code = proc.stdout, proc.stderr, proc.returncode
+    except subprocess.TimeoutExpired as exc:
+        stdout, stderr, code = exc.stdout or b'', exc.stderr or b'', 124
+    (output / f'{stem}.stdout.log').write_bytes(stdout)
+    (output / f'{stem}.stderr.log').write_bytes(stderr)
+    write_json(output / f'{stem}.result.json', {'returncode': code})
+    return code, stdout.decode(errors='replace'), stderr.decode(errors='replace')
+
+
+def evaluate(case_path: Path, submission: Path, output: Path) -> dict:
+    output.mkdir(parents=True, exist_ok=True)
+    contract = json.loads((case_path / 'public/output_contract.json').read_text())
+    scoring = json.loads((case_path / 'private/scoring.json').read_text())
+    files = [item['path'] for item in contract['required_files']]
+    result = {'project_id': json.loads((case_path / 'case.json').read_text())['project_id'],
+              'contract_pass': True, 'compile_pass': False, 'errors': [], 'points': []}
+    with tempfile.TemporaryDirectory(prefix='rtlbenchls-score-') as tmp:
+        work = Path(tmp)
+        for item in contract['required_files']:
+            name = item['path']
+            source = submission / name
+            if not source.is_file() or source.is_symlink() or not source.resolve().is_relative_to(submission.resolve()):
+                result['errors'].append(f'missing/unsafe required file: {name}')
+                continue
+            data = source.read_text()
+            code = re.sub(r'/\*.*?\*/|//[^\n]*', '', data, flags=re.S)
+            # This case is synthesizable logic only. Prevent simulation-side I/O,
+            # includes, and test result injection in a submitted implementation.
+            if re.search(r'\$|`include|\binitial\b|\bfinal\b|\bforce\b|\brelease\b|#\s*\d', code):
+                result['errors'].append(f'unsupported simulation construct: {name}')
+            for module in item.get('modules', [item['module']]):
+                if not re.search(r'\bmodule\s+' + re.escape(module) + r'\b', code):
+                    result['errors'].append(f'required module {module} absent from its path: {name}')
+            target = work / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(data)
+        result['contract_pass'] = not result['errors']
+        if result['contract_pass']:
+            argv = [str(TOOLCHAIN / 'bin/iverilog'), '-g2012', '-Wall', '-s',
+                    contract['top_module'], '-o', 'compile.vvp', *files]
+            code, _, stderr = run_raw(work, argv, output, 'project_compile')
+            result['compile_pass'] = code == 0
+            if code and ('bwrap:' in stderr):
+                raise RuntimeError('evaluation sandbox failed; see project_compile.stderr.log')
+        for point in scoring['points']:
+            passed = False
+            if result['compile_pass']:
+                tb = case_path / 'private/verification' / point['testbench']
+                shutil.copyfile(tb, work / 'testbench.v')
+                point_out = output / point['id']
+                code, _, stderr = run_raw(work, [str(TOOLCHAIN / 'bin/iverilog'), '-g2012', '-Wall',
+                    '-s', 'tb', '-o', 'point.vvp', *files, 'testbench.v'], point_out, 'compile')
+                if code == 0:
+                    code, stdout, _ = run_raw(work, [str(TOOLCHAIN / 'bin/vvp'), 'point.vvp'],
+                                               point_out, 'simulate', point['timeout_seconds'])
+                    passed = code == 0 and stdout.strip() == 'RTL_BENCHLS_PASS'
+            result['points'].append({'id': point['id'], 'target': point['target'],
+                                     'weight': point['weight'], 'passed': passed})
+    result['passed_points'] = sum(p['passed'] for p in result['points'])
+    result['total_points'] = len(result['points'])
+    result['score'] = sum(p['weight'] for p in result['points'] if p['passed']) / sum(p['weight'] for p in result['points'])
+    result['full_project_pass'] = result['contract_pass'] and result['compile_pass'] and result['passed_points'] == result['total_points']
+    write_json(output / 'score.json', result)
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--case', type=Path, required=True)
+    parser.add_argument('--submission', type=Path, required=True)
+    parser.add_argument('--output', type=Path, required=True)
+    args = parser.parse_args()
+    print(json.dumps(evaluate(args.case.resolve(), args.submission.resolve(), args.output.resolve()), indent=2))
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,131 @@
+module origen_134435 #(
+    parameter BASEADDR = 32'h0000_0000,
+    parameter HIGHADDR = 32'h0000_FFFF,
+    parameter ABUSWIDTH = 32,
+    parameter MEM_BYTES = 1
+)(
+    input wire BUS_CLK,
+    input wire BUS_RST,
+    input wire [ABUSWIDTH-1:0] BUS_ADD,
+    inout wire [7:0] BUS_DATA,
+    input wire BUS_RD,
+    input wire BUS_WR,
+    input wire JTAG_CLK,
+    output reg TDO,
+    input wire TDI,
+    input wire TCK,
+    input wire TMS,
+    output reg SEN,
+    inout wire SLD
+);
+
+    // JTAG TAP controller states
+    localparam RESET = 4'b0000;
+    localparam IDLE = 4'b0001;
+    localparam SELECT_DR = 4'b0010;
+    localparam CAPTURE_DR = 4'b0011;
+    localparam SHIFT_DR = 4'b0100;
+    localparam EXIT1_DR = 4'b0101;
+    localparam PAUSE_DR = 4'b0110;
+    localparam EXIT2_DR = 4'b0111;
+    localparam UPDATE_DR = 4'b1000;
+
+    reg [3:0] tap_state;
+    reg [7:0] instruction;
+    reg [ABUSWIDTH-1:0] address;
+    reg [7:0] data;
+    reg [2:0] bit_counter;
+    reg [7:0] shift_register;
+    reg sld_out;
+    reg sld_oe;
+
+    // JTAG TAP controller
+    always @(posedge TCK or posedge BUS_RST) begin
+        if (BUS_RST) begin
+            tap_state <= RESET;
+        end else begin
+            case (tap_state)
+                RESET: tap_state <= TMS ? RESET : IDLE;
+                IDLE: tap_state <= TMS ? SELECT_DR : IDLE;
+                SELECT_DR: tap_state <= TMS ? RESET : CAPTURE_DR;
+                CAPTURE_DR: tap_state <= TMS ? EXIT1_DR : SHIFT_DR;
+                SHIFT_DR: tap_state <= TMS ? EXIT1_DR : SHIFT_DR;
+                EXIT1_DR: tap_state <= TMS ? UPDATE_DR : PAUSE_DR;
+                PAUSE_DR: tap_state <= TMS ? EXIT2_DR : PAUSE_DR;
+                EXIT2_DR: tap_state <= TMS ? UPDATE_DR : SHIFT_DR;
+                UPDATE_DR: tap_state <= TMS ? SELECT_DR : IDLE;
+                default: tap_state <= RESET;
+            endcase
+        end
+    end
+
+    // Instruction and data handling
+    always @(posedge TCK) begin
+        case (tap_state)
+            CAPTURE_DR: begin
+                bit_counter <= 0;
+                shift_register <= 8'b0;
+            end
+            SHIFT_DR: begin
+                shift_register <= {TDI, shift_register[7:1]};
+                bit_counter <= bit_counter + 1;
+                if (bit_counter == 7) begin
+                    if (instruction == 8'h00) // Read instruction
+                        instruction <= shift_register;
+                    else if (instruction == 8'h01) // Write instruction
+                        address[ABUSWIDTH-1:ABUSWIDTH-8] <= shift_register;
+                    else if (instruction == 8'h02) // Data for write
+                        data <= shift_register;
+                end
+            end
+            UPDATE_DR: begin
+                if (instruction == 8'h01) // Write instruction
+                    SEN <= 1;
+                else if (instruction == 8'h02) begin // Data for write
+                    sld_out <= data;
+                    sld_oe <= 1;
+                end
+            end
+        endcase
+    end
+
+    // TDO output
+    always @(negedge TCK) begin
+        if (tap_state == SHIFT_DR) begin
+            if (instruction == 8'h00) // Read instruction
+                TDO <= shift_register[0];
+            else if (instruction == 8'h01) // Read data
+                TDO <= SLD;
+        end else begin
+            TDO <= 1'bz;
+        end
+    end
+
+    // Memory read/write logic
+    always @(posedge BUS_CLK) begin
+        if (BUS_RST) begin
+            SEN <= 0;
+            sld_oe <= 0;
+            sld_out <= 8'b0;
+        end else if (BUS_ADD >= BASEADDR && BUS_ADD <= HIGHADDR) begin
+            if (BUS_RD) begin
+                SEN <= 1;
+                sld_oe <= 0;
+            end else if (BUS_WR) begin
+                SEN <= 1;
+                sld_out <= BUS_DATA;
+                sld_oe <= 1;
+            end else begin
+                SEN <= 0;
+                sld_oe <= 0;
+            end
+        end
+    end
+
+    // Bus data output
+    assign BUS_DATA = (BUS_RD && BUS_ADD >= BASEADDR && BUS_ADD <= HIGHADDR) ? SLD : 8'bz;
+
+    // SLD tristate buffer
+    assign SLD = sld_oe ? sld_out : 1'bz;
+
+endmodule

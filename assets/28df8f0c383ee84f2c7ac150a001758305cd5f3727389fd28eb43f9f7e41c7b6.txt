@@ -1,0 +1,11 @@
+# Bug when using RV32E (ENABLE_REGS_16_31=0)
+
+Support for rv32e is buggy.  Setting ENABLE_REGS_16_31 = 0 leads to the following:
+
+- regindex_bits will be 4 (instead of 5)
+- decoded_rs2 will be 4 bits wide (instead of 5)
+- reg_sh will be set to the 4 least significant bits of the immediate field of the instruction, instead of the full 5 bits
+- shift immediate instructions will fail (e.g. slli)
+
+Easily fixed by setting decoded_rs2 (and possibly decoded_rs1 and decoded_rs) fixed 5 bits wide, instead of having it depend on the size of the register file. 
+

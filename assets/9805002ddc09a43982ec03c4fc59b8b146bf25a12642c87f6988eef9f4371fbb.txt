@@ -1,0 +1,59 @@
+module origen_119669(
+    input [10:0] read_address,
+    input Clk,
+    output reg [3:0] data_Out
+);
+    reg [3:0] mem [0:1599];
+    
+    initial $readmemh("sprite_bytes/flappy.txt", mem);
+    
+    always @(posedge Clk)
+    begin
+        data_Out <= mem[read_address];
+    end
+endmodule
+
+module background(
+    input [18:0] read_address,
+    input Clk,
+    output reg [3:0] data_Out
+);
+    reg [3:0] membg [0:307199];
+    
+    initial $readmemh("sprite_bytes/background.txt", membg);
+    
+    always @(posedge Clk)
+    begin
+        data_Out <= membg[read_address];
+    end
+endmodule
+
+module piperam(
+    input [15:0] read_address,
+    input Clk,
+    output reg [3:0] data_Out
+);
+    reg [3:0] mempipe [0:38399];
+    
+    initial $readmemh("sprite_bytes/pipe.txt", mempipe);
+    
+    always @(posedge Clk)
+    begin
+        data_Out <= mempipe[read_address];
+    end
+endmodule
+
+module startram(
+    input [11:0] read_address,
+    input Clk,
+    output reg [3:0] data_Out
+);
+    reg [3:0] mempipe [0:4059];
+    
+    initial $readmemh("sprite_bytes/start.txt", mempipe);
+    
+    always @(posedge Clk)
+    begin
+        data_Out <= mempipe[read_address];
+    end
+endmodule

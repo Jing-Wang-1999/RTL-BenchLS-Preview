@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/172",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/170",
+  "repository": "lowRISC/ibex",
+  "pr_number": 172,
+  "issue_number": 170,
+  "verilog_files": [
+    "rtl/ibex_decoder.sv"
+  ],
+  "deletions": 2,
+  "additions": 3,
+  "patches": [
+    {
+      "filename": "rtl/ibex_decoder.sv",
+      "patch": "@@ -602,9 +602,9 @@ module ibex_decoder #(\n     end\n \n     // make sure illegal instructions detected in the decoder do not propagate from decoder\n-    // into register file, LSU, EX, WB, CSRs\n+    // into register file, LSU, EX, WB, CSRs, PC\n     // NOTE: instructions can also be detected to be illegal inside the CSRs (upon accesses with\n-    // insufficient privileges), in ID stage (when accessing Reg 16 or higher in RV32E config),\n+    // insufficient privileges), or when accessing non-available registers in RV32E,\n     // these cases are not handled here\n     if (illegal_insn) begin\n       regfile_we      = 1'b0;\n@@ -613,6 +613,7 @@ module ibex_decoder #(\n       mult_en_o       = 1'b0;\n       div_en_o        = 1'b0;\n       jump_in_dec_o   = 1'b0;\n+      jump_set_o      = 1'b0;\n       branch_in_dec_o = 1'b0;\n       csr_access_o    = 1'b0;\n     end",
+      "additions": 3,
+      "deletions": 2,
+      "changes": 5
+    }
+  ],
+  "pr_info": {
+    "title": "Decoder: avoid setting PC upon illegal JALR instructions",
+    "body": "Without this commit, the PC is still set to a possible wrong jump target on illegal JALR instructions ultimately causing the wrong PC being saved to `mepc` during the illegal instruction exception.\r\n\r\nThis bug has been reported by @taoliug. This commit resolves #170.",
+    "state": "closed",
+    "created_at": "2019-07-18T10:20:12Z",
+    "updated_at": "2019-07-19T08:15:48Z",
+    "merged_at": "2019-07-18T14:52:27Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "MEPC is not updated with correct value for illegal JALR instruction",
+    "body": "spike log\r\n\r\n```\r\ncore   0: 0xffffffff8000f720 (0x65d42c67) unknown\r\ncore   0: exception trap_illegal_instruction, epc 0xffffffff8000f720\r\ncore   0:           tval 0x0000000000000000\r\ncore   0: 0x000000008001d000 (0x00007119) addi    sp, sp, -128\r\n\r\n```\r\n0x65d42c67 is detected as illegal instruction by ibex correctly. However, seems like the core still executed the JALR instruction which causes the PC changed to some unexpected value(0x65a) and get saved to MEPC eventually.\r\n\r\nibex log:\r\n```\r\n            34443000           17123 8000f720 65d42c67 INVALID                             \r\n            34465000           17134 0000065a xxxxxxxx lui              xx, 0xxxxxx000     \r\n```\r\n![screencapture-remotedesktop-corp-google-access-session-6fd70a76-592d-4962-9324-fb0b435c9f3d-2019-07-17-21_31_58](https://user-images.githubusercontent.com/34581368/61429489-5d695880-a8db-11e9-8493-ca7f5e4068aa.png)\r\n\r\n\r\n\r\n",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "created_at": "2019-07-18T04:40:09Z",
+    "updated_at": "2019-07-18T14:52:28Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 323
+  },
+  "task_id": "lowRISC_ibex_172_170",
+  "lec_status": "useful_pass",
+  "base_commit": "f12b94c2a21dfb4779be5c4b9c460eb3f3c48323",
+  "head_commit": "24968c32d7b92eb0d8cba131ac579d83f3815497"
+}

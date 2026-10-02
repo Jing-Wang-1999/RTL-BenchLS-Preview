@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   zero_length_encoding_fsm.v0, zero_length_encoding_fsm.v1, zero_length_encoding_fsm, clock, reset
+set DESIGN_NAME_GOLDEN "zero_length_encoding_fsm.v0"
+set DESIGN_NAME "zero_length_encoding_fsm.v1"
+set TOP_NAME "zero_length_encoding_fsm"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_a0f365a138b581c4.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_a0f365a138b581c4.negative.v
+check_sec -elaborate -spec -top zero_length_encoding_fsm -disable_auto_bbox
+check_sec -elaborate -imp -top zero_length_encoding_fsm -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clock 
+reset reset
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

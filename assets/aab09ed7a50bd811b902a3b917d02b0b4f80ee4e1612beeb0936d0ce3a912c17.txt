@@ -1,0 +1,115 @@
+module origen_134216 (
+    input wire clk,
+    input wire rst_n,
+    input wire start,
+    input wire mode,
+    input wire valid_in,
+    input wire [63:0] key,
+    input wire [63:0] iv,
+    input wire [63:0] data_in,
+    output reg [63:0] data_out,
+    output reg valid_out,
+    output reg ready
+);
+
+    // DES module instantiation
+    reg [63:0] des_in, des_key;
+    wire [63:0] des_out;
+    wire des_ready;
+
+    // Assuming the DES module is defined elsewhere or needs to be implemented
+    // For now, we'll create a placeholder module
+    des_placeholder des_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .start(start),
+        .mode(mode),
+        .key(des_key),
+        .data_in(des_in),
+        .data_out(des_out),
+        .ready(des_ready)
+    );
+
+    // Internal registers
+    reg [63:0] current_iv;
+    reg [1:0] state;
+    localparam IDLE = 2'b00, PROCESS = 2'b01, OUTPUT = 2'b10;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE;
+            current_iv <= 64'b0;
+            data_out <= 64'b0;
+            valid_out <= 1'b0;
+            ready <= 1'b1;
+        end else begin
+            case (state)
+                IDLE: begin
+                    if (start) begin
+                        current_iv <= iv;
+                        state <= PROCESS;
+                        ready <= 1'b0;
+                    end
+                end
+
+                PROCESS: begin
+                    if (valid_in) begin
+                        des_key <= key;
+                        if (mode == 1'b0) begin // Encryption
+                            des_in <= data_in ^ current_iv;
+                        end else begin // Decryption
+                            des_in <= data_in;
+                        end
+                        state <= OUTPUT;
+                    end
+                end
+
+                OUTPUT: begin
+                    if (des_ready) begin
+                        if (mode == 1'b0) begin // Encryption
+                            data_out <= des_out;
+                            current_iv <= des_out;
+                        end else begin // Decryption
+                            data_out <= des_out ^ current_iv;
+                            current_iv <= data_in;
+                        end
+                        valid_out <= 1'b1;
+                        state <= IDLE;
+                        ready <= 1'b1;
+                    end
+                end
+
+                default: state <= IDLE;
+            endcase
+        end
+    end
+
+endmodule
+
+// Placeholder DES module
+module des_placeholder (
+    input wire clk,
+    input wire rst_n,
+    input wire start,
+    input wire mode,
+    input wire [63:0] key,
+    input wire [63:0] data_in,
+    output reg [63:0] data_out,
+    output reg ready
+);
+
+    // Placeholder implementation
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            data_out <= 64'b0;
+            ready <= 1'b0;
+        end else if (start) begin
+            // Simulate DES operation (replace with actual DES implementation)
+            data_out <= data_in ^ key;
+            ready <= 1'b1;
+        end else begin
+            ready <= 1'b0;
+        end
+    end
+
+endmodule

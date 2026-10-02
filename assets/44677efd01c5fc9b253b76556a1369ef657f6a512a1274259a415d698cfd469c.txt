@@ -1,0 +1,17 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Auto-generated for design vga_read_iface
+set DESIGN_NAME_GOLDEN "vga_read_iface.v0"
+set DESIGN_NAME "vga_read_iface.v1"
+set TOP_NAME "vga_read_iface"
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/${DESIGN_NAME_GOLDEN}.v
+check_sec -analyze -imp -sv ./input/rtl/${DESIGN_NAME}.v
+check_sec -elaborate -spec -top ${TOP_NAME} -disable_auto_bbox
+check_sec -elaborate -imp -top ${TOP_NAME} -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock wb_clk_i
+reset -none
+check_sec -gen
+check_sec -prove -strategy proof

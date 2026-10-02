@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.30ef34df50cb5e43c2af.e8a41cd51c1b",
+  "compile_check": {
+    "case_id": "s1derived.30ef34df50cb5e43c2af.e8a41cd51c1b",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_027682",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_027682.ac7a07578c4f6935/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.30ef34df50cb5e43c2af",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "30ef34df50cb5e43c2afc54cf69f8e6f0942d48f4fbb3d008190c65775558609",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.30ef34df50cb5e43c2af.e8a41cd51c1b",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_027682.ac7a07578c4f6935/private/commercial_positive.log",
+    "commercial_log_sha256": "abb6680feea041f12694e68d99b9c64963b3a65adef67725acd6b85607e38649",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_027682.ac7a07578c4f6935/private/historical_harness/00_sec_origen_027682.tcl",
+    "executed_script_sha256": "0203291a1009428405a6e7a913d2d362535b7c73371169bb714423e0014ed780",
+    "golden_tops": [
+      "origen_027682"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.origen_027682.ac7a07578c4f6935",
+    "parent_id": "s1p.30ef34df50cb5e43c2af",
+    "revised_tops": [
+      "origen_027682"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_027682",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.30ef34df50cb5e43c2af.e8a41cd51c1b",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Both default16-bit dividers and exact BCD time selectors match; output samples the old tone, so the stated frequencies and register delay agree.",
+        "rtl_excerpt": "alarm_radio <= F500HZ;",
+        "specification_excerpt": "pre-edge F500HZ"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.30ef34df50cb5e43c2af",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "24e504037f4659567411896798f76866f318ef11c2a94b6e15bef020d1882606",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "30ef34df50cb5e43c2afc54cf69f8e6f0942d48f4fbb3d008190c65775558609",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_027682.ac7a07578c4f6935/private/historical_harness/00_sec_origen_027682.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_027682.ac7a07578c4f6935/private/historical_harness/01_sec_origen_027682.tcl"
+  ],
+  "parent_id": "s1p.30ef34df50cb5e43c2af",
+  "primary_review": {
+    "case_id": "s1derived.30ef34df50cb5e43c2af.e8a41cd51c1b",
+    "checks": {
+      "behavior": "Trigger selection matches.",
+      "boundaries": "Full periods are 2*T clocks; names assume 50 MHz.",
+      "interface": "All ports match.",
+      "rtl_reasonableness": "The alarm generator is reasonable.",
+      "sequential_and_reset": "Active-low asynchronous reset clears counters, tones, and output."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Trigger selection matches. Active-low asynchronous reset clears counters, tones, and output.",
+        "rtl_excerpt": "counters toggle at parameter-1; alarm captures pre-edge tone registers",
+        "spec_excerpt": "Frequencies are named without system-clock assumption or parameter defaults."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The trigger patterns match, but defaults T1MS=50000/T500US=25000 and exact full periods and registered sampling are omitted.",
+        "rtl_evidence": "counters toggle at parameter-1; alarm captures pre-edge tone registers",
+        "spec_evidence": "Frequencies are named without system-clock assumption or parameter defaults.",
+        "type": "missing_parameter_defaults_and_timing"
+      }
+    ],
+    "parent_id": "s1p.30ef34df50cb5e43c2af",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.30ef34df50cb5e43c2af.e8a41cd51c1b.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "30ef34df50cb5e43c2afc54cf69f8e6f0942d48f4fbb3d008190c65775558609",
+    "source_group": "S2",
+    "specification_sha256": "e8a41cd51c1b303731bf63bcde32f4128f24faa9a0c730fc0eabcc8748ed3f03",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.30ef34df50cb5e43c2af.e8a41cd51c1b.md",
+  "qualified_specification_sha256": "24e504037f4659567411896798f76866f318ef11c2a94b6e15bef020d1882606",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_027682.ac7a07578c4f6935/private/golden_design.v",
+  "rtl_sha256": "30ef34df50cb5e43c2afc54cf69f8e6f0942d48f4fbb3d008190c65775558609",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_027682.ac7a07578c4f6935/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "e8a41cd51c1b303731bf63bcde32f4128f24faa9a0c730fc0eabcc8748ed3f03",
+  "top_module": "origen_027682"
+}

@@ -1,0 +1,40 @@
+### Instruction for LLM
+
+Design a Verilog module for a watchdog timer with functionalities for internal counter management, interrupt generation, and reset handling.
+
+1. **Primary Function**: The module should implement a watchdog timer that counts down from a preset value and generates an interrupt (`irq`) and a reset request (`resetrequest`) if the timer reaches zero without being restarted.
+
+2. **Control Flow**:
+   - The internal counter should decrement on each clock cycle when enabled, and reload a specified value upon reaching zero or a forced reload.
+   - The counter should start or stop based on specific control signals.
+   - An interrupt and reset request should be generated when a timeout occurs, which is when the counter transitions from one to zero.
+
+3. **Data Processing and Signal Interactions**:
+   - The module must handle various input signals like `address`, `chipselect`, `clk`, `reset_n`, `write_n`, and `writedata`.
+   - Use control signals (`control_wr_strobe`, `period_h_wr_strobe`, `period_l_wr_strobe`, `start_strobe`, `status_wr_strobe`) to manage the internal states and timing operations.
+   - An internal register `internal_counter` must be decremented or reloaded based on control signals and the presence of a `force_reload` condition.
+   - The output signals (`irq`, `readdata`, `resetrequest`) should be assigned based on the internal states and control register values.
+
+4. **Implementation Details**:
+   - The module should include appropriate conditional logic to handle the asynchronous reset (`reset_n`).
+   - Implement combinational logic to generate necessary strobe signals and determine when to start or stop the counter.
+   - Assign outputs such as `readdata` based on the current address and internal states.
+
+The resulting Verilog code should encapsulate these functionalities effectively, maintaining clarity around control flow and data dependencies.
+
+Module Interface:
+module watchdog_timer (
+    address,
+    chipselect,
+    clk,
+    reset_n,
+    write_n,
+    writedata,
+    irq,
+    readdata,
+    resetrequest
+);
+
+Behavioral Clarifications:
+- reset_n is active-low asynchronous. internal_counter is 20 bits and initializes to 0xF423F (999999) on reset; counter_load_value is the constant 0xF423F. readdata is 16 bits.
+- timeout_event is a rising-edge detector on counter_is_zero (current cycle zero AND previous cycle not zero). irq = timeout_occurred AND control_interrupt_enable. resetrequest = timeout_occurred. start_strobe = writedata[2] AND control_wr_strobe; do_stop_counter is hardwired to 0.

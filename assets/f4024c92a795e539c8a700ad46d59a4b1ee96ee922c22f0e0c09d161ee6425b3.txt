@@ -1,0 +1,30 @@
+module SDP_Y_INP_mgc_shift_r_v4 #(
+    parameter width_a = 4,
+    parameter signd_a = 1,
+    parameter width_s = 2,
+    parameter width_z = 8
+) (
+    input  [width_a-1:0] a,
+    input  [width_s-1:0] s,
+    output [width_z-1:0] z
+);
+
+    wire signed [width_a-1:0] a_signed;
+    wire [width_a-1:0] a_unsigned;
+    wire signed [width_z-1:0] result_signed;
+    wire [width_z-1:0] result_unsigned;
+
+    assign a_signed = a;
+    assign a_unsigned = a;
+
+    generate
+        if (signd_a == 1) begin : signed_shift
+            assign result_signed = a_signed >>> s;
+            assign z = result_signed;
+        end else begin : unsigned_shift
+            assign result_unsigned = a_unsigned >> s;
+            assign z = result_unsigned;
+        end
+    endgenerate
+
+endmodule

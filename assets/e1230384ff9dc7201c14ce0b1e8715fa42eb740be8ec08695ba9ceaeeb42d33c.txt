@@ -1,0 +1,5 @@
+# `mg_06532`
+
+Parameters `work_mode[0:0]` and `window_width[3:0]` default to 0 and 3. Inputs are `clk`, active-low `rst_n`, `in_enable`, and two `window_width*window_width`-bit vectors `template` and `in_data`. Outputs `out_ready` and `out_data` are scalar.
+
+`out_ready` clears asynchronously when reset is low or `in_enable` falls. On a rising `clk` edge with reset and enable high, it sets to one; otherwise it holds. In work mode 0, the equality result `in_data==template` is captured on every rising `clk`, regardless of reset or enable. In nonzero work mode, equality is captured on each rising edge of `in_enable`. The data register has no reset or initialization. `out_data` equals the captured comparison only while `out_ready` is one and is zero otherwise. In mode 1, a rising enable captures data immediately but ready does not assert until a later rising clock edge.

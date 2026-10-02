@@ -1,0 +1,277 @@
+always @(posedge clk_i or negedge nrst_i)
+        if(~nrst_i)
+        begin
+            state <= 14'h000;
+            lframe_o <= 1'b0;
+            wbs_ack_o <= 1'b0;
+            wbs_err_o <= 1'b0;
+            lad_oe <= 1'b0;
+            lad_o <= 4'b0;
+            adr_cnt <= 3'b0;
+            dat_cnt <= 4'h0;
+            xfr_len <= 3'b000;
+            lpc_dat_i <= 32'h00000000;
+        end
+        else begin
+            case(state)
+                14'h000:
+                    begin
+                        wbs_ack_o <= 1'b0;
+                        wbs_err_o <= 1'b0;
+                        lframe_o <= 1'b0;
+                        dat_cnt <= 4'h0;                        
+
+                        if(wbs_acc)     // Wishbone access starts LPC transaction
+                            state <= 14'h001;
+                        else
+                            state <= 14'h000;
+                    end
+                14'h001:
+                    begin
+                        lframe_o <= 1'b1;
+                        if(~fw_xfr) begin       // For Memory and I/O Cycles
+                            lad_o   <= 4'b0000;
+                            state   <= 14'h002;
+                        end
+                        else begin              // Firmware Read and Write Cycles
+                            if(wbs_wr)
+                                lad_o <= 4'b1110;
+                            else
+                                lad_o <= 4'b1101;
+                            
+                            state   <= 14'h004;
+                        end
+                        lad_oe  <= 1'b1;
+                        adr_cnt <= ((mem_xfr | fw_xfr) ? 3'b000 : 3'b100);
+                    end
+                14'h002:
+                    begin
+                        lframe_o    <= 1'b0;
+                        lad_oe  <= 1'b1;                
+
+                        if(~dma_xfr)
+                            begin
+                                lad_o   <= {1'b0,mem_xfr,wbs_wr,1'b0};      // Cycle Type/Direction for I/O or MEM
+                                state       <= 14'h004;
+                            end
+                        else // it is DMA
+                            begin
+                                lad_o   <= {1'b1,1'b0,~wbs_wr,1'b0};        // Cycle Type/Direction for DMA, r/w is inverted for DMA
+                                state       <= 14'h008;
+                            end
+                    end
+                14'h004:   // Output four nubbles of address.
+                    begin
+                        lframe_o <= 1'b0;       // In case we came here from a Firmware cycle, which skips CYCTYP.
+                        
+                        // The LPC Bus Address is sent across the bus a nibble at a time;
+                        // however, the most significant nibble is sent first.  For firmware and
+                        // memory cycles, the address is 32-bits.  Actually, for firmware accesses,
+                        // the most significant nibble is known as the IDSEL field.  For I/O,
+                        // the address is only 16-bits wide.
+                        case(adr_cnt)
+                            3'h0:
+                                lad_o <= wbs_adr_i[31:28];
+                            3'h1:
+                                lad_o <= wbs_adr_i[27:24];
+                            3'h2:
+                                lad_o <= wbs_adr_i[23:20];
+                            3'h3:
+                                lad_o <= wbs_adr_i[19:16];
+                            3'h4:
+                                lad_o <= wbs_adr_i[15:12];
+                            3'h5:
+                                lad_o <= wbs_adr_i[11:8];
+                            3'h6:
+                                lad_o <= wbs_adr_i[7:4];
+                            3'h7:
+                                lad_o <= wbs_adr_i[3:0];
+                        endcase
+                        
+                        adr_cnt <= adr_cnt + 1;
+                        
+                        if(adr_cnt == 4'h7) // Last address nibble.
+                            begin
+                                if(~fw_xfr)
+                                    if(wbs_wr)
+                                        state <= 14'h020;
+                                    else
+                                        state <= 14'h080;
+                                else    // For firmware read/write, we need to transfer the MSIZE nibble
+                                    state <= 14'h010;
+                            end
+                        else
+                            state <= 14'h004;
+        
+                        lad_oe  <= 1'b1;
+                        xfr_len     <= 3'b001;      // One Byte Transfer
+                    end
+                14'h008:
+                    begin
+                        lad_o   <= {dma_tc_i, dma_chan_i};
+                        state <= 14'h010;
+                    end
+                14'h010:
+                    begin
+                        case(wbs_sel_i)
+                            4'b0001:
+                                begin
+                                    xfr_len <= 3'b001;
+                                    lad_o <= 4'h0;
+                                end
+                            4'b0011:
+                                begin
+                                    xfr_len <= 3'b010;
+                                    lad_o <= 4'h1;
+                                end
+                            4'b1111:
+                                begin
+                                    xfr_len <= 3'b100;
+                                    if(fw_xfr)              // Firmware transfer uses '2' for 4-byte transfer.
+                                        lad_o <= 4'h2;
+                                    else                    // DMA uses '3' for 4-byte transfer.
+                                        lad_o <= 4'h3;
+                                end
+                            default:
+                                begin
+                                    xfr_len <= 3'b001;
+                                    lad_o <= 4'h0;
+                                end
+                        endcase
+                        if(wbs_wr)
+                            state <= 14'h020;
+                        else
+                            state <= 14'h080;
+                    end
+
+                14'h020:
+                    begin
+                        lad_oe  <= 1'b1;
+                        case(dat_cnt)   // We only support a single byte for I/O.
+                            4'h0:
+                                lad_o <= wbs_dat_i[3:0];
+                            4'h1:
+                                lad_o <= wbs_dat_i[7:4];
+                            4'h2:
+                                lad_o <= wbs_dat_i[11:8];
+                            4'h3:
+                                lad_o <= wbs_dat_i[15:12];
+                            4'h4:
+                                lad_o <= wbs_dat_i[19:16];
+                            4'h5:
+                                lad_o <= wbs_dat_i[23:20];
+                            4'h6:
+                                lad_o <= wbs_dat_i[27:24];
+                            4'h7:
+                                lad_o <= wbs_dat_i[31:28];
+                            default:
+                                lad_o <= 4'hx;
+                        endcase
+                        
+                        dat_cnt <= dat_cnt + 1;
+                        
+                        if(nibble_cnt == 1'b1) // end of byte
+                            begin
+                                if((fw_xfr) && (byte_cnt != xfr_len-1)) // Firmware transfer does not have TAR between bytes.
+                                    state <= 14'h020;
+                                else
+                                    state <= 14'h080;
+                            end
+                        else
+                            state <= 14'h020;
+                    end
+        
+                14'h080:
+                    begin
+                        lad_o <= 4'b1111;       // Drive LAD high
+                        lad_oe <= 1'b1;
+                        state <= 14'h100;
+                    end
+                14'h100:
+                    begin
+                        lad_oe <= 1'b0;     // float LAD
+                        state <= 14'h800;
+                    end
+                14'h800:
+                    begin
+                        lad_oe <= 1'b0;     // float LAD
+                        if((lad_i == 4'b0000) || (lad_i == 4'b1001)) begin
+                            if(wbs_wr) begin
+                                state <= 14'h200;
+                            end
+                            else begin
+                                state <= 14'h040;
+                            end
+                        end else if(lad_i == 4'b1010) begin
+                            dat_cnt <= { xfr_len, 1'b1 };    // Terminate data transfer
+                            wbs_err_o <= 1'b1;    // signal wishbone error
+                            state <= 14'h200;
+                        end else begin
+                            state <= 14'h800;
+                        end
+                    end
+        
+                14'h040:
+                    begin
+                        case(dat_cnt)
+                            4'h0:
+                                lpc_dat_i[3:0] <= lad_i;
+                            4'h1:
+                                lpc_dat_i[7:4] <= lad_i;
+                            4'h2:
+                                lpc_dat_i[11:8] <= lad_i;
+                            4'h3:
+                                lpc_dat_i[15:12] <= lad_i;
+                            4'h4:
+                                lpc_dat_i[19:16] <= lad_i;
+                            4'h5:
+                                lpc_dat_i[23:20] <= lad_i;
+                            4'h6:
+                                lpc_dat_i[27:24] <= lad_i;
+                            4'h7:
+                                lpc_dat_i[31:28] <= lad_i;
+                        endcase
+                        
+                        dat_cnt <= dat_cnt + 1;
+                        
+                        if(nibble_cnt == 1'b1)          // Byte transfer complete
+                            if (byte_cnt == xfr_len-1)  // End of data transfer phase
+                                state <= 14'h200;
+                            else begin
+                                if(fw_xfr) // Firmware transfer does not have TAR between bytes.
+                                    state <= 14'h040;
+                                else
+                                    state <= 14'h800;
+                            end
+                        else                            // Go to next nibble
+                            state <= 14'h040;
+                    end
+                14'h200:
+                    begin
+                        lad_oe <= 1'b0;
+                        if(byte_cnt == xfr_len) begin
+                            state <= 14'h400;
+                            wbs_ack_o <= wbs_acc;
+                        end
+                        else begin
+                            if(wbs_wr) begin    // DMA READ (Host to Peripheral)
+                                state <= 14'h020;
+                            end
+                            else begin  // unhandled READ case
+                                state <= 14'h000;
+                            end
+                        end
+                    end
+                14'h400:
+                    begin
+                        wbs_ack_o <= 1'b0;
+                        wbs_err_o <= 1'b0;
+                        if(wbs_acc) begin
+                            state <= 14'h400;
+                        end
+                        else begin
+                            state <= 14'h000;
+                        end
+                    end
+            endcase
+        end

@@ -1,0 +1,54 @@
+module origen_104861(
+    input wire clk,
+    input wire [7:0] A, B,
+    input wire carry_in,
+    input wire shift,
+    input wire [2:0] operation,
+    output reg [7:0] result,
+    output wire zero,
+    output reg carry_out
+);
+
+    reg [7:0] res;
+    reg c;
+
+    always @(*) begin
+        if (shift) begin
+            case (operation[1:0])
+                2'b00: {c, res} = {A, 1'b0} << B[2:0];  // Logical left shift
+                2'b01: {res, c} = {1'b0, A} >> B[2:0];  // Logical right shift
+                2'b10: begin  // Rotate left
+                    res = A;
+                    for (int i = 0; i < B[2:0]; i = i + 1)
+                        res = {res[6:0], res[7]};
+                    c = res[7];
+                end
+                2'b11: begin  // Rotate right
+                    res = A;
+                    for (int i = 0; i < B[2:0]; i = i + 1)
+                        res = {res[0], res[7:1]};
+                    c = res[0];
+                end
+            endcase
+        end else begin
+            case (operation)
+                3'b000: {c, res} = A + B;  // Addition
+                3'b001: {c, res} = A + B + carry_in;  // Addition with carry
+                3'b010: {c, res} = A - B;  // Subtraction
+                3'b011: {c, res} = A - B - carry_in;  // Subtraction with borrow
+                3'b100: begin res = A & B; c = 0; end  // Bitwise AND
+                3'b101: begin res = A | B; c = 0; end  // Bitwise OR
+                3'b110: begin res = A ^ B; c = 0; end  // Bitwise XOR
+                3'b111: begin res = ~(A & B); c = 0; end  // Bitwise NAND
+            endcase
+        end
+    end
+
+    always @(posedge clk) begin
+        result <= res;
+        carry_out <= c;
+    end
+
+    assign zero = (res == 8'b0);
+
+endmodule

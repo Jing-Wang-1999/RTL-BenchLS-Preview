@@ -1,0 +1,65 @@
+module origen_071324(
+    input Mhz50,
+    output Khz1,
+    output hzhalf
+);
+
+    wire Khz1_wire;
+
+    Mhz50toKhz1 div1 (
+        .Mhz50(Mhz50),
+        .Khz1(Khz1_wire)
+    );
+
+    Khz1tohzhalf div2 (
+        .Khz1(Khz1_wire),
+        .hzhalf(hzhalf)
+    );
+
+    assign Khz1 = Khz1_wire;
+
+endmodule
+
+module Mhz50toKhz1(
+    input Mhz50,
+    output reg Khz1
+);
+
+    parameter resetCount = 15'b0;
+    parameter fullcount = 15'b110000110101000;
+
+    reg [14:0] divideC;
+
+    always @(posedge Mhz50) begin
+        if (divideC == fullcount) begin
+            divideC <= resetCount;
+            Khz1 <= ~Khz1;
+        end
+        else begin
+            divideC <= divideC + 1'b1;
+        end
+    end
+
+endmodule
+
+module Khz1tohzhalf(
+    input Khz1,
+    output reg hzhalf
+);
+
+    parameter resetCount = 8'b0;
+    parameter fullcount = 8'b11111010;
+
+    reg [7:0] divideC;
+
+    always @(posedge Khz1) begin
+        if (divideC == fullcount) begin
+            divideC <= resetCount;
+            hzhalf <= ~hzhalf;
+        end
+        else begin
+            divideC <= divideC + 1'b1;
+        end
+    end
+
+endmodule

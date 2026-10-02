@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.07b4322e85ad1ee007d2.827b447573ef",
+  "compile_check": {
+    "case_id": "s1derived.07b4322e85ad1ee007d2.827b447573ef",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_064698",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_064698.1223c3c00553bfb4/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.07b4322e85ad1ee007d2",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "07b4322e85ad1ee007d2ad53f32f89557295749fb7d14db03ac3d81f2f71cfe3",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.07b4322e85ad1ee007d2.827b447573ef",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_064698.1223c3c00553bfb4/private/commercial_positive.log",
+    "commercial_log_sha256": "78aeb7061aeb923dea020fac637c5bfa70cbd5e31cc69d8f4bf83505026aa406",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_064698.1223c3c00553bfb4/private/historical_harness/00_sec_origen_064698.tcl",
+    "executed_script_sha256": "9e3a30b3b86a12aa41499b1a2d1b638c0041e21473547a519c0f8e84c6c4fffa",
+    "golden_tops": [
+      "origen_064698"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.origen_064698.1223c3c00553bfb4",
+    "parent_id": "s1p.07b4322e85ad1ee007d2",
+    "revised_tops": [
+      "origen_064698"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_064698",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.07b4322e85ad1ee007d2.827b447573ef",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All eight transitions, combinational alert outputs, illegal recovery, and asynchronous reset agree.",
+        "rtl_excerpt": "`s0 ... EJECA=1; ... s6 ... EJECD=1;`",
+        "spec_excerpt": "\u201cs0 EJECA=1 ... s6 EJECD=1\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.07b4322e85ad1ee007d2",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "ab22b0b92d7a7e391e4b5f1945b21914da2e9cc3c55ed7ffab17212af109a77a",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "07b4322e85ad1ee007d2ad53f32f89557295749fb7d14db03ac3d81f2f71cfe3",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_064698.1223c3c00553bfb4/private/historical_harness/00_sec_origen_064698.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_064698.1223c3c00553bfb4/private/historical_harness/01_sec_origen_064698.tcl"
+  ],
+  "parent_id": "s1p.07b4322e85ad1ee007d2",
+  "primary_review": {
+    "case_id": "s1derived.07b4322e85ad1ee007d2.827b447573ef",
+    "checks": {
+      "behavior": "The stated state transitions and asserted outputs match the case logic.",
+      "boundaries": "Invalid state returns to s0 with outputs low; each odd state has an unconditional transition and no asserted output.",
+      "interface": "All six scalar inputs and eight scalar outputs match.",
+      "rtl_reasonableness": "The FSM is reasonable after accurately specifying combinational outputs.",
+      "sequential_and_reset": "Only state is clocked with asynchronous Reset; outputs are unregistered."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The stated state transitions and asserted outputs match the case logic. Only state is clocked with asynchronous Reset; outputs are unregistered.",
+        "rtl_excerpt": "always @(*) assigns outputs from current_state and T1/T2/Humo/CS",
+        "spec_excerpt": "\u201cAll outputs are glitch-free and synchronous to the clock\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The transition table matches, but the claim that all outputs are glitch-free and synchronous is false because outputs are combinational and alerts depend directly on live inputs.",
+        "rtl_evidence": "always @(*) assigns outputs from current_state and T1/T2/Humo/CS",
+        "spec_evidence": "\u201cAll outputs are glitch-free and synchronous to the clock\u201d",
+        "type": "combinational_output_timing"
+      }
+    ],
+    "parent_id": "s1p.07b4322e85ad1ee007d2",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.07b4322e85ad1ee007d2.827b447573ef.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "07b4322e85ad1ee007d2ad53f32f89557295749fb7d14db03ac3d81f2f71cfe3",
+    "source_group": "S2",
+    "specification_sha256": "827b447573ef09b9be5018ee83586551adf0ea82aa9e2746962d4695a32e6d7c",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.07b4322e85ad1ee007d2.827b447573ef.md",
+  "qualified_specification_sha256": "ab22b0b92d7a7e391e4b5f1945b21914da2e9cc3c55ed7ffab17212af109a77a",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_064698.1223c3c00553bfb4/private/golden_design.v",
+  "rtl_sha256": "07b4322e85ad1ee007d2ad53f32f89557295749fb7d14db03ac3d81f2f71cfe3",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_064698.1223c3c00553bfb4/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "827b447573ef09b9be5018ee83586551adf0ea82aa9e2746962d4695a32e6d7c",
+  "top_module": "origen_064698"
+}

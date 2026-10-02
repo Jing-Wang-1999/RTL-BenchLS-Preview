@@ -1,0 +1,39 @@
+The Verilog module `instruction_decoder` is designed to decode a stream of serial data input from multiple sources, synchronize it, and generate decoded data along with related control signals. Here is a detailed step-by-step explanation of its purpose and operation:
+
+1. **Summary of Primary Function:**
+   The module captures and processes serial input data from two sources (`rx_in_d` and `pi_mosi_d`), combining and decoding these inputs into 8-bit bytes. It generates corresponding output data (`rx_out_d`) and local processing data (`rx_loc_d`, `rx_loc_start`, `rx_loc_stop`), as well as readiness signals (`rx_out_rdy`, `rx_loc_rdy`).
+
+2. **Key Control Flow/Decision Points:**
+   - The module operates on a clock signal (`clk`) and can be reset using the `reset` signal.
+   - Based on the readiness signals `rx_in_rdy` and `pi_mosi_rdy`, the module decides when to read data from the inputs.
+   - The `byte_pingpong` signal toggles to help assemble the 8-bit byte from 4-bit nibbles.
+   - The main state machines (`packet_jk`, `packet_jk_p1`, `packet_done`) control the start, continuation, and end of the packet processing based on specific patterns and byte count.
+
+3. **Important Data Processing/Signal Interactions:**
+   - Data shift register `byte_sr` collects 4-bit data inputs sequentially from `rx_in_d` or `pi_mosi_d` and assembles them into 8-bit bytes.
+   - The `byte_cnt` and `payload_cnt` counters keep track of the number of bytes processed and the amount of payload data remaining, respectively.
+   - When specific byte patterns (e.g., `0xF0`, `0xFF`, `0xFE`) are encountered, the module transitions between different stages of packet processing, such as starting or stopping packet capture and signaling byte readiness.
+   - The module generates the outputs (`rx_out_d`, `rx_loc_d`, `rx_loc_start`, and `rx_loc_stop`) based on the processed data and current states.
+
+The described operations ensure the sequential capturing, decoding, and control signal generation necessary to handle the given input streams effectively. These steps are governed by well-defined FSM logic and synchronized with the clock, making the module robust for various serial data processing applications.
+
+Module Interface:
+module instruction_decoder
+(
+  input  wire         clk,
+  input  wire         reset,
+  input  wire [3:0]   rx_in_d,
+  input  wire         rx_in_rdy,
+  input  wire [3:0]   pi_mosi_d,
+  input  wire         pi_mosi_rdy,
+  output wire [7:0]   rx_out_d,
+  output wire         rx_out_rdy,
+  output wire [7:0]   rx_loc_d,
+  output wire         rx_loc_rdy,
+  output wire         rx_loc_start,
+  output wire         rx_loc_stop
+);
+
+Behavioral Clarifications:
+- The module uses three separate posedge clk always blocks: nibble input and byte_sr assembly, byte boundary detection (byte_rdy, packet_jk), and header/payload processing (byte_cnt, payload_cnt, loc fields, byte_out, byte_loc).
+- A packet starts when byte_sr equals 8'hF0 and packet_jk is 0. byte_cnt saturates at 4'h4; payload_cnt is loaded from byte_sr at byte_cnt==3'h3 and decremented during payload. rx_loc_rdy and rx_out_rdy both equal byte_rdy_p1; rx_loc_stop equals packet_done.

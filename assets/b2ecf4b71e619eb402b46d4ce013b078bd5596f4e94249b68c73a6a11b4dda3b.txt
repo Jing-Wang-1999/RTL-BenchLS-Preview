@@ -1,0 +1,57 @@
+module origen_142049(
+    input wire clk,
+    input wire reset,
+    output reg [3:0] count
+);
+
+    wire [3:0] j, k;
+    wire [3:0] q;
+
+    // Combinational logic for J and K inputs
+    assign j[0] = 1'b1;
+    assign k[0] = 1'b1;
+    assign j[1] = q[0];
+    assign k[1] = q[0];
+    assign j[2] = q[1] & q[0];
+    assign k[2] = q[1] & q[0];
+    assign j[3] = q[2] & q[1] & q[0];
+    assign k[3] = q[2] & q[1] & q[0];
+
+    // JK flip-flops
+    jk_ff ff0 (.j(j[0]), .k(k[0]), .clk(clk), .reset(reset), .q(q[0]));
+    jk_ff ff1 (.j(j[1]), .k(k[1]), .clk(clk), .reset(reset), .q(q[1]));
+    jk_ff ff2 (.j(j[2]), .k(k[2]), .clk(clk), .reset(reset), .q(q[2]));
+    jk_ff ff3 (.j(j[3]), .k(k[3]), .clk(clk), .reset(reset), .q(q[3]));
+
+    // Output assignment
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            count <= 4'b0000;
+        else
+            count <= q;
+    end
+
+endmodule
+
+// JK flip-flop module
+module jk_ff(
+    input wire j,
+    input wire k,
+    input wire clk,
+    input wire reset,
+    output reg q
+);
+
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            q <= 1'b0;
+        else
+            case ({j, k})
+                2'b00: q <= q;
+                2'b01: q <= 1'b0;
+                2'b10: q <= 1'b1;
+                2'b11: q <= ~q;
+            endcase
+    end
+
+endmodule

@@ -1,0 +1,96 @@
+module origen_062861(
+    input clk, reset, enable,
+    input [3:0] D,
+    output reg [3:0] Q
+);
+    always @(posedge clk) begin
+        if (reset)
+            Q <= 4'b0000;
+        else if (enable)
+            Q <= D;
+    end
+endmodule
+
+module Counter(
+    input clk, reset, enable, bitcar,
+    input [11:0] L,
+    output reg [11:0] E
+);
+    always @(posedge clk) begin
+        if (reset)
+            E <= 12'b000000000000;
+        else if (enable)
+            E <= E + 1;
+        else if (bitcar)
+            E <= L;
+    end
+endmodule
+
+module ROM(
+    input [11:0] Lect,
+    output reg [7:0] Data
+);
+    reg [7:0] memory [0:4095];
+    
+    initial begin
+        $readmemh("memory.jmc", memory);
+    end
+    
+    always @(*) begin
+        Data = memory[Lect];
+    end
+endmodule
+
+module Fetch(
+    input clk, reset, enable2,
+    input [7:0] D8,
+    output [3:0] Q1, Q2
+);
+    FFD4 upper_bits(
+        .clk(clk),
+        .reset(reset),
+        .enable(enable2),
+        .D(D8[7:4]),
+        .Q(Q1)
+    );
+    
+    FFD4 lower_bits(
+        .clk(clk),
+        .reset(reset),
+        .enable(enable2),
+        .D(D8[3:0]),
+        .Q(Q2)
+    );
+endmodule
+
+module Main(
+    input clk, reset, enable, non, enable2,
+    input [11:0] L,
+    output [7:0] Pb,
+    output [3:0] Q1, Q2
+);
+    wire [11:0] C;
+    
+    Counter counter(
+        .clk(clk),
+        .reset(reset),
+        .enable(enable),
+        .bitcar(non),
+        .L(L),
+        .E(C)
+    );
+    
+    ROM rom(
+        .Lect(C),
+        .Data(Pb)
+    );
+    
+    Fetch fetch(
+        .clk(clk),
+        .reset(reset),
+        .enable2(enable2),
+        .D8(Pb),
+        .Q1(Q1),
+        .Q2(Q2)
+    );
+endmodule

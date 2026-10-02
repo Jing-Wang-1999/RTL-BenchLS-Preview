@@ -1,0 +1,39 @@
+The module `SDP_Y_CORE_leading_sign_49_0` is designed to analyze a 49-bit input signal, referred to as `mantissa`, and produce a 6-bit output signal, `rtn`. The primary function of this module is to determine the leading sign bits within the `mantissa` input and encode this information into the `rtn` output.
+
+### Inputs and Outputs
+
+- **Input:**
+  - `mantissa`: A 49-bit wide input signal that represents a binary number. This input is analyzed to determine the number of leading zero bits.
+
+- **Output:**
+  - `rtn`: A 6-bit wide output signal that encodes the number of leading zero bits found in the `mantissa`. This output provides a compact representation of the leading zero count.
+
+### Module Behavior
+
+The module processes the `mantissa` input to identify sequences of leading zero bits. It uses a series of logical operations to evaluate different segments of the `mantissa` and determine whether they contain zero bits. The module is structured to efficiently check pairs and groups of bits, using intermediate signals to combine results from smaller segments into larger ones.
+
+The logic within the module is organized to progressively build up the count of leading zeros by examining the `mantissa` from the most significant bit to the least significant bit. The module uses a combination of bitwise comparisons and logical operations to achieve this.
+
+### Internal Signals
+
+The module employs several intermediate signals (wires) to facilitate the computation of the leading zero count. These signals are used to store intermediate results of logical operations and comparisons between segments of the `mantissa`. They help in breaking down the problem into smaller, manageable parts, which are then combined to form the final result.
+
+### Logical Structure
+
+1. **Segment Evaluation:** The `mantissa` is divided into smaller segments, and each segment is evaluated to determine if it contains zero bits. This is done using bitwise comparisons.
+
+2. **Intermediate Results:** The results from each segment are stored in intermediate signals. These signals represent whether specific segments of the `mantissa` are entirely zero.
+
+3. **Combination of Results:** The intermediate results are logically combined to form larger segments, progressively building up to the entire `mantissa`.
+
+4. **Final Encoding:** The combined results are encoded into the 6-bit `rtn` output, representing the number of leading zero bits in the `mantissa`.
+
+### Design Considerations
+
+- **Efficiency:** The module is designed to efficiently compute the leading zero count by leveraging parallel processing of segments and minimizing the number of operations required.
+
+- **Scalability:** The approach used in this module can be adapted to different input sizes by adjusting the segment sizes and the number of intermediate signals.
+
+- **Accuracy:** The logical operations ensure that the leading zero count is accurately represented in the `rtn` output, providing a reliable measure of the leading zero bits in the `mantissa`.
+
+This module is a critical component in systems where the leading zero count of a binary number is needed, such as in floating-point arithmetic operations, data compression algorithms, and digital signal processing applications. It provides a compact and efficient means of encoding this information, facilitating further processing and analysis.

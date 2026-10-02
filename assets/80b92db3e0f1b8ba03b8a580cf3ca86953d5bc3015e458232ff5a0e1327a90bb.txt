@@ -1,0 +1,57 @@
+module autovcoder_102169 (
+    output wire LED1,  // LED1
+    output wire LED2,  // LED2
+    output wire LED3,  // LED3
+
+    input wire H1,  // sca_clk 
+    input wire H2,  // sca_data_in
+    input wire H3,  // sca_reset
+
+    input wire H4,  // flip_clk
+
+    output wire H5,  // flip_clk_out
+    output wire H6,  // xor_out
+    output wire H7,  // sca_data_out
+    input  wire H8   // xor_out_select
+);
+
+
+  wire flip_clk;
+  wire sca_clk;
+  wire sca_data_in;
+  wire sca_data_out;
+  wire sca_reset;
+
+  assign flip_clk = H4;
+
+  assign sca_clk = H1;
+  assign sca_data_in = H2;
+  assign sca_reset = H3;
+
+  //wire xor_out;
+  //assign H5 = flip_clk;
+  wire shift_out_out;
+  wire mux_in;
+
+  assign mux_in = H8;
+  assign H6 = mux_in ? sca_reset : shift_out_out;
+  assign H7 = sca_data_out;
+
+  (* S = "true" *) (* keep_hierarchy = "yes" *)
+  sca_unlock u0 (
+      flip_clk,
+      sca_reset,
+      shift_out_out,
+      sca_data_in,
+      sca_data_out,
+      mux_in,
+      sca_clk
+  );
+
+  assign LED1 = sca_clk;
+  assign LED2 = sca_data_in;
+  assign LED3 = sca_reset;
+  //assign LED3 = xor_out;
+
+endmodule
+

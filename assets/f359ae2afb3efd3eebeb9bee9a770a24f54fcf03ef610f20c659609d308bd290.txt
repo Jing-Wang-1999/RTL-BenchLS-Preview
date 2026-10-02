@@ -1,0 +1,70 @@
+module rtlpp_05211 (
+    input wire wb_clk_i,
+    input wire wb_rst_i,
+    input wire wb_cyc_i,
+    input wire wb_stb_i,
+    input wire wb_we_i,
+    input wire [7:0] wb_adr_i,
+    input wire [7:0] wb_dat_i,
+    input wire spi_scsn,
+    output wire [7:0] wb_dat_o,
+    output wire wb_ack_o,
+    output wire [0:0] spi_csn,
+    inout wire spi_clk,
+    inout wire spi_miso,
+    inout wire spi_mosi
+);
+
+    wire scuba_vhi = 1'b1;
+    wire spi_mosi_oe;
+    wire spi_mosi_o;
+    wire spi_miso_oe;
+    wire spi_miso_o;
+    wire spi_clk_oe;
+    wire spi_clk_o;
+    wire spi_mosi_i;
+    wire spi_miso_i;
+    wire spi_clk_i;
+    wire scuba_vlo = 1'b0;
+
+    // Bidirectional buffers
+    assign spi_mosi = (spi_mosi_oe) ? spi_mosi_o : 1'bz;
+    assign spi_mosi_i = spi_mosi;
+    
+    assign spi_miso = (spi_miso_oe) ? spi_miso_o : 1'bz;
+    assign spi_miso_i = spi_miso;
+    
+    assign spi_clk = (spi_clk_oe) ? spi_clk_o : 1'bz;
+    assign spi_clk_i = spi_clk;
+
+    // EFB module internal logic for simulation purposes
+    // This represents the internal working of the instantiated EFB module
+    
+    // Actual EFB module logic, registers, and state machines would be placed here based on the required functionality.
+    // Placeholder logic:
+    reg [7:0] wb_dat_o_reg;
+    reg wb_ack_o_reg;
+
+    always @(posedge wb_clk_i or posedge wb_rst_i) begin
+        if(wb_rst_i) begin
+            wb_dat_o_reg <= 8'b0;
+            wb_ack_o_reg <= 1'b0;
+        end else if(wb_cyc_i && wb_stb_i) begin
+            wb_ack_o_reg <= 1'b1;
+            if(wb_we_i) begin
+                // Write operation
+                wb_dat_o_reg <= wb_dat_i;
+            end else begin
+                // Read operation
+                wb_dat_o_reg <= {8{1'b0}}; // Dummy data, replace with actual logic
+            end
+        end else begin
+            wb_ack_o_reg <= 1'b0;
+        end
+    end
+
+    assign wb_dat_o = wb_dat_o_reg;
+    assign wb_ack_o = wb_ack_o_reg;
+    assign spi_csn[0] = spi_scsn;
+
+endmodule

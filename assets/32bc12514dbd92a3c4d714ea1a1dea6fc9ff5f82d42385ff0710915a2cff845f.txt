@@ -1,0 +1,28 @@
+The hardware specification describes three distinct modules: `origen_064019`, `ddr_clkout`, and `ddr_inbuf`.
+
+1. **Module: origen_064019**
+   - **Inputs:** 
+     - `clk`: A clock signal that synchronizes operations.
+     - `outsig`: A signal to be sampled and potentially output.
+     - `oe`: An output enable signal.
+   - **Inout:** 
+     - `pad`: A bidirectional signal line.
+   - **Behavior:** 
+     - The module samples the `outsig` and `oe` signals on the rising edge of the `clk`. The sampled values are stored in internal registers.
+     - The `pad` signal is driven by the sampled `outsig` if the sampled `oe` is active; otherwise, `pad` is set to high impedance (disconnected).
+
+2. **Module: ddr_clkout**
+   - **Input:** 
+     - `clk`: A clock signal.
+   - **Output:** 
+     - `pad`: An output signal.
+   - **Behavior:** 
+     - The module directly assigns the input `clk` signal to the output `pad`, effectively routing the clock signal to the output.
+
+3. **Module: ddr_inbuf**
+   - **Parameters:** 
+     - `WIDTH`: Defines the width of the data bus, defaulting to 32 bits.
+   - **Inputs:** 
+     - `clk`: A clock signal.
+     - `pad`: A data bus with a width defined by `WIDTH`.
+   - **

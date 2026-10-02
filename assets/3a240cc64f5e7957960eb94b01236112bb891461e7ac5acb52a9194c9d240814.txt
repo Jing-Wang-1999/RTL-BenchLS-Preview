@@ -1,0 +1,4544 @@
+// Declaration-only interfaces, fixed selected configuration. Compile veer_types.sv first.
+module dbg (
+    
+   output logic [31:0]                 dbg_cmd_addr,
+   output logic [31:0]                 dbg_cmd_wrdata,
+   output logic                        dbg_cmd_valid,
+   output logic                        dbg_cmd_write,  
+   output logic [1:0]                  dbg_cmd_type,  
+   output logic [1:0]                  dbg_cmd_size,  
+   output logic                        dbg_core_rst_l,  
+
+    
+   input logic [31:0]                  core_dbg_rddata,
+   input logic                         core_dbg_cmd_done,  
+   input logic                         core_dbg_cmd_fail,  
+
+    
+   output logic                        dbg_dma_bubble,    
+   input  logic                        dma_dbg_ready,     
+
+    
+   output logic                        dbg_halt_req,  
+   output logic                        dbg_resume_req,  
+   input  logic                        dec_tlu_debug_mode,         
+   input  logic                        dec_tlu_dbg_halted,  
+   input  logic                        dec_tlu_mpc_halted_only,    
+   input  logic                        dec_tlu_resume_ack,  
+
+    
+   input logic                         dmi_reg_en,  
+   input logic [6:0]                   dmi_reg_addr,  
+   input logic                         dmi_reg_wr_en,  
+   input logic [31:0]                  dmi_reg_wdata,  
+    
+   output logic [31:0]                 dmi_reg_rdata,  
+
+    
+    
+   output logic                        sb_axi_awvalid,
+   input  logic                        sb_axi_awready,
+   output logic [1-1:0]   sb_axi_awid,
+   output logic [31:0]                 sb_axi_awaddr,
+   output logic [3:0]                  sb_axi_awregion,
+   output logic [7:0]                  sb_axi_awlen,
+   output logic [2:0]                  sb_axi_awsize,
+   output logic [1:0]                  sb_axi_awburst,
+   output logic                        sb_axi_awlock,
+   output logic [3:0]                  sb_axi_awcache,
+   output logic [2:0]                  sb_axi_awprot,
+   output logic [3:0]                  sb_axi_awqos,
+
+   output logic                        sb_axi_wvalid,
+   input  logic                        sb_axi_wready,
+   output logic [63:0]                 sb_axi_wdata,
+   output logic [7:0]                  sb_axi_wstrb,
+   output logic                        sb_axi_wlast,
+
+   input  logic                        sb_axi_bvalid,
+   output logic                        sb_axi_bready,
+   input  logic [1:0]                  sb_axi_bresp,
+   input  logic [1-1:0]   sb_axi_bid,
+
+    
+   output logic                        sb_axi_arvalid,
+   input  logic                        sb_axi_arready,
+   output logic [1-1:0]   sb_axi_arid,
+   output logic [31:0]                 sb_axi_araddr,
+   output logic [3:0]                  sb_axi_arregion,
+   output logic [7:0]                  sb_axi_arlen,
+   output logic [2:0]                  sb_axi_arsize,
+   output logic [1:0]                  sb_axi_arburst,
+   output logic                        sb_axi_arlock,
+   output logic [3:0]                  sb_axi_arcache,
+   output logic [2:0]                  sb_axi_arprot,
+   output logic [3:0]                  sb_axi_arqos,
+
+   input  logic                        sb_axi_rvalid,
+   output logic                        sb_axi_rready,
+   input  logic [1-1:0]   sb_axi_rid,
+   input  logic [63:0]                 sb_axi_rdata,
+   input  logic [1:0]                  sb_axi_rresp,
+   input  logic                        sb_axi_rlast,
+
+   input logic                         dbg_bus_clk_en,
+
+    
+   input logic                         clk,
+   input logic                         free_clk,
+   input logic                         rst_l,             
+   input logic                         dbg_rst_l,
+   input logic                         clk_override,
+   input logic                         scan_mode
+);
+endmodule
+
+module dec
+   import veer_types::*;
+(
+   input logic clk,
+   input logic free_clk,
+   input logic active_clk,
+
+   output logic       dec_pause_state_cg,            
+
+   input logic rst_l,                         
+   input logic [31:1] rst_vec,                
+
+   input logic        nmi_int,                
+   input logic [31:1] nmi_vec,                
+
+   input logic  i_cpu_halt_req,               
+   input logic  i_cpu_run_req,                
+
+   output logic o_cpu_halt_status,            
+   output logic o_cpu_halt_ack,               
+   output logic o_cpu_run_ack,                
+   output logic o_debug_mode_status,          
+
+    
+   input logic mpc_debug_halt_req,  
+   input logic mpc_debug_run_req,  
+   input logic mpc_reset_run_req,  
+   output logic mpc_debug_halt_ack,  
+   output logic mpc_debug_run_ack,  
+   output logic debug_brkpt_status,  
+
+   output logic dec_ib0_valid_eff_d,          
+   output logic dec_ib1_valid_eff_d,
+
+   input logic       exu_pmu_i0_br_misp,      
+   input logic       exu_pmu_i0_br_ataken,    
+   input logic       exu_pmu_i0_pc4,          
+   input logic       exu_pmu_i1_br_misp,      
+   input logic       exu_pmu_i1_br_ataken,    
+   input logic       exu_pmu_i1_pc4,          
+
+   input logic                                 lsu_nonblock_load_valid_dc3,       
+   input logic [3-1:0]  lsu_nonblock_load_tag_dc3,         
+   input logic                                 lsu_nonblock_load_inv_dc5,         
+   input logic [3-1:0]  lsu_nonblock_load_inv_tag_dc5,     
+   input logic                                 lsu_nonblock_load_data_valid,      
+   input logic                                 lsu_nonblock_load_data_error,      
+   input logic [3-1:0]  lsu_nonblock_load_data_tag,        
+   input logic [31:0]                          lsu_nonblock_load_data,            
+
+   input logic       lsu_pmu_bus_trxn,        
+   input logic       lsu_pmu_bus_misaligned,  
+   input logic       lsu_pmu_bus_error,       
+   input logic       lsu_pmu_bus_busy,        
+   input logic       lsu_pmu_misaligned_dc3,  
+
+   input logic [1:0] ifu_pmu_instr_aligned,   
+   input logic       ifu_pmu_align_stall,     
+   input logic       ifu_pmu_fetch_stall,     
+   input logic       ifu_pmu_ic_miss,         
+   input logic       ifu_pmu_ic_hit,          
+   input logic       ifu_pmu_bus_error,       
+   input logic       ifu_pmu_bus_busy,        
+   input logic       ifu_pmu_bus_trxn,        
+
+   input logic [3:0]  lsu_trigger_match_dc3,
+   input logic        dbg_cmd_valid,    
+   input logic  [1:0] dbg_cmd_size,     
+   input logic        dbg_cmd_write,    
+   input logic  [1:0] dbg_cmd_type,     
+   input logic [31:0] dbg_cmd_addr,     
+   input logic  [1:0] dbg_cmd_wrdata,   
+
+   input logic   ifu_i0_icaf,           
+   input logic   ifu_i1_icaf,
+   input logic   ifu_i0_icaf_second,        
+   input logic   ifu_i1_icaf_second,
+   input logic   ifu_i0_perr,           
+   input logic   ifu_i1_perr,
+   input logic   ifu_i0_sbecc,          
+   input logic   ifu_i1_sbecc,
+   input logic   ifu_i0_dbecc,          
+   input logic   ifu_i1_dbecc,
+
+   input logic lsu_freeze_dc3,          
+   input logic lsu_idle_any,       
+   input logic lsu_halt_idle_any,       
+
+   input br_pkt_t i0_brp,               
+   input br_pkt_t i1_brp,
+
+   input    lsu_error_pkt_t lsu_error_pkt_dc3,  
+   input logic         lsu_single_ecc_error_incr,     
+
+   input logic lsu_load_ecc_stbuf_full_dc3,     
+
+   input logic         lsu_imprecise_error_load_any,    
+   input logic         lsu_imprecise_error_store_any,   
+   input logic [31:0]  lsu_imprecise_error_addr_any,    
+   input logic         lsu_freeze_external_ints_dc3,    
+
+   input logic exu_i0_flush_lower_e4,        
+   input logic exu_i1_flush_lower_e4,        
+   input logic [31:1] exu_i0_flush_path_e4,  
+   input logic [31:1] exu_i1_flush_path_e4,  
+
+   input logic [15:0] ifu_illegal_inst,      
+
+   input logic exu_div_stall,                
+   input logic [31:0]  exu_div_result,       
+   input logic exu_div_finish,               
+
+   input logic [31:0] exu_mul_result_e3,     
+
+   input logic [31:0] exu_csr_rs1_e1,        
+
+   input logic [31:0] lsu_result_dc3,        
+   input logic [31:0] lsu_result_corr_dc4,  
+
+   input logic        lsu_load_stall_any,    
+   input logic        lsu_store_stall_any,   
+   input logic        dma_dccm_stall_any,    
+   input logic        dma_iccm_stall_any,    
+
+   input logic       iccm_dma_sb_error,      
+
+   input logic        dma_mem_dccm_req,
+
+   input logic exu_i0_flush_final,           
+   input logic exu_i1_flush_final,           
+
+   input logic [31:1] exu_npc_e4,            
+
+   input logic exu_flush_final,              
+
+   input logic [31:0] exu_i0_result_e1,      
+   input logic [31:0] exu_i1_result_e1,
+
+   input logic [31:0] exu_i0_result_e4,      
+   input logic [31:0] exu_i1_result_e4,
+
+   input logic         ifu_i0_valid, ifu_i1_valid,     
+   input logic [31:0]  ifu_i0_instr, ifu_i1_instr,     
+   input logic [31:1]  ifu_i0_pc, ifu_i1_pc,           
+   input logic         ifu_i0_pc4, ifu_i1_pc4,         
+   input logic  [31:1] exu_i0_pc_e1,                   
+   input logic  [31:1] exu_i1_pc_e1,
+
+   input logic mexintpend,                             
+   input logic timer_int,                              
+
+   input logic [7:0] pic_claimid,                      
+   input logic [3:0] pic_pl,                           
+   input logic       mhwakeup,                         
+
+   output logic [3:0] dec_tlu_meicurpl,                
+   output logic [3:0] dec_tlu_meipt,                   
+
+
+   input logic [33:0] ifu_ic_debug_rd_data,            
+
+   input logic ifu_ic_debug_rd_data_valid,             
+   output cache_debug_pkt_t dec_tlu_ic_diag_pkt,       
+
+ 
+   input logic dbg_halt_req,                  
+   input logic dbg_resume_req,                
+   input logic ifu_miss_state_idle,           
+
+  output logic dec_tlu_flush_noredir_wb ,     
+   output logic dec_tlu_mpc_halted_only,  
+   output logic dec_tlu_dbg_halted,           
+   output logic dec_tlu_pmu_fw_halted,        
+   output logic dec_tlu_debug_mode,           
+   output logic dec_tlu_resume_ack,           
+   output logic dec_tlu_flush_leak_one_wb,    
+   output logic dec_tlu_flush_err_wb,         
+   output logic dec_tlu_stall_dma,            
+
+   output logic dec_debug_wdata_rs1_d,        
+
+   output logic [31:0] dec_dbg_rddata,        
+
+   output logic dec_dbg_cmd_done,             
+   output logic dec_dbg_cmd_fail,             
+
+   output trigger_pkt_t  [3:0] trigger_pkt_any,  
+
+ 
+    
+   input logic [5:4] exu_i0_br_index_e4,  
+   input logic [1:0]  exu_i0_br_hist_e4,                              
+   input logic [1:0]  exu_i0_br_bank_e4,                              
+   input logic        exu_i0_br_error_e4,                             
+   input logic        exu_i0_br_start_error_e4,                       
+   input logic        exu_i0_br_valid_e4,                             
+   input logic        exu_i0_br_mp_e4,                                
+   input logic        exu_i0_br_middle_e4,                            
+   input logic [4:0]  exu_i0_br_fghr_e4,                
+
+    
+   input logic [5:4] exu_i1_br_index_e4,  
+   input logic [1:0]  exu_i1_br_hist_e4,                              
+   input logic [1:0]  exu_i1_br_bank_e4,                              
+   input logic        exu_i1_br_error_e4,                             
+   input logic        exu_i1_br_start_error_e4,                       
+   input logic        exu_i1_br_valid_e4,                             
+   input logic        exu_i1_br_mp_e4,                                
+   input logic        exu_i1_br_middle_e4,                            
+   input logic [4:0]  exu_i1_br_fghr_e4,                
+
+
+   input logic        exu_i1_br_way_e4,              
+   input logic        exu_i0_br_way_e4,              
+
+   output logic  [31:0] gpr_i0_rs1_d,                
+   output logic  [31:0] gpr_i0_rs2_d,                
+   output logic  [31:0] gpr_i1_rs1_d,
+   output logic  [31:0] gpr_i1_rs2_d,
+
+   output logic [31:0] dec_i0_immed_d,               
+   output logic [31:0] dec_i1_immed_d,
+
+   output logic [12:1] dec_i0_br_immed_d,            
+   output logic [12:1] dec_i1_br_immed_d,
+
+   output        alu_pkt_t i0_ap,                    
+   output        alu_pkt_t i1_ap,
+
+   output logic          dec_i0_alu_decode_d,        
+   output logic          dec_i1_alu_decode_d,
+
+   output logic          dec_i0_select_pc_d,         
+   output logic          dec_i1_select_pc_d,
+
+   output logic [31:1] dec_i0_pc_d, dec_i1_pc_d,     
+   output logic         dec_i0_rs1_bypass_en_d,      
+   output logic         dec_i0_rs2_bypass_en_d,      
+   output logic         dec_i1_rs1_bypass_en_d,
+   output logic         dec_i1_rs2_bypass_en_d,
+
+   output logic [31:0] i0_rs1_bypass_data_d,        
+   output logic [31:0] i0_rs2_bypass_data_d,        
+   output logic [31:0] i1_rs1_bypass_data_d,
+   output logic [31:0] i1_rs2_bypass_data_d,
+   output logic         dec_ib3_valid_d,            
+   output logic         dec_ib2_valid_d,            
+
+   output lsu_pkt_t    lsu_p,                       
+   output mul_pkt_t    mul_p,                       
+   output div_pkt_t    div_p,                       
+
+   output logic [11:0] dec_lsu_offset_d,            
+   output logic        dec_i0_lsu_d,                
+   output logic        dec_i1_lsu_d,
+
+   output logic        flush_final_e3,              
+   output logic        i0_flush_final_e3,           
+
+   output logic        dec_csr_ren_d,               
+
+   output logic        dec_tlu_cancel_e4,           
+
+   output logic        dec_tlu_flush_lower_wb,      
+   output logic [31:1] dec_tlu_flush_path_wb,       
+   output logic        dec_tlu_i0_kill_writeb_wb,   
+   output logic        dec_tlu_i1_kill_writeb_wb,   
+   output logic        dec_tlu_fence_i_wb,          
+
+   output logic        dec_i0_mul_d,                
+   output logic        dec_i1_mul_d,
+   output logic        dec_i0_div_d,                
+   output logic        dec_i1_div_d,
+   output logic        dec_i1_valid_e1,             
+   output logic        dec_div_decode_e4,           
+   output logic [31:1] pred_correct_npc_e2,         
+
+   output logic        dec_i0_rs1_bypass_en_e3,     
+   output logic        dec_i0_rs2_bypass_en_e3,     
+   output logic        dec_i1_rs1_bypass_en_e3,
+   output logic        dec_i1_rs2_bypass_en_e3,
+   output logic [31:0] i0_rs1_bypass_data_e3,       
+   output logic [31:0] i0_rs2_bypass_data_e3,       
+   output logic [31:0] i1_rs1_bypass_data_e3,
+   output logic [31:0] i1_rs2_bypass_data_e3,
+   output logic        dec_i0_sec_decode_e3,        
+   output logic        dec_i1_sec_decode_e3,
+   output logic [31:1] dec_i0_pc_e3,                
+   output logic [31:1] dec_i1_pc_e3,
+
+   output logic        dec_i0_rs1_bypass_en_e2,     
+   output logic        dec_i0_rs2_bypass_en_e2,     
+   output logic        dec_i1_rs1_bypass_en_e2,
+   output logic        dec_i1_rs2_bypass_en_e2,
+   output logic [31:0] i0_rs1_bypass_data_e2,       
+   output logic [31:0] i0_rs2_bypass_data_e2,       
+   output logic [31:0] i1_rs1_bypass_data_e2,
+   output logic [31:0] i1_rs2_bypass_data_e2,
+
+   output br_tlu_pkt_t dec_tlu_br0_wb_pkt,          
+   output br_tlu_pkt_t dec_tlu_br1_wb_pkt,          
+
+   output logic [1:0] dec_tlu_perfcnt0,                   
+   output logic [1:0] dec_tlu_perfcnt1,                   
+   output logic [1:0] dec_tlu_perfcnt2,                   
+   output logic [1:0] dec_tlu_perfcnt3,                   
+
+   output predict_pkt_t  i0_predict_p_d,            
+   output predict_pkt_t  i1_predict_p_d,
+
+   output logic dec_i0_lsu_decode_d,                
+
+   output logic [31:0] i0_result_e4_eff,            
+   output logic [31:0] i1_result_e4_eff,
+
+   output   logic dec_tlu_i0_valid_e4,              
+   output   logic dec_tlu_i1_valid_e4,              
+
+   output logic [31:0] i0_result_e2,                
+   output logic [31:0] dec_tlu_mrac_ff,             
+
+   output logic [31:1] dec_tlu_i0_pc_e4,            
+   output logic [31:1] dec_tlu_i1_pc_e4,
+
+   output logic [4:2] dec_i0_data_en,               
+   output logic [4:1] dec_i0_ctl_en,
+   output logic [4:2] dec_i1_data_en,
+   output logic [4:1] dec_i1_ctl_en,
+
+   output logic       dec_nonblock_load_freeze_dc2,   
+
+   input logic [15:0] ifu_i0_cinst,                   
+   input logic [15:0] ifu_i1_cinst,
+
+   output trace_pkt_t  trace_rv_trace_pkt,              
+
+    
+   output logic  dec_tlu_sideeffect_posted_disable,     
+   output logic  dec_tlu_core_ecc_disable,            
+   output logic  dec_tlu_sec_alu_disable,             
+   output logic  dec_tlu_dccm_nonblock_dma_disable,  
+   output logic  dec_tlu_non_blocking_disable,        
+   output logic  dec_tlu_fast_div_disable,            
+   output logic  dec_tlu_bpred_disable,               
+   output logic  dec_tlu_wb_coalescing_disable,       
+   output logic  dec_tlu_ld_miss_byp_wb_disable,      
+   output logic [2:0]  dec_tlu_dma_qos_prty,          
+
+    
+   output logic  dec_tlu_misc_clk_override,           
+   output logic  dec_tlu_exu_clk_override,            
+   output logic  dec_tlu_ifu_clk_override,            
+   output logic  dec_tlu_lsu_clk_override,            
+   output logic  dec_tlu_bus_clk_override,            
+   output logic  dec_tlu_pic_clk_override,            
+   output logic  dec_tlu_dccm_clk_override,           
+   output logic  dec_tlu_icm_clk_override,            
+
+   input  logic        scan_mode
+
+   );
+endmodule
+
+module dec_decode_ctl
+   import veer_types::*;
+(
+   input logic [15:0] dec_i0_cinst_d,          
+   input logic [15:0] dec_i1_cinst_d,
+
+   output logic [31:0] dec_i0_inst_wb1,        
+   output logic [31:0] dec_i1_inst_wb1,
+
+   output logic [31:1] dec_i0_pc_wb1,          
+   output logic [31:1] dec_i1_pc_wb1,
+
+   input logic                                lsu_nonblock_load_valid_dc3,      
+   input logic [3-1:0] lsu_nonblock_load_tag_dc3,        
+   input logic                                lsu_nonblock_load_inv_dc5,        
+   input logic [3-1:0] lsu_nonblock_load_inv_tag_dc5,    
+   input logic                                lsu_nonblock_load_data_valid,     
+   input logic                                lsu_nonblock_load_data_error,     
+   input logic [3-1:0] lsu_nonblock_load_data_tag,       
+
+   input logic [3:0] dec_i0_trigger_match_d,           
+   input logic [3:0] dec_i1_trigger_match_d,           
+
+   input logic dec_tlu_wr_pause_wb,                    
+   input logic dec_tlu_pipelining_disable,             
+   input logic dec_tlu_dual_issue_disable,             
+
+   input logic dec_tlu_sec_alu_disable,                
+
+   input logic [3:0]  lsu_trigger_match_dc3,           
+
+   input logic lsu_pmu_misaligned_dc3,                 
+   input logic dec_tlu_debug_stall,                    
+   input logic dec_tlu_flush_leak_one_wb,              
+
+   input logic dec_debug_fence_d,                      
+
+   input logic [1:0] dbg_cmd_wrdata,                   
+
+   input logic dec_i0_icaf_d,                          
+   input logic dec_i1_icaf_d,
+   input logic dec_i0_icaf_second_d,                       
+   input logic dec_i0_perr_d,                          
+   input logic dec_i1_perr_d,
+   input logic dec_i0_sbecc_d,                         
+   input logic dec_i1_sbecc_d,
+   input logic dec_i0_dbecc_d,                         
+   input logic dec_i1_dbecc_d,
+
+   input br_pkt_t dec_i0_brp,                          
+   input br_pkt_t dec_i1_brp,
+
+   input logic [15:0] ifu_illegal_inst,                
+
+   input logic [31:1] dec_i0_pc_d,                     
+
+   input logic lsu_freeze_dc3,                         
+   input logic lsu_halt_idle_any,                      
+
+   input logic lsu_load_stall_any,                     
+   input logic lsu_store_stall_any,                    
+   input logic dma_dccm_stall_any,                     
+
+   input logic exu_div_finish,                         
+   input logic exu_div_stall,                          
+   input logic [31:0] exu_div_result,                  
+
+   input logic dec_tlu_i0_kill_writeb_wb,     
+   input logic dec_tlu_i1_kill_writeb_wb,     
+
+   input logic dec_tlu_flush_lower_wb,           
+   input logic dec_tlu_flush_pause_wb,           
+   input logic dec_tlu_presync_d,                
+   input logic dec_tlu_postsync_d,               
+
+   input logic [31:0] exu_mul_result_e3,         
+
+   input logic dec_i0_pc4_d,                
+   input logic dec_i1_pc4_d,
+
+   input logic [31:0] dec_csr_rddata_d,     
+   input logic dec_csr_legal_d,             
+
+   input logic [31:0] exu_csr_rs1_e1,       
+
+   input logic [31:0] lsu_result_dc3,       
+   input logic [31:0] lsu_result_corr_dc4,  
+
+   input logic exu_i0_flush_final,          
+   input logic exu_i1_flush_final,          
+
+   input logic [31:1] exu_i0_pc_e1,         
+   input logic [31:1] exu_i1_pc_e1,
+
+   input logic [31:0] dec_i0_instr_d,       
+   input logic [31:0] dec_i1_instr_d,
+
+   input logic  dec_ib0_valid_d,           
+   input logic  dec_ib1_valid_d,
+
+   input logic [31:0] exu_i0_result_e1,     
+   input logic [31:0] exu_i1_result_e1,
+
+   input logic [31:0] exu_i0_result_e4,     
+   input logic [31:0] exu_i1_result_e4,
+
+   input logic  clk,                        
+   input logic  active_clk,                 
+   input logic  free_clk,                   
+
+   input logic  clk_override,               
+   input logic  rst_l,
+
+   output logic         dec_i0_rs1_en_d,    
+   output logic         dec_i0_rs2_en_d,
+
+   output logic [4:0] dec_i0_rs1_d,         
+   output logic [4:0] dec_i0_rs2_d,
+
+   output logic [31:0] dec_i0_immed_d,      
+
+   output logic          dec_i1_rs1_en_d,
+   output logic          dec_i1_rs2_en_d,
+
+   output logic [4:0]  dec_i1_rs1_d,
+   output logic [4:0]  dec_i1_rs2_d,
+
+   output logic [31:0] dec_i1_immed_d,
+
+   output logic [12:1] dec_i0_br_immed_d,     
+   output logic [12:1] dec_i1_br_immed_d,
+
+   output alu_pkt_t i0_ap,                    
+   output alu_pkt_t i1_ap,
+
+   output logic          dec_i0_decode_d,     
+   output logic          dec_i1_decode_d,
+
+   output logic          dec_ib0_valid_eff_d,    
+   output logic          dec_ib1_valid_eff_d,
+
+   output logic          dec_i0_alu_decode_d,    
+   output logic          dec_i1_alu_decode_d,
+
+   output logic [31:0] i0_rs1_bypass_data_d,     
+   output logic [31:0] i0_rs2_bypass_data_d,     
+   output logic [31:0] i1_rs1_bypass_data_d,
+   output logic [31:0] i1_rs2_bypass_data_d,
+
+   output logic [4:0]  dec_i0_waddr_wb,          
+   output logic          dec_i0_wen_wb,          
+   output logic [31:0] dec_i0_wdata_wb,          
+
+   output logic [4:0]  dec_i1_waddr_wb,
+   output logic          dec_i1_wen_wb,
+   output logic [31:0] dec_i1_wdata_wb,
+
+   output logic          dec_i0_select_pc_d,     
+   output logic          dec_i1_select_pc_d,
+
+   output logic dec_i0_rs1_bypass_en_d,          
+   output logic dec_i0_rs2_bypass_en_d,          
+   output logic dec_i1_rs1_bypass_en_d,
+   output logic dec_i1_rs2_bypass_en_d,
+
+   output lsu_pkt_t    lsu_p,                    
+
+   output mul_pkt_t    mul_p,                    
+
+   output div_pkt_t    div_p,                    
+
+   output logic [11:0] dec_lsu_offset_d,
+   output logic        dec_i0_lsu_d,         
+   output logic        dec_i1_lsu_d,
+   output logic        dec_i0_mul_d,         
+   output logic        dec_i1_mul_d,
+   output logic        dec_i0_div_d,         
+   output logic        dec_i1_div_d,
+
+    
+   output logic        flush_final_e3,       
+   output logic        i0_flush_final_e3,    
+
+   output logic        dec_csr_ren_d,        
+   output logic        dec_csr_wen_unq_d,        
+   output logic        dec_csr_any_unq_d,        
+   output logic        dec_csr_wen_wb,       
+   output logic [11:0] dec_csr_rdaddr_d,       
+   output logic [11:0] dec_csr_wraddr_wb,      
+   output logic [31:0] dec_csr_wrdata_wb,    
+   output logic        dec_csr_stall_int_ff,  
+
+   output              dec_tlu_i0_valid_e4,   
+   output              dec_tlu_i1_valid_e4,
+
+   output              trap_pkt_t dec_tlu_packet_e4,    
+
+   output logic        dec_fence_pending,  
+   output logic [31:1] dec_tlu_i0_pc_e4,   
+   output logic [31:1] dec_tlu_i1_pc_e4,
+
+   output logic [31:0] dec_illegal_inst,         
+   output logic        dec_i1_valid_e1,          
+   output logic        dec_div_decode_e4,        
+   output logic [31:1] pred_correct_npc_e2,      
+   output logic        dec_i0_rs1_bypass_en_e3,  
+   output logic        dec_i0_rs2_bypass_en_e3,  
+   output logic        dec_i1_rs1_bypass_en_e3,
+   output logic        dec_i1_rs2_bypass_en_e3,
+   output logic [31:0] i0_rs1_bypass_data_e3,    
+   output logic [31:0] i0_rs2_bypass_data_e3,    
+   output logic [31:0] i1_rs1_bypass_data_e3,
+   output logic [31:0] i1_rs2_bypass_data_e3,
+   output logic        dec_i0_sec_decode_e3,     
+   output logic        dec_i1_sec_decode_e3,     
+   output logic [31:1] dec_i0_pc_e3,             
+   output logic [31:1] dec_i1_pc_e3,             
+
+   output logic        dec_i0_rs1_bypass_en_e2,  
+   output logic        dec_i0_rs2_bypass_en_e2,  
+   output logic        dec_i1_rs1_bypass_en_e2,
+   output logic        dec_i1_rs2_bypass_en_e2,
+   output logic [31:0] i0_rs1_bypass_data_e2,    
+   output logic [31:0] i0_rs2_bypass_data_e2,    
+   output logic [31:0] i1_rs1_bypass_data_e2,
+   output logic [31:0] i1_rs2_bypass_data_e2,
+
+   output predict_pkt_t  i0_predict_p_d,         
+   output predict_pkt_t  i1_predict_p_d,
+
+   output logic          dec_i0_lsu_decode_d,    
+
+   output logic [31:0] i0_result_e4_eff,         
+   output logic [31:0] i1_result_e4_eff,
+   output logic [31:0] i0_result_e2,             
+
+   output logic [4:2] dec_i0_data_en,            
+   output logic [4:1] dec_i0_ctl_en,
+   output logic [4:2] dec_i1_data_en,
+   output logic [4:1] dec_i1_ctl_en,
+
+   output logic [1:0] dec_pmu_instr_decoded,     
+   output logic       dec_pmu_decode_stall,      
+   output logic       dec_pmu_presync_stall,     
+   output logic       dec_pmu_postsync_stall,    
+
+   output logic       dec_nonblock_load_wen,         
+   output logic [4:0] dec_nonblock_load_waddr,       
+   output logic       dec_nonblock_load_freeze_dc2,  
+   output logic       dec_pause_state,               
+   output logic       dec_pause_state_cg,            
+
+   output logic       dec_i0_load_e4,           
+
+   input  logic        scan_mode
+   );
+endmodule
+
+module dec_dec_ctl
+   import veer_types::*;
+(
+   input logic [31:0] inst,
+
+   output dec_pkt_t out
+   );
+endmodule
+
+module dec_gpr_ctl #(parameter GPR_BANKS      = 1,
+                               GPR_BANKS_LOG2 = 1)  (
+    input logic active_clk,
+
+    input logic [4:0] raddr0,   
+    input logic [4:0] raddr1,
+    input logic [4:0] raddr2,
+    input logic [4:0] raddr3,
+
+    input logic       rden0,    
+    input logic       rden1,
+    input logic       rden2,
+    input logic       rden3,
+
+    input logic [4:0] waddr0,   
+    input logic [4:0] waddr1,
+    input logic [4:0] waddr2,
+
+    input logic wen0,           
+    input logic wen1,
+    input logic wen2,
+
+    input logic [31:0] wd0,     
+    input logic [31:0] wd1,
+    input logic [31:0] wd2,
+
+    input logic                      wen_bank_id,   
+    input logic [GPR_BANKS_LOG2-1:0] wr_bank_id,    
+
+    input logic       clk,
+    input logic       rst_l,
+
+    output logic [31:0] rd0,   
+    output logic [31:0] rd1,
+    output logic [31:0] rd2,
+    output logic [31:0] rd3,
+
+    input  logic        scan_mode
+);
+endmodule
+
+module dec_ib_ctl
+   import veer_types::*;
+(
+   input logic   free_clk,                     
+   input logic   active_clk,                   
+
+   input logic                 dbg_cmd_valid,   
+
+   input logic                 dbg_cmd_write,   
+   input logic [1:0]           dbg_cmd_type,    
+   input logic [1:0]           dbg_cmd_size,    
+   input logic [31:0]          dbg_cmd_addr,    
+
+   input logic exu_flush_final,                 
+
+   input logic          dec_ib0_valid_eff_d,    
+   input logic          dec_ib1_valid_eff_d,
+
+   input br_pkt_t i0_brp,                       
+   input br_pkt_t i1_brp,
+
+   input logic   ifu_i0_pc4,                    
+   input logic   ifu_i1_pc4,
+
+   input logic   ifu_i0_valid,                  
+   input logic   ifu_i1_valid,
+
+   input logic   ifu_i0_icaf,                   
+   input logic   ifu_i1_icaf,
+   input logic   ifu_i0_icaf_second,                
+   input logic   ifu_i1_icaf_second,
+   input logic   ifu_i0_perr,                   
+   input logic   ifu_i1_perr,
+   input logic   ifu_i0_sbecc,                  
+   input logic   ifu_i1_sbecc,
+   input logic   ifu_i0_dbecc,                  
+   input logic   ifu_i1_dbecc,
+
+   input logic [31:0]  ifu_i0_instr,            
+   input logic [31:0]  ifu_i1_instr,
+
+   input logic [31:1]  ifu_i0_pc,               
+   input logic [31:1] ifu_i1_pc,
+
+   input logic   dec_i0_decode_d,               
+   input logic   dec_i1_decode_d,
+
+   input logic   rst_l,                         
+   input logic   clk,
+
+   output logic dec_ib3_valid_d,                
+   output logic dec_ib2_valid_d,                
+   output logic dec_ib1_valid_d,                
+   output logic dec_ib0_valid_d,                
+
+   output logic [31:0] dec_i0_instr_d,          
+   output logic [31:0] dec_i1_instr_d,          
+
+   output logic [31:1] dec_i0_pc_d,             
+   output logic [31:1] dec_i1_pc_d,
+
+   output logic dec_i0_pc4_d,                   
+   output logic dec_i1_pc4_d,
+
+   output br_pkt_t dec_i0_brp,                  
+   output br_pkt_t dec_i1_brp,
+
+   output logic dec_i0_icaf_d,                  
+   output logic dec_i1_icaf_d,
+   output logic dec_i0_icaf_second_d,               
+   output logic dec_i0_perr_d,                  
+   output logic dec_i1_perr_d,
+   output logic dec_i0_sbecc_d,                 
+   output logic dec_i1_sbecc_d,
+   output logic dec_i0_dbecc_d,                 
+   output logic dec_i1_dbecc_d,
+   output logic dec_debug_wdata_rs1_d,          
+
+   output logic dec_debug_fence_d,              
+
+   input logic [15:0] ifu_i0_cinst,             
+   input logic [15:0] ifu_i1_cinst,
+
+   output logic [15:0] dec_i0_cinst_d,          
+   output logic [15:0] dec_i1_cinst_d,
+
+   input  logic scan_mode
+
+   );
+endmodule
+
+module dec_tlu_ctl
+   import veer_types::*;
+(
+   input logic clk,
+   input logic active_clk,
+   input logic free_clk,
+   input logic rst_l,
+   input logic scan_mode,
+
+   input logic [31:1] rst_vec,  
+   input logic        nmi_int,  
+   input logic [31:1] nmi_vec,  
+   input logic  i_cpu_halt_req,     
+   input logic  i_cpu_run_req,      
+
+   input logic mpc_debug_halt_req,  
+   input logic mpc_debug_run_req,  
+   input logic mpc_reset_run_req,  
+
+    
+   input logic [1:0] ifu_pmu_instr_aligned,    
+   input logic       ifu_pmu_align_stall,   
+   input logic       ifu_pmu_fetch_stall,  
+   input logic       ifu_pmu_ic_miss,  
+   input logic       ifu_pmu_ic_hit,  
+   input logic       ifu_pmu_bus_error,  
+   input logic       ifu_pmu_bus_busy,  
+   input logic       ifu_pmu_bus_trxn,  
+   input logic [1:0] dec_pmu_instr_decoded,  
+   input logic       dec_pmu_decode_stall,  
+   input logic       dec_pmu_presync_stall,  
+   input logic       dec_pmu_postsync_stall, 
+   input logic       lsu_freeze_dc3,          
+   input logic       lsu_store_stall_any,     
+   input logic       dma_dccm_stall_any,      
+   input logic       dma_iccm_stall_any,      
+   input logic       exu_pmu_i0_br_misp,      
+   input logic       exu_pmu_i0_br_ataken,    
+   input logic       exu_pmu_i0_pc4,          
+   input logic       exu_pmu_i1_br_misp,      
+   input logic       exu_pmu_i1_br_ataken,    
+   input logic       exu_pmu_i1_pc4,          
+   input logic       lsu_pmu_bus_trxn,        
+   input logic       lsu_pmu_bus_misaligned,  
+   input logic       lsu_pmu_bus_error,       
+   input logic       lsu_pmu_bus_busy,        
+
+   input logic        dma_mem_dccm_req,
+
+   input logic       iccm_dma_sb_error,       
+
+   input    lsu_error_pkt_t lsu_error_pkt_dc3,  
+   input logic         lsu_single_ecc_error_incr,     
+
+   input logic lsu_load_ecc_stbuf_full_dc3,     
+
+   input logic dec_pause_state,  
+   input logic         lsu_imprecise_error_store_any,       
+   input logic         lsu_imprecise_error_load_any,       
+   input logic [31:0]  lsu_imprecise_error_addr_any,  
+   input logic         lsu_freeze_external_ints_dc3,  
+
+   input logic        dec_csr_wen_unq_d,        
+   input logic        dec_csr_any_unq_d,        
+   input logic        dec_csr_wen_wb,       
+   input logic [11:0] dec_csr_rdaddr_d,       
+   input logic [11:0] dec_csr_wraddr_wb,       
+   input logic [31:0] dec_csr_wrdata_wb,    
+   input logic        dec_csr_stall_int_ff,  
+
+   input logic dec_tlu_i0_valid_e4,  
+   input logic dec_tlu_i1_valid_e4,  
+
+   input logic dec_i0_load_e4,  
+
+   input logic dec_fence_pending,  
+
+   input logic [31:1] exu_npc_e4,  
+   input logic exu_i0_flush_lower_e4,        
+   input logic exu_i1_flush_lower_e4,        
+   input logic [31:1] exu_i0_flush_path_e4,  
+   input logic [31:1] exu_i1_flush_path_e4,  
+
+   input logic [31:1] dec_tlu_i0_pc_e4,  
+   input logic [31:1] dec_tlu_i1_pc_e4,  
+
+   input trap_pkt_t dec_tlu_packet_e4,  
+
+   input logic [31:0] dec_illegal_inst,  
+   input logic        dec_i0_decode_d,   
+
+    
+   input logic [5:4] exu_i0_br_index_e4,  
+   input logic [1:0]  exu_i0_br_hist_e4,  
+   input logic [1:0]  exu_i0_br_bank_e4,  
+   input logic        exu_i0_br_error_e4,  
+   input logic        exu_i0_br_start_error_e4,  
+   input logic        exu_i0_br_valid_e4,  
+   input logic        exu_i0_br_mp_e4,  
+   input logic        exu_i0_br_middle_e4,  
+   input logic [4:0]  exu_i0_br_fghr_e4,  
+
+    
+   input logic [5:4] exu_i1_br_index_e4,  
+   input logic [1:0]  exu_i1_br_hist_e4,  
+   input logic [1:0]  exu_i1_br_bank_e4,  
+   input logic        exu_i1_br_error_e4,  
+   input logic        exu_i1_br_start_error_e4,  
+   input logic        exu_i1_br_valid_e4,  
+   input logic        exu_i1_br_mp_e4,  
+   input logic        exu_i1_br_middle_e4,  
+   input logic [4:0]  exu_i1_br_fghr_e4,  
+
+
+   input logic        exu_i1_br_way_e4,  
+   input logic        exu_i0_br_way_e4,  
+
+    
+   output logic dec_dbg_cmd_done,  
+   output logic dec_dbg_cmd_fail,  
+   output logic dec_tlu_flush_noredir_wb ,  
+   output logic dec_tlu_mpc_halted_only,  
+   output logic dec_tlu_dbg_halted,  
+   output logic dec_tlu_pmu_fw_halted,  
+   output logic dec_tlu_debug_mode,  
+   output logic dec_tlu_resume_ack,  
+   output logic dec_tlu_debug_stall,  
+   output logic dec_tlu_flush_leak_one_wb,  
+   output logic dec_tlu_flush_err_wb,  
+   output logic dec_tlu_stall_dma,  
+   input  logic dbg_halt_req,  
+   input  logic dbg_resume_req,  
+   input  logic ifu_miss_state_idle,  
+   input  logic lsu_halt_idle_any,  
+   output trigger_pkt_t  [3:0] trigger_pkt_any,  
+
+
+   input logic [33:0] ifu_ic_debug_rd_data,  
+
+   input logic ifu_ic_debug_rd_data_valid,  
+   output cache_debug_pkt_t dec_tlu_ic_diag_pkt,  
+
+   input logic [7:0] pic_claimid,  
+   input logic [3:0] pic_pl,  
+   input logic       mhwakeup,  
+
+   input logic mexintpend,  
+   input logic timer_int,  
+
+   output logic o_cpu_halt_status,  
+   output logic o_cpu_halt_ack,  
+   output logic o_cpu_run_ack,  
+   output logic o_debug_mode_status,  
+
+   output logic mpc_debug_halt_ack,  
+   output logic mpc_debug_run_ack,  
+   output logic debug_brkpt_status,  
+
+   output logic [3:0] dec_tlu_meicurpl,  
+   output logic [3:0] dec_tlu_meipt,  
+
+   output br_tlu_pkt_t dec_tlu_br0_wb_pkt,  
+   output br_tlu_pkt_t dec_tlu_br1_wb_pkt,  
+
+   output logic [31:0] dec_csr_rddata_d,       
+   output logic dec_csr_legal_d,               
+
+   output logic dec_tlu_i0_kill_writeb_wb,     
+   output logic dec_tlu_i1_kill_writeb_wb,     
+
+   output logic dec_tlu_flush_lower_wb,        
+   output logic [31:1] dec_tlu_flush_path_wb,  
+   output logic dec_tlu_fence_i_wb,            
+
+   output logic dec_tlu_presync_d,             
+   output logic dec_tlu_postsync_d,            
+
+   output logic [31:0] dec_tlu_mrac_ff,         
+
+   output logic dec_tlu_cancel_e4,              
+
+   output logic dec_tlu_wr_pause_wb,            
+   output logic dec_tlu_flush_pause_wb,         
+
+   output logic [1:0] dec_tlu_perfcnt0,  
+   output logic [1:0] dec_tlu_perfcnt1,  
+   output logic [1:0] dec_tlu_perfcnt2,  
+   output logic [1:0] dec_tlu_perfcnt3,  
+
+   output logic dec_tlu_i0_valid_wb1,   
+   output logic dec_tlu_i1_valid_wb1,   
+   output logic dec_tlu_i0_exc_valid_wb1,  
+   output logic dec_tlu_i1_exc_valid_wb1,  
+   output logic dec_tlu_int_valid_wb1,  
+   output logic [4:0] dec_tlu_exc_cause_wb1,  
+   output logic [31:0] dec_tlu_mtval_wb1,  
+
+    
+   output logic  dec_tlu_sideeffect_posted_disable,     
+   output logic  dec_tlu_dual_issue_disable,  
+   output logic  dec_tlu_core_ecc_disable,  
+   output logic  dec_tlu_sec_alu_disable,  
+   output logic  dec_tlu_dccm_nonblock_dma_disable,  
+   output logic  dec_tlu_non_blocking_disable,     
+   output logic  dec_tlu_fast_div_disable,         
+   output logic  dec_tlu_bpred_disable,            
+   output logic  dec_tlu_wb_coalescing_disable,    
+   output logic  dec_tlu_ld_miss_byp_wb_disable,   
+   output logic  dec_tlu_pipelining_disable,       
+   output logic [2:0]  dec_tlu_dma_qos_prty,     
+
+    
+   output logic  dec_tlu_misc_clk_override,  
+   output logic  dec_tlu_dec_clk_override,   
+   output logic  dec_tlu_exu_clk_override,   
+   output logic  dec_tlu_ifu_clk_override,   
+   output logic  dec_tlu_lsu_clk_override,   
+   output logic  dec_tlu_bus_clk_override,   
+   output logic  dec_tlu_pic_clk_override,   
+   output logic  dec_tlu_dccm_clk_override,  
+   output logic  dec_tlu_icm_clk_override    
+
+   );
+endmodule
+
+module dec_timer_ctl
+  (
+   input logic clk,
+   input logic free_clk,
+   input logic rst_l,
+   input logic        dec_csr_wen_wb_mod,       
+   input logic [11:0] dec_csr_rdaddr_d,       
+   input logic [11:0] dec_csr_wraddr_wb,       
+   input logic [31:0] dec_csr_wrdata_wb,    
+
+   input logic dec_pause_state,  
+   input logic dec_tlu_pmu_fw_halted,  
+   input logic internal_dbg_halt_timers,  
+
+   output logic [31:0] dec_timer_rddata_d,  
+   output logic        dec_timer_read_d,  
+   output logic        dec_timer_t0_pulse,  
+   output logic        dec_timer_t1_pulse,  
+
+   input  logic        scan_mode
+   );
+endmodule
+
+module dec_trigger
+   import veer_types::*;
+(
+   input logic         clk,
+   input logic         rst_l,
+
+   input trigger_pkt_t [3:0] trigger_pkt_any,            
+   input logic [31:1]  dec_i0_pc_d,                      
+   input logic [31:1]  dec_i1_pc_d,                      
+
+   output logic [3:0] dec_i0_trigger_match_d,
+   output logic [3:0] dec_i1_trigger_match_d
+);
+endmodule
+
+module dma_ctrl (
+   input logic         clk,
+   input logic         free_clk,
+   input logic         rst_l,
+   input logic         dma_bus_clk_en,  
+   input logic         clk_override,
+
+    
+    
+   input  logic                         dma_axi_awvalid,
+   output logic                         dma_axi_awready,
+   input  logic [1-1:0]   dma_axi_awid,
+   input  logic [31:0]                  dma_axi_awaddr,
+   input  logic [2:0]                   dma_axi_awsize,
+   input  logic [2:0]                   dma_axi_awprot,
+   input  logic [7:0]                   dma_axi_awlen,
+   input  logic [1:0]                   dma_axi_awburst,
+
+   input  logic                         dma_axi_wvalid,
+   output logic                         dma_axi_wready,
+   input  logic [63:0]                  dma_axi_wdata,
+   input  logic [7:0]                   dma_axi_wstrb,
+   input  logic                         dma_axi_wlast,
+
+   output logic                         dma_axi_bvalid,
+   input  logic                         dma_axi_bready,
+   output logic [1:0]                   dma_axi_bresp,
+   output logic [1-1:0]   dma_axi_bid,
+
+    
+   input  logic                         dma_axi_arvalid,
+   output logic                         dma_axi_arready,
+   input  logic [1-1:0]   dma_axi_arid,
+   input  logic [31:0]                  dma_axi_araddr,
+   input  logic [2:0]                   dma_axi_arsize,
+   input  logic [2:0]                   dma_axi_arprot,
+   input  logic [7:0]                   dma_axi_arlen,
+   input  logic [1:0]                   dma_axi_arburst,
+
+   output logic                         dma_axi_rvalid,
+   input  logic                         dma_axi_rready,
+   output logic [1-1:0]   dma_axi_rid,
+   output logic [63:0]                  dma_axi_rdata,
+   output logic [1:0]                   dma_axi_rresp,
+   output logic                         dma_axi_rlast,
+
+   output logic                        dma_slv_algn_err,
+    
+   input logic [31:0]  dbg_cmd_addr,
+   input logic [31:0]  dbg_cmd_wrdata,
+   input logic         dbg_cmd_valid,
+   input logic         dbg_cmd_write,  
+   input logic [1:0]   dbg_cmd_type,  
+   input logic [1:0]   dbg_cmd_size,  
+
+   input  logic        dbg_dma_bubble,    
+   output logic        dma_dbg_ready,     
+
+   output logic        dma_dbg_cmd_done,
+   output logic        dma_dbg_cmd_fail,
+   output logic [31:0] dma_dbg_rddata,
+
+    
+   output logic        dma_dccm_req,  
+   output logic        dma_iccm_req,  
+   output logic [31:0] dma_mem_addr,  
+   output logic [2:0]  dma_mem_sz,  
+   output logic        dma_mem_write,  
+   output logic [63:0] dma_mem_wdata,  
+
+   input logic         dccm_dma_rvalid,     
+   input logic         dccm_dma_ecc_error,  
+   input logic [63:0]  dccm_dma_rdata,      
+   input logic         iccm_dma_rvalid,     
+   input logic         iccm_dma_ecc_error,  
+   input logic [63:0]  iccm_dma_rdata,      
+
+   output logic        dma_dccm_stall_any,  
+   output logic        dma_iccm_stall_any,  
+   input logic         dccm_ready,  
+   input logic         iccm_ready,  
+   input logic         dec_tlu_stall_dma,  
+   input logic [2:0]   dec_tlu_dma_qos_prty,     
+
+   output logic        dma_mem_dccm_req,         
+
+   input logic         scan_mode
+);
+endmodule
+
+module dmi_jtag_to_core_sync (
+    
+   input                       rd_en,        
+   input                       wr_en,        
+
+    
+   input                       rst_n,        
+   input                       clk,          
+
+   output                      reg_en,       
+   output                      reg_wr_en     
+);
+endmodule
+
+module dmi_wrapper(
+   
+  input              trst_n,               
+  input              tck,                  
+  input              tms,                  
+  input              tdi,                  
+  output             tdo,                  
+  output             tdoEnable,            
+
+   
+  input              core_rst_n,           
+  input              core_clk,             
+  input [31:1]       jtag_id,              
+  input [31:0]       rd_data,              
+  output [31:0]      reg_wr_data,          
+  output [6:0]       reg_wr_addr,          
+  output             reg_en,               
+  output             reg_wr_en,            
+  output             dmi_hard_reset  
+);
+endmodule
+
+module rvjtag_tap #(
+parameter AWIDTH = 7
+)
+(
+input               trst,
+input               tck,
+input               tms,
+input               tdi,
+output   reg        tdo,
+output              tdoEnable,
+
+output [31:0]       wr_data,
+output [AWIDTH-1:0] wr_addr,
+output              wr_en,
+output              rd_en,
+
+input   [31:0]      rd_data,
+input   [1:0]       rd_status,
+
+output  reg         dmi_reset,
+output  reg         dmi_hard_reset,
+
+input   [2:0]       idle,
+input   [1:0]       dmi_stat,
+
+
+
+
+
+ 
+input   [31:1]      jtag_id,
+input   [3:0]       version
+);
+endmodule
+
+module exu
+   import veer_types::*;
+(
+
+   input logic clk,                                                     
+   input logic active_clk,                                              
+   input logic clk_override,                                            
+   input logic rst_l,                                                   
+   input logic scan_mode,                                               
+   input logic lsu_freeze_dc3,                                          
+
+   input logic  dec_tlu_fast_div_disable,                               
+
+   input logic [4:2] dec_i0_data_en,                                    
+   input logic [4:1] dec_i0_ctl_en,                                     
+   input logic [4:2] dec_i1_data_en,                                    
+   input logic [4:1] dec_i1_ctl_en,                                     
+
+   input logic dec_debug_wdata_rs1_d,                                   
+
+   input logic [31:0] dbg_cmd_wrdata,                                   
+
+   input logic [31:0] lsu_result_dc3,                                   
+
+   input predict_pkt_t  i0_predict_p_d,                                 
+   input predict_pkt_t  i1_predict_p_d,                                 
+
+   input logic        dec_i0_rs1_bypass_en_e2,                          
+   input logic        dec_i0_rs2_bypass_en_e2,                          
+   input logic        dec_i1_rs1_bypass_en_e2,                          
+   input logic        dec_i1_rs2_bypass_en_e2,                          
+   input logic [31:0] i0_rs1_bypass_data_e2,                            
+   input logic [31:0] i0_rs2_bypass_data_e2,                            
+   input logic [31:0] i1_rs1_bypass_data_e2,                            
+   input logic [31:0] i1_rs2_bypass_data_e2,                            
+
+   input logic        dec_i0_rs1_bypass_en_e3,                          
+   input logic        dec_i0_rs2_bypass_en_e3,                          
+   input logic        dec_i1_rs1_bypass_en_e3,                          
+   input logic        dec_i1_rs2_bypass_en_e3,                          
+   input logic [31:0] i0_rs1_bypass_data_e3,                            
+   input logic [31:0] i0_rs2_bypass_data_e3,                            
+   input logic [31:0] i1_rs1_bypass_data_e3,                            
+   input logic [31:0] i1_rs2_bypass_data_e3,                            
+
+   input logic        dec_i0_sec_decode_e3,                             
+   input logic        dec_i1_sec_decode_e3,                             
+   input logic [31:1] dec_i0_pc_e3,                                     
+   input logic [31:1] dec_i1_pc_e3,                                     
+
+   input logic [31:1] pred_correct_npc_e2,                              
+
+   input logic        dec_i1_valid_e1,                                  
+
+   input logic        dec_i0_mul_d,                                     
+   input logic        dec_i1_mul_d,                                     
+
+   input logic        dec_i0_div_d,                                     
+   input logic        dec_i1_div_d,                                     
+
+   input logic [31:0] gpr_i0_rs1_d,                                     
+   input logic [31:0] gpr_i0_rs2_d,                                     
+   input logic [31:0] dec_i0_immed_d,                                   
+
+   input logic [31:0] gpr_i1_rs1_d,                                     
+   input logic [31:0] gpr_i1_rs2_d,                                     
+   input logic [31:0] dec_i1_immed_d,                                   
+
+   input logic [31:0] i0_rs1_bypass_data_d,                             
+   input logic [31:0] i0_rs2_bypass_data_d,                             
+   input logic [31:0] i1_rs1_bypass_data_d,                             
+   input logic [31:0] i1_rs2_bypass_data_d,                             
+
+   input logic [12:1] dec_i0_br_immed_d,                                
+   input logic [12:1] dec_i1_br_immed_d,                                
+
+   input         alu_pkt_t i0_ap,                                       
+   input         alu_pkt_t i1_ap,                                       
+
+   input logic   dec_i0_alu_decode_d,                                   
+   input logic   dec_i1_alu_decode_d,                                   
+
+   input logic   dec_i0_select_pc_d,                                    
+   input logic   dec_i1_select_pc_d,                                    
+
+   input logic [31:1] dec_i0_pc_d, dec_i1_pc_d,                         
+
+   input logic  dec_i0_rs1_bypass_en_d,                                 
+   input logic  dec_i0_rs2_bypass_en_d,                                 
+   input logic  dec_i1_rs1_bypass_en_d,                                 
+   input logic  dec_i1_rs2_bypass_en_d,                                 
+
+   input logic        dec_tlu_flush_lower_wb,                           
+   input logic [31:1] dec_tlu_flush_path_wb,                            
+
+   input logic dec_tlu_i0_valid_e4,                                     
+   input logic dec_tlu_i1_valid_e4,                                     
+
+   output logic [31:0] exu_i0_result_e1,                                
+   output logic [31:0] exu_i1_result_e1,                                
+   output logic [31:1] exu_i0_pc_e1,                                    
+   output logic [31:1] exu_i1_pc_e1,                                    
+
+   output logic [31:0] exu_i0_result_e4,                                
+   output logic [31:0] exu_i1_result_e4,                                
+
+   output logic        exu_i0_flush_final,                              
+   output logic        exu_i1_flush_final,                              
+
+   input mul_pkt_t  mul_p,                                              
+
+   input div_pkt_t  div_p,                                              
+
+   input logic   dec_i0_lsu_d,                                          
+   input logic   dec_i1_lsu_d,                                          
+
+   input logic   dec_csr_ren_d,                                         
+
+   output logic [31:0] exu_lsu_rs1_d,                                   
+   output logic [31:0] exu_lsu_rs2_d,                                   
+
+   output logic [31:0] exu_csr_rs1_e1,                                  
+
+   output logic         exu_flush_final,                                
+   output logic [31:1]  exu_flush_path_final,                           
+
+   output logic [31:0] exu_mul_result_e3,                               
+
+   output logic [31:0]  exu_div_result,                                 
+   output logic exu_div_finish,                                         
+   output logic exu_div_stall,                                          
+   output logic [31:1] exu_npc_e4,                                      
+
+   output logic exu_i0_flush_lower_e4,                                  
+   output logic exu_i1_flush_lower_e4,                                  
+   output logic [31:1] exu_i0_flush_path_e4,                            
+   output logic [31:1] exu_i1_flush_path_e4,                            
+
+   output predict_pkt_t exu_mp_pkt,                                     
+
+   output logic [4:0]  exu_mp_eghr,                       
+
+   output logic [1:0]  exu_i0_br_hist_e4,                               
+   output logic [1:0]  exu_i0_br_bank_e4,                               
+   output logic        exu_i0_br_error_e4,                              
+   output logic        exu_i0_br_start_error_e4,                        
+   output logic [5:4] exu_i0_br_index_e4,   
+   output logic        exu_i0_br_valid_e4,                              
+   output logic        exu_i0_br_mp_e4,                                 
+
+   output logic        exu_i0_br_way_e4,                                
+
+   output logic        exu_i0_br_middle_e4,                             
+   output logic [4:0]  exu_i0_br_fghr_e4,                 
+   output logic        exu_i0_br_ret_e4,                                
+   output logic        exu_i0_br_call_e4,                               
+
+   output logic [1:0]  exu_i1_br_hist_e4,                               
+   output logic [1:0]  exu_i1_br_bank_e4,                               
+   output logic        exu_i1_br_error_e4,                              
+   output logic        exu_i1_br_start_error_e4,                        
+   output logic [5:4] exu_i1_br_index_e4,   
+   output logic        exu_i1_br_valid_e4,                              
+   output logic        exu_i1_br_mp_e4,                                 
+
+   output logic        exu_i1_br_way_e4,                                
+
+   output logic        exu_i1_br_middle_e4,                             
+   output logic [4:0]  exu_i1_br_fghr_e4,                 
+   output logic        exu_i1_br_ret_e4,                                
+   output logic        exu_i1_br_call_e4,                               
+   output logic        exu_flush_upper_e2,                              
+
+   output rets_pkt_t exu_rets_e1_pkt,                                   
+   output rets_pkt_t exu_rets_e4_pkt,                                   
+
+   output logic exu_pmu_i0_br_misp,                                     
+   output logic exu_pmu_i0_br_ataken,                                   
+   output logic exu_pmu_i0_pc4,                                         
+   output logic exu_pmu_i1_br_misp,                                     
+   output logic exu_pmu_i1_br_ataken,                                   
+   output logic exu_pmu_i1_pc4                                          
+
+   );
+endmodule
+
+module exu_alu_ctl
+   import veer_types::*;
+(
+   input logic  clk,                       
+   input logic  active_clk,                
+   input logic  rst_l,                     
+   input logic  scan_mode,                 
+
+   input predict_pkt_t  predict_p,         
+
+   input logic freeze,                     
+
+   input logic [31:0] a,                   
+   input logic [31:0] b,                   
+   input logic [31:1] pc,                  
+
+   input logic valid,                      
+   input logic flush,                      
+
+   input logic [12:1] brimm,               
+
+   input alu_pkt_t ap,                     
+
+   input logic  enable,                    
+
+   output logic [31:0] out,                
+
+   output logic        flush_upper,        
+   output logic [31:1] flush_path,         
+
+   output logic [31:1] pc_ff,              
+
+   output logic pred_correct,              
+   output predict_pkt_t predict_p_ff       
+
+  );
+endmodule
+
+module exu_div_ctl
+   import veer_types::*;
+(
+   input logic         clk,                        
+   input logic         active_clk,                 
+   input logic         rst_l,                      
+   input logic         scan_mode,                  
+
+   input logic         dec_tlu_fast_div_disable,   
+
+   input logic  [31:0] dividend,                   
+   input logic  [31:0] divisor,                    
+
+   input div_pkt_t     dp,                         
+
+   input logic         flush_lower,                
+
+   output logic        valid_ff_e1,                
+   output logic        finish_early,               
+   output logic        finish,                     
+   output logic        div_stall,                  
+
+   output logic [31:0] out                         
+  );
+endmodule
+
+module exu_mul_ctl
+   import veer_types::*;
+(
+   input logic         clk,               
+   input logic         active_clk,        
+   input logic         clk_override,      
+   input logic         rst_l,             
+   input logic         scan_mode,         
+
+   input logic [31:0]  a,                 
+   input logic [31:0]  b,                 
+
+   input logic [31:0]  lsu_result_dc3,    
+
+   input logic         freeze,            
+
+   input mul_pkt_t     mp,                
+
+   output logic [31:0] out                
+
+   );
+endmodule
+
+module ifu
+   import veer_types::*;
+(
+   input logic free_clk,
+   input logic active_clk,
+   input logic clk,
+   input logic clk_override,
+   input logic rst_l,
+
+   input logic dec_ib3_valid_d, dec_ib2_valid_d,  
+
+   input logic dec_ib0_valid_eff_d,    
+   input logic dec_ib1_valid_eff_d,    
+
+   input logic        exu_i0_br_ret_e4,  
+   input logic        exu_i1_br_ret_e4,  
+   input logic        exu_i0_br_call_e4,  
+   input logic        exu_i1_br_call_e4,  
+
+   input logic exu_flush_final,  
+   input logic dec_tlu_flush_err_wb ,  
+   input logic dec_tlu_flush_noredir_wb,  
+   input logic dec_tlu_dbg_halted,  
+   input logic dec_tlu_pmu_fw_halted,  
+   input logic [31:1] exu_flush_path_final,  
+   input logic        exu_flush_upper_e2,     
+
+   input logic [31:0]  dec_tlu_mrac_ff , 
+   input logic         dec_tlu_fence_i_wb,  
+   input logic         dec_tlu_flush_leak_one_wb,  
+
+   input logic                       dec_tlu_bpred_disable,  
+   input logic                       dec_tlu_core_ecc_disable,   
+
+    
+   output logic                           ifu_axi_awvalid,
+   input  logic                           ifu_axi_awready,
+   output logic [3-1:0]     ifu_axi_awid,
+   output logic [31:0]                    ifu_axi_awaddr,
+   output logic [3:0]                     ifu_axi_awregion,
+   output logic [7:0]                     ifu_axi_awlen,
+   output logic [2:0]                     ifu_axi_awsize,
+   output logic [1:0]                     ifu_axi_awburst,
+   output logic                           ifu_axi_awlock,
+   output logic [3:0]                     ifu_axi_awcache,
+   output logic [2:0]                     ifu_axi_awprot,
+   output logic [3:0]                     ifu_axi_awqos,
+
+   output logic                           ifu_axi_wvalid,
+   input  logic                           ifu_axi_wready,
+   output logic [63:0]                    ifu_axi_wdata,
+   output logic [7:0]                     ifu_axi_wstrb,
+   output logic                           ifu_axi_wlast,
+
+   input  logic                           ifu_axi_bvalid,
+   output logic                           ifu_axi_bready,
+   input  logic [1:0]                     ifu_axi_bresp,
+   input  logic [3-1:0]     ifu_axi_bid,
+
+    
+   output logic                           ifu_axi_arvalid,
+   input  logic                           ifu_axi_arready,
+   output logic [3-1:0]     ifu_axi_arid,
+   output logic [31:0]                    ifu_axi_araddr,
+   output logic [3:0]                     ifu_axi_arregion,
+   output logic [7:0]                     ifu_axi_arlen,
+   output logic [2:0]                     ifu_axi_arsize,
+   output logic [1:0]                     ifu_axi_arburst,
+   output logic                           ifu_axi_arlock,
+   output logic [3:0]                     ifu_axi_arcache,
+   output logic [2:0]                     ifu_axi_arprot,
+   output logic [3:0]                     ifu_axi_arqos,
+
+   input  logic                           ifu_axi_rvalid,
+   output logic                           ifu_axi_rready,
+   input  logic [3-1:0]     ifu_axi_rid,
+   input  logic [63:0]                    ifu_axi_rdata,
+   input  logic [1:0]                     ifu_axi_rresp,
+   input  logic                           ifu_axi_rlast,
+
+  
+ 
+   input  logic                      ifu_bus_clk_en,
+
+   input  logic                      dma_iccm_req,
+   input  logic                      dma_iccm_stall_any,
+   input  logic [31:0]               dma_mem_addr,
+   input  logic [2:0]                dma_mem_sz,
+   input  logic                      dma_mem_write,
+   input  logic [63:0]               dma_mem_wdata,
+
+   output logic                      iccm_dma_ecc_error,
+   output logic                      iccm_dma_rvalid,
+   output logic [63:0]               iccm_dma_rdata,
+   output logic                      iccm_ready,
+
+
+   output logic [1:0] ifu_pmu_instr_aligned,
+   output logic       ifu_pmu_align_stall,
+   output logic       ifu_pmu_fetch_stall,
+
+ 
+   output logic [31:2]               ic_rw_addr,          
+   output logic [3:0]                ic_wr_en,            
+   output logic                      ic_rd_en,            
+
+   output logic [67:0]               ic_wr_data,          
+   input  logic [135:0]              ic_rd_data ,         
+   input  logic [20:0]               ictag_debug_rd_data, 
+   output logic [33:0]               ic_debug_wr_data,    
+   output logic [33:0]               ifu_ic_debug_rd_data,
+
+   output logic [127:0]              ic_premux_data,      
+   output logic                      ic_sel_premux_data,  
+
+   output logic [15:2]               ic_debug_addr,       
+   output logic                      ic_debug_rd_en,      
+   output logic                      ic_debug_wr_en,      
+   output logic                      ic_debug_tag_array,  
+   output logic [3:0]                ic_debug_way,        
+
+   output logic [3:0]                ic_tag_valid,        
+
+   input  logic [3:0]                ic_rd_hit,           
+   input  logic                      ic_tag_perr,         
+
+ 
+    
+   output logic [19-1:2]               iccm_rw_addr,        
+   output logic                      iccm_wren,           
+   output logic                      iccm_rden,           
+   output logic [77:0]               iccm_wr_data,        
+   output logic [2:0]                iccm_wr_size,        
+
+   input  logic [155:0]              iccm_rd_data,        
+
+ 
+   output logic       ifu_pmu_ic_miss,  
+   output logic       ifu_pmu_ic_hit,  
+   output logic       ifu_pmu_bus_error,  
+   output logic       ifu_pmu_bus_busy,   
+   output logic       ifu_pmu_bus_trxn,  
+
+   output logic  ifu_i0_valid,         
+   output logic  ifu_i1_valid,         
+   output logic  ifu_i0_icaf,          
+   output logic  ifu_i1_icaf,          
+   output logic  ifu_i0_icaf_second,       
+   output logic  ifu_i1_icaf_second,       
+   output logic  ifu_i0_perr,          
+   output logic  ifu_i1_perr,          
+   output logic  ifu_i0_sbecc,         
+   output logic  ifu_i1_sbecc,         
+   output logic  ifu_i0_dbecc,         
+   output logic  ifu_i1_dbecc,         
+   output logic  iccm_dma_sb_error,    
+   output logic[31:0] ifu_i0_instr,    
+   output logic[31:0] ifu_i1_instr,    
+   output logic[31:1] ifu_i0_pc,       
+   output logic[31:1] ifu_i1_pc,       
+   output logic ifu_i0_pc4,            
+   output logic ifu_i1_pc4,            
+   output logic [15:0] ifu_illegal_inst,  
+
+   output logic ifu_miss_state_idle,    
+
+   output br_pkt_t i0_brp,            
+   output br_pkt_t i1_brp,            
+
+   input predict_pkt_t  exu_mp_pkt,  
+   input logic [4:0] exu_mp_eghr,  
+
+   input br_tlu_pkt_t dec_tlu_br0_wb_pkt,  
+   input br_tlu_pkt_t dec_tlu_br1_wb_pkt,  
+   input dec_tlu_flush_lower_wb,
+
+   input rets_pkt_t exu_rets_e1_pkt,  
+   input rets_pkt_t exu_rets_e4_pkt,  
+
+
+   output logic [15:0] ifu_i0_cinst,
+   output logic [15:0] ifu_i1_cinst,
+
+ 
+   input  cache_debug_pkt_t        dec_tlu_ic_diag_pkt ,
+   output logic                    ifu_ic_debug_rd_data_valid,
+
+   input logic scan_mode
+   );
+endmodule
+
+module ifu_aln_ctl
+   import veer_types::*;
+(
+
+   input logic        active_clk,
+
+   input logic        iccm_rd_ecc_single_err,          
+   input logic [7:0]  iccm_rd_ecc_double_err,          
+   input logic        ic_rd_parity_final_err,          
+
+   input logic        ifu_icache_fetch_f2,
+
+   input logic [7:0]  ic_access_fault_f2,              
+   input logic [4:0]  ifu_bp_fghr_f2,    
+   input logic [31:1] ifu_bp_btb_target_f2,            
+   input logic [11:0] ifu_bp_poffset_f2,               
+
+   input logic [7:0]  ifu_bp_hist0_f2,     
+   input logic [7:0]  ifu_bp_hist1_f2,     
+   input logic [7:0]  ifu_bp_pc4_f2,       
+
+   input logic [7:0]  ifu_bp_way_f2,       
+
+   input logic [7:0]  ifu_bp_valid_f2,     
+   input logic [7:0]  ifu_bp_ret_f2,       
+
+   input logic exu_flush_final,            
+
+   input logic dec_ib3_valid_d,            
+   input logic dec_ib2_valid_d,
+
+   input logic dec_ib0_valid_eff_d,        
+   input logic dec_ib1_valid_eff_d,
+
+   input logic [127:0] ifu_fetch_data,       
+
+   input icache_err_pkt_t ic_error_f2,       
+
+   input logic [7:0]   ifu_fetch_val,        
+   input logic [31:1]  ifu_fetch_pc,         
+
+   input logic   rst_l,
+   input logic   clk,
+   input logic   dec_tlu_core_ecc_disable,   
+
+   output logic ifu_i0_valid,             
+   output logic ifu_i1_valid,             
+   output logic ifu_i0_icaf,              
+   output logic ifu_i1_icaf,              
+   output logic ifu_i0_icaf_second,       
+   output logic ifu_i1_icaf_second,       
+   output logic ifu_i0_perr,              
+   output logic ifu_i1_perr,              
+   output logic ifu_i0_sbecc,             
+   output logic ifu_i1_sbecc,             
+   output logic ifu_i0_dbecc,             
+   output logic ifu_i1_dbecc,             
+   output logic [31:0] ifu_i0_instr,      
+   output logic [31:0] ifu_i1_instr,      
+   output logic [31:1] ifu_i0_pc,         
+   output logic [31:1] ifu_i1_pc,         
+   output logic ifu_i0_pc4,
+   output logic ifu_i1_pc4,
+
+   output logic ifu_fb_consume1,          
+   output logic ifu_fb_consume2,          
+   output logic [15:0] ifu_illegal_inst,  
+
+   output br_pkt_t i0_brp,                
+   output br_pkt_t i1_brp,                
+
+   output logic [1:0] ifu_pmu_instr_aligned,          
+   output logic       ifu_pmu_align_stall,            
+
+   output logic [16:2] ifu_icache_error_index,    
+   output logic        ifu_icache_error_val,      
+   output logic        ifu_icache_sb_error_val,
+
+   output logic [15:0] ifu_i0_cinst,                  
+   output logic [15:0] ifu_i1_cinst,                  
+
+   input  logic    scan_mode
+
+   );
+endmodule
+
+module ifu_bp_ctl
+   import veer_types::*;
+(
+
+   input logic clk,
+   input logic active_clk,
+   input logic clk_override,
+   input logic rst_l,
+
+   input logic ic_hit_f2,       
+
+   input logic [31:1] ifc_fetch_addr_f1,  
+   input logic [31:1] ifc_fetch_addr_f2,  
+   input logic ifc_fetch_req_f1,   
+   input logic ifc_fetch_req_f2,   
+
+   input br_tlu_pkt_t dec_tlu_br0_wb_pkt,  
+   input br_tlu_pkt_t dec_tlu_br1_wb_pkt,  
+
+   input logic dec_tlu_flush_lower_wb,  
+   input logic dec_tlu_flush_leak_one_wb,  
+
+   input logic dec_tlu_bpred_disable,  
+
+   input logic        exu_i0_br_ret_e4,  
+   input logic        exu_i1_br_ret_e4,  
+   input logic        exu_i0_br_call_e4,  
+   input logic        exu_i1_br_call_e4,  
+
+   input predict_pkt_t  exu_mp_pkt,  
+
+   input rets_pkt_t exu_rets_e1_pkt,  
+   input rets_pkt_t exu_rets_e4_pkt,  
+
+
+   input logic [4:0] exu_mp_eghr,  
+
+   input logic exu_flush_final,  
+   input logic exu_flush_upper_e2,  
+
+   output logic ifu_bp_kill_next_f2,  
+   output logic [31:1] ifu_bp_btb_target_f2,  
+   output logic [7:1] ifu_bp_inst_mask_f2,  
+
+   output logic [4:0] ifu_bp_fghr_f2,  
+
+
+   output logic [7:0] ifu_bp_way_f2,  
+
+   output logic [7:0] ifu_bp_ret_f2,  
+   output logic [7:0] ifu_bp_hist1_f2,  
+   output logic [7:0] ifu_bp_hist0_f2,  
+   output logic [11:0] ifu_bp_poffset_f2,  
+   output logic [7:0] ifu_bp_pc4_f2,  
+   output logic [7:0] ifu_bp_valid_f2,  
+
+   input  logic       scan_mode
+   );
+endmodule
+
+module ifu_compress_ctl
+  (
+   input  logic [15:0] din,
+   output logic [31:0] dout,
+   output logic legal
+   );
+endmodule
+
+module ifu_ic_mem
+  (
+      input logic free_clk,
+      input logic clk,
+      input logic rst_l,
+      input logic clk_override,
+      input logic dec_tlu_core_ecc_disable,
+
+      input logic [31:2]  ic_rw_addr,
+      input logic [3:0]   ic_wr_en  ,   
+      input logic         ic_rd_en  ,   
+
+      input logic [15:2]               ic_debug_addr,       
+      input logic                      ic_debug_rd_en,      
+      input logic                      ic_debug_wr_en,      
+      input logic                      ic_debug_tag_array,  
+      input logic [3:0]                ic_debug_way,        
+      input logic [127:0]              ic_premux_data,      
+      input logic                      ic_sel_premux_data,  
+
+
+      input  logic [67:0]               ic_wr_data,          
+      output logic [135:0]              ic_rd_data ,         
+      output logic [20:0]               ictag_debug_rd_data, 
+      input logic  [33:0]               ic_debug_wr_data,    
+
+      input logic [3:0]   ic_tag_valid,   
+
+      output logic [3:0]   ic_rd_hit,    
+      output logic         ic_tag_perr,  
+      input  logic         scan_mode
+      ) ;
+endmodule
+
+module IC_DATA #(parameter ICACHE_TAG_HIGH = 16 ,
+                           ICACHE_TAG_LOW=6 ,
+                           ICACHE_IC_DEPTH=1024
+                                        )
+     (
+      input logic free_clk,
+      input logic clk,
+      input logic rst_l,
+      input logic clk_override,
+
+      input logic [ICACHE_TAG_HIGH-1:2]  ic_rw_addr,
+      input logic [3:0]                  ic_wr_en,
+      input logic                        ic_rd_en,   
+
+      input  logic [67:0]               ic_wr_data,          
+      output logic [135:0]              ic_rd_data ,         
+      input  logic [33:0]               ic_debug_wr_data,    
+
+      input logic [ICACHE_TAG_HIGH-1:2]  ic_debug_addr,       
+      input logic                        ic_debug_rd_en,      
+      input logic                        ic_debug_wr_en,      
+      input logic                        ic_debug_tag_array,  
+      input logic [3:0]                  ic_debug_way,        
+      input logic [127:0]                ic_premux_data,      
+      input logic                        ic_sel_premux_data,  
+
+      input logic [3:0]          ic_rd_hit,
+
+      input  logic               scan_mode
+
+      ) ;
+endmodule
+
+module IC_TAG #(parameter ICACHE_TAG_HIGH = 16 ,
+                          ICACHE_TAG_LOW=6 ,
+                          ICACHE_TAG_DEPTH=1024
+                                        )
+     (
+      input logic free_clk,
+      input logic clk,
+      input logic rst_l,
+      input logic clk_override,
+      input logic dec_tlu_core_ecc_disable,
+
+      input logic [31:3]  ic_rw_addr,
+
+      input logic [3:0]   ic_wr_en,   
+      input logic [3:0]   ic_tag_valid,
+      input logic         ic_rd_en,
+
+      input logic [ICACHE_TAG_HIGH-1:2]  ic_debug_addr,       
+      input logic                        ic_debug_rd_en,      
+      input logic                        ic_debug_wr_en,      
+      input logic                        ic_debug_tag_array,  
+      input logic [3:0]                  ic_debug_way,        
+
+
+      output logic [20:0]  ictag_debug_rd_data,
+      input  logic [33:0]  ic_debug_wr_data,    
+
+      output logic [3:0]   ic_rd_hit,
+      output logic         ic_tag_perr,
+      input  logic         scan_mode
+
+      ) ;
+endmodule
+
+module ifu_iccm_mem
+   import veer_types::*;
+
+(
+   input logic         clk,
+   input logic         free_clk,
+   input logic         rst_l,
+   input logic         clk_override,
+
+   input logic          iccm_wren,
+   input logic          iccm_rden,
+   input logic [19-1:2]   iccm_rw_addr,
+
+   input logic [2:0]    iccm_wr_size,
+   input logic [77:0]   iccm_wr_data,
+
+   output logic [155:0] iccm_rd_data,
+   input  logic         scan_mode
+
+);
+endmodule
+
+module ifu_ifc_ctl
+  (
+   input logic clk,
+   input logic free_clk,
+   input logic active_clk,
+
+   input logic clk_override,  
+   input logic rst_l,  
+   input logic scan_mode,  
+
+   input logic ic_hit_f2,       
+   input logic ic_crit_wd_rdy,  
+   input logic ifu_ic_mb_empty,  
+
+   input logic ifu_fb_consume1,   
+   input logic ifu_fb_consume2,   
+
+   input logic dec_tlu_flush_noredir_wb,  
+   input logic dec_tlu_dbg_halted,  
+   input logic dec_tlu_pmu_fw_halted,  
+   input logic exu_flush_final,  
+   input logic [31:1] exu_flush_path_final,  
+
+   input logic ifu_bp_kill_next_f2,  
+   input logic [31:1] ifu_bp_btb_target_f2,  
+
+   input logic ic_dma_active,  
+   input logic ic_write_stall,  
+   input logic dma_iccm_stall_any,  
+
+   input logic [31:0]  dec_tlu_mrac_ff ,    
+
+   output logic  ifc_fetch_uncacheable_f1,  
+
+   output logic [31:1] ifc_fetch_addr_f1,  
+   output logic [31:1] ifc_fetch_addr_f2,   
+
+   output logic  ifc_fetch_req_f1,   
+   output logic  ifc_fetch_req_f1_raw,  
+   output logic  ifc_fetch_req_f2,   
+
+   output logic  ifu_pmu_fetch_stall,  
+
+   output logic  ifc_iccm_access_f1,  
+   output logic  ifc_region_acc_fault_f1,  
+   output logic  ifc_dma_access_ok  
+
+   );
+endmodule
+
+module ifu_mem_ctl
+   import veer_types::*;
+(
+   input logic clk,
+   input logic free_clk,                                             
+   input logic active_clk,                                           
+   input logic rst_l,
+
+   input logic                       exu_flush_final,                
+   input logic                       dec_tlu_flush_err_wb,           
+
+   input logic [31:1]                fetch_addr_f1,                  
+   input logic                       ifc_fetch_uncacheable_f1,       
+   input logic                       ifc_fetch_req_f1,               
+   input logic                       ifc_fetch_req_f1_raw,           
+   input logic                       ifc_iccm_access_f1,             
+   input logic                       ifc_region_acc_fault_f1,        
+   input logic                       ifc_dma_access_ok,              
+   input logic                       dec_tlu_fence_i_wb,             
+
+   input logic [16:6]                ifu_icache_error_index,         
+   input logic                       ifu_icache_error_val,           
+   input logic                       ifu_icache_sb_error_val,        
+   input logic [7:1]                 ifu_bp_inst_mask_f2,            
+
+   output logic                      ifu_miss_state_idle,            
+   output logic                      ifu_ic_mb_empty,                
+   output logic                      ic_dma_active  ,                
+   output logic                      ic_write_stall,                 
+
+ 
+   output logic                      ifu_pmu_ic_miss,                
+   output logic                      ifu_pmu_ic_hit,                 
+   output logic                      ifu_pmu_bus_error,              
+   output logic                      ifu_pmu_bus_busy,               
+   output logic                      ifu_pmu_bus_trxn,               
+
+    
+   output logic                           ifu_axi_awvalid,
+   input  logic                           ifu_axi_awready,
+   output logic [3-1:0]     ifu_axi_awid,
+   output logic [31:0]                    ifu_axi_awaddr,
+   output logic [3:0]                     ifu_axi_awregion,
+   output logic [7:0]                     ifu_axi_awlen,
+   output logic [2:0]                     ifu_axi_awsize,
+   output logic [1:0]                     ifu_axi_awburst,
+   output logic                           ifu_axi_awlock,
+   output logic [3:0]                     ifu_axi_awcache,
+   output logic [2:0]                     ifu_axi_awprot,
+   output logic [3:0]                     ifu_axi_awqos,
+
+   output logic                           ifu_axi_wvalid,
+   input  logic                           ifu_axi_wready,
+   output logic [63:0]                    ifu_axi_wdata,
+   output logic [7:0]                     ifu_axi_wstrb,
+   output logic                           ifu_axi_wlast,
+
+   input  logic                           ifu_axi_bvalid,
+   output logic                           ifu_axi_bready,
+   input  logic [1:0]                     ifu_axi_bresp,
+   input  logic [3-1:0]     ifu_axi_bid,
+
+    
+   output logic                           ifu_axi_arvalid,
+   input  logic                           ifu_axi_arready,
+   output logic [3-1:0]     ifu_axi_arid,
+   output logic [31:0]                    ifu_axi_araddr,
+   output logic [3:0]                     ifu_axi_arregion,
+   output logic [7:0]                     ifu_axi_arlen,
+   output logic [2:0]                     ifu_axi_arsize,
+   output logic [1:0]                     ifu_axi_arburst,
+   output logic                           ifu_axi_arlock,
+   output logic [3:0]                     ifu_axi_arcache,
+   output logic [2:0]                     ifu_axi_arprot,
+   output logic [3:0]                     ifu_axi_arqos,
+
+   input  logic                           ifu_axi_rvalid,
+   output logic                           ifu_axi_rready,
+   input  logic [3-1:0]     ifu_axi_rid,
+   input  logic [63:0]                    ifu_axi_rdata,
+   input  logic [1:0]                     ifu_axi_rresp,
+   input  logic                           ifu_axi_rlast,
+
+     
+    input  logic                     ifu_bus_clk_en,
+
+   input  logic                      dma_iccm_req,       
+   input  logic [31:0]               dma_mem_addr,       
+   input  logic [2:0]                dma_mem_sz,         
+   input  logic                      dma_mem_write,      
+   input  logic [63:0]               dma_mem_wdata,      
+
+   output logic                      iccm_dma_ecc_error, 
+   output logic                      iccm_dma_rvalid,    
+   output logic [63:0]               iccm_dma_rdata,     
+   output logic                      iccm_ready,         
+
+ 
+   output logic [31:2]               ic_rw_addr,          
+   output logic [3:0]                ic_wr_en,            
+   output logic                      ic_rd_en,            
+
+
+   output logic [67:0]               ic_wr_data,          
+   input  logic [135:0]              ic_rd_data ,         
+   input  logic [20:0]               ictag_debug_rd_data, 
+   output logic [33:0]               ic_debug_wr_data,    
+   output logic [33:0]               ifu_ic_debug_rd_data,        
+
+   output logic [15:2]               ic_debug_addr,       
+   output logic                      ic_debug_rd_en,      
+   output logic                      ic_debug_wr_en,      
+   output logic                      ic_debug_tag_array,  
+   output logic [3:0]                ic_debug_way,        
+
+   output logic [3:0]                ic_tag_valid,        
+
+   input  logic [3:0]                ic_rd_hit,           
+   input  logic                      ic_tag_perr,         
+
+ 
+    
+   output logic [19-1:2]  iccm_rw_addr,        
+   output logic                      iccm_wren,           
+   output logic                      iccm_rden,           
+   output logic [77:0]               iccm_wr_data,        
+   output logic [2:0]                iccm_wr_size,        
+
+   input  logic [155:0]              iccm_rd_data,        
+
+    
+   output logic                      ic_hit_f2,               
+   output logic                      ic_crit_wd_rdy,          
+   output logic  [7:0]               ic_access_fault_f2,      
+   output logic                      ic_rd_parity_final_err,  
+   output logic                      iccm_rd_ecc_single_err,  
+   output logic  [7:0]               iccm_rd_ecc_double_err,  
+   output logic                      iccm_dma_sb_error,       
+   output logic [7:0]                ic_fetch_val_f2,         
+   output logic [127:0]              ic_data_f2,              
+   output icache_err_pkt_t           ic_error_f2 ,            
+   output logic                      ifu_icache_fetch_f2  ,
+   output logic [127:0]              ic_premux_data,          
+   output logic                      ic_sel_premux_data,      
+
+ 
+   input  cache_debug_pkt_t          dec_tlu_ic_diag_pkt ,        
+   input  logic                      dec_tlu_core_ecc_disable,    
+   output logic                      ifu_ic_debug_rd_data_valid,  
+
+   input  logic         scan_mode
+   );
+endmodule
+
+module ahb_to_axi4 #(parameter TAG  = 1) (
+
+   input                   clk,
+   input                   rst_l,
+   input                   scan_mode,
+   input                   bus_clk_en,
+   input                   clk_override,
+
+    
+    
+   output logic            axi_awvalid,
+   input  logic            axi_awready,
+   output logic [TAG-1:0]  axi_awid,
+   output logic [31:0]     axi_awaddr,
+   output logic [2:0]      axi_awsize,
+   output logic [2:0]      axi_awprot,
+   output logic [7:0]      axi_awlen,
+   output logic [1:0]      axi_awburst,
+
+   output logic            axi_wvalid,
+   input  logic            axi_wready,
+   output logic [63:0]     axi_wdata,
+   output logic [7:0]      axi_wstrb,
+   output logic            axi_wlast,
+
+   input  logic            axi_bvalid,
+   output logic            axi_bready,
+   input  logic [1:0]      axi_bresp,
+   input  logic [TAG-1:0]  axi_bid,
+
+    
+   output logic            axi_arvalid,
+   input  logic            axi_arready,
+   output logic [TAG-1:0]  axi_arid,
+   output logic [31:0]     axi_araddr,
+   output logic [2:0]      axi_arsize,
+   output logic [2:0]      axi_arprot,
+   output logic [7:0]      axi_arlen,
+   output logic [1:0]      axi_arburst,
+
+   input  logic            axi_rvalid,
+   output logic            axi_rready,
+   input  logic [TAG-1:0]  axi_rid,
+   input  logic [63:0]     axi_rdata,
+   input  logic [1:0]      axi_rresp,
+
+    
+   input logic [31:0]      ahb_haddr,      
+   input logic [2:0]       ahb_hburst,     
+   input logic             ahb_hmastlock,  
+   input logic [3:0]       ahb_hprot,      
+   input logic [2:0]       ahb_hsize,      
+   input logic [1:0]       ahb_htrans,     
+   input logic             ahb_hwrite,     
+   input logic [63:0]      ahb_hwdata,     
+   input logic             ahb_hsel,       
+   input logic             ahb_hreadyin,   
+
+   output logic [63:0]      ahb_hrdata,       
+   output logic             ahb_hreadyout,    
+   output logic             ahb_hresp         
+
+);
+endmodule
+
+module axi4_to_ahb #(parameter TAG  = 1) (
+
+   input                   clk,
+   input                   rst_l,
+   input                   scan_mode,
+   input                   bus_clk_en,
+   input                   clk_override,
+
+    
+    
+   input  logic            axi_awvalid,
+   output logic            axi_awready,
+   input  logic [TAG-1:0]  axi_awid,
+   input  logic [31:0]     axi_awaddr,
+   input  logic [2:0]      axi_awsize,
+   input  logic [2:0]      axi_awprot,
+
+   input  logic            axi_wvalid,
+   output logic            axi_wready,
+   input  logic [63:0]     axi_wdata,
+   input  logic [7:0]      axi_wstrb,
+   input  logic            axi_wlast,
+
+   output logic            axi_bvalid,
+   input  logic            axi_bready,
+   output logic [1:0]      axi_bresp,
+   output logic [TAG-1:0]  axi_bid,
+
+    
+   input  logic            axi_arvalid,
+   output logic            axi_arready,
+   input  logic [TAG-1:0]  axi_arid,
+   input  logic [31:0]     axi_araddr,
+   input  logic [2:0]      axi_arsize,
+   input  logic [2:0]      axi_arprot,
+
+   output logic            axi_rvalid,
+   input  logic            axi_rready,
+   output logic [TAG-1:0]  axi_rid,
+   output logic [63:0]     axi_rdata,
+   output logic [1:0]      axi_rresp,
+   output logic            axi_rlast,
+
+    
+   output logic [31:0]     ahb_haddr,        
+   output logic [2:0]      ahb_hburst,       
+   output logic            ahb_hmastlock,    
+   output logic [3:0]      ahb_hprot,        
+   output logic [2:0]      ahb_hsize,        
+   output logic [1:0]      ahb_htrans,       
+   output logic            ahb_hwrite,       
+   output logic [63:0]     ahb_hwdata,       
+
+   input logic [63:0]      ahb_hrdata,       
+   input logic             ahb_hready,       
+   input logic             ahb_hresp         
+
+);
+endmodule
+
+module rvdff #( parameter WIDTH=1 )
+   (
+     input logic [WIDTH-1:0] din,
+     input logic           clk,
+     input logic                   rst_l,
+
+     output logic [WIDTH-1:0] dout
+     );
+endmodule
+
+module rvdffs #( parameter WIDTH=1 )
+   (
+     input logic [WIDTH-1:0] din,
+     input logic             en,
+     input logic           clk,
+     input logic                   rst_l,
+     output logic [WIDTH-1:0] dout
+     );
+endmodule
+
+module rvdffsc #( parameter WIDTH=1 )
+   (
+     input logic [WIDTH-1:0] din,
+     input logic             en,
+     input logic             clear,
+     input logic           clk,
+     input logic                   rst_l,
+     output logic [WIDTH-1:0] dout
+     );
+endmodule
+
+module rvdff_fpga #( parameter WIDTH=1 )
+   (
+     input logic [WIDTH-1:0] din,
+     input logic           clk,
+     input logic           clken,
+     input logic           rawclk,
+     input logic           rst_l,
+     input logic           scan_mode,
+
+     output logic [WIDTH-1:0] dout
+     );
+endmodule
+
+module rvdffs_fpga #( parameter WIDTH=1 )
+   (
+     input logic [WIDTH-1:0] din,
+     input logic             en,
+     input logic           clk,
+     input logic           clken,
+     input logic           rawclk,
+     input logic           rst_l,
+     input logic           scan_mode,
+     output logic [WIDTH-1:0] dout
+     );
+endmodule
+
+module rvdffsc_fpga #( parameter WIDTH=1 )
+   (
+     input logic [WIDTH-1:0] din,
+     input logic             en,
+     input logic             clear,
+     input logic             clk,
+     input logic             clken,
+     input logic             rawclk,
+     input logic             rst_l,
+     input logic             scan_mode,
+     output logic [WIDTH-1:0] dout
+     );
+endmodule
+
+module clockhdr
+  (
+   input logic TE, E, CP,
+   output Q
+   );
+endmodule
+
+module rvoclkhdr
+  (
+   input  logic en,
+   input  logic clk,
+   input  logic scan_mode,
+   output logic l1clk
+   );
+endmodule
+
+module rvdffe #( parameter WIDTH=1, parameter OVERRIDE=0 )
+   (
+     input  logic [WIDTH-1:0] din,
+     input  logic           en,
+     input  logic           clk,
+     input  logic           rst_l,
+     input  logic             scan_mode,
+     output logic [WIDTH-1:0] dout
+     );
+endmodule
+
+module rvsyncss #(parameter WIDTH = 251)
+   (
+     input  logic                 clk,
+     input  logic                 rst_l,
+     input  logic [WIDTH-1:0]     din,
+     output logic [WIDTH-1:0]     dout
+     );
+endmodule
+
+module rvlsadder
+  (
+    input logic [31:0] rs1,
+    input logic [11:0] offset,
+
+    output logic [31:0] dout
+    );
+endmodule
+
+module rvbradder
+  (
+    input [31:1] pc,
+    input [12:1] offset,
+
+    output [31:1] dout
+    );
+endmodule
+
+module rvtwoscomp #( parameter WIDTH=32 )
+   (
+     input logic [WIDTH-1:0] din,
+
+     output logic [WIDTH-1:0] dout
+     );
+endmodule
+
+module rvfindfirst1 #( parameter WIDTH=32, SHIFT=$clog2(WIDTH) )
+   (
+     input logic [WIDTH-1:0] din,
+
+     output logic [SHIFT-1:0] dout
+     );
+endmodule
+
+module rvfindfirst1hot #( parameter WIDTH=32 )
+   (
+     input logic [WIDTH-1:0] din,
+
+     output logic [WIDTH-1:0] dout
+     );
+endmodule
+
+module rvmaskandmatch #( parameter WIDTH=32 )
+   (
+     input  logic [WIDTH-1:0] mask,      
+     input  logic [WIDTH-1:0] data,      
+     input  logic             masken,    
+     output logic             match
+     );
+endmodule
+
+module rvbtb_tag_hash (
+                       input logic [31:1] pc,
+                       output logic [9-1:0] hash
+                       );
+endmodule
+
+module rvbtb_addr_hash (
+                        input logic [31:1] pc,
+                        output logic [5:4] hash
+                        );
+endmodule
+
+module rvbtb_ghr_hash (
+                       input logic [5:4] hashin,
+                       input logic [4:0] ghr,
+                       output logic [7:4] hash
+                       );
+endmodule
+
+module rvrangecheck  #(CCM_SADR = 32'h0,
+                       CCM_SIZE  = 128) (
+   input  logic [31:0]   addr,                              
+   output logic          in_range,                             
+   output logic          in_region
+);
+endmodule
+
+module rveven_paritygen #(WIDTH = 16)  (
+                                         input  logic [WIDTH-1:0]  data_in,          
+                                         output logic              parity_out        
+                                         );
+endmodule
+
+module rveven_paritycheck #(WIDTH = 16)  (
+                                           input  logic [WIDTH-1:0]  data_in,          
+                                           input  logic              parity_in,
+                                           output logic              parity_err        
+                                           );
+endmodule
+
+module rvecc_encode  (
+                      input [31:0] din,
+                      output [6:0] ecc_out
+                      );
+endmodule
+
+module rvecc_decode  (
+                      input         en,
+                      input [31:0]  din,
+                      input [6:0]   ecc_in,
+                      input         sed_ded,     
+                      output [31:0] dout,
+                      output [6:0]  ecc_out,
+                      output        single_ecc_error,
+                      output        double_ecc_error
+
+                      );
+endmodule
+
+module ram_32768x39
+  ( input logic CLK,
+    input logic [14:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_16384x39
+  ( input logic CLK,
+    input logic [13:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_8192x39
+  ( input logic CLK,
+    input logic [12:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_4096x39
+  ( input logic CLK,
+    input logic [11:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_3072x39
+  ( input logic CLK,
+    input logic [11:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_2048x39
+  ( input logic CLK,
+    input logic [10:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_1536x39      
+  ( input logic CLK,
+    input logic [10:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_1024x39
+  ( input logic CLK,
+    input logic [9:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_768x39
+  ( input logic CLK,
+    input logic [9:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_512x39
+  ( input logic CLK,
+    input logic [8:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_256x39
+  ( input logic CLK,
+    input logic [7:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_128x39
+  ( input logic CLK,
+    input logic [6:0] ADR,
+    input logic [38:0] D,
+
+    output logic [38:0] Q,
+    input logic WE );
+endmodule
+
+module ram_1024x20
+  ( input logic CLK,
+
+    input logic [9:0] ADR,
+    input logic [19:0] D,
+
+    output logic [19:0] Q,
+    input logic WE );
+endmodule
+
+module ram_512x20
+  ( input logic CLK,
+    input logic [8:0] ADR,
+    input logic [19:0] D,
+
+    output logic [19:0] Q,
+    input logic WE );
+endmodule
+
+module ram_256x20
+  ( input logic CLK,
+    input logic [7:0] ADR,
+    input logic [19:0] D,
+
+    output logic [19:0] Q,
+    input logic WE );
+endmodule
+
+module ram_128x20
+  ( input logic CLK,
+    input logic [6:0] ADR,
+    input logic [19:0] D,
+
+    output logic [19:0] Q,
+    input logic WE );
+endmodule
+
+module ram_64x20
+  ( input logic CLK,
+    input logic [5:0] ADR,
+    input logic [19:0] D,
+
+    output logic [19:0] Q,
+    input logic WE );
+endmodule
+
+module ram_4096x34
+  ( input logic CLK,
+    input logic [11:0] ADR,
+    input logic [33:0] D,
+
+    output logic [33:0] Q,
+    input logic WE );
+endmodule
+
+module ram_2048x34
+  ( input logic CLK,
+    input logic [10:0] ADR,
+    input logic [33:0] D,
+
+    output logic [33:0] Q,
+    input logic WE );
+endmodule
+
+module ram_1024x34
+  ( input logic CLK,
+    input logic [9:0] ADR,
+    input logic [33:0] D,
+
+    output logic [33:0] Q,
+    input logic WE );
+endmodule
+
+module ram_512x34
+  ( input logic CLK,
+    input logic [8:0] ADR,
+    input logic [33:0] D,
+
+    output logic [33:0] Q,
+    input logic WE );
+endmodule
+
+module ram_256x34
+  ( input logic CLK,
+    input logic [7:0] ADR,
+    input logic [33:0] D,
+
+    output logic [33:0] Q,
+    input logic WE );
+endmodule
+
+module ram_128x34
+  ( input logic CLK,
+    input logic [6:0] ADR,
+    input logic [33:0] D,
+
+    output logic [33:0] Q,
+    input logic WE );
+endmodule
+
+module ram_64x34
+  ( input logic CLK,
+    input logic [5:0] ADR,
+    input logic [33:0] D,
+
+    output logic [33:0] Q,
+    input logic WE );
+endmodule
+
+module ram_4096x42
+  ( input logic CLK,
+    input logic [11:0] ADR,
+    input logic [41:0] D,
+
+    output logic [41:0] Q,
+
+    input logic WE );
+endmodule
+
+module ram_2048x42
+  ( input logic CLK,
+    input logic [10:0] ADR,
+    input logic [41:0] D,
+
+    output logic [41:0] Q,
+    input logic WE );
+endmodule
+
+module ram_1024x42
+  ( input logic CLK,
+    input logic [9:0] ADR,
+    input logic [41:0] D,
+
+    output logic [41:0] Q,
+    input logic WE );
+endmodule
+
+module ram_512x42
+  ( input logic CLK,
+    input logic [8:0] ADR,
+    input logic [41:0] D,
+
+    output logic [41:0] Q,
+    input logic WE );
+endmodule
+
+module ram_256x42
+  ( input logic CLK,
+    input logic [7:0] ADR,
+    input logic [41:0] D,
+
+    output logic [41:0] Q,
+    input logic WE );
+endmodule
+
+module ram_128x42
+  ( input logic CLK,
+    input logic [6:0] ADR,
+    input logic [41:0] D,
+
+    output logic [41:0] Q,
+    input logic WE );
+endmodule
+
+module ram_64x42
+  ( input logic CLK,
+    input logic [5:0] ADR,
+    input logic [41:0] D,
+
+    output logic [41:0] Q,
+    input logic WE );
+endmodule
+
+module ram_1024x21
+  ( input logic CLK,
+    input logic [9:0] ADR,
+    input logic [20:0] D,
+
+    output logic [20:0] Q,
+
+    input logic WE );
+endmodule
+
+module ram_512x21
+  ( input logic CLK,
+    input logic [8:0] ADR,
+    input logic [20:0] D,
+
+    output logic [20:0] Q,
+    input logic WE );
+endmodule
+
+module ram_256x21
+  ( input logic CLK,
+    input logic [7:0] ADR,
+    input logic [20:0] D,
+
+    output logic [20:0] Q,
+    input logic WE );
+endmodule
+
+module ram_128x21
+  ( input logic CLK,
+    input logic [6:0] ADR,
+    input logic [20:0] D,
+
+    output logic [20:0] Q,
+    input logic WE );
+endmodule
+
+module ram_64x21
+  ( input logic CLK,
+    input logic [5:0] ADR,
+    input logic [20:0] D,
+
+    output logic [20:0] Q,
+    input logic WE );
+endmodule
+
+module ram_1024x25
+  ( input logic CLK,
+    input logic [9:0] ADR,
+    input logic [24:0] D,
+
+    output logic [24:0] Q,
+    input logic WE );
+endmodule
+
+module ram_512x25
+  ( input logic CLK,
+    input logic [8:0] ADR,
+    input logic [24:0] D,
+
+    output logic [24:0] Q,
+
+    input logic WE );
+endmodule
+
+module ram_256x25
+  ( input logic CLK,
+    input logic [7:0] ADR,
+    input logic [24:0] D,
+
+    output logic [24:0] Q,
+
+    input logic WE );
+endmodule
+
+module ram_128x25
+  ( input logic CLK,
+    input logic [6:0] ADR,
+    input logic [24:0] D,
+
+    output logic [24:0] Q,
+
+    input logic WE );
+endmodule
+
+module ram_64x25
+  ( input logic CLK,
+    input logic [5:0] ADR,
+    input logic [24:0] D,
+
+    output logic [24:0] Q,
+
+    input logic WE );
+endmodule
+
+module lsu
+   import veer_types::*;
+(
+
+   input logic [31:0]                      i0_result_e4_eff,  
+   input logic [31:0]                      i1_result_e4_eff,  
+   input logic [31:0]                      i0_result_e2,      
+
+   input logic                             flush_final_e3,     
+   input logic                             i0_flush_final_e3,  
+   input logic                             dec_tlu_flush_lower_wb,     
+   input logic                             dec_tlu_i0_kill_writeb_wb,  
+   input logic                             dec_tlu_i1_kill_writeb_wb,  
+   input logic                             dec_tlu_cancel_e4,          
+
+    
+   input logic                             dec_tlu_dccm_nonblock_dma_disable,  
+   input logic                             dec_tlu_wb_coalescing_disable,    
+   input logic                             dec_tlu_ld_miss_byp_wb_disable,   
+   input logic                             dec_tlu_sideeffect_posted_disable,   
+   input logic                             dec_tlu_core_ecc_disable,         
+
+   input logic [31:0]                      exu_lsu_rs1_d,       
+   input logic [31:0]                      exu_lsu_rs2_d,       
+   input logic [11:0]                      dec_lsu_offset_d,    
+
+   input                                   lsu_pkt_t lsu_p,      
+   input logic                             dec_i0_lsu_decode_d,  
+   input logic [31:0]                      dec_tlu_mrac_ff,      
+
+   output logic [31:0]                     lsu_result_dc3,       
+   output logic                            lsu_single_ecc_error_incr,      
+   output logic [31:0]                     lsu_result_corr_dc4,  
+   output logic                            lsu_freeze_dc3,       
+   output logic                            lsu_load_stall_any,  
+   output logic                            lsu_store_stall_any,  
+   output logic                            lsu_load_ecc_stbuf_full_dc3,  
+   output logic                            lsu_idle_any,         
+   output logic                            lsu_halt_idle_any,    
+
+   output lsu_error_pkt_t                  lsu_error_pkt_dc3,              
+   output logic                            lsu_freeze_external_ints_dc3,   
+   output logic                            lsu_imprecise_error_load_any,   
+   output logic                            lsu_imprecise_error_store_any,  
+   output logic [31:0]                     lsu_imprecise_error_addr_any,   
+
+    
+   input  logic                                 dec_nonblock_load_freeze_dc2,   
+   output logic                                 lsu_nonblock_load_valid_dc3,     
+   output logic [3-1:0]  lsu_nonblock_load_tag_dc3,       
+   output logic                                 lsu_nonblock_load_inv_dc5,       
+   output logic [3-1:0]  lsu_nonblock_load_inv_tag_dc5,   
+   output logic                                 lsu_nonblock_load_data_valid,    
+   output logic                                 lsu_nonblock_load_data_error,    
+   output logic [3-1:0]  lsu_nonblock_load_data_tag,      
+   output logic [31:0]                          lsu_nonblock_load_data,          
+
+   output logic                            lsu_pmu_misaligned_dc3,          
+   output logic                            lsu_pmu_bus_trxn,                
+   output logic                            lsu_pmu_bus_misaligned,          
+   output logic                            lsu_pmu_bus_error,               
+   output logic                            lsu_pmu_bus_busy,                
+
+    
+   input                                   trigger_pkt_t [3:0] trigger_pkt_any,  
+   output logic [3:0]                      lsu_trigger_match_dc3,                
+
+    
+   output logic                            dccm_wren,        
+   output logic                            dccm_rden,        
+   output logic [16-1:0]        dccm_wr_addr,     
+   output logic [16-1:0]        dccm_rd_addr_lo,  
+   output logic [16-1:0]        dccm_rd_addr_hi,  
+   output logic [39-1:0] dccm_wr_data,     
+
+   input logic [39-1:0]  dccm_rd_data_lo,  
+   input logic [39-1:0]  dccm_rd_data_hi,  
+
+    
+   output logic                            picm_wren,     
+   output logic                            picm_rden,     
+   output logic                            picm_mken,     
+   output logic [31:0]                     picm_addr,     
+   output logic [31:0]                     picm_wr_data,  
+   input logic [31:0]                      picm_rd_data,  
+
+    
+   output logic                            lsu_axi_awvalid,
+   input  logic                            lsu_axi_awready,
+   output logic [4-1:0]      lsu_axi_awid,
+   output logic [31:0]                     lsu_axi_awaddr,
+   output logic [3:0]                      lsu_axi_awregion,
+   output logic [7:0]                      lsu_axi_awlen,
+   output logic [2:0]                      lsu_axi_awsize,
+   output logic [1:0]                      lsu_axi_awburst,
+   output logic                            lsu_axi_awlock,
+   output logic [3:0]                      lsu_axi_awcache,
+   output logic [2:0]                      lsu_axi_awprot,
+   output logic [3:0]                      lsu_axi_awqos,
+
+   output logic                            lsu_axi_wvalid,
+   input  logic                            lsu_axi_wready,
+   output logic [63:0]                     lsu_axi_wdata,
+   output logic [7:0]                      lsu_axi_wstrb,
+   output logic                            lsu_axi_wlast,
+
+   input  logic                            lsu_axi_bvalid,
+   output logic                            lsu_axi_bready,
+   input  logic [1:0]                      lsu_axi_bresp,
+   input  logic [4-1:0]      lsu_axi_bid,
+
+    
+   output logic                            lsu_axi_arvalid,
+   input  logic                            lsu_axi_arready,
+   output logic [4-1:0]      lsu_axi_arid,
+   output logic [31:0]                     lsu_axi_araddr,
+   output logic [3:0]                      lsu_axi_arregion,
+   output logic [7:0]                      lsu_axi_arlen,
+   output logic [2:0]                      lsu_axi_arsize,
+   output logic [1:0]                      lsu_axi_arburst,
+   output logic                            lsu_axi_arlock,
+   output logic [3:0]                      lsu_axi_arcache,
+   output logic [2:0]                      lsu_axi_arprot,
+   output logic [3:0]                      lsu_axi_arqos,
+
+   input  logic                            lsu_axi_rvalid,
+   output logic                            lsu_axi_rready,
+   input  logic [4-1:0]      lsu_axi_rid,
+   input  logic [63:0]                     lsu_axi_rdata,
+   input  logic [1:0]                      lsu_axi_rresp,
+   input  logic                            lsu_axi_rlast,
+
+   input logic                             lsu_bus_clk_en,     
+
+    
+   input logic                             dma_dccm_req,        
+   input logic [31:0]                      dma_mem_addr,        
+   input logic [2:0]                       dma_mem_sz,          
+   input logic                             dma_mem_write,       
+   input logic [63:0]                      dma_mem_wdata,       
+
+   output logic                            dccm_dma_rvalid,      
+   output logic                            dccm_dma_ecc_error,   
+   output logic [63:0]                     dccm_dma_rdata,       
+   output logic                            dccm_ready,           
+
+   input logic                             clk_override,         
+   input logic                             scan_mode,            
+   input logic                             clk,
+   input logic                             free_clk,
+   input logic                             rst_l
+
+   );
+endmodule
+
+module lsu_addrcheck
+   import veer_types::*;
+(
+   input logic         lsu_freeze_c2_dc2_clk,        
+   input logic         lsu_freeze_c2_dc3_clk,
+   input logic         lsu_freeze_c2_dc2_clken,
+   input logic         lsu_freeze_c2_dc3_clken,
+   input logic         rst_l,                        
+   input logic         clk,
+
+   input logic [31:0]  start_addr_dc1,               
+   input logic [31:0]  end_addr_dc1,                 
+   input lsu_pkt_t     lsu_pkt_dc1,                  
+   input logic [31:0]  dec_tlu_mrac_ff,              
+
+   output logic        is_sideeffects_dc2,           
+   output logic        is_sideeffects_dc3,
+   output logic        addr_in_dccm_dc1,             
+   output logic        addr_in_pic_dc1,              
+   output logic        addr_external_dc1,            
+
+   output logic        access_fault_dc1,             
+   output logic        misaligned_fault_dc1,         
+
+   input  logic        scan_mode
+);
+endmodule
+
+module lsu_bus_buffer
+   import veer_types::*;
+(
+   input logic                          clk,
+   input logic                          rst_l,
+   input logic                          scan_mode,
+   input logic                          dec_tlu_dccm_nonblock_dma_disable,  
+   input logic                          dec_tlu_wb_coalescing_disable,     
+   input logic                          dec_tlu_ld_miss_byp_wb_disable,    
+   input logic                          dec_tlu_sideeffect_posted_disable,   
+
+    
+   input logic                          lsu_c1_dc3_clk,
+   input logic                          lsu_c1_dc4_clk,
+   input logic                          lsu_c1_dc5_clk,
+   input logic                          lsu_c2_dc3_clk,
+   input logic                          lsu_c2_dc4_clk,
+   input logic                          lsu_c2_dc5_clk,
+   input logic                          lsu_freeze_c1_dc2_clk,
+   input logic                          lsu_freeze_c1_dc3_clk,
+   input logic                          lsu_freeze_c2_dc2_clk,
+   input logic                          lsu_freeze_c2_dc3_clk,
+   input logic                          lsu_freeze_c2_dc3_clken,
+   input logic                          lsu_bus_ibuf_c1_clk,
+   input logic                          lsu_bus_obuf_c1_clk,
+   input logic                          lsu_bus_buf_c1_clk,
+   input logic                          lsu_free_c2_clk,
+   input logic                          lsu_busm_clk,
+
+   input                                lsu_pkt_t lsu_pkt_dc1,             
+   input                                lsu_pkt_t lsu_pkt_dc2,             
+   input                                lsu_pkt_t lsu_pkt_dc3,             
+   input                                lsu_pkt_t lsu_pkt_dc4,             
+   input                                lsu_pkt_t lsu_pkt_dc5,             
+
+   input logic [31:0]                   lsu_addr_dc2,                      
+   input logic [31:0]                   end_addr_dc2,                      
+   input logic [31:0]                   lsu_addr_dc5,                      
+   input logic [31:0]                   end_addr_dc5,                      
+   input logic [31:0]                   store_data_dc5,                    
+
+   input logic                          no_word_merge_dc5,                 
+   input logic                          no_dword_merge_dc5,                
+   input logic                          lsu_busreq_dc2,                    
+   output logic                         lsu_busreq_dc3,                    
+   output logic                         lsu_busreq_dc4,                    
+   output logic                         lsu_busreq_dc5,                    
+   input logic                          ld_full_hit_dc2,                   
+   input logic                          flush_dc2_up,                      
+   input logic                          flush_dc3,                         
+   input logic                          flush_dc4,                         
+   input logic                          flush_dc5,                         
+   input logic                          lsu_freeze_dc3,
+   input logic                          dec_tlu_cancel_e4,                 
+   input logic                          lsu_commit_dc5,                    
+   input logic                          is_sideeffects_dc2,                
+   input logic                          is_sideeffects_dc5,                
+   input logic                          ldst_dual_dc1,                     
+   input logic                          ldst_dual_dc2,                     
+   input logic                          ldst_dual_dc3,                     
+   input logic                          ldst_dual_dc4,                     
+   input logic                          ldst_dual_dc5,                     
+
+   input logic [7:0]                   ldst_byteen_ext_dc2,
+
+   output logic                         ld_freeze_dc3,                     
+   output logic                         lsu_bus_buffer_pend_any,           
+   output logic                         lsu_bus_buffer_full_any,           
+   output logic                         lsu_bus_buffer_empty_any,          
+
+   output logic                         ld_bus_error_dc3,                  
+   output logic [31:0]                  ld_bus_error_addr_dc3,             
+   output logic [31:0]                  ld_bus_data_dc3,                  
+
+   output logic [3:0]                   ld_byte_hit_buf_lo, ld_byte_hit_buf_hi,     
+   output logic [31:0]                  ld_fwddata_buf_lo, ld_fwddata_buf_hi,       
+
+   output logic                         lsu_imprecise_error_load_any,      
+   output logic                         lsu_imprecise_error_store_any,     
+   output logic [31:0]                  lsu_imprecise_error_addr_any,      
+
+    
+   input  logic                                dec_nonblock_load_freeze_dc2,
+   output logic                                lsu_nonblock_load_valid_dc3,      
+   output logic [3-1:0] lsu_nonblock_load_tag_dc3,        
+   output logic                                lsu_nonblock_load_inv_dc5,        
+   output logic [3-1:0] lsu_nonblock_load_inv_tag_dc5,    
+   output logic                                lsu_nonblock_load_data_valid,     
+   output logic                                lsu_nonblock_load_data_error,     
+   output logic [3-1:0] lsu_nonblock_load_data_tag,       
+   output logic [31:0]                         lsu_nonblock_load_data,           
+
+    
+   output logic                         lsu_pmu_bus_trxn,
+   output logic                         lsu_pmu_bus_misaligned,
+   output logic                         lsu_pmu_bus_error,
+   output logic                         lsu_pmu_bus_busy,
+
+    
+   output logic                            lsu_axi_awvalid,
+   input  logic                            lsu_axi_awready,
+   output logic [4-1:0]      lsu_axi_awid,
+   output logic [31:0]                     lsu_axi_awaddr,
+   output logic [3:0]                      lsu_axi_awregion,
+   output logic [7:0]                      lsu_axi_awlen,
+   output logic [2:0]                      lsu_axi_awsize,
+   output logic [1:0]                      lsu_axi_awburst,
+   output logic                            lsu_axi_awlock,
+   output logic [3:0]                      lsu_axi_awcache,
+   output logic [2:0]                      lsu_axi_awprot,
+   output logic [3:0]                      lsu_axi_awqos,
+
+   output logic                            lsu_axi_wvalid,
+   input  logic                            lsu_axi_wready,
+   output logic [63:0]                     lsu_axi_wdata,
+   output logic [7:0]                      lsu_axi_wstrb,
+   output logic                            lsu_axi_wlast,
+
+   input  logic                            lsu_axi_bvalid,
+   output logic                            lsu_axi_bready,
+   input  logic [1:0]                      lsu_axi_bresp,
+   input  logic [4-1:0]      lsu_axi_bid,
+
+    
+   output logic                            lsu_axi_arvalid,
+   input  logic                            lsu_axi_arready,
+   output logic [4-1:0]      lsu_axi_arid,
+   output logic [31:0]                     lsu_axi_araddr,
+   output logic [3:0]                      lsu_axi_arregion,
+   output logic [7:0]                      lsu_axi_arlen,
+   output logic [2:0]                      lsu_axi_arsize,
+   output logic [1:0]                      lsu_axi_arburst,
+   output logic                            lsu_axi_arlock,
+   output logic [3:0]                      lsu_axi_arcache,
+   output logic [2:0]                      lsu_axi_arprot,
+   output logic [3:0]                      lsu_axi_arqos,
+
+   input  logic                            lsu_axi_rvalid,
+   output logic                            lsu_axi_rready,
+   input  logic [4-1:0]      lsu_axi_rid,
+   input  logic [63:0]                     lsu_axi_rdata,
+   input  logic [1:0]                      lsu_axi_rresp,
+   input  logic                            lsu_axi_rlast,
+
+   input logic                          lsu_bus_clk_en,
+   input logic                          lsu_bus_clk_en_q
+
+);
+endmodule
+
+module lsu_bus_intf
+   import veer_types::*;
+(
+   input logic                          clk,
+   input logic                          rst_l,
+   input logic                          scan_mode,
+   input logic                          dec_tlu_dccm_nonblock_dma_disable,  
+   input logic                          dec_tlu_wb_coalescing_disable,     
+   input logic                          dec_tlu_ld_miss_byp_wb_disable,    
+   input logic                          dec_tlu_sideeffect_posted_disable,   
+
+    
+   input logic                          lsu_c1_dc3_clk,
+   input logic                          lsu_c1_dc4_clk,
+   input logic                          lsu_c1_dc5_clk,
+   input logic                          lsu_c2_dc3_clk,
+   input logic                          lsu_c2_dc4_clk,
+   input logic                          lsu_c2_dc5_clk,
+   input logic                          lsu_freeze_c1_dc2_clk,
+   input logic                          lsu_freeze_c1_dc3_clk,
+   input logic                          lsu_freeze_c2_dc2_clk,
+   input logic                          lsu_freeze_c2_dc3_clk,
+   input logic                          lsu_freeze_c1_dc2_clken,
+   input logic                          lsu_freeze_c1_dc3_clken,
+   input logic                          lsu_freeze_c2_dc2_clken,
+   input logic                          lsu_freeze_c2_dc3_clken,
+   input logic                          lsu_bus_ibuf_c1_clk,
+   input logic                          lsu_bus_obuf_c1_clk,
+   input logic                          lsu_bus_buf_c1_clk,
+   input logic                          lsu_free_c2_clk,
+   input logic                          free_clk,
+   input logic                          lsu_busm_clk,
+
+   input logic                          lsu_busreq_dc2,                    
+
+   input                                lsu_pkt_t lsu_pkt_dc1,             
+   input                                lsu_pkt_t lsu_pkt_dc2,             
+   input                                lsu_pkt_t lsu_pkt_dc3,             
+   input                                lsu_pkt_t lsu_pkt_dc4,             
+   input                                lsu_pkt_t lsu_pkt_dc5,             
+
+   input logic [31:0]                   lsu_addr_dc1,                      
+   input logic [31:0]                   lsu_addr_dc2,                      
+   input logic [31:0]                   lsu_addr_dc3,                      
+   input logic [31:0]                   lsu_addr_dc4,                      
+   input logic [31:0]                   lsu_addr_dc5,                      
+
+   input logic [31:0]                   end_addr_dc1,                      
+   input logic [31:0]                   end_addr_dc2,                      
+   input logic [31:0]                   end_addr_dc3,                      
+   input logic [31:0]                   end_addr_dc4,                      
+   input logic [31:0]                   end_addr_dc5,                      
+
+   input logic                          addr_external_dc2,                 
+   input logic                          addr_external_dc3,                 
+   input logic                          addr_external_dc4,                 
+   input logic                          addr_external_dc5,                 
+
+   input logic [63:0]                   store_data_dc2,                    
+   input logic [63:0]                   store_data_dc3,                    
+   input logic [31:0]                   store_data_dc4,                    
+   input logic [31:0]                   store_data_dc5,                    
+
+   input logic                          lsu_commit_dc5,                    
+   input logic                          is_sideeffects_dc2,                
+   input logic                          is_sideeffects_dc3,                
+   input logic                          flush_dc2_up,                      
+   input logic                          flush_dc3,                         
+   input logic                          flush_dc4,                         
+   input logic                          flush_dc5,                         
+   input logic                          dec_tlu_cancel_e4,                 
+
+   output logic                         lsu_freeze_dc3,                    
+   output logic                         lsu_busreq_dc5,                    
+   output logic                         lsu_bus_buffer_pend_any,           
+   output logic                         lsu_bus_buffer_full_any,           
+   output logic                         lsu_bus_buffer_empty_any,          
+   output logic [31:0]                  bus_read_data_dc3,                 
+
+   output logic                         ld_bus_error_dc3,                  
+   output logic [31:0]                  ld_bus_error_addr_dc3,             
+
+   output logic                         lsu_imprecise_error_load_any,      
+   output logic                         lsu_imprecise_error_store_any,     
+   output logic [31:0]                  lsu_imprecise_error_addr_any,      
+
+    
+   input  logic                                dec_nonblock_load_freeze_dc2,
+   output logic                                lsu_nonblock_load_valid_dc3,      
+   output logic [3-1:0] lsu_nonblock_load_tag_dc3,        
+   output logic                                lsu_nonblock_load_inv_dc5,        
+   output logic [3-1:0] lsu_nonblock_load_inv_tag_dc5,    
+   output logic                                lsu_nonblock_load_data_valid,     
+   output logic                                lsu_nonblock_load_data_error,     
+   output logic [3-1:0] lsu_nonblock_load_data_tag,       
+   output logic [31:0]                         lsu_nonblock_load_data,           
+
+    
+   output logic                         lsu_pmu_bus_trxn,
+   output logic                         lsu_pmu_bus_misaligned,
+   output logic                         lsu_pmu_bus_error,
+   output logic                         lsu_pmu_bus_busy,
+
+    
+   output logic                            lsu_axi_awvalid,
+   input  logic                            lsu_axi_awready,
+   output logic [4-1:0]      lsu_axi_awid,
+   output logic [31:0]                     lsu_axi_awaddr,
+   output logic [3:0]                      lsu_axi_awregion,
+   output logic [7:0]                      lsu_axi_awlen,
+   output logic [2:0]                      lsu_axi_awsize,
+   output logic [1:0]                      lsu_axi_awburst,
+   output logic                            lsu_axi_awlock,
+   output logic [3:0]                      lsu_axi_awcache,
+   output logic [2:0]                      lsu_axi_awprot,
+   output logic [3:0]                      lsu_axi_awqos,
+
+   output logic                            lsu_axi_wvalid,
+   input  logic                            lsu_axi_wready,
+   output logic [63:0]                     lsu_axi_wdata,
+   output logic [7:0]                      lsu_axi_wstrb,
+   output logic                            lsu_axi_wlast,
+
+   input  logic                            lsu_axi_bvalid,
+   output logic                            lsu_axi_bready,
+   input  logic [1:0]                      lsu_axi_bresp,
+   input  logic [4-1:0]      lsu_axi_bid,
+
+    
+   output logic                            lsu_axi_arvalid,
+   input  logic                            lsu_axi_arready,
+   output logic [4-1:0]      lsu_axi_arid,
+   output logic [31:0]                     lsu_axi_araddr,
+   output logic [3:0]                      lsu_axi_arregion,
+   output logic [7:0]                      lsu_axi_arlen,
+   output logic [2:0]                      lsu_axi_arsize,
+   output logic [1:0]                      lsu_axi_arburst,
+   output logic                            lsu_axi_arlock,
+   output logic [3:0]                      lsu_axi_arcache,
+   output logic [2:0]                      lsu_axi_arprot,
+   output logic [3:0]                      lsu_axi_arqos,
+
+   input  logic                            lsu_axi_rvalid,
+   output logic                            lsu_axi_rready,
+   input  logic [4-1:0]      lsu_axi_rid,
+   input  logic [63:0]                     lsu_axi_rdata,
+   input  logic [1:0]                      lsu_axi_rresp,
+   input  logic                            lsu_axi_rlast,
+
+   input logic                          lsu_bus_clk_en
+
+);
+endmodule
+
+module lsu_clkdomain
+   import veer_types::*;
+(
+   input logic      clk,                                
+   input logic      free_clk,                           
+   input logic      rst_l,                              
+
+    
+   input logic      clk_override,                       
+   input logic      lsu_freeze_dc3,                     
+   input logic      addr_in_dccm_dc2,                   
+   input logic      addr_in_pic_dc2,                    
+   input logic      dma_dccm_req,                       
+   input logic      dma_mem_write,                      
+   input logic      load_stbuf_reqvld_dc3,              
+   input logic      store_stbuf_reqvld_dc3,             
+   input logic      stbuf_reqvld_any,                   
+   input logic      stbuf_reqvld_flushed_any,           
+   input logic      lsu_busreq_dc5,                     
+   input logic      lsu_bus_buffer_pend_any,            
+   input logic      lsu_bus_buffer_empty_any,           
+   input logic      lsu_stbuf_empty_any,                
+
+   input logic      lsu_bus_clk_en,                
+
+   input lsu_pkt_t  lsu_p,                              
+   input lsu_pkt_t  lsu_pkt_dc1,                        
+   input lsu_pkt_t  lsu_pkt_dc2,                        
+   input lsu_pkt_t  lsu_pkt_dc3,                        
+   input lsu_pkt_t  lsu_pkt_dc4,                        
+   input lsu_pkt_t  lsu_pkt_dc5,                        
+
+    
+   output logic     lsu_c1_dc3_clk,                     
+   output logic     lsu_c1_dc4_clk,                     
+   output logic     lsu_c1_dc5_clk,                     
+
+   output logic     lsu_c2_dc3_clk,                     
+   output logic     lsu_c2_dc4_clk,                     
+   output logic     lsu_c2_dc5_clk,                     
+
+   output logic     lsu_store_c1_dc1_clken,               
+   output logic     lsu_store_c1_dc2_clken,               
+   output logic     lsu_store_c1_dc3_clken,               
+   output logic     lsu_store_c1_dc4_clk,               
+   output logic     lsu_store_c1_dc5_clk,               
+
+   output logic     lsu_freeze_c1_dc1_clken,              
+   output logic     lsu_freeze_c1_dc2_clken,              
+   output logic     lsu_freeze_c1_dc3_clken,              
+
+   output logic     lsu_freeze_c1_dc2_clk,              
+   output logic     lsu_freeze_c1_dc3_clk,              
+
+   output logic     lsu_freeze_c2_dc1_clk,
+   output logic     lsu_freeze_c2_dc2_clk,
+   output logic     lsu_freeze_c2_dc3_clk,
+   output logic     lsu_freeze_c2_dc4_clk,
+
+   output logic     lsu_freeze_c2_dc1_clken,
+   output logic     lsu_freeze_c2_dc2_clken,
+   output logic     lsu_freeze_c2_dc3_clken,
+   output logic     lsu_freeze_c2_dc4_clken,
+
+   output logic     lsu_dccm_c1_dc3_clk,                
+   output logic     lsu_dccm_c1_dc3_clken,
+
+   output logic     lsu_pic_c1_dc3_clken,               
+
+   output logic     lsu_stbuf_c1_clk,
+   output logic     lsu_bus_obuf_c1_clk,                
+   output logic     lsu_bus_ibuf_c1_clk,                
+   output logic     lsu_bus_buf_c1_clk,                 
+   output logic     lsu_busm_clk,                       
+
+   output logic     lsu_free_c2_clk,
+
+   input  logic     scan_mode
+);
+endmodule
+
+module lsu_dccm_ctl
+   import veer_types::*;
+(
+   input logic                             lsu_freeze_c2_dc2_clk,      
+   input logic                             lsu_freeze_c2_dc3_clk,
+   input logic                             lsu_freeze_c2_dc2_clken,      
+   input logic                             lsu_freeze_c2_dc3_clken,
+   input logic                             lsu_dccm_c1_dc3_clk,
+   input logic                             lsu_dccm_c1_dc3_clken,
+   input logic                             lsu_pic_c1_dc3_clken,
+
+   input logic                             rst_l,
+   input logic                             clk,
+   input logic                             lsu_freeze_dc3,             
+
+   input                                   lsu_pkt_t lsu_pkt_dc3,      
+   input                                   lsu_pkt_t lsu_pkt_dc1,
+   input logic                             addr_in_dccm_dc1,           
+   input logic                             addr_in_pic_dc1,            
+   input logic                             addr_in_pic_dc3,            
+   input logic [31:0]                      lsu_addr_dc1,               
+   input logic [16-1:0]         end_addr_dc1,               
+   input logic [16-1:0]         lsu_addr_dc3,               
+
+   input logic                             stbuf_reqvld_any,           
+   input logic                             stbuf_addr_in_pic_any,      
+   input logic [16-1:0]       stbuf_addr_any,             
+
+   input logic [32-1:0]   stbuf_data_any,             
+   input logic [7-1:0]    stbuf_ecc_any,              
+   input logic [32-1:0]   stbuf_fwddata_hi_dc3,       
+   input logic [32-1:0]   stbuf_fwddata_lo_dc3,       
+   input logic [4-1:0]   stbuf_fwdbyteen_hi_dc3,     
+   input logic [4-1:0]   stbuf_fwdbyteen_lo_dc3,     
+
+   input logic                             lsu_double_ecc_error_dc3,   
+   input logic [32-1:0]   store_ecc_datafn_hi_dc3,    
+   input logic [32-1:0]   store_ecc_datafn_lo_dc3,    
+
+   output logic [32-1:0]  dccm_data_hi_dc3,           
+   output logic [32-1:0]  dccm_data_lo_dc3,           
+   output logic [7-1:0]   dccm_data_ecc_hi_dc3,       
+   output logic [7-1:0]   dccm_data_ecc_lo_dc3,
+   output logic [32-1:0]  lsu_ld_data_dc3,            
+   output logic [32-1:0]  lsu_ld_data_corr_dc3,       
+   output logic [31:0]                     picm_mask_data_dc3,         
+   output logic                            lsu_stbuf_commit_any,       
+   output logic                            lsu_dccm_rden_dc3,          
+
+   output logic                            dccm_dma_rvalid,            
+   output logic                            dccm_dma_ecc_error,         
+   output logic [63:0]                     dccm_dma_rdata,             
+
+    
+   output logic                            dccm_wren,                 
+   output logic                            dccm_rden,                 
+   output logic [16-1:0]        dccm_wr_addr,              
+   output logic [16-1:0]        dccm_rd_addr_lo,           
+   output logic [16-1:0]        dccm_rd_addr_hi,           
+   output logic [39-1:0] dccm_wr_data,              
+
+   input logic [39-1:0]  dccm_rd_data_lo,           
+   input logic [39-1:0]  dccm_rd_data_hi,           
+
+    
+   output logic                            picm_wren,           
+   output logic                            picm_rden,           
+   output logic                            picm_mken,           
+   output logic [31:0]                     picm_addr,           
+   output logic [31:0]                     picm_wr_data,        
+   input logic [31:0]                      picm_rd_data,        
+
+   input logic                             scan_mode            
+);
+endmodule
+
+module lsu_dccm_mem
+   import veer_types::*;
+(
+   input logic         clk,                                               
+   input logic         free_clk,                                          
+   input logic         rst_l,
+   input logic         lsu_freeze_dc3,                                    
+   input logic         clk_override,                                      
+
+   input logic         dccm_wren,                                         
+   input logic         dccm_rden,                                         
+   input logic [16-1:0]  dccm_wr_addr,                         
+   input logic [16-1:0]  dccm_rd_addr_lo,                      
+   input logic [16-1:0]  dccm_rd_addr_hi,                      
+   input logic [39-1:0]  dccm_wr_data,                  
+
+   output logic [39-1:0] dccm_rd_data_lo,               
+   output logic [39-1:0] dccm_rd_data_hi,               
+
+   input  logic         scan_mode
+);
+endmodule
+
+module lsu_ecc
+   import veer_types::*;
+(
+
+   input logic        lsu_c2_dc4_clk,                       
+   input logic        lsu_c1_dc4_clk,
+   input logic        lsu_c1_dc5_clk,
+   input logic        clk,
+   input logic        rst_l,
+
+   input lsu_pkt_t    lsu_pkt_dc3,                         
+   input logic        lsu_dccm_rden_dc3,                   
+   input logic        addr_in_dccm_dc3,                    
+   input logic [16-1:0]       lsu_addr_dc3,     
+   input logic [16-1:0]       end_addr_dc3,     
+   input logic [63:0]                    store_data_dc3,   
+   input logic [32-1:0] stbuf_data_any,
+
+   input logic [32-1:0] stbuf_fwddata_hi_dc3,   
+   input logic [32-1:0] stbuf_fwddata_lo_dc3,   
+   input logic [4-1:0] stbuf_fwdbyteen_hi_dc3, 
+   input logic [4-1:0] stbuf_fwdbyteen_lo_dc3, 
+
+   input logic [32-1:0] dccm_data_hi_dc3,      
+   input logic [32-1:0] dccm_data_lo_dc3,      
+   input logic [7-1:0]  dccm_data_ecc_hi_dc3,  
+   input logic [7-1:0]  dccm_data_ecc_lo_dc3,  
+
+   input logic                           dec_tlu_core_ecc_disable,   
+
+   output logic [32-1:0] store_ecc_datafn_hi_dc3,   
+   output logic [32-1:0] store_ecc_datafn_lo_dc3,
+
+   output logic [7-1:0] stbuf_ecc_any,
+   output logic        single_ecc_error_hi_dc3,                    
+   output logic        single_ecc_error_lo_dc3,                    
+   output logic        lsu_single_ecc_error_dc3,                   
+   output logic        lsu_double_ecc_error_dc3,                   
+
+   input logic         scan_mode
+ );
+endmodule
+
+module lsu_lsc_ctl
+   import veer_types::*;
+(
+   input logic         rst_l,
+   input logic         clk,
+
+    
+   input logic        lsu_c1_dc4_clk,
+   input logic        lsu_c1_dc5_clk,
+   input logic        lsu_c2_dc4_clk,
+   input logic        lsu_c2_dc5_clk,
+    
+   input logic        lsu_freeze_c1_dc1_clken,
+   input logic        lsu_freeze_c1_dc2_clken,
+   input logic        lsu_freeze_c1_dc2_clk,
+   input logic        lsu_freeze_c1_dc3_clken,
+   input logic        lsu_freeze_c1_dc3_clk,
+   input logic        lsu_freeze_c2_dc1_clk,
+   input logic        lsu_freeze_c2_dc2_clk,
+   input logic        lsu_freeze_c2_dc3_clk,
+   input logic        lsu_freeze_c2_dc1_clken,
+   input logic        lsu_freeze_c2_dc2_clken,
+   input logic        lsu_freeze_c2_dc3_clken,
+
+   input logic        lsu_store_c1_dc1_clken,
+   input logic        lsu_store_c1_dc2_clken,
+   input logic        lsu_store_c1_dc3_clken,
+   input logic        lsu_store_c1_dc4_clk,
+   input logic        lsu_store_c1_dc5_clk,
+
+   input logic [31:0] i0_result_e4_eff,
+   input logic [31:0] i1_result_e4_eff,
+
+   input logic [31:0] i0_result_e2,
+
+   input logic         ld_bus_error_dc3,
+   input logic [31:0]  ld_bus_error_addr_dc3,
+   input logic         lsu_single_ecc_error_dc3,
+   input logic         lsu_single_ecc_error_dc5,
+   input logic         lsu_double_ecc_error_dc3,
+   input logic         lsu_freeze_dc3,
+
+   input logic         lsu_i0_valid_dc3,
+   input logic         flush_dc2_up,
+   input logic         flush_dc3,
+   input logic         flush_dc4,
+   input logic         flush_dc5,
+
+   input logic [31:0]  exu_lsu_rs1_d,  
+   input logic [31:0]  exu_lsu_rs2_d,  
+
+   input lsu_pkt_t     lsu_p,          
+   input logic [11:0]  dec_lsu_offset_d,
+
+   input  logic [31:0] picm_mask_data_dc3,
+   input  logic [31:0] lsu_ld_data_dc3,
+   input  logic [31:0] lsu_ld_data_corr_dc3,
+   input  logic [31:0]  bus_read_data_dc3,
+   output logic [31:0] lsu_result_dc3,
+   output logic [31:0] lsu_result_corr_dc4,    
+    
+   output logic [31:0] lsu_addr_dc1,
+   output logic [31:0] lsu_addr_dc2,
+   output logic [31:0] lsu_addr_dc3,
+   output logic [31:0] lsu_addr_dc4,
+   output logic [31:0] lsu_addr_dc5,
+    
+   output logic [31:0] end_addr_dc1,
+   output logic [31:0] end_addr_dc2,
+   output logic [31:0] end_addr_dc3,
+   output logic [31:0] end_addr_dc4,
+   output logic [31:0] end_addr_dc5,
+    
+   output logic [63:0] store_data_dc2,
+   output logic [63:0] store_data_dc3,
+   output logic [31:0] store_data_dc4,
+   output logic [31:0] store_data_dc5,
+
+   input  logic [31:0]    dec_tlu_mrac_ff,
+   output logic           lsu_exc_dc2,
+   output lsu_error_pkt_t lsu_error_pkt_dc3,
+   output logic           lsu_single_ecc_error_incr,     
+   output logic           lsu_freeze_external_ints_dc3,
+   output logic           is_sideeffects_dc2,
+   output logic           is_sideeffects_dc3,
+   output logic           lsu_commit_dc5,
+    
+   output logic        addr_in_dccm_dc1,
+   output logic        addr_in_dccm_dc2,
+   output logic        addr_in_dccm_dc3,
+   output logic        addr_in_pic_dc1,
+   output logic        addr_in_pic_dc2,
+   output logic        addr_in_pic_dc3,
+   output logic        addr_external_dc2,
+   output logic        addr_external_dc3,
+   output logic        addr_external_dc4,
+   output logic        addr_external_dc5,
+
+    
+   input logic        dma_dccm_req,
+   input logic [31:0] dma_mem_addr,
+   input logic [2:0]  dma_mem_sz,
+   input logic        dma_mem_write,
+   input logic [63:0] dma_mem_wdata,
+
+    
+   output lsu_pkt_t    lsu_pkt_dc1,
+   output lsu_pkt_t    lsu_pkt_dc2,
+   output lsu_pkt_t    lsu_pkt_dc3,
+   output lsu_pkt_t    lsu_pkt_dc4,
+   output lsu_pkt_t    lsu_pkt_dc5,
+
+   input  logic        scan_mode
+
+   );
+endmodule
+
+module lsu_stbuf
+   import veer_types::*;
+(
+   input logic        clk,                                 
+   input logic        rst_l,                               
+
+   input logic        lsu_freeze_c2_dc2_clk,               
+   input logic        lsu_freeze_c2_dc3_clk,               
+   input logic        lsu_freeze_c1_dc2_clk,               
+   input logic        lsu_freeze_c1_dc3_clk,               
+
+   input logic        lsu_freeze_c2_dc2_clken,
+   input logic        lsu_freeze_c2_dc3_clken,
+   input logic        lsu_freeze_c1_dc2_clken,
+   input logic        lsu_freeze_c1_dc3_clken,
+
+   input logic        lsu_c1_dc4_clk,                      
+   input logic        lsu_c1_dc5_clk,                      
+   input logic        lsu_c2_dc4_clk,                      
+   input logic        lsu_c2_dc5_clk,                      
+   input logic        lsu_stbuf_c1_clk,                    
+   input logic        lsu_free_c2_clk,                     
+
+    
+   input logic        load_stbuf_reqvld_dc3,              
+   input logic        store_stbuf_reqvld_dc3,              
+    
+   input logic        addr_in_pic_dc2,                     
+   input logic        addr_in_pic_dc3,                     
+   input logic        addr_in_dccm_dc2,                     
+   input logic        addr_in_dccm_dc3,                     
+   input logic [32-1:0] store_ecc_datafn_hi_dc3,    
+   input logic [32-1:0] store_ecc_datafn_lo_dc3,    
+
+   input logic        isldst_dc1,                          
+   input logic        dccm_ldst_dc2,                          
+   input logic        dccm_ldst_dc3,                          
+
+   input logic        single_ecc_error_hi_dc3,             
+   input logic        single_ecc_error_lo_dc3,             
+   input logic        lsu_single_ecc_error_dc5,            
+   input logic        lsu_commit_dc5,                      
+   input logic        lsu_freeze_dc3,                      
+   input logic        flush_prior_dc5,                     
+
+    
+   output logic                  stbuf_reqvld_any,          
+   output logic                  stbuf_reqvld_flushed_any,  
+   output logic                  stbuf_addr_in_pic_any,     
+   output logic [4-1:0] stbuf_byteen_any,  
+   output logic [16-1:0]  stbuf_addr_any,         
+   output logic [32-1:0] stbuf_data_any,    
+
+   input  logic       lsu_stbuf_commit_any,                  
+   output logic       lsu_stbuf_full_any,                    
+   output logic       lsu_stbuf_empty_any,                   
+   output logic       lsu_stbuf_nodma_empty_any,             
+   output logic       lsu_load_ecc_stbuf_full_dc3,           
+
+   input logic [16-1:0] lsu_addr_dc1,             
+   input logic [16-1:0] lsu_addr_dc2,
+   input logic [16-1:0] lsu_addr_dc3,
+
+   input logic [16-1:0] end_addr_dc1,             
+   input logic [16-1:0] end_addr_dc2,
+   input logic [16-1:0] end_addr_dc3,
+
+    
+   input logic        lsu_cmpen_dc2,                        
+   input lsu_pkt_t    lsu_pkt_dc2,
+   input lsu_pkt_t    lsu_pkt_dc3,
+   input lsu_pkt_t    lsu_pkt_dc5,
+
+   output logic [32-1:0] stbuf_fwddata_hi_dc3,      
+   output logic [32-1:0] stbuf_fwddata_lo_dc3,
+   output logic [4-1:0] stbuf_fwdbyteen_hi_dc3,
+   output logic [4-1:0] stbuf_fwdbyteen_lo_dc3,
+
+   input  logic       scan_mode
+
+);
+endmodule
+
+module lsu_trigger
+   import veer_types::*;
+(
+   input logic         clk,                           
+   input logic         lsu_free_c2_clk,               
+   input logic         rst_l,                         
+
+   input trigger_pkt_t [3:0] trigger_pkt_any,         
+   input lsu_pkt_t     lsu_pkt_dc3,                   
+   input logic [31:0]  lsu_addr_dc3,                  
+   input logic [31:0]  lsu_result_dc3,                
+   input logic [31:0]  store_data_dc3,                
+
+   output logic [3:0] lsu_trigger_match_dc3           
+);
+endmodule
+
+module mem
+   import veer_types::*;
+(
+   input logic         clk,
+   input logic         rst_l,
+   input logic         lsu_freeze_dc3,
+   input logic         dccm_clk_override,
+   input logic         icm_clk_override,
+   input logic         dec_tlu_core_ecc_disable,
+
+    
+   input logic         dccm_wren,
+   input logic         dccm_rden,
+   input logic [16-1:0]  dccm_wr_addr,
+   input logic [16-1:0]  dccm_rd_addr_lo,
+   input logic [16-1:0]  dccm_rd_addr_hi,
+   input logic [39-1:0]  dccm_wr_data,
+
+   output logic [39-1:0]  dccm_rd_data_lo,
+   output logic [39-1:0]  dccm_rd_data_hi,
+
+ 
+    
+   input logic [19-1:2]  iccm_rw_addr,
+   input logic         iccm_wren,
+   input logic         iccm_rden,
+   input logic [2:0]   iccm_wr_size,
+   input logic [77:0]  iccm_wr_data,
+
+   output logic [155:0] iccm_rd_data,
+
+    
+   
+   input  logic [31:2]  ic_rw_addr,
+   input  logic [3:0]   ic_tag_valid,
+   input  logic [3:0]   ic_wr_en,
+   input  logic         ic_rd_en,
+   input  logic [127:0] ic_premux_data,      
+   input  logic         ic_sel_premux_data,  
+
+
+   input  logic [67:0]               ic_wr_data,          
+   input  logic [33:0]               ic_debug_wr_data,    
+
+   input  logic [15:2]               ic_debug_addr,       
+   input  logic                      ic_debug_rd_en,      
+   input  logic                      ic_debug_wr_en,      
+   input  logic                      ic_debug_tag_array,  
+   input  logic [3:0]                ic_debug_way,        
+
+
+   output logic [135:0]              ic_rd_data ,         
+   output logic [20:0]               ictag_debug_rd_data, 
+
+   output logic [3:0]   ic_rd_hit,
+   output logic         ic_tag_perr,         
+
+   input  logic         scan_mode
+
+);
+endmodule
+
+module pic_ctrl
+                  (
+
+                     input  logic                   clk,                   
+                     input  logic                   free_clk,              
+                     input  logic                   active_clk,            
+                     input  logic                   rst_l,                 
+                     input  logic                   clk_override,          
+                     input  logic                   lsu_freeze_dc3,        
+                     input  logic [9-1:0]   extintsrc_req,         
+                     input  logic [31:0]            picm_addr,             
+                     input  logic [31:0]            picm_wr_data,          
+                     input  logic                   picm_wren,             
+                     input  logic                   picm_rden,             
+                     input  logic                   picm_mken,             
+                     input  logic [3:0]             meicurpl,              
+                     input  logic [3:0]             meipt,                 
+
+                     output logic                   mexintpend,            
+                     output logic [7:0]             claimid,               
+                     output logic [3:0]             pl,                    
+                     output logic [31:0]            picm_rd_data,          
+                     output logic                   mhwakeup,              
+                     input  logic                   scan_mode              
+
+);
+endmodule
+
+module cmp_and_mux #(parameter ID_BITS=8,
+                               INTPRIORITY_BITS = 4)
+                    (
+                        input  logic [ID_BITS-1:0]       a_id,
+                        input  logic [INTPRIORITY_BITS-1:0] a_priority,
+
+                        input  logic [ID_BITS-1:0]       b_id,
+                        input  logic [INTPRIORITY_BITS-1:0] b_priority,
+
+                        output logic [ID_BITS-1:0]       out_id,
+                        output logic [INTPRIORITY_BITS-1:0] out_priority
+
+                    );
+endmodule
+
+module configurable_gw (
+                             input logic gw_clk,
+                             input logic rst_l,
+
+                             input logic extintsrc_req_sync ,
+                             input logic meigwctrl_polarity ,
+                             input logic meigwctrl_type ,
+                             input logic meigwclr ,
+
+                             output logic extintsrc_req_config
+                            );
+endmodule
+
+module veer
+   import veer_types::*;
+(
+   input logic                  clk,
+   input logic                  rst_l,
+   input logic                  dbg_rst_l,
+   input logic [31:1]           rst_vec,
+   input logic                  nmi_int,
+   input logic [31:1]           nmi_vec,
+   output logic                 core_rst_l,    
+
+   output logic [63:0] trace_rv_i_insn_ip,
+   output logic [63:0] trace_rv_i_address_ip,
+   output logic [2:0]  trace_rv_i_valid_ip,
+   output logic [2:0]  trace_rv_i_exception_ip,
+   output logic [4:0]  trace_rv_i_ecause_ip,
+   output logic [2:0]  trace_rv_i_interrupt_ip,
+   output logic [31:0] trace_rv_i_tval_ip,
+
+   output logic                 lsu_freeze_dc3,
+   output logic                 dccm_clk_override,
+   output logic                 icm_clk_override,
+   output logic                 dec_tlu_core_ecc_disable,
+
+    
+   input logic  i_cpu_halt_req,     
+   input logic  i_cpu_run_req,      
+   output logic o_cpu_halt_ack,     
+   output logic o_cpu_halt_status,  
+   output logic o_cpu_run_ack,      
+   output logic o_debug_mode_status,  
+
+    
+   input logic mpc_debug_halt_req,  
+   input logic mpc_debug_run_req,  
+   input logic mpc_reset_run_req,  
+   output logic mpc_debug_halt_ack,  
+   output logic mpc_debug_run_ack,  
+   output logic debug_brkpt_status,  
+
+   output logic [1:0] dec_tlu_perfcnt0,  
+   output logic [1:0] dec_tlu_perfcnt1,
+   output logic [1:0] dec_tlu_perfcnt2,
+   output logic [1:0] dec_tlu_perfcnt3,
+
+    
+   output logic                          dccm_wren,
+   output logic                          dccm_rden,
+   output logic [16-1:0]          dccm_wr_addr,
+   output logic [16-1:0]          dccm_rd_addr_lo,
+   output logic [16-1:0]          dccm_rd_addr_hi,
+   output logic [39-1:0]   dccm_wr_data,
+
+   input logic [39-1:0]    dccm_rd_data_lo,
+   input logic [39-1:0]    dccm_rd_data_hi,
+
+ 
+    
+   output logic [19-1:2]           iccm_rw_addr,
+   output logic                  iccm_wren,
+   output logic                  iccm_rden,
+   output logic [2:0]            iccm_wr_size,
+   output logic [77:0]           iccm_wr_data,
+
+   input  logic [155:0]          iccm_rd_data,
+
+    
+   output logic [31:2]           ic_rw_addr,
+   output logic [3:0]            ic_tag_valid,
+   output logic [3:0]            ic_wr_en,
+   output logic                  ic_rd_en,
+
+
+   output logic [67:0]               ic_wr_data,          
+   input  logic [135:0]              ic_rd_data ,         
+   input  logic [20:0]               ictag_debug_rd_data, 
+   output logic [33:0]               ic_debug_wr_data,    
+
+   output logic [127:0]              ic_premux_data,      
+   output logic                      ic_sel_premux_data,  
+
+   output logic [15:2]               ic_debug_addr,       
+   output logic                      ic_debug_rd_en,      
+   output logic                      ic_debug_wr_en,      
+   output logic                      ic_debug_tag_array,  
+   output logic [3:0]                ic_debug_way,        
+
+   input  logic [3:0]            ic_rd_hit,
+   input  logic                  ic_tag_perr,         
+
+ 
+    
+    
+   output logic                            lsu_axi_awvalid,
+   input  logic                            lsu_axi_awready,
+   output logic [4-1:0]      lsu_axi_awid,
+   output logic [31:0]                     lsu_axi_awaddr,
+   output logic [3:0]                      lsu_axi_awregion,
+   output logic [7:0]                      lsu_axi_awlen,
+   output logic [2:0]                      lsu_axi_awsize,
+   output logic [1:0]                      lsu_axi_awburst,
+   output logic                            lsu_axi_awlock,
+   output logic [3:0]                      lsu_axi_awcache,
+   output logic [2:0]                      lsu_axi_awprot,
+   output logic [3:0]                      lsu_axi_awqos,
+
+   output logic                            lsu_axi_wvalid,
+   input  logic                            lsu_axi_wready,
+   output logic [63:0]                     lsu_axi_wdata,
+   output logic [7:0]                      lsu_axi_wstrb,
+   output logic                            lsu_axi_wlast,
+
+   input  logic                            lsu_axi_bvalid,
+   output logic                            lsu_axi_bready,
+   input  logic [1:0]                      lsu_axi_bresp,
+   input  logic [4-1:0]      lsu_axi_bid,
+
+    
+   output logic                            lsu_axi_arvalid,
+   input  logic                            lsu_axi_arready,
+   output logic [4-1:0]      lsu_axi_arid,
+   output logic [31:0]                     lsu_axi_araddr,
+   output logic [3:0]                      lsu_axi_arregion,
+   output logic [7:0]                      lsu_axi_arlen,
+   output logic [2:0]                      lsu_axi_arsize,
+   output logic [1:0]                      lsu_axi_arburst,
+   output logic                            lsu_axi_arlock,
+   output logic [3:0]                      lsu_axi_arcache,
+   output logic [2:0]                      lsu_axi_arprot,
+   output logic [3:0]                      lsu_axi_arqos,
+
+   input  logic                            lsu_axi_rvalid,
+   output logic                            lsu_axi_rready,
+   input  logic [4-1:0]      lsu_axi_rid,
+   input  logic [63:0]                     lsu_axi_rdata,
+   input  logic [1:0]                      lsu_axi_rresp,
+   input  logic                            lsu_axi_rlast,
+
+    
+    
+   output logic                            ifu_axi_awvalid,
+   input  logic                            ifu_axi_awready,
+   output logic [3-1:0]      ifu_axi_awid,
+   output logic [31:0]                     ifu_axi_awaddr,
+   output logic [3:0]                      ifu_axi_awregion,
+   output logic [7:0]                      ifu_axi_awlen,
+   output logic [2:0]                      ifu_axi_awsize,
+   output logic [1:0]                      ifu_axi_awburst,
+   output logic                            ifu_axi_awlock,
+   output logic [3:0]                      ifu_axi_awcache,
+   output logic [2:0]                      ifu_axi_awprot,
+   output logic [3:0]                      ifu_axi_awqos,
+
+   output logic                            ifu_axi_wvalid,
+   input  logic                            ifu_axi_wready,
+   output logic [63:0]                     ifu_axi_wdata,
+   output logic [7:0]                      ifu_axi_wstrb,
+   output logic                            ifu_axi_wlast,
+
+   input  logic                            ifu_axi_bvalid,
+   output logic                            ifu_axi_bready,
+   input  logic [1:0]                      ifu_axi_bresp,
+   input  logic [3-1:0]      ifu_axi_bid,
+
+    
+   output logic                            ifu_axi_arvalid,
+   input  logic                            ifu_axi_arready,
+   output logic [3-1:0]      ifu_axi_arid,
+   output logic [31:0]                     ifu_axi_araddr,
+   output logic [3:0]                      ifu_axi_arregion,
+   output logic [7:0]                      ifu_axi_arlen,
+   output logic [2:0]                      ifu_axi_arsize,
+   output logic [1:0]                      ifu_axi_arburst,
+   output logic                            ifu_axi_arlock,
+   output logic [3:0]                      ifu_axi_arcache,
+   output logic [2:0]                      ifu_axi_arprot,
+   output logic [3:0]                      ifu_axi_arqos,
+
+   input  logic                            ifu_axi_rvalid,
+   output logic                            ifu_axi_rready,
+   input  logic [3-1:0]      ifu_axi_rid,
+   input  logic [63:0]                     ifu_axi_rdata,
+   input  logic [1:0]                      ifu_axi_rresp,
+   input  logic                            ifu_axi_rlast,
+
+    
+    
+   output logic                            sb_axi_awvalid,
+   input  logic                            sb_axi_awready,
+   output logic [1-1:0]       sb_axi_awid,
+   output logic [31:0]                     sb_axi_awaddr,
+   output logic [3:0]                      sb_axi_awregion,
+   output logic [7:0]                      sb_axi_awlen,
+   output logic [2:0]                      sb_axi_awsize,
+   output logic [1:0]                      sb_axi_awburst,
+   output logic                            sb_axi_awlock,
+   output logic [3:0]                      sb_axi_awcache,
+   output logic [2:0]                      sb_axi_awprot,
+   output logic [3:0]                      sb_axi_awqos,
+
+   output logic                            sb_axi_wvalid,
+   input  logic                            sb_axi_wready,
+   output logic [63:0]                     sb_axi_wdata,
+   output logic [7:0]                      sb_axi_wstrb,
+   output logic                            sb_axi_wlast,
+
+   input  logic                            sb_axi_bvalid,
+   output logic                            sb_axi_bready,
+   input  logic [1:0]                      sb_axi_bresp,
+   input  logic [1-1:0]       sb_axi_bid,
+
+    
+   output logic                            sb_axi_arvalid,
+   input  logic                            sb_axi_arready,
+   output logic [1-1:0]       sb_axi_arid,
+   output logic [31:0]                     sb_axi_araddr,
+   output logic [3:0]                      sb_axi_arregion,
+   output logic [7:0]                      sb_axi_arlen,
+   output logic [2:0]                      sb_axi_arsize,
+   output logic [1:0]                      sb_axi_arburst,
+   output logic                            sb_axi_arlock,
+   output logic [3:0]                      sb_axi_arcache,
+   output logic [2:0]                      sb_axi_arprot,
+   output logic [3:0]                      sb_axi_arqos,
+
+   input  logic                            sb_axi_rvalid,
+   output logic                            sb_axi_rready,
+   input  logic [1-1:0]       sb_axi_rid,
+   input  logic [63:0]                     sb_axi_rdata,
+   input  logic [1:0]                      sb_axi_rresp,
+   input  logic                            sb_axi_rlast,
+
+    
+    
+   input  logic                         dma_axi_awvalid,
+   output logic                         dma_axi_awready,
+   input  logic [1-1:0]   dma_axi_awid,
+   input  logic [31:0]                  dma_axi_awaddr,
+   input  logic [2:0]                   dma_axi_awsize,
+   input  logic [2:0]                   dma_axi_awprot,
+   input  logic [7:0]                   dma_axi_awlen,
+   input  logic [1:0]                   dma_axi_awburst,
+
+   input  logic                         dma_axi_wvalid,
+   output logic                         dma_axi_wready,
+   input  logic [63:0]                  dma_axi_wdata,
+   input  logic [7:0]                   dma_axi_wstrb,
+   input  logic                         dma_axi_wlast,
+
+   output logic                         dma_axi_bvalid,
+   input  logic                         dma_axi_bready,
+   output logic [1:0]                   dma_axi_bresp,
+   output logic [1-1:0]   dma_axi_bid,
+
+    
+   input  logic                         dma_axi_arvalid,
+   output logic                         dma_axi_arready,
+   input  logic [1-1:0]   dma_axi_arid,
+   input  logic [31:0]                  dma_axi_araddr,
+   input  logic [2:0]                   dma_axi_arsize,
+   input  logic [2:0]                   dma_axi_arprot,
+   input  logic [7:0]                   dma_axi_arlen,
+   input  logic [1:0]                   dma_axi_arburst,
+
+   output logic                         dma_axi_rvalid,
+   input  logic                         dma_axi_rready,
+   output logic [1-1:0]   dma_axi_rid,
+   output logic [63:0]                  dma_axi_rdata,
+   output logic [1:0]                   dma_axi_rresp,
+   output logic                         dma_axi_rlast,
+
+
+
+
+
+
+
+
+
+
+   input   logic                 lsu_bus_clk_en,
+   input   logic                 ifu_bus_clk_en,
+   input   logic                 dbg_bus_clk_en,
+   input   logic                 dma_bus_clk_en,
+
+    
+   input  logic                  dmi_reg_en,
+   input  logic [6:0]            dmi_reg_addr,
+   input  logic                  dmi_reg_wr_en,
+   input  logic [31:0]           dmi_reg_wdata,
+   output logic [31:0]           dmi_reg_rdata,
+   input  logic                  dmi_hard_reset,
+
+   input logic [8:1]           extintsrc_req,
+   input logic                   timer_int,
+   input logic                   scan_mode
+);
+endmodule
+
+module veer_wrapper
+   import veer_types::*;
+(
+   input logic                       clk,
+   input logic                       rst_l,
+   input logic                       dbg_rst_l,
+   input logic [31:1]                rst_vec,
+   input logic                       nmi_int,
+   input logic [31:1]                nmi_vec,
+   input logic [31:1]                jtag_id,
+
+   output logic [63:0] trace_rv_i_insn_ip,
+   output logic [63:0] trace_rv_i_address_ip,
+   output logic [2:0]  trace_rv_i_valid_ip,
+   output logic [2:0]  trace_rv_i_exception_ip,
+   output logic [4:0]  trace_rv_i_ecause_ip,
+   output logic [2:0]  trace_rv_i_interrupt_ip,
+   output logic [31:0] trace_rv_i_tval_ip,
+
+
+ 
+    
+    
+   output logic                            lsu_axi_awvalid,
+   input  logic                            lsu_axi_awready,
+   output logic [4-1:0]      lsu_axi_awid,
+   output logic [31:0]                     lsu_axi_awaddr,
+   output logic [3:0]                      lsu_axi_awregion,
+   output logic [7:0]                      lsu_axi_awlen,
+   output logic [2:0]                      lsu_axi_awsize,
+   output logic [1:0]                      lsu_axi_awburst,
+   output logic                            lsu_axi_awlock,
+   output logic [3:0]                      lsu_axi_awcache,
+   output logic [2:0]                      lsu_axi_awprot,
+   output logic [3:0]                      lsu_axi_awqos,
+
+   output logic                            lsu_axi_wvalid,
+   input  logic                            lsu_axi_wready,
+   output logic [63:0]                     lsu_axi_wdata,
+   output logic [7:0]                      lsu_axi_wstrb,
+   output logic                            lsu_axi_wlast,
+
+   input  logic                            lsu_axi_bvalid,
+   output logic                            lsu_axi_bready,
+   input  logic [1:0]                      lsu_axi_bresp,
+   input  logic [4-1:0]      lsu_axi_bid,
+
+    
+   output logic                            lsu_axi_arvalid,
+   input  logic                            lsu_axi_arready,
+   output logic [4-1:0]      lsu_axi_arid,
+   output logic [31:0]                     lsu_axi_araddr,
+   output logic [3:0]                      lsu_axi_arregion,
+   output logic [7:0]                      lsu_axi_arlen,
+   output logic [2:0]                      lsu_axi_arsize,
+   output logic [1:0]                      lsu_axi_arburst,
+   output logic                            lsu_axi_arlock,
+   output logic [3:0]                      lsu_axi_arcache,
+   output logic [2:0]                      lsu_axi_arprot,
+   output logic [3:0]                      lsu_axi_arqos,
+
+   input  logic                            lsu_axi_rvalid,
+   output logic                            lsu_axi_rready,
+   input  logic [4-1:0]      lsu_axi_rid,
+   input  logic [63:0]                     lsu_axi_rdata,
+   input  logic [1:0]                      lsu_axi_rresp,
+   input  logic                            lsu_axi_rlast,
+
+    
+    
+   output logic                            ifu_axi_awvalid,
+   input  logic                            ifu_axi_awready,
+   output logic [3-1:0]      ifu_axi_awid,
+   output logic [31:0]                     ifu_axi_awaddr,
+   output logic [3:0]                      ifu_axi_awregion,
+   output logic [7:0]                      ifu_axi_awlen,
+   output logic [2:0]                      ifu_axi_awsize,
+   output logic [1:0]                      ifu_axi_awburst,
+   output logic                            ifu_axi_awlock,
+   output logic [3:0]                      ifu_axi_awcache,
+   output logic [2:0]                      ifu_axi_awprot,
+   output logic [3:0]                      ifu_axi_awqos,
+
+   output logic                            ifu_axi_wvalid,
+   input  logic                            ifu_axi_wready,
+   output logic [63:0]                     ifu_axi_wdata,
+   output logic [7:0]                      ifu_axi_wstrb,
+   output logic                            ifu_axi_wlast,
+
+   input  logic                            ifu_axi_bvalid,
+   output logic                            ifu_axi_bready,
+   input  logic [1:0]                      ifu_axi_bresp,
+   input  logic [3-1:0]      ifu_axi_bid,
+
+    
+   output logic                            ifu_axi_arvalid,
+   input  logic                            ifu_axi_arready,
+   output logic [3-1:0]      ifu_axi_arid,
+   output logic [31:0]                     ifu_axi_araddr,
+   output logic [3:0]                      ifu_axi_arregion,
+   output logic [7:0]                      ifu_axi_arlen,
+   output logic [2:0]                      ifu_axi_arsize,
+   output logic [1:0]                      ifu_axi_arburst,
+   output logic                            ifu_axi_arlock,
+   output logic [3:0]                      ifu_axi_arcache,
+   output logic [2:0]                      ifu_axi_arprot,
+   output logic [3:0]                      ifu_axi_arqos,
+
+   input  logic                            ifu_axi_rvalid,
+   output logic                            ifu_axi_rready,
+   input  logic [3-1:0]      ifu_axi_rid,
+   input  logic [63:0]                     ifu_axi_rdata,
+   input  logic [1:0]                      ifu_axi_rresp,
+   input  logic                            ifu_axi_rlast,
+
+    
+    
+   output logic                            sb_axi_awvalid,
+   input  logic                            sb_axi_awready,
+   output logic [1-1:0]       sb_axi_awid,
+   output logic [31:0]                     sb_axi_awaddr,
+   output logic [3:0]                      sb_axi_awregion,
+   output logic [7:0]                      sb_axi_awlen,
+   output logic [2:0]                      sb_axi_awsize,
+   output logic [1:0]                      sb_axi_awburst,
+   output logic                            sb_axi_awlock,
+   output logic [3:0]                      sb_axi_awcache,
+   output logic [2:0]                      sb_axi_awprot,
+   output logic [3:0]                      sb_axi_awqos,
+
+   output logic                            sb_axi_wvalid,
+   input  logic                            sb_axi_wready,
+   output logic [63:0]                     sb_axi_wdata,
+   output logic [7:0]                      sb_axi_wstrb,
+   output logic                            sb_axi_wlast,
+
+   input  logic                            sb_axi_bvalid,
+   output logic                            sb_axi_bready,
+   input  logic [1:0]                      sb_axi_bresp,
+   input  logic [1-1:0]       sb_axi_bid,
+
+    
+   output logic                            sb_axi_arvalid,
+   input  logic                            sb_axi_arready,
+   output logic [1-1:0]       sb_axi_arid,
+   output logic [31:0]                     sb_axi_araddr,
+   output logic [3:0]                      sb_axi_arregion,
+   output logic [7:0]                      sb_axi_arlen,
+   output logic [2:0]                      sb_axi_arsize,
+   output logic [1:0]                      sb_axi_arburst,
+   output logic                            sb_axi_arlock,
+   output logic [3:0]                      sb_axi_arcache,
+   output logic [2:0]                      sb_axi_arprot,
+   output logic [3:0]                      sb_axi_arqos,
+
+   input  logic                            sb_axi_rvalid,
+   output logic                            sb_axi_rready,
+   input  logic [1-1:0]       sb_axi_rid,
+   input  logic [63:0]                     sb_axi_rdata,
+   input  logic [1:0]                      sb_axi_rresp,
+   input  logic                            sb_axi_rlast,
+
+    
+    
+   input  logic                         dma_axi_awvalid,
+   output logic                         dma_axi_awready,
+   input  logic [1-1:0]   dma_axi_awid,
+   input  logic [31:0]                  dma_axi_awaddr,
+   input  logic [2:0]                   dma_axi_awsize,
+   input  logic [2:0]                   dma_axi_awprot,
+   input  logic [7:0]                   dma_axi_awlen,
+   input  logic [1:0]                   dma_axi_awburst,
+
+   input  logic                         dma_axi_wvalid,
+   output logic                         dma_axi_wready,
+   input  logic [63:0]                  dma_axi_wdata,
+   input  logic [7:0]                   dma_axi_wstrb,
+   input  logic                         dma_axi_wlast,
+
+   output logic                         dma_axi_bvalid,
+   input  logic                         dma_axi_bready,
+   output logic [1:0]                   dma_axi_bresp,
+   output logic [1-1:0]   dma_axi_bid,
+
+    
+   input  logic                         dma_axi_arvalid,
+   output logic                         dma_axi_arready,
+   input  logic [1-1:0]   dma_axi_arid,
+   input  logic [31:0]                  dma_axi_araddr,
+   input  logic [2:0]                   dma_axi_arsize,
+   input  logic [2:0]                   dma_axi_arprot,
+   input  logic [7:0]                   dma_axi_arlen,
+   input  logic [1:0]                   dma_axi_arburst,
+
+   output logic                         dma_axi_rvalid,
+   input  logic                         dma_axi_rready,
+   output logic [1-1:0]   dma_axi_rid,
+   output logic [63:0]                  dma_axi_rdata,
+   output logic [1:0]                   dma_axi_rresp,
+   output logic                         dma_axi_rlast,
+
+
+
+
+
+
+
+
+    
+   input logic                       lsu_bus_clk_en,  
+   input logic                       ifu_bus_clk_en,  
+   input logic                       dbg_bus_clk_en,  
+   input logic                       dma_bus_clk_en,  
+
+ 
+   input logic                       timer_int,
+   input logic [8:1] extintsrc_req,
+
+   output logic [1:0] dec_tlu_perfcnt0,  
+   output logic [1:0] dec_tlu_perfcnt1,
+   output logic [1:0] dec_tlu_perfcnt2,
+   output logic [1:0] dec_tlu_perfcnt3,
+
+    
+   input logic                       jtag_tck,  
+   input logic                       jtag_tms,  
+   input logic                       jtag_tdi,  
+   input logic                       jtag_trst_n,  
+   output logic                      jtag_tdo,  
+    
+   input logic mpc_debug_halt_req,  
+   input logic mpc_debug_run_req,  
+   input logic mpc_reset_run_req,  
+   output logic mpc_debug_halt_ack,  
+   output logic mpc_debug_run_ack,  
+   output logic debug_brkpt_status,  
+
+   input logic                       i_cpu_halt_req,  
+   output logic                      o_cpu_halt_ack,  
+   output logic                      o_cpu_halt_status,  
+   output logic                      o_debug_mode_status,  
+   input logic                       i_cpu_run_req,  
+   output logic                      o_cpu_run_ack,  
+   input logic                       scan_mode,  
+   input logic                       mbist_mode  
+);
+endmodule
+
+module rvclkhdr
+  (
+   input  logic en,
+   input  logic clk,
+   input  logic scan_mode,
+   output logic l1clk
+   );
+endmodule

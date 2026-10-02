@@ -1,0 +1,135 @@
+module origen_103528 #(
+    parameter CLK_DIV = 100,
+    parameter SLAVE_ADDR = 7'h48,
+    parameter REG_ADDR = 8'h00
+)(
+    input wire rstn,
+    input wire clk,
+    output reg scl,
+    inout wire sda,
+    input wire start,
+    output reg ready,
+    output reg done,
+    output reg [15:0] regout
+);
+
+    localparam IDLE = 0, START = 1, ADDR = 2, WRITE = 3, RESTART = 4, READ = 5, STOP = 6;
+
+    reg [7:0] cnt;
+    reg [7:0] clk_div_cnt;
+    reg epoch;
+    reg [7:0] send_shift;
+    reg [15:0] recv_shift;
+    reg sda_e, sda_o;
+    wire sda_i;
+
+    assign sda = sda_e ? sda_o : 1'bz;
+    assign sda_i = sda;
+
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
+            cnt <= 0;
+            clk_div_cnt <= 0;
+            epoch <= 0;
+            scl <= 1;
+            sda_e <= 1;
+            sda_o <= 1;
+            ready <= 1;
+            done <= 0;
+            regout <= 0;
+        end else begin
+            if (clk_div_cnt == CLK_DIV - 1) begin
+                clk_div_cnt <= 0;
+                epoch <= 1;
+            end else begin
+                clk_div_cnt <= clk_div_cnt + 1;
+                epoch <= 0;
+            end
+
+            if (epoch) begin
+                case (cnt)
+                    IDLE: begin
+                        if (start) begin
+                            cnt <= START;
+                            ready <= 0;
+                        end
+                        scl <= 1;
+                        sda_e <= 1;
+                        sda_o <= 1;
+                    end
+                    START: begin
+                        if (scl) begin
+                            sda_o <= 0;
+                        end else begin
+                            cnt <= ADDR;
+                            send_shift <= {SLAVE_ADDR, 1'b0};
+                        end
+                        scl <= ~scl;
+                    end
+                    ADDR: begin
+                        if (cnt[2:0] == 0) begin
+                            if (cnt[3]) begin
+                                sda_e <= 0;
+                                cnt <= WRITE;
+                            end else begin
+                                sda_o <= send_shift[7];
+                                send_shift <= {send_shift[6:0], 1'b0};
+                            end
+                        end
+                        scl <= ~scl;
+                    end
+                    WRITE: begin
+                        if (cnt[2:0] == 0) begin
+                            if (cnt[3]) begin
+                                sda_e <= 1;
+                                cnt <= RESTART;
+                                send_shift <= REG_ADDR;
+                            end else begin
+                                sda_o <= send_shift[7];
+                                send_shift <= {send_shift[6:0], 1'b0};
+                            end
+                        end
+                        scl <= ~scl;
+                    end
+                    RESTART: begin
+                        if (scl) begin
+                            sda_o <= 1;
+                        end else begin
+                            sda_o <= 0;
+                            cnt <= ADDR;
+                            send_shift <= {SLAVE_ADDR, 1'b1};
+                        end
+                        scl <= ~scl;
+                    end
+                    READ: begin
+                        if (cnt[2:0] == 0) begin
+                            if (cnt[4]) begin
+                                sda_e <= 1;
+                                sda_o <= cnt[3];
+                                cnt <= STOP;
+                            end else begin
+                                sda_e <= 0;
+                                recv_shift <= {recv_shift[14:0], sda_i};
+                            end
+                        end
+                        scl <= ~scl;
+                    end
+                    STOP: begin
+                        if (scl) begin
+                            sda_o <= 0;
+                        end else begin
+                            sda_o <= 1;
+                            cnt <= IDLE;
+                            ready <= 1;
+                            done <= 1;
+                            regout <= recv_shift;
+                        end
+                        scl <= ~scl;
+                    end
+                endcase
+            end else begin
+                done <= 0;
+            end
+        end
+    end
+endmodule

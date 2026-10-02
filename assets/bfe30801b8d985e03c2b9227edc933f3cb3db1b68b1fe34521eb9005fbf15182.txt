@@ -1,0 +1,11 @@
+# Assertion needs to be disabled while reset is asserted
+
+There are a few assertions in ibex_load_store_unit which are not disabled while reset is asserted. This could cause some false firing if some signals are x when reset is asserted.
+
+e.g. ibex_load_store_unit.sv:457
+
+```
+  assert property (
+    @(posedge clk) (CS == IDLE) |-> (data_rvalid_i == 1'b0) );
+
+```

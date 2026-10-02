@@ -1,0 +1,18 @@
+module cmt_mod (
+	input wire 			clk,
+	input wire 			clk2400,
+	input wire 			din,
+	output reg			cmt_out
+	);
+
+	reg	_clk2400;
+	
+	always @( posedge clk) begin
+
+		if( clk2400 & ~_clk2400)			cmt_out <= ~cmt_out;
+		if( ~clk2400 & _clk2400 & din)	cmt_out <= ~cmt_out;
+
+		_clk2400 <= clk2400;
+	end
+
+endmodule

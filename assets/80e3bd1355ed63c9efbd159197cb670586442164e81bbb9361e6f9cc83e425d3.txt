@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.cdc15a3298c9c8db81d2.42cd743ec456",
+  "compile_check": {
+    "case_id": "s1derived.cdc15a3298c9c8db81d2.42cd743ec456",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "oh_mxi3",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.cdc15a3298c9c8db81d2.42cd743ec456/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "cdc15a3298c9c8db81d2f541106e0169a95798499eb76883df4b70a9da4429a1",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.cdc15a3298c9c8db81d2.42cd743ec456",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.cdc15a3298c9c8db81d2",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "oh_mxi3"
+  },
+  "independent_review": {
+    "case_id": "s1derived.cdc15a3298c9c8db81d2.42cd743ec456",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The vector widths, per-bit selector priority, inversion, and default parameter match.",
+        "rtl_excerpt": "`assign z=~((d0&~s0&~s1)|(d1&s0&~s1)|(d2&s1));`",
+        "spec_excerpt": "`z = ~((d0 & ~s0 & ~s1) | ... | (d2 & s1))`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.cdc15a3298c9c8db81d2",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "2d9b02cd0bc8b4e03c149d06fb49f074785d7df12cc94b7d97b0126ec3165686",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "cdc15a3298c9c8db81d2f541106e0169a95798499eb76883df4b70a9da4429a1",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.cdc15a3298c9c8db81d2",
+  "primary_review": {
+    "case_id": "s1derived.cdc15a3298c9c8db81d2.42cd743ec456",
+    "checks": {
+      "behavior": "Selection description matches only when applied independently per bit.",
+      "boundaries": "s1 dominates within each bit.",
+      "interface": "All ports are DW bits.",
+      "rtl_reasonableness": "RTL is reasonable bitwise selector logic.",
+      "sequential_and_reset": "Combinational."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Selection description matches only when applied independently per bit. Combinational.",
+        "rtl_excerpt": "parameter DW=1; input [DW-1:0] s0,s1; bitwise operators",
+        "spec_excerpt": "\u201cbased on two select inputs (s0, s1)\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose omits DW=1 and does not state that both selects are DW-bit vectors operating per bit.",
+        "rtl_evidence": "parameter DW=1; input [DW-1:0] s0,s1; bitwise operators",
+        "spec_evidence": "\u201cbased on two select inputs (s0, s1)\u201d",
+        "type": "vector_select_and_default_omitted"
+      }
+    ],
+    "parent_id": "s1p.cdc15a3298c9c8db81d2",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.cdc15a3298c9c8db81d2.42cd743ec456.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "cdc15a3298c9c8db81d2f541106e0169a95798499eb76883df4b70a9da4429a1",
+    "source_group": "S1",
+    "specification_sha256": "42cd743ec4565cc9fb94ab5a204790e1813a470b768a7e82e340a82c1f381f68",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.cdc15a3298c9c8db81d2.42cd743ec456.md",
+  "qualified_specification_sha256": "2d9b02cd0bc8b4e03c149d06fb49f074785d7df12cc94b7d97b0126ec3165686",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.cdc15a3298c9c8db81d2.42cd743ec456/private/golden_design.v",
+  "rtl_sha256": "cdc15a3298c9c8db81d2f541106e0169a95798499eb76883df4b70a9da4429a1",
+  "source_corpus": "SEC-Flow-Star-repos-31.oh",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.cdc15a3298c9c8db81d2.42cd743ec456/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "42cd743ec4565cc9fb94ab5a204790e1813a470b768a7e82e340a82c1f381f68",
+  "top_module": "oh_mxi3"
+}

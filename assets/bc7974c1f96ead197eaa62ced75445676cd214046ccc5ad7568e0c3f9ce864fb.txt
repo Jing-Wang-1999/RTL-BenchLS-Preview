@@ -1,0 +1,22 @@
+always @ (posedge clk or negedge rst_n) begin
+	if (!rst_n) begin
+		pc <= RESET_VECTOR;
+	end else begin
+		if (debug_dpc_wen) begin
+			pc <= debug_dpc_wdata;
+		end else if (debug_mode) begin
+			pc <= pc;
+		end else if ((f_jump_now && !hold_pc_on_cir_lock) || update_pc_on_cir_unlock) begin
+			pc <= f_jump_target;
+		end else if (!f_jump_now && fd_cir_uop_nonfinal && !fd_cir_uop_no_pc_update && !x_stall) begin
+			// End of previously stalled jr uop in cm.popret and cm.popretz:
+			// safe to update PC as next instruction (addi sp) cannot trap.
+			pc <= f_jump_target;
+		end else if (!d_stall && !cir_lock) begin
+			// If this instruction is a predicted-taken branch (and has not
+			// generated a mispredict recovery jump) then set PC to the
+			// prediction target instead of the sequentially next PC
+			pc <= predicted_branch ? d_btb_target_addr : pc_seq_next;
+		end
+	end
+end

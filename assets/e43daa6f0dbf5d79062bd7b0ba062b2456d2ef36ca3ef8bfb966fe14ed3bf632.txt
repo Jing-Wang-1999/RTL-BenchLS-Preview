@@ -1,0 +1,42 @@
+# FP32_ADD_mgc_shift_bl_v4 Module Specification
+
+## Overview
+This module performs a variable-width arithmetic shift operation on a fixed-point or integer input. It supports both left and right shifts controlled by a signed shift amount, with automatic sign extension for signed inputs.
+
+## Inputs
+- **a**: The data input to be shifted. Width is configurable via the `width_a` parameter (default 4 bits).
+- **s**: The shift amount control signal. Width is configurable via the `width_s` parameter (default 2 bits). This is interpreted as a signed value where the most significant bit determines shift direction.
+
+## Output
+- **z**: The shifted result. Width is configurable via the `width_z` parameter (default 8 bits). The output is zero-padded or sign-extended as appropriate.
+
+## Parameters
+- **width_a**: Bit width of input data (default 4).
+- **signd_a**: Boolean flag indicating if input is signed (default 1 for signed). When set, the sign bit is used for extension; otherwise, zeros are used.
+- **width_s**: Bit width of shift amount (default 2).
+- **width_z**: Bit width of output result (default 8).
+
+## Functional Behavior
+
+### Shift Direction Control
+The shift amount `s` is interpreted as a signed value:
+- When the most significant bit of `s` is 0: perform a left shift by the magnitude of `s`.
+- When the most significant bit of `s` is 1: perform a right shift by the magnitude of the two's complement of `s`.
+
+### Left Shift Operation
+The input is extended to the output width by prepending either the sign bit (if signed) or zeros (if unsigned). The extended value is then shifted left by the specified amount. Bits shifted out on the left are discarded; vacated positions on the right are filled with zeros.
+
+### Right Shift Operation
+The input is extended to the output width using sign extension (if signed) or zero extension (if unsigned). The extended value is then arithmetically shifted right by the specified amount. For signed inputs, the sign bit is replicated into vacated positions on the left. For unsigned inputs, zeros fill vacated positions.
+
+### Sign Extension
+When `signd_a` is true, the most significant bit of the input is used as the sign bit for extension during both left and right shift operations. When `signd_a` is false, extension always uses zeros.
+
+## Internal Functions
+The module uses three helper functions:
+- **fshl_u**: Performs unsigned left shift with zero or sign-bit extension.
+- **fshr_u**: Performs unsigned right shift with arithmetic extension.
+- **fshl_s**: Dispatches to left or right shift based on the sign of the shift amount.
+
+## Use Case
+This module is typically used in floating-point arithmetic pipelines (as suggested by the naming) to align mantissas or perform exponent adjustments by shifting operands to the required precision and scale.

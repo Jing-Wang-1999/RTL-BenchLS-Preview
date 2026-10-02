@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a",
+  "compile_check": {
+    "case_id": "s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "soc2nvdla_time_gen",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "167e5a8b8bfb06c5e55813feecb011eda4973231d012f4ddeb39fe333c9d5dcc",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.167e5a8b8bfb06c5e558",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "soc2nvdla_time_gen"
+  },
+  "independent_review": {
+    "case_id": "s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The combined counter boundary, Gray split, asynchronous reset, modulo wrap, and tick-as-bit-5 behavior match.",
+        "rtl_excerpt": "`Bin2Gray = Bin ^ Bin_right_shift; ... time_tick = ...right_shift[4];`",
+        "spec_excerpt": "\u201ccomplete 56-bit Gray code is counter ^ (counter >> 1)\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.167e5a8b8bfb06c5e558",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "0bcfc96a3e7c6b5caaeb13b170fdee13bf33a422e0d80a38df4666e9ed0f9561",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "167e5a8b8bfb06c5e55813feecb011eda4973231d012f4ddeb39fe333c9d5dcc",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.167e5a8b8bfb06c5e558",
+  "primary_review": {
+    "case_id": "s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a",
+    "checks": {
+      "behavior": "Combined encoding differs at the partition boundary.",
+      "boundaries": "Tick is high for 32 clocks and low for 32 clocks.",
+      "interface": "Ports and widths match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Active-low asynchronous reset and increment match."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Combined encoding differs at the partition boundary. Active-low asynchronous reset and increment match.",
+        "rtl_excerpt": "Bin2Gray({time1_bin,time0_bin}, combined>>1); tick=(combined>>1)[4]",
+        "spec_excerpt": "\u201ctwo gray-coded timing signals ... derived from another internal binary counter\u201d and \u201cperiodic pulse\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose describes two independently Gray-coded counters and calls tick a pulse, while RTL Gray-encodes one concatenated counter and exposes binary bit 5 as a level.",
+        "rtl_evidence": "Bin2Gray({time1_bin,time0_bin}, combined>>1); tick=(combined>>1)[4]",
+        "spec_evidence": "\u201ctwo gray-coded timing signals ... derived from another internal binary counter\u201d and \u201cperiodic pulse\u201d",
+        "type": "combined_gray_and_tick_semantics"
+      }
+    ],
+    "parent_id": "s1p.167e5a8b8bfb06c5e558",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "167e5a8b8bfb06c5e55813feecb011eda4973231d012f4ddeb39fe333c9d5dcc",
+    "source_group": "S1",
+    "specification_sha256": "bd6fcf5e940a9d4d84ce496a928219deb4165ad21422d63ff89533275baa5963",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a.md",
+  "qualified_specification_sha256": "0bcfc96a3e7c6b5caaeb13b170fdee13bf33a422e0d80a38df4666e9ed0f9561",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a/private/golden_design.v",
+  "rtl_sha256": "167e5a8b8bfb06c5e55813feecb011eda4973231d012f4ddeb39fe333c9d5dcc",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.167e5a8b8bfb06c5e558.bd6fcf5e940a/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "bd6fcf5e940a9d4d84ce496a928219deb4165ad21422d63ff89533275baa5963",
+  "top_module": "soc2nvdla_time_gen"
+}

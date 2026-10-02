@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.9ccc692ba82add17f53a.45af3cf44f8e",
+  "compile_check": {
+    "case_id": "s1derived.9ccc692ba82add17f53a.45af3cf44f8e",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "jtag_shifter",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.9ccc692ba82add17f53a.45af3cf44f8e/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "9ccc692ba82add17f53a49f55e64c888576051b4017fa8fd2d0ca78807eec503",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.9ccc692ba82add17f53a.45af3cf44f8e",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.9ccc692ba82add17f53a",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "jtag_shifter"
+  },
+  "independent_review": {
+    "case_id": "s1derived.9ccc692ba82add17f53a.45af3cf44f8e",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The later nonblocking shift override, serial chain order, independent bit-zero priority, and unknown startup are described exactly.",
+        "rtl_excerpt": "`if(din_load) bram_d_int[i+1]<=din[i+1]; if(shift) bram_d_int[i+1]<=bram_d_int[i];`",
+        "spec_excerpt": "\u201cboth asserted produce bit0 from din[0] while higher bits shift old data\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.9ccc692ba82add17f53a",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "0cee7bbaf53868f99e0235eeac247680420afb1979dead297a03c39b0420e8a7",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9ccc692ba82add17f53a49f55e64c888576051b4017fa8fd2d0ca78807eec503",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.9ccc692ba82add17f53a",
+  "primary_review": {
+    "case_id": "s1derived.9ccc692ba82add17f53a.45af3cf44f8e",
+    "checks": {
+      "behavior": "Serial chain mostly matches, simultaneous controls do not.",
+      "boundaries": "Both asserted yields din[0] only at bit0 while higher bits shift old state.",
+      "interface": "All parameterized ports match; defaults absent.",
+      "rtl_reasonableness": "RTL is reasonable but unusual.",
+      "sequential_and_reset": "No reset or initialization."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Serial chain mostly matches, simultaneous controls do not. No reset or initialization.",
+        "rtl_excerpt": "bit0 uses if din_load else if shift; bits i+1 use if(din_load) then separate if(shift), with shift assignment last",
+        "spec_excerpt": "\u201cparallel ... loaded ... overriding the serial shifting path\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose claims parallel load overrides shifting, but for bram_d bits 1 upward a later independent shift assignment overrides load when both controls are high; defaults, no reset, and initial unknown state are also omitted.",
+        "rtl_evidence": "bit0 uses if din_load else if shift; bits i+1 use if(din_load) then separate if(shift), with shift assignment last",
+        "spec_evidence": "\u201cparallel ... loaded ... overriding the serial shifting path\u201d",
+        "type": "simultaneous_load_shift_priority"
+      }
+    ],
+    "parent_id": "s1p.9ccc692ba82add17f53a",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.9ccc692ba82add17f53a.45af3cf44f8e.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9ccc692ba82add17f53a49f55e64c888576051b4017fa8fd2d0ca78807eec503",
+    "source_group": "S1",
+    "specification_sha256": "45af3cf44f8ee76e307c03af9c0d552f273483bf082b178caf19a6a741b69460",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.9ccc692ba82add17f53a.45af3cf44f8e.md",
+  "qualified_specification_sha256": "0cee7bbaf53868f99e0235eeac247680420afb1979dead297a03c39b0420e8a7",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.9ccc692ba82add17f53a.45af3cf44f8e/private/golden_design.v",
+  "rtl_sha256": "9ccc692ba82add17f53a49f55e64c888576051b4017fa8fd2d0ca78807eec503",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.9ccc692ba82add17f53a.45af3cf44f8e/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "45af3cf44f8ee76e307c03af9c0d552f273483bf082b178caf19a6a741b69460",
+  "top_module": "jtag_shifter"
+}

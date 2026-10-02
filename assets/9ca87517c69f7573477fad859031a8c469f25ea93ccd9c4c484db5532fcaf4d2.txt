@@ -1,0 +1,54 @@
+module sevseg(
+    input clk,
+    input [3:0] binary_input_0,
+    input [3:0] binary_input_1,
+    input [3:0] binary_input_2,
+    input [3:0] binary_input_3,
+    output reg [3:0] IO_SSEG_SEL,
+    output reg [6:0] IO_SSEG
+    );
+    
+    // Register to hold multiplexing value
+    reg [1:0] mux;
+
+    // BCD to 7-segment Decoder
+    function [6:0] bcd_to_7seg;
+        input [3:0] bcd;
+        case (bcd)
+            4'b0000: bcd_to_7seg = 7'b0000001;
+            4'b0001: bcd_to_7seg = 7'b1001111;
+            4'b0010: bcd_to_7seg = 7'b0010010;
+            4'b0011: bcd_to_7seg = 7'b0000110;
+            4'b0100: bcd_to_7seg = 7'b1001100;
+            4'b0101: bcd_to_7seg = 7'b0100100;
+            4'b0110: bcd_to_7seg = 7'b0100000;
+            4'b0111: bcd_to_7seg = 7'b0001111;
+            4'b1000: bcd_to_7seg = 7'b0000000;
+            4'b1001: bcd_to_7seg = 7'b0000100;
+            default: bcd_to_7seg = 7'b1111111;
+        endcase
+    endfunction
+
+    // Multiplexing the digits
+    always @(posedge clk) begin
+        mux <= mux + 1;
+        case (mux)
+            2'b00: begin
+                IO_SSEG_SEL <= 4'b1110;
+                IO_SSEG <= bcd_to_7seg(binary_input_0);
+            end
+            2'b01: begin
+                IO_SSEG_SEL <= 4'b1101;
+                IO_SSEG <= bcd_to_7seg(binary_input_1);
+            end
+            2'b10: begin
+                IO_SSEG_SEL <= 4'b1011;
+                IO_SSEG <= bcd_to_7seg(binary_input_2);
+            end
+            2'b11: begin
+                IO_SSEG_SEL <= 4'b0111;
+                IO_SSEG <= bcd_to_7seg(binary_input_3);
+            end
+        endcase
+    end
+endmodule

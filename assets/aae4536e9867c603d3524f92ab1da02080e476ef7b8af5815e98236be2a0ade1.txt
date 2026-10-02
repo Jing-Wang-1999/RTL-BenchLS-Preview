@@ -1,0 +1,28 @@
+# Unused APU signal tying off logic in ID stage causes issues.
+
+The the for loop here can execute over each signal. The generate loop should be labeled and a begin/end statements inserted as well.
+  ```
+    for (genvar i=0;i<APU_NARGS_CPU;i++)
+        assign apu_operands[i]         = '0;
+        assign apu_waddr               = '0;
+        assign apu_flags               = '0;
+        assign apu_write_regs_o        = '0;
+        assign apu_read_regs_o         = '0;
+        assign apu_write_regs_valid_o  = '0;
+        assign apu_read_regs_valid_o   = '0;
+```
+Proposed revision:
+   ```
+    genvar i;
+       for (i=0;i<APU_NARGS_CPU;i++) begin : apu_tie_off
+        assign apu_operands[i]         = 32'h00;
+       end
+        assign apu_waddr               = {APU_NDSFLAGS_CPU{1'b0}};
+        assign apu_flags               = 6'b0;
+        assign apu_write_regs_o        = 6'b0;
+        assign apu_read_regs_o         = 6'b0;
+        assign apu_write_regs_valid_o  = 1'b0;
+        assign apu_read_regs_valid_o   = 1'b0;
+
+```
+

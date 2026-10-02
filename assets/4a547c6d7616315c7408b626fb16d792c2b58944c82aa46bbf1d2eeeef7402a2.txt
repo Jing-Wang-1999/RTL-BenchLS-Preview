@@ -1,0 +1,35 @@
+### Module Specification: ALU Control and Flag Write Logic
+
+**Overview:**  
+This module generates control signals for an Arithmetic Logic Unit (ALU) and flag update logic based on a function field and an ALU operation enable signal.
+
+**Inputs:**  
+- **FUNCT (5-bit):** Encodes the ALU operation and flag write condition. Bits [4:1] define the operation, and bit [0] determines flag write enable for certain operations.  
+- **ALU_Op (1-bit):** Master control; when low, the ALU performs a default operation with no flag updates.
+
+**Outputs:**  
+- **ALU_Ctrl (3-bit):** Selects the ALU operation:  
+  - `000`: Logical OR or default operation.  
+  - `001`: Logical AND.  
+  - `100`: Addition.  
+  - `101`: Subtraction.  
+- **Flag_Write (2-bit):** Controls which flag registers are written:  
+  - `00`: No flags updated.  
+  - `01` or `10`: Only the flag indicated by FUNCT[0] is updated.  
+  - `11`: All flags updated.  
+- **No_Write (1-bit):** When high, inhibits writing the ALU result to a destination register.
+
+**Behavior:**  
+If ALU_Op is low, the ALU performs a logical OR (ALU_Ctrl = 000), writes no flags (Flag_Write = 00), and allows register writes (No_Write = 0).
+
+If ALU_Op is high, the operation depends on FUNCT[4:1]:  
+- **0100:** Logical OR, conditionally update one flag based on FUNCT[0].  
+- **0010:** Logical AND, conditionally update one flag based on FUNCT[0].  
+- **0000:** Addition, conditionally update one flag based on FUNCT[0].  
+- **1100:** Subtraction, conditionally update one flag based on FUNCT[0].  
+- **1010:** Logical AND, do not write the result (No_Write = 1), update all flags (Flag_Write = 11).  
+
+For any other FUNCT[4:1] value, the module defaults to logical OR with no flag updates and allows register writes.
+
+**Allowed Sub-modules:**  
+Only combinational logic; no sequential elements (registers or memory).

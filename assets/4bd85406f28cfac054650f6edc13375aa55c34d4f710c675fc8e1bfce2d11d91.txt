@@ -1,0 +1,35 @@
+# Hardware Specification: EX/ME Pipeline Register
+
+## Overview
+This module implements a pipeline register that transfers data from the Execute (EX) stage to the Memory (ME) stage of a processor. It synchronizes and holds execution results for memory operations.
+
+## Inputs
+- **clk**: Clock signal for synchronous operation
+- **rst**: Asynchronous reset signal
+- **stall**: Pipeline stall control signal
+- **ex_aluresult**: 32-bit ALU result from Execute stage
+- **ex_d2**: 32-bit data value from Execute stage (typically register source operand)
+- **ex_td**: 5-bit destination register address from Execute stage
+- **ex_WREG**: Write register enable flag from Execute stage
+- **ex_WMEM**: Write memory enable flag from Execute stage
+- **ex_LW**: Load word flag from Execute stage
+- **ex_instr**: 32-bit instruction from Execute stage
+- **ex_pc**: 32-bit program counter from Execute stage
+
+## Outputs
+- **me_aluresult**: 32-bit ALU result for Memory stage
+- **me_d2**: 32-bit data value for Memory stage
+- **me_td**: 5-bit destination register address for Memory stage
+- **me_WREG**: Write register enable for Memory stage
+- **me_WMEM**: Write memory enable for Memory stage
+- **me_LW**: Load word flag for Memory stage
+- **me_instr**: 32-bit instruction for Memory stage
+- **me_pc**: 32-bit program counter for Memory stage
+
+## Behavior
+
+**On Reset (rst = 1):**
+All output registers are cleared to zero, except me_instr which is set to a NOP instruction (32'b100000).
+
+**On Stall (stall = 1):**
+Control signals (WREG, WMEM, LW) are disabled to prevent unintended operations. The program counter is preserved from the Execute stage, while other data is cleared. The instruction is set to NOP

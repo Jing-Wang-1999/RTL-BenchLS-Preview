@@ -1,0 +1,46 @@
+{
+  "evaluator": "private/verification/evaluate_direct_package.py",
+  "gate_failure_score": 0,
+  "limitations": "Finite supported configurations, not universal formal equivalence.",
+  "oracle": "all usable original upstream benches for the complete selected RTL closure",
+  "points": [
+    {
+      "command": [
+        "python3",
+        "private/verification/evaluate_direct_package.py",
+        "--case",
+        "<case>",
+        "--submission",
+        "<candidate>",
+        "--output",
+        "<new_output>"
+      ],
+      "id": "cocotb_test_axi_register",
+      "pass_criterion": {
+        "fail": "compile error, simulator error, exception, failed XML entry, or timeout",
+        "pass": "make exit0, nonempty Cocotb results.xml, zero failure/error entries",
+        "scoring": "Entire cocotb testbench is ONE testpoint; internal generated tests are diagnostics only"
+      },
+      "target": "axi_register",
+      "timeout_seconds": 180,
+      "weight": 1
+    },
+    {
+      "command": [
+        "python3",
+        "private/verification/evaluate_direct_package.py",
+        "--case",
+        "<case>",
+        "--submission",
+        "<candidate>",
+        "--output",
+        "<new_output>"
+      ],
+      "id": "myhdl_test_axi_register",
+      "pass_criterion": "pytest exit0 and 1 passed; entire harness one testpoint",
+      "target": "axi_register",
+      "timeout_seconds": 180,
+      "weight": 1
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+always @* begin
+    state_next = STATE_READ;
+
+    m_axis_stat_tdata_next = m_axis_stat_tdata_reg;
+    m_axis_stat_tid_next = m_axis_stat_tid_reg;
+    m_axis_stat_tvalid_next = m_axis_stat_tvalid_reg && !m_axis_stat_tready;
+
+    count_next = count_reg;
+    update_period_next = update_period_reg;
+    zero_next = zero_reg;
+    update_next = update_reg;
+
+    acc_clear = {COUNT{1'b0}};
+
+    mem_rd_en = 1'b0;
+    mem_wr_en = 1'b0;
+    mem_wr_data = 0;
+
+    case (state_reg)
+        STATE_READ: begin
+            mem_rd_en = 1'b1;
+            state_next = STATE_WRITE;
+        end
+        STATE_WRITE: begin;
+            mem_wr_en = 1'b1;
+            acc_clear[count_reg] = 1'b1;
+            if (!m_axis_stat_tvalid_reg && update_reg[count_reg]) begin
+                update_next[count_reg] = 1'b0;
+                mem_wr_data = 0;
+                if (zero_reg[count_reg]) begin
+                    m_axis_stat_tdata_next = acc_int[count_reg];
+                    m_axis_stat_tid_next = count_reg;
+                    m_axis_stat_tvalid_next = acc_int[count_reg] != 0;
+                end else begin
+                    m_axis_stat_tdata_next = mem_rd_data_reg + acc_int[count_reg];
+                    m_axis_stat_tid_next = count_reg;
+                    m_axis_stat_tvalid_next = mem_rd_data_reg != 0 || acc_int[count_reg] != 0;
+                end
+            end else begin
+                if (zero_reg[count_reg]) begin
+                    mem_wr_data = acc_int[count_reg];
+                end else begin
+                    mem_wr_data = mem_rd_data_reg + acc_int[count_reg];
+                end
+            end
+            zero_next[count_reg] = 1'b0;
+
+            if (count_reg == COUNT-1) begin
+                count_next = 0;
+            end else begin
+                count_next = count_reg + 1;
+            end
+
+            state_next = STATE_READ;
+        end
+    endcase
+
+    if (update_period_reg == 0) begin
+        update_next = {COUNT{1'b1}};
+        update_period_next = UPDATE_PERIOD-1;
+    end else begin
+        update_period_next = update_period_reg - 1;
+    end
+
+    if (update) begin
+        update_next = {COUNT{1'b1}};
+    end
+end

@@ -1,0 +1,92 @@
+module origen_221002(
+    input RESET,
+    input CLK,
+    input N_TXE,
+    input N_RXF,
+    input CDONE,
+    input [7:0] DATAOUT,
+    output reg JTCK,
+    output reg N_CONF,
+    output reg N_CS,
+    output reg N_CE,
+    output reg ASDI,
+    output reg N_RD,
+    output reg WR,
+    inout [7:0] d
+);
+
+reg [7:0] From_FT245;
+reg [7:0] ft245_d;
+
+reg [1:0] state;
+parameter IDLE = 2'b00, RD_ACTIVE = 2'b01, WR_ACTIVE = 2'b10;
+
+always @(posedge CLK or posedge RESET) begin
+    if (RESET) begin
+        state <= IDLE;
+        JTCK <= 0;
+        N_CONF <= 0;
+        N_CS <= 0;
+        N_CE <= 0;
+        ASDI <= 0;
+        N_RD <= 0;
+        WR <= 0;
+        From_FT245 <= 0;
+        ft245_d <= 0;
+    end else begin
+        case (state)
+            IDLE: begin
+                if (~N_RXF) begin
+                    state <= RD_ACTIVE;
+                    N_RD <= 0;
+                    WR <= 0;
+                end else if (~N_TXE) begin
+                    state <= WR_ACTIVE;
+                    N_RD <= 0;
+                    WR <= 0;
+                end else begin
+                    N_RD <= 1;
+                    WR <= 1;
+                end
+            end
+            RD_ACTIVE: begin
+                if (~N_RXF) begin
+                    From_FT245 <= DATAOUT;
+                    N_RD <= 0;
+                    WR <= 1;
+                end else begin
+                    state <= IDLE;
+                    N_RD <= 1;
+                    WR <= 1;
+                end
+            end
+            WR_ACTIVE: begin
+                if (~N_TXE) begin
+                    ft245_d <= From_FT245;
+                    N_RD <= 1;
+                    WR <= 0;
+                end else begin
+                    state <= IDLE;
+                    N_RD <= 1;
+                    WR <= 1;
+                end
+            end
+            default: begin
+                state <= IDLE;
+                N_RD <= 1;
+                WR <= 1;
+            end
+        endcase
+
+        // JTAG signal generation
+        JTCK <= ~JTCK;
+        N_CONF <= CDONE;
+        N_CS <= 1;
+        N_CE <= 1;
+        ASDI <= From_FT245[0];
+    end
+end
+
+assign d = ft245_d;
+
+endmodule

@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.10cac9dfb6ecd177f5f3.3988798b3f6f",
+  "compile_check": {
+    "case_id": "s1derived.10cac9dfb6ecd177f5f3.3988798b3f6f",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_07029",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_07029.3b8b032ea9ddf23e/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.10cac9dfb6ecd177f5f3",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "10cac9dfb6ecd177f5f3d31ee7e9e9f0c89353d74e02bc082721abd28e09dfa9",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.10cac9dfb6ecd177f5f3.3988798b3f6f",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_07029.3b8b032ea9ddf23e/private/commercial_positive.log",
+    "commercial_log_sha256": "e2c2ed88e467221f94020d4057f5f79b64fb0b42fd73219f4d9626d3907834b2",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_07029.3b8b032ea9ddf23e/private/historical_harness/00_sec_rtlpp_07029.tcl",
+    "executed_script_sha256": "d63d110bb21031c76b64f0f063e390b416d2c555a65c2611bb09ecdb84b5faee",
+    "golden_tops": [
+      "rtlpp_07029"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.rtlpp_07029.3b8b032ea9ddf23e",
+    "parent_id": "s1p.10cac9dfb6ecd177f5f3",
+    "revised_tops": [
+      "rtlpp_07029"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_07029",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.10cac9dfb6ecd177f5f3.3988798b3f6f",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The separate sensitivities establish exactly the documented pre-edge output latency and reset behavior.",
+        "rtl_excerpt": "`state always @(posedge clk or posedge rst); y always @(posedge clk) y<=s_y_out;`",
+        "spec_excerpt": "\u201cy captures ... state immediately before edge ... rst does not directly reset y\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.10cac9dfb6ecd177f5f3",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "88f5a988c7d7d876430e0d07ff83d8d93e7b9d73f61199744ae774936f4969ee",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "10cac9dfb6ecd177f5f3d31ee7e9e9f0c89353d74e02bc082721abd28e09dfa9",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_07029.3b8b032ea9ddf23e/private/historical_harness/00_sec_rtlpp_07029.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_07029.3b8b032ea9ddf23e/private/historical_harness/01_sec_rtlpp_07029.tcl"
+  ],
+  "parent_id": "s1p.10cac9dfb6ecd177f5f3",
+  "primary_review": {
+    "case_id": "s1derived.10cac9dfb6ecd177f5f3.3988798b3f6f",
+    "checks": {
+      "behavior": "Combinational s_y_out is one in B, but y is a register that captures the old-state value at each edge.",
+      "boundaries": "y can remain stale during reset and is unknown before its first clock; invalid state follows default A behavior.",
+      "interface": "Ports and state names match.",
+      "rtl_reasonableness": "The registered-output FSM is usable hardware once its latency and output-reset limitation are explicit.",
+      "sequential_and_reset": "rst asynchronously resets only s_pr_state; y has no reset or initialization."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Combinational s_y_out is one in B, but y is a register that captures the old-state value at each edge. rst asynchronously resets only s_pr_state; y has no reset or initialization.",
+        "rtl_excerpt": "state has asynchronous reset, while separate always @(posedge clk) executes y <= s_y_out",
+        "spec_excerpt": "\u201cy ... determined by the current state\u201d followed by an unfinished \u201cReset\u201d section."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The state transitions are correct, but prose says y reflects current state without specifying that y samples the pre-edge state, and the reset section is truncated; rst does not reset y.",
+        "rtl_evidence": "state has asynchronous reset, while separate always @(posedge clk) executes y <= s_y_out",
+        "spec_evidence": "\u201cy ... determined by the current state\u201d followed by an unfinished \u201cReset\u201d section.",
+        "type": "output_latency_and_reset"
+      }
+    ],
+    "parent_id": "s1p.10cac9dfb6ecd177f5f3",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.10cac9dfb6ecd177f5f3.3988798b3f6f.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "10cac9dfb6ecd177f5f3d31ee7e9e9f0c89353d74e02bc082721abd28e09dfa9",
+    "source_group": "S4",
+    "specification_sha256": "3988798b3f6fabfe2d5a255296e2f5ce1ec6999823582f0534f2ea490154756a",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.10cac9dfb6ecd177f5f3.3988798b3f6f.md",
+  "qualified_specification_sha256": "88f5a988c7d7d876430e0d07ff83d8d93e7b9d73f61199744ae774936f4969ee",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_07029.3b8b032ea9ddf23e/private/golden_design.v",
+  "rtl_sha256": "10cac9dfb6ecd177f5f3d31ee7e9e9f0c89353d74e02bc082721abd28e09dfa9",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_07029.3b8b032ea9ddf23e/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "3988798b3f6fabfe2d5a255296e2f5ce1ec6999823582f0534f2ea490154756a",
+  "top_module": "rtlpp_07029"
+}

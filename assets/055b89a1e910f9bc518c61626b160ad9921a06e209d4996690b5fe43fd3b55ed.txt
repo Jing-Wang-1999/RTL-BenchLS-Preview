@@ -1,0 +1,50 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/48",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/46",
+  "repository": "lowRISC/ibex",
+  "pr_number": 48,
+  "issue_number": 46,
+  "verilog_files": [
+    "rtl/ibex_compressed_decoder.sv"
+  ],
+  "deletions": 14,
+  "additions": 18,
+  "patches": [
+    {
+      "filename": "rtl/ibex_compressed_decoder.sv",
+      "patch": "@@ -206,24 +206,28 @@ module ibex_compressed_decoder (\n \n           3'b100: begin\n             if (instr_i[12] == 1'b0) begin\n-              // c.mv -> add rd/rs1, x0, rs2\n-              instr_o = {7'b0, instr_i[6:2], 5'b0, 3'b0, instr_i[11:7], {OPCODE_OP}};\n-\n-              if (instr_i[6:2] == 5'b0) begin\n+              if (instr_i[6:2] != 5'b0) begin\n+                // c.mv -> add rd/rs1, x0, rs2\n+                // (c.mv hints are translated into an add hint)\n+                instr_o = {7'b0, instr_i[6:2], 5'b0, 3'b0, instr_i[11:7], {OPCODE_OP}};\n+              end else begin\n                 // c.jr -> jalr x0, rd/rs1, 0\n                 instr_o = {12'b0, instr_i[11:7], 3'b0, 5'b0, {OPCODE_JALR}};\n+                if (instr_i[11:7] == 5'b0)  illegal_instr_o = 1'b1;\n               end\n             end else begin\n-              // c.add -> add rd, rd, rs2\n-              instr_o = {7'b0, instr_i[6:2], instr_i[11:7], 3'b0, instr_i[11:7], {OPCODE_OP}};\n-\n-              if (instr_i[11:7] == 5'b0) begin\n-                // c.ebreak -> ebreak\n-                instr_o = {32'h00_10_00_73};\n-                if (instr_i[6:2] != 5'b0) illegal_instr_o = 1'b1;\n-              end else if (instr_i[6:2] == 5'b0) begin\n-                // c.jalr -> jalr x1, rs1, 0\n-                instr_o = {12'b0, instr_i[11:7], 3'b000, 5'b00001, {OPCODE_JALR}};\n+              if (instr_i[6:2] != 5'b0) begin\n+                // c.add -> add rd, rd, rs2\n+                // (c.add hints are translated into an add hint)\n+                instr_o = {7'b0, instr_i[6:2], instr_i[11:7], 3'b0, instr_i[11:7], {OPCODE_OP}};\n+              end else begin\n+                if (instr_i[11:7] == 5'b0) begin\n+                  // c.ebreak -> ebreak\n+                  instr_o = {32'h00_10_00_73};\n+                end else begin\n+                  // c.jalr -> jalr x1, rs1, 0\n+                  instr_o = {12'b0, instr_i[11:7], 3'b000, 5'b00001, {OPCODE_JALR}};\n+                end\n               end\n             end\n           end",
+      "additions": 18,
+      "deletions": 14,
+      "changes": 32
+    }
+  ],
+  "pr_info": {
+    "title": "Compressed hints",
+    "body": "Fix handling of HINTs in compressed instructions. \r\n\r\nFixes #46 (and a bit more)\r\n\r\n\r\n@taoliug can you re-test with these modifications?\r\n@asb does my reading of the spec sound about right?",
+    "state": "closed",
+    "created_at": "2019-05-22T18:11:28Z",
+    "updated_at": "2019-05-23T09:05:07Z",
+    "merged_at": "2019-05-23T09:05:04Z",
+    "user": "imphil"
+  },
+  "issue_info": {
+    "title": "Decode HINT as NOP",
+    "body": "The core fetched an compressed instruction like below.\r\n\r\nFrom a downstream bug report:\r\n\r\ncore   0: 0xffffffff8000f2ec (0x00009056) add     zero, zero, s5\r\n\r\n0x9056 is correctly decoded as HINT instruction by spike, but ibex decode it as illegal C.EBREAK instruction:\r\n\r\nhttps://github.com/lowRISC/stwg-base/blob/master/hw/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv#L215\r\n\r\n```\r\n              if (instr_i[11:7] == 5'b0) begin\r\n                // c.ebreak -> ebreak\r\n                instr_o = {32'h00_10_00_73};\r\n                if (instr_i[6:2] != 5'b0) illegal_instr_o = 1'b1;\r\n```\r\n\r\nThis code first checks if instr[11:7] is zero to determine if it's c.ebreak instruction, then check instr[6:2] to see if it's illegal. However, when instr[6:2] == 0 and instr_i[11:7] != 0, it should be treated as HINT instruction rather than illegal instruction.",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "created_at": "2019-05-21T14:09:17Z",
+    "updated_at": "2019-05-23T09:05:04Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 348
+  },
+  "base_commit": "145269fdc88e1d545fca692fd3e3a43c99e1ac12",
+  "head_commit": "efa93b27945fe8b2e3dae24c674db28377f25361",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_48_46",
+  "lec_status": "useful_pass"
+}

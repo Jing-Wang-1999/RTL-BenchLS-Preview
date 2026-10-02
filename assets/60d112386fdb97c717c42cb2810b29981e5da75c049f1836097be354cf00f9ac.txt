@@ -1,0 +1,11 @@
+always @(posedge i_clk)
+	if (i_reset)
+		baud_counter <= 0;
+	else if (((state==RXUL_IDLE))&&(!ck_uart)&&(half_baud_time))
+		baud_counter <= CLOCKS_PER_BAUD-1'b1;
+	else if (state == RXUL_WAIT)
+		baud_counter <= 0;
+	else if ((zero_baud_counter)&&(state < RXUL_STOP))
+		baud_counter <= CLOCKS_PER_BAUD-1'b1;
+	else if (!zero_baud_counter)
+		baud_counter <= baud_counter-1'b1;

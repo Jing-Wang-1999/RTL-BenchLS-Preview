@@ -1,0 +1,124 @@
+module origen_058141 (
+    output reg clk,
+    output reg reset,
+    output reg [3:0] cperiod_v,
+    output reg cperiod_tc,
+    output reg p1,
+    output reg [4:0] cout,
+    output reg enable,
+    output reg [3:0] cperiod_v_2,
+    output reg cperiod_tc_2,
+    output reg p2,
+    output reg [1:0] cperiod_v_3,
+    output reg cperiod_tc_3,
+    output reg div_n,
+    output reg [3:0] count,
+    output reg [1:0] factor,
+    input [3:0] period
+);
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk;
+    end
+
+    // Reset generation
+    initial begin
+        reset = 0;
+        #100 reset = 1;
+        @(posedge clk) reset = 0;
+    end
+
+    // Main counter
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            cperiod_v <= 4'b0;
+            cperiod_tc <= 1'b0;
+            p1 <= 1'b0;
+        end else begin
+            if (cperiod_v == 4'b1111) begin
+                cperiod_v <= 4'b0;
+                cperiod_tc <= 1'b1;
+            end else begin
+                cperiod_v <= cperiod_v + 1'b1;
+                cperiod_tc <= 1'b0;
+            end
+            p1 <= (cperiod_v == 4'b1010);
+        end
+    end
+
+    // Enable generator
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            cout <= 5'b0;
+            enable <= 1'b0;
+        end else begin
+            if (cout == 5'h14) begin
+                cout <= 5'b0;
+                enable <= 1'b1;
+            end else begin
+                cout <= cout + 1'b1;
+                enable <= 1'b0;
+            end
+        end
+    end
+
+    // Periodic counter
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            cperiod_v_2 <= 4'b0;
+            cperiod_tc_2 <= 1'b0;
+            p2 <= 1'b0;
+        end else if (enable) begin
+            if (cperiod_v_2 == period) begin
+                cperiod_v_2 <= 4'b0;
+                cperiod_tc_2 <= 1'b1;
+            end else begin
+                cperiod_v_2 <= cperiod_v_2 + 1'b1;
+                cperiod_tc_2 <= 1'b0;
+            end
+            p2 <= (cperiod_v_2 == 4'b1010);
+        end
+    end
+
+    // Division counter
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            cperiod_v_3 <= 2'b0;
+            cperiod_tc_3 <= 1'b0;
+            div_n <= 1'b0;
+        end else if (enable) begin
+            if (cperiod_v_3 == 2'b11) begin
+                cperiod_v_3 <= 2'b0;
+                cperiod_tc_3 <= 1'b1;
+                div_n <= 1'b1;
+            end else begin
+                cperiod_v_3 <= cperiod_v_3 + 1'b1;
+                cperiod_tc_3 <= 1'b0;
+                div_n <= 1'b0;
+            end
+        end
+    end
+
+    // Output counter
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            count <= 4'b0;
+        end else if (div_n) begin
+            count <= count + 1'b1;
+        end
+    end
+
+    // Factor counter
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            factor <= 2'b0;
+        end else if (div_n) begin
+            factor <= 2'b0;
+        end else begin
+            factor <= factor + 1'b1;
+        end
+    end
+
+endmodule

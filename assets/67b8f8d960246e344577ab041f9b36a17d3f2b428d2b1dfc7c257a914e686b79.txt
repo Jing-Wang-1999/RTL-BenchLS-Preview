@@ -1,0 +1,111 @@
+always @ (posedge clk or negedge rstn)
+    if (~rstn) begin
+        rwtype <= 1'b0;
+        addr   <= 0;
+        len    <= 9'h0;
+        wwen   <= 1'b0;
+        wwdata <= 0;
+        wraddr <= 8'h0;
+        state  <= S_IDLE;
+    end else begin
+        case (state)
+            
+            S_IDLE : begin
+                rwtype <= rx_char_w;
+                addr   <= 0;
+                len    <= 9'h0;
+                wwen   <= 1'b0;
+                wwdata <= 0;
+                wraddr <= 8'h0;
+                if (rx_char_w | rx_char_r)
+                    state <= S_PARSE_ADDR;
+                else if (rx_space | rx_newline)
+                    state <= S_IDLE;
+                else if (rx_valid)
+                    state <= S_INVALID;
+            end
+            
+            S_PARSE_ADDR :
+                if (rx_is_hex) begin
+                    addr <= (addr << 4);
+                    addr[3:0] <= rx_hex;
+                end else if (rx_space)
+                    state <= rwtype ? S_PARSE_WDATA : S_PARSE_LEN;
+                else if (rx_newline)
+                    state <= S_FAILED;
+                else if (rx_valid)
+                    state <= S_INVALID;
+            
+            S_PARSE_LEN :
+                if (rx_is_hex) begin
+                    len   <= (len << 4);
+                    len[3:0] <= rx_hex;
+                end else if (rx_newline) begin
+                    len   <= (len >= 9'h100) ? 9'hFF : (len == 9'h0) ? 9'h0 : (len - 9'h1);
+                    state <= S_AXI_RADDR;
+                end else if (rx_space) begin
+                    state <= S_PARSE_LEN;
+                end else if (rx_valid) begin
+                    state <= S_INVALID;
+                end
+            
+            S_PARSE_WDATA :
+                if (rx_is_hex) begin
+                    wwen   <= 1'b1;
+                    wwdata <= (wwdata << 4);
+                    wwdata[3:0] <= rx_hex;
+                end else if (rx_space) begin
+                    wwen  <= 1'b0;
+                    if (wwen) begin
+                        wwdata <= 0;
+                        len    <= len + 9'd1;
+                    end
+                end else if (rx_newline) begin
+                    if (wwen) begin
+                        state <= (               len <  9'h100) ? S_AXI_WADDR : S_FAILED;
+                    end else begin
+                        state <= (len >= 9'd0 && len <= 9'd100) ? S_AXI_WADDR : S_FAILED;
+                        len   <= len - 9'd1;
+                    end
+                end else if (rx_valid) begin
+                    state <= S_INVALID;
+                end
+            
+            S_AXI_RADDR :
+                if (arready)
+                    state <= S_AXI_RDATA;
+            
+            S_AXI_WADDR :
+                if (awready)
+                    state <= S_AXI_WDATA;
+            
+            S_AXI_RDATA : 
+                if (rvalid) begin
+                    len <= len - 9'd1;
+                    if (rlast || (len==9'd0))
+                        state <= S_IDLE;
+                end
+            
+            S_AXI_WDATA :
+                if (wready) begin
+                    wraddr <= wraddr + 8'd1;
+                    if (wraddr >= len[7:0])
+                        state <= S_AXI_B;
+                end
+            
+            S_AXI_B :
+                if (bvalid)
+                    state <= S_W_DONE;
+            
+            S_W_DONE :
+                state <= S_IDLE;
+            
+            S_INVALID :
+                if (rx_newline)
+                    state <= S_FAILED;
+            
+            default : // S_FAILED :
+                state <= S_IDLE;
+                
+        endcase
+    end

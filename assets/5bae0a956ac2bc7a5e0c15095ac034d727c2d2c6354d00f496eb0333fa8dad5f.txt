@@ -1,0 +1,54 @@
+module origen_149906(
+    input clk,
+    input rst,
+    input ps2_clk,
+    input ps2_data,
+    output [9:0] data_out,
+    output ready
+);
+
+reg [10:0] data_in;
+reg [3:0] cnt;
+reg key_expand;
+reg key_break;
+reg key_done;
+reg [8:0] data;
+
+always @(posedge clk or negedge rst) begin
+    if (!rst) begin
+        cnt <= 0;
+        key_expand <= 0;
+        key_break <= 0;
+        key_done <= 0;
+        data <= 0;
+    end
+    else begin
+        if (ps2_clk == 1 && ps2_clk == $past(ps2_clk, 1)) begin
+            data_in[cnt] <= ps2_data;
+            cnt <= cnt + 1;
+
+            if (cnt == 11) begin
+                cnt <= 0;
+
+                if (data_in == 11'h17E) begin
+                    key_expand <= 1;
+                end
+                else if (data_in == 11'h17F) begin
+                    key_break <= 1;
+                end
+                else begin
+                    data <= {key_expand, key_break, data_in[8:1]};
+                    key_done <= 1;
+                end
+            end
+        end
+        else begin
+            key_done <= 0;
+        end
+    end
+end
+
+assign data_out = {key_expand, key_break, data};
+assign ready = key_done;
+
+endmodule

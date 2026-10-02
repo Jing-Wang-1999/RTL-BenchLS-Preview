@@ -1,0 +1,34 @@
+{
+  "candidate_id": "large_module.759365dcb282f10cd5d7",
+  "reviewer_identity": "/root/screen_memory_v2",
+  "independent_of_primary_author": "/root/screen_protocol_v2",
+  "decision": "pass",
+  "rtl_sha256": "30e7d78acf565d5d12b3cdc3d0e7ff249e520773d949b19a783844de84157b8b",
+  "specification_sha256": "9de6fbbfb973a49dd0fcbe506fdc1a49d21467cae7482b8db52770974bc7f706",
+  "rtl_reasonable": true,
+  "blocking_findings": [],
+  "evidence": [
+    {
+      "kind": "independent_full_specification_and_rtl_review",
+      "findings": [
+        "Independently traced all three transfer states and exact divider+1 half-period timing. Fixed default SPI_MODE0 ignores software CPOL/CPHA; register indexes and interrupt bit mapping agree.",
+        "Checked async reset affects only state and pending flag; unreset counters, divider/config, buffer and shift registers continue their normal updates. No invented reset initialization in specification.",
+        "Checked simultaneous buffer write/load priority, chained-transfer final MISO capture into receive buffer, no-next-byte result in shift register, and modulo bit counter wrap. Specification matches all cases."
+      ]
+    },
+    {
+      "kind": "reviewed_primary_local_probe",
+      "path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/complexity_admission_20260913_v2/reviews/large_module.759365dcb282f10cd5d7/directed_smoke.log",
+      "sha256": "883b6ba6046145235fe895b8d61caf592bed2f1b47d0658898217386ece20cb0",
+      "result": "PASS 256 loopback bytes at default mode0 divider1",
+      "note": "Existing bounded local evidence read; no redundant rerun needed after independent source/contract inspection."
+    }
+  ],
+  "formal_scope_review": {
+    "configuration": "Declared defaults only; preprocessor_defines empty",
+    "clock": "clk_i",
+    "reset_expression": "rst_i",
+    "input_assumptions": "None beyond reset-first qualification; intended external timing advice does not constrain equivalence histories.",
+    "qualification": "Positive/negative formal control and complete output coverage remain separately required; this review does not claim model evaluation or freeze."
+  }
+}

@@ -1,0 +1,51 @@
+module origen_121404 (
+    input [4:0] address_0,
+    input [3:0] contrib_0,
+    output [3:0] rdata_0,
+    output [3:0] mixed
+);
+
+    // Direct pass-through of contrib_0
+    assign mixed = contrib_0;
+
+    // Internal 128-bit data vector construction
+    wire [127:0] data_vector;
+    assign data_vector[127:124] = contrib_0;  // MSB segment = contrib_0
+    assign data_vector[123:0] = 124'b0;       // All other bits = 0
+
+    // Address-based lookup
+    assign rdata_0 = (address_0 == 5'd31) ? data_vector[127:124] :
+                     (address_0 == 5'd30) ? data_vector[123:120] :
+                     (address_0 == 5'd29) ? data_vector[119:116] :
+                     (address_0 == 5'd28) ? data_vector[115:112] :
+                     (address_0 == 5'd27) ? data_vector[111:108] :
+                     (address_0 == 5'd26) ? data_vector[107:104] :
+                     (address_0 == 5'd25) ? data_vector[103:100] :
+                     (address_0 == 5'd24) ? data_vector[99:96] :
+                     (address_0 == 5'd23) ? data_vector[95:92] :
+                     (address_0 == 5'd22) ? data_vector[91:88] :
+                     (address_0 == 5'd21) ? data_vector[87:84] :
+                     (address_0 == 5'd20) ? data_vector[83:80] :
+                     (address_0 == 5'd19) ? data_vector[79:76] :
+                     (address_0 == 5'd18) ? data_vector[75:72] :
+                     (address_0 == 5'd17) ? data_vector[71:68] :
+                     (address_0 == 5'd16) ? data_vector[67:64] :
+                     (address_0 == 5'd15) ? data_vector[63:60] :
+                     (address_0 == 5'd14) ? data_vector[59:56] :
+                     (address_0 == 5'd13) ? data_vector[55:52] :
+                     (address_0 == 5'd12) ? data_vector[51:48] :
+                     (address_0 == 5'd11) ? data_vector[47:44] :
+                     (address_0 == 5'd10) ? data_vector[43:40] :
+                     (address_0 == 5'd9) ? data_vector[39:36] :
+                     (address_0 == 5'd8) ? data_vector[35:32] :
+                     (address_0 == 5'd7) ? data_vector[31:28] :
+                     (address_0 == 5'd6) ? data_vector[27:24] :
+                     (address_0 == 5'd5) ? data_vector[23:20] :
+                     (address_0 == 5'd4) ? data_vector[19:16] :
+                     (address_0 == 5'd3) ? data_vector[15:12] :
+                     (address_0 == 5'd2) ? data_vector[11:8] :
+                     (address_0 == 5'd1) ? data_vector[7:4] :
+                     (address_0 == 5'd0) ? data_vector[3:0] :
+                     4'b0;  // Default case (should never occur with 5-bit address)
+
+endmodule

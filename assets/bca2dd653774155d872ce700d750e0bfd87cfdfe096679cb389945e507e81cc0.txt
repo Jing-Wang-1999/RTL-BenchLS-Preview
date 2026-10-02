@@ -1,0 +1,113 @@
+{
+  "case_id": "s1derived.525ec6c09df19fa4a699.826a2d6613d4",
+  "compile_check": {
+    "case_id": "s1derived.525ec6c09df19fa4a699.826a2d6613d4",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_01101",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_01101.b1041783bea12a39/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.525ec6c09df19fa4a699",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "525ec6c09df19fa4a699041d07f5d76852977906752b291c57a7343a02186419",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.525ec6c09df19fa4a699.826a2d6613d4",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_01101.b1041783bea12a39/private/commercial_positive.log",
+    "commercial_log_sha256": "03677233e2a9976e825d32877062a781db42b52c95341debca1b12165fb8b5c0",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_01101.b1041783bea12a39/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mg_01101"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.mg_01101.b1041783bea12a39",
+    "parent_id": "s1p.525ec6c09df19fa4a699",
+    "revised_tops": [
+      "mg_01101"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_01101",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.525ec6c09df19fa4a699.826a2d6613d4",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The defaults, initialization-only constant behavior, error for nonpositive width, and 33-bit implementation boundary match.",
+        "rtl_excerpt": "`reg[32:0] int_value; initial ... int_value = lpm_cvalue; assign result = int_value[lpm_width-1:0];`",
+        "spec_excerpt": "Defaults are `lpm_width=1`, `lpm_cvalue=0`, and the result is the low `lpm_width` bits of a 33-bit initialized value, with width limited to 1..33."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.525ec6c09df19fa4a699",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "b985020174fddc848859ed82d8f5ed31235a16bb5a8c15b60698c7f51f438492",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "525ec6c09df19fa4a699041d07f5d76852977906752b291c57a7343a02186419",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_01101.b1041783bea12a39/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_01101.b1041783bea12a39/private/historical_harness/01_conformal_rtl_mg_01101.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_01101.b1041783bea12a39/private/historical_harness/02_fm_rtl_mg_01101.tcl"
+  ],
+  "parent_id": "s1p.525ec6c09df19fa4a699",
+  "primary_review": {
+    "case_id": "s1derived.525ec6c09df19fa4a699.826a2d6613d4",
+    "checks": {
+      "behavior": "All five parameter defaults and the 33-bit storage/truncation boundary are not fully specified.",
+      "boundaries": "Checked defaults, widths, zero/default cases, and latency.",
+      "interface": "Compared all named ports and widths.",
+      "rtl_reasonableness": "Reasonable hardware.",
+      "sequential_and_reset": "Checked clock, reset, enable, priority, hold, and combinational behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "All five parameter defaults and the 33-bit storage/truncation boundary are not fully specified.",
+        "rtl_excerpt": "parameter lpm_width=1; reg[32:0] int_value",
+        "spec_excerpt": "result is derived from the least significant bits of int_value"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "All five parameter defaults and the 33-bit storage/truncation boundary are not fully specified.",
+        "rtl_evidence": "parameter lpm_width=1; reg[32:0] int_value",
+        "spec_evidence": "result is derived from the least significant bits of int_value",
+        "type": "missing_defaults"
+      }
+    ],
+    "parent_id": "s1p.525ec6c09df19fa4a699",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_05/s1derived.525ec6c09df19fa4a699.826a2d6613d4.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "525ec6c09df19fa4a699041d07f5d76852977906752b291c57a7343a02186419",
+    "source_group": "S5",
+    "specification_sha256": "826a2d6613d4f69bb3a0c9c4abb22ed74089d948a6ab4c11d76459bc553b3664",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_05/s1derived.525ec6c09df19fa4a699.826a2d6613d4.md",
+  "qualified_specification_sha256": "b985020174fddc848859ed82d8f5ed31235a16bb5a8c15b60698c7f51f438492",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_01101.b1041783bea12a39/private/golden_design.v",
+  "rtl_sha256": "525ec6c09df19fa4a699041d07f5d76852977906752b291c57a7343a02186419",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_01101.b1041783bea12a39/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "826a2d6613d4f69bb3a0c9c4abb22ed74089d948a6ab4c11d76459bc553b3664",
+  "top_module": "mg_01101"
+}

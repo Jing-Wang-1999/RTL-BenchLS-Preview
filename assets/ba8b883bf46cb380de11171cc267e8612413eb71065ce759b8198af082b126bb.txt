@@ -1,0 +1,22 @@
+module autovcoder_026168 (
+    input wire atm_valid,
+    input wire dtm_valid,
+    input wire itm_valid,
+    output reg [1:0] compute_input_tm_cnt
+);
+
+    wire [2:0] switch_for_mux;
+
+    assign switch_for_mux = {atm_valid, dtm_valid, itm_valid};
+
+    always @(*) begin
+        case (switch_for_mux)
+            3'b000: compute_input_tm_cnt = 2'b00; // No inputs active
+            3'b001, 3'b010, 3'b100: compute_input_tm_cnt = 2'b01; // One input active
+            3'b011, 3'b101, 3'b110: compute_input_tm_cnt = 2'b10; // Two inputs active
+            3'b111: compute_input_tm_cnt = 2'b11; // All inputs active
+            default: compute_input_tm_cnt = 2'b00; // Default case (should not occur)
+        endcase
+    end
+
+endmodule

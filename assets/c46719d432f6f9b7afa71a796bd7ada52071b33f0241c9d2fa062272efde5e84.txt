@@ -1,0 +1,18 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+begin
+    req_hold_rd_q   <= 1'b0;
+    req_hold_wr_q   <= 1'b0;
+end
+else
+begin
+    if (ram_rd_o && !ram_accept_i)
+        req_hold_rd_q   <= 1'b1;
+    else if (ram_accept_i)
+        req_hold_rd_q   <= 1'b0;
+
+    if ((|ram_wr_o) && !ram_accept_i)
+        req_hold_wr_q   <= 1'b1;
+    else if (ram_accept_i)
+        req_hold_wr_q   <= 1'b0;
+end

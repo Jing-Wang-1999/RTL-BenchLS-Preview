@@ -1,0 +1,100 @@
+module autovcoder_034010 (
+    SW,
+    HEX0,
+    HEX1,
+    HEX2,
+    HEX3,
+    HEX4,
+    HEX5
+);
+  input [2:0] SW;
+  output [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5;
+  wire [2:0] o0, o1, o2, o3, o4, o5;
+  wire [2:0] h = 3'b000, e = 3'b001, l = 3'b010, o = 3'b011, blk = 3'b100;
+
+  mux_3bit_6to1 m5 (
+      SW,
+      blk,
+      h,
+      e,
+      l,
+      l,
+      o,
+      o5
+  );
+  char_7seg c5 (
+      o5,
+      HEX5
+  );
+  mux_3bit_6to1 m4 (
+      SW,
+      h,
+      e,
+      l,
+      l,
+      o,
+      blk,
+      o4
+  );
+  char_7seg c4 (
+      o4,
+      HEX4
+  );
+  mux_3bit_6to1 m3 (
+      SW,
+      e,
+      l,
+      l,
+      o,
+      blk,
+      h,
+      o3
+  );
+  char_7seg c3 (
+      o3,
+      HEX3
+  );
+  mux_3bit_6to1 m2 (
+      SW,
+      l,
+      l,
+      o,
+      blk,
+      h,
+      e,
+      o2
+  );
+  char_7seg c2 (
+      o2,
+      HEX2
+  );
+  mux_3bit_6to1 m1 (
+      SW,
+      l,
+      o,
+      blk,
+      h,
+      e,
+      l,
+      o1
+  );
+  char_7seg c1 (
+      o1,
+      HEX1
+  );
+  mux_3bit_6to1 m0 (
+      SW,
+      o,
+      blk,
+      h,
+      e,
+      l,
+      l,
+      o0
+  );
+  char_7seg c0 (
+      o0,
+      HEX0
+  );
+endmodule
+

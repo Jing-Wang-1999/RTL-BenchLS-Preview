@@ -1,0 +1,99 @@
+module origen_085121 (
+    input wire clk,
+    input wire reset,
+    input wire mem,
+    input wire rw,
+    input wire [17:0] addr,
+    input wire [15:0] data_f2s,
+    output reg ready,
+    output reg [15:0] data_s2f_r,
+    output wire [15:0] data_s2f_ur,
+    output reg [17:0] ad,
+    output reg we_n,
+    output reg oe_n,
+    output wire ce_a_n,
+    output wire ub_a_n,
+    output wire lb_a_n,
+    inout wire [15:0] dio_a
+);
+
+    // State encoding
+    localparam IDLE = 3'd0, RD1 = 3'd1, RD2 = 3'd2, WR1 = 3'd3, WR2 = 3'd4;
+    reg [2:0] state, next_state;
+
+    // Internal registers
+    reg [15:0] data_f2s_reg;
+    reg dio_oe;
+
+    // State machine
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            IDLE: next_state = mem ? (rw ? WR1 : RD1) : IDLE;
+            RD1:  next_state = RD2;
+            RD2:  next_state = IDLE;
+            WR1:  next_state = WR2;
+            WR2:  next_state = IDLE;
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Output logic
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            ready <= 1'b1;
+            we_n <= 1'b1;
+            oe_n <= 1'b1;
+            ad <= 18'd0;
+            data_s2f_r <= 16'd0;
+            data_f2s_reg <= 16'd0;
+            dio_oe <= 1'b0;
+        end else begin
+            case (state)
+                IDLE: begin
+                    ready <= 1'b1;
+                    we_n <= 1'b1;
+                    oe_n <= 1'b1;
+                    dio_oe <= 1'b0;
+                    if (mem) begin
+                        ad <= addr;
+                        data_f2s_reg <= data_f2s;
+                        ready <= 1'b0;
+                    end
+                end
+                RD1: begin
+                    oe_n <= 1'b0;
+                    ready <= 1'b0;
+                end
+                RD2: begin
+                    data_s2f_r <= dio_a;
+                    oe_n <= 1'b1;
+                end
+                WR1: begin
+                    we_n <= 1'b0;
+                    dio_oe <= 1'b1;
+                    ready <= 1'b0;
+                end
+                WR2: begin
+                    we_n <= 1'b1;
+                    dio_oe <= 1'b1;
+                end
+            endcase
+        end
+    end
+
+    // Continuous assignments
+    assign ce_a_n = 1'b0;
+    assign ub_a_n = 1'b0;
+    assign lb_a_n = 1'b0;
+    assign data_s2f_ur = dio_a;
+    assign dio_a = dio_oe ? data_f2s_reg : 16'bz;
+
+endmodule

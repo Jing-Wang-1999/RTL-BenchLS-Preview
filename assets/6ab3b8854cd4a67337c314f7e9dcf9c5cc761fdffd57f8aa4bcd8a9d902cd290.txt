@@ -1,0 +1,513 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+`timescale 1ns / 10ps
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module mc_adr_sel(clk, csc, tms, wb_ack_o, wb_stb_i, wb_addr_i, wb_we_i,
+		wb_write_go, wr_hold, cas_,
+		mc_addr, row_adr, bank_adr, rfr_ack,
+		cs_le, cmd_a10, row_sel, lmr_sel, next_adr, wr_cycle,
+		page_size);
+
+input		clk;
+input	[31:0]	csc;
+input	[31:0]	tms;
+input		wb_ack_o, wb_stb_i;
+input	[31:0]	wb_addr_i;
+input		wb_we_i;
+input		wb_write_go;
+input		wr_hold;
+input		cas_;
+output	[23:0]	mc_addr;
+output	[12:0]	row_adr;
+output	[1:0]	bank_adr;
+input		rfr_ack;
+input		cs_le;
+input		cmd_a10;
+input		row_sel;
+input		lmr_sel;
+input		next_adr;
+input		wr_cycle;
+output	[10:0]	page_size;
+
+
+
+
+
+
+reg	[23:0]	mc_addr_d;
+reg	[23:0]	acs_addr;
+wire	[23:0]	acs_addr_pl1;
+reg	[23:0]	sram_addr;
+wire	[14:0]	sdram_adr;
+reg	[12:0]	row_adr;
+reg	[9:0]	col_adr;
+reg	[1:0]	bank_adr;
+reg	[10:0]	page_size;
+
+wire	[2:0]	mem_type;
+wire	[1:0]	bus_width;
+wire	[1:0]	mem_size;
+wire		bas;
+
+
+assign mem_type  = csc[3:1];
+assign bus_width = csc[5:4];
+assign mem_size  = csc[7:6];
+assign bas       = csc[9];
+
+
+
+
+
+
+always @(mem_type or wr_hold or sdram_adr or acs_addr or sram_addr or wb_addr_i)
+	if(mem_type == 3'h0)		mc_addr_d = {9'h0, sdram_adr};
+	else
+	if(mem_type == 3'h2)		mc_addr_d = acs_addr;
+	else
+	if((mem_type == 3'h1) & wr_hold)	mc_addr_d = sram_addr;
+	else						mc_addr_d = wb_addr_i[25:2];
+
+assign mc_addr = rfr_ack ? {mc_addr_d[23:11], 1'b1, mc_addr_d[9:0]} : mc_addr_d;
+
+
+
+
+
+
+mc_incn_r #(24) u0(	.clk(		clk		),
+			.inc_in(	acs_addr	),
+			.inc_out(	acs_addr_pl1	) );
+
+always @(posedge clk)
+	if(wb_stb_i)	sram_addr <=  wb_addr_i[25:2];
+
+always @(posedge clk)
+	if(cs_le | wb_we_i)
+		case(bus_width)		
+		   2'h0:	acs_addr <=  wb_addr_i[23:0];
+		   2'h1:	acs_addr <=  wb_addr_i[24:1];
+		   2'h2:	acs_addr <=  wb_addr_i[25:2];
+		endcase
+	else
+	if(next_adr)		acs_addr <=  acs_addr_pl1;
+
+
+
+
+
+
+assign sdram_adr[12:0] =	(lmr_sel & !cas_) ? tms[12:0] :
+				row_sel ? row_adr :
+				{2'h0, cmd_a10, col_adr};
+
+assign sdram_adr[14:13] = bank_adr;
+
+always @(posedge clk)
+   if(wr_cycle ? wb_ack_o : wb_stb_i)	
+	casex({bus_width, mem_size})		
+	   {2'h0, 2'h0}:		col_adr <=  {1'h0, wb_addr_i[10:2]};
+	   {2'h0, 2'h1}:	col_adr <=         wb_addr_i[11:2];
+	   {2'h0, 2'h2}:	col_adr <=         wb_addr_i[11:2];
+
+	   {2'h1, 2'h0}:	col_adr <=  {2'h0, wb_addr_i[09:2]};
+	   {2'h1, 2'h1}:	col_adr <=  {1'h0, wb_addr_i[10:2]};
+	   {2'h1, 2'h2}:	col_adr <=  {1'h0, wb_addr_i[10:2]};
+
+	   {2'h2, 2'h0}:	col_adr <=  {2'h0, wb_addr_i[09:2]};
+	   {2'h2, 2'h1}:	col_adr <=  {2'h0, wb_addr_i[09:2]};
+	   {2'h2, 2'h2}:	col_adr <=  {2'h0, wb_addr_i[09:2]};
+	endcase
+
+always @(posedge clk)
+   if(cs_le)
+     begin
+	if(!bas)
+		casex({bus_width, mem_size})		
+		   {2'h0, 2'h0}:		row_adr <=  {1'h0, wb_addr_i[24:13]};
+		   {2'h0, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[25:14]};
+		   {2'h0, 2'h2}:	row_adr <=         wb_addr_i[26:14];
+	
+		   {2'h1, 2'h0}:	row_adr <=  {1'h0, wb_addr_i[23:12]};
+		   {2'h1, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[24:13]};
+		   {2'h1, 2'h2}:	row_adr <=         wb_addr_i[25:13];
+	
+		   {2'h2, 2'h0}:	row_adr <=  {2'h0, wb_addr_i[22:12]};
+		   {2'h2, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[23:12]};
+		   {2'h2, 2'h2}:	row_adr <=         wb_addr_i[24:12];
+		endcase
+	else
+		casex({bus_width, mem_size})		
+		   {2'h0, 2'h0}:		row_adr <=  {1'h0, wb_addr_i[22:11]};
+		   {2'h0, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[23:12]};
+		   {2'h0, 2'h2}:	row_adr <=         wb_addr_i[24:12];
+	
+		   {2'h1, 2'h0}:	row_adr <=  {1'h0, wb_addr_i[21:10]};
+		   {2'h1, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[22:11]};
+		   {2'h1, 2'h2}:	row_adr <=         wb_addr_i[23:11];
+	
+		   {2'h2, 2'h0}:	row_adr <=  {2'h0, wb_addr_i[20:10]};
+		   {2'h2, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[21:10]};
+		   {2'h2, 2'h2}:	row_adr <=         wb_addr_i[22:10];
+		endcase
+     end
+
+
+always @(posedge clk)
+   if(cs_le)
+     begin
+	if(!bas)
+		casex({bus_width, mem_size})		
+		   {2'h0, 2'h0}:		bank_adr <=  wb_addr_i[12:11];
+		   {2'h0, 2'h1}:	bank_adr <=  wb_addr_i[13:12];
+		   {2'h0, 2'h2}:	bank_adr <=  wb_addr_i[13:12];
+	
+		   {2'h1, 2'h0}:	bank_adr <=  wb_addr_i[11:10];
+		   {2'h1, 2'h1}:	bank_adr <=  wb_addr_i[12:11];
+		   {2'h1, 2'h2}:	bank_adr <=  wb_addr_i[12:11];
+	
+		   {2'h2, 2'h0}:	bank_adr <=  wb_addr_i[11:10];
+		   {2'h2, 2'h1}:	bank_adr <=  wb_addr_i[11:10];
+		   {2'h2, 2'h2}:	bank_adr <=  wb_addr_i[11:10];
+		endcase
+	else
+		casex({bus_width, mem_size})		
+		   {2'h0, 2'h0}:		bank_adr <=  wb_addr_i[24:23];
+		   {2'h0, 2'h1}:	bank_adr <=  wb_addr_i[25:24];
+		   {2'h0, 2'h2}:	bank_adr <=  wb_addr_i[26:25];
+	
+		   {2'h1, 2'h0}:	bank_adr <=  wb_addr_i[23:22];
+		   {2'h1, 2'h1}:	bank_adr <=  wb_addr_i[24:23];
+		   {2'h1, 2'h2}:	bank_adr <=  wb_addr_i[25:24];
+	
+		   {2'h2, 2'h0}:	bank_adr <=  wb_addr_i[22:21];
+		   {2'h2, 2'h1}:	bank_adr <=  wb_addr_i[23:22];
+		   {2'h2, 2'h2}:	bank_adr <=  wb_addr_i[24:23];
+		endcase
+     end
+
+always @(bus_width or mem_size)
+	casex({bus_width, mem_size})		
+	   {2'h0, 2'h0}:		page_size = 11'd512;
+	   {2'h0, 2'h1}:	page_size = 11'd1024;
+	   {2'h0, 2'h2}:	page_size = 11'd1024;
+
+	   {2'h1, 2'h0}:	page_size = 11'd256;
+	   {2'h1, 2'h1}:	page_size = 11'd512;
+	   {2'h1, 2'h2}:	page_size = 11'd512;
+
+	   {2'h2, 2'h0}:	page_size = 11'd256;
+	   {2'h2, 2'h1}:	page_size = 11'd256;
+	   {2'h2, 2'h2}:	page_size = 11'd256;
+	endcase
+
+endmodule
+

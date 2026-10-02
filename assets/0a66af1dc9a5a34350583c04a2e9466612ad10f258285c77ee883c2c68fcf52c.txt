@@ -1,0 +1,60 @@
+module origen_128711 (
+    input wire CLK,
+    input wire RST_N,
+    input wire CLR,
+    input wire ENQ,
+    input wire DEQ,
+    input wire [127:0] D_IN,
+    output wire FULL_N,
+    output wire EMPTY_N,
+    output wire [127:0] D_OUT
+);
+
+    localparam DEPTH = 32;
+    localparam ADDR_WIDTH = 5;
+
+    reg [127:0] shift_reg [0:DEPTH-1];
+    reg [ADDR_WIDTH-1:0] head;
+    reg [ADDR_WIDTH-1:0] tail;
+    reg [ADDR_WIDTH:0] count;
+
+    wire full;
+    wire empty;
+
+    assign full = (count == DEPTH);
+    assign empty = (count == 0);
+
+    assign FULL_N = ~full;
+    assign EMPTY_N = ~empty;
+
+    assign D_OUT = shift_reg[head];
+
+    integer i;
+
+    always @(posedge CLK or negedge RST_N) begin
+        if (!RST_N || CLR) begin
+            head <= 0;
+            tail <= 0;
+            count <= 0;
+            for (i = 0; i < DEPTH; i = i + 1) begin
+                shift_reg[i] <= 128'b0;
+            end
+        end else begin
+            if (ENQ && !full) begin
+                shift_reg[tail] <= D_IN;
+                tail <= (tail == DEPTH-1) ? 0 : tail + 1;
+                count <= count + 1;
+            end
+
+            if (DEQ && !empty) begin
+                head <= (head == DEPTH-1) ? 0 : head + 1;
+                count <= count - 1;
+            end
+
+            if (ENQ && DEQ && !full && !empty) begin
+                // No change in count when both ENQ and DEQ are active
+            end
+        end
+    end
+
+endmodule

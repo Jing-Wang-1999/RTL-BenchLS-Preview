@@ -1,0 +1,9 @@
+always @ (posedge clock or posedge reset)
+begin
+	if (reset) 
+		counter <= 16'b0;
+	else if (counter >= baud_limit) 
+		counter <= counter - baud_limit;
+	else 
+		counter <= counter + baud_freq;
+end

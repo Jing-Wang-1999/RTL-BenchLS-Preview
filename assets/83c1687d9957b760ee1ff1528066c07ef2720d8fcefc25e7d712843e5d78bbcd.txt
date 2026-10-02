@@ -1,0 +1,33 @@
+module origen_099616 (
+    input clk,
+    input n_rst,
+    input clr,
+    input count_enable,
+    input [31:0] rollover_val,
+    output reg [31:0] count_out,
+    output reg rollover_flag
+);
+
+    always @(posedge clk or negedge n_rst) begin
+        if (!n_rst) begin
+            count_out <= 32'd0;
+            rollover_flag <= 1'b0;
+        end
+        else begin
+            rollover_flag <= 1'b0;
+            if (clr) begin
+                count_out <= 32'd0;
+            end
+            else if (count_enable) begin
+                if (count_out == rollover_val) begin
+                    count_out <= 32'd0;
+                    rollover_flag <= 1'b1;
+                end
+                else begin
+                    count_out <= count_out + 1'b1;
+                end
+            end
+        end
+    end
+
+endmodule

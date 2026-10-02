@@ -1,0 +1,111 @@
+{
+  "case_id": "s1derived.002aa46f8813a269311f.03fde7c8a455",
+  "compile_check": {
+    "case_id": "s1derived.002aa46f8813a269311f.03fde7c8a455",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_03278",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_03278.e3774b79e05171f9/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.002aa46f8813a269311f",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "002aa46f8813a269311fe202289168c60c6d88a4ac52850ec75f7068eeb1df94",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.002aa46f8813a269311f.03fde7c8a455",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_03278.e3774b79e05171f9/private/commercial_positive.log",
+    "commercial_log_sha256": "9fa33348677018a1842c287c1a8522235f6920881b40f70a54fb128085b425b5",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_03278.e3774b79e05171f9/private/historical_harness/00_sec_rtlpp_03278.tcl",
+    "executed_script_sha256": "20ba3b23bdd8644f3569440552d2df0bbc78c8ba22cc2c771d1eef564c707b5b",
+    "golden_tops": [
+      "rtlpp_03278"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.rtlpp_03278.e3774b79e05171f9",
+    "parent_id": "s1p.002aa46f8813a269311f",
+    "revised_tops": [
+      "rtlpp_03278"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_03278",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.002aa46f8813a269311f.03fde7c8a455",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Reset timing and priority, hold behavior, 32-bit left-shift recurrence, polynomial feedback positions, crc_out=crc[31], and whole-state zero comparison all match.",
+        "rtl_excerpt": "`always @(posedge clk or posedge rst)` prioritizes rst, sync_rst, enable/new_crc, then shift; new_crc XORs `data ^ crc[31]` into exactly the listed taps.",
+        "spec_excerpt": "\u201crst is active-high asynchronous reset; sync_rst is active-high synchronous reset... enable takes priority over shift\u201d and feedback taps `{0,1,2,4,5,7,8,10,11,12,16,22,23,26}`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.002aa46f8813a269311f",
+    "reviewed_specification_sha256": "177bdf4fdd362ef2e0edc648fca4ae83c0a3bf1f36191c27d28dd7fa904fd648",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "002aa46f8813a269311fe202289168c60c6d88a4ac52850ec75f7068eeb1df94",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_03278.e3774b79e05171f9/private/historical_harness/00_sec_rtlpp_03278.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_03278.e3774b79e05171f9/private/historical_harness/01_sec_rtlpp_03278.tcl"
+  ],
+  "parent_id": "s1p.002aa46f8813a269311f",
+  "primary_review": {
+    "case_id": "s1derived.002aa46f8813a269311f.03fde7c8a455",
+    "checks": {
+      "behavior": "The specification ends mid-sentence in CRC verification and omits the complete externally visible crc_match behavior.",
+      "boundaries": "Declared parameter defaults and ordinary boundary behavior are coherent.",
+      "interface": "Declared ports and widths match the specification.",
+      "rtl_reasonableness": "Synthesizable and coherent implementation.",
+      "sequential_and_reset": "RTL has coherent clock/reset behavior; the prose is incomplete."
+    },
+    "curation_note": "Complete second revision following independent review; new specification requires independent approval.",
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The quoted implementation supports the described behavior; revision is due to incomplete prose where noted.",
+        "rtl_excerpt": "if (rst) crc <= 32'hffffffff; else if (sync_rst) ...",
+        "spec_excerpt": "The specification ends mid-sentence in CRC verification and omits the complete externally visible crc_match behavior."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends mid-sentence in CRC verification and omits the complete externally visible crc_match behavior.",
+        "rtl_evidence": "if (rst) crc <= 32'hffffffff; else if (sync_rst) ...",
+        "spec_evidence": "The visible specification ends mid-sentence or omits a parameterized externally observable branch.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.002aa46f8813a269311f",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_root/s1derived.002aa46f8813a269311f.03fde7c8a455.md",
+    "reviewer": "root_curator",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "002aa46f8813a269311fe202289168c60c6d88a4ac52850ec75f7068eeb1df94",
+    "source_group": "S4",
+    "specification_sha256": "03fde7c8a455797de3b29cb83bf01c5bcf92493cc47b87cb3455b77e059e9f34",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_root/s1derived.002aa46f8813a269311f.03fde7c8a455.md",
+  "qualified_specification_sha256": "177bdf4fdd362ef2e0edc648fca4ae83c0a3bf1f36191c27d28dd7fa904fd648",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_03278.e3774b79e05171f9/private/golden_design.v",
+  "rtl_sha256": "002aa46f8813a269311fe202289168c60c6d88a4ac52850ec75f7068eeb1df94",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_03278.e3774b79e05171f9/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "03fde7c8a455797de3b29cb83bf01c5bcf92493cc47b87cb3455b77e059e9f34",
+  "top_module": "rtlpp_03278"
+}

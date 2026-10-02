@@ -1,0 +1,59 @@
+module __formal113_core_19ef02e4800ebf08a06c
+
+    #(
+        parameter  DATASIZE = 8,    // Memory data word width
+        parameter  ADDRSIZE = 4,    // Number of mem address bits
+        parameter  FALLTHROUGH = "TRUE" // First word fall-through
+    ) (
+        input  wire                wclk,
+        input  wire                wclken,
+        input  wire [ADDRSIZE-1:0] waddr,
+        input  wire [DATASIZE-1:0] wdata,
+        input  wire                wfull,
+        input  wire                rclk,
+        input  wire                rclken,
+        input  wire [ADDRSIZE-1:0] raddr,
+        output wire [DATASIZE-1:0] rdata
+    );
+
+    localparam DEPTH = 1<<ADDRSIZE;
+
+    reg [DATASIZE-1:0] mem [0:DEPTH-1];
+    reg [DATASIZE-1:0] rdata_r;
+
+    always @(posedge wclk) begin
+        if (wclken && !wfull)
+            mem[waddr] <= wdata;
+    end
+
+    generate
+        if (FALLTHROUGH == "TRUE")
+        begin : fallthrough
+            assign rdata = mem[raddr];
+        end
+        else
+        begin : registered_read
+            always @(posedge rclk) begin
+                if (rclken)
+                    rdata_r <= mem[raddr];
+            end
+            assign rdata = rdata_r;
+        end
+    endgenerate
+
+endmodule
+module fifomem(
+  input wire  wclk,
+  input wire  wclken,
+  input wire [3:0] waddr,
+  input wire [7:0] wdata,
+  input wire  wfull,
+  input wire  rclk,
+  input wire  rclken,
+  input wire [3:0] raddr,
+  output wire [7:0] rdata
+);
+wire [7:0] __negative_output;
+__formal113_core_19ef02e4800ebf08a06c dut(.wclk(wclk), .wclken(wclken), .waddr(waddr), .wdata(wdata), .wfull(wfull), .rclk(rclk), .rclken(rclken), .raddr(raddr), .rdata(__negative_output));
+assign rdata = __negative_output ^ 8'd1;
+endmodule

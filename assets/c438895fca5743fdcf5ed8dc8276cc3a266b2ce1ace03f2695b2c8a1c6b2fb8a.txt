@@ -1,0 +1,107 @@
+module origen_145529 (
+    input wire clk,
+    input wire rst,
+    input wire [31:0] input_signal,
+    output wire [15:0] xor_output
+);
+
+    wire [31:0] change_detector_output;
+    wire [15:0] bcd_counter_output;
+    wire enable_hundreds, enable_thousands;
+
+    // Instantiate the 32-bit input signal change detector
+    change_detector cd (
+        .clk(clk),
+        .rst(rst),
+        .input_signal(input_signal),
+        .change_detected(change_detector_output)
+    );
+
+    // Instantiate the 4-digit BCD counter
+    bcd_counter bc (
+        .clk(clk),
+        .rst(rst),
+        .enable_hundreds(enable_hundreds),
+        .enable_thousands(enable_thousands),
+        .bcd_output(bcd_counter_output)
+    );
+
+    // Perform bitwise XOR operation
+    assign xor_output = change_detector_output[15:0] ^ bcd_counter_output;
+
+    // Generate enable signals for hundreds and thousands
+    assign enable_hundreds = (bcd_counter_output[7:0] == 8'h99);
+    assign enable_thousands = (bcd_counter_output[11:0] == 12'h999);
+
+endmodule
+
+// Change detector module
+module change_detector (
+    input wire clk,
+    input wire rst,
+    input wire [31:0] input_signal,
+    output reg [31:0] change_detected
+);
+
+    reg [31:0] prev_input;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            change_detected <= 32'b0;
+            prev_input <= 32'b0;
+        end else begin
+            change_detected <= (prev_input & ~input_signal);
+            prev_input <= input_signal;
+        end
+    end
+endmodule
+
+// BCD counter module
+module bcd_counter (
+    input wire clk,
+    input wire rst,
+    input wire enable_hundreds,
+    input wire enable_thousands,
+    output reg [15:0] bcd_output
+);
+
+    reg [3:0] ones, tens, hundreds, thousands;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            ones <= 4'b0;
+            tens <= 4'b0;
+            hundreds <= 4'b0;
+            thousands <= 4'b0;
+        end else begin
+            if (ones == 4'd9) begin
+                ones <= 4'd0;
+                if (tens == 4'd9) begin
+                    tens <= 4'd0;
+                    if (enable_hundreds) begin
+                        if (hundreds == 4'd9) begin
+                            hundreds <= 4'd0;
+                            if (enable_thousands) begin
+                                if (thousands == 4'd9) begin
+                                    thousands <= 4'd0;
+                                end else begin
+                                    thousands <= thousands + 1;
+                                end
+                            end
+                        end else begin
+                            hundreds <= hundreds + 1;
+                        end
+                    end
+                end else begin
+                    tens <= tens + 1;
+                end
+            end else begin
+                ones <= ones + 1;
+            end
+        end
+    end
+
+    always @(*) begin
+        bcd_output = {thousands, hundreds, tens, ones};
+    end
+endmodule

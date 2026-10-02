@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.6488c2047497b7387001.4bfc0c7e0085",
+  "compile_check": {
+    "case_id": "s1derived.6488c2047497b7387001.4bfc0c7e0085",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_03612",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03612.8623434d0995edc9/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.6488c2047497b7387001",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "6488c2047497b73870014a0059e1ce0e3b9578d763051d122ff1c98b3c7be86b",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.6488c2047497b7387001.4bfc0c7e0085",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03612.8623434d0995edc9/private/commercial_positive.log",
+    "commercial_log_sha256": "75060c038bc5a7141206bc8456cdc6f81ebd904d89d548a6ba31b07292792b33",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03612.8623434d0995edc9/private/historical_harness/00_sec_mg_03612.tcl",
+    "executed_script_sha256": "6f8aae273d76f603ee5ec515124a3d89b9d4677d454691cff170fc1323be26de",
+    "golden_tops": [
+      "mg_03612"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.mg_03612.8623434d0995edc9",
+    "parent_id": "s1p.6488c2047497b7387001",
+    "revised_tops": [
+      "mg_03612"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_03612",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.6488c2047497b7387001.4bfc0c7e0085",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All four cfg modes and two-stage sticky request equations agree. Ack clears the output, intermediate storage lacks reset, and simulation #1 is explicitly distinguished from edge behavior.",
+        "rtl_excerpt": "if(dma_req_r1 & dma_req_d & !dma_ack)",
+        "specification_excerpt": "Once set it holds"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.6488c2047497b7387001",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "ac7369d0ed05b1ac74717ee5a3b53d93ccc99c149d5fc01fcd9522db1357a7e6",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6488c2047497b73870014a0059e1ce0e3b9578d763051d122ff1c98b3c7be86b",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03612.8623434d0995edc9/private/historical_harness/00_sec_mg_03612.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03612.8623434d0995edc9/private/historical_harness/01_sec_mg_03612.tcl"
+  ],
+  "parent_id": "s1p.6488c2047497b7387001",
+  "primary_review": {
+    "case_id": "s1derived.6488c2047497b7387001.4bfc0c7e0085",
+    "checks": {
+      "behavior": "Checked all four candidate modes and registered request protocol.",
+      "boundaries": "Checked status thresholds and full_empty override.",
+      "interface": "All ports, widths, and reset polarity match.",
+      "rtl_reasonableness": "Reasonable DMA request filter.",
+      "sequential_and_reset": "Checked intermediate latency, acknowledge clear, and async output reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The prose excludes a condition that can independently assert the request candidate.",
+        "rtl_excerpt": "(full_empty | (status < 2'h3))",
+        "spec_excerpt": "Request if status is less than 3"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "Modes 0-2 omit the full_empty OR term, and the prose truncates before defining the two-stage set/acknowledge behavior.",
+        "rtl_evidence": "cfg[0] & cfg[6] & (full_empty | (status < 2'h3))",
+        "spec_evidence": "Mode 0 ... Request if status is less than 3",
+        "type": "semantic_mismatch"
+      }
+    ],
+    "parent_id": "s1p.6488c2047497b7387001",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.6488c2047497b7387001.4bfc0c7e0085.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6488c2047497b73870014a0059e1ce0e3b9578d763051d122ff1c98b3c7be86b",
+    "source_group": "S5",
+    "specification_sha256": "4bfc0c7e0085b8b3a43b1b0e56e645f1cd28668cbb2480b2a4d52ec0909e0182",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.6488c2047497b7387001.4bfc0c7e0085.md",
+  "qualified_specification_sha256": "ac7369d0ed05b1ac74717ee5a3b53d93ccc99c149d5fc01fcd9522db1357a7e6",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03612.8623434d0995edc9/private/golden_design.v",
+  "rtl_sha256": "6488c2047497b73870014a0059e1ce0e3b9578d763051d122ff1c98b3c7be86b",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03612.8623434d0995edc9/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "4bfc0c7e0085b8b3a43b1b0e56e645f1cd28668cbb2480b2a4d52ec0909e0182",
+  "top_module": "mg_03612"
+}

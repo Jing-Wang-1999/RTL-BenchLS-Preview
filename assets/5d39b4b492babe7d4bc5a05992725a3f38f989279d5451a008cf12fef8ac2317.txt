@@ -1,0 +1,77 @@
+module rtlpp_04544 (
+    input  [7:0] data_in,
+    input        write_buffer,
+    input        reset_buffer,
+    input        en_16_x_baud,
+    output       serial_out,
+    output       buffer_full,
+    output       buffer_half_full,
+    input        clk
+);
+
+reg [7:0] fifo_mem [0:15];
+reg [3:0] write_ptr;
+reg [3:0] read_ptr;
+reg       fifo_full_reg;
+reg       fifo_half_full_reg;
+wire      fifo_data_present;
+reg [7:0] fifo_data_out;
+wire      fifo_read;
+reg [3:0] data_count;
+
+assign buffer_full = fifo_full_reg;
+assign buffer_half_full = fifo_half_full_reg;
+assign fifo_data_present = (data_count != 0);
+
+always @(posedge clk or posedge reset_buffer) begin
+    if (reset_buffer) begin
+        write_ptr <= 0;
+        read_ptr <= 0;
+        fifo_full_reg <= 0;
+        fifo_half_full_reg <= 0;
+        data_count <= 0;
+    end else begin
+        if (write_buffer && !fifo_full_reg) begin
+            fifo_mem[write_ptr] <= data_in;
+            write_ptr <= write_ptr + 1;
+            data_count <= data_count + 1;
+        end
+
+        if (fifo_read && fifo_data_present) begin
+            fifo_data_out <= fifo_mem[read_ptr];
+            read_ptr <= read_ptr + 1;
+            data_count <= data_count - 1;
+        end
+
+        fifo_full_reg <= (data_count == 16);
+        fifo_half_full_reg <= (data_count >= 8);
+    end
+end
+
+reg [3:0] bit_count;
+reg [9:0] shift_reg;
+reg sending;
+reg Tx_complete;
+wire Tx_start = fifo_data_present && !sending;
+
+assign serial_out = shift_reg[0];
+assign fifo_read = Tx_complete;
+
+always @(posedge clk) begin
+    if (Tx_start) begin
+        sending <= 1;
+        shift_reg <= {1'b1, fifo_data_out, 1'b0}; // Start bit, data, and stop bit
+        bit_count <= 0;
+        Tx_complete <= 0;
+    end
+    else if (sending && en_16_x_baud) begin
+        shift_reg <= {1'b1, shift_reg[9:1]};
+        bit_count <= bit_count + 1;
+        if (bit_count == 9) begin
+            sending <= 0;
+            Tx_complete <= 1;
+        end
+    end
+end
+
+endmodule

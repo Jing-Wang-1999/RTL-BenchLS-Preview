@@ -1,0 +1,66 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/23546",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/21700",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 23546,
+  "issue_number": 21700,
+  "verilog_files": [
+    "hw/ip/spi_device/rtl/spi_cmdparse.sv",
+    "hw/ip/spi_device/rtl/spi_device.sv",
+    "hw/ip/spi_device/rtl/spid_status.sv"
+  ],
+  "deletions": 5,
+  "additions": 17,
+  "patches": [
+    {
+      "filename": "hw/ip/spi_device/rtl/spi_cmdparse.sv",
+      "patch": "@@ -30,6 +30,10 @@ module spi_cmdparse\n   // Read Status module as Index 0 is pre-assigned to Read Status.\n   input cmd_info_t [NumTotalCmdInfo-1:0] cmd_info_i,\n \n+  // Busy status at the beginning of the transaction.\n+  // Used to block some commands.\n+  input sck_status_busy_i,\n+\n   // control to spi_s2p\n   output io_mode_e io_mode_o,\n \n@@ -191,13 +195,13 @@ module spi_cmdparse\n                           && (data_i == cmd_info_i[CmdInfoReadJedecId].opcode);\n   assign opcode_readsfdp = cmd_info_i[CmdInfoReadSfdp].valid\n                          && (data_i == cmd_info_i[CmdInfoReadSfdp].opcode);\n-  assign opcode_en4b = cmd_info_i[CmdInfoEn4B].valid\n+  assign opcode_en4b = !sck_status_busy_i && cmd_info_i[CmdInfoEn4B].valid\n                      && (data_i == cmd_info_i[CmdInfoEn4B].opcode);\n-  assign opcode_ex4b = cmd_info_i[CmdInfoEx4B].valid\n+  assign opcode_ex4b = !sck_status_busy_i && cmd_info_i[CmdInfoEx4B].valid\n                      && (data_i == cmd_info_i[CmdInfoEx4B].opcode);\n-  assign opcode_wren = cmd_info_i[CmdInfoWrEn].valid\n+  assign opcode_wren = !sck_status_busy_i && cmd_info_i[CmdInfoWrEn].valid\n                      && (data_i == cmd_info_i[CmdInfoWrEn].opcode);\n-  assign opcode_wrdi = cmd_info_i[CmdInfoWrDi].valid\n+  assign opcode_wrdi = !sck_status_busy_i && cmd_info_i[CmdInfoWrDi].valid\n                      && (data_i == cmd_info_i[CmdInfoWrDi].opcode);\n \n   always_comb begin\n@@ -272,7 +276,7 @@ module spi_cmdparse\n \n   // Check upload field in the cmd_info\n   logic upload;\n-  assign upload = cmd_info_d.upload;\n+  assign upload = cmd_info_d.upload && !sck_status_busy_i;\n \n   // Intercept: Latched in SCK\n   always_ff @(posedge clk_i or negedge rst_ni) begin",
+      "additions": 9,
+      "deletions": 5,
+      "changes": 14
+    },
+    {
+      "filename": "hw/ip/spi_device/rtl/spi_device.sv",
+      "patch": "@@ -284,6 +284,7 @@ module spi_device\n   // Important status bits for tracking in the upload module\n   logic cmd_sync_status_busy;\n   logic cmd_sync_status_wel;\n+  logic sck_status_busy;\n \n   // Read Status input and broadcast\n   logic sck_status_busy_set;       // set by HW (upload)\n@@ -1114,6 +1115,8 @@ module spi_device\n \n     .cmd_info_i   (cmd_info),\n \n+    .sck_status_busy_i(sck_status_busy),\n+\n     .io_mode_o    (sub_iomode[IoModeCmdParse]),\n \n     .sel_dp_o          (cmd_dp_sel),\n@@ -1250,6 +1253,7 @@ module spi_device\n     .inclk_status_commit_i  (s2p_data_valid),\n     .cmd_sync_status_busy_o (cmd_sync_status_busy),\n     .cmd_sync_status_wel_o  (cmd_sync_status_wel),\n+    .sck_status_busy_o      (sck_status_busy),\n     .csb_busy_broadcast_o   (csb_status_busy_broadcast) // SCK domain\n   );\n ",
+      "additions": 4,
+      "deletions": 0,
+      "changes": 4
+    },
+    {
+      "filename": "hw/ip/spi_device/rtl/spid_status.sv",
+      "patch": "@@ -76,6 +76,9 @@ module spid_status\n   output logic cmd_sync_status_busy_o,\n   output logic cmd_sync_status_wel_o,\n \n+  // Represents current busy bit, for cmdparse to block commands.\n+  output logic sck_status_busy_o,\n+\n   // indicator of busy for blocking passthrough\n   output logic csb_busy_broadcast_o // CSB domain\n );\n@@ -216,6 +219,7 @@ module spid_status\n \n   assign cmd_sync_status_busy_o = sck_status_to_commit[BitBusy];\n   assign cmd_sync_status_wel_o = sck_status_to_commit[BitWe];\n+  assign sck_status_busy_o = sck_status_committed[BitBusy];\n \n   // Staged to Committed at CSb de-assertion\n   // SW and the passthrough gate only receive the final values of",
+      "additions": 4,
+      "deletions": 0,
+      "changes": 4
+    }
+  ],
+  "pr_info": {
+    "title": "[spi_device] Block flash write commands when busy",
+    "body": "Block uploads, WREN, WRDI, EN4B, and EX4B when the busy bit is set. The state of the device should not change until the busy bit is cleared.\r\n\r\nThis may be especially important to avoid the payload buffer changing its contents while software is processing a command.\r\n\r\nFixes #21700 ",
+    "state": "closed",
+    "created_at": "2024-06-06T17:59:53Z",
+    "updated_at": "2024-06-10T15:00:56Z",
+    "merged_at": "2024-06-07T02:15:28Z",
+    "user": "a-will"
+  },
+  "issue_info": {
+    "title": "[spi_device] Disallow certain state changes when busy",
+    "body": "### Description\n\nOn a real SPI flash device, many commands are ignored when the device is busy. We might want to consider adding this behavior to our IP as well.\r\n\r\nCurrently, command uploads, WREN, WRDI, EN4B, and EX4B all are allowed while the busy bit is set.",
+    "labels": [
+      "Component:RTL",
+      "IP:spi_device"
+    ],
+    "state": "closed",
+    "created_at": "2024-02-27T03:38:22Z",
+    "updated_at": "2024-06-07T02:15:29Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 493
+  },
+  "base_commit": "574ece386f821fa4bba1b390b859c2c32043845b",
+  "head_commit": "9191f1590fdb3f0d68c56183d61b905b1dedc383",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_23546_21700",
+  "lec_status": "useful_pass"
+}

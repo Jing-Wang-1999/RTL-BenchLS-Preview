@@ -1,0 +1,32 @@
+always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            count_r   <= 32'b0;
+            compare_r <= 32'hffffffff;
+            status_r  <= 32'b0; // IE=0, EXL=0
+            cause_r   <= 32'b0;
+            epc_r     <= 32'b0;
+        end else begin
+            count_r <= count_r + 32'd1;
+
+            // software writes via mtc0
+            if (mtc0we) begin
+                case (waddr)
+                    CP0_COUNT:   count_r   <= wdata;
+                    CP0_COMPARE: compare_r <= wdata;
+                    CP0_STATUS:  status_r  <= wdata;
+                    CP0_CAUSE:   cause_r   <= wdata;
+                    CP0_EPC:     epc_r     <= wdata;
+                    default: ;
+                endcase
+            end
+
+            // interrupt entry / eret take priority over mtc0 for EXL and EPC
+            if (exc_take) begin
+                epc_r        <= exc_epc;
+                status_r[1]  <= 1'b1;    // set EXL
+                cause_r[6:2] <= 5'd0;    // ExcCode = 0 (interrupt)
+            end else if (eret) begin
+                status_r[1]  <= 1'b0;    // clear EXL
+            end
+        end
+    end

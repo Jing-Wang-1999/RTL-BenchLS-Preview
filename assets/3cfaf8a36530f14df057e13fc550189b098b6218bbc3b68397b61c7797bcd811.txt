@@ -1,0 +1,125 @@
+module __formal113_core_e25d1ba3cacb (
+  
+  input  wire        HCLK,              
+  input  wire        HRESETn,           
+
+  output wire [31:0] HADDR,             
+  output wire [ 2:0] HBURST,            
+  output wire        HMASTLOCK,         
+  output wire [ 3:0] HPROT,             
+  output wire [ 2:0] HSIZE,             
+  output wire [ 1:0] HTRANS,            
+  output wire [31:0] HWDATA,            
+  output wire        HWRITE,            
+  input  wire [31:0] HRDATA,            
+  input  wire        HREADY,            
+  input  wire        HRESP,             
+
+  input  wire        NMI,               
+  input  wire [31:0] IRQ,               
+  output wire        TXEV,              
+  input  wire        RXEV,              
+  output wire        LOCKUP,            
+  output wire        SYSRESETREQ,       
+  input  wire        STCLKEN,           
+  input  wire [25:0] STCALIB,           
+
+  output wire        SLEEPING           
+);
+
+  // Internal signals
+  wire    [31: 0] cm0_r00;
+  wire    [31: 0] cm0_r01;
+  wire    [31: 0] cm0_r02;
+  wire    [31: 0] cm0_r03;
+  wire    [31: 0] cm0_r04;
+  wire    [31: 0] cm0_r05;
+  wire    [31: 0] cm0_r06;
+  wire    [31: 0] cm0_r07;
+  wire    [31: 0] cm0_r08;
+  wire    [31: 0] cm0_r09;
+  wire    [31: 0] cm0_r10;
+  wire    [31: 0] cm0_r11;
+  wire    [31: 0] cm0_r12;
+  wire    [31: 0] cm0_msp;
+  wire    [31: 0] cm0_psp;
+  wire    [31: 0] cm0_r14;
+  wire    [31: 0] cm0_pc;
+  wire    [31: 0] cm0_xpsr;
+  wire    [31: 0] cm0_control;
+  wire    [31: 0] cm0_primask;
+
+  wire    [29: 0] vis_msp;
+  wire    [29: 0] vis_psp;
+  wire    [30: 0] vis_pc;
+  wire    [ 3: 0] vis_apsr;
+  wire            vis_tbit;
+  wire    [ 5: 0] vis_ipsr;
+  wire            vis_control;
+  wire            vis_primask;
+
+  // Embedded logic from cortexm0ds_logic
+  // Assuming placeholder logic for demonstration as the original logic is not provided
+
+  // Just assigning some logic to illustrate embedding. Replace with actual logic.
+  assign vis_msp = 30'd0;
+  assign vis_psp = 30'd0;
+  assign vis_pc = 31'd0;
+  assign vis_apsr = 4'd0;
+  assign vis_tbit = 1'b0;
+  assign vis_ipsr = 6'd0;
+  assign vis_control = 1'b0;
+  assign vis_primask = 1'b0;
+
+  assign HADDR = 32'd0;
+  assign HBURST = 3'd0;
+  assign HMASTLOCK = 1'b0;
+  assign HPROT = 4'd0;
+  assign HSIZE = 3'd0;
+  assign HTRANS = 2'd0;
+  assign HWDATA = 32'd0;
+  assign HWRITE = 1'b0;
+
+  assign TXEV = 1'b0;
+  assign LOCKUP = 1'b0;
+  assign SYSRESETREQ = 1'b0;
+  assign SLEEPING = 1'b0;
+
+  // Additional Module Logic here
+  
+  assign cm0_msp     = {vis_msp[29:0],2'd0};
+  assign cm0_psp     = {vis_psp[29:0],2'd0};
+  assign cm0_pc      = {vis_pc[30:0],1'b0};
+  assign cm0_xpsr    = {vis_apsr[3:0],3'd0,vis_tbit,18'd0,vis_ipsr[5:0]};
+  assign cm0_control = {30'd0,vis_control,1'b0};
+  assign cm0_primask = {31'd0,vis_primask};
+
+endmodule
+module cortex_m0_processor(
+  input wire [0:0] HCLK,
+  input wire [0:0] HRESETn,
+  output wire [31:0] HADDR,
+  output wire [2:0] HBURST,
+  output wire [0:0] HMASTLOCK,
+  output wire [3:0] HPROT,
+  output wire [2:0] HSIZE,
+  output wire [1:0] HTRANS,
+  output wire [31:0] HWDATA,
+  output wire [0:0] HWRITE,
+  input wire [31:0] HRDATA,
+  input wire [0:0] HREADY,
+  input wire [0:0] HRESP,
+  input wire [0:0] NMI,
+  input wire [31:0] IRQ,
+  output wire [0:0] TXEV,
+  input wire [0:0] RXEV,
+  output wire [0:0] LOCKUP,
+  output wire [0:0] SYSRESETREQ,
+  input wire [0:0] STCLKEN,
+  input wire [25:0] STCALIB,
+  output wire [0:0] SLEEPING
+);
+wire [31:0] __negative_output;
+__formal113_core_e25d1ba3cacb dut(.HCLK(HCLK), .HRESETn(HRESETn), .HADDR(__negative_output), .HBURST(HBURST), .HMASTLOCK(HMASTLOCK), .HPROT(HPROT), .HSIZE(HSIZE), .HTRANS(HTRANS), .HWDATA(HWDATA), .HWRITE(HWRITE), .HRDATA(HRDATA), .HREADY(HREADY), .HRESP(HRESP), .NMI(NMI), .IRQ(IRQ), .TXEV(TXEV), .RXEV(RXEV), .LOCKUP(LOCKUP), .SYSRESETREQ(SYSRESETREQ), .STCLKEN(STCLKEN), .STCALIB(STCALIB), .SLEEPING(SLEEPING));
+assign HADDR = __negative_output ^ 32'd1;
+endmodule

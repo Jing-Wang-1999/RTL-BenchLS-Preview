@@ -1,0 +1,25 @@
+module FL1P3DX_FUNC (
+    input wire D0,
+    input wire D1,
+    input wire SP,
+    input wire CK,
+    input wire SD,
+    input wire CD,
+    input wire SR,
+    input wire notifier,
+    output reg Q
+);
+
+always @(posedge CK or posedge SR) begin
+    if (SR) begin
+        Q <= 0;
+    end else if (CD) begin
+        Q <= 0;
+    end else if (SD) begin
+        Q <= D1;
+    end else if (SP) begin
+        Q <= D0;
+    end
+end
+
+endmodule

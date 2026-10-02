@@ -1,0 +1,89 @@
+module autovcoder_064906 (
+    track_out,
+    shouldLoad,
+    CLOCK_LINE,
+    RESET_GAME,
+    shift_out
+);
+  input [3:0] track_out;
+  input shouldLoad;
+  input CLOCK_LINE;
+  input RESET_GAME;
+  output [3:0] shift_out;
+  /***************TOP SET OF SHIFTS, RESPONSIBLE FOR LOADING FROM RAM*****************/
+  wire [3:0] loadShiftOut;
+  shifterbit loadShift7 (
+      .OUT(loadShiftOut[3]),
+      .IN(never_write),
+      .LOAD(track_out[3]),
+      .SHIFT(~shouldLoad),
+      .LOAD_N(~shouldLoad),
+      .CLK(CLOCK_LINE),
+      .RESET_N(~RESET_GAME)
+  );
+  shifterbit loadShift6 (
+      .OUT(loadShiftOut[2]),
+      .IN(loadShiftOut[3]),
+      .LOAD(track_out[2]),
+      .SHIFT(~shouldLoad),
+      .LOAD_N(~shouldLoad),
+      .CLK(CLOCK_LINE),
+      .RESET_N(~RESET_GAME)
+  );
+  shifterbit loadShift5 (
+      .OUT(loadShiftOut[1]),
+      .IN(loadShiftOut[2]),
+      .LOAD(track_out[1]),
+      .SHIFT(~shouldLoad),
+      .LOAD_N(~shouldLoad),
+      .CLK(CLOCK_LINE),
+      .RESET_N(~RESET_GAME)
+  );
+  shifterbit loadShift4 (
+      .OUT(loadShiftOut[0]),
+      .IN(loadShiftOut[1]),
+      .LOAD(track_out[0]),
+      .SHIFT(~shouldLoad),
+      .LOAD_N(~shouldLoad),
+      .CLK(CLOCK_LINE),
+      .RESET_N(~RESET_GAME)
+  );
+
+
+  /***************BOTTOM SET OF SHIFTS, ONLY SHIFTS*****************/
+  wire [3:0] straightShift;
+  shifterbitNL loadShift3 (
+      .OUT(straightShift[3]),
+      .IN(loadShiftOut[0]),
+      .SHIFT(~shouldLoad | shouldLoad),
+      .CLK(CLOCK_LINE),
+      .RESET_N(~RESET_GAME)
+  );
+  shifterbitNL loadShift2 (
+      .OUT(straightShift[2]),
+      .IN(straightShift[3]),
+      .SHIFT(~shouldLoad | shouldLoad),
+      .CLK(CLOCK_LINE),
+      .RESET_N(~RESET_GAME)
+  );
+  shifterbitNL loadShift1 (
+      .OUT(straightShift[1]),
+      .IN(straightShift[2]),
+      .SHIFT(~shouldLoad | shouldLoad),
+      .CLK(CLOCK_LINE),
+      .RESET_N(~RESET_GAME)
+  );
+  shifterbitNL loadShift0 (
+      .OUT(straightShift[0]),
+      .IN(straightShift[1]),
+      .SHIFT(~shouldLoad | shouldLoad),
+      .CLK(CLOCK_LINE),
+      .RESET_N(~RESET_GAME)
+  );
+
+  assign shift_out = straightShift;
+
+  //assign LEDR[7:4] = loadShiftOut;
+  //assign LEDR[3:0] = straightShift;
+endmodule
+

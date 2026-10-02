@@ -1,0 +1,40 @@
+**Specification: Instruction Control Unit (origen_004940)**
+
+**Overview:**
+This module decodes a 6-bit instruction opcode to generate control signals for a processor datapath. It configures the behavior of register operations, memory access, branching, and ALU functionality based on the instruction type.
+
+**Inputs:**
+- **Opcode (6-bit):** The instruction opcode that determines the operation type (e.g., R-type, load/store, branch, jump).
+
+**Outputs:**
+- **RegDst:** Selects the destination register. High for R-type instructions (register destination), low for others (immediate destination).
+- **ALUSrc:** Selects the ALU’s second operand. High for immediate values (e.g., load/store, XORI), low for register values.
+- **MemtoReg:** Selects the data source for register writes. High for memory loads (data from memory), low for ALU results.
+- **RegWrite:** Enables writing to the register file. High for instructions modifying registers (e.g., R-type, load, XORI).
+- **MemRead:** Enables memory read operations. High for load instructions.
+- **MemWrite:** Enables memory write operations. High for store instructions.
+- **Branch:** Enables conditional branching. High for branch-on-not-equal (BNE) instructions.
+- **Jump:** Enables unconditional jumps. High for jump instructions.
+- **ALUOp (2-bit):** Directs the ALU to perform specific operations:
+  - `00`: Add (for load/store).
+  - `01`: Subtract (for BNE).
+  - `10`: R-type operation (determined by funct field).
+  - `11`: XOR (for XORI).
+- **SignZero:** Selects ALU input extension. High for zero-extension (XORI), low for sign-extension (others).
+
+**Behavior:**
+The module decodes the opcode to set control signals as follows:
+- **R-type (000000):** Register-register operations. ALU performs R-type operations; result written to register.
+- **Load word (100011):** Memory read. ALU adds base and offset; data loaded into register.
+- **Store word (101011):** Memory write. ALU adds base and offset; data written to memory.
+- **Branch on not equal (000101):** Conditional branch. ALU subtracts to compare registers.
+- **XORI (001110):** Immediate XOR. ALU performs XOR with zero-extended immediate.
+- **Jump (000010):** Unconditional jump. No ALU operation; PC updated directly.
+- **Default:** Disables all operations (no-op).
+
+**Allowed Sub-Modules:**
+None. This is a combinational logic block with no internal state or sub-modules.
+
+**Notes:**
+- Undefined signals (e.g., `RegDst` for store) are marked as "don’t care" (`x`).
+- All outputs are generated combinatorially from the opcode input.

@@ -1,0 +1,21 @@
+module mg_00462(
+    input signed [7:0] sample,
+    input [5:0] volume,
+    output signed [13:0] out
+);
+
+    wire signed [13:0] sample_extended;
+    wire [13:0] volume_extended;
+    wire signed [27:0] product;
+
+    // Sign-extend 8-bit sample to 14 bits
+    assign sample_extended = {{6{sample[7]}}, sample};
+
+    // Zero-extend 6-bit volume to 14 bits
+    assign volume_extended = {{8{1'b0}}, volume};
+
+    // Multiply and take lower 14 bits
+    assign product = sample_extended * volume_extended;
+    assign out = product[13:0];
+
+endmodule

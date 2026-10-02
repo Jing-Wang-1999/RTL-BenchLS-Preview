@@ -1,0 +1,121 @@
+module origen_018408 (
+    input wire iCLK,
+    input wire iRST_n,
+    input wire [7:0] iTxD_DATA,
+    input wire iTxD_Start,
+    input wire TDI,
+    input wire TCS,
+    input wire TCK,
+    output wire [7:0] oRxD_DATA,
+    output wire oTxD_Done,
+    output wire oRxD_Ready,
+    output wire TDO
+);
+
+    wire tck_sync;
+    reg tck_prev;
+    wire tck_posedge;
+
+    // Clock synchronization
+    always @(posedge iCLK or negedge iRST_n) begin
+        if (!iRST_n)
+            tck_prev <= 1'b0;
+        else
+            tck_prev <= TCK;
+    end
+
+    assign tck_posedge = TCK & ~tck_prev;
+    assign tck_sync = tck_posedge;
+
+    // Instantiate JTAG_REC
+    JTAG_REC u0 (
+        .TDI(TDI),
+        .TCS(TCS),
+        .TCK(tck_sync),
+        .oRxD_DATA(oRxD_DATA),
+        .oRxD_Ready(oRxD_Ready)
+    );
+
+    // Instantiate JTAG_TRANS
+    JTAG_TRANS u1 (
+        .iTxD_DATA(iTxD_DATA),
+        .iTxD_Start(iTxD_Start),
+        .TCK(tck_sync),
+        .TCS(TCS),
+        .oTxD_Done(oTxD_Done),
+        .TDO(TDO)
+    );
+
+endmodule
+
+module JTAG_REC (
+    input wire TDI,
+    input wire TCS,
+    input wire TCK,
+    output reg [7:0] oRxD_DATA,
+    output reg oRxD_Ready
+);
+
+    reg [2:0] rCont;
+    reg [7:0] rShiftReg;
+
+    always @(posedge TCK or posedge TCS) begin
+        if (TCS) begin
+            rCont <= 3'b000;
+            oRxD_Ready <= 1'b0;
+        end else begin
+            rShiftReg <= {rShiftReg[6:0], TDI};
+            rCont <= rCont + 1'b1;
+            
+            if (rCont == 3'b111) begin
+                oRxD_DATA <= {rShiftReg[6:0], TDI};
+                oRxD_Ready <= 1'b1;
+            end else begin
+                oRxD_Ready <= 1'b0;
+            end
+        end
+    end
+
+endmodule
+
+module JTAG_TRANS (
+    input wire [7:0] iTxD_DATA,
+    input wire iTxD_Start,
+    input wire TCK,
+    input wire TCS,
+    output reg oTxD_Done,
+    output reg TDO
+);
+
+    reg [2:0] rCont;
+    reg [7:0] rShiftReg;
+
+    always @(posedge TCK or posedge TCS) begin
+        if (TCS) begin
+            rCont <= 3'b000;
+            oTxD_Done <= 1'b0;
+            TDO <= 1'b0;
+        end else begin
+            if (iTxD_Start && rCont == 3'b000) begin
+                rShiftReg <= iTxD_DATA;
+                rCont <= 3'b001;
+                TDO <= iTxD_DATA[0];
+                oTxD_Done <= 1'b0;
+            end else if (rCont != 3'b000) begin
+                rShiftReg <= {1'b0, rShiftReg[7:1]};
+                rCont <= rCont + 1'b1;
+                TDO <= rShiftReg[0];
+                
+                if (rCont == 3'b111) begin
+                    oTxD_Done <= 1'b1;
+                end else begin
+                    oTxD_Done <= 1'b0;
+                end
+            end else begin
+                oTxD_Done <= 1'b0;
+                TDO <= 1'b0;
+            end
+        end
+    end
+
+endmodule

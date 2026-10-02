@@ -1,0 +1,29 @@
+always @* begin
+            full  = mem_used[DEPTH-1];
+            empty = !mem_used[0];
+
+            // ------------------------------------------
+            // For a single slot FIFO, reading clears the
+            // full status immediately.
+            // ------------------------------------------
+            if (DEPTH == 1)
+                full = mem_used[0] && !read;
+
+            internal_out_payload = mem[0];
+
+            // ------------------------------------------
+            // Writes clear empty immediately for lookahead modes.
+            // Note that we use in_valid instead of write to avoid
+            // combinational loops (in lookahead mode, qualifying
+            // with in_ready is meaningless).
+            //
+            // In a 1-deep FIFO, a possible combinational loop runs
+            // from write -> out_valid -> out_ready -> write
+            // ------------------------------------------
+            if (EMPTY_LATENCY == 0) begin
+                empty = !mem_used[0] && !in_valid;
+
+                if (!mem_used[0] && in_valid)
+                    internal_out_payload = in_payload;
+            end
+        end

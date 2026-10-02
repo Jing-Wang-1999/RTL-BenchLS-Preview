@@ -1,0 +1,53 @@
+### Instruction for Verilog Module Generation
+
+Develop a Verilog module named `key_input_pio_register` that functions as an input capture and interrupt generation system for a set of keys. The module should include the following key components and behaviors:
+
+1. **Primary Function**:
+   - Capture the edge transitions (press events) of a 3-bit input port and generate an interrupt based on these events.
+
+2. **Key Input and Address Handling**:
+   - Inputs: `address` (2-bits), `chipselect`, `clk`, `in_port` (3-bits), `reset_n`, `write_n`, `writedata` (32-bits).
+   - Outputs: `irq`, `readdata` (32-bits).
+   - Use the address input to select between different functionalities:
+     - `2'b00`: Read the current input port state.
+     - `2'b10`: Read or write the interrupt mask.
+     - `2'b11`: Read or clear the edge capture register.
+
+3. **Reading and Writing Data**:
+   - Output data (`readdata`) should be updated based on the selected address using a multiplexer to decide between input port data, interrupt mask, and edge capture.
+
+4. **Edge Detection and Interrupt Generation**:
+   - Capture edges (press events) on the input port and store them in the `edge_capture` register.
+   - Generate an interrupt (`irq`) when a press event aligns with the irq_mask.
+
+5. **Internal Registers and Logic**:
+   - Registers: `d1_data_in`, `d2_data_in` for input synchronization; `irq_mask` for interrupt masking; `edge_capture` for storing detected edges.
+   - Use `clk` and `reset_n` for synchronous operations:
+     - On reset, initialize all registers.
+     - On the positive edge of the clock, update registers based on control signals.
+
+6. **Control Flow Logic**:
+   - The `irq_mask` register is written when `chipselect` is active, `write_n` is low, and the address is `2'b10`.
+   - The edge capture register is updated with detected edges, and can be cleared based on the address and control signals.
+   - The output `readdata` is updated synchronously based on the current address and selected data.
+
+7. **Signal Interactions**:
+   - Use edge detection logic to detect rising edges on the input (`data_in`).
+   - The `irq` output is asserted if any bit of the `edge_capture` register is high and its corresponding bit in the `irq_mask` is set.
+
+By following this detailed instruction, the LLM should be able to generate the required Verilog code accurately. The module's control flow and data dependencies are arranged to manage edge detection of the input signals and handle synchronous read/write operations based on the address input.
+
+### Example Verilog Code Output
+
+Module Interface:
+module key_input_pio_register (
+                         address,
+                         chipselect,
+                         clk,
+                         in_port,
+                         reset_n,
+                         write_n,
+                         writedata,
+                         irq,
+                         readdata
+                        );

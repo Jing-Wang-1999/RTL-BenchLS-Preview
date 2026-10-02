@@ -1,0 +1,22 @@
+always @ (posedge clk) begin
+    h_sof <= g_sof & rstn;
+    h_bb <= 57'd0;
+    h_bn <= 6'd0;
+    if(~rstn | g_sof) begin
+        h_eof <= 1'b0;
+    end else begin
+        h_eof <= g_eof;
+        if(g_e) begin
+            if(g_runi) begin
+                if(g_on==2'd1)
+                    h_bb[56] <= 1'b1;
+                else if(g_on==2'd2)
+                    h_bb[56:55] <= 2'b11;
+                h_bn <= {4'h0, g_on};
+            end else begin
+                h_bb <= ( {41'h0,g_cb} << (6'd57-g_cn) ) | ( 57'd1 << (6'd56-g_cn-g_zn) ) | ( {47'h0,g_db} << (6'd56-g_cn-g_zn-g_dn) );
+                h_bn <= {1'b0,g_cn} + {1'b0,g_zn} + 6'd1 + {2'b0,g_dn};
+            end
+        end
+    end
+end

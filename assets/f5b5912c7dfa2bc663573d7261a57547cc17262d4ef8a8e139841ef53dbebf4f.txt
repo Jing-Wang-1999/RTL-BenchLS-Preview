@@ -1,0 +1,75 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/188",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/187",
+  "repository": "lowRISC/ibex",
+  "pr_number": 188,
+  "issue_number": 187,
+  "verilog_files": [
+    "examples/fpga/artya7-100/rtl/top_artya7_100.sv",
+    "examples/sim/tb/ibex_tracing_tb.sv",
+    "rtl/ibex_core.sv",
+    "rtl/ibex_core_tracing.sv"
+  ],
+  "deletions": 21,
+  "additions": 20,
+  "patches": [
+    {
+      "filename": "examples/fpga/artya7-100/rtl/top_artya7_100.sv",
+      "patch": "@@ -70,10 +70,11 @@ module top_artya7_100 (\n      .data_rdata_i          (data_rdata),\n      .data_err_i            ('b0),\n \n-     .irq_i                 ('b0),\n-     .irq_id_i              ('b0),\n-     .irq_ack_o             (),\n-     .irq_id_o              (),\n+     .irq_software_i        (1'b0),\n+     .irq_timer_i           (1'b0),\n+     .irq_external_i        (1'b0),\n+     .irq_fast_i            (15'b0),\n+     .irq_nm_i              (1'b0),\n \n      .debug_req_i           ('b0),\n ",
+      "additions": 5,
+      "deletions": 4,
+      "changes": 9
+    },
+    {
+      "filename": "examples/sim/tb/ibex_tracing_tb.sv",
+      "patch": "@@ -100,10 +100,11 @@ module ibex_tracing_tb;\n     .data_err_i             (1'b0),\n \n     // Interrupt inputs\n-    .irq_i                  (1'b0),\n-    .irq_id_i               (5'b0),\n-    .irq_ack_o              (),\n-    .irq_id_o               (),\n+    .irq_software_i         (1'b0),\n+    .irq_timer_i            (1'b0),\n+    .irq_external_i         (1'b0),\n+    .irq_fast_i             (15'b0),\n+    .irq_nm_i               (1'b0),\n \n     // Debug Interface\n     .debug_req_i            (1'b0),",
+      "additions": 5,
+      "deletions": 4,
+      "changes": 9
+    },
+    {
+      "filename": "rtl/ibex_core.sv",
+      "patch": "@@ -85,7 +85,6 @@ module ibex_core #(\n     output logic [31:0] rvfi_insn_uncompressed,\n     output logic        rvfi_trap,\n     output logic        rvfi_halt,\n-    output logic        rvfi_intr,\n     output logic [ 1:0] rvfi_mode,\n     output logic [ 4:0] rvfi_rs1_addr,\n     output logic [ 4:0] rvfi_rs2_addr,\n@@ -620,7 +619,6 @@ module ibex_core #(\n     if (!rst_ni) begin\n       rvfi_halt              <= '0;\n       rvfi_trap              <= '0;\n-      rvfi_intr              <= '0;\n       rvfi_order             <= '0;\n       rvfi_insn              <= '0;\n       rvfi_insn_uncompressed <= '0;\n@@ -642,7 +640,6 @@ module ibex_core #(\n     end else begin\n       rvfi_halt              <= '0;\n       rvfi_trap              <= illegal_insn_id;\n-      rvfi_intr              <= irq_ack_o;\n       rvfi_order             <= rvfi_order + rvfi_valid;\n       rvfi_insn              <= rvfi_insn_id;\n       rvfi_insn_uncompressed <= instr_rdata_id;",
+      "additions": 0,
+      "deletions": 3,
+      "changes": 3
+    },
+    {
+      "filename": "rtl/ibex_core_tracing.sv",
+      "patch": "@@ -44,10 +44,11 @@ module ibex_core_tracing #(\n     input  logic        data_err_i,\n \n     // Interrupt inputs\n-    input  logic        irq_i,                 // level sensitive IR lines\n-    input  logic [4:0]  irq_id_i,\n-    output logic        irq_ack_o,             // irq ack\n-    output logic [4:0]  irq_id_o,\n+    input  logic        irq_software_i,\n+    input  logic        irq_timer_i,\n+    input  logic        irq_external_i,\n+    input  logic [14:0] irq_fast_i,\n+    input  logic        irq_nm_i,       // non-maskeable interrupt\n \n     // Debug Interface\n     input  logic        debug_req_i,\n@@ -70,7 +71,6 @@ module ibex_core_tracing #(\n   logic [31:0] rvfi_insn_uncompressed;\n   logic        rvfi_trap;\n   logic        rvfi_halt;\n-  logic        rvfi_intr;\n   logic [ 1:0] rvfi_mode;\n   logic [ 4:0] rvfi_rs1_addr;\n   logic [ 4:0] rvfi_rs2_addr;\n@@ -119,10 +119,11 @@ module ibex_core_tracing #(\n     .data_rdata_i,\n     .data_err_i,\n \n-    .irq_i,\n-    .irq_id_i,\n-    .irq_ack_o,\n-    .irq_id_o,\n+    .irq_software_i,\n+    .irq_timer_i,\n+    .irq_external_i,\n+    .irq_fast_i,\n+    .irq_nm_i,\n \n     .debug_req_i,\n \n@@ -132,7 +133,6 @@ module ibex_core_tracing #(\n     .rvfi_insn_uncompressed,\n     .rvfi_trap,\n     .rvfi_halt,\n-    .rvfi_intr,\n     .rvfi_mode,\n     .rvfi_rs1_addr,\n     .rvfi_rs2_addr,",
+      "additions": 10,
+      "deletions": 10,
+      "changes": 20
+    }
+  ],
+  "pr_info": {
+    "title": "Adapt interrupt interface for Arty example, tracer and TB",
+    "body": "This PR also adapts the interrupt interface in the Arty example, the tracer and the tracer TB.\r\n\r\nA follow-up PR will contain the required changes for the UVM infrastructure.\r\n\r\nThis PR is related to #187 .",
+    "state": "closed",
+    "created_at": "2019-07-24T17:47:24Z",
+    "updated_at": "2019-07-26T10:39:39Z",
+    "merged_at": "2019-07-24T17:58:27Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "Tracer compile issue: irq_ack_o ",
+    "body": "Looks like this port is removed recently, but still connected to the tracer.\r\n\r\n/usr/local/google/home/taliu/ibex_dbg/ibex/rtl/ibex_core.sv, 645\r\n  Identifier 'irq_ack_o' has not been declared yet. If this error is not \r\n  expected, please check if you have set `default_nettype to none.\r\n\r\nhttps://github.com/lowRISC/ibex/blob/master/rtl/ibex_core.sv#L645",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL",
+      "Component:DV"
+    ],
+    "state": "closed",
+    "created_at": "2019-07-24T15:28:00Z",
+    "updated_at": "2019-07-24T18:46:53Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 319
+  },
+  "base_commit": "72c77f855d16cfc5f1106aaefc713edabdc5e724",
+  "head_commit": "793c78d3a217453aac0a1c178190f800dffc8c99",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_188_187",
+  "lec_status": "useful_pass"
+}

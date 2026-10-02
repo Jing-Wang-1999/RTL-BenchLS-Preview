@@ -1,0 +1,36 @@
+module ddr2_sequencer_ram (
+    address,
+    byteenable,
+    chipselect,
+    clk,
+    clken,
+    write,
+    writedata,
+    readdata
+);
+
+  output reg [31:0] readdata;
+  input [9:0] address;
+  input [3:0] byteenable;
+  input chipselect;
+  input clk;
+  input clken;
+  input write;
+  input [31:0] writedata;
+
+  reg [31:0] mem [0:1023];
+  wire wren;
+
+  assign wren = chipselect & write;
+
+  always @(posedge clk)
+    if (clken) begin
+        if (wren) begin
+          if (byteenable[0]) mem[address][7:0] <= writedata[7:0];
+          if (byteenable[1]) mem[address][15:8] <= writedata[15:8];
+          if (byteenable[2]) mem[address][23:16] <= writedata[23:16];
+          if (byteenable[3]) mem[address][31:24] <= writedata[31:24];
+        end
+        readdata <= mem[address];
+    end
+endmodule

@@ -1,0 +1,30 @@
+module origen_122978 (
+    input [3:0] kpr,
+    input [3:0] kpc,
+    output reg [3:0] buttons
+);
+
+    always @(*) begin
+        buttons = 4'b0000; // default output
+
+        // Check if exactly one bit is low in kpr and kpc
+        if ((kpr == 4'b1110) && (kpc == 4'b1110)) buttons = 4'b0000; // row0 col0
+        else if ((kpr == 4'b1110) && (kpc == 4'b1101)) buttons = 4'b0001; // row0 col1
+        else if ((kpr == 4'b1110) && (kpc == 4'b1011)) buttons = 4'b0010; // row0 col2
+        else if ((kpr == 4'b1110) && (kpc == 4'b0111)) buttons = 4'b0011; // row0 col3
+        else if ((kpr == 4'b1101) && (kpc == 4'b1110)) buttons = 4'b0100; // row1 col0
+        else if ((kpr == 4'b1101) && (kpc == 4'b1101)) buttons = 4'b0101; // row1 col1
+        else if ((kpr == 4'b1101) && (kpc == 4'b1011)) buttons = 4'b0110; // row1 col2
+        else if ((kpr == 4'b1101) && (kpc == 4'b0111)) buttons = 4'b0111; // row1 col3
+        else if ((kpr == 4'b1011) && (kpc == 4'b1110)) buttons = 4'b1000; // row2 col0
+        else if ((kpr == 4'b1011) && (kpc == 4'b1101)) buttons = 4'b1001; // row2 col1
+        else if ((kpr == 4'b1011) && (kpc == 4'b1011)) buttons = 4'b1010; // row2 col2
+        else if ((kpr == 4'b1011) && (kpc == 4'b0111)) buttons = 4'b1011; // row2 col3
+        else if ((kpr == 4'b0111) && (kpc == 4'b1110)) buttons = 4'b1100; // row3 col0
+        else if ((kpr == 4'b0111) && (kpc == 4'b1101)) buttons = 4'b1101; // row3 col1
+        else if ((kpr == 4'b0111) && (kpc == 4'b1011)) buttons = 4'b1110; // row3 col2
+        else if ((kpr == 4'b0111) && (kpc == 4'b0111)) buttons = 4'b1111; // row3 col3
+        // all other combinations (invalid) keep buttons = 0
+    end
+
+endmodule

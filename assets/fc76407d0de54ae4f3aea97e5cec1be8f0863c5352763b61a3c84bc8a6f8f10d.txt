@@ -1,0 +1,50 @@
+# Implement the asynchronous FIFO project
+Read the original project specification, README and testplan in specification/.
+Implement the complete six-module async_fifo configuration, with the required
+paths and declaration-only interfaces. Bidirectional and external RAM wrappers
+are separate configurations and are not required by this case.
+
+Reviewed document reconciliation, fixed before any evaluated model call:
+- The old specification.rst uses wren/rden and a byte-depth rounding interface.
+  The pinned release README and RTL interface instead use winc/rinc, DSIZE bits
+  per word, and ASIZE address bits: capacity is exactly 2**ASIZE words. No byte
+  rounding parameter exists. Follow this release contract when documents differ.
+- Both clocks use rising edges. wrst_n and rrst_n are asynchronous active-low
+  resets; assert both together before use, including when discarding queued data.
+  Memory contents and read output on empty/reset are unspecified. Initial flags
+  are wfull=0, awfull=0, rempty=1 and arempty=0.
+- A write edge accepts wdata iff winc && !wfull. A read edge consumes the oldest
+  word iff rinc && !rempty. Requests during full/empty do not advance pointers;
+  writes while full must not overwrite memory. Preserve order through pointer wrap.
+- Maintain local binary pointers with an extra wrap bit and Gray-code pointers
+  for cross-domain transfer. The declared synchronizers transfer each pointer
+  through TWO destination-clock registers, reset to zero. The source may advance
+  independently; local availability flags can conservatively lag remote progress.
+- With FALLTHROUGH="TRUE", rdata continuously shows the oldest addressed word;
+  sample it before an accepted rising read edge. With any other value, rdata
+  registers the addressed word on each rising edge with rinc; an accepted read's
+  result is visible after that edge. No data correctness is required on empty.
+- wfull is registered from whether the next accepted-write pointer equals the
+  synchronized read pointer with the wrap relation for full. awfull registers
+  the same test one additional word ahead; it is an equality flag for one free
+  slot, not an inclusive threshold asserted at full. rempty registers equality of
+  the next accepted-read Gray pointer and synchronized write pointer; arempty
+  uses one extra read ahead, indicating exactly one available word, not empty.
+- Required parameter envelope: DSIZE 8, 13 or 32; ASIZE 2, 3 or 4; both read
+  modes. Preserve default parameter values in the interfaces. Internal state
+  names are unrestricted; connect all six modules in the integration top.
+
+Private points test reset, full/empty blocking, almost flags, multiple wraps,
+independent clock rates/phases, intermittent and simultaneous accesses, parameter
+geometry and registered reads. Tests compare end-to-end transactions with an
+independent software queue; no hierarchical access to reference internals is used.
+Finite RTL simulation does not establish analog metastability safety or physical
+CDC timing closure. Write your own tests; public feedback checks compilation.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

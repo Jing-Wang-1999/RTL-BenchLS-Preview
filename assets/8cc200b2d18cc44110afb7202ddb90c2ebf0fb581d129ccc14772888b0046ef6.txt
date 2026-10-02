@@ -1,0 +1,74 @@
+`timescale 1ns/1ps
+module tb;reg clk=0,rst=0;always #5 clk=~clk;
+task tick;begin @(posedge clk);#2;end endtask
+task reset;begin @(negedge clk);rst=1;repeat(3)tick;@(negedge clk);rst=0;end endtask
+initial begin #100000000;$fatal(1,"timeout");end
+wire [15:0] addr;wire [7:0] wrdata;wire wr,rd,req;
+wire [7:0] rddata=addr[15:8]^addr[7:0]^8'ha7;
+reg grant=0;integer grant_wait=0;
+always @(posedge clk)if(rst)begin grant<=0;grant_wait<=0;end
+else if(req)begin grant_wait<=grant_wait+1;grant<=grant_wait>=3;end
+else begin grant<=0;grant_wait<=0;end
+integer nw=0,nr=0,nt=0;reg [15:0] wa[0:511],ra[0:511];reg [7:0] wd[0:511],tx[0:511];
+always @(posedge clk)if(!rst)begin
+if(wr)begin if(addr!==wa[nw] || wrdata!==wd[nw])$fatal(1,"bus write %d %h %h",nw,addr,wrdata);nw=nw+1;end
+if(rd)begin if(addr!==ra[nr])$fatal(1,"bus read %d %h",nr,addr);nr=nr+1;end
+end
+task received;input [7:0] data;begin if(data!==tx[nt])$fatal(1,"response %d %h != %h",nt,data,tx[nt]);nt=nt+1;end endtask
+reg [7:0] rxdata=0;reg newrx=0,busy=0;wire [7:0] txdata;wire newtx;
+integer busy_count=0;
+uart_parser #(16) dut(clk,rst,rxdata,newrx,txdata,newtx,busy,addr,wrdata,wr,rddata,rd,req,grant);
+always @(posedge clk)if(rst)begin busy<=0;busy_count<=0;end
+else if(newtx && !busy)begin received(txdata);busy<=1;busy_count<=20;end
+else if(busy_count>0)busy_count<=busy_count-1;
+else busy<=0;
+task put;input [7:0] data;begin
+@(negedge clk);rxdata=data;newrx=1;tick;@(negedge clk);newrx=0;repeat(24)tick;end endtask
+initial begin
+wa[0]=16'h12fc;wd[0]=8'h99;
+wa[1]=16'h12fd;wd[1]=8'hdd;
+wa[2]=16'h12fe;wd[2]=8'h6d;
+wa[3]=16'h12ff;wd[3]=8'hee;
+wa[4]=16'h1300;wd[4]=8'h6a;
+wa[5]=16'h1301;wd[5]=8'h00;
+wa[6]=16'h1302;wd[6]=8'h2c;
+wa[7]=16'h1303;wd[7]=8'h79;
+wa[8]=16'hfe31;wd[8]=8'h00;
+wa[9]=16'hfe31;wd[9]=8'hff;
+wa[10]=16'hfe31;wd[10]=8'h55;
+wa[11]=16'hfe31;wd[11]=8'haa;
+ra[0]=16'h12fc;
+ra[1]=16'h12fd;
+ra[2]=16'h12fe;
+ra[3]=16'h12ff;
+ra[4]=16'h1300;
+ra[5]=16'h1301;
+ra[6]=16'h1302;
+ra[7]=16'h1303;
+ra[8]=16'habed;
+ra[9]=16'habed;
+ra[10]=16'habed;
+tx[0]=8'h5a;
+tx[1]=8'h5a;
+tx[2]=8'h5a;
+tx[3]=8'h49;
+tx[4]=8'h48;
+tx[5]=8'h4b;
+tx[6]=8'h4a;
+tx[7]=8'hb4;
+tx[8]=8'hb5;
+tx[9]=8'hb6;
+tx[10]=8'hb7;
+tx[11]=8'h5a;
+tx[12]=8'he1;
+tx[13]=8'he1;
+tx[14]=8'he1;
+tx[15]=8'h5a;
+reset;repeat(50)tick;
+put(8'h00);put(8'h01);repeat(1000)tick;
+put(8'h00);put(8'h21);put(8'h12);put(8'hfc);put(8'h08);put(8'h99);put(8'hdd);put(8'h6d);put(8'hee);put(8'h6a);put(8'h00);put(8'h2c);put(8'h79);repeat(1000)tick;
+put(8'h00);put(8'h23);put(8'hfe);put(8'h31);put(8'h04);put(8'h00);put(8'hff);put(8'h55);put(8'haa);repeat(1000)tick;
+put(8'h00);put(8'h11);put(8'h12);put(8'hfc);put(8'h08);repeat(1000)tick;
+put(8'h00);put(8'h13);put(8'hab);put(8'hed);put(8'h03);repeat(1000)tick;
+if(nw!=12 || nr!=11 || nt!=16)$fatal(1,"transaction counts %d %d %d",nw,nr,nt);
+$display("RTL_BENCHLS_PASS");$finish(0);end endmodule

@@ -1,0 +1,14 @@
+module inv_mix_columns (in,out);
+input [16*8-1 : 0] in;
+output [16*8-1 : 0] out;
+wire [16*8-1 : 0] out;
+
+genvar i;
+generate
+    for (i=0; i<4; i=i+1)
+    begin : mx
+       inv_mix_one_column m (.in(in[32*i+31:32*i]),
+						.out(out[32*i+31:32*i]));
+    end
+endgenerate
+endmodule

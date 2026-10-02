@@ -1,0 +1,11 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/harder3_8e4772b8c937e27b6e29_positive.v0.v
+check_sec -analyze -imp -sv ./input/rtl/harder3_8e4772b8c937e27b6e29_positive.negative.v
+check_sec -elaborate -spec -top busdelay -disable_auto_bbox
+check_sec -elaborate -imp -top busdelay -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock i_clk
+reset -expression {i_reset}
+check_sec -gen
+check_sec -prove -strategy proof

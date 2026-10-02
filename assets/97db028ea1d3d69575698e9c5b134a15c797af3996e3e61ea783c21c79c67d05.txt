@@ -1,0 +1,113 @@
+{
+  "case_id": "s1derived.148188d95df606da9f86.0442ae7b3c8a",
+  "compile_check": {
+    "case_id": "s1derived.148188d95df606da9f86.0442ae7b3c8a",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_03551",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03551.25580289f04eb9c6/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.148188d95df606da9f86",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "148188d95df606da9f8691b45fade1b1a3ad809dc3e55ce2ac851656d6b46d59",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.148188d95df606da9f86.0442ae7b3c8a",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03551.25580289f04eb9c6/private/commercial_positive.log",
+    "commercial_log_sha256": "317579355a3f8d05b25da690c84d38cbffe1183a14b8bb8d8850eeac62b03780",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03551.25580289f04eb9c6/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mg_03551"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.mg_03551.25580289f04eb9c6",
+    "parent_id": "s1p.148188d95df606da9f86",
+    "revised_tops": [
+      "mg_03551"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_03551",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.148188d95df606da9f86.0442ae7b3c8a",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The six ALU controls apply in the stated zero/negate, add-or-AND, final-negate order, followed by zero and sign flags for binary operands.",
+        "rtl_excerpt": "r_out = r_x + r_y;",
+        "specification_excerpt": "low 16 bits of their sum"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.148188d95df606da9f86",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "f9bc97956d029d3b6e2f08b021e933dfffd973194e9abc1c0daa7fe259df0630",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "148188d95df606da9f8691b45fade1b1a3ad809dc3e55ce2ac851656d6b46d59",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03551.25580289f04eb9c6/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03551.25580289f04eb9c6/private/historical_harness/01_conformal_rtl_mg_03551.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03551.25580289f04eb9c6/private/historical_harness/02_fm_rtl_mg_03551.tcl"
+  ],
+  "parent_id": "s1p.148188d95df606da9f86",
+  "primary_review": {
+    "case_id": "s1derived.148188d95df606da9f86.0442ae7b3c8a",
+    "checks": {
+      "behavior": "The ordered Hack-style ALU transformations match the stated initial portion and are completed by RTL.",
+      "boundaries": "Addition discards carry above bit 15; zr tests all bits and ng equals bit 15.",
+      "interface": "All two 16-bit inputs, six controls, 16-bit output, and two flags match.",
+      "rtl_reasonableness": "The combinational ALU is reasonable.",
+      "sequential_and_reset": "Purely combinational; the declaration initializer is overwritten for every combinational evaluation."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The ordered Hack-style ALU transformations match the stated initial portion and are completed by RTL. Purely combinational; the declaration initializer is overwritten for every combinational evaluation.",
+        "rtl_excerpt": "RTL zeroes then optionally complements each operand, chooses 16-bit add or AND, optionally complements result, then computes zero and sign flags",
+        "spec_excerpt": "The final phrase is \u201cthe processed x is negated (bitwise\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification stops while describing nx and omits the remaining operand, operation, output-negation, and flag sequence.",
+        "rtl_evidence": "RTL zeroes then optionally complements each operand, chooses 16-bit add or AND, optionally complements result, then computes zero and sign flags",
+        "spec_evidence": "The final phrase is \u201cthe processed x is negated (bitwise\u201d.",
+        "type": "truncated_operation"
+      }
+    ],
+    "parent_id": "s1p.148188d95df606da9f86",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.148188d95df606da9f86.0442ae7b3c8a.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "148188d95df606da9f8691b45fade1b1a3ad809dc3e55ce2ac851656d6b46d59",
+    "source_group": "S5",
+    "specification_sha256": "0442ae7b3c8a0093fa3348ee31180119a68e274824c1db286db8a829dc096445",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.148188d95df606da9f86.0442ae7b3c8a.md",
+  "qualified_specification_sha256": "f9bc97956d029d3b6e2f08b021e933dfffd973194e9abc1c0daa7fe259df0630",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03551.25580289f04eb9c6/private/golden_design.v",
+  "rtl_sha256": "148188d95df606da9f8691b45fade1b1a3ad809dc3e55ce2ac851656d6b46d59",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_03551.25580289f04eb9c6/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "0442ae7b3c8a0093fa3348ee31180119a68e274824c1db286db8a829dc096445",
+  "top_module": "mg_03551"
+}

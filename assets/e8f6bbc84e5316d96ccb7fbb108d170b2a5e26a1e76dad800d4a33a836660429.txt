@@ -1,0 +1,60 @@
+**Instruction:**
+
+Create a Verilog module named `hardware_instantiation_wrapper` that manages a response FIFO and its associated data flow for system responses. The module has two modes determined by the `RESPONSE_PORT` parameter, with mode 0 and mode 1 handling different data and control signals.
+
+1. **Primary Function:**
+   - The module interfaces with a response FIFO to manage and process response data.
+   - It supports different configurations and data widths based on the `RESPONSE_PORT` parameter.
+
+2. **Key Control Flow:**
+   - The module includes a FIFO implemented using registers and control logic for reading and writing operations.
+   - Control points include:
+     - `reset` and `sw_reset` signals for resetting the FIFO pointers and flags.
+     - `done_strobe` for writing data to the FIFO.
+     - Read enable signals based on `mm_response_read` and `fifo_empty` for mode 0, and `src_response_ready` and `fifo_empty` for mode 1.
+
+3. **Important Data Processing:**
+   - Data written to the FIFO is based on early termination status, error status, and actual bytes transferred, varying slightly between `RESPONSE_PORT` modes.
+   - Read operations output different data formats and signals depending on the mode:
+     - Mode 0 reads data for the MM response interface.
+     - Mode 1 reads data for the source response interface.
+   - Status signals (`response_watermark`, `response_fifo_full`, `response_fifo_empty`) provide FIFO status information for flow control and monitoring.
+
+4. **Signal Summary:**
+   - Inputs: `clk`, `reset`, `mm_response_read`, `mm_response_address`, `mm_response_byteenable`, `src_response_ready`, `sw_reset`, `done_strobe`, `actual_bytes_transferred`, `error`, `early_termination`, `transfer_complete_IRQ_mask`, `error_IRQ_mask`, `early_termination_IRQ_mask`, `descriptor_buffer_full`.
+   - Outputs: `mm_response_readdata`, `mm_response_waitrequest`, `src_response_data`, `src_response_valid`, `response_watermark`, `response_fifo_full`, `response_fifo_empty`.
+
+The Verilog module should have a straightforward design accommodating these control flows and data processes, ensuring the FIFO operations are correctly executed for both response modes (0 and 1). The FIFO logic should handle read and write pointers, check for full and empty states, and provide correct data outputs depending on the mode.
+
+Module Interface:
+module hardware_instantiation_wrapper (
+  clk,
+  reset,
+
+  mm_response_readdata,
+  mm_response_read,
+  mm_response_address,
+  mm_response_byteenable,
+  mm_response_waitrequest,
+
+  src_response_data,
+  src_response_valid,
+  src_response_ready,
+
+  sw_reset,
+  response_watermark,
+  response_fifo_full,
+  response_fifo_empty,
+  done_strobe,
+  actual_bytes_transferred,
+  error,
+  early_termination,
+  transfer_complete_IRQ_mask,
+  error_IRQ_mask,
+  early_termination_IRQ_mask,
+  descriptor_buffer_full
+);
+
+Behavioral Clarifications:
+- Parameters: RESPONSE_PORT=0 (default), FIFO_DEPTH=256, FIFO_DEPTH_LOG2=8. FIFO data width is 41 bits for mode 0 and 51 bits for mode 1 (localparam FIFO_WIDTH).
+- In mode 0, FIFO stores {early_termination, error[7:0], actual_bytes_transferred[31:0]} (41 bits) and mm_response_waitrequest is asserted when the FIFO is empty. In mode 1, IRQ masks are prepended and src_response_valid is asserted when FIFO is non-empty.

@@ -1,0 +1,20 @@
+always @(*) begin
+	   if (nextState == Reset || nextState == Bypass)
+	     outstanding_in <= 0;
+	   else if (nextState == Idle ) begin
+	      if (start_token && !end_token)
+		     outstanding_in <= outstanding_c + 1;
+	      else if (!start_token && end_token)
+		     outstanding_in <= outstanding_c - 1;
+	      else if (start_token && end_token)
+		     outstanding_in <= outstanding_c;
+	      else 
+		     outstanding_in <= outstanding_c;
+	   end else if (nextState == Filter ) begin
+	    if (end_token)
+	     outstanding_in <= outstanding_r - 1;
+	    else
+	     outstanding_in <= outstanding_r;
+	   end else
+	     outstanding_in <= 0;
+   end

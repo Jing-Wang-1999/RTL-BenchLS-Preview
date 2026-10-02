@@ -1,0 +1,156 @@
+module mg_09014(input wire clk,input wire can_go,output reg req,output reg rnw,output reg [7:0] wd,output reg [20:0] addr,input wire ack,input wire done,input wire [7:0] rd);
+parameter BEG_ADDR = 21'h00C000; 
+  parameter BLK_SIZE = 21'd004096; 
+  reg first; 
+  reg rnw_done; 
+  reg first_done; 
+  always @(posedge clk, negedge can_go) 
+  begin 
+  if( !can_go ) 
+  begin 
+  addr = BEG_ADDR; 
+  rnw = 1'b1; 
+  first = 1'b0; 
+  end 
+  else 
+  begin 
+  if( ack ) 
+  begin 
+  if( addr >= (BEG_ADDR+BLK_SIZE-1) ) 
+  begin 
+  addr <= BEG_ADDR; 
+  rnw <= ~rnw; 
+  first <= 1'b1; 
+  end 
+  else 
+  begin 
+  addr <= addr + 21'd1; 
+  first <= 1'b0; 
+  end 
+  end 
+  end 
+  end 
+ `define RND_PAUSE (8'd20 + ( 8'd63 & ($random>>20))) 
+ `define RND_BURST (8'd1 + ( 8'd15 & ($random>>20))) 
+  reg [7:0] bcnt; 
+  always @(posedge clk, negedge can_go) 
+  begin 
+  if( !can_go ) 
+  begin 
+  bcnt = `RND_PAUSE; 
+  req = 1'b0; 
+  end 
+  else 
+  begin 
+  if( !req ) 
+  begin 
+  if( bcnt!=0 ) 
+  begin 
+  bcnt <= bcnt - 8'd1; 
+  end 
+  else 
+  begin 
+  req <= 1'b1; 
+  bcnt <= `RND_BURST; 
+  end 
+  end 
+  else 
+  begin 
+  if( ack ) 
+  begin 
+  if( bcnt!=0 ) 
+  begin 
+  bcnt <= bcnt - 8'd1; 
+  end 
+  else 
+  begin 
+  req <= 1'b0; 
+  bcnt <= `RND_PAUSE; 
+  end 
+  end 
+  end 
+  end 
+  end 
+  reg [7:0] chkmem [0:BLK_SIZE-1]; 
+  integer wr_ptr,rd_ptr; 
+  integer rnd; 
+  reg idle; 
+  initial 
+  begin 
+  idle=1'b1; 
+  wr_ptr = 0; 
+  rd_ptr = 0; 
+  end 
+  always @(posedge clk, negedge can_go) 
+  begin 
+  if( !can_go ) 
+  begin 
+  rnw_done = 1'b1; 
+  first_done = 1'b0; 
+  end 
+  else 
+  begin 
+  if( ack ) 
+  begin 
+  rnw_done <= rnw; 
+  first_done <= first; 
+  end 
+  end 
+  end 
+  always @(posedge first) 
+  begin 
+  if( idle ) 
+  begin 
+  idle <= 1'b0; 
+  end 
+  end 
+  always @(posedge clk) 
+  begin 
+  if( !idle ) 
+  begin 
+  if( rnw_done ) 
+  begin 
+  if( done ) 
+  begin 
+  if( first_done ) 
+  begin 
+  rd_ptr = 0; 
+  end 
+  if( chkmem[rd_ptr]!=rd ) 
+  begin 
+  $display("readback error: at address %x must be %x, was %x\n",rd_ptr,chkmem[rd_ptr],rd); 
+  $stop; 
+  end 
+  rd_ptr=rd_ptr+1; 
+  end 
+  end 
+  end 
+  end 
+  always @(posedge clk) 
+  begin 
+  if( idle ) 
+  wd <= $random>>24; 
+  else 
+  if( !rnw && ack ) 
+  wd <= $random>>24; 
+  end 
+  always @(posedge clk) 
+  begin 
+  if( !idle ) 
+  begin 
+  if( !rnw ) 
+  begin 
+  if( ack ) 
+  begin 
+  chkmem[wr_ptr] <= wd; 
+  if( first ) 
+  wr_ptr <= 1; 
+  else if( wr_ptr<(BLK_SIZE-1) ) 
+  wr_ptr <= wr_ptr+1; 
+  else 
+  wr_ptr <= 0; 
+  end 
+  end 
+  end 
+  end 
+ endmodule

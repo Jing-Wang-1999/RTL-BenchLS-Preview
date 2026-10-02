@@ -1,0 +1,51 @@
+module autovcoder_093120 (
+    sub,
+    opa,
+    opb,
+    out,
+    co
+);
+  input sub;
+  input [7:0] opa, opb;
+  output [7:0] out;
+  output co;
+
+  wire add;
+  assign add = ~sub;
+
+  // INST_TAG
+  xilinx_add_sub8_co u0 (
+      .A0(opa[0]),
+      .A1(opa[1]),
+      .A2(opa[2]),
+      .A3(opa[3]),
+      .A4(opa[4]),
+      .A5(opa[5]),
+      .A6(opa[6]),
+      .A7(opa[7]),
+
+      .B0(opb[0]),
+      .B1(opb[1]),
+      .B2(opb[2]),
+      .B3(opb[3]),
+      .B4(opb[4]),
+      .B5(opb[5]),
+      .B6(opb[6]),
+      .B7(opb[7]),
+
+      .C_OUT(co),
+      .ADD  (add),
+
+      .S0(out[0]),
+      .S1(out[1]),
+      .S2(out[2]),
+      .S3(out[3]),
+      .S4(out[4]),
+      .S5(out[5]),
+      .S6(out[6]),
+      .S7(out[7])
+  );
+  // INST_TAG_END
+
+endmodule
+

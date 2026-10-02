@@ -1,0 +1,20 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+    replace_way_q <= 0;
+else if (state_q == STATE_WRITE || state_q == STATE_READ)
+    replace_way_q <= replace_way_q + 1;
+else if (flushing_q && tag_dirty_any_m_w && !evict_way_w && state_q != STATE_FLUSH_ADDR)
+    replace_way_q <= replace_way_q + 1;
+else if (state_q == STATE_EVICT_WAIT && next_state_r == STATE_FLUSH_ADDR)
+    replace_way_q <= 0;
+else if (state_q == STATE_FLUSH && next_state_r == STATE_LOOKUP)
+    replace_way_q <= 0;
+else if (state_q == STATE_LOOKUP && next_state_r == STATE_FLUSH_ADDR)
+    replace_way_q <= 0;
+else if (state_q == STATE_WRITEBACK)
+begin
+    case (1'b1)
+    tag0_hit_m_w: replace_way_q <= 0;
+    tag1_hit_m_w: replace_way_q <= 1;
+    endcase
+end

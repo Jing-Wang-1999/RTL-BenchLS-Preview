@@ -1,0 +1,58 @@
+module autovcoder_090047 (
+    AA,
+    BB,
+    CC,
+    YY
+);
+  input [2:0] AA, BB, CC;
+  output [2:0] YY;
+
+
+  wire [2:0] mtop0_out, mbottom0_out, mmid0_out, mmid1_out, mrear0_out, c, off1;
+  assign c[2] = AA;
+  assign c[1] = BB;
+  assign c[0] = CC;
+
+  assign off1 = 3'b100;
+
+  mux4to2 mtop0 (
+      .I0(3'b000),
+      .I1(3'b001),
+      .S (c[0]),
+      .Y (mtop0_out)
+  );
+
+  mux4to2 mbottom0 (
+      .I0(3'b010),
+      .I1(3'b011),
+      .S (c[0]),
+      .Y (mbottom0_out)
+  );
+
+
+  mux4to2 mmid0 (
+      .I0(mtop0_out),
+      .I1(mbottom0_out),
+      .S (c[1]),
+      .Y (mmid0_out)
+  );
+
+  mux4to2 mrear0 (
+      .I0(3'b100),
+      .I1(3'b101),
+      .S (c[1]),
+      .Y (mrear0_out)
+  );
+
+  mux4to2 mmid1 (
+      .I0(mmid0_out),
+      .I1(mrear0_out),
+      .S (c[2]),
+      .Y (mmid1_out)
+  );
+
+
+  assign YY = mmid1_out;
+
+endmodule
+

@@ -1,0 +1,19 @@
+always @(posedge wr_clk or negedge wr_reset_n) begin
+	if (!wr_reset_n) begin
+		wr_ptr <= 0;
+		grey_wr_ptr <= 0;
+		full_q <= 0;	
+	end
+	else if (wr_en) begin
+		wr_ptr <= wr_ptr_inc;
+		grey_wr_ptr <= bin2grey(wr_ptr_inc);
+		if (wr_cnt == (FULL_DP-1)) begin
+			full_q <= 1'b1;
+		end
+	end
+	else begin
+	    	if (full_q && (wr_cnt<FULL_DP)) begin
+			full_q <= 1'b0;
+	     	end
+	end
+    end

@@ -1,0 +1,38 @@
+module autovcoder_096573 (
+    input [43:0] inp,
+    output signed [13:0] out
+);
+    wire signed [7:0] weights [0:10];
+    assign weights[0] = 8'sd17;
+    assign weights[1] = -8'sd42;
+    assign weights[2] = -8'sd4;
+    assign weights[3] = 8'sd16;
+    assign weights[4] = -8'sd24;
+    assign weights[5] = 8'sd8;
+    assign weights[6] = -8'sd23;
+    assign weights[7] = -8'sd15;
+    assign weights[8] = -8'sd7;
+    assign weights[9] = 8'sd36;
+    assign weights[10] = 8'sd64;
+
+    wire signed [11:0] products [0:10];
+    
+    assign products[0] = $signed({8'b0, inp[3:0]}) * weights[0];
+    assign products[1] = $signed({8'b0, inp[7:4]}) * weights[1];
+    assign products[2] = $signed({8'b0, inp[11:8]}) * weights[2];
+    assign products[3] = $signed({8'b0, inp[15:12]}) * weights[3];
+    assign products[4] = $signed({8'b0, inp[19:16]}) * weights[4];
+    assign products[5] = $signed({8'b0, inp[23:20]}) * weights[5];
+    assign products[6] = $signed({8'b0, inp[27:24]}) * weights[6];
+    assign products[7] = $signed({8'b0, inp[31:28]}) * weights[7];
+    assign products[8] = $signed({8'b0, inp[35:32]}) * weights[8];
+    assign products[9] = $signed({8'b0, inp[39:36]}) * weights[9];
+    assign products[10] = $signed({8'b0, inp[43:40]}) * weights[10];
+
+    wire signed [13:0] sum_products;
+    assign sum_products = products[0] + products[1] + products[2] + products[3] + products[4] +
+                         products[5] + products[6] + products[7] + products[8] + products[9] +
+                         products[10];
+
+    assign out = sum_products + 14'sd2763;
+endmodule

@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.7e50d8c5a6ad0e42e996.1f59bd97c133",
+  "compile_check": {
+    "case_id": "s1derived.7e50d8c5a6ad0e42e996.1f59bd97c133",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_086108",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_086108.fa5be3c9141081ad/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.7e50d8c5a6ad0e42e996",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "7e50d8c5a6ad0e42e99682634d294732681df230674eb451f13275b2171e338a",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.7e50d8c5a6ad0e42e996.1f59bd97c133",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_086108.fa5be3c9141081ad/private/commercial_positive.log",
+    "commercial_log_sha256": "2a54a99e53296f202d8ed5ac50d1a67e2c0dd5d154437a563e8f524d1a1c0e48",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_086108.fa5be3c9141081ad/private/historical_harness/00_sec_autovcoder_086108.tcl",
+    "executed_script_sha256": "4c3ca4dbb49a28ef5f557f7a58636f5c64ab103c6cda1c63b113b47067a7274c",
+    "golden_tops": [
+      "autovcoder_086108"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.autovcoder_086108.fa5be3c9141081ad",
+    "parent_id": "s1p.7e50d8c5a6ad0e42e996",
+    "revised_tops": [
+      "autovcoder_086108"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_086108",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.7e50d8c5a6ad0e42e996.1f59bd97c133",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All four directional states and ordered button choices match; RESET is synchronous despite its active-high name.",
+        "rtl_excerpt": "if (PUSH_BUTTONS[0]) NextState <= 2'b00;",
+        "specification_excerpt": "button 0 has priority"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.7e50d8c5a6ad0e42e996",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "ec3eadeebf9eef91a37cf6dc2476688e23fb74e82a846e96815f09793eea1b4a",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "7e50d8c5a6ad0e42e99682634d294732681df230674eb451f13275b2171e338a",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_086108.fa5be3c9141081ad/private/historical_harness/00_sec_autovcoder_086108.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_086108.fa5be3c9141081ad/private/historical_harness/01_sec_autovcoder_086108.tcl"
+  ],
+  "parent_id": "s1p.7e50d8c5a6ad0e42e996",
+  "primary_review": {
+    "case_id": "s1derived.7e50d8c5a6ad0e42e996.1f59bd97c133",
+    "checks": {
+      "behavior": "Checked all four transition branches and button priority.",
+      "boundaries": "Checked simultaneous buttons and all encoded states.",
+      "interface": "Ports and state encoding match.",
+      "rtl_reasonableness": "Reasonable four-state controller.",
+      "sequential_and_reset": "Reset is synchronous in RTL, contrary to the prose."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "A full contract must state the completed branch, priority, and synchronous reset.",
+        "rtl_excerpt": "if (PUSH_BUTTONS[1]) ... else if (PUSH_BUTTONS[2])",
+        "spec_excerpt": "From Left State ... Pressing up"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The spec calls RESET asynchronous and truncates the left-state rules, while RTL samples RESET synchronously.",
+        "rtl_evidence": "always @(posedge CLOCK) begin if (RESET)",
+        "spec_evidence": "RESET: Asynchronous reset signal",
+        "type": "semantic_mismatch"
+      }
+    ],
+    "parent_id": "s1p.7e50d8c5a6ad0e42e996",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.7e50d8c5a6ad0e42e996.1f59bd97c133.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "7e50d8c5a6ad0e42e99682634d294732681df230674eb451f13275b2171e338a",
+    "source_group": "S3",
+    "specification_sha256": "1f59bd97c13375c30439d8da38841a412d59afbcc9354521cfa3610cb6a850e0",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.7e50d8c5a6ad0e42e996.1f59bd97c133.md",
+  "qualified_specification_sha256": "ec3eadeebf9eef91a37cf6dc2476688e23fb74e82a846e96815f09793eea1b4a",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_086108.fa5be3c9141081ad/private/golden_design.v",
+  "rtl_sha256": "7e50d8c5a6ad0e42e99682634d294732681df230674eb451f13275b2171e338a",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_086108.fa5be3c9141081ad/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "1f59bd97c13375c30439d8da38841a412d59afbcc9354521cfa3610cb6a850e0",
+  "top_module": "autovcoder_086108"
+}

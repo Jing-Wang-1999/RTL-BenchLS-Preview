@@ -1,0 +1,60 @@
+# Background pixel and scroll-address generator
+
+Implement `ppu_bg` with the public declaration below. It is a background/playfield sub-block driven by externally supplied raster coordinates and VRAM data; it does not generate clocks, scan timing, or memory acknowledgements. All state updates on rising `clk_in`; synchronous high `rst_in` clears all state. No parameters or optional configurations exist. The equations below describe its coordinate conventions, including the strict239-line bounds, without claiming a complete console PPU implementation.
+
+## Scroll counters and address
+
+Maintain fine vertical F(3bits), vertical tile T(5), vertical table V(1), horizontal tile Ht(5), and horizontal table H(1), initially0. All updates below use pre-edge values and wrap at the stated widths.
+
+Highest-priority `ri_inc_addr_in` suppresses all other counter updates. If `ri_inc_addr_amt_in=0`, increment the concatenation `{F,V,H,T,Ht}` as a15-bit number by1. If it is1, increment `{F,V,H,T}` as a10-bit number by1 and hold Ht.
+
+Otherwise, when rendering is enabled (`en_in` and either `nes_y_in<239` or `nes_y_next_in=0`), an asserted pixel pulse at x=319 reloads H/Ht from h_in/ht_in. If next-y differs from current-y, it also reloads V/T/F from v_in/vt_in/fv_in when next-y=0, otherwise increments vertical scrolling: if T=29 and F=7, toggle V and clear T/F; otherwise increment `{V,T,F}` as9bits. During active fetch x ranges0..255 or320..335, a pixel pulse with x modulo8=7 increments `{H,Ht}` as6bits. Independently `ri_upd_cntrs_in` reloads all counters from their corresponding inputs, overriding rendering increments/reloads. Counter loads do not change `fh_in`, which directly selects fine horizontal output bits.
+
+Normally `vram_a_out={F[1:0],V,H,T,Ht}` (14bits). In active fetch range and rendering enabled, x modulo8 selects:
+
+| x mod8 | VRAM address | Every system-clock capture (not gated by pix_pulse) |
+|---|---|---|
+|0| `{2'b10,V,H,T,Ht}` | tile-number latch P := vram_d_in |
+|1| `{2'b10,V,H,4'b1111,T[4:2],Ht[4:2]}` | 2-bit attribute A := low2bits of vram_d_in shifted right by `{T[1],Ht[1],1'b0}` |
+|2| `{1'b0,s_in,P,1'b0,F}` | pattern-byte B0 := vram_d_in |
+|3| `{1'b0,s_in,P,1'b1,F}` | pattern-byte B1 := vram_d_in |
+|4..7| normal register-interface address | hold P/A/B0/B1 |
+
+P/A/B0/B1 all reset0. Register-interface counter requests do not suppress these captures or the rendering address selection.
+
+## Pixel pipeline
+
+Maintain two9-bit attribute shift registers S3,S2 and two16-bit pattern shift registers S1,S0, all reset0. In the active fetch range while rendering enabled, every pixel pulse shifts S3/S2 right one with their old bit8 replicated into bit8, and shifts S1/S0 right one with zero fill. On a pulse at x mod8=7, after this shift also set S3[8]/S2[8] from old A[1]/A[0], and replace S1[15:8]/S0[15:8] by bit-reversed old B1/B0. Their low8 bits retain the just-shifted values. Outside these conditions the shift registers hold.
+
+Combinational `palette_idx_out` is `{S3[fh_in],S2[fh_in],S1[fh_in],S0[fh_in]}` when en_in is1, except that ls_clip_in masks it to zero for x<8. When en_in=0 it is0. Output is not additionally masked by y or the active fetch range, and attribute bits are not forced to zero for transparent pattern bits. The external palette/composition stage interprets transparency.
+
+Reset clears counters, latches and all shift registers, but the combinational address still depends on external coordinate/mode inputs and the zeroed state; it is not forced to address0. No implied VRAM latency is inserted: input memory data must already be present at each specified capture edge.
+
+## Public declaration
+
+```verilog
+module ppu_bg
+(
+  input  wire        clk_in,
+  input  wire        rst_in,
+  input  wire        en_in,
+  input  wire        ls_clip_in,
+  input  wire [ 2:0] fv_in,
+  input  wire [ 4:0] vt_in,
+  input  wire        v_in,
+  input  wire [ 2:0] fh_in,
+  input  wire [ 4:0] ht_in,
+  input  wire        h_in,
+  input  wire        s_in,
+  input  wire [ 9:0] nes_x_in,
+  input  wire [ 9:0] nes_y_in,
+  input  wire [ 9:0] nes_y_next_in,
+  input  wire        pix_pulse_in,
+  input  wire [ 7:0] vram_d_in,
+  input  wire        ri_upd_cntrs_in,
+  input  wire        ri_inc_addr_in,
+  input  wire        ri_inc_addr_amt_in,
+  output reg  [13:0] vram_a_out,
+  output wire [ 3:0] palette_idx_out
+);
+```

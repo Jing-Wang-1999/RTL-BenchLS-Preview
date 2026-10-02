@@ -1,0 +1,37 @@
+# Implement the SHA-256 core project configuration
+Read the original SHA core project manual. Implement the complete SHA-256
+configuration in rtl/sha256.v with module sha256. SHA-1/SHA-512 are other project
+configurations and are not required. This project configuration has one RTL module.
+
+Protocol clarifications:
+- Active-high synchronous reset. Input/output words are 32 bits, big-endian
+  within the message/digest. The host supplies SHA-256 padded 512-bit blocks,
+  including the 0x80 padding and final 64-bit big-endian message bit length.
+  Padding is performed by the host, not by this core.
+- Pulse cmd_w_i for one rising edge to write cmd_i. Command 010 starts a FIRST
+  block using standard SHA-256 IV; 110 continues from the prior block state.
+  Starting on the following rising edge, supply 16 consecutive text_i words,
+  most significant word first. No separate per-word valid or backpressure exists.
+  Run all 64 SHA-256 rounds and add the previous chaining state.
+- cmd_o[3] is registered busy; [2] is first/continuation selection and [1:0]
+  are command write/read bits. Hardware clears [1:0] when idle. Busy becomes
+  visible shortly after command acceptance and clears after block completion;
+  complete within 128 clocks of accepting the sixteenth input word. Do not
+  issue another command while busy. First-block commands restart the digest
+  without requiring hardware reset; reset can abort an in-progress operation.
+- After completion pulse command 001 to read. Let C be the edge accepting that
+  command: C+1 initializes the read pointer; C+2 through C+9 output the eight
+  digest words in H0..H7 order. The last word holds while idle. Re-reading a
+  completed digest is permitted. text_o while hashing is not a valid digest.
+
+Private equal-weight points check short messages, padding boundaries, multiple
+blocks, and reset/restart sequences against an independent SHA-256 library.
+No internal RTL, intermediate trace, or private testbench is supplied to the agent.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

@@ -1,0 +1,83 @@
+module rtlpp_10827
+(
+    input  serial_in,
+    output [7:0] data_out,
+    input  read_buffer,
+    input  reset_buffer,
+    input  en_16_x_baud,
+    output buffer_data_present,
+    output buffer_full,
+    output buffer_half_full,
+    input  clk
+);
+
+reg [3:0] bit_count;
+reg [9:0] rx_shift_reg;  // Includes start bit, 8 data bits, and stop bit
+reg [7:0] uart_data_out;
+reg receiving;
+reg fifo_write;
+
+always @(posedge clk or posedge reset_buffer) begin
+    if (reset_buffer) begin
+        bit_count <= 4'd0;
+        rx_shift_reg <= 10'd0;
+        uart_data_out <= 8'd0;
+        receiving <= 1'b0;
+        fifo_write <= 1'b0;
+    end else if (en_16_x_baud) begin
+        if (!receiving) begin
+            if (!serial_in) begin
+                receiving <= 1'b0;
+                bit_count <= 4'd0;
+            end
+        end else begin
+            rx_shift_reg <= {serial_in, rx_shift_reg[9:1]};
+            bit_count <= bit_count + 1;
+            if (bit_count == 4'd9) begin
+                uart_data_out <= rx_shift_reg[8:1];
+                fifo_write <= 1'b1;
+                receiving <= 1'b0;
+            end else begin
+                fifo_write <= 1'b0;
+            end
+        end
+    end else begin
+        fifo_write <= 1'b0;
+    end
+end
+
+reg [7:0] fifo [0:15];
+reg [3:0] read_pointer;
+reg [3:0] write_pointer;
+reg buffer_full_reg;
+reg buffer_half_full_reg;
+reg buffer_data_present_reg;
+
+always @(posedge clk or posedge reset_buffer) begin
+    if (reset_buffer) begin
+        read_pointer <= 4'd0;
+        write_pointer <= 4'd0;
+        buffer_full_reg <= 1'b0;
+        buffer_half_full_reg <= 1'b0;
+        buffer_data_present_reg <= 1'b0;
+    end else begin
+        if (fifo_write && !buffer_full_reg) begin
+            fifo[write_pointer] <= uart_data_out;
+            write_pointer <= write_pointer + 1;
+        end
+        if (read_buffer && buffer_data_present_reg) begin
+            read_pointer <= read_pointer + 1;
+        end
+        
+        buffer_full_reg <= (write_pointer == read_pointer - 4'd1) || (write_pointer == 4'd15 && read_pointer == 4'd0);
+        buffer_half_full_reg <= (write_pointer == read_pointer + 4'd8);
+        buffer_data_present_reg <= !buffer_full_reg && (read_pointer != write_pointer);
+    end
+end
+
+assign data_out = fifo[read_pointer];
+assign buffer_full = buffer_full_reg;
+assign buffer_half_full = buffer_half_full_reg;
+assign buffer_data_present = buffer_data_present_reg;
+
+endmodule

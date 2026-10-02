@@ -1,0 +1,126 @@
+module autovcoder_008722 (
+    CLOCK_50,  //	On Board 50 MHz
+    // Your inputs and outputs here
+    KEY,
+    SW,
+    // The ports below are for the VGA output.  Do not change.
+    VGA_CLK,  //	VGA Clock
+    VGA_HS,  //	VGA H_SYNC
+    VGA_VS,  //	VGA V_SYNC
+    VGA_BLANK_N,  //	VGA BLANK
+    VGA_SYNC_N,  //	VGA SYNC
+    VGA_R,  //	VGA Red[9:0]
+    VGA_G,  //	VGA Green[9:0]
+    VGA_B,  //	VGA Blue[9:0]
+    LEDR,
+    HEX0,
+    HEX1,
+    HEX2,
+    HEX3
+);
+
+
+  input CLOCK_50;  //	50 MHz
+  input [9:0] SW;
+  input [3:0] KEY;
+
+  // Declare your inputs and outputs here
+  // Do not change the following outputs
+  output VGA_CLK;  //	VGA Clock
+  output VGA_HS;  //	VGA H_SYNC
+  output VGA_VS;  //	VGA V_SYNC
+  output VGA_BLANK_N;  //	VGA BLANK
+  output VGA_SYNC_N;  //	VGA SYNC
+  output [9:0] VGA_R;  //	VGA Red[9:0]
+  output [9:0] VGA_G;  //	VGA Green[9:0]
+  output [9:0] VGA_B;  //	VGA Blue[9:0]
+  output [9:0] LEDR;
+  output [6:0] HEX0;
+  output [6:0] HEX1;
+  output [6:0] HEX2;
+  output [6:0] HEX3;
+
+  //	hex_decoder hex0(x[3:0], HEX0[6:0]);
+  //	hex_decoder hex1(x[7:4], HEX1[6:0]);
+  //	hex_decoder hex2(y[3:0], HEX2[6:0]);
+  //	hex_decoder hex3(y[6:4], HEX3[6:0]);
+
+  wire resetn;
+  assign resetn = KEY[0];
+
+  // Create the colour, x, y and writeEn wires that are inputs to the controller.
+  wire [2:0] colour;
+  wire [7:0] x;
+  wire [6:0] y;
+  wire writeEn;
+
+  // Create an Instance of a VGA controller - there can be only one!
+  // Define the number of colours as well as the initial background
+  // image file (.MIF) for the controller.
+  vga_adapter VGA (
+      .resetn(resetn),
+      .clock(CLOCK_50),
+      .colour(colour),
+      .x(x),
+      .y(y),
+      .plot(writeEn),
+      /* Signals for the DAC to drive the monitor. */
+      .VGA_R(VGA_R),
+      .VGA_G(VGA_G),
+      .VGA_B(VGA_B),
+      .VGA_HS(VGA_HS),
+      .VGA_VS(VGA_VS),
+      .VGA_BLANK(VGA_BLANK_N),
+      .VGA_SYNC(VGA_SYNC_N),
+      .VGA_CLK(VGA_CLK)
+  );
+  defparam VGA.RESOLUTION = "160x120"; defparam VGA.MONOCHROME = "FALSE";
+      defparam VGA.BITS_PER_COLOUR_CHANNEL = 1; defparam VGA.BACKGROUND_IMAGE = "black.mif";
+
+
+  // wire left, right;
+  // assign left = !KEY[3];
+  // assign right = !KEY[2];
+
+  wire draw_done, draw, move_done;
+
+  control_ball c1 (
+      .clk(CLOCK_50),
+      .resetn(resetn),
+      .go(1'b1),
+      .draw_done(draw_done),
+      .move_done(move_done),
+      .enable_color(enable_color_ball),
+      .enable_move(enable_move_ball),
+      .writeEn(writeEn),
+      .draw(draw),
+      .done(ball_done)
+  );
+
+
+  datapath_ball p0 (
+      .clk(CLOCK_50),
+      .resetn(resetn),
+      .enable_color(enable_color_ball),
+      .enable_move(enable_move_ball),
+      .draw(draw),
+      .x_out(x),
+      .y_out(y),
+      .color_out(colour),
+      .draw_done(draw_done),
+      .move_done(move_done)
+  );
+  // assign LEDR[1] = en_pad;
+  // assign LEDR[2] = paddle_done;
+  assign LEDR[1] = ball_done;
+  assign LEDR[0] = move_done;
+
+  // assign LEDR[7] = hold;
+  // assign LEDR[8] = hold1;
+  // assign LEDR[9] = draw_hold;
+  // assign LEDR[9] = hold;
+  // assign LEDR[0] = enable_color;
+  // assign LEDR[1] = enable_move;
+  // assign LEDR[2] = writeEn;
+endmodule
+

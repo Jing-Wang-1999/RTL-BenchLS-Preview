@@ -1,0 +1,33 @@
+module rtlpp_09341
+    (
+    clk,
+    inclk
+    );
+
+    output [4:0] clk;
+    input [1:0] inclk;
+
+    wire [4:0] wire_pll1_clk;
+    wire wire_pll1_fbout;
+
+    // Internal PLL logic (based on cycloneive_pll configuration)
+    // Assuming a simplified PLL model for demonstration purposes
+    reg [4:0] pll_clk_reg;
+    reg pll_fbout_reg;
+
+    always @(posedge inclk[0] or posedge inclk[1]) begin
+        pll_clk_reg <= {5{inclk[0]}};
+        pll_fbout_reg <= inclk[0];
+    end
+
+    assign wire_pll1_clk = pll_clk_reg;
+    assign wire_pll1_fbout = pll_fbout_reg;
+    assign clk = wire_pll1_clk;
+
+    // Add any necessary initializations
+    initial begin
+        pll_clk_reg = 0;
+        pll_fbout_reg = 0;
+    end
+
+endmodule

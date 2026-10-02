@@ -1,0 +1,24 @@
+The Verilog module is designed to perform complex multiplication between input signals and coefficients, then output the real and imaginary components of the result.
+
+1. **Primary Function:** This module takes in 8-bit input signals `x_in`, `y_in`, and `c_in`, and 9-bit coefficient signals `cps_in` and `cms_in`. It performs specific arithmetic operations to compute the real (`r_out`) and imaginary (`i_out`) parts of a result.
+
+2. **Key Control Flow Points:** The module operates synchronously with an external clock signal (`clk`). At every positive clock edge, the outputs `r_out` and `i_out` are updated with their new calculated values based on the most recent input and coefficient values.
+
+3. **Important Data Processing and Signal Interactions:**
+    - Input signals `x_in`, `y_in`, `c_in` and coefficient signals `cps_in`, `cms_in` are assigned to corresponding internal wire variables (`x`, `y`, `c`, `cps`, `cms`).
+    - Extended versions of `x` and `y` are created (`sxtx`, `sxty`) by sign-extending them to accommodate arithmetic operations.
+    - The difference between these extended values (`xmy = sxtx - sxty`) is computed.
+    - This difference (`xmy`) is multiplied by the coefficient `c` to produce an intermediate result (`xmyc`).
+    - Concurrently, `cms` is multiplied by `y` to produce `cmsy`, and `cps` is multiplied by `x` to produce `cpsx`.
+    - The real part of the result (`r`) is obtained by adding `cmsy` and `xmyc`.
+    - The imaginary part of the result (`i`) is obtained by subtracting `xmyc` from `cpsx`.
+    - Finally, these results (`r`, `i`) are assigned to the outputs (`r_out`, `i_out`) after truncating them to an appropriate width (`W`).
+
+This concise instruction should provide an LLM with enough detail to generate the Verilog code accurately while reflecting an understanding of both control and data flows within the module.
+
+Module Interface:
+module complex_coefficient_multiplier (clk, x_in, y_in, c_in,
+              cps_in, cms_in, r_out, i_out);
+
+Behavioral Clarifications:
+- Parameters are W=8, W1=9, W2=17. Inputs x_in, y_in, c_in are W-bit wide; cps_in and cms_in are W1-bit wide; outputs r_out and i_out are W-bit registers. All arithmetic is purely combinational via continuous assigns; only the output registers update on posedge clk. Outputs are assigned bits [W2-2:W] of the 17-bit intermediate results r and i.

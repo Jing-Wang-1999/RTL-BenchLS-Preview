@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.dbc090f8608e9eb4aec1.adeecac46d7e",
+  "compile_check": {
+    "case_id": "s1derived.dbc090f8608e9eb4aec1.adeecac46d7e",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_147685",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_147685.f4c7b484394afc82/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.dbc090f8608e9eb4aec1",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "dbc090f8608e9eb4aec1dafded7ecca8c90cd8d83122bac757c8b47973e8c832",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.dbc090f8608e9eb4aec1.adeecac46d7e",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_147685.f4c7b484394afc82/private/commercial_positive.log",
+    "commercial_log_sha256": "0092fa592ef542376fdbf69d82eb57bcb9d09a9558faaf9ba4ac98d46537f11e",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_147685.f4c7b484394afc82/private/historical_harness/00_sec_origen_147685.tcl",
+    "executed_script_sha256": "5e69503945b1a974321270ea2fc811f4b7c2d6118615e4fff99f21574c4eeea5",
+    "golden_tops": [
+      "origen_147685"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.origen_147685.f4c7b484394afc82",
+    "parent_id": "s1p.dbc090f8608e9eb4aec1",
+    "revised_tops": [
+      "origen_147685"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_147685",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.dbc090f8608e9eb4aec1.adeecac46d7e",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The repair exactly covers the interface, synchronizers, state/count progression, odd-parity check, sticky data-valid behavior, transient error, and reset values.",
+        "rtl_excerpt": "assign ps2clk_falling_edge = (ps2clk_sync == 2'b10);",
+        "specification_excerpt": "Treat synchronized `PS2CLK == 2'b10` as a falling edge."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.dbc090f8608e9eb4aec1",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "7e134c53487f02dcb9689118bde8cd10a8377fc95062dd97bf149c9a1db10650",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "dbc090f8608e9eb4aec1dafded7ecca8c90cd8d83122bac757c8b47973e8c832",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_147685.f4c7b484394afc82/private/historical_harness/00_sec_origen_147685.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_147685.f4c7b484394afc82/private/historical_harness/01_sec_origen_147685.tcl"
+  ],
+  "parent_id": "s1p.dbc090f8608e9eb4aec1",
+  "primary_review": {
+    "case_id": "s1derived.dbc090f8608e9eb4aec1.adeecac46d7e",
+    "checks": {
+      "behavior": "The broad PS/2 receive flow matches, but exact sampling transitions and persistent data_valid require repair.",
+      "boundaries": "Checked start, eight data bits, odd-parity reduction over shift_reg[9:1], stop acceptance, failure, and illegal-state behavior.",
+      "interface": "All ports and widths match; PS2DATA is correctly identified as bidirectional and rst_n as active-low.",
+      "rtl_reasonableness": "The receiver is coherent synthesizable RTL despite its unusual persistent data_valid contract.",
+      "sequential_and_reset": "Verified two-stage synchronization, falling-edge detection, asynchronous active-low reset, state/count progression, holds, and status assignment priority."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Acceptance and byte extraction are concrete, but data_valid is never subsequently cleared outside reset.",
+        "rtl_excerpt": "if (ps2data_sync[1] && (^shift_reg[9:1])) begin data_out <= shift_reg[8:1]; data_valid <= 1'b1; end",
+        "specification_excerpt": "If the stop bit is high and the parity check passes, the data is considered valid"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose does not define the implemented count-dependent state timing or that data_valid latches high indefinitely after a valid frame.",
+        "rtl_evidence": "data_valid <= 1'b1 occurs in STOP, with no non-reset assignment clearing data_valid",
+        "spec_evidence": "data_valid: A signal indicating that data_out contains valid data",
+        "type": "underspecified_behavior"
+      }
+    ],
+    "parent_id": "s1p.dbc090f8608e9eb4aec1",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_10/s1derived.dbc090f8608e9eb4aec1.adeecac46d7e.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "last_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "dbc090f8608e9eb4aec1dafded7ecca8c90cd8d83122bac757c8b47973e8c832",
+    "source_group": "S2",
+    "specification_sha256": "adeecac46d7e18521b6606bc1366376abc6ce9bcee36ddcb9d341d55c83c8ee3",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_10/s1derived.dbc090f8608e9eb4aec1.adeecac46d7e.md",
+  "qualified_specification_sha256": "7e134c53487f02dcb9689118bde8cd10a8377fc95062dd97bf149c9a1db10650",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_147685.f4c7b484394afc82/private/golden_design.v",
+  "rtl_sha256": "dbc090f8608e9eb4aec1dafded7ecca8c90cd8d83122bac757c8b47973e8c832",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_147685.f4c7b484394afc82/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "adeecac46d7e18521b6606bc1366376abc6ce9bcee36ddcb9d341d55c83c8ee3",
+  "top_module": "origen_147685"
+}

@@ -1,0 +1,52 @@
+always @*
+    begin : digest_logic
+      H0_new = 32'h0;
+      H1_new = 32'h0;
+      H2_new = 32'h0;
+      H3_new = 32'h0;
+      H4_new = 32'h0;
+      H5_new = 32'h0;
+      H6_new = 32'h0;
+      H7_new = 32'h0;
+      H_we = 0;
+
+      if (digest_init)
+        begin
+          H_we = 1;
+          if (mode)
+            begin
+              H0_new = SHA256_H0_0;
+              H1_new = SHA256_H0_1;
+              H2_new = SHA256_H0_2;
+              H3_new = SHA256_H0_3;
+              H4_new = SHA256_H0_4;
+              H5_new = SHA256_H0_5;
+              H6_new = SHA256_H0_6;
+              H7_new = SHA256_H0_7;
+            end
+          else
+            begin
+              H0_new = SHA224_H0_0;
+              H1_new = SHA224_H0_1;
+              H2_new = SHA224_H0_2;
+              H3_new = SHA224_H0_3;
+              H4_new = SHA224_H0_4;
+              H5_new = SHA224_H0_5;
+              H6_new = SHA224_H0_6;
+              H7_new = SHA224_H0_7;
+            end
+        end
+
+      if (digest_update)
+        begin
+          H0_new = H0_reg + a_reg;
+          H1_new = H1_reg + b_reg;
+          H2_new = H2_reg + c_reg;
+          H3_new = H3_reg + d_reg;
+          H4_new = H4_reg + e_reg;
+          H5_new = H5_reg + f_reg;
+          H6_new = H6_reg + g_reg;
+          H7_new = H7_reg + h_reg;
+          H_we = 1;
+        end
+    end

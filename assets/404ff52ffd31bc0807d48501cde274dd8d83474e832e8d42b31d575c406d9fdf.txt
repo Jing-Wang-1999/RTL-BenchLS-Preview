@@ -1,0 +1,97 @@
+module origen_134751 (
+    input wire SCL,
+    input wire SDA,
+    input wire RESET,
+    input wire [6:0] ADDR,
+    input wire [7:0] DATA_IN,
+    input wire DATA_OUT_EN,
+    output reg [7:0] DATA_OUT
+);
+
+    // State definitions
+    localparam IDLE = 4'b0000;
+    localparam START = 4'b0001;
+    localparam ADDR_SEND = 4'b0010;
+    localparam ACK_ADDR = 4'b0011;
+    localparam WRITE_DATA = 4'b0100;
+    localparam READ_DATA = 4'b0101;
+    localparam ACK_DATA = 4'b0110;
+    localparam STOP = 4'b0111;
+    localparam ERROR = 4'b1000;
+
+    reg [3:0] state, next_state;
+    reg [7:0] shift_reg;
+    reg [3:0] bit_count;
+    reg sda_out;
+    reg ack;
+
+    // State machine
+    always @(posedge SCL or posedge RESET) begin
+        if (RESET)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            IDLE: next_state = (SDA == 0) ? START : IDLE;
+            START: next_state = ADDR_SEND;
+            ADDR_SEND: next_state = (bit_count == 8) ? ACK_ADDR : ADDR_SEND;
+            ACK_ADDR: next_state = ack ? (ADDR[0] ? READ_DATA : WRITE_DATA) : ERROR;
+            WRITE_DATA: next_state = (bit_count == 8) ? ACK_DATA : WRITE_DATA;
+            READ_DATA: next_state = (bit_count == 8) ? ACK_DATA : READ_DATA;
+            ACK_DATA: next_state = (SDA == 1) ? STOP : (ADDR[0] ? READ_DATA : WRITE_DATA);
+            STOP: next_state = (SDA == 1) ? IDLE : STOP;
+            ERROR: next_state = IDLE;
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Output logic
+    always @(posedge SCL) begin
+        case (state)
+            IDLE: begin
+                sda_out <= 1;
+                bit_count <= 0;
+            end
+            START: begin
+                sda_out <= 0;
+                shift_reg <= {ADDR, 1'b0}; // Write operation
+            end
+            ADDR_SEND: begin
+                sda_out <= shift_reg[7];
+                shift_reg <= {shift_reg[6:0], 1'b0};
+                bit_count <= bit_count + 1;
+            end
+            ACK_ADDR: begin
+                ack <= ~SDA;
+                bit_count <= 0;
+            end
+            WRITE_DATA: begin
+                sda_out <= DATA_IN[7-bit_count];
+                bit_count <= bit_count + 1;
+            end
+            READ_DATA: begin
+                if (DATA_OUT_EN)
+                    DATA_OUT[7-bit_count] <= SDA;
+                bit_count <= bit_count + 1;
+            end
+            ACK_DATA: begin
+                sda_out <= ~DATA_OUT_EN; // ACK for read, NACK for write
+                bit_count <= 0;
+            end
+            STOP: begin
+                sda_out <= 0;
+            end
+            ERROR: begin
+                sda_out <= 1;
+            end
+        endcase
+    end
+
+    // SDA output control
+    assign SDA = (state == ADDR_SEND || state == WRITE_DATA || state == ACK_DATA || state == STOP) ? sda_out : 1'bz;
+
+endmodule

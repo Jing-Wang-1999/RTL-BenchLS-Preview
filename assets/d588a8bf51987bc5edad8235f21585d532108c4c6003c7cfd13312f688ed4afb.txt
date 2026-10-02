@@ -1,0 +1,132 @@
+always @ (mgmt_st or sdram_enable or mgmt_ack or trp_delay or tmr0_tc or
+	     cntr1_tc or trcar_delay or rfsh_row_cnt or ref_req or sdr_init_done
+	     or precharge_ok or sdram_mode_reg) begin 
+
+      case (mgmt_st)          // synopsys full_case parallel_case
+
+	3'b000 : begin
+	   mgmt_idle = 1'b0;
+	   mgmt_req = 1'b0;
+	   mgmt_cmd = 4'b1111;
+	   mgmt_ba = 2'b0;
+	   mgmt_addr = 13'h400;    // A10 = 1 => all banks
+	   ld_tmr0 = 1'b0;
+	   tmr0_d = 4'b0;
+	   dec_cntr1 = 1'b0;
+	   ld_cntr1 = 1'b1;
+	   cntr1_d = 4'hf; // changed for sdrams with higher refresh cycles during initialization
+	   set_sdr_init_done = 1'b0;
+	   next_mgmt_st = (sdram_enable) ? 3'b001 : 3'b000; 
+	end // case: `MGM_POWERUP
+
+	3'b001 : begin	   // Precharge all banks
+	   mgmt_idle = 1'b0;
+	   mgmt_req = 1'b1;
+	   mgmt_cmd = (precharge_ok) ? 4'b0010 : 4'b1111;
+	   mgmt_ba = 2'b0;
+	   mgmt_addr = 13'h400;	   // A10 = 1 => all banks
+	   ld_tmr0 = mgmt_ack;
+	   tmr0_d = trp_delay;
+	   ld_cntr1 = 1'b0;
+	   cntr1_d = 4'h7;
+	   dec_cntr1 = 1'b0;
+	   set_sdr_init_done = 1'b0;
+	   next_mgmt_st = (precharge_ok & mgmt_ack) ? 3'b010 : 3'b001;
+	end // case: `MGM_PRECHARGE
+	
+	3'b010 : begin	   // Wait for Trp
+	   mgmt_idle = 1'b0;
+	   mgmt_req = 1'b1;
+	   mgmt_cmd = 4'b1111;
+	   mgmt_ba = 2'b0;
+	   mgmt_addr = 13'h400;	   // A10 = 1 => all banks
+	   ld_tmr0 = 1'b0;
+	   tmr0_d = trp_delay;
+	   ld_cntr1 = 1'b0;
+	   cntr1_d = 4'b0;
+	   dec_cntr1 = 1'b0;
+	   set_sdr_init_done = 1'b0;
+	   next_mgmt_st = (tmr0_tc) ? 3'b011 : 3'b010;
+	end // case: `MGM_PRECHARGE
+	
+	3'b011 : begin	   // Refresh
+	   mgmt_idle = 1'b0;
+	   mgmt_req = 1'b1;
+	   mgmt_cmd = 4'b0001;
+	   mgmt_ba = 2'b0;
+	   mgmt_addr = 13'h400;	   // A10 = 1 => all banks
+	   ld_tmr0 = mgmt_ack;
+	   tmr0_d = trcar_delay;
+	   dec_cntr1 = mgmt_ack;
+	   ld_cntr1 = 1'b0;
+	   cntr1_d = 4'h7;
+	   set_sdr_init_done = 1'b0;
+	   next_mgmt_st = (mgmt_ack) ? 3'b100 : 3'b011;
+	end // case: `MGM_REFRESH
+	
+	3'b100 : begin	   // Wait for trcar
+	   mgmt_idle = 1'b0;
+	   mgmt_req = 1'b1;
+	   mgmt_cmd = 4'b1111;
+	   mgmt_ba = 2'b0;
+	   mgmt_addr = 13'h400;	   // A10 = 1 => all banks
+	   ld_tmr0 = 1'b0;
+	   tmr0_d = trcar_delay;
+	   dec_cntr1 = 1'b0;
+	   ld_cntr1 = 1'b0;
+	   cntr1_d = 4'h7;
+	   set_sdr_init_done = 1'b0;
+	   next_mgmt_st = (~tmr0_tc) ? 3'b100 : 
+			  (~cntr1_tc) ? 3'b011 :
+			  (sdr_init_done) ? 3'b111 : 3'b101;
+	end // case: `MGM_REFWT
+	
+	3'b101 : begin	   // Program mode Register & wait for 
+	   mgmt_idle = 1'b0;
+	   mgmt_req = 1'b1;
+	   mgmt_cmd = 4'b0000;
+	   mgmt_ba = {1'b0, sdram_mode_reg[11]};
+	   mgmt_addr = sdram_mode_reg;
+	   ld_tmr0 = mgmt_ack;
+	   tmr0_d = 4'h7;
+	   dec_cntr1 = 1'b0;
+	   ld_cntr1 = 1'b0;
+	   cntr1_d = 4'h7;
+	   set_sdr_init_done = 1'b0;
+	   next_mgmt_st = (mgmt_ack) ? 3'b110 : 3'b101;
+	end // case: `MGM_MODE_REG
+	
+	3'b110 : begin	   // Wait for tMRD
+	   mgmt_idle = 1'b0;
+	   mgmt_req = 1'b1;
+	   mgmt_cmd = 4'b1111;
+	   mgmt_ba = 2'bx;
+	   mgmt_addr = 13'bx;
+	   ld_tmr0 = 1'b0;
+	   tmr0_d = 4'h7;
+	   dec_cntr1 = 1'b0;
+	   ld_cntr1 = 1'b0;
+	   cntr1_d = 4'h7;
+	   set_sdr_init_done = 1'b0;
+	   next_mgmt_st = (~tmr0_tc) ? 3'b110 : 3'b111;
+	end // case: `MGM_MODE_WT
+	
+	3'b111 : begin	   // Wait for ref_req
+	   mgmt_idle = ~ref_req;
+	   mgmt_req = 1'b0;
+	   mgmt_cmd = 4'b1111;
+	   mgmt_ba = 2'bx;
+	   mgmt_addr = 13'bx;
+	   ld_tmr0 = 1'b0;
+	   tmr0_d = 4'h7;
+	   dec_cntr1 = 1'b0;
+	   ld_cntr1 = ref_req;
+	   cntr1_d = rfsh_row_cnt;
+	   set_sdr_init_done = 1'b1;
+	   next_mgmt_st =  (~sdram_enable) ? 3'b000 :
+                           (ref_req) ? 3'b001 : 3'b111;
+	end // case: `MGM_MODE_WT
+	
+      endcase // case(mgmt_st)
+
+   end

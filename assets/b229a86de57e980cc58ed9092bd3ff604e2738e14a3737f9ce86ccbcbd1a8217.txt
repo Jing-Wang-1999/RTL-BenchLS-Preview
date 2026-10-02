@@ -1,0 +1,81 @@
+`timescale 1ns/1ps
+module tb;reg clk=0,rst=0;always #5 clk=~clk;
+task tick;begin @(posedge clk);#2;end endtask
+task reset;begin @(negedge clk);rst=1;repeat(3)tick;@(negedge clk);rst=0;end endtask
+initial begin #100000000;$fatal(1,"timeout");end
+wire [15:0] addr;wire [7:0] wrdata;wire wr,rd,req;
+wire [7:0] rddata=addr[15:8]^addr[7:0]^8'ha7;
+reg grant=0;integer grant_wait=0;
+always @(posedge clk)if(rst)begin grant<=0;grant_wait<=0;end
+else if(req)begin grant_wait<=grant_wait+1;grant<=grant_wait>=3;end
+else begin grant<=0;grant_wait<=0;end
+integer nw=0,nr=0,nt=0;reg [15:0] wa[0:511],ra[0:511];reg [7:0] wd[0:511],tx[0:511];
+always @(posedge clk)if(!rst)begin
+if(wr)begin if(addr!==wa[nw] || wrdata!==wd[nw])$fatal(1,"bus write %d %h %h",nw,addr,wrdata);nw=nw+1;end
+if(rd)begin if(addr!==ra[nr])$fatal(1,"bus read %d %h",nr,addr);nr=nr+1;end
+end
+task received;input [7:0] data;begin if(data!==tx[nt])$fatal(1,"response %d %h != %h",nt,data,tx[nt]);nt=nt+1;end endtask
+reg si=1;wire so;integer bitn;reg [7:0] received_byte;
+uart2bus_top dut(clk,rst,si,so,addr,wrdata,wr,rddata,rd,req,grant);
+task put;input [7:0] data;integer b;begin
+@(negedge clk);si=0;repeat(347)tick;
+for(b=0;b<8;b=b+1)begin @(negedge clk);si=data[b];repeat(347)tick;end
+@(negedge clk);si=1;repeat(400)tick;end endtask
+initial forever begin
+@(negedge so);if(!rst)begin
+repeat(173)tick;if(so!==0)$fatal(1,"response start");
+for(bitn=0;bitn<8;bitn=bitn+1)begin repeat(347)tick;received_byte[bitn]=so;end
+repeat(347)tick;if(so!==1)$fatal(1,"response stop");received(received_byte);
+end end
+initial begin
+wa[0]=16'h160f;wd[0]=8'h7a;
+wa[1]=16'h71b6;wd[1]=8'h7e;
+wa[2]=16'h17af;wd[2]=8'hda;
+wa[3]=16'h92ba;wd[3]=8'h19;
+wa[4]=16'h4a80;wd[4]=8'h79;
+wa[5]=16'hbfd1;wd[5]=8'hf7;
+ra[0]=16'h160f;
+ra[1]=16'h71b6;
+ra[2]=16'h17af;
+ra[3]=16'h92ba;
+ra[4]=16'h4a80;
+ra[5]=16'hbfd1;
+tx[0]=8'h42;
+tx[1]=8'h45;
+tx[2]=8'h0d;
+tx[3]=8'h0a;
+tx[4]=8'h36;
+tx[5]=8'h30;
+tx[6]=8'h0d;
+tx[7]=8'h0a;
+tx[8]=8'h31;
+tx[9]=8'h46;
+tx[10]=8'h0d;
+tx[11]=8'h0a;
+tx[12]=8'h38;
+tx[13]=8'h46;
+tx[14]=8'h0d;
+tx[15]=8'h0a;
+tx[16]=8'h36;
+tx[17]=8'h44;
+tx[18]=8'h0d;
+tx[19]=8'h0a;
+tx[20]=8'h43;
+tx[21]=8'h39;
+tx[22]=8'h0d;
+tx[23]=8'h0a;
+reset;repeat(50)tick;
+put(8'h57);put(8'h09);put(8'h37);put(8'h41);put(8'h09);put(8'h31);put(8'h36);put(8'h30);put(8'h46);put(8'h0a);repeat(50000)tick;
+put(8'h52);put(8'h09);put(8'h31);put(8'h36);put(8'h30);put(8'h46);put(8'h0d);repeat(50000)tick;
+put(8'h77);put(8'h20);put(8'h37);put(8'h65);put(8'h20);put(8'h37);put(8'h31);put(8'h62);put(8'h36);put(8'h0d);repeat(50000)tick;
+put(8'h72);put(8'h20);put(8'h37);put(8'h31);put(8'h62);put(8'h36);put(8'h0a);repeat(50000)tick;
+put(8'h57);put(8'h09);put(8'h44);put(8'h41);put(8'h09);put(8'h31);put(8'h37);put(8'h41);put(8'h46);put(8'h0a);repeat(50000)tick;
+put(8'h52);put(8'h09);put(8'h31);put(8'h37);put(8'h41);put(8'h46);put(8'h0d);repeat(50000)tick;
+put(8'h77);put(8'h20);put(8'h31);put(8'h39);put(8'h20);put(8'h39);put(8'h32);put(8'h62);put(8'h61);put(8'h0d);repeat(50000)tick;
+put(8'h72);put(8'h20);put(8'h39);put(8'h32);put(8'h62);put(8'h61);put(8'h0a);repeat(50000)tick;
+put(8'h57);put(8'h09);put(8'h37);put(8'h39);put(8'h09);put(8'h34);put(8'h41);put(8'h38);put(8'h30);put(8'h0a);repeat(50000)tick;
+put(8'h52);put(8'h09);put(8'h34);put(8'h41);put(8'h38);put(8'h30);put(8'h0d);repeat(50000)tick;
+put(8'h77);put(8'h20);put(8'h66);put(8'h37);put(8'h20);put(8'h62);put(8'h66);put(8'h64);put(8'h31);put(8'h0d);repeat(50000)tick;
+put(8'h72);put(8'h20);put(8'h62);put(8'h66);put(8'h64);put(8'h31);put(8'h0a);repeat(50000)tick;
+if(nw!=6 || nr!=6 || nt!=24)$fatal(1,"transaction counts %d %d %d",nw,nr,nt);
+$display("RTL_BENCHLS_PASS");$finish(0);end endmodule

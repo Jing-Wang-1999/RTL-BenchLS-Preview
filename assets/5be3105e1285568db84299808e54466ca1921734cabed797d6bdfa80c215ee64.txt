@@ -1,0 +1,51 @@
+module autovcoder_024170 (
+    a,
+    b,
+    c_in,
+    sum,
+    c_out
+);
+  input wire [7:0] a, b;
+  input wire c_in;
+  output wire [7:0] sum;
+  output wire c_out;
+  wire [3:0] s0, s1;
+  wire c0, c1, c2;
+
+  CSA_4BITS entity_23 (
+      a[3:0],
+      b[3:0],
+      c_in,
+      sum[3:0],
+      c0
+  );
+
+  CSA_4BITS entity_24 (
+      a[7:4],
+      b[7:4],
+      1'b0,
+      s0,
+      c1
+  );
+  CSA_4BITS entity_25 (
+      a[7:4],
+      b[7:4],
+      1'b1,
+      s1,
+      c2
+  );
+
+  mux2X1 entity_26 (
+      c1,
+      c2,
+      c0,
+      c_out
+  );
+  mux2X4 entity_27 (
+      s0,
+      s1,
+      c0,
+      sum[7:4]
+  );
+endmodule
+

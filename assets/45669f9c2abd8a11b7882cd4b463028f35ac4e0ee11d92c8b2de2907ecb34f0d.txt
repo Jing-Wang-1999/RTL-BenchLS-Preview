@@ -1,0 +1,81 @@
+"""Whole SHA-256 core with hashlib-backed variable-length message checks."""
+import hashlib
+import random
+from case_specs_uartbus import HEAD, END
+
+
+def messages(lengths, reset_midstream=False):
+    s=HEAD+'''reg [31:0] data=0;reg [2:0] cmd=0;reg write=0;wire [31:0] result;wire [3:0] status;
+sha256 dut(clk,rst,data,result,cmd,write,status);
+task command;input [2:0] c;begin @(negedge clk);cmd=c;write=1;tick;@(negedge clk);write=0;end endtask
+task block_done;integer count;begin count=0;
+if(status[3]!==1)$fatal(1,"busy never asserted");
+while(status[3] && count<128)begin tick;count=count+1;end
+if(status[3]!==0)$fatal(1,"busy timeout");repeat(5)tick;end endtask
+initial begin reset;repeat(5)tick;
+''';rng=random.Random(9060632)
+    for n in lengths:
+        if reset_midstream:
+            s+='command(2);data=32\'habcdef12;repeat(9)tick;reset;repeat(5)tick;if(status!==0)$fatal(1,"reset status");\n'
+        message=bytes(rng.randrange(256) for _ in range(n))
+        padded=message+b'\x80';padded+=b'\0'*((56-len(padded))%64)+(n*8).to_bytes(8,'big')
+        for offset in range(0,len(padded),64):
+            s+=f'command({2 if offset==0 else 6});\n'
+            for i in range(16):
+                word=int.from_bytes(padded[offset+4*i:offset+4*i+4],'big')
+                # command task exits on a falling edge; subsequent words update
+                # at falling edges too, before each sampling edge.
+                s+=('' if i==0 else '@(negedge clk);')+f"data=32'h{word:08x};tick;\n"
+            s+='block_done;\n'
+        expected=hashlib.sha256(message).digest()
+        s+='command(1);tick;\n'
+        for i in range(8):
+            word=int.from_bytes(expected[4*i:4*i+4],'big')
+            s+=f"tick;if(result!==32'h{word:08x})$fatal(1,\"SHA length {n} word {i}: %h\",result);\n"
+        s+='repeat(5)tick;\n'
+    return s+END
+
+
+INSTRUCTION='''# Implement the SHA-256 core project configuration
+Read the original SHA core project manual. Implement the complete SHA-256
+configuration in rtl/sha256.v with module sha256. SHA-1/SHA-512 are other project
+configurations and are not required. This project configuration has one RTL module.
+
+Protocol clarifications:
+- Active-high synchronous reset. Input/output words are 32 bits, big-endian
+  within the message/digest. The host supplies SHA-256 padded 512-bit blocks,
+  including the 0x80 padding and final 64-bit big-endian message bit length.
+  Padding is performed by the host, not by this core.
+- Pulse cmd_w_i for one rising edge to write cmd_i. Command 010 starts a FIRST
+  block using standard SHA-256 IV; 110 continues from the prior block state.
+  Starting on the following rising edge, supply 16 consecutive text_i words,
+  most significant word first. No separate per-word valid or backpressure exists.
+  Run all 64 SHA-256 rounds and add the previous chaining state.
+- cmd_o[3] is registered busy; [2] is first/continuation selection and [1:0]
+  are command write/read bits. Hardware clears [1:0] when idle. Busy becomes
+  visible shortly after command acceptance and clears after block completion;
+  complete within 128 clocks of accepting the sixteenth input word. Do not
+  issue another command while busy. First-block commands restart the digest
+  without requiring hardware reset; reset can abort an in-progress operation.
+- After completion pulse command 001 to read. Let C be the edge accepting that
+  command: C+1 initializes the read pointer; C+2 through C+9 output the eight
+  digest words in H0..H7 order. The last word holds while idle. Re-reading a
+  completed digest is permitted. text_o while hashing is not a valid digest.
+
+Private equal-weight points check short messages, padding boundaries, multiple
+blocks, and reset/restart sequences against an independent SHA-256 library.
+No internal RTL, intermediate trace, or private testbench is supplied to the agent.
+'''
+
+
+def sha256_spec():
+    return dict(case_id='opencores_sha256_v1',project='crypto_core_sha_cores',top='sha256',
+        configuration='sha256',instruction=INSTRUCTION,builder_source=__file__,
+        tests=[('short_messages','sha256',messages([0,1,2,3,7,15,31,47,55])),
+            ('padding_boundaries','sha256',messages([56,57,63,64,65,111,119])),
+            ('multiple_blocks','sha256',messages([120,127,128,129,255,511,1025])),
+            ('reset_restart','sha256',messages([3,55,56,73,150],True))],
+        mutations=[('initial_state','rtl/sha256.v',"SHA256_H0 32'h6a09e667","SHA256_H0 32'h6a09e666"),
+            ('round_constant','rtl/sha256.v',"K00 32'h428a2f98","K00 32'h428a2f99"),
+            ('choose_function','rtl/sha256.v','(E & F) ^ (~E & G)','(E & F) ^ (E & G)'),
+            ('schedule_shift','rtl/sha256.v',"{3'b000,W1[31:3]}","{4'b0000,W1[31:4]}")])

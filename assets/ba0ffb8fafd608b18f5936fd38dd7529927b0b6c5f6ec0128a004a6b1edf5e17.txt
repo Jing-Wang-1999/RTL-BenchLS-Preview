@@ -1,0 +1,208 @@
+module origen_131264 (
+    input [65535:0] in,
+    input [15:0] sel,
+    output [15:0] out
+);
+
+    wire [15:0] mux_out;
+    
+    mux_65536to1 main_mux (
+        .in(in),
+        .sel(sel),
+        .out(mux_out)
+    );
+    
+    xor_16bit xor_module (
+        .in(mux_out),
+        .out(out)
+    );
+
+endmodule
+
+module mux_65536to1 (
+    input [65535:0] in,
+    input [15:0] sel,
+    output [15:0] out
+);
+
+    wire [15:0] level1_out [0:3];
+
+    genvar i;
+    generate
+        for (i = 0; i < 4; i = i + 1) begin : mux_16384to1
+            mux_16384to1 mux_l1 (
+                .in(in[16384*i +: 16384]),
+                .sel(sel[13:0]),
+                .out(level1_out[i])
+            );
+        end
+    endgenerate
+
+    mux_4to1_16bit final_mux (
+        .in0(level1_out[0]),
+        .in1(level1_out[1]),
+        .in2(level1_out[2]),
+        .in3(level1_out[3]),
+        .sel(sel[15:14]),
+        .out(out)
+    );
+
+endmodule
+
+module mux_16384to1 (
+    input [16383:0] in,
+    input [13:0] sel,
+    output [15:0] out
+);
+
+    wire [15:0] level1_out [0:3];
+
+    genvar i;
+    generate
+        for (i = 0; i < 4; i = i + 1) begin : mux_4096to1
+            mux_4096to1 mux_l1 (
+                .in(in[4096*i +: 4096]),
+                .sel(sel[11:0]),
+                .out(level1_out[i])
+            );
+        end
+    endgenerate
+
+    mux_4to1_16bit final_mux (
+        .in0(level1_out[0]),
+        .in1(level1_out[1]),
+        .in2(level1_out[2]),
+        .in3(level1_out[3]),
+        .sel(sel[13:12]),
+        .out(out)
+    );
+
+endmodule
+
+module mux_4096to1 (
+    input [4095:0] in,
+    input [11:0] sel,
+    output [15:0] out
+);
+
+    wire [15:0] level1_out [0:3];
+
+    genvar i;
+    generate
+        for (i = 0; i < 4; i = i + 1) begin : mux_1024to1
+            mux_1024to1 mux_l1 (
+                .in(in[1024*i +: 1024]),
+                .sel(sel[9:0]),
+                .out(level1_out[i])
+            );
+        end
+    endgenerate
+
+    mux_4to1_16bit final_mux (
+        .in0(level1_out[0]),
+        .in1(level1_out[1]),
+        .in2(level1_out[2]),
+        .in3(level1_out[3]),
+        .sel(sel[11:10]),
+        .out(out)
+    );
+
+endmodule
+
+module mux_1024to1 (
+    input [1023:0] in,
+    input [9:0] sel,
+    output [15:0] out
+);
+
+    wire [15:0] level1_out [0:3];
+
+    genvar i;
+    generate
+        for (i = 0; i < 4; i = i + 1) begin : mux_256to1
+            mux_256to1 mux_l1 (
+                .in(in[256*i +: 256]),
+                .sel(sel[7:0]),
+                .out(level1_out[i])
+            );
+        end
+    endgenerate
+
+    mux_4to1_16bit final_mux (
+        .in0(level1_out[0]),
+        .in1(level1_out[1]),
+        .in2(level1_out[2]),
+        .in3(level1_out[3]),
+        .sel(sel[9:8]),
+        .out(out)
+    );
+
+endmodule
+
+module mux_256to1 (
+    input [255:0] in,
+    input [7:0] sel,
+    output [15:0] out
+);
+
+    wire [15:0] level1_out [0:15];
+
+    genvar i;
+    generate
+        for (i = 0; i < 16; i = i + 1) begin : mux_16to1
+            mux_16to1 mux_l1 (
+                .in(in[16*i +: 16]),
+                .sel(sel[3:0]),
+                .out(level1_out[i])
+            );
+        end
+    endgenerate
+
+    mux_16to1_16bit final_mux (
+        .in(level1_out),
+        .sel(sel[7:4]),
+        .out(out)
+    );
+
+endmodule
+
+module mux_16to1 (
+    input [15:0] in,
+    input [3:0] sel,
+    output out
+);
+
+    assign out = in[sel];
+
+endmodule
+
+module mux_16to1_16bit (
+    input [15:0] in [0:15],
+    input [3:0] sel,
+    output [15:0] out
+);
+
+    assign out = in[sel];
+
+endmodule
+
+module mux_4to1_16bit (
+    input [15:0] in0, in1, in2, in3,
+    input [1:0] sel,
+    output [15:0] out
+);
+
+    assign out = (sel == 2'b00) ? in0 :
+                 (sel == 2'b01) ? in1 :
+                 (sel == 2'b10) ? in2 : in3;
+
+endmodule
+
+module xor_16bit (
+    input [15:0] in,
+    output [15:0] out
+);
+
+    assign out = in ^ 16'hFFFF;
+
+endmodule

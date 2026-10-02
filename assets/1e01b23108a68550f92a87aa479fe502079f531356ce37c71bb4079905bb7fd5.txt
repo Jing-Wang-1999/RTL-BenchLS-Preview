@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.a797a0d82c3ba7984f53.5f6ea81c352b",
+  "compile_check": {
+    "case_id": "s1derived.a797a0d82c3ba7984f53.5f6ea81c352b",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "NV_NVDLA_RT_SDP2NOCIF_pipe_p8",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.NV_NVDLA_RT_SDP2NOCIF_pipe_p8.6ca51388ea8bdb2f/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.a797a0d82c3ba7984f53",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "a797a0d82c3ba7984f53a6a360a1d11042e3b850bafa2b69d6b732bb726c0b1b",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.a797a0d82c3ba7984f53.5f6ea81c352b",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.NV_NVDLA_RT_SDP2NOCIF_pipe_p8.6ca51388ea8bdb2f/private/commercial_positive.log",
+    "commercial_log_sha256": "c9f81093f0f05c339b7d462948e7c97530f106ae0f973227ba88af08bb6a632a",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.NV_NVDLA_RT_SDP2NOCIF_pipe_p8.6ca51388ea8bdb2f/private/historical_harness/00_sec_NV_NVDLA_RT_SDP2NOCIF_pipe_p8.tcl",
+    "executed_script_sha256": "1a811a9235ea0b30823f4de64142ec79155c94577b4ab2f4148092e1b71624e3",
+    "golden_tops": [
+      "NV_NVDLA_RT_SDP2NOCIF_pipe_p8"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.NV_NVDLA_RT_SDP2NOCIF_pipe_p8.6ca51388ea8bdb2f",
+    "parent_id": "s1p.a797a0d82c3ba7984f53",
+    "revised_tops": [
+      "NV_NVDLA_RT_SDP2NOCIF_pipe_p8"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "NV_NVDLA_RT_SDP2NOCIF_pipe_p8",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.a797a0d82c3ba7984f53.5f6ea81c352b",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The bubble-collapse register accepts into empty storage while stalled and replaces full storage on downstream ready. Valid resets asynchronously; data has a separate unreset posedge process and captures only ready AND valid. The repair specifies514-bit registered data, no bypass, and unspecified invalid data, matching the meaningful pipeline behavior.",
+        "rtl_excerpt": "p8_pipe_ready_bc = p8_pipe_ready || !p8_pipe_valid;",
+        "specification_excerpt": "upstream ready is `downstream_ready | ~stored_valid`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.a797a0d82c3ba7984f53",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "99c93cdfe20d36010296ee35ce79d666fb2aaaa43f15936634efb1f72c090bdf",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "a797a0d82c3ba7984f53a6a360a1d11042e3b850bafa2b69d6b732bb726c0b1b",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.NV_NVDLA_RT_SDP2NOCIF_pipe_p8.6ca51388ea8bdb2f/private/historical_harness/00_sec_NV_NVDLA_RT_SDP2NOCIF_pipe_p8.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.NV_NVDLA_RT_SDP2NOCIF_pipe_p8.6ca51388ea8bdb2f/private/historical_harness/01_sec_NV_NVDLA_RT_SDP2NOCIF_pipe_p8.tcl"
+  ],
+  "parent_id": "s1p.a797a0d82c3ba7984f53",
+  "primary_review": {
+    "case_id": "s1derived.a797a0d82c3ba7984f53.5f6ea81c352b",
+    "checks": {
+      "behavior": "Ready equals downstream-ready or empty; valid and data come from stored registers.",
+      "boundaries": "A full stage can replace consumed data; an empty stalled stage can accept one item; no combinational bypass exists.",
+      "interface": "All 514-bit payload and ready/valid ports match.",
+      "rtl_reasonableness": "The one-entry elastic pipeline is reasonable.",
+      "sequential_and_reset": "Only valid has active-low asynchronous reset; payload retains unspecified data while invalid."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Ready equals downstream-ready or empty; valid and data come from stored registers. Only valid has active-low asynchronous reset; payload retains unspecified data while invalid.",
+        "rtl_excerpt": "valid resets in an or negedge rstn block; d1 is always p8_pipe_data, loaded only on a clock edge",
+        "spec_excerpt": "\u201cActive-low synchronous reset\u201d and \u201czero cycles (bypass)\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose calls reset synchronous and claims zero-cycle bypass, but the valid reset is asynchronous and all payloads are registered before reaching d1.",
+        "rtl_evidence": "valid resets in an or negedge rstn block; d1 is always p8_pipe_data, loaded only on a clock edge",
+        "spec_evidence": "\u201cActive-low synchronous reset\u201d and \u201czero cycles (bypass)\u201d",
+        "type": "latency_and_reset_mismatch"
+      }
+    ],
+    "parent_id": "s1p.a797a0d82c3ba7984f53",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.a797a0d82c3ba7984f53.5f6ea81c352b.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "a797a0d82c3ba7984f53a6a360a1d11042e3b850bafa2b69d6b732bb726c0b1b",
+    "source_group": "S1",
+    "specification_sha256": "5f6ea81c352bb339da7c81fc8c06c356ed600444b881c2a45b9243c628ed85df",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.a797a0d82c3ba7984f53.5f6ea81c352b.md",
+  "qualified_specification_sha256": "99c93cdfe20d36010296ee35ce79d666fb2aaaa43f15936634efb1f72c090bdf",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.NV_NVDLA_RT_SDP2NOCIF_pipe_p8.6ca51388ea8bdb2f/private/golden_design.v",
+  "rtl_sha256": "a797a0d82c3ba7984f53a6a360a1d11042e3b850bafa2b69d6b732bb726c0b1b",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.NV_NVDLA_RT_SDP2NOCIF_pipe_p8.6ca51388ea8bdb2f/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "5f6ea81c352bb339da7c81fc8c06c356ed600444b881c2a45b9243c628ed85df",
+  "top_module": "NV_NVDLA_RT_SDP2NOCIF_pipe_p8"
+}

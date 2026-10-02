@@ -1,0 +1,14 @@
+always @(posedge clk) begin
+    if (reset) begin
+      shift_reg <= 0;
+      count <= 0;  // Empty
+    end else if (penable && !stalled) begin
+       if (set) begin
+         shift_reg <= din;
+         count <= bit_count;
+       end else if (do_shift) begin
+         shift_reg <= dir ? new_shift[31:0] : new_shift[63:32];
+         count <= count + shift_val > 32 ? 32 : count + shift_val;
+       end
+    end
+  end

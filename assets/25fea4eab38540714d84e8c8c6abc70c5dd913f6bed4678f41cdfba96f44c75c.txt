@@ -1,0 +1,39 @@
+module rtlpp_06341 (
+	clk,
+	in1,
+	saida_mealy
+);
+input 	clk;
+input 	in1;
+output 	saida_mealy;
+
+wire gnd;
+wire vcc;
+wire unknown;
+
+assign gnd = 1'b0;
+assign vcc = 1'b1;
+assign unknown = 1'bx;
+
+tri1 devclrn;
+tri1 devpor;
+tri1 devoe;
+
+reg present_state_temp;
+reg present_state_febre;
+reg present_state_base_dados;
+
+wire Selector0_combout = !in1 & !present_state_base_dados;
+wire next_state_febre_combout = !in1 & !present_state_temp;
+wire Selector1_combout = !in1 & !present_state_febre;
+wire saida_mealy_combout = !in1 & !present_state_base_dados;
+
+always @(posedge clk) begin
+    present_state_temp <= Selector0_combout;
+    present_state_febre <= next_state_febre_combout;
+    present_state_base_dados <= Selector1_combout;
+end
+
+assign saida_mealy = saida_mealy_combout;
+
+endmodule

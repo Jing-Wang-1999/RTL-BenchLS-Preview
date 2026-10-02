@@ -1,0 +1,45 @@
+**Module Specification: origen_121404**
+
+**Overview**  
+This module implements a simple read-only memory (ROM) lookup combined with a direct pass-through of an input value. It outputs a 4-bit data word selected from a fixed 128-bit data vector based on a 5-bit address, and also provides a 4-bit output that is a direct copy of one of its inputs.
+
+**Interface**  
+- **Inputs**  
+  - `address_0` (5 bits): Selects which 4-bit segment of the internal data vector to read.  
+  - `contrib_0` (4 bits): A 4-bit value that is directly passed to the `mixed` output.  
+
+- **Outputs**  
+  - `rdata_0` (4 bits): The 4-bit data read from the selected segment of the internal data vector.  
+  - `mixed` (4 bits): A direct copy of the `contrib_0` input (no modification).  
+
+**Functional Description**  
+
+1. **Internal Data Vector**  
+   A fixed 128-bit data vector is defined as follows:  
+   - Bits [127:124] = `mixed` (which equals `contrib_0`).  
+   - Bits [123:44] = All zeros (80 bits).  
+   - Bits [43:0] = All zeros (44 bits).  
+
+   Thus, the vector contains `contrib_0` in its four most significant bits, and zeros elsewhere.
+
+2. **Address-Based Lookup**  
+   - The 5-bit `address_0` selects one of 32 possible 4-bit segments from the 128-bit data vector.  
+   - The mapping is sequential:  
+     - `address_0` = 0 selects bits [3:0] (least significant segment).  
+     - `address_0` = 1 selects bits [7:4].  
+     - ...  
+     - `address_0` = 31 selects bits [127:124] (most significant segment, which equals `contrib_0`).  
+   - If `address_0` is outside the range 0–31 (though a 5-bit input inherently covers 0–31), the output `rdata_0` is zero.
+
+3. **Output Behavior**  
+   - `rdata_0`: Always outputs the 4-bit segment selected by `address_0`.  
+   - `mixed`: Always outputs the value of `contrib_0` unchanged.  
+
+**Key Characteristics**  
+- The module is purely combinational: outputs update immediately when inputs change.  
+- No clock, reset, or sequential logic is used.  
+- The internal data is static; only the four most significant bits depend on the input `contrib_0`.  
+- For addresses 0–30, `rdata_0` is always zero. Only when `address_0` = 31 does `rdata_0` equal `contrib_0` (and thus equal `mixed`).  
+
+**Allowed Sub-Modules**  
+None; the functionality is implemented directly with combinational logic.

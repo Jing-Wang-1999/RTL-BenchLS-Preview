@@ -1,0 +1,13 @@
+The module `ecc_correction_16bit` is designed to perform error correction on a 16-bit data word using a 6-bit syndrome input. It has three main components: inputs, outputs, and internal logic.
+
+**Inputs:**
+- `s`: A 6-bit syndrome input that indicates the presence and location of errors in the data.
+
+**Outputs:**
+- `e`: A 16-bit corrected data output. This output represents the corrected version of the data based on the syndrome input.
+- `fatal`: A single-bit output indicating whether the error is uncorrectable. If `fatal` is high, it means the error cannot be corrected.
+
+**Internal Logic:**
+- The module uses a 64-bit register `d` to decode the syndrome. The syndrome is used to set a specific bit in `d` to 1, based on the value of `s`.
+- A wire `dw` is used to hold the decoded syndrome value.
+- The module checks for uncorrectable errors by evaluating the lower 5 bits of the syndrome and ensuring the

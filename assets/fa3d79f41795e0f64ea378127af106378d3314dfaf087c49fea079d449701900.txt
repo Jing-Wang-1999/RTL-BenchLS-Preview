@@ -1,0 +1,26 @@
+always @(posedge clk or posedge rst)
+
+	if(rst)			timer <=  8'd250 ;
+	else
+
+	if(tmr_ld_twr2)		timer <=  { 4'h0, tms_x[15:12] };
+	else
+	if(tmr_ld_trdz)		timer <=  { 4'h0, tms_x[11:8] };
+	else
+	if(tmr_ld_trdv)		timer <=  tms_x[7:0];
+	else
+	if(tmr_ld_twr)		timer <=  { 4'h0, twrp};
+	else
+	if(tmr_ld_trp)		timer <=  { 4'h0, tms_x[23:20]};
+	else
+	if(tmr_ld_trcd)		timer <=  { 5'h0, tms_x[19:17]};
+	else
+	if(tmr_ld_tcl)		timer <=  { 6'h0, tms_x[05:04]};
+	else
+	if(tmr_ld_trfc)		timer <=  { 4'h0, tms_x[27:24]};
+	else
+	if(tmr_ld_tavav)	timer <=  8'h3;
+	else
+	if(tmr_ld_txsr)		timer <=  8'h7;
+	else
+	if(!timer_is_zero & !mc_le)	timer <=  timer - 8'b1;

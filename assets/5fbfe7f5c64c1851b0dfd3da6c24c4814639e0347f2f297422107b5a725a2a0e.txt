@@ -1,0 +1,123 @@
+module rtlpp_04314 (
+    tx,
+    rx,
+    alarm,
+    clk
+);
+
+output  tx;
+input   rx;
+output  alarm;
+input   clk;
+
+wire    tx;
+wire    rx;
+reg     alarm;
+wire    clk;
+
+wire [9:0]  address;
+wire [17:0] instruction;
+wire [7:0]  port_id;
+wire [7:0]  out_port;
+reg [7:0]   in_port;
+wire        write_strobe;
+wire        read_strobe;
+reg         interrupt;
+wire        interrupt_ack;
+
+wire [7:0]  uart_status_port;
+
+reg [6:0]   timer_count;
+reg         timer_pulse;
+
+reg [9:0]   baud_count;
+reg         en_16_x_baud;
+wire        write_to_uart;
+wire        tx_full;
+wire        tx_half_full;
+reg         read_from_uart;
+wire [7:0]  rx_data;
+wire        rx_data_present;
+wire        rx_full;
+wire        rx_half_full;
+
+// Embedded kcpsm3 processor logic
+reg reset = 1'b0;
+// Embedded uclock program_rom logic
+// (Given that these modules are not explicit, we have to assume they contain the necessary logic here)
+
+// kcpsm3 instruction decoding logic
+always @(posedge clk) begin
+    // Placeholder: Address and instruction should be derived per kcpsm3 behavior
+end
+
+// uclock ROM logic would define behavior for given address, providing an instruction
+always @(posedge clk) begin
+    // Placeholder: This should map address to instruction according to uclock's ROM table
+end
+
+always @(posedge clk) begin
+    if (timer_count == 49) begin
+        timer_count <= 1'b0;
+        timer_pulse <= 1'b1;
+    end
+    else begin
+        timer_count <= timer_count + 1;
+        timer_pulse <= 1'b0;
+    end
+   
+    if (interrupt_ack == 1'b1) begin
+        interrupt <= 1'b0;
+    end 
+    else if (timer_pulse == 1'b1) begin 
+        interrupt <= 1'b1;
+    end
+    else begin
+        interrupt <= interrupt;
+    end
+end
+
+assign uart_status_port = {3'b000, rx_data_present, rx_full, rx_half_full, tx_full, tx_half_full};
+
+always @(posedge clk) begin
+    case(port_id[0])
+        1'b0: in_port <= uart_status_port;
+        1'b1: in_port <= rx_data;
+        default: in_port <= 8'bXXXXXXXX;
+    endcase
+
+    read_from_uart <= read_strobe & port_id[0];
+end
+
+always @(posedge clk) begin
+    if(write_strobe == 1'b1) begin
+        if(port_id[0] == 1'b0) begin
+            alarm <= out_port[0];
+        end
+    end
+end
+
+assign write_to_uart = write_strobe & port_id[0];
+
+// Embedded uart_tx transmit logic
+always @(posedge clk) begin
+    // Placeholder for uart_tx logic
+end
+
+// Embedded uart_rx receive logic
+always @(posedge clk) begin
+    // Placeholder for uart_rx logic
+end
+
+always @(posedge clk) begin
+    if (baud_count == 324) begin
+        baud_count <= 1'b0;
+        en_16_x_baud <= 1'b1;
+    end
+    else begin
+        baud_count <= baud_count + 1;
+        en_16_x_baud <= 1'b0;
+    end
+end
+
+endmodule

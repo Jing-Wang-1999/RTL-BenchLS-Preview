@@ -1,0 +1,56 @@
+module origen_217966 #(
+    parameter BAUD_RATE = 9600,
+    parameter CLOCK_HZ = 100_000_000,
+    parameter DATA_SIZE = 8,
+    parameter PARITY = "NONE",
+    parameter STOP_SIZE = 1
+)(
+    input clk,
+    input start,
+    input [DATA_SIZE-1:0] data,
+    output reg tx,
+    output ready
+);
+
+localparam MAX_COUNT = CLOCK_HZ / BAUD_RATE;
+localparam TX_SIZE = DATA_SIZE + STOP_SIZE + (PARITY != "NONE" ? 1 : 0) + 1;
+
+reg [TX_SIZE-1:0] tx_bus;
+reg [$clog2(TX_SIZE)-1:0] tx_count;
+reg [$clog2(MAX_COUNT)-1:0] count;
+
+reg [1:0] state;
+localparam IDLE = 2'd0, TX_CNT = 2'd1, TRANSMIT = 2'd2;
+
+assign ready = (state == IDLE);
+
+always @(posedge clk) begin
+    case (state)
+        IDLE: begin
+            tx <= 1'b1;
+            tx_count <= 0;
+            count <= 0;
+            if (start) begin
+                tx_bus <= {1'b0, data, 1'b0, (PARITY == "EVEN") ? ^data : (PARITY == "ODD") ? ~^data : 1'b0, {STOP_SIZE{1'b1}}};
+                state <= TX_CNT;
+            end
+        end
+        TX_CNT: begin
+            count <= count + 1;
+            if (count == MAX_COUNT - 1) begin
+                count <= 0;
+                state <= TRANSMIT;
+            end
+        end
+        TRANSMIT: begin
+            tx <= tx_bus[0];
+            tx_bus <= {1'b1, tx_bus[TX_SIZE-1:1]};
+            tx_count <= tx_count + 1;
+            if (tx_count == TX_SIZE - 1) begin
+                state <= IDLE;
+            end
+        end
+    endcase
+end
+
+endmodule

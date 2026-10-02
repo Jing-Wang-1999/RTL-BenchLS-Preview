@@ -1,0 +1,36 @@
+The purpose of the Verilog module `ble_packet_memory` is to implement an 8-bit wide, 256-depth memory block with synchronous read and write operations controlled by a clock signal. The module supports memory initialization, data writing, and data reading functionalities within a Bluetooth Low Energy (BLE) system.
+
+1. **Primary Function**:
+   - The module acts as a memory block that can store 256 entries, each 8-bits wide. It features synchronous read from and write to memory capabilities, operating based on clock cycles.
+
+2. **Key Control Flow or Decision Points**:
+   - On each rising edge of the Clock and when ClockEn is high:
+     - When the write enable (WE) signal is active (high), the data present at the Data input port is written to the specified Address in memory.
+     - Regardless of the WE signal, the read_address register is updated to the current Address.
+   - On each rising edge of the Clock and when ClockEn is high:
+     - If the Reset signal is not active (not high), the output Q is updated with the data stored at the location indicated by read_address in the memory.
+     - If the Reset signal is active (high), the output Q is reset to 0.
+
+3. **Important Data Processing or Signal Interactions**:
+   - The module contains a 256x9 memory array, where the high bit of each word is always zero due to the combination with the `scuba_vlo` signal.
+   - The write operation stores a 9-bit value combining `scuba_vlo` (0) as the high bit and the 8-bit Data input.
+   - The read operation extracts the lower 8-bits of the data and assigns them to the output Q.
+   - The read_address register ensures that the output data is from the memory location specified by the most recent address input before clock enable triggers, ensuring proper synchronization.
+
+4. **Clear and Concise Description for LLM**:
+   Create a Verilog module named `ble_packet_memory` that implements a synchronous 256x8 memory block. The module has inputs for `Clock`, `ClockEn`, `Reset`, `WE` (write enable), `Address` (8-bit), and `Data` (8-bit), and an 8-bit output `Q`. On each rising edge of the Clock, if `ClockEn` is high, and `WE` is high, store the 8-bit Data input at the specified Address in memory. Always update the read_address with the current Address. If `Reset` is low, set Q to the data from memory addressed by read_address; if `Reset` is high, set Q to 0. Initialize all memory locations to zero.
+
+Module Interface:
+module ble_packet_memory (
+    input Clock,
+    input ClockEn,
+    input Reset,
+    input WE,
+    input [7:0] Address,
+    input [7:0] Data,
+    output reg [7:0] Q
+);
+
+Behavioral Clarifications:
+- The internal memory array is 9 bits wide (not 8); the extra high bit is always written as 0 and only bits [7:0] are read out to Q. All 256 memory locations are initialized to 9'b0 in an initial block.
+- Two separate sequential always blocks are used: one for the write path and read_address update, and one for the output Q; both are sensitive to posedge Clock and both gated by ClockEn.

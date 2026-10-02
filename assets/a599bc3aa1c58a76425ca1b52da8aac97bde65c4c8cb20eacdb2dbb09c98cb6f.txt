@@ -1,0 +1,62 @@
+The Verilog module "ad_pps_receiver" is designed to interface with a GPS pulse-per-second (PPS) signal and provide synchronous PPS status and counters to an UP logic domain. Here's an instruction to generate this module:
+
+1. **Primary Function**: This module synchronizes a GPS PPS signal to both the main and UP clock domains, while maintaining counters and status flags.
+
+2. **Key Control Flow/Decision Points**:
+   - **PPS Signal Detection**: Positive edges of the PPS signal are detected and used to reset counters and toggle status signals.
+   - **Reset Handling**: On a reset, all counters and status flags are reset to their default states.
+   - **UP Control Flow**: Operations within the UP clock domain, including the synchronization of the PPS signal and interrupt management.
+
+3. **Important Data Processing/Signal Interactions**:
+   - **GPS PPS Signal**: Processed through a 3-bit shift register for edge detection.
+   - **Free-running Counter**: Incremented on each main clock cycle, resets on PPS edge.
+   - **PPS Counter**: Captures the value of the free-running counter on PPS edge.
+   - **PPS Toggle and Status**: Maintains and updates status and toggle signals on PPS edges.
+   - **UP PPS Counter and Status**: Synchronized to the UP clock domain, capturing the PPS counter values and status.
+   - **Interrupt**: Generated based on synchronized PPS edges and masked by an external signal.
+
+Here's a detailed and concise instruction for generating the Verilog code:
+
+### Instruction:
+Create a Verilog module named "ad_pps_receiver" with the following functionality:
+
+1. **Inputs and Outputs**:
+   - Inputs: `clk` (main clock), `rst` (main reset), `gps_pps` (GPS PPS signal), `up_clk` (UP clock), `up_rstn` (UP active-low reset), `up_irq_mask` (interrupt mask).
+   - Outputs: `up_pps_rcounter` (32-bit UP PPS counter), `up_pps_status` (UP PPS status), `up_irq` (interrupt signal).
+
+2. **Main Operations**:
+   - **PPS Edge Detection**: Use a 3-bit shift register to detect the rising edge of the GPS PPS signal.
+   - **Counters and Status**: Maintain a free-running counter (`free_rcounter`) that resets and captures its value (`pps_rcounter`) on a PPS edge. Update the `pps_status` to indicate the presence of a PPS signal.
+   - **PPS Toggle**: Use a flip-flop to toggle its state on each PPS edge.
+   - **UP Domain Synchronization**: Synchronize the toggled PPS signal and status to the UP clock domain using another 3-bit shift register. Update the `up_pps_rcounter` and `up_pps_status` accordingly.
+   - **Interrupt Generation**: Based on synchronized PPS edge detection in the UP domain, generate an interrupt signal (`up_irq`) conditional on `up_irq_mask`.
+
+3. **Processes**:
+   - **Main Clock Domain Processes**:
+     - Shift the GPS PPS signal through a 3-bit register for edge detection.
+     - Manage the free-running counter and status upon detection of a PPS edge.
+     - Toggle a signal on each PPS edge.
+   - **UP Clock Domain Processes**:
+     - Synchronize the toggled PPS signal and status.
+     - Update the UP PPS counter and status.
+     - Generate an interrupt signal based on edge detection and mask.
+
+This instruction captures the module's purpose, crucial control flow elements, and data interactions necessary to describe its operation fully and allow an LLM to generate the corresponding Verilog code.
+
+Module Interface:
+module pulse_per_second_receiver (
+  input                 clk,
+  input                 rst,
+  input                 gps_pps,
+  input                 up_clk,
+  input                 up_rstn,
+  output reg [31:0]     up_pps_rcounter,
+  output reg            up_pps_status,
+  input                 up_irq_mask,
+  output reg            up_irq
+);
+
+Behavioral Clarifications:
+- All internal registers initialize to zero except pps_status and up_pps_status_m and up_pps_status, which initialize to 1 (absent PPS). On rst, pps_status resets to 1'b1; on up_rstn=0, up_pps_status_m and up_pps_status reset to 1'b1.
+- The pps_status flag is set to 1 (no PPS) when the free-running counter bit 28 goes high, indicating more than ~268M cycles since last PPS edge.
+- The UP domain detects PPS toggle changes using XOR of adjacent bits in the 3-bit shift register, not a simple posedge detector.

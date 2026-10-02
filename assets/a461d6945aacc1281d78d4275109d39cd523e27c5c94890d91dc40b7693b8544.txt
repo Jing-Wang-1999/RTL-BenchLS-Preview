@@ -1,0 +1,16 @@
+always @ (posedge clock or posedge reset)
+begin
+	if (reset) 
+		int_address <= 0;
+	else if ((main_sm == 4'b0100) && new_rx_data && !data_in_hex_range)
+		int_address <= addr_param[AW-1:0];
+	// binary extension 
+	else if ((main_sm == 4'b1011) && new_rx_data)
+		// sample address parameter on reception of length byte 
+		int_address <= addr_param[AW-1:0];
+	else if (addr_auto_inc && 
+			 ((bin_read_op && tx_end_p && !bin_last_byte) || 
+			  (bin_write_op && int_write)))
+		// address is incremented on every read or write if enabled 
+		int_address <= int_address + 1;
+end

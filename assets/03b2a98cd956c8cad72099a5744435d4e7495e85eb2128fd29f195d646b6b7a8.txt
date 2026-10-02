@@ -1,0 +1,50 @@
+{
+  "additions": 4,
+  "base_commit": "294849bb18e27c0487b7317f53ca878217712ffd",
+  "base_ref": "master",
+  "deletions": 11,
+  "head_commit": "1a3479f172221d18320aac0a9abe890993714a19",
+  "issue_info": {
+    "body": "Inside `ibex_load_store_unit.sv`, we have an assertion checking that in the RVALID state, a grant can only be received while also getting the rvalid. This assertion has become obsolete in the process of adding PMP support. Currently, the RVALID state is only entered when a grant is no longer expected.\r\n\r\nThis assertion should be removed or corrected. ",
+    "created_at": "2019-10-24T10:54:34Z",
+    "labels": [
+      "Type:Cleanup",
+      "Component:DV"
+    ],
+    "state": "closed",
+    "title": "LSU: Remove/correct obsolete assertion",
+    "updated_at": "2019-10-26T13:51:20Z"
+  },
+  "issue_number": 421,
+  "issue_url": "https://github.com/lowRISC/ibex/issues/421",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 4,
+      "changes": 15,
+      "deletions": 11,
+      "filename": "rtl/ibex_load_store_unit.sv",
+      "patch": "@@ -483,18 +483,11 @@ module ibex_load_store_unit (\n   ////////////////\n \n `ifndef VERILATOR\n-  // make sure there is no new request when the old one is not yet completely done\n-  // i.e. it should not be possible to get a grant without an rvalid for the\n-  // last request\n+  // there should not be an rvalid unless the FSM is handlling it\n   assert property (\n-    @(posedge clk_i)\n-      ((ls_fsm_cs == WAIT_RVALID) && (data_gnt_i == 1'b1)) |-> (data_rvalid_i == 1'b1) ) else\n-        $display(\"Data grant set while LSU keeps waiting for rvalid\");\n-\n-  // there should be no rvalid when we are in IDLE\n-  assert property (\n-    @(posedge clk_i) (ls_fsm_cs == IDLE) |-> (data_rvalid_i == 1'b0) ) else\n-      $display(\"Data rvalid set while LSU idle\");\n+    @(posedge clk_i) (data_rvalid_i) |-> ((ls_fsm_cs == WAIT_RVALID) ||\n+        (ls_fsm_cs == WAIT_RVALID_MIS) || (ls_fsm_cs == WAIT_RVALID_DONE)) ) else\n+      $display(\"Data response valid received without expecting it\");\n \n   // assert that errors are only sent at the same time as rvalid\n   assert property ("
+    }
+  ],
+  "pr_info": {
+    "body": "This commit replaces an obsolete assertion with one checking that response valid is received only if the LSU is ready to handle it.\r\n\r\nThis resolves lowRISC/ibex#421 reported by @udinator.",
+    "created_at": "2019-10-24T15:10:59Z",
+    "merged_at": "2019-10-26T13:51:20Z",
+    "state": "closed",
+    "title": "[rtl/lsu] Rework assertion checking response valid",
+    "updated_at": "2019-11-01T22:48:37Z",
+    "user": "vogelpi"
+  },
+  "pr_number": 425,
+  "pr_url": "https://github.com/lowRISC/ibex/pull/425",
+  "repository": "lowRISC/ibex",
+  "source_info": {
+    "line_number": 243,
+    "source_file": "14.txt"
+  },
+  "task_id": "lowRISC_ibex_425_421",
+  "verilog_files": [
+    "rtl/ibex_load_store_unit.sv"
+  ]
+}

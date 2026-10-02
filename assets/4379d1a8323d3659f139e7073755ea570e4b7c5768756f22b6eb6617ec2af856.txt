@@ -1,0 +1,22 @@
+**Specification: 1KB Byte-Addressable Memory Module**
+
+This module implements a 1KB (1024x32-bit) synchronous, byte-addressable memory block.
+
+**Inputs:**
+- 10-bit *address*: Selects one of 1024 memory locations.
+- 4-bit *byteenable*: Enables writing to individual bytes (bits 0-3 correspond to bytes 0-3).
+- *chipselect*: Enables memory operation when high.
+- *clk*: Clock input for synchronous operation.
+- *clken*: Clock enable; memory updates only when high.
+- *write*: Write control signal.
+- 32-bit *writedata*: Data to be written.
+
+**Output:**
+- 32-bit *readdata*: Data read from the selected address.
+
+**Behavior:**
+On each rising clock edge, if *clken* is high:
+- **Write:** If *chipselect* and *write* are high, *writedata* is written to the selected *address*, with byte granularity controlled by *byteenable*.
+- **Read:** The 32-bit data at *address* is always output on *readdata*.
+
+**Sub-mod

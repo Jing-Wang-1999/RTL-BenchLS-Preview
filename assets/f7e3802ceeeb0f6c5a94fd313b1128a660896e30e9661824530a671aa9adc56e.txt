@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.485eb498f93fee48df71.bcecd3a6e103",
+  "compile_check": {
+    "case_id": "s1derived.485eb498f93fee48df71.bcecd3a6e103",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_06532",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_06532.0259cef378a15428/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.485eb498f93fee48df71",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "485eb498f93fee48df71621718cef27076c4a70ae942157260ae4672d6264317",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.485eb498f93fee48df71.bcecd3a6e103",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_06532.0259cef378a15428/private/commercial_positive.log",
+    "commercial_log_sha256": "dfe99bd3b19f945f49f2f5f52c7f17a716f5dbf9884b6f1b92cf278f3cb256fb",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_06532.0259cef378a15428/private/historical_harness/00_sec_mg_06532.tcl",
+    "executed_script_sha256": "9a242b58786a89464bca0554c66bc119030b937477957688aae921cda683a88a",
+    "golden_tops": [
+      "mg_06532"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.mg_06532.0259cef378a15428",
+    "parent_id": "s1p.485eb498f93fee48df71",
+    "revised_tops": [
+      "mg_06532"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_06532",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.485eb498f93fee48df71.bcecd3a6e103",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Mode0capturescomparisononclk; mode1capturesonenableedge. Readiness has separateclk with low-reset or enablefall asynchronousclear and gatesoutputzero. Parameter defaults mode0/window3, vectorwidthwindow squared, and dataregister lackofreset allmatch; unusual enableclock is explicit rather than hidden.",
+        "rtl_excerpt": "always @(posedge in_enable)",
+        "specification_excerpt": "In nonzero work mode, equality is captured on each rising edge of `in_enable`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.485eb498f93fee48df71",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "e1230384ff9dc7201c14ce0b1e8715fa42eb740be8ec08695ba9ceaeeb42d33c",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "485eb498f93fee48df71621718cef27076c4a70ae942157260ae4672d6264317",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_06532.0259cef378a15428/private/historical_harness/00_sec_mg_06532.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_06532.0259cef378a15428/private/historical_harness/01_sec_mg_06532.tcl"
+  ],
+  "parent_id": "s1p.485eb498f93fee48df71",
+  "primary_review": {
+    "case_id": "s1derived.485eb498f93fee48df71.bcecd3a6e103",
+    "checks": {
+      "behavior": "Comparison modes agree, but validity timing and initial data behavior are absent.",
+      "boundaries": "checked widths, selector/state ranges, arithmetic overflow and same-cycle behavior",
+      "interface": "checked complete RTL ports against prose",
+      "rtl_reasonableness": "reasonable hardware",
+      "sequential_and_reset": "checked reset edge, initialization, hold, priority and pipeline alignment"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Comparison modes agree, but validity timing and initial data behavior are absent.",
+        "rtl_excerpt": "ready async-clears on reset or enable low and sets at clk edge; data captures on selected event; out_data gated by ready",
+        "spec_excerpt": "work_mode selects clk-edge or in_enable-edge comparison."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose truncates before defining out_ready timing and reset/enable interactions; data registers are not reset.",
+        "rtl_evidence": "ready async-clears on reset or enable low and sets at clk edge; data captures on selected event; out_data gated by ready",
+        "spec_evidence": "work_mode selects clk-edge or in_enable-edge comparison.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.485eb498f93fee48df71",
+    "proposed_specification_path": "proposed_repairs_3_sol_04/s1derived.485eb498f93fee48df71.bcecd3a6e103.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "485eb498f93fee48df71621718cef27076c4a70ae942157260ae4672d6264317",
+    "source_group": "S5",
+    "specification_sha256": "bcecd3a6e1032ba848c3c0aa9e86304cf696a27c51c8b77c534046ed0c46911c",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_04/s1derived.485eb498f93fee48df71.bcecd3a6e103.md",
+  "qualified_specification_sha256": "e1230384ff9dc7201c14ce0b1e8715fa42eb740be8ec08695ba9ceaeeb42d33c",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_06532.0259cef378a15428/private/golden_design.v",
+  "rtl_sha256": "485eb498f93fee48df71621718cef27076c4a70ae942157260ae4672d6264317",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_06532.0259cef378a15428/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "bcecd3a6e1032ba848c3c0aa9e86304cf696a27c51c8b77c534046ed0c46911c",
+  "top_module": "mg_06532"
+}

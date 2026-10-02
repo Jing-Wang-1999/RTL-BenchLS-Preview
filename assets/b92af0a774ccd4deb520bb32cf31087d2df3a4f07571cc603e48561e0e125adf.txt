@@ -1,0 +1,120 @@
+module autovcoder_073666 (
+    in1,
+    in2,
+    in3,
+    in4,
+    in5,
+    in6,
+    in7,
+    in8,
+    in9,
+    in10,
+    out1,
+    out2,
+    out3,
+    out4,
+    out5,
+    out6,
+    out7,
+    out8,
+    out9,
+    out10,
+    control
+);
+  input [3:0] in1, in2, in3, in4, in5, in6, in7, in8, in9, in10;
+  input [31:0] control;
+  output [3:0] out1, out2, out3, out4, out5, out6, out7, out8, out9, out10;
+
+  wire [3:0] 
+	wire00, wire01, wire02, wire03,
+	wire10, wire11,
+	wire20, wire21, wire22, wire23,
+	wire30, wire31, wire32, wire33,
+	wire40, wire41, wire42, wire43,
+	wire50, wire51, wire52, wire53,
+	wire60, wire61,
+	wire70, wire71, wire72, wire73;
+
+  Crossbar_4x4_4bit cb4_0 (
+      .in1(in1),
+      .in2(in2),
+      .in3(in3),
+      .in4(in4),
+      .out1(wire00),
+      .out2(wire01),
+      .out3(wire02),
+      .out4(wire03),
+      .control(control[4:0])
+  );
+  Crossbar_2x2_4bit cb2_1 (
+      .in1(in5),
+      .in2(in6),
+      .control(control[5]),
+      .out1(wire10),
+      .out2(wire11)
+  );
+  Crossbar_4x4_4bit cb4_2 (
+      .in1(in7),
+      .in2(in8),
+      .in3(in9),
+      .in4(in10),
+      .out1(wire20),
+      .out2(wire21),
+      .out3(wire22),
+      .out4(wire23),
+      .control(control[10:6])
+  );
+  Crossbar_4x4_4bit cb4_3 (
+      .in1(wire01),
+      .in2(wire02),
+      .in3(wire03),
+      .in4(wire10),
+      .out1(wire30),
+      .out2(wire31),
+      .out3(wire32),
+      .out4(wire33),
+      .control(control[15:11])
+  );
+  Crossbar_4x4_4bit cb4_4 (
+      .in1(wire11),
+      .in2(wire20),
+      .in3(wire21),
+      .in4(wire22),
+      .out1(wire40),
+      .out2(wire41),
+      .out3(wire42),
+      .out4(wire43),
+      .control(control[20:16])
+  );
+  Crossbar_4x4_4bit cb4_5 (
+      .in1(wire00),
+      .in2(wire30),
+      .in3(wire31),
+      .in4(wire32),
+      .out1(out1),
+      .out2(out2),
+      .out3(out3),
+      .out4(out4),
+      .control(control[25:21])
+  );
+  Crossbar_2x2_4bit cb2_6 (
+      .in1(wire33),
+      .in2(wire40),
+      .control(control[26]),
+      .out1(out5),
+      .out2(out6)
+  );
+  Crossbar_4x4_4bit cb4_7 (
+      .in1(wire41),
+      .in2(wire42),
+      .in3(wire43),
+      .in4(wire23),
+      .out1(out7),
+      .out2(out8),
+      .out3(out9),
+      .out4(out10),
+      .control(control[31:27])
+  );
+
+endmodule
+

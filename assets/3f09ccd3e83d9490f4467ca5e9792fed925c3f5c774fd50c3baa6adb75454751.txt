@@ -1,0 +1,4 @@
+# `jtag_io_mm_interconnect_0_rsp_demux`
+This is a combinational one-output stream demultiplexer. Inputs are scalar `sink_valid`, `sink_startofpacket`, `sink_endofpacket`, `src0_ready`, `clk`, and `reset`, plus `sink_data[103:0]` and `sink_channel[3:0]`. Outputs are scalar `sink_ready`, `src0_valid`, `src0_startofpacket`, `src0_endofpacket`, plus `src0_data[103:0]` and `src0_channel[3:0]`.
+
+The payload and packet markers always pass through: `src0_data=sink_data`, `src0_startofpacket=sink_startofpacket`, and `src0_endofpacket=sink_endofpacket`. The output channel is `sink_channel >> 1`. Channel bit zero selects the sole output: `src0_valid=sink_channel[0]&sink_valid`, and backpressure is `sink_ready=sink_channel[0]&src0_ready`. `clk` and `reset` are unused compatibility ports; there is no state, reset action, buffering, or dependency.

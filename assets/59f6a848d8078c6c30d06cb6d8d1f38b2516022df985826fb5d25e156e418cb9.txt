@@ -1,0 +1,55 @@
+module origen_045769 #(
+    parameter ABUS_WIDTH = 32,
+    parameter DBUS_WIDTH = 32
+) (
+    input wire clk,
+    input wire reset,
+    input wire [ABUS_WIDTH-1:0] aBus,
+    inout wire [DBUS_WIDTH-1:0] dBus,
+    input wire wrtEn,
+    input wire [3:0] keys,
+    output wire IRQ
+);
+
+    reg [3:0] kdata;
+    reg [8:0] kctrl;
+    reg oneTimeKInit;
+
+    wire readData = (aBus == 32'hF0000010);
+    wire writeCtrl = (aBus == 32'hF0000110) && wrtEn;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            kdata <= 4'b0000;
+            kctrl <= 9'b000000000;
+            oneTimeKInit <= 1'b1;
+        end else begin
+            if (oneTimeKInit) begin
+                kdata <= keys;
+                oneTimeKInit <= 1'b0;
+            end else if (kdata != keys) begin
+                kdata <= keys;
+                if (kctrl[0]) begin
+                    kctrl[2] <= 1'b1;
+                end
+                kctrl[0] <= 1'b1;
+            end
+
+            if (readData) begin
+                kctrl[0] <= 1'b0;
+            end
+
+            if (writeCtrl) begin
+                kctrl[2] <= dBus[2];
+                kctrl[8] <= dBus[8];
+            end
+        end
+    end
+
+    assign IRQ = kctrl[0];
+
+    assign dBus = (readData) ? {28'b0, kdata} :
+                  (aBus == 32'hF0000110) ? {23'b0, kctrl} :
+                  {DBUS_WIDTH{1'bz}};
+
+endmodule

@@ -1,0 +1,5 @@
+# gearbox_20_67
+
+Inputs are `clk`, active-high asynchronous `arst`, `din[19:0]`, and `slip_to_frame`; outputs are combinational concatenation `dout={hiword[21:0],midword[21:0],loword[22:0]}` and registered `dout_valid`. Reset clears all storage/control/output registers and sets one-hot schedule to `001`.
+
+Each rising edge appends din to the low end of 42-bit storage. The occupancy `top_ptr` gains 20 when fewer than the scheduled 22 or 23 bits are available; otherwise it loses net 2 for a 22-bit scheduled extraction or net 3 for a 23-bit extraction. Enough means occupancy at least 22 for a high/middle phase and at least 23 for low phase. On enough, schedule rotates `001→010→100→001`; selected 23-bit `loword` comes from the occupied high portion of storage, with the 22-bit case padding bit 0. Delayed valid and phase flags move prior loword bits `[22:1]` into hiword or midword. `dout_valid` asserts when the current low phase has enough bits. If slip is asserted during a delayed-valid high phase and loword bits 21 and 20 are equal, schedule is forced to `001`. There are no submodules.

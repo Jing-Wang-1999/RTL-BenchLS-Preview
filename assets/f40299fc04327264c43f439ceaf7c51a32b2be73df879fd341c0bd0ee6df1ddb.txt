@@ -1,0 +1,55 @@
+module origen_102380(
+    input [5:0] pc,
+    output reg [7:0] q
+);
+
+    reg [13:0] instr;
+    reg [5:0] op;
+    reg [6:0] tap;
+    reg [7:0] seed;
+    reg [7:0] r_addr;
+    reg [7:0] M [0:225];
+
+    always @(*) begin
+        instr = 14'b0; // Initialize instruction
+        case(pc)
+            // Add your instruction memory here
+            // Example: 6'h00: instr = 14'b00000100000000; // Set tap configuration
+            default: instr = 14'b0;
+        endcase
+
+        op = instr[13:8];
+
+        case(op)
+            6'b000001: begin // Set tap configuration
+                tap = instr[6:0];
+            end
+            6'b000010: begin // Set seed value and initialize q
+                seed = instr[7:0];
+                q = seed;
+            end
+            6'b000011: begin // LFSR shift operation
+                q = {^(q & tap), q[7:1]};
+            end
+            6'b000100: begin // Set read address
+                r_addr = instr[7:0];
+            end
+            6'b000101: begin // Store LFSR output to memory
+                M[r_addr] = q;
+            end
+            6'b000111: begin // Load LFSR output from memory
+                q = M[r_addr];
+            end
+            6'b000110: begin // Increment read address
+                r_addr = r_addr + 1;
+            end
+            6'b000000: begin // Stop operation
+                // Do nothing
+            end
+            default: begin
+                // Do nothing for undefined operations
+            end
+        endcase
+    end
+
+endmodule

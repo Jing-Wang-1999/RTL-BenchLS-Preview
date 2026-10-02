@@ -1,0 +1,62 @@
+always @(*) begin
+		NS = CS;
+		data_req_o = 1'b0;
+		lsu_update_addr_o = 1'b0;
+		data_valid_o = 1'b0;
+		increase_address = 1'b0;
+		data_misaligned_o = 1'b0;
+		case (CS)
+			3'd0:
+				if (data_req_ex_i) begin
+					data_req_o = data_req_ex_i;
+					if (data_gnt_i) begin
+						lsu_update_addr_o = 1'b1;
+						increase_address = data_misaligned;
+						NS = (data_misaligned ? 3'd2 : 3'd4);
+					end
+					else
+						NS = (data_misaligned ? 3'd1 : 3'd3);
+				end
+			3'd1: begin
+				data_req_o = 1'b1;
+				if (data_gnt_i) begin
+					lsu_update_addr_o = 1'b1;
+					increase_address = data_misaligned;
+					NS = 3'd2;
+				end
+			end
+			3'd2: begin
+				increase_address = 1'b0;
+				data_misaligned_o = 1'b1;
+				data_req_o = 1'b0;
+				lsu_update_addr_o = data_gnt_i;
+				if (data_rvalid_i) begin
+					data_req_o = 1'b1;
+					if (data_gnt_i)
+						NS = 3'd4;
+					else
+						NS = 3'd3;
+				end
+				else
+					NS = 3'd2;
+			end
+			3'd3: begin
+				data_misaligned_o = data_misaligned_q;
+				data_req_o = 1'b1;
+				if (data_gnt_i) begin
+					lsu_update_addr_o = 1'b1;
+					NS = 3'd4;
+				end
+			end
+			3'd4: begin
+				data_req_o = 1'b0;
+				if (data_rvalid_i) begin
+					data_valid_o = 1'b1;
+					NS = 3'd0;
+				end
+				else
+					NS = 3'd4;
+			end
+			default: NS = 3'd0;
+		endcase
+	end

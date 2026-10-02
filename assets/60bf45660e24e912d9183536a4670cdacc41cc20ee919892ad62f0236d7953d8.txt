@@ -1,0 +1,23 @@
+The module performs a signed linear transformation on an input vector to produce a single output value. It is a fixed-function computational block with no internal state or configurable parameters.
+
+**Inputs:**
+- A 44-bit unsigned input vector `inp`, logically divided into 11 contiguous 4-bit groups (bits 3:0, 7:4, ..., 43:40).
+
+**Outputs:**
+- A 14-bit signed output `out`.
+
+**Function:**
+The module computes a weighted sum of the 11 input groups, plus a constant bias. Each 4-bit input group is treated as an unsigned integer, zero-extended to the required width, and multiplied by a fixed 8-bit signed weight. The 11 resulting signed products and the bias are summed to produce the final signed output.
+
+The specific, immutable parameters are:
+*   **Bias:** +2763.
+*   **Weights (in order, applied to input groups from LSB to MSB):** +17, -42, -4, +16, -24, +8, -23, -15, -7, +36, +64.
+
+**Operation:**
+1.  For each of the 11 input groups, perform a signed multiplication of the zero-extended 4-bit value with its corresponding fixed weight.
+2.  Sum all 11 signed multiplication results.
+3.  Add the constant bias (+2763) to this sum.
+4.  Output the total as a 14-bit signed value.
+
+**Allowed Sub-modules:**
+The implementation may use signed multipliers and adders to perform the arithmetic. No other logic or storage elements are required.

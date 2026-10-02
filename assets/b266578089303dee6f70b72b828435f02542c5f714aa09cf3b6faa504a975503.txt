@@ -1,0 +1,71 @@
+module rtlpp_10518 (
+    input clk,
+    input flash,
+    input [31:0] Hexs,
+    input [7:0] LES,
+    input [7:0] point,
+    input rst,
+    input Start,
+    output seg_clk,
+    output seg_clrn,
+    output SEG_PEN,
+    output seg_sout
+);
+    wire [63:0] SEG_TXT;
+
+    // Embedded logic from HexTo8SEG8 module
+    function [7:0] HexTo8SEG;
+        input [3:0] hex;
+        begin
+            case (hex)
+                4'h0: HexTo8SEG = 8'b11000000;
+                4'h1: HexTo8SEG = 8'b11111001;
+                4'h2: HexTo8SEG = 8'b10100100;
+                4'h3: HexTo8SEG = 8'b10110000;
+                4'h4: HexTo8SEG = 8'b10011001;
+                4'h5: HexTo8SEG = 8'b10010010;
+                4'h6: HexTo8SEG = 8'b10000010;
+                4'h7: HexTo8SEG = 8'b11111000;
+                4'h8: HexTo8SEG = 8'b10000000;
+                4'h9: HexTo8SEG = 8'b10010000;
+                4'hA: HexTo8SEG = 8'b10001000;
+                4'hB: HexTo8SEG = 8'b10000011;
+                4'hC: HexTo8SEG = 8'b11000110;
+                4'hD: HexTo8SEG = 8'b10100001;
+                4'hE: HexTo8SEG = 8'b10000110;
+                4'hF: HexTo8SEG = 8'b10001110;
+                default: HexTo8SEG = 8'b11111111;
+            endcase
+        end
+    endfunction
+
+    generate
+        genvar i;
+        for (i = 0; i < 8; i = i + 1) begin : gen_HexTo8SEG8
+            assign SEG_TXT[(i+1)*8-1:i*8] = HexTo8SEG(Hexs[(i+1)*4-1:i*4]) | {~LES[i], 7'b0} | {7'b0, point[i]};
+        end
+    endgenerate
+
+    // Embedded logic from P2S module
+    reg [63:0] shift_reg;
+    reg [6:0] cnt;
+    
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            shift_reg <= 64'b0;
+            cnt <= 7'b0;
+        end else if (Start) begin
+            shift_reg <= SEG_TXT;
+            cnt <= 7'd64;
+        end else if (cnt > 0) begin
+            shift_reg <= {shift_reg[62:0], 1'b0};
+            cnt <= cnt - 1;
+        end
+    end
+
+    assign seg_clk = clk;
+    assign seg_clrn = ~rst;
+    assign SEG_PEN = (cnt > 0);
+    assign seg_sout = shift_reg[63];
+
+endmodule

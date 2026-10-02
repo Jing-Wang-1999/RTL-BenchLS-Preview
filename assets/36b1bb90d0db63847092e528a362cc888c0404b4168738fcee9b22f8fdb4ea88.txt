@@ -1,0 +1,35 @@
+`timescale 1ns/1ps
+module tb;
+reg clk=0,reset_n=1; always #5 clk=~clk;
+task tick; begin @(posedge clk); #1; end endtask
+task reset; begin @(negedge clk); reset_n=0; repeat(4) tick; @(negedge clk); reset_n=1; end endtask
+initial begin #10000000; $fatal(1,"timeout"); end
+reg rxd=1,si=0;wire txd,sck,so,baud,frm,par;wire [3:0] csn;
+top dut(reset_n,clk,1'b1,1'b1,1'b0,2'b00,12'd2,frm,par,baud,rxd,txd,sck,so,si,csn);
+reg [7:0] chars[0:1023];integer nchars=0,b;reg [7:0] value;
+initial forever begin @(negedge txd);#960;
+for(b=0;b<8;b=b+1)begin value[b]=txd;#640;end
+if(txd!==1)$fatal(1,"UART stop");chars[nchars]=value;nchars=nchars+1;end
+integer bits=0;reg [31:0] captured=0;
+always @(posedge sck) begin if(csn===4'hF)$fatal(1,"CS idle");captured={captured[30:0],so};bits=bits+1;end
+task charin;input [7:0] c;integer j;begin
+@(negedge clk);rxd=0;repeat(64)tick;
+for(j=0;j<8;j=j+1)begin @(negedge clk);rxd=c[j];repeat(64)tick;end
+@(negedge clk);rxd=1;repeat(80)tick;end endtask
+ task find_hex;input [63:0] hexchars;integer k,j,ok,found;
+begin found=0;for(k=0;k<nchars-7;k=k+1) begin ok=1;for(j=0;j<8;j=j+1)
+if(chars[k+j]!==hexchars[63-j*8-:8])ok=0;if(ok)found=1;end
+if(!found)$fatal(1,"missing UART read data %h, bytes %d",hexchars,nchars);end endtask
+initial begin reset;repeat(35000)tick;
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h30);charin(8'h30);charin(8'h30);charin(8'h34);charin(8'h20);charin(8'h41);charin(8'h35);charin(8'h46);charin(8'h30);charin(8'h30);charin(8'h46);charin(8'h39);charin(8'h36);charin(8'h0a);repeat(18000)tick;
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h30);charin(8'h30);charin(8'h30);charin(8'h34);charin(8'h0a);repeat(18000)tick;
+find_hex("A5F00F96");
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h30);charin(8'h30);charin(8'h30);charin(8'h34);charin(8'h20);charin(8'h31);charin(8'h33);charin(8'h43);charin(8'h38);charin(8'h42);charin(8'h37);charin(8'h32);charin(8'h45);charin(8'h0a);repeat(18000)tick;
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h30);charin(8'h30);charin(8'h30);charin(8'h34);charin(8'h0a);repeat(18000)tick;
+find_hex("13C8B72E");
+bits=0;captured=0;
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h30);charin(8'h30);charin(8'h30);charin(8'h30);charin(8'h20);charin(8'h38);charin(8'h30);charin(8'h31);charin(8'h39);charin(8'h30);charin(8'h32);charin(8'h30);charin(8'h31);charin(8'h0a);repeat(22000)tick;
+if(bits!=32 || captured!==32'h13C8B72E || csn!==4'hF) $fatal(1,"whole bridge SPI %d %h",bits,captured);
+
+$display("RTL_BENCHLS_PASS"); $finish(0); end
+endmodule

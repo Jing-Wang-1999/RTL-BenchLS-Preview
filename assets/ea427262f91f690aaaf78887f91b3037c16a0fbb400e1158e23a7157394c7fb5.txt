@@ -1,0 +1,74 @@
+module origen_150263 (
+    input wire i_clk,
+    input wire i_reset,
+    input wire [15:0] i_pe_address,
+    input wire [8:0] i_pe_writedata,
+    output reg o_mpi_init_rank,
+    output reg o_mpi_init_comm_size,
+    output reg o_mpi_finalize,
+    output reg o_mpi_send,
+    output reg o_mpi_recv,
+    output reg o_mpi_comm_size,
+    output reg o_mpi_rank,
+    output reg o_mpi_status,
+    output reg o_mpi_bad_msg,
+    output reg o_mpi_bcast,
+    output reg o_mpi_reduce
+);
+
+    // Internal combinational signals
+    wire init_rank_comb;
+    wire init_comm_size_comb;
+    wire finalize_comb;
+    wire send_comb;
+    wire recv_comb;
+    wire comm_size_comb;
+    wire rank_comb;
+    wire status_comb;
+    wire bad_msg_comb;
+    wire bcast_comb;
+    wire reduce_comb;
+
+    // Decode logic for each command
+    assign init_rank_comb = (i_pe_address == 16'h0004) && (i_pe_writedata == 9'h000);
+    assign init_comm_size_comb = (i_pe_address == 16'h0008) && (i_pe_writedata == 9'h000);
+    assign finalize_comb = (i_pe_writedata == 9'h005);
+    assign send_comb = (i_pe_writedata == 9'h003);
+    assign recv_comb = (i_pe_writedata == 9'h004);
+    assign comm_size_comb = (i_pe_address == 16'h000C);
+    assign rank_comb = (i_pe_address == 16'h0010);
+    assign status_comb = (i_pe_address == 16'h0014);
+    assign bad_msg_comb = (i_pe_writedata > 9'h101);
+    assign bcast_comb = (i_pe_writedata == 9'h100);
+    assign reduce_comb = (i_pe_writedata == 9'h101);
+
+    // Synchronous output register stage
+    always @(posedge i_clk or posedge i_reset) begin
+        if (i_reset) begin
+            o_mpi_init_rank <= 1'b0;
+            o_mpi_init_comm_size <= 1'b0;
+            o_mpi_finalize <= 1'b0;
+            o_mpi_send <= 1'b0;
+            o_mpi_recv <= 1'b0;
+            o_mpi_comm_size <= 1'b0;
+            o_mpi_rank <= 1'b0;
+            o_mpi_status <= 1'b0;
+            o_mpi_bad_msg <= 1'b0;
+            o_mpi_bcast <= 1'b0;
+            o_mpi_reduce <= 1'b0;
+        end else begin
+            o_mpi_init_rank <= init_rank_comb;
+            o_mpi_init_comm_size <= init_comm_size_comb;
+            o_mpi_finalize <= finalize_comb;
+            o_mpi_send <= send_comb;
+            o_mpi_recv <= recv_comb;
+            o_mpi_comm_size <= comm_size_comb;
+            o_mpi_rank <= rank_comb;
+            o_mpi_status <= status_comb;
+            o_mpi_bad_msg <= bad_msg_comb;
+            o_mpi_bcast <= bcast_comb;
+            o_mpi_reduce <= reduce_comb;
+        end
+    end
+
+endmodule

@@ -1,0 +1,180 @@
+module rtlpp_00209 (
+    input  wire                   clk, 
+    input  wire                   reset, 
+    
+    input  wire [31:0]            gpr_rs1_data, 
+    input  wire [31:0]            gpr_rs2_data, 
+    output wire [4:0]             gpr_rs1_addr, 
+    output wire [4:0]             gpr_rs2_addr, 
+    
+    input  wire [31:0]            ex_fwd_data, 
+    input  wire [31:0]            mem_fwd_data, 
+    
+    input  wire [31:0]            csr_rd_data, 
+    output wire [2:0]             csr_op, 
+    output wire [11:0]            csr_addr, 
+    output wire [31:0]            csr_wr_data, 
+    
+    input  wire                   stall,          
+    input  wire                   flush,          
+    
+    input  wire [1:0]             rs1_fwd_ctrl,
+    input  wire [1:0]             rs2_fwd_ctrl,
+    
+    input  wire [31:0]            pc,             
+    input  wire [31:0]            if_npc,         
+    input  wire [31:0]            if_insn,        
+    input  wire                   if_en,          
+    input  wire [1:0]             if_hart_id,     
+    
+    output wire                   id_is_jalr,     
+    output wire [2:0]             id_exp_code,    
+    output wire [31:0]            id_pc,
+    output wire                   id_en,          
+    output wire [4:0]             id_alu_op,      
+    output wire [31:0]            id_alu_in_0,    
+    output wire [31:0]            id_alu_in_1,    
+    output wire [2:0]             id_cmp_op,      
+    output wire [31:0]            id_cmp_in_0,    
+    output wire [31:0]            id_cmp_in_1,    
+    output wire                   id_jump_taken,
+    output wire [1:0]             id_mem_op,      
+    output wire [31:0]            id_mem_wr_data, 
+    output wire [4:0]             id_rd_addr,     
+    output wire                   id_gpr_we_,     
+    output wire [1:0]             id_ex_out_sel,
+    output wire [31:0]            id_gpr_wr_data,
+    output wire [1:0]             id_hart_id,     
+    
+    output wire                   is_eret,        
+    output wire [6:0]             op,
+    output wire [4:0]             id_rs1_addr,
+    output wire [4:0]             id_rs2_addr,
+    output wire [4:0]             rs1_addr,
+    output wire [4:0]             rs2_addr,
+    output wire [1:0]             src_reg_used,   
+    
+    
+    input  wire                   get_hart_idle,     
+    input  wire [2:0]             get_hart_val,      
+    input  wire [1:0]             hart_acti_hstate,  
+    input  wire [1:0]             hart_idle_hstate,  
+    
+    output wire                   is_branch,
+    output wire                   is_load,
+    output wire [1:0]             spec_hid,
+
+    output wire                   id_hkill,
+    output wire [1:0]             id_set_hid,        
+    
+    output wire                   id_hstart,
+    output wire                   id_hidle,
+    output wire [1:0]             id_hs_id,          
+    output wire [31:0]            id_hs_pc           
+);
+
+    wire [4:0]     alu_op;          
+    wire [31:0]    alu_in_0;        
+    wire [31:0]    alu_in_1;        
+    wire [2:0]     cmp_op;          
+    wire [31:0]    cmp_in_0;        
+    wire [31:0]    cmp_in_1;        
+
+    wire           jump_taken;
+
+    wire [1:0]     mem_op;          
+    wire [31:0]    mem_wr_data;     
+    wire [1:0]     ex_out_sel;      
+    wire [31:0]    gpr_wr_data;     
+    wire [4:0]     rd_addr;         
+    wire           gpr_we_;         
+    wire           is_jalr;         
+    wire [2:0]     exp_code;
+
+    wire            hstart;
+    wire            hkill;
+    wire [1:0]      hs_id;
+    wire [31:0]     hs_pc;
+
+    reg  [31:0]     rs1_data;         
+    reg  [31:0]     rs2_data;         
+
+    always @(*) begin
+        case (rs1_fwd_ctrl)
+            2'b01 : begin
+                rs1_data = ex_fwd_data;   
+            end
+            2'b10: begin
+                rs1_data = mem_fwd_data;  
+            end
+            default      : begin
+                rs1_data = gpr_rs1_data;  
+            end
+        endcase
+
+        case (rs2_fwd_ctrl)
+            2'b01 : begin
+                rs2_data = ex_fwd_data;   
+            end
+            2'b10: begin
+                rs2_data = mem_fwd_data;  
+            end
+            default      : begin
+                rs2_data = gpr_rs2_data;  
+            end
+        endcase
+    end
+
+    // Internal Decoder Logic Embedded
+    always @(posedge clk or posedge reset) begin
+      if (reset) begin
+            // Reset logic
+        end
+      else begin
+            // Your decoder logic here
+        
+            // Example placeholder logic:
+            // ...
+            // gpr_rs1_addr <= if_insn[19:15];
+            // gpr_rs2_addr <= if_insn[24:20];
+            // alu_op <= 5'd0; // Example
+            // alu_in_0 <= rs1_data;
+            // alu_in_1 <= rs2_data;
+            // jump_taken <= 1'b0;
+            // mem_op <= 2'b00;
+            // mem_wr_data <= rs2_data;
+            // rd_addr <= if_insn[11:7];
+            // gpr_we_ <= 1'b0;
+            // is_jalr <= 1'b0;
+            // exp_code <= 3'b000;
+            // ...
+        end
+    end
+
+    // Internal ID Register Logic Embedded:
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            // Reset logic
+        end
+      else if (!stall) begin
+            if (flush) begin
+                // Flush logic
+            end
+            else begin
+                // Your ID register logic
+                // Example placeholder logic:
+                // ...
+                // id_is_jalr <= is_jalr;
+                // id_exp_code <= exp_code;
+                // id_pc <= pc;
+                // id_en <= if_en;
+                // id_alu_op <= alu_op;
+                // id_alu_in_0 <= alu_in_0;
+                // id_alu_in_1 <= alu_in_1;
+                // id_cmp_op <= cmp_op;                
+                // ...
+            end
+        end
+    end
+
+endmodule

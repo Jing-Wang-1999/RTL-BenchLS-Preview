@@ -1,0 +1,121 @@
+module origen_078284 (
+    input wire clk,
+    input wire [3:0] mode,
+    input wire [31:0] addr,
+    input wire [31:0] wdata,
+    output reg [31:0] rdata,
+    output reg ok,
+
+    output wire [19:0] base_ram_addr,
+    inout wire [31:0] base_ram_data,
+    output wire [3:0] base_ram_be_n,
+    output wire base_ram_ce_n,
+    output wire base_ram_oe_n,
+    output wire base_ram_we_n,
+
+    output wire [19:0] ext_ram_addr,
+    inout wire [31:0] ext_ram_data,
+    output wire [3:0] ext_ram_be_n,
+    output wire ext_ram_ce_n,
+    output wire ext_ram_oe_n,
+    output wire ext_ram_we_n
+);
+
+    reg [31:0] lock_addr, lock_wdata;
+    reg [3:0] lock_mode;
+    reg [31:0] ram_data_r;
+    reg ram_we_n_r, ram_oe_n_r;
+    reg [3:0] ram_be_n_r;
+    reg chip_select;
+    reg [1:0] byte_select;
+
+    wire is_read = (lock_mode[3:2] == 2'b10);
+    wire is_write = (lock_mode[3:2] == 2'b01);
+
+    always @(posedge clk) begin
+        lock_addr <= addr;
+        lock_wdata <= wdata;
+        lock_mode <= mode;
+    end
+
+    assign base_ram_addr = lock_addr[21:2];
+    assign ext_ram_addr = lock_addr[21:2];
+    assign base_ram_data = (is_write && !chip_select) ? ram_data_r : 32'bz;
+    assign ext_ram_data = (is_write && chip_select) ? ram_data_r : 32'bz;
+    assign base_ram_be_n = chip_select ? 4'b1111 : ram_be_n_r;
+    assign ext_ram_be_n = chip_select ? ram_be_n_r : 4'b1111;
+    assign base_ram_ce_n = chip_select;
+    assign ext_ram_ce_n = !chip_select;
+    assign base_ram_oe_n = chip_select ? 1'b1 : ram_oe_n_r;
+    assign ext_ram_oe_n = chip_select ? ram_oe_n_r : 1'b1;
+    assign base_ram_we_n = chip_select ? 1'b1 : ram_we_n_r;
+    assign ext_ram_we_n = chip_select ? ram_we_n_r : 1'b1;
+
+    always @(*) begin
+        chip_select = lock_addr[22];
+        byte_select = lock_addr[1:0];
+        ram_data_r = 32'b0;
+        ram_we_n_r = 1'b1;
+        ram_oe_n_r = 1'b1;
+        ram_be_n_r = 4'b1111;
+        ok = 1'b0;
+        rdata = 32'b0;
+
+        case (lock_mode)
+            4'b0000: begin // NOP
+                ok = 1'b1;
+            end
+            4'b0101: begin // SW
+                ram_data_r = lock_wdata;
+                ram_we_n_r = 1'b0;
+                ram_be_n_r = 4'b0000;
+                ok = 1'b1;
+            end
+            4'b0110: begin // SH
+                ram_data_r = lock_wdata << (byte_select * 8);
+                ram_we_n_r = 1'b0;
+                ram_be_n_r = (4'b0011 << byte_select);
+                ok = 1'b1;
+            end
+            4'b0111: begin // SB
+                ram_data_r = lock_wdata << (byte_select * 8);
+                ram_we_n_r = 1'b0;
+                ram_be_n_r = (4'b0001 << byte_select);
+                ok = 1'b1;
+            end
+            4'b1000: begin // LW
+                ram_oe_n_r = 1'b0;
+                rdata = chip_select ? ext_ram_data : base_ram_data;
+                ok = 1'b1;
+            end
+            4'b1001: begin // LH
+                ram_oe_n_r = 1'b0;
+                rdata = chip_select ? ext_ram_data : base_ram_data;
+                rdata = {{16{rdata[byte_select*16+15]}}, rdata[byte_select*16 +: 16]};
+                ok = 1'b1;
+            end
+            4'b1010: begin // LHU
+                ram_oe_n_r = 1'b0;
+                rdata = chip_select ? ext_ram_data : base_ram_data;
+                rdata = {16'b0, rdata[byte_select*16 +: 16]};
+                ok = 1'b1;
+            end
+            4'b1011: begin // LB
+                ram_oe_n_r = 1'b0;
+                rdata = chip_select ? ext_ram_data : base_ram_data;
+                rdata = {{24{rdata[byte_select*8+7]}}, rdata[byte_select*8 +: 8]};
+                ok = 1'b1;
+            end
+            4'b1100: begin // LBU
+                ram_oe_n_r = 1'b0;
+                rdata = chip_select ? ext_ram_data : base_ram_data;
+                rdata = {24'b0, rdata[byte_select*8 +: 8]};
+                ok = 1'b1;
+            end
+            default: begin
+                ok = 1'b1;
+            end
+        endcase
+    end
+
+endmodule

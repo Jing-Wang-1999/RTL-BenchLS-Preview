@@ -1,0 +1,70 @@
+from pathlib import Path
+import subprocess,json
+root=Path('/home/jwangjw/project_3rd/ICLR-RTL-BenchLS')
+src=root/'scope1/task1_1_spec_to_rtl/cases/candidates/complexity_expansion_20260913_v1/payloads'
+dst=root/'scope1/task1_1_spec_to_rtl/results/complexity_admission_20260913_v1/reviews'
+cid='large_module.6533df40f6d00b1254c0';d=dst/cid/'local_spec_check';d.mkdir(exist_ok=True)
+tb='''module tb;
+reg clk=0,rst=1,ready=0,seed_start=0; reg [63:0] seed_val=5489;
+wire [63:0] data; wire valid,busy;
+rtlpp_02379 dut(clk,rst,data,valid,ready,busy,seed_val,seed_start);
+always #5 clk=~clk;
+integer n,k=0;
+initial begin
+@(negedge clk);rst=0;seed_start=1;
+@(posedge clk);#1;$display("SEED %b",busy);
+@(negedge clk);seed_start=0;ready=1;
+for(n=1;n<20010;n=n+1) begin
+ @(posedge clk);#1;
+ if(n>19965 && n<19971) $display("CYCLE %d busy=%b valid=%b",n,busy,valid);
+ if(valid && k<10) begin $display("WORD %h",data);k=k+1;end
+ @(negedge clk);
+end
+$finish;end
+endmodule
+'''
+(d/'tb.v').write_text(tb)
+subprocess.run(['iverilog','-g2012','-s','tb','-o',str(d/'simv'),str(d/'tb.v'),str(src/cid/'private/golden_design.v')],check=True)
+r=subprocess.run(['vvp',str(d/'simv')],capture_output=True,text=True,check=True);(d/'simulation.log').write_text(r.stdout)
+mask=(1<<64)-1;m=[5489]
+for i in range(1,312):m.append((6364136223846793005*(m[-1]^(m[-1]>>62))+i)&mask)
+expected=[]
+for i in range(10):
+ z=(m[i]&0xFFFFFFFF80000000)|(m[(i+1)%312]&0x7FFFFFFF)
+ w=m[(i+156)%312]^(z>>1)^(0xB5026F5AA96619E9 if z&1 else 0);m[i]=w
+ t=w^((w>>29)&0x5555555555555555);t^=(t<<17)&0x71D67FFFEDA60000;t^=(t<<37)&0xFFF7EEE000000000;t^=t>>43;expected.append(t&mask)
+actual=[int(l.split()[1],16) for l in r.stdout.splitlines() if l.startswith('WORD')]
+assert actual==expected,(actual,expected)
+assert 'CYCLE       19968 busy=0 valid=0' in r.stdout,r.stdout
+assert 'CYCLE       19969 busy=0 valid=1' in r.stdout,r.stdout
+(d/'check.json').write_text(json.dumps({'result':'pass','seed':5489,'reference':'independent integer MT19937-64 recurrence','output_samples_checked':10,'busy_falls_after_seed_acceptance_clocks':19968,'first_generated_valid_after_seed_acceptance_clocks':19969,'scope':'local directed simulation only; no formal proof; no stalls or reseed coverage'},indent=2)+'\n')
+print(r.stdout)
+
+cid='large_module.8d2e5d2ca7a8342352d2';d=dst/cid/'local_spec_check';d.mkdir(exist_ok=True)
+tb='''module tb;
+reg clk=0,reset=0;reg signed [7:0] X=0;wire signed [19:0] Y;
+rtlpp_10242 dut(clk,reset,X,Y);
+always #5 clk=~clk;
+integer n;
+initial begin
+@(negedge clk);reset=1;
+for(n=0;n<512;n=n+1) begin
+ X=(n*73+19)%256;
+ @(posedge clk);#1;$display("SAMPLE %d %d",X,Y);
+ @(negedge clk);
+end
+$finish;end
+endmodule
+'''
+(d/'tb.v').write_text(tb)
+subprocess.run(['iverilog','-g2012','-s','tb','-o',str(d/'simv'),str(d/'tb.v'),str(src/cid/'private/golden_design.v')],check=True)
+r=subprocess.run(['vvp',str(d/'simv')],capture_output=True,text=True,check=True);(d/'simulation.log').write_text(r.stdout)
+c=[-1,3,9,6,-12,-35,-27,39,147,237,249,174,64,-16,-37,-19,3,9,4,0,-1];xs=[]
+for line in r.stdout.splitlines():
+ _,x,y=line.split();x=int(x);y=int(y)
+ expected=sum(c[i]*xs[-i-1] for i in range(min(len(xs),21)))
+ expected=((expected+(1<<19))%(1<<20))-(1<<19)
+ assert y==expected,(len(xs),y,expected)
+ xs.append(x)
+(d/'check.json').write_text(json.dumps({'result':'pass','samples_checked':len(xs),'unique_input_values':len(set(xs)),'reference':'independent default-width FIR convolution plus one output register','scope':'local simulation only; no formal proof; non-default widths not checked'},indent=2)+'\n')
+print('FIR checked',len(xs),'samples,',len(set(xs)),'distinct input values')

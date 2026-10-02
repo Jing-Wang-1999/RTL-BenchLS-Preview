@@ -1,0 +1,25 @@
+always @(posedge i_clk)
+	if (i_reset)
+	begin
+		r_busy <= 1'b1;
+		state  <= TXUL_IDLE;
+	end else if (!zero_baud_counter)
+		// r_busy needs to be set coming into here
+		r_busy <= 1'b1;
+	else if (state > TXUL_STOP)	// STATE_IDLE
+	begin
+		state <= TXUL_IDLE;
+		r_busy <= 1'b0;
+		if ((i_wr)&&(!r_busy))
+		begin	// Immediately start us off with a start bit
+			r_busy <= 1'b1;
+			state <= TXUL_BIT_ZERO;
+		end
+	end else begin
+		// One clock tick in each of these states ...
+		r_busy <= 1'b1;
+		if (state <=TXUL_STOP) // start bit, 8-d bits, stop-b
+			state <= state + 1'b1;
+		else
+			state <= TXUL_IDLE;
+	end

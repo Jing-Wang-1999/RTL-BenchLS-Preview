@@ -1,0 +1,47 @@
+module autovcoder_076097 (
+    ConfigBits_OBUF,
+    ConfigBits_N_OBUF,
+    \ConfigBits_N[398] ,
+    FrameData_IBUF,
+    FrameStrobe_IBUF
+);
+  output [0:0] ConfigBits_OBUF;
+  output [0:0] ConfigBits_N_OBUF;
+  output \ConfigBits_N[398] ;
+  input [0:0] FrameData_IBUF;
+  input [0:0] FrameStrobe_IBUF;
+
+  wire \ConfigBits_N[398] ;
+  wire [0:0] ConfigBits_N_OBUF;
+  wire [0:0] ConfigBits_OBUF;
+  wire [0:0] FrameData_IBUF;
+  wire [0:0] FrameStrobe_IBUF;
+
+  (* XILINX_LEGACY_PRIM = "LD" *)
+  LDCE #(
+      .INIT(1'b0)
+  ) QN_reg (
+      .CLR(1'b0),
+      .D  (\ConfigBits_N[398] ),
+      .G  (FrameStrobe_IBUF),
+      .GE (1'b1),
+      .Q  (ConfigBits_N_OBUF)
+  );
+  LUT1 #(
+      .INIT(2'h1)
+  ) QN_reg_i_1__14 (
+      .I0(FrameData_IBUF),
+      .O (\ConfigBits_N[398] )
+  );
+  (* XILINX_LEGACY_PRIM = "LD" *)
+  LDCE #(
+      .INIT(1'b0)
+  ) Q_reg (
+      .CLR(1'b0),
+      .D  (FrameData_IBUF),
+      .G  (FrameStrobe_IBUF),
+      .GE (1'b1),
+      .Q  (ConfigBits_OBUF)
+  );
+endmodule
+

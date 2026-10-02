@@ -1,0 +1,9 @@
+always @(posedge req_aclk) begin
+    if (req_aresetn == 1'b0) begin
+      prev_buf_done <= 1'b1;
+    end else if (out_req_valid && out_req_ready) begin
+      prev_buf_done <= 1'b0;
+    end else if (resp_eot) begin
+      prev_buf_done <= 1'b1;
+    end
+  end

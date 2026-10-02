@@ -1,0 +1,19 @@
+always @ *
+begin
+    if (SUPPORT_SUPER)
+    begin
+        irq_pending_r   = (csr_mip_q & csr_mie_q);
+        m_enabled_r     = (csr_mpriv_q < 2'd3) || (csr_mpriv_q == 2'd3 && csr_sr_q[3]);
+        s_enabled_r     = (csr_mpriv_q < 2'd1)   || (csr_mpriv_q == 2'd1   && csr_sr_q[1]);
+        m_interrupts_r  = m_enabled_r    ? (irq_pending_r & ~csr_mideleg_q) : 32'b0;
+        s_interrupts_r  = s_enabled_r    ? (irq_pending_r &  csr_mideleg_q) : 32'b0;
+        irq_masked_r    = (|m_interrupts_r) ? m_interrupts_r : s_interrupts_r;
+        irq_priv_r      = (|m_interrupts_r) ? 2'd3 : 2'd1;
+    end
+    else
+    begin
+        irq_pending_r   = (csr_mip_q & csr_mie_q);
+        irq_masked_r    = csr_sr_q[3] ? irq_pending_r : 32'b0;
+        irq_priv_r      = 2'd3;
+    end
+end

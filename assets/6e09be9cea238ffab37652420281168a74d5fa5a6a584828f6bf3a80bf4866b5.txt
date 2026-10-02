@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/165",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/150",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 165,
+  "issue_number": 150,
+  "verilog_files": [
+    "rtl/riscv_compressed_decoder.sv"
+  ],
+  "deletions": 1,
+  "additions": 2,
+  "patches": [
+    {
+      "filename": "rtl/riscv_compressed_decoder.sv",
+      "patch": "@@ -253,9 +253,10 @@ module riscv_compressed_decoder\n \n               if (instr_i[11:7] == 5'b0) begin\n                 // c.ebreak -> ebreak\n-                instr_o = {32'h00_10_00_73};\n                 if (instr_i[6:2] != 5'b0)\n                   illegal_instr_o = 1'b1;\n+                else\n+                   instr_o = {32'h00_10_00_73};\n               end else if (instr_i[6:2] == 5'b0) begin\n                 // c.jalr -> jalr x1, rs1, 0\n                 instr_o = {12'b0, instr_i[11:7], 3'b000, 5'b00001, OPCODE_JALR};",
+      "additions": 2,
+      "deletions": 1,
+      "changes": 3
+    }
+  ],
+  "pr_info": {
+    "title": "Do not decode insn as ebreak when it is already marked illegal",
+    "body": "Fixes #150 ",
+    "state": "closed",
+    "created_at": "2019-09-20T11:51:20Z",
+    "updated_at": "2019-11-07T14:03:23Z",
+    "merged_at": "2019-09-20T15:18:14Z",
+    "user": "bluewww"
+  },
+  "issue_info": {
+    "title": "BUG: ebrk_insn_i set at the same time as illegal_inst_i, should be one hot",
+    "body": "this is an actual cause of a unique case violation. \r\n\r\nif (instr_i[11:7] == 5'b0) begin\r\n                // c.ebreak -> ebreak\r\n                instr_o = {32'h00_10_00_73};\r\n                if (instr_i[6:2] != 5'b0)\r\n                  illegal_instr_o = 1'b1;\r\n\r\n\r\n at the same time an instruction is being decompressed to ebreak and also marked as illegal which cause unique case violation at the next cycle. From our point of view this is a design bug in the riscv_compressed_decoder module which can cause a design instability.\r\n\r\nsuggested fix:\r\n\r\nif (instr_i[11:7] == 5'b0) begin\r\n                // c.ebreak -> ebreak\r\n                if (instr_i[6:2] != 5'b0)\r\n                  illegal_instr_o = 1'b1;\r\n                else\r\n                  instr_o = {32'h00_10_00_73};\r\n",
+    "labels": [
+      "Type:Bug"
+    ],
+    "state": "closed",
+    "created_at": "2019-09-05T13:07:42Z",
+    "updated_at": "2019-09-20T15:18:14Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 169
+  },
+  "base_commit": "1b2b29bcbda7ad98208c4bcdd1da6f4a4cdbb26f",
+  "head_commit": "cbd0dabf3ae1f74f185def42121d018bb3cee0ed",
+  "base_ref": "master",
+  "task_id": "openhwgroup_cv32e40p_165_150",
+  "lec_status": "useful_pass"
+}

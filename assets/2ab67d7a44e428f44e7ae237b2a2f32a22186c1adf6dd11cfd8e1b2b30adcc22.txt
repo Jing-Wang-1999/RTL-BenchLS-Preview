@@ -1,0 +1,16 @@
+# Double-precision floating-point unit project
+Implement the seven-module non-pipelined fpu project described by the original Readme.txt and Double_FPU.PDF in specification/. The separate pipeline directory is another design and is excluded. The original documentation supplies the IEEE binary64 representation, supported arithmetic, rounding modes, denormal handling, exceptional values, architecture and enable/ready API.
+
+Curator port/configuration clarification from the pinned release:
+- fpu in fpu_double.v is the top. Required arithmetic helpers are fpu_add, fpu_sub, fpu_mul, fpu_div, fpu_round and fpu_exceptions, with their declaration-only interfaces. Inputs opa/opb and output out are 64-bit IEEE binary64 encodings. fpu_op=0/1/2/3 selects add/subtract/multiply/divide; other opcodes are outside this case. rmode=0 is nearest ties-to-even, 1 toward zero, 2 toward positive infinity, 3 toward negative infinity.
+- All state uses rising clk and synchronous active-high rst. Assert reset across at least two edges before work. Hold operands, operation and rounding mode stable while asserting enable for two clock edges, then deassert it. Do not overlap operations; wait for ready before starting the next. ready and top output/status registers clear on reset. Completed output is held until the next operation result. The original 20/21/24/71-cycle arithmetic latencies are descriptive; the qualified upstream transactions allow 80 clocks after enable is deasserted, so a different internal pipeline is permitted within that finite completion budget.
+- Preserve the document's binary64 rounding, denormal support, signed arithmetic and output status signals underflow/overflow/inexact/exception/invalid. The private upstream bench compares 50 binary64 results across all four operations and rounding modes; it does not independently establish exhaustive status-flag or IEEE754 conformance. The PDF's prose binary exponent for 3.5 omits a zero: the correct stored 11-bit exponent is 10000000000, as its accompanying diagram shows.
+- Internal arithmetic helper boundaries remain part of the required project closure; implement their roles in operand alignment, arithmetic, normalization, rounding and exception selection. Their state encodings are unrestricted. No vendor primitive is required by the pinned implementation.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

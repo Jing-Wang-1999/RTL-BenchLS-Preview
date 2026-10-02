@@ -1,0 +1,47 @@
+always @ *
+begin
+    next_state_r = state_q;
+
+    case (state_q)
+    //-----------------------------------------
+    // STATE_FLUSH
+    //-----------------------------------------
+    STATE_FLUSH :
+    begin
+        if (invalidate_q)
+            next_state_r = STATE_LOOKUP;
+        else if (flush_addr_q == {(ICACHE_TAG_REQ_LINE_W){1'b1}})
+            next_state_r = STATE_LOOKUP;
+    end
+    //-----------------------------------------
+    // STATE_LOOKUP
+    //-----------------------------------------
+    STATE_LOOKUP :
+    begin
+        // Tried a lookup but no match found
+        if (lookup_valid_q && !tag_hit_any_w)
+            next_state_r = STATE_REFILL;
+        // Invalidate a line / flush cache
+        else if (req_invalidate_i || req_flush_i)
+            next_state_r = STATE_FLUSH;
+    end
+    //-----------------------------------------
+    // STATE_REFILL
+    //-----------------------------------------
+    STATE_REFILL :
+    begin
+        // End of refill
+        if (axi_rvalid_i && axi_rlast_i)
+            next_state_r = STATE_RELOOKUP;
+    end
+    //-----------------------------------------
+    // STATE_RELOOKUP
+    //-----------------------------------------
+    STATE_RELOOKUP :
+    begin
+        next_state_r = STATE_LOOKUP;
+    end
+    default:
+        ;
+   endcase
+end

@@ -1,0 +1,11 @@
+always @ (posedge clk or posedge reset)
+begin
+   if (reset)
+      wr_256 <= 1'b0;
+   else if (key_start)
+      wr_256 <= 1'b0;
+   else if (sbox_out_valid && (state[1:0] == GENKEY_256))
+      wr_256 <= 1'b1;
+   else if (sbox_out_valid)
+      wr_256 <= 1'b0;
+end

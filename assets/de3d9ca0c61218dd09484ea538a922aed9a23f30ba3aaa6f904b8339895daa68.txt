@@ -1,0 +1,54 @@
+module origen_015087(
+    input interr,
+    input derecha,
+    input clk,
+    input reset,
+    output reg [3:0] dir2,
+    output reg [3:0] punteroOut
+);
+
+    // State encoding
+    parameter [3:0] inicio = 4'b0000,
+                    clk_segundos = 4'b0001,
+                    clk_minutos = 4'b0010,
+                    clk_horas = 4'b0011,
+                    dia = 4'b0100,
+                    mes = 4'b0101,
+                    year = 4'b0110,
+                    timer_segundos = 4'b0111,
+                    timer_minutos = 4'b1000,
+                    timer_horas = 4'b1001;
+
+    reg [3:0] state, next_state;
+
+    // Next state logic
+    always @(*) begin
+        case(state)
+            inicio: next_state = interr ? clk_segundos : inicio;
+            clk_segundos: next_state = derecha ? clk_minutos : clk_segundos;
+            clk_minutos: next_state = derecha ? clk_horas : clk_minutos;
+            clk_horas: next_state = derecha ? dia : clk_horas;
+            dia: next_state = derecha ? mes : dia;
+            mes: next_state = derecha ? year : mes;
+            year: next_state = derecha ? timer_segundos : year;
+            timer_segundos: next_state = derecha ? timer_minutos : timer_segundos;
+            timer_minutos: next_state = derecha ? timer_horas : timer_minutos;
+            timer_horas: next_state = derecha ? clk_segundos : timer_horas;
+            default: next_state = inicio;
+        endcase
+    end
+
+    // State update and output logic
+    always @(posedge clk or posedge reset) begin
+        if (reset || !interr) begin
+            state <= inicio;
+            dir2 <= 4'b0000;
+            punteroOut <= 4'b0000;
+        end else begin
+            state <= next_state;
+            dir2 <= next_state;
+            punteroOut <= next_state;
+        end
+    end
+
+endmodule

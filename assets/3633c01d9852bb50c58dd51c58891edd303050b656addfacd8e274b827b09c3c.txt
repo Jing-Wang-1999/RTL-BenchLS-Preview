@@ -1,0 +1,48 @@
+# OpenRISC tightly-coupled-memory instruction fetch controller
+
+Implement `mor1kx_fetch_tcm_prontoespresso`. Default OPTION_OPERAND_WIDTH32, OPTION_RF_ADDR_WIDTH5, OPTION_RESET_PC=0x00000100. Rising clk and **synchronous** active-high rst; the default OR_ASYNC_RST macro is empty. This is a pipelined instruction-fetch stage, not an entire processor. The interface includes instruction bus response inputs and execution/debug coordination inputs; no external input is internally constrained or latched unless described below.
+
+Inputs: clk,rst,ibus_err_i,ibus_ack_i,ibus_dat_i[31:0],padv_i,branch_occur_i,branch_dest_i[31:0],du_restart_i,du_restart_pc_i[31:0],fetch_take_exception_branch_i,execute_waiting_i,du_stall_i,stepping_i,flag_i,flag_clear_i,flag_set_i. Outputs: ibus_adr_o[31:0],ibus_req_o,decode_insn_o[31:0],fetched_pc_o[31:0],fetch_ready_o,fetch_rfa_adr_o[4:0],fetch_rfb_adr_o[4:0],fetch_rf_re_o,pc_fetch_next_o[31:0],decode_except_ibus_err_o,fetch_sleep_o.
+
+The following abstract registers define the precise cycle behavior; implementations can choose any equivalent architecture. All named registers reset0 except P=0x100 and D=NOP=0x14000000. D is decode_insn_o; F is fetched_pc_o; E is decode_except_ibus_err_o. P is current bus PC; A is address-pipelined flag; Q is bus-request state; QR previous external bus request; J0 just-took-branch; J1/J2 one/two-edge delays of J0; IBUF a32-bit instruction buffer; B buffered-valid; JD jump-in-decode; PJ push-buffered-jump; S sleep; XR delayed exception-branch input; WR delayed execute_waiting_i; WA delayed waiting-rise; W1/W2 successive delays of a one-cycle wait; H a4-bit padv history. Outputs fetch_sleep_o=S. An additional previous fetch_ready register has no externally observable effect.
+
+Define combinational terms using current inputs/pre-edge registers:
+
+- fall=!execute_waiting_i and WR; rise=execute_waiting_i and !WR; single=WA and !execute_waiting_i; long=({H,padv_i}==binary10000) and execute_waiting_i.
+- Sequential PC=P+4 modulo2^32. ibus_adr_o=pc_fetch_next_o=(A ? P+4:P).
+- Selected instruction=B ? IBUF:ibus_dat_i. Register addresses are selected bits20:16 and15:11. fetch_rf_re_o=(ibus_ack_i or fall) and (padv_i or stepping_i).
+- Branch prediction T is0 unless (ibus_ack_i and !J0) or B. Then inspect selected bits31:26: opcodes0,1,17,18,8,9 =>T1; opcode3 BNF=>!(flag_i or flag_set_i) or flag_clear_i; opcode4 BF=>!(!flag_i or flag_clear_i) or flag_set_i; othersT0. This is fetch-side branch classification only, not ISA execution.
+- buffered_jump=B and T. ibus_req_o=(Q and !(stepping_i and ibus_ack_i)) or (fall and !buffered_jump) or XR. first=ibus_req_o and !QR; take=(branch_occur_i and padv_i) or fetch_take_exception_branch_i.
+- fetch_ready_o=((ibus_ack_i or B) and !J0 and !W1 and !du_stall_i) or PJ. Ready can therefore be high without a new bus request when a buffered instruction advances.
+- will_sleep=(ibus_dat_i==0) and padv_i and ibus_ack_i and ibus_req_o and ((!JD and !J0) or J1).
+
+At every nonreset clk edge apply each independent row below concurrently, using old values throughout. Priority within each row is from left to right; unspecified cases hold.
+
+| Register | Next value |
+|---|---|
+| P,J0 | If du_restart_i: P=du_restart_pc_i,J0=0. Else if fetch_take_exception_branch_i: P=branch_dest_i,J0=1. Else if branch_occur_i and padv_i: same branch update. Else if ibus_ack_i and (padv_i or (W2 and {H[0],padv_i}!=00)) and !single and !stepping_i: P=P+4,J0=0. Else if rise and ibus_ack_i and !J0: P=P+4, hold J0. Else if J0: J0=0, hold P. Else if long: P=F+4, hold J0. |
+| J1,J2 | J1=J0,J2=old J1; J2 is retained history without output effect |
+| Q | 0 if (stepping_i and ibus_ack_i), else0 if du_stall_i, else0 if ibus_err_i or E, else0 if S, else0 if execute_waiting_i, else0 if buffered_jump, else1 |
+| QR | ibus_req_o |
+| A | 0 if ibus_err_i or E or fetch_take_exception_branch_i; else1 if first; else0 if take; else1 if J0; else1 if W1; else0 if !Q; otherwise hold |
+| WR,WA,W1,W2,H | WR=execute_waiting_i; WA=rise; W1=single; W2=old W1; H={old H[2:0],padv_i} |
+| IBUF | capture ibus_dat_i if rise and ibus_ack_i and !J0 |
+| B | set1 if rise and ibus_ack_i and !J0; else clear0 on fall; else clear0 on fetch_take_exception_branch_i; else clear0 on long |
+| PJ | buffered_jump and fall |
+| XR | fetch_take_exception_branch_i |
+| JD | clear0 if S; else set1 if !JD and T and ibus_ack_i; otherwise0 |
+| S | clear0 if fetch_take_exception_branch_i; else set1 if will_sleep; otherwise hold |
+| E | clear0 if (((padv_i or fetch_take_exception_branch_i) and branch_occur_i) or du_stall_i); else capture ibus_err_i if Q; otherwise hold |
+
+D,F update independently with the following ordered priority:
+
+1. If S or (du_stall_i and !execute_waiting_i): D=NOP, F holds.
+2. Else if fetch_take_exception_branch_i and !du_stall_i: D=NOP, F holds.
+3. Else if (padv_i or stepping_i) and ibus_ack_i and (ibus_req_o or stepping_i) and ((!JD and !J0) or J1) and !(single or W1): D=ibus_dat_i,F=P.
+4. Else if W2 and !execute_waiting_i: D=ibus_dat_i,F=P.
+5. Else if fall and B: D=IBUF,F=F+4.
+6. Else if (JD or branch_occur_i) and padv_i: D=NOP,F holds.
+7. Else if fetch_take_exception_branch_i or PJ: D=NOP,F holds.
+8. Otherwise both hold.
+
+A bus error blocks later Q requests and latches E until the specified branch/debug condition. Debug restart updates P but does not independently clear every queue/sleep flag. A zero instruction acts as sleep sentinel when accepted, and exception branch wakes it. Branch, one-cycle-wait and long-stall special cases above are essential to matching pipeline timing. There is no inferred instruction-valid qualifier beyond the explicit output equations, and no requirement to zero inactive bus/address outputs. Reset-first operation is qualified; optional asynchronous reset or different operand geometry is not.

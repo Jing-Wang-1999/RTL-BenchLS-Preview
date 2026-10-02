@@ -1,0 +1,36 @@
+### Instruction for Verilog Code Generation
+
+1. **Primary Function:**
+   - The Verilog module implements a timer, which can be configured to count down from a specified value, generate an interrupt upon timeout, and allows for read/write access to various control and status registers.
+
+2. **Key Control Flow Points:**
+   - The timer starts counting when a start command is issued and stops counting under specific conditions (stop command, reload trigger, or counter reaching zero in non-continuous mode).
+   - On reset, all registers and internal states are initialized to default values.
+   - Write operations to specific addresses update control, period, snapshot, and status registers.
+   - The timer asserts an interrupt request signal (irq) if the counter reaches zero and interrupt is enabled.
+
+3. **Important Data Processing and Signal Interactions:**
+   - The internal 64-bit counter decrements with each clock cycle when active. When it reaches zero, it reloads from the period registers if configured in continuous mode.
+   - The period is set using four 16-bit registers which collectively form the 64-bit load value.
+   - Write strobes to the corresponding period registers trigger the reload of the counter.
+   - Snapshot registers capture the current value of the counter when a snapshot command is issued.
+   - The read multiplexer (using address) outputs data from various registers: period registers, snapshot value, control register, and status register.
+   - The control register includes bits that control start/stop functionality, continuous mode, and interrupt enable.
+   - Timeout events and the associated irq signal are generated based on counter zero detections and the control register settings.
+
+Using these details, the LLM can generate the Verilog code with the specified functionality, including initializing registers, handling read/write operations, and managing the timer's counting and interrupt generation logic.
+
+Module Interface:
+module configurable_system_timer_d (
+                          address,
+                          chipselect,
+                          clk,
+                          reset_n,
+                          write_n,
+                          writedata,
+                          irq,
+                          readdata
+                       );
+
+Behavioral Clarifications:
+- The 64-bit counter resets to 64'hC34F (decimal 49999) and period_halfword_0 resets to 16'hC34F; period_halfword_1/2/3 reset to zero. Address map: 0=status, 1=control (4-bit), 2-5=period halfwords 0-3, 6-9=snapshot halfwords 0-3. Control register bit[3]=stop, bit[2]=start, bit[1]=continuous mode, bit[0]=interrupt enable. Writing to snapshot address captures the running counter value.

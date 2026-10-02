@@ -1,0 +1,19 @@
+always @(posedge clk)
+begin
+	if (rst) begin
+		underflow <= 0;
+		overflow <= 0;
+		inexact <= 0;
+		exception <= 0;
+		invalid <= 0;	   	 
+		out <= 0;
+		end
+	else if (ready_1) begin
+		underflow <= underflow_0;
+		overflow <= overflow_0;
+		inexact <= inexact_0;
+		exception <= exception_0;
+		invalid <= invalid_0; 	
+		out <= except_enable ? out_except : out_round;
+		end
+end

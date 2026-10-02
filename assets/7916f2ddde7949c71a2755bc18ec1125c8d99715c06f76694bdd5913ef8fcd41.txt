@@ -1,0 +1,91 @@
+module autovcoder_090369 (
+    pci_ext_inta_l,
+`ifdef PCI_EXTERNAL_MASTER
+    pci_ext_req_l,
+    pci_ext_gnt_l,
+`else  // PCI_EXTERNAL_MASTER
+`endif  // PCI_EXTERNAL_MASTER
+    pci_ext_clk,
+    pci_ext_reset_l,
+
+    pci_int_a_in_prev,
+    pci_int_a_out_next,
+`ifdef PCI_EXTERNAL_MASTER
+    pci_req_in_prev,
+    pci_req_out_comb,
+    pci_gnt_in_critical,
+    pci_gnt_in_prev,
+    pci_gnt_out_comb,
+`else  // PCI_EXTERNAL_MASTER
+`endif  // PCI_EXTERNAL_MASTER
+
+    pci_clk_in,
+    pci_clk_out,
+    pci_clk_oe,
+    pci_reset_l_in,
+    pci_reset_l_out,
+    pci_reset_oe,
+    pci_clk,
+    pci_reset_comb
+);
+
+  inout pci_ext_inta_l;
+`ifdef PCI_EXTERNAL_MASTER
+  inout pci_ext_req_l;
+  inout pci_ext_gnt_l;
+`endif  // PCI_EXTERNAL_MASTER
+  inout pci_ext_clk;
+  inout pci_ext_reset_l;
+
+  input pci_int_a_out_next;
+  output pci_int_a_in_prev;
+`ifdef PCI_EXTERNAL_MASTER
+  input pci_req_out_comb;
+  output pci_req_in_prev;
+  output pci_gnt_in_critical;
+  output pci_gnt_in_prev;
+  input pci_gnt_out_comb;
+`endif  // PCI_EXTERNAL_MASTER
+
+  output pci_clk_in;
+  input pci_clk_out;
+  input pci_clk_oe;
+  output pci_reset_l_in;
+  input pci_reset_l_out;
+  input pci_reset_oe;
+  input pci_clk, pci_reset_comb;
+
+  wire discard_req_in, discard_int_in;
+  wire discard_clock_prev, discard_reset_prev;
+
+  wire pci_req_in_l_prev, pci_gnt_in_l_prev, pci_int_a_in_l_prev;
+  assign pci_req_in_prev   = ~pci_req_in_l_prev;
+  assign pci_gnt_in_prev   = ~pci_gnt_in_l_prev;
+  assign pci_int_a_in_prev = ~pci_int_a_in_l_prev;
+
+  // this pad order follows the suggested pinout given in the PCI Revision 2.2
+  // specification figure 4-9.  Pads start in the middle left and count up.
+
+`ifdef PCI_EXTERNAL_MASTER
+  pci_registered_io_pad req (
+      .pci_clk           (pci_clk),
+      .pci_ad_in_comb    (discard_req_in),
+      .pci_ad_in_prev    (pci_req_in_l_prev),
+      .pci_ad_out_next   (1'b0),
+      .pci_ad_out_en_next(pci_ad_out_en),
+      .pci_ad_out_oe_comb(pci_req_out_comb),
+      .pci_ad_ext        (pci_ext_req_l)
+  );
+  pci_registered_io_pad gnt (
+      .pci_clk           (pci_clk),
+      .pci_ad_in_comb    (pci_gnt_in_critical),
+      .pci_ad_in_prev    (pci_gnt_in_l_prev),
+      .pci_ad_out_next   (1'b0),
+      .pci_ad_out_en_next(pci_ad_out_en),
+      .pci_ad_out_oe_comb(pci_gnt_out_comb),
+      .pci_ad_ext        (pci_ext_gnt_l)
+  );
+`else  // PCI_EXTERNAL_MASTER
+`endif  // PCI_EXTERNAL_MASTER
+endmodule
+

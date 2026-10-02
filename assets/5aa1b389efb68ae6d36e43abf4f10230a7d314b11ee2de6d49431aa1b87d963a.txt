@@ -1,0 +1,29 @@
+{
+  "mode": "SEC",
+  "clocks": [
+    {
+      "name": "clk",
+      "polarity": "posedge"
+    }
+  ],
+  "reset_expression": "rst",
+  "reset_type": "synchronous_active_high",
+  "basis": "golden_design.v:392-401 and 505-531; two positive-edge blocks with synchronous active-high reset",
+  "pitfalls": [
+    "Output metadata and data/last/user are not warm-reset; declaration-initialized values must not be confused with rst-cleared values.",
+    "Independent output header and payload channels; do not constrain payload acceptance to header consumption.",
+    "Input readiness is registered and uses two-slot buffer capacity; avoid an unregistered-ready simplification.",
+    "Busy drops when input frame is complete even if output remains pending.",
+    "Formal candidate comparisons must retain malformed/zero-payload behavior or explicitly publish and justify any domain restriction; qualification needs decision on nonempty-domain limitation.",
+    "Protocol assumptions about holding inputs under backpressure must be declared if used; raw identical-input equivalence may run unconstrained."
+  ],
+  "candidate_id": "large_module.c968f6e9b848b2c3d550",
+  "top_module": "udp_ip_rx",
+  "parameters": {},
+  "rtl_sha256": "bed1fb03cabe705b9757bfa17e262dfc739ccf48700e04c234ebc276a5f527c1",
+  "status": "proposal_not_executed",
+  "qualification_controls": [
+    "golden-versus-identical-golden must prove",
+    "nontrivial observable mutation must fail; timeout or compile failure is not mutation detection"
+  ]
+}

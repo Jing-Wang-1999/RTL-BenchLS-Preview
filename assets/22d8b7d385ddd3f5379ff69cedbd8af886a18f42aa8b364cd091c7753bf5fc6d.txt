@@ -1,0 +1,42 @@
+The Verilog module `ethernet_receive_synchronizer_b` primarily functions to synchronize incoming data and control signals for communication interfaces, ensuring that various error, control, and data signals are correctly managed and propagated.
+
+The module operates based on a clock and reset signal. It registers incoming data and control signals, including `alt_dataout`, `alt_sync`, `alt_disperr`, `alt_ctrldetect`, `alt_errdetect`, `alt_rmfifodatadeleted`, `alt_rmfifodatainserted`, `alt_runlengthviolation`, `alt_patterndetect`, and `alt_runningdisp`. These signals are stored in intermediate registers on each clock cycle when the reset is inactive.
+
+Depending on the `DEVICE_FAMILY` parameter, the module handles data synchronization and error signal management differently:
+1. For device families `STRATIXIIGX`, `ARRIAGX`, `STRATIXV`, and `ARRIAV`, the module outputs synchronized data and error signals (`altpcs_dataout`, `altpcs_disperr`, `altpcs_ctrldetect`, `altpcs_errdetect`, `altpcs_rmfifodatadeleted`, and `altpcs_rmfifodatainserted`) whenever `alt_sync` is high.
+
+2. For device families `STRATIXIV`, `ARRIAIIGX`, `CYCLONEIVGX`, `HARDCOPYIV`, and `ARRIAIIGZ`, the module continuously outputs the registered data and control signals, along with an additional synchronization register `alt_sync_reg2`.
+
+The module also manages a `alt_runlengthviolation_latched` signal, which is updated based on the `alt_sync` and `alt_runlengthviolation` inputs.
+
+The output `altpcs_carrierdetect` is determined by a series of conditional checks against the current state of the internal registers (`alt_dataout_reg1`, `alt_sync_reg1`, `alt_ctrldetect_reg1`, `alt_errdetect_reg1`, `alt_disperr_reg1`, `alt_patterndetect_reg1`, `alt_runningdisp_reg1`, `alt_runlengthviolation_latched`). These checks ensure proper carrier detection and data alignment based on various input signals and conditions.
+
+Module Interface:
+module ethernet_receive_synchronizer_b (
+  input clk,
+  input reset,
+
+  input [7:0] alt_dataout,
+  input alt_sync,
+  input alt_disperr,
+  input alt_ctrldetect,
+  input alt_errdetect,
+  input alt_rmfifodatadeleted,
+  input alt_rmfifodatainserted,
+  input alt_runlengthviolation,
+  input alt_patterndetect,
+  input alt_runningdisp,
+
+  output reg [7:0] altpcs_dataout,
+  output altpcs_sync,
+  output reg altpcs_disperr,
+  output reg altpcs_ctrldetect,
+  output reg altpcs_errdetect,
+  output reg altpcs_rmfifodatadeleted,
+  output reg altpcs_rmfifodatainserted,
+  output reg altpcs_carrierdetect
+);
+
+Behavioral Clarifications:
+- The default DEVICE_FAMILY parameter is "ARRIAGX", which selects the STRATIXIIGX/ARRIAGX/STRATIXV/ARRIAV behavior branch.
+- On reset in the ARRIAGX family branch, `altpcs_disperr` and `altpcs_errdetect` reset to 1 (not 0), while `altpcs_dataout`, `altpcs_ctrldetect`, `altpcs_rmfifodatadeleted`, and `altpcs_rmfifodatainserted` reset to 0. `altpcs_carrierdetect` resets to 1.

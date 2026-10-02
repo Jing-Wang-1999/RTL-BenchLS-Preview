@@ -1,0 +1,5 @@
+# Memory-mapped output register (`rtlpp_11479`)
+
+Inputs are `address[1:0]`, scalar `chipselect`, `clk`, active-low asynchronous `reset_n`, active-low `write_n`, and `writedata[31:0]`. Outputs are `out_port[31:0]` and `readdata[31:0]`. There are no parameters.
+
+Pulling `reset_n` low asynchronously clears the 32-bit stored value. At each rising clock edge otherwise, the value becomes `writedata` only when `chipselect=1`, `write_n=0`, and `address=0`; it holds for every other condition. `out_port` continuously exposes the stored value. `readdata` continuously exposes it whenever `address=0`, independent of `chipselect`, and is zero for addresses 1–3. The internal `clk_en` wire is tied high and has no behavioral effect.

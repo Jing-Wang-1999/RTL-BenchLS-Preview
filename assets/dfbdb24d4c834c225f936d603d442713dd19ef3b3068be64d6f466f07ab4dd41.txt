@@ -1,0 +1,432 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module sdrc_core 
+           (
+		clk,
+                pad_clk,
+		reset_n,
+                sdr_width,
+		cfg_colbits,
+
+		
+		app_req,	        
+		app_req_addr,	        
+		app_req_len,	        
+		app_req_wrap,	        
+		app_req_wr_n,	        
+		app_req_ack,	        
+		cfg_req_depth,	        
+		
+		app_wr_data,
+                app_wr_en_n,
+		app_last_wr,
+
+		app_rd_data,
+		app_rd_valid,
+		app_last_rd,
+		app_wr_next_req,
+		sdr_init_done,
+		app_req_dma_last,
+
+		
+		sdr_cs_n,
+		sdr_cke,
+		sdr_ras_n,
+		sdr_cas_n,
+		sdr_we_n,
+		sdr_dqm,
+		sdr_ba,
+		sdr_addr, 
+		pad_sdr_din,
+		sdr_dout,
+		sdr_den_n,
+
+		
+		cfg_sdr_en,
+		cfg_sdr_mode_reg,
+		cfg_sdr_tras_d,
+		cfg_sdr_trp_d,
+		cfg_sdr_trcd_d,
+		cfg_sdr_cas,
+		cfg_sdr_trcar_d,
+		cfg_sdr_twr_d,
+		cfg_sdr_rfsh,
+		cfg_sdr_rfmax);
+  
+parameter  APP_AW   = 26;  
+parameter  APP_DW   = 32;  
+parameter  APP_BW   = 4;   
+parameter  APP_RW   = 9;   
+
+parameter  SDR_DW   = 16;  
+parameter  SDR_BW   = 2;   
+             
+
+
+
+
+input                   clk                 ; 
+input                   pad_clk             ; 
+input                   reset_n             ; 
+input [1:0]             sdr_width           ; 
+input [1:0]             cfg_colbits         ; 
+
+
+
+
+
+input 			app_req             ; 
+input [APP_AW-1:0] 	app_req_addr        ; 
+input 			app_req_wr_n        ; 
+input                   app_req_wrap        ; 
+output                  app_req_ack         ; 
+		
+input [APP_DW-1:0] 	app_wr_data         ; 
+output 		        app_wr_next_req     ; 
+input [APP_BW-1:0] 	app_wr_en_n         ; 
+output                  app_last_wr         ; 
+output [APP_DW-1:0] 	app_rd_data         ; 
+output                  app_rd_valid        ; 
+output                  app_last_rd         ; 
+		
+
+
+
+output                  sdr_cke             ; 
+output 			sdr_cs_n            ; 
+output                  sdr_ras_n           ; 
+output                  sdr_cas_n           ; 
+output			sdr_we_n            ; 
+output [SDR_BW-1:0] 	sdr_dqm             ; 
+output [1:0] 		sdr_ba              ; 
+output [12:0] 		sdr_addr            ; 
+input [SDR_DW-1:0] 	pad_sdr_din         ; 
+output [SDR_DW-1:0] 	sdr_dout            ; 
+output [SDR_BW-1:0] 	sdr_den_n           ; 
+
+
+
+
+output                  sdr_init_done       ; 
+input [3:0] 		cfg_sdr_tras_d      ; 
+input [3:0]             cfg_sdr_trp_d       ; 
+input [3:0]             cfg_sdr_trcd_d      ; 
+input 			cfg_sdr_en          ; 
+input [1:0] 		cfg_req_depth       ; 
+input [APP_RW-1:0]	app_req_len         ; 
+input [12:0] 		cfg_sdr_mode_reg    ;
+input [2:0] 		cfg_sdr_cas         ; 
+input [3:0] 		cfg_sdr_trcar_d     ; 
+input [3:0]             cfg_sdr_twr_d       ; 
+input [12-1 : 0] cfg_sdr_rfsh;
+input [3 -1 : 0] cfg_sdr_rfmax;
+input                   app_req_dma_last;    
+
+
+
+   
+
+wire [4-1:0]r2b_req_id;
+wire [1:0] 		r2b_ba;
+wire [12:0] 		r2b_raddr;
+wire [12:0] 		r2b_caddr;
+wire [(1'b0 == 1'b0) ? 6 : 12-1:0] 	r2b_len;
+
+
+wire [4-1:0]b2x_id;
+wire [1:0] 		b2x_ba;
+wire [12:0] 		b2x_addr;
+wire [(1'b0 == 1'b0) ? 6 : 12-1:0] 	b2x_len;
+wire [1:0] 		b2x_cmd;
+
+
+wire [3:0] 		x2b_pre_ok;
+wire [4-1:0]xfr_id;
+wire [APP_DW-1:0] 	app_rd_data;
+wire 			sdr_cs_n, sdr_cke, sdr_ras_n, sdr_cas_n, sdr_we_n; 
+wire [SDR_BW-1:0] 	sdr_dqm;
+wire [1:0] 		sdr_ba;
+wire [12:0] 		sdr_addr;
+wire [SDR_DW-1:0] 	sdr_dout;
+wire [SDR_DW-1:0] 	sdr_dout_int;
+wire [SDR_BW-1:0] 	sdr_den_n;
+wire [SDR_BW-1:0] 	sdr_den_n_int;
+
+wire [1:0] 		xfr_bank_sel;
+
+wire [APP_AW-1:0]        app_req_addr;
+wire [APP_RW-1:0]        app_req_len;
+
+wire [APP_DW-1:0]        app_wr_data;
+wire [SDR_DW-1:0]        a2x_wrdt       ;
+wire [APP_BW-1:0]        app_wr_en_n;
+wire [SDR_BW-1:0]        a2x_wren_n;
+
+
+wire [SDR_DW-1:0]        x2a_rddt;
+
+
+ 
+
+assign sdr_den_n = sdr_den_n_int ; 
+assign sdr_dout  = sdr_dout_int ;
+
+
+
+
+
+reg [SDR_DW-1:0] pad_sdr_din1;
+reg [SDR_DW-1:0] pad_sdr_din2;
+always@(posedge pad_clk) begin
+   pad_sdr_din1 <= pad_sdr_din;
+end
+
+always@(posedge clk) begin
+   pad_sdr_din2 <= pad_sdr_din1;
+end
+
+
+   
+   
+   
+   
+
+sdrc_req_gen #(.SDR_DW(SDR_DW) , .SDR_BW(SDR_BW)) u_req_gen (
+          .clk                (clk          ),
+          .reset_n            (reset_n            ),
+	  .cfg_colbits        (cfg_colbits        ),
+          .sdr_width          (sdr_width          ),
+
+	
+          .r2x_idle           (r2x_idle           ),
+
+	
+          .req                (app_req            ),
+          .req_id             (4'b0               ),
+          .req_addr           (app_req_addr       ),
+          .req_len            (app_req_len        ),
+          .req_wrap           (app_req_wrap       ),
+          .req_wr_n           (app_req_wr_n       ),
+          .req_ack            (app_req_ack        ),
+		
+       
+          .r2b_req            (r2b_req            ),
+          .r2b_req_id         (r2b_req_id         ),
+          .r2b_start          (r2b_start          ),
+          .r2b_last           (r2b_last           ),
+          .r2b_wrap           (r2b_wrap           ),
+          .r2b_ba             (r2b_ba             ),
+          .r2b_raddr          (r2b_raddr          ),
+          .r2b_caddr          (r2b_caddr          ),
+          .r2b_len            (r2b_len            ),
+          .r2b_write          (r2b_write          ),
+          .b2r_ack            (b2r_ack            ),
+          .b2r_arb_ok         (b2r_arb_ok         )
+     );
+
+   
+   
+   
+   
+   
+
+sdrc_bank_ctl #(.SDR_DW(SDR_DW) ,  .SDR_BW(SDR_BW)) u_bank_ctl (
+          .clk                (clk          ),
+          .reset_n            (reset_n            ),
+          .a2b_req_depth      (cfg_req_depth      ),
+			      
+      
+          .r2b_req            (r2b_req            ),
+          .r2b_req_id         (r2b_req_id         ),
+          .r2b_start          (r2b_start          ),
+          .r2b_last           (r2b_last           ),
+          .r2b_wrap           (r2b_wrap           ),
+          .r2b_ba             (r2b_ba             ),
+          .r2b_raddr          (r2b_raddr          ),
+          .r2b_caddr          (r2b_caddr          ),
+          .r2b_len            (r2b_len            ),
+          .r2b_write          (r2b_write          ),
+          .b2r_arb_ok         (b2r_arb_ok         ),
+          .b2r_ack            (b2r_ack            ),
+			      
+      
+          .b2x_idle           (b2x_idle           ),
+          .b2x_req            (b2x_req            ),
+          .b2x_start          (b2x_start          ),
+          .b2x_last           (b2x_last           ),
+          .b2x_wrap           (b2x_wrap           ),
+          .b2x_id             (b2x_id             ),
+          .b2x_ba             (b2x_ba             ),
+          .b2x_addr           (b2x_addr           ),
+          .b2x_len            (b2x_len            ),
+          .b2x_cmd            (b2x_cmd            ),
+          .x2b_ack            (x2b_ack            ),
+		     
+      
+          .b2x_tras_ok        (b2x_tras_ok        ),
+          .x2b_refresh        (x2b_refresh        ),
+          .x2b_pre_ok         (x2b_pre_ok         ),
+          .x2b_act_ok         (x2b_act_ok         ),
+          .x2b_rdok           (x2b_rdok           ),
+          .x2b_wrok           (x2b_wrok           ),
+
+      
+          .sdr_req_norm_dma_last(app_req_dma_last),
+          .xfr_bank_sel       (xfr_bank_sel       ),
+
+       
+          .tras_delay         (cfg_sdr_tras_d     ),
+          .trp_delay          (cfg_sdr_trp_d      ),
+          .trcd_delay         (cfg_sdr_trcd_d     )
+      );
+   
+   
+   
+   
+   
+   
+   
+
+sdrc_xfr_ctl #(.SDR_DW(SDR_DW) ,  .SDR_BW(SDR_BW)) u_xfr_ctl (
+          .clk                (clk          ),
+          .reset_n            (reset_n            ),
+			    
+      
+          .r2x_idle           (r2x_idle           ),
+          .b2x_idle           (b2x_idle           ),
+          .b2x_req            (b2x_req            ),
+          .b2x_start          (b2x_start          ),
+          .b2x_last           (b2x_last           ),
+          .b2x_wrap           (b2x_wrap           ),
+          .b2x_id             (b2x_id             ),
+          .b2x_ba             (b2x_ba             ),
+          .b2x_addr           (b2x_addr           ),
+          .b2x_len            (b2x_len            ),
+          .b2x_cmd            (b2x_cmd            ),
+          .x2b_ack            (x2b_ack            ),
+		     
+       
+          .b2x_tras_ok        (b2x_tras_ok        ),
+          .x2b_refresh        (x2b_refresh        ),
+          .x2b_pre_ok         (x2b_pre_ok         ),
+          .x2b_act_ok         (x2b_act_ok         ),
+          .x2b_rdok           (x2b_rdok           ),
+          .x2b_wrok           (x2b_wrok           ),
+		    
+       
+          .sdr_cs_n           (sdr_cs_n           ),
+          .sdr_cke            (sdr_cke            ),
+          .sdr_ras_n          (sdr_ras_n          ),
+          .sdr_cas_n          (sdr_cas_n          ),
+          .sdr_we_n           (sdr_we_n           ),
+          .sdr_dqm            (sdr_dqm            ),
+          .sdr_ba             (sdr_ba             ),
+          .sdr_addr           (sdr_addr           ),
+          .sdr_din            (pad_sdr_din2       ),
+          .sdr_dout           (sdr_dout_int       ),
+          .sdr_den_n          (sdr_den_n_int      ),
+      
+          .x2a_rdstart        (x2a_rdstart        ),
+          .x2a_wrstart        (x2a_wrstart        ),
+          .x2a_id             (xfr_id             ),
+          .x2a_rdlast         (x2a_rdlast         ),
+          .x2a_wrlast         (x2a_wrlast         ),
+          .a2x_wrdt           (a2x_wrdt           ),
+          .a2x_wren_n         (a2x_wren_n         ),
+          .x2a_wrnext         (x2a_wrnext         ),
+          .x2a_rddt           (x2a_rddt           ),
+          .x2a_rdok           (x2a_rdok           ),
+          .sdr_init_done      (sdr_init_done      ),
+			    
+      
+          .sdram_enable       (cfg_sdr_en         ),
+          .sdram_mode_reg     (cfg_sdr_mode_reg   ),
+		    
+      
+          .xfr_bank_sel       (xfr_bank_sel       ),
+
+      
+          .cas_latency        (cfg_sdr_cas        ),
+          .trp_delay          (cfg_sdr_trp_d      ),
+          .trcar_delay        (cfg_sdr_trcar_d    ),
+          .twr_delay          (cfg_sdr_twr_d      ),
+          .rfsh_time          (cfg_sdr_rfsh       ),
+          .rfsh_rmax          (cfg_sdr_rfmax      )
+    );
+   
+   
+   
+   
+   
+   
+   
+   
+   
+sdrc_bs_convert #(.SDR_DW(SDR_DW) ,  .SDR_BW(SDR_BW)) u_bs_convert (
+          .clk                (clk          ),
+          .reset_n            (reset_n            ),
+          .sdr_width          (sdr_width          ),
+
+   
+          
+          .x2a_rdstart        (x2a_rdstart        ),
+          .x2a_rdlast         (x2a_rdlast         ),
+          .x2a_rdok           (x2a_rdok           ),
+	  
+          .x2a_rddt           (x2a_rddt           ),
+
+          
+          .x2a_wrstart        (x2a_wrstart        ),
+          .x2a_wrlast         (x2a_wrlast         ),
+          .x2a_wrnext         (x2a_wrnext         ),
+
+          
+          .a2x_wrdt           (a2x_wrdt           ),
+          .a2x_wren_n         (a2x_wren_n         ),
+
+   
+
+   
+          .app_wr_data        (app_wr_data        ),
+          .app_wr_en_n        (app_wr_en_n        ),
+          .app_wr_next        (app_wr_next_req    ),
+	  .app_last_wr        (app_last_wr        ),
+          .app_rd_data        (app_rd_data        ),
+          .app_rd_valid       (app_rd_valid       ),
+	  .app_last_rd        (app_last_rd        )
+
+       );   
+   
+endmodule 

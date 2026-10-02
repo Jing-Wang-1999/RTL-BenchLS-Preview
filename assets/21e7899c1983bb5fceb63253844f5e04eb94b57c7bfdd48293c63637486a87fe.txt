@@ -1,0 +1,72 @@
+module origen_162366(
+    input [1:0] Input,
+    input [3:0] Present_State,
+    output reg [3:0] Next_State
+);
+
+always @(*) begin
+    case (Present_State)
+        4'b1111: begin
+            case (Input)
+                2'b10: Next_State = 4'b0100;
+                2'b01: Next_State = 4'b0000;
+                default: Next_State = 4'b1111;
+            endcase
+        end
+        4'b0100: begin
+            case (Input)
+                2'b10: Next_State = 4'b0001;
+                2'b01: Next_State = 4'b0101;
+                default: Next_State = 4'b1111;
+            endcase
+        end
+        4'b0101: begin
+            case (Input)
+                2'b10: Next_State = 4'b0010;
+                2'b01: Next_State = 4'b0110;
+                default: Next_State = 4'b1111;
+            endcase
+        end
+        4'b0110: begin
+            case (Input)
+                2'b10: Next_State = 4'b0111;
+                2'b01: Next_State = 4'b0011;
+                default: Next_State = 4'b1111;
+            endcase
+        end
+        4'b0111: begin
+            case (Input)
+                2'b10, 2'b01: Next_State = 4'b0111;
+                default: Next_State = 4'b1111;
+            endcase
+        end
+        4'b0000: begin
+            case (Input)
+                2'b10, 2'b01: Next_State = 4'b0001;
+                default: Next_State = 4'b1111;
+            endcase
+        end
+        4'b0001: begin
+            case (Input)
+                2'b10, 2'b01: Next_State = 4'b0010;
+                default: Next_State = 4'b1111;
+            endcase
+        end
+        4'b0010: begin
+            case (Input)
+                2'b10, 2'b01: Next_State = 4'b0011;
+                default: Next_State = 4'b1111;
+            endcase
+        end
+        4'b0011: begin
+            case (Input)
+                2'b10: Next_State = 4'b0100;
+                2'b01: Next_State = 4'b0000;
+                default: Next_State = 4'b1111;
+            endcase
+        end
+        default: Next_State = 4'b1111;
+    endcase
+end
+
+endmodule

@@ -1,0 +1,11 @@
+always @(negedge ECLK)
+  begin
+    if (rst_i)
+    begin
+      ta_fld <= 1'b0;
+    end
+    else if (sel_cra & we_i) // write to cra bit 4 (force load strobe)
+      ta_fld <= DBi[4];
+    else // timer is reloaded when TAHI is written and counter not running
+      ta_fld <= sel_i & adr_tahi & we_i & ~cra_strt;
+  end

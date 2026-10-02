@@ -1,0 +1,21 @@
+The module implements an 8-bit equality decoder with an enable signal. It maps a 3-bit input data value to a corresponding 8-bit output, where exactly one output bit is high when enabled.
+
+**Inputs:**
+- `data` (3 bits): Selects which output line to assert.
+- `enable` (1 bit): Global enable. When high, the decoder is active; when low, all outputs are driven low.
+
+**Outputs:**
+- `eq` (8 bits): The one-hot decoded output. The bit position corresponds to the binary value of the `data` input.
+
+**Function:**
+When the `enable` signal is high:
+- The output `eq` is set to a one-hot encoding of the `data` input. Specifically, `eq[i]` is high if and only if the unsigned integer value of `data` equals `i`.
+- All other bits of `eq` are low.
+When the `enable` signal is low:
+- All bits of the `eq` output are driven low, regardless of the `data` input.
+
+**Internal Logic:**
+The decoder is built from eight parallel combinatorial cells. Each cell corresponds to one of the eight possible input patterns (000 through 111). Each cell generates a single-bit output that is high only when two conditions are met simultaneously: 1) the `enable` signal is high, and 2) each bit of the `data` input matches the specific pattern for that cell (a match can be for the data bit to be either 0 or 1, as defined by the pattern). The outputs of these cells are assembled to form the final 8-bit bus.
+
+**Allowed Sub-modules:**
+Only basic combinatorial logic gates (AND, NOT) and wiring are permitted. No sequential elements (like flip-flops) or arithmetic blocks are used. The implementation is purely combinatorial and level-sensitive.

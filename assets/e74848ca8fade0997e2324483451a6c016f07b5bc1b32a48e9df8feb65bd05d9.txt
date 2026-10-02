@@ -1,0 +1,74 @@
+module rtlpp_02687(
+    input wire afe_ctrl,    
+    input wire clock,       
+    input wire [4:0] cpu_addr,    
+    input wire [7:0] cpu_wdata,   
+    input wire cpu_wr,      
+    input wire [8:0] mbist_done,  
+    input wire [8:0] mbist_fail,  
+    input wire reset,       
+    input wire test_enable, 
+    output wire [7:0] cpu_rdata,   
+    output wire mbist_rst,   
+    output wire mbist_test   
+);
+
+    // Internal signals
+    wire [7:0] core_data;
+    wire core_code_error;
+    wire core_code_idle;
+
+    // Logic extracted from AA module
+    reg [7:0] reg_core_data;
+    reg reg_core_code_error;
+    reg reg_core_code_idle;
+    reg [7:0] reg_cpu_rdata;
+
+    assign core_data = reg_core_data;
+    assign core_code_error = reg_core_code_error;
+    assign core_code_idle = reg_core_code_idle;
+    assign cpu_rdata = reg_cpu_rdata;
+
+    always @(posedge clock or posedge reset) begin
+        if (reset) begin
+            reg_core_data <= 8'b0;
+            reg_core_code_error <= 1'b0;
+            reg_core_code_idle <= 1'b0;
+            reg_cpu_rdata <= 8'b0;
+        end else if (test_enable) begin
+            // placeholder logic
+            reg_core_data <= 8'hAA;
+            reg_core_code_error <= 1'b1;
+            reg_core_code_idle <= 1'b0;
+            reg_cpu_rdata <= 8'h55;
+        end else if (cpu_wr) begin
+            // CPU write logic
+            reg_core_data <= cpu_wdata;
+            reg_cpu_rdata <= cpu_wdata;
+            reg_core_code_error <= 1'b0;
+            reg_core_code_idle <= 1'b1;
+        end
+    end
+
+    // Logic extracted from BB module
+    reg reg_mbist_rst;
+    reg reg_mbist_test;
+
+    assign mbist_rst = reg_mbist_rst;
+
+    always @(posedge clock or posedge reset) begin
+        if (reset) begin
+            reg_mbist_test <= 1'b0;
+            reg_mbist_rst <= 1'b0;
+        end else if (test_enable) begin
+            reg_mbist_test <= 1'b1;
+            reg_mbist_rst <= 1'b1;
+        end else begin
+            reg_mbist_test <= |mbist_done & ~|mbist_fail;
+            reg_mbist_rst <= 1'b0;
+        end
+    end
+
+    assign mbist_test = reg_mbist_test;
+
+endmodule

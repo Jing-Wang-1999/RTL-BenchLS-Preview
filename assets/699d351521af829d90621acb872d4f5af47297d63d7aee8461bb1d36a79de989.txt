@@ -1,0 +1,49 @@
+# Implement the Wishbone I2C master project
+Read the original PDF, the output contract and the declaration-only interfaces.
+Implement i2c_master_top, i2c_master_byte_ctrl and i2c_master_bit_ctrl in their
+required paths. Headers are preprocessed privately to freeze the original default
+configuration; provide synthesizable modules without includes or simulation delays.
+
+Clarifications for this pinned release:
+- Top wb_rst_i is active-high synchronous. arst_i has configurable active level
+  ARST_LVL (default 0, active-low asynchronous). Child nReset is active-low
+  asynchronous and rst active-high synchronous. Reset initializes released bus
+  lines; pad_o outputs are always zero, pad_oen=1 means release/open-drain high.
+- Register addresses 0/1 prescaler low/high (reset FFFF), 2 control (reset zero),
+  3 transmit write / receive read, 4 command write / status read. Address 5 reads
+  the stored transmit byte, 6 reads the command register, 7 returns zero. Read
+  data registers every clock. Wishbone ACK alternates while cyc/stb are held;
+  hold writes for two rising edges because write acceptance uses old ACK.
+- Control bit 7 enables the engine, bit 6 enables IRQ. Other control bits are
+  stored/read. Command writes are ignored while disabled. Command bits are
+  START[7], STOP[6], READ[5], WRITE[4], ACK-to-send[3] (1=NACK), IACK[0].
+  Bits 7:4 clear on done/arbitration loss, bits 2:1 clear, IACK self-clears.
+  Bit 3 persists. Use only valid commands, clearing enable only when idle.
+- Status: RXACK[7] (1=NACK), bus-busy[6], arbitration-lost[5], zeros[4:2],
+  transfer-in-progress[1], interrupt-flag[0]. Completion/arbitration sets sticky
+  flag; command IACK clears it. IRQ is the registered flag AND control[6].
+- Serial transfers are 8 bits MSB first plus ACK, with START, repeated START,
+  STOP, slave clock stretching and bus arbitration. Prescaler gives approximately
+  SCL = wb_clk/(5*(prescaler+1)); this release synchronizes and filters SCL/SDA.
+  Losing arbitration releases both lines and clears the command. Busy tracks
+  observed START/STOP. A transmitted one observed as zero loses arbitration.
+- Byte controller starts a transfer on read or write, optionally emits START,
+  shifts eight bits and receives/sends ACK, optionally STOP, then pulses cmd_ack.
+  ack_out contains received ACK and dout the received/shifted byte. Hold command
+  inputs until completion, then clear them before requesting another operation.
+- Bit-controller 4-bit commands: NOP=0, START=1, STOP=2, READ=4, WRITE=8.
+  A command emits its bus waveform and pulses cmd_ack. din selects transmitted
+  data; dout samples SDA. Handshake/timing follows the byte controller and PDF;
+  internal state encodings and pipeline organization need not copy the reference.
+
+Private points check register behavior, full slave memory transactions with
+repeated START and ACK/NACK, clock stretching, and arbitration loss. The finite
+tests are not exhaustive formal equivalence. Public checks give compilation only.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

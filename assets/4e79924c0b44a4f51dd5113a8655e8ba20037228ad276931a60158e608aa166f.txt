@@ -1,0 +1,59 @@
+module autovcoder_008046 #(
+    parameter DATA_WIDTH  = 16,  // DATA bus width
+    parameter STRB_WIDTH  = 2,   // STROBE bus width
+    parameter USE_UFC_REM = 0,   // UFC REM bus width identifier 
+    parameter REM_WIDTH   = 1    // REM bus width
+
+) (
+
+    // LocalLink input Interface
+    LL_IP_DATA,
+    LL_IP_SOF_N,
+    LL_IP_EOF_N,
+    LL_IP_REM,
+    LL_IP_SRC_RDY_N,
+    LL_OP_DST_RDY_N,
+
+    // AXI4-S output signals
+    AXI4_S_OP_TVALID,
+    AXI4_S_OP_TDATA,
+    AXI4_S_OP_TKEEP,
+    AXI4_S_OP_TLAST,
+    AXI4_S_IP_TREADY
+
+);
+
+  `define DLY #1
+
+  //***********************************Port Declarations*******************************
+
+  // AXI4-Stream TX Interface
+  output [0:(DATA_WIDTH-1)] AXI4_S_OP_TDATA;
+  output [0:(STRB_WIDTH-1)] AXI4_S_OP_TKEEP;
+  output AXI4_S_OP_TVALID;
+  output AXI4_S_OP_TLAST;
+  input AXI4_S_IP_TREADY;
+
+
+  // LocalLink TX Interface
+  input [0:(DATA_WIDTH-1)] LL_IP_DATA;
+  input [0:(REM_WIDTH-1)] LL_IP_REM;
+  input LL_IP_SOF_N;
+  input LL_IP_EOF_N;
+  input LL_IP_SRC_RDY_N;
+  output LL_OP_DST_RDY_N;
+
+  //*********************************Main Body of Code**********************************
+
+
+  assign AXI4_S_OP_TDATA = LL_IP_DATA;
+  assign AXI4_S_OP_TVALID = !LL_IP_SRC_RDY_N;
+  assign AXI4_S_OP_TLAST = !LL_IP_EOF_N;
+
+  assign AXI4_S_OP_TKEEP  = (LL_IP_REM == {REM_WIDTH{1'b1}})? ({STRB_WIDTH{1'b1}}) :
+                             (~({STRB_WIDTH{1'b1}}>>(LL_IP_REM + 1'b1)));
+
+  assign LL_OP_DST_RDY_N = !AXI4_S_IP_TREADY;
+
+endmodule
+

@@ -1,0 +1,16 @@
+always @(posedge clk)
+	if (clk7_en) begin
+		if (reset) begin
+			tmrD <= 24'd0;
+			tmrDl <= 8'h00;
+			tmrDm <= 8'h00;
+			tmrDh <= 8'h00;
+		end else if (wr && tdlo)
+			tmrD[7:0] <= data_in;
+		else if (wr && tdme)
+			tmrD[15:8] <= data_in;
+		else if (wr && tdhi)
+			tmrD[23:16] <= data_in;
+		else if (tick & ~tick_del)
+			tmrD <= tmrD - 1;
+	end

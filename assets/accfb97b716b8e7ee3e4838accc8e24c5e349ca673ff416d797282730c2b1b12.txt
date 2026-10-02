@@ -1,0 +1,65 @@
+module origen_019582(
+    output reg in_A, in_B, selector, reset_L,
+    output reg [1:0] data_in0, data_in1,
+    output reg clk,
+    input [1:0] data_cond, data_estructural,
+    input and_out, or_out, not_out,
+    input [1:0] ff_out,
+    input mux_output
+);
+
+    initial begin
+        $dumpfile("test.vcd");
+        $dumpvars;
+        
+        {selector, reset_L, data_in0, data_in1} <= 0;
+        
+        @(posedge clk);
+        reset_L <= 1;
+        
+        @(posedge clk);
+        data_in0 <= 2'b01;
+        data_in1 <= 2'b10;
+        
+        @(posedge clk);
+        selector <= 1;
+        
+        @(posedge clk);
+        data_in0 <= 2'b11;
+        data_in1 <= 2'b00;
+        
+        @(posedge clk);
+        selector <= 0;
+        
+        repeat(5) @(posedge clk);
+        $finish;
+    end
+
+    initial begin
+        in_A = 0;
+        in_B = 0;
+        forever begin
+            #6 in_A = ~in_A;
+            #6 in_B = ~in_B;
+        end
+    end
+
+    initial clk <= 0;
+    always #3 clk <= ~clk;
+
+    reg [3:0] contador_cond, contador_estr;
+
+    always @(posedge clk) begin
+        if (data_cond != data_estructural)
+            $display("Error en tiempo %0t, data_cond=%b, data_estructural=%b", $time, data_cond, data_estructural);
+        $display("Tiempo=%0t, data_cond=%b, data_estructural=%b, contador_cond=%0d, contador_estr=%0d", 
+                 $time, data_cond, data_estructural, contador_cond, contador_estr);
+    end
+
+    always @(posedge data_cond[0])
+        contador_cond <= contador_cond + 1;
+
+    always @(posedge data_estructural[0])
+        contador_estr <= contador_estr + 1;
+
+endmodule

@@ -1,0 +1,51 @@
+module autovcoder_000869 (
+    input wire signed [15:0] a,
+    Q,
+    input wire signed q0,
+    input wire signed [15:0] m,
+    output reg signed [15:0] f8,
+    output reg signed [15:0] l8,
+    output reg cq0
+);
+  wire [15:0] addam, subam;
+  Adder myadd (
+      a,
+      m,
+      addam
+  );
+  subtractor mysub (
+      a,
+      m,
+      subam
+  );
+
+  //First if- 0, 0 or 1, 1
+  always @(*) begin
+    if (Q[0] == q0) begin
+      cq0 = Q[0];
+      l8 = Q >> 1;
+      l8[15] = a[0];
+      f8 = a >> 1;
+      if (a[15] == 1) f8[15] = 1;
+    end else if (Q[0] == 1 && q0 == 0) begin
+      cq0 = Q[0];
+      l8 = Q >> 1;
+      l8[15] = subam[0];
+      f8 = subam >> 1;
+      if (subam[15] == 1) f8[15] = 1;
+    end else begin
+      cq0 = Q[0];
+      l8 = Q >> 1;
+      l8[15] = addam[0];
+      f8 = addam >> 1;
+      if (addam[15] == 1) f8[15] = 1;
+    end
+
+
+
+
+
+
+  end
+endmodule
+

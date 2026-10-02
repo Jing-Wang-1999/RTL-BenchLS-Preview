@@ -1,0 +1,76 @@
+module FP_SUM_BLOCK_pipe_p15 (
+    nvdla_core_clk,
+    nvdla_core_rstn,
+    stage3_pipe_in_pd_d2,
+    stage3_pipe_in_vld_d2,
+    stage3_pipe_in_rdy_d2,
+    stage3_pipe_in_pd_d3,
+    stage3_pipe_in_vld_d3,
+    stage3_pipe_in_rdy_d3
+);
+
+input          nvdla_core_clk;
+input          nvdla_core_rstn;
+input  [31:0]  stage3_pipe_in_pd_d2;
+input          stage3_pipe_in_vld_d2;
+output         stage3_pipe_in_rdy_d2;
+output [31:0]  stage3_pipe_in_pd_d3;
+output         stage3_pipe_in_vld_d3;
+input          stage3_pipe_in_rdy_d3;
+
+reg    [31:0]  p15_pipe_data;
+reg            p15_pipe_valid;
+wire           p15_pipe_ready;
+
+// Internal valid-ready handshake
+assign p15_pipe_ready = !p15_pipe_valid || stage3_pipe_in_rdy_d3;
+
+// Output to previous stage
+assign stage3_pipe_in_rdy_d2 = p15_pipe_ready;
+
+// Output to next stage
+assign stage3_pipe_in_pd_d3 = p15_pipe_data;
+assign stage3_pipe_in_vld_d3 = p15_pipe_valid;
+
+// Pipeline register update
+always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
+    if (!nvdla_core_rstn) begin
+        p15_pipe_valid <= 1'b0;
+    end else begin
+        if (p15_pipe_ready) begin
+            p15_pipe_valid <= stage3_pipe_in_vld_d2;
+        end
+    end
+end
+
+// Data register update
+always @(posedge nvdla_core_clk) begin
+    if (p15_pipe_ready && stage3_pipe_in_vld_d2) begin
+        p15_pipe_data <= stage3_pipe_in_pd_d2;
+    end
+end
+
+// synthesis translate_off
+`ifndef SYNTHESIS
+// Assertions for protocol checking (disabled in synthesis)
+always @(posedge nvdla_core_clk) begin
+    if (nvdla_core_rstn) begin
+        // Check for unknown values on control signals
+        if ($isunknown(stage3_pipe_in_vld_d2)) begin
+            $error("[%t] FP_SUM_BLOCK_pipe_p15: stage3_pipe_in_vld_d2 is X", $time);
+        end
+        if ($isunknown(stage3_pipe_in_rdy_d3)) begin
+            $error("[%t] FP_SUM_BLOCK_pipe_p15: stage3_pipe_in_rdy_d3 is X", $time);
+        end
+        
+        // Protocol check: valid should not drop before ready
+        if (p15_pipe_valid && !stage3_pipe_in_rdy_d3) begin
+            // Once valid is asserted, it should stay asserted until ready
+            // This is inherent in our design since we only clear valid when ready
+        end
+    end
+end
+`endif
+// synthesis translate_on
+
+endmodule

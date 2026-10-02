@@ -1,0 +1,27 @@
+# [rom_ctrl, dv] Uncovered conditional coverage in tlul_adapter_reg.sv
+
+Hi,
+
+According to 2nd oct nightly regression coverage dashboard [here](https://reports.opentitan.org/hw/ip/rom_ctrl_64kB/dv/latest/cov_report/mod64.html#Cond) stating that a conditional coverage for [L208](https://github.com/lowRISC/opentitan/blob/29d22a60a272d26f8987bc39fa4ba0794f02a0e8/hw/ip/tlul/rtl/tlul_adapter_reg.sv#L208C72-L208C83) in tlul_adapter_reg.sv is uncovered. The tool never seen 0, 0, 0, 1, 0 and 0, 1, 0, 0, 0 transitions. That makes sense as **malformed_meta_err**, **tl_err** and **instr_error**  are dependent over instruction type being invalid. Which corresponds that if there is a malformed_meta_err there would be a  **tl_err** and **instr_error**. Hence, 01000 is a non-occuring case.
+```             <Non-ocurring case> [tlul_adapter_reg.sv L208]
+| addr_align_err | malformed_meta_err | tl_err | instr_error | intg_error
+|  ------------- |  ----------------- |  ----- | ----------- | ---------
+|        0       |          1         |   0    |      0      |     0
+```
+Regarding the next case: 
+```             <uncovered case> [tlul_adapter_reg.sv L208]
+| addr_align_err | malformed_meta_err | tl_err | instr_error | intg_error
+|  ------------- |  ----------------- |  ----- | ----------- | ---------
+|        0       |          0         |   0    |      1      |     0
+```
+This could only be occuring if instruction type is valid and instruction fetch is disabled and tl_i.a_opcode is **GET**
+### Referencing files
+
+- Case (01000)
+1.  [tlul_adapter_reg](https://github.com/lowRISC/opentitan/blob/29d22a60a272d26f8987bc39fa4ba0794f02a0e8/hw/ip/tlul/rtl/tlul_adapter_reg.sv#L204C1-L211C58)
+2. [tlul_err](https://github.com/lowRISC/opentitan/blob/7e76fe2910765d2e5d8bf2a75d1b954fff06dfbb/hw/ip/tlul/rtl/tlul_err.sv#L23C1-L39C87). Assignments to look for [instr_wr_err](https://github.com/lowRISC/opentitan/blob/7e76fe2910765d2e5d8bf2a75d1b954fff06dfbb/hw/ip/tlul/rtl/tlul_err.sv#L32C1-L33C48), [instr_type_err](https://github.com/lowRISC/opentitan/blob/7e76fe2910765d2e5d8bf2a75d1b954fff06dfbb/hw/ip/tlul/rtl/tlul_err.sv#L36C1-L36C85) and [tl_err](https://github.com/lowRISC/opentitan/blob/7e76fe2910765d2e5d8bf2a75d1b954fff06dfbb/hw/ip/tlul/rtl/tlul_err.sv#L39C1-L39C87)
+3. [malformed_meta_err assignment](https://github.com/lowRISC/opentitan/blob/7e76fe2910765d2e5d8bf2a75d1b954fff06dfbb/hw/ip/tlul/rtl/tlul_pkg.sv#L143)
+
+-  Case(00010)
+1. [instr_error](https://github.com/lowRISC/opentitan/blob/7e76fe2910765d2e5d8bf2a75d1b954fff06dfbb/hw/ip/tlul/rtl/tlul_adapter_reg.sv#L205C1-L207C1)
+2. [instr_wr_err in file tlul_err.sv](https://github.com/lowRISC/opentitan/blob/7e76fe2910765d2e5d8bf2a75d1b954fff06dfbb/hw/ip/tlul/rtl/tlul_err.sv#L32C2-L33C48)

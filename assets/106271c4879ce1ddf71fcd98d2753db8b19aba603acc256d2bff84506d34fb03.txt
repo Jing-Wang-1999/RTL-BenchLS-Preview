@@ -1,0 +1,206 @@
+{
+  "parent_case_id": "t1.4.upstream172.uart2axi4",
+  "parent_path": "scope2/task2_3_specification_round_trip/cases/frozen/upstream172_20260909_v1/cases/026_t1.4.upstream172.uart2axi4",
+  "parent_manifest_sha256": "0d3d78dbd7ce566cba419bde41536325af275538200849a051e8cd6a0c500bb5",
+  "source_root": "github/wangxuan95/fpga-uart",
+  "project_id": "github/wangxuan95/fpga-uart",
+  "parent_loc": 702,
+  "source_directory": "scope2/task2_3_specification_round_trip/cases/frozen/upstream172_20260909_v1/cases/026_t1.4.upstream172.uart2axi4/payload/source",
+  "in_task1_4_selected20": false,
+  "parent_qualification": "inherited_exact_frozen_Task1.4_catalog",
+  "top_module": "uart2axi4",
+  "file_path": "RTL/uart_rx.v",
+  "source_sha256": "d159d943b4820e06b74f462f4920658eb16f8594d499269cc131c89f63572a0e",
+  "candidate_id": "t2.4.block.565b8699a3c3d21341b79922",
+  "mask_kind": "process",
+  "module": "uart_rx",
+  "start": 5749,
+  "end": 8236,
+  "start_line": 123,
+  "end_line": 168,
+  "hidden_loc": 42,
+  "branches": 8,
+  "assignments": 21,
+  "processes": 1,
+  "retained_loc": 660,
+  "hidden_tokens": 397,
+  "implementation_sha256": "7901cdab8f5e9c8a6b1e9f4cc2b7a0d24215c89f6a2cdddb1278c764d526f954",
+  "syntax_kind": "AlwaysBlock",
+  "offset_unit": "unicode_codepoints",
+  "state": "constructed_candidate",
+  "meaningful_review": "accepted_deterministic_AST_mask_rules",
+  "payload_path": "scope2/task2_4_round_trip_missing_module/cases/candidates/roundtrip_project_masks72_20260916_v1/t2.4.block.565b8699a3c3d21341b79922",
+  "masked_sha256": "2da1834d71d1d6c28dc922f196221020c975dfefb7304a496b763afa84ea47f5",
+  "golden_region_sha256": "41865b925525ba54d7ac4901bc731318900d026f5a4f3ff9107dfe9e3d4b4b45",
+  "restoration_identity": true,
+  "admission_audit": {
+    "candidate_id": "t2.4.block.565b8699a3c3d21341b79922",
+    "parent_case_id": "t1.4.upstream172.uart2axi4",
+    "module": "uart_rx",
+    "file_path": "RTL/uart_rx.v",
+    "source_root": "github/wangxuan95/fpga-uart",
+    "parent_loc": 702,
+    "loc_bin": "500\u20131,999",
+    "hidden_loc": 42,
+    "hidden_tokens": 397,
+    "state": "admit_automated_mask_rules",
+    "reasons": [
+      "multiway_control_or_data_selection",
+      "data_transformation_or_state_update",
+      "interacting_control_conditions",
+      "ordered_control_priority"
+    ],
+    "features": {
+      "parse_errors": [],
+      "assignments": 21,
+      "written_identifiers": [
+        "countp",
+        "cycle",
+        "rxbits",
+        "rxcnt",
+        "state"
+      ],
+      "case_statements": 1,
+      "case_items": 3,
+      "complex_conditions": 5,
+      "rhs_operations": {
+        "ConditionalExpression": 1,
+        "SubtractExpression": 2,
+        "AddExpression": 4
+      },
+      "rhs_concatenations": 1,
+      "rhs_selects": 1,
+      "lhs_dynamic_selects": 0,
+      "nonreset_conditions": 5,
+      "priority_paths": [
+        {
+          "left": "rxcnt",
+          "conditions": [
+            "cycle < cycles [ rxcnt ]",
+            "rxcnt < TOTAL_BITS_MINUS1"
+          ]
+        },
+        {
+          "left": "state",
+          "conditions": [
+            "cycle < cycles [ rxcnt ]",
+            "rxcnt < TOTAL_BITS_MINUS1",
+            "( rxcnt == 4 'd 0 ) && ( rxbit == 1 'b 1 )"
+          ]
+        },
+        {
+          "left": "rxcnt",
+          "conditions": [
+            "cycle < cycles [ rxcnt ]",
+            "rxcnt < TOTAL_BITS_MINUS1"
+          ]
+        },
+        {
+          "left": "state",
+          "conditions": [
+            "cycle < cycles [ rxcnt ]",
+            "rxcnt < TOTAL_BITS_MINUS1"
+          ]
+        }
+      ],
+      "rhs_signal_count": 9,
+      "literal_assignment_fraction": 0.5238095238095238,
+      "predicate_examples": [
+        "~ rstn",
+        "( count1 >= THREE_QUARTER_BAUD_CYCLES ) && ( rx_d1 == 1 'b 0 )",
+        "cycle < cycles [ rxcnt ]",
+        "rxcnt < TOTAL_BITS_MINUS1",
+        "( rxcnt == 4 'd 0 ) && ( rxbit == 1 'b 1 )",
+        "cycle < THREE_QUARTER_BAUD_CYCLES"
+      ],
+      "transformation_examples": [
+        {
+          "left": "countp",
+          "right": "( 33 'h 1_0000_0000 - 33 'd 1 )",
+          "operations": [
+            "SubtractExpression"
+          ]
+        },
+        {
+          "left": "cycle",
+          "right": "cycle + 1",
+          "operations": [
+            "AddExpression"
+          ]
+        },
+        {
+          "left": "countp",
+          "right": "rx_d1 ? ( countp + 33 'd 1 ) : ( countp - 33 'd 1 )",
+          "operations": [
+            "ConditionalExpression",
+            "AddExpression",
+            "SubtractExpression"
+          ]
+        },
+        {
+          "left": "rxcnt",
+          "right": "rxcnt + 4 'd 1",
+          "operations": [
+            "AddExpression"
+          ]
+        },
+        {
+          "left": "cycle",
+          "right": "cycle + 1",
+          "operations": [
+            "AddExpression"
+          ]
+        }
+      ]
+    },
+    "restoration_identity": true,
+    "parent_pins_verified": true,
+    "inherited_review": false,
+    "review_mode": "deterministic_AST_rule_screen",
+    "semantic_signature": "7901cdab8f5e9c8a6b1e9f4cc2b7a0d24215c89f6a2cdddb1278c764d526f954",
+    "next_gate": null,
+    "test_root_path": [
+      "uart2axi4",
+      "uart_rx"
+    ],
+    "oracle_pins_valid": true,
+    "runtime_contract_pass": true,
+    "admission_method": "parent qualification + AST mask review + context/identity + frozen oracle binding"
+  },
+  "oracle_pins": {
+    "scope2/task2_3_specification_round_trip/pipeline/top_testbench_evaluator_v1.py": "caa3ebb9be2cacec9996660485f9f6f077c74344c4254cd717b5cce08f8327b1",
+    "scope2/task2_3_specification_round_trip/cases/frozen/upstream172_20260909_v1/cases/026_t1.4.upstream172.uart2axi4/private/evaluator.json": "b70432699d985fef4103cfdb36648918d506ca9abe46044124dc01b370b6da6d",
+    "/home/jwangjw/anaconda3/bin/iverilog": "6ee1c55ebe4e3276aea7b8f3dbc9e87b05dbfdd599bbb33335cbd477c8c61db3",
+    "/home/jwangjw/anaconda3/bin/vvp": "9ccd23396605d17c1997a130c80b961ca2c92b673e343af83e1cf90be254fc5b",
+    "scope2/task2_3_specification_round_trip/pipeline/evaluate_initial_project_172.py": "366ba45b44a80be7d7cbac9ad69b6f9173eb6a2ea80130a62ffeea886dac33e5",
+    "scope2/task2_3_specification_round_trip/pipeline/qualify_initial_replays_172.py": "e21d60c7da30cf6608874b49495869fb370447ae5526d5014fa86234a21628cf"
+  },
+  "total_points": 2,
+  "case_id": "t2.4.block.565b8699a3c3d21341b79922",
+  "official_task": "2.4",
+  "schema_version": "task2.4.project_region.v2",
+  "status": "frozen",
+  "required_files": [
+    "RTL/uart2axi4.v",
+    "RTL/uart_rx.v",
+    "RTL/uart_tx.v"
+  ],
+  "allowed_outputs": [
+    "completion.v"
+  ],
+  "source_hashes": {
+    "RTL/uart2axi4.v": "594f3257f7b97c232e945f62e6a791c973dfef99a58a3fde73a62431e5473c7a",
+    "RTL/uart_rx.v": "d159d943b4820e06b74f462f4920658eb16f8594d499269cc131c89f63572a0e",
+    "RTL/uart_tx.v": "e48dd27cbfb64bb21593cdd3f7a0450bbef56d56de3f6f8d8878187e116526ed"
+  },
+  "mask_granularity": "process",
+  "review_manifest": "common/reporting/roundtrip_masks703_final_20260916_v1/audit703.jsonl",
+  "review_manifest_sha256": "b64987332d84ed47e407fb90a8b1bc4fb3813fe312bc75b4d7c740b2387d2aa2",
+  "runtime": "common/tools/models/roundtrip_project_region_v2.py",
+  "runtime_sha256": "5bbae5e2d92a6f39b072dbd85453ebe2a718f87676eb720877fbc4a7529f11bd",
+  "oracle_kind": "inherited_parent_testbenches",
+  "parent_gold_replay": "Inherited exact frozen parent; byte-identical source restoration",
+  "specification_rescreened": false,
+  "negative_control_status": "optional completion diagnostic; not individually rerun",
+  "coverage_limit": "Syntactic reachability and inherited oracle; no claim of exhaustive per-mask coverage"
+}

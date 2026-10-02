@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""Run unchanged native SystemC/Verilator benches and shipped basic.elf checks."""
+import argparse,json,os,re,shutil,signal,subprocess,time
+from pathlib import Path
+p=argparse.ArgumentParser();p.add_argument('--payload',type=Path,required=True);p.add_argument('--candidate-dir',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.payload=a.payload.resolve();a.output=a.output.resolve();c=json.loads((a.payload/'case.json').read_text());a.output.mkdir(parents=True,exist_ok=False);source=a.output/'source';shutil.copytree(a.payload/'source',source)
+for f in c['rtl_files']:shutil.copyfile(a.candidate_dir/f,source/f)
+cwd=source/c['bench_directory'];v=Path(c['verilator_root']);env={**os.environ,**c['environment'],'PATH':str(v.parent.parent/'bin')+':/usr/bin:/bin','VERILATOR_ROOT':str(v),'ENABLE_WAVES':'no','SEED':'1'};env['LD_LIBRARY_PATH']=':'.join([str(cwd/'lib'),str(source/'isa_sim'),env['LD_LIBRARY_PATH']])
+for k in ['MAKEFLAGS','MFLAGS','CFLAGS','CXXFLAGS','LDFLAGS','CORE','TEST_IMAGE']:env.pop(k,None)
+opts=[f'VERILATOR_SRC={v}/include','VERILATE_PARAMS=--trace -Wno-fatal',f'SYSTEMC_HOME={c["systemc_home"]}',f'LIB_OPT={c["systemc_library"]}','LIBS=-lisa_sim -lsyscverilated -lelf -lbfd '+c['libiberty']+' -lsframe -lz -lzstd','CORE=riscv']
+commands=[['make','-C',str(source/'isa_sim'),'lib','CFLAGS=-O2 -fPIC -DCONFIG_MMU -DPACKAGE=1'],['make','-f','makefile.generate_verilated']+opts,['make','-j2','-f','makefile.build_verilated']+opts,['make','-f','makefile.build_sysc_tb']+opts,['./build/test.x','-f','../../isa_sim/images/basic.elf']];rows=[]
+for i,cmd in enumerate(commands):
+ log=a.output/f'{i:02d}.log';start=time.monotonic()
+ with log.open('w') as f:
+  q=subprocess.Popen(cmd,cwd=cwd,env=env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+  try:rc=q.wait(timeout=300 if i<4 else 30);timeout=False
+  except subprocess.TimeoutExpired:os.killpg(q.pid,signal.SIGKILL);q.wait();rc=None;timeout=True
+ rows.append({'command':cmd,'exit_code':rc,'timeout':timeout,'seconds':round(time.monotonic()-start,3),'log':str(log)})
+ if rc!=0:break
+compiled=len(rows)>=4 and rows[3]['exit_code']==0 and (cwd/'build/test.x').is_file();passed=False;reason='Build or simulation did not complete'
+if compiled and len(rows)==5 and rows[-1]['exit_code']==0:
+ text=(a.output/'04.log').read_text(errors='replace');expected=c['expected_test_sections'];observed=re.findall(r'^\d+\. [^\r\n]+',text,re.M);failure=re.search(r'ASSERT|Unhandled|Exception:|Incorrect comparision|TEST FAILED|Error:',text)
+ passed=observed==expected and failure is None and bool(re.search(r'^TB: Aborted at [0-9.e+]+ [a-z]+$',text,re.M))
+ reason='All ten firmware sections and native normal-exit handler observed; no firmware assertion/exception.' if passed else 'Missing/reordered firmware sections, assertion/exception, or missing native completion.'
+point={'id':c['testpoints'][0]['id'],'passed':passed,'compile_valid':compiled,'reason':reason,'commands':rows};r={'parent_case_id':c['case_id'],'passed_testpoints':int(passed),'total_testpoints':1,'score':float(passed),'testpoints':[point]};(a.output/'result.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps(r,indent=2))

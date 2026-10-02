@@ -1,0 +1,58 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/261",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/255",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 261,
+  "issue_number": 255,
+  "verilog_files": [
+    "rtl/riscv_core.sv",
+    "rtl/riscv_tracer.sv"
+  ],
+  "deletions": 2,
+  "additions": 4,
+  "patches": [
+    {
+      "filename": "rtl/riscv_core.sv",
+      "patch": "@@ -1177,6 +1177,7 @@ module riscv_core\n     .dret           ( id_stage_i.controller_i.dret_insn_i  ),\n     .ecall          ( id_stage_i.controller_i.ecall_insn_i ),\n     .ebreak         ( id_stage_i.controller_i.ebrk_insn_i  ),\n+    .fence          ( id_stage_i.controller_i.fencei_insn_i),\n     .rs1_value      ( id_stage_i.operand_a_fw_id           ),\n     .rs2_value      ( id_stage_i.operand_b_fw_id           ),\n     .rs3_value      ( id_stage_i.alu_operand_c             ),",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1
+    },
+    {
+      "filename": "rtl/riscv_tracer.sv",
+      "patch": "@@ -54,6 +54,7 @@ module riscv_tracer (\n   input  logic        dret,\n   input  logic        ecall,\n   input  logic        ebreak,\n+  input  logic        fence,\n \n   input  logic [31:0] rs1_value,\n   input  logic [31:0] rs2_value,\n@@ -105,7 +106,7 @@ module riscv_tracer (\n   logic [ 5:0] rd, rs1, rs2, rs3, rs4;\n \n   event        retire;\n-  \n+\n   typedef struct {\n     logic [ 5:0] addr;\n     logic [31:0] value;\n@@ -846,7 +847,7 @@ module riscv_tracer (\n     instr_trace_t trace;\n \n     // special case for WFI because we don't wait for unstalling there\n-    if ( (id_valid || pipe_flush || mret || uret || ecall || ebreak || dret) && is_decoding)\n+    if ( (id_valid || pipe_flush || mret || uret || ecall || ebreak || dret || fence) && is_decoding)\n     begin\n       trace = new ();\n ",
+      "additions": 3,
+      "deletions": 2,
+      "changes": 5
+    }
+  ],
+  "pr_info": {
+    "title": ":bug: tracer for fence instructions #255",
+    "body": "Fixing issue \"Tracer does not log fence.i instruction #255\"",
+    "state": "closed",
+    "created_at": "2020-03-18T09:05:27Z",
+    "updated_at": "2020-04-22T18:02:44Z",
+    "merged_at": "2020-04-22T18:02:44Z",
+    "user": "davideschiavone"
+  },
+  "issue_info": {
+    "title": "Tracer does not log fence.i instruction",
+    "body": "@davideschiavone \r\nAs discussed earlier, when executing the fence.i instruction, this is not reported by the tracer.\r\nThis causes the step/compare to lose synchronization\r\ncould we please have a fix to this so that the step and compare is consistent\r\nThx\r\nLee",
+    "labels": [
+      "Type:Bug",
+      "Type:Task"
+    ],
+    "state": "closed",
+    "created_at": "2020-03-10T15:52:56Z",
+    "updated_at": "2020-03-26T10:18:58Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 148
+  },
+  "base_commit": "e1c6e0b2b39fb2dcdf0ed3a7f71e9b6e8d4ec992",
+  "head_commit": "f066bb1655bda6897d128c21e061eb2f882c6e35",
+  "base_ref": "master",
+  "task_id": "openhwgroup_cv32e40p_261_255",
+  "lec_status": "useful_pass"
+}

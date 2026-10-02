@@ -1,0 +1,58 @@
+module autovcoder_018880 (
+    q,
+    q_b,
+    bl,
+    pgate_l,
+    pgate_r,
+    r_gnd_l,
+    r_gnd_r,
+    reset_l,
+    reset_r,
+    wl_l,
+    wl_r
+);
+
+
+
+  output [7:0] q_b;
+  output [7:0] q;
+
+  inout [3:0] bl;
+
+  input [1:0] r_gnd_r;
+  input [1:0] pgate_l;
+  input [1:0] reset_r;
+  input [1:0] wl_r;
+  input [1:0] reset_l;
+  input [1:0] pgate_r;
+  input [1:0] r_gnd_l;
+  input [1:0] wl_l;
+  supply1 vdd_;
+  supply0 gnd_;
+  /* wire vddp_ = test.cds_globalsInst.vddp_; */supply1 vddp_;
+  supply0 GND_;
+  supply1 VDD_;
+
+
+
+  cram2x2 I_mem_r (
+      .bl(bl[3:2]),
+      .q_b(q_b[7:4]),
+      .reset(reset_r[1:0]),
+      .q(q[7:4]),
+      .wl(wl_r[1:0]),
+      .r_vdd(r_gnd_r[1:0]),
+      .pgate(pgate_r[1:0])
+  );
+  cram2x2 I_mem_l (
+      .bl(bl[1:0]),
+      .q_b(q_b[3:0]),
+      .reset(reset_l[1:0]),
+      .q(q[3:0]),
+      .wl(wl_l[1:0]),
+      .r_vdd(r_gnd_l[1:0]),
+      .pgate(pgate_l[1:0])
+  );
+
+endmodule
+

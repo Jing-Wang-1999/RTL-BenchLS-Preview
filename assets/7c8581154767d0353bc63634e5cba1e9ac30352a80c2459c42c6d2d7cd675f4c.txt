@@ -1,0 +1,275 @@
+
+
+
+module wb2sdrc (
+      
+                    wb_rst_i            ,
+                    wb_clk_i            ,
+
+                    wb_stb_i            ,
+                    wb_ack_o            ,
+                    wb_addr_i           ,
+                    wb_we_i             ,
+                    wb_dat_i            ,
+                    wb_sel_i            ,
+                    wb_dat_o            ,
+                    wb_cyc_i            ,
+                    wb_cti_i            , 
+
+
+      
+                    sdram_clk           ,
+                    sdram_resetn        ,
+                    sdr_req             ,
+                    sdr_req_addr        ,
+                    sdr_req_len         ,
+                    sdr_req_wr_n        ,
+                    sdr_req_ack         ,
+                    sdr_busy_n          ,
+                    sdr_wr_en_n         ,
+                    sdr_wr_next         ,
+                    sdr_rd_valid        ,
+                    sdr_last_rd         ,
+                    sdr_wr_data         ,
+                    sdr_rd_data        
+
+      ); 
+
+parameter      dw              = 32;  
+parameter      tw              = 8;   
+parameter      bl              = 9;   
+parameter      APP_AW          = 26;  
+
+
+
+input                   wb_rst_i           ;
+input                   wb_clk_i           ;
+
+input                   wb_stb_i           ;
+output                  wb_ack_o           ;
+input [APP_AW-1:0]      wb_addr_i          ;
+input                   wb_we_i            ; 
+input [dw-1:0]          wb_dat_i           ;
+input [dw/8-1:0]        wb_sel_i           ; 
+output [dw-1:0]         wb_dat_o           ;
+input                   wb_cyc_i           ;
+input  [2:0]            wb_cti_i           ;
+
+
+
+
+input                   sdram_clk          ; 
+input                   sdram_resetn       ; 
+output                  sdr_req            ; 
+output [APP_AW-1:0]           sdr_req_addr       ; 
+output [bl-1:0]         sdr_req_len        ;
+output                  sdr_req_wr_n       ; 
+input                   sdr_req_ack        ; 
+input                   sdr_busy_n         ; 
+output [dw/8-1:0]       sdr_wr_en_n        ; 
+input                   sdr_wr_next        ; 
+input                   sdr_rd_valid       ; 
+input                   sdr_last_rd        ; 
+output [dw-1:0]         sdr_wr_data        ; 
+input  [dw-1:0]         sdr_rd_data        ; 
+
+
+
+
+wire                    cmdfifo_full       ;
+wire                    cmdfifo_empty      ;
+wire                    wrdatafifo_full    ;
+wire                    wrdatafifo_empty   ;
+wire                    tagfifo_full       ;
+wire                    tagfifo_empty      ;
+wire                    rddatafifo_empty   ;
+wire                    rddatafifo_full    ;
+
+reg                     pending_read       ;
+
+
+
+
+
+
+
+
+
+assign wb_ack_o = (wb_stb_i && wb_cyc_i && wb_we_i) ?  
+	                  ((!cmdfifo_full) && (!wrdatafifo_full)) :
+		  (wb_stb_i && wb_cyc_i && !wb_we_i) ? 
+		           !rddatafifo_empty : 1'b0;
+
+
+
+
+
+
+
+
+wire           cmdfifo_wr   = (wb_stb_i && wb_cyc_i && wb_we_i && (!cmdfifo_full) ) ? wb_ack_o :
+	                      (wb_stb_i && wb_cyc_i && !wb_we_i && (!cmdfifo_full)) ? !pending_read: 1'b0 ; 
+
+
+
+
+
+
+
+wire           cmdfifo_rd   = sdr_req_ack;
+
+
+
+
+
+assign         sdr_req      = !cmdfifo_empty;
+
+
+
+
+
+wire [bl-1:0]  burst_length  = 1;  
+
+
+
+
+
+
+
+
+
+
+always @(posedge wb_rst_i or posedge wb_clk_i) begin
+   if(wb_rst_i) begin
+       pending_read <= 1'b0;
+   end else begin
+      
+      pending_read <=   (cmdfifo_wr && !wb_we_i) ? 1'b1:
+	                (wb_stb_i & wb_cyc_i & !wb_we_i & wb_ack_o) ? 1'b0: pending_read;
+   end
+end
+
+
+
+
+
+   
+    async_fifo #(.W(APP_AW+bl+1),.DP(4),.WR_FAST(1'b0), .RD_FAST(1'b0)) u_cmdfifo (
+     
+          .wr_clk             (wb_clk_i           ),
+          .wr_reset_n         (!wb_rst_i          ),
+          .wr_en              (cmdfifo_wr         ),
+          .wr_data            ({burst_length, 
+	                        !wb_we_i, 
+				wb_addr_i}        ),
+          .afull              (                   ),
+          .full               (cmdfifo_full       ),
+
+     
+          .rd_clk             (sdram_clk          ),
+          .rd_reset_n         (sdram_resetn       ),
+          .aempty             (                   ),
+          .empty              (cmdfifo_empty      ),
+          .rd_en              (cmdfifo_rd         ),
+          .rd_data            ({sdr_req_len,
+	                        sdr_req_wr_n,
+		                sdr_req_addr}     )
+     );
+
+
+
+
+
+
+
+
+
+wire  wrdatafifo_wr  = wb_ack_o & wb_we_i ;
+
+
+
+
+
+wire  wrdatafifo_rd  = sdr_wr_next;
+
+
+
+
+
+
+
+
+   
+    async_fifo #(.W(dw+(dw/8)), .DP(8), .WR_FAST(1'b0), .RD_FAST(1'b1)) u_wrdatafifo (
+       
+          .wr_clk             (wb_clk_i           ),
+          .wr_reset_n         (!wb_rst_i          ),
+          .wr_en              (wrdatafifo_wr      ),
+          .wr_data            ({~wb_sel_i, 
+	                         wb_dat_i}        ),
+          .afull              (                   ),
+          .full               (wrdatafifo_full    ),
+
+
+       
+          .rd_clk             (sdram_clk          ),
+          .rd_reset_n         (sdram_resetn       ),
+          .aempty             (                   ),
+          .empty              (wrdatafifo_empty   ),
+          .rd_en              (wrdatafifo_rd      ),
+          .rd_data            ({sdr_wr_en_n,
+                                sdr_wr_data}      )
+     );
+
+
+
+
+
+wire    rd_eop; 
+
+
+
+wire    rddatafifo_wr = sdr_rd_valid;
+
+
+
+
+
+wire    rddatafifo_rd = wb_ack_o & !wb_we_i;
+
+
+
+
+
+
+
+
+
+
+
+
+    async_fifo #(.W(dw+1), .DP(4), .WR_FAST(1'b0), .RD_FAST(1'b1) ) u_rddatafifo (
+       
+          .wr_clk             (sdram_clk          ),
+          .wr_reset_n         (sdram_resetn       ),
+          .wr_en              (rddatafifo_wr      ),
+          .wr_data            ({sdr_last_rd,
+	                        sdr_rd_data}      ),
+          .afull              (                   ),
+          .full               (rddatafifo_full    ),
+
+
+       
+          .rd_clk             (wb_clk_i           ),
+          .rd_reset_n         (!wb_rst_i          ),
+          .empty              (rddatafifo_empty   ),
+          .aempty             (                   ),
+          .rd_en              (rddatafifo_rd      ),
+          .rd_data            ({rd_eop,
+                                wb_dat_o}         )
+     );
+
+
+
+ 
+endmodule

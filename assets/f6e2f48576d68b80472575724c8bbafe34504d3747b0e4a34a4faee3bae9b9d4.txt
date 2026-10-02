@@ -1,0 +1,54 @@
+module autovcoder_065863 (
+    LO
+);
+
+  // Module ports
+  output LO;
+
+  // Local signals
+  wire nor2left;
+  wire invleft;
+  wire nor2right;
+  wire invright;
+  wire nd2left;
+  wire nd2right;
+  wire tielo;
+  wire net7;
+
+  //                       Name    Output         Other arguments
+  sky130_fd_sc_hd__inv_2 inv0 (
+      .A(nor2left),
+      .Y(invleft)
+  );
+  sky130_fd_sc_hd__inv_2 inv1 (
+      .A(nor2right),
+      .Y(invright)
+  );
+  sky130_fd_sc_hd__nor2_2 nor20 (
+      .B(nd2left),
+      .A(nd2left),
+      .Y(nor2left)
+  );
+  sky130_fd_sc_hd__nor2_2 nor21 (
+      .B(nd2right),
+      .A(nd2right),
+      .Y(nor2right)
+  );
+  sky130_fd_sc_hd__nand2_2 nand20 (
+      .B(tielo),
+      .A(tielo),
+      .Y(nd2right)
+  );
+  sky130_fd_sc_hd__nand2_2 nand21 (
+      .B(tielo),
+      .A(tielo),
+      .Y(nd2left)
+  );
+  sky130_fd_sc_hd__conb_1 conb0 (
+      .LO(tielo),
+      .HI(net7)
+  );
+  buf buf0 (LO, tielo);
+
+endmodule
+

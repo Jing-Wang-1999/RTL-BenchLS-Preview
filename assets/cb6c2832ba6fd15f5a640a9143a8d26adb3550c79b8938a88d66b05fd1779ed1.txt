@@ -1,0 +1,50 @@
+module autovcoder_067309 (
+    out_hash,
+    valid_hash_flag,
+    nonce,
+    valid_hash
+);
+  input [255:0] out_hash;
+  input [31:0] nonce;
+  output [287:0] valid_hash;
+  input valid_hash_flag;
+
+
+  flip_endian_LENGTH32_FLIP_LENGTH8_8 FLIP_HASH_0 (
+      .data(nonce),
+      .flipped(valid_hash[31:0])
+  );
+  flip_endian_LENGTH32_FLIP_LENGTH8_7 FLIP_HASH_1 (
+      .data(out_hash[31:0]),
+      .flipped(valid_hash[63:32])
+  );
+  flip_endian_LENGTH32_FLIP_LENGTH8_6 FLIP_HASH_2 (
+      .data(out_hash[63:32]),
+      .flipped(valid_hash[95:64])
+  );
+  flip_endian_LENGTH32_FLIP_LENGTH8_5 FLIP_HASH_3 (
+      .data(out_hash[95:64]),
+      .flipped(valid_hash[127:96])
+  );
+  flip_endian_LENGTH32_FLIP_LENGTH8_4 FLIP_HASH_4 (
+      .data(out_hash[127:96]),
+      .flipped(valid_hash[159:128])
+  );
+  flip_endian_LENGTH32_FLIP_LENGTH8_3 FLIP_HASH_5 (
+      .data(out_hash[159:128]),
+      .flipped(valid_hash[191:160])
+  );
+  flip_endian_LENGTH32_FLIP_LENGTH8_2 FLIP_HASH_6 (
+      .data(out_hash[191:160]),
+      .flipped(valid_hash[223:192])
+  );
+  flip_endian_LENGTH32_FLIP_LENGTH8_1 FLIP_HASH_7 (
+      .data(out_hash[223:192]),
+      .flipped(valid_hash[255:224])
+  );
+  flip_endian_LENGTH32_FLIP_LENGTH8_0 FLIP_HASH_8 (
+      .data(out_hash[255:224]),
+      .flipped(valid_hash[287:256])
+  );
+endmodule
+

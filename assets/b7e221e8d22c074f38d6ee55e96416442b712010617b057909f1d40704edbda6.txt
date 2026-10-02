@@ -1,0 +1,110 @@
+module origen_134723 (
+    input wire PACKAGEPIN,
+    input wire EXTFEEDBACK,
+    input wire [7:0] DYNAMICDELAY,
+    input wire BYPASS,
+    input wire RESETB,
+    input wire LATCHINPUTVALUE,
+    input wire SDI,
+    input wire SCLK,
+    output wire PLLOUTCOREA,
+    output wire PLLOUTGLOBALA,
+    output wire PLLOUTCOREB,
+    output wire PLLOUTGLOBALB,
+    output wire LOCK,
+    output wire SDO
+);
+
+    parameter FEEDBACK_PATH = "SIMPLE";
+    parameter DELAY_ADJUSTMENT_MODE_FEEDBACK = "FIXED";
+    parameter DELAY_ADJUSTMENT_MODE_RELATIVE = "FIXED";
+    parameter SHIFTREG_DIV_MODE = 1'b0;
+    parameter FDA_FEEDBACK = 4'b0000;
+    parameter FDA_RELATIVE = 4'b0000;
+    parameter PLLOUT_SELECT_PORTB = "GENCLK";
+    parameter DIVR = 4'b0000;
+    parameter DIVF = 7'b0000000;
+    parameter DIVQ = 3'b000;
+    parameter FILTER_RANGE = 3'b000;
+    parameter ENABLE_ICEGATE_PORTA = 1'b0;
+    parameter ENABLE_ICEGATE_PORTB = 1'b0;
+    parameter TEST_MODE = 1'b0;
+    parameter EXTERNAL_DIVIDE_FACTOR = 1'b0;
+
+    // PLL instance
+    // Since SB_PLL40_CORE is not recognized, we'll use a generic PLL module
+    PLL_GENERIC #(
+        .FEEDBACK_PATH(FEEDBACK_PATH),
+        .DELAY_ADJUSTMENT_MODE_FEEDBACK(DELAY_ADJUSTMENT_MODE_FEEDBACK),
+        .DELAY_ADJUSTMENT_MODE_RELATIVE(DELAY_ADJUSTMENT_MODE_RELATIVE),
+        .SHIFTREG_DIV_MODE(SHIFTREG_DIV_MODE),
+        .FDA_FEEDBACK(FDA_FEEDBACK),
+        .FDA_RELATIVE(FDA_RELATIVE),
+        .PLLOUT_SELECT_PORTA("GENCLK"),
+        .PLLOUT_SELECT_PORTB(PLLOUT_SELECT_PORTB),
+        .DIVR(DIVR),
+        .DIVF(DIVF),
+        .DIVQ(DIVQ),
+        .FILTER_RANGE(FILTER_RANGE),
+        .ENABLE_ICEGATE_PORTA(ENABLE_ICEGATE_PORTA),
+        .ENABLE_ICEGATE_PORTB(ENABLE_ICEGATE_PORTB),
+        .TEST_MODE(TEST_MODE),
+        .EXTERNAL_DIVIDE_FACTOR(EXTERNAL_DIVIDE_FACTOR)
+    ) pll_inst (
+        .PACKAGEPIN(PACKAGEPIN),
+        .EXTFEEDBACK(EXTFEEDBACK),
+        .DYNAMICDELAY(DYNAMICDELAY),
+        .BYPASS(BYPASS),
+        .RESETB(RESETB),
+        .LATCHINPUTVALUE(LATCHINPUTVALUE),
+        .SDI(SDI),
+        .SCLK(SCLK),
+        .PLLOUTCOREA(PLLOUTCOREA),
+        .PLLOUTGLOBALA(PLLOUTGLOBALA),
+        .PLLOUTCOREB(PLLOUTCOREB),
+        .PLLOUTGLOBALB(PLLOUTGLOBALB),
+        .LOCK(LOCK),
+        .SDO(SDO)
+    );
+
+endmodule
+
+// Generic PLL module (placeholder)
+module PLL_GENERIC #(
+    parameter FEEDBACK_PATH = "SIMPLE",
+    parameter DELAY_ADJUSTMENT_MODE_FEEDBACK = "FIXED",
+    parameter DELAY_ADJUSTMENT_MODE_RELATIVE = "FIXED",
+    parameter SHIFTREG_DIV_MODE = 1'b0,
+    parameter FDA_FEEDBACK = 4'b0000,
+    parameter FDA_RELATIVE = 4'b0000,
+    parameter PLLOUT_SELECT_PORTA = "GENCLK",
+    parameter PLLOUT_SELECT_PORTB = "GENCLK",
+    parameter DIVR = 4'b0000,
+    parameter DIVF = 7'b0000000,
+    parameter DIVQ = 3'b000,
+    parameter FILTER_RANGE = 3'b000,
+    parameter ENABLE_ICEGATE_PORTA = 1'b0,
+    parameter ENABLE_ICEGATE_PORTB = 1'b0,
+    parameter TEST_MODE = 1'b0,
+    parameter EXTERNAL_DIVIDE_FACTOR = 1'b0
+) (
+    input wire PACKAGEPIN,
+    input wire EXTFEEDBACK,
+    input wire [7:0] DYNAMICDELAY,
+    input wire BYPASS,
+    input wire RESETB,
+    input wire LATCHINPUTVALUE,
+    input wire SDI,
+    input wire SCLK,
+    output wire PLLOUTCOREA,
+    output wire PLLOUTGLOBALA,
+    output wire PLLOUTCOREB,
+    output wire PLLOUTGLOBALB,
+    output wire LOCK,
+    output wire SDO
+);
+
+    // PLL logic would be implemented here
+    // This is a placeholder for demonstration purposes
+
+endmodule

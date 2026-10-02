@@ -1,0 +1,99 @@
+module autovcoder_117266 (
+    UartRx_prescale,
+    UartRx_RX_IN,
+    UartRx_PAR_EN,
+    UartRx_Par_Type,
+    UartRx_CLK,
+    UartRx_RST,
+    UartRx_PDATA,
+    UartRx_Data_Valid
+);
+  input [4:0] UartRx_prescale;
+  output [7:0] UartRx_PDATA;
+  input UartRx_RX_IN, UartRx_PAR_EN, UartRx_Par_Type, UartRx_CLK, UartRx_RST;
+  output UartRx_Data_Valid;
+  wire   par_err, strt_glitch, stp_err, FINISH, EdgeFinish, data_samp_en,
+         deser_en, edge_cnt_enable, bit_cnt_enable, par_chk_en, strt_chk_en,
+         stp_chk_en, sample, Sample_Valid, n1, n2;
+  wire [2:0] bit_cnt;
+  wire [4:0] edge_cnt;
+
+  RXFSM U0_RXFSM (
+      .RXFSM_bit_cnt(bit_cnt),
+      .RXFSM_RX_IN(UartRx_RX_IN),
+      .RXFSM_par_err(par_err),
+      .RXFSM_strt_glitch(strt_glitch),
+      .RXFSM_stp_err(stp_err),
+      .RXFSM_PAR_EN(UartRx_PAR_EN),
+      .RXFSM_FINISH(FINISH),
+      .RXFSM_EdgeFinish(EdgeFinish),
+      .RXFSM_CLK(UartRx_CLK),
+      .RXFSM_RST(n1),
+      .RXFSM_data_samp_en(data_samp_en),
+      .RXFSM_deser_en(deser_en),
+      .RXFSM_edge_cnt_enable(edge_cnt_enable),
+      .RXFSM_bit_cnt_enable(bit_cnt_enable),
+      .RXFSM_data_valid(UartRx_Data_Valid),
+      .RXFSM_par_chk_en(par_chk_en),
+      .RXFSM_strt_chk_en(strt_chk_en),
+      .RXFSM_stp_chk(stp_chk_en)
+  );
+  edge_bit_counter U0_edge_bit_counter (
+      .Cnt_prescale(UartRx_prescale),
+      .Cnt_edge_cnt_enable(edge_cnt_enable),
+      .Cnt_bit_cnt_enable(bit_cnt_enable),
+      .Cnt_CLK(UartRx_CLK),
+      .Cnt_RST(n1),
+      .Cnt_edge_cnt(edge_cnt),
+      .Cnt_bit_cnt(bit_cnt),
+      .Cnt_EdgeFinish(EdgeFinish)
+  );
+  Data_Sampler U0_Data_Sampler (
+      .Sampler_edge_cnt(edge_cnt),
+      .Sampler_prescale(UartRx_prescale),
+      .Sampler_data_samp_en(data_samp_en),
+      .Sampler_RX_IN(UartRx_RX_IN),
+      .Sampler_CLK(UartRx_CLK),
+      .Sampler_RST(n1),
+      .Sampler_sample(sample),
+      .Sampler_Sample_Valid(Sample_Valid)
+  );
+  Deseralizer U0_Deseralizer (
+      .Deseralizer_SampledData(sample),
+      .Deseralizer_Sample_Valid(Sample_Valid),
+      .Deseralizer_EN(deser_en),
+      .Deseralizer_CLK(UartRx_CLK),
+      .Deseralizer_RST(n1),
+      .Deseralizer_PDATA(UartRx_PDATA)
+  );
+  Strt_Check U0_Strt_Check (
+      .StrtChk_EN(strt_chk_en),
+      .StrtChk_Sample_Valid(Sample_Valid),
+      .StrtChk_sample(sample),
+      .StrtChk_glitch(strt_glitch)
+  );
+  Parity_Check U0_Parity_Check (
+      .ParityCheck_PDATA(UartRx_PDATA),
+      .ParityCheck_EN(par_chk_en),
+      .ParityCheck_PAR_TYP(UartRx_Par_Type),
+      .ParityCheck_sample(sample),
+      .ParityCheck_Sample_Valid(Sample_Valid),
+      .ParityCheck_Par_err(par_err)
+  );
+  Stop_Check U0_Stop_Check (
+      .StpChk_stp_chk_en(stp_chk_en),
+      .StpChk_sample(sample),
+      .StpChk_Sample_Valid(Sample_Valid),
+      .StpChk_stp_err(stp_err),
+      .StpChk_finish(FINISH)
+  );
+  INVX2M U1 (
+      .A(n2),
+      .Y(n1)
+  );
+  INVX2M U2 (
+      .A(UartRx_RST),
+      .Y(n2)
+  );
+endmodule
+

@@ -1,0 +1,13 @@
+always @ (posedge aclk or negedge aresetn) begin
+        if (!aresetn) begin
+            ar_misrouting <= 1'b0;
+        end else if (srst) begin
+            ar_misrouting <= 1'b0;
+        end else begin
+            if (ar_misrouting) begin
+                ar_misrouting <= 1'b0;
+            end else if (i_arvalid && ar_misrouting_c) begin
+                ar_misrouting <= 1'b1;
+            end
+        end
+    end

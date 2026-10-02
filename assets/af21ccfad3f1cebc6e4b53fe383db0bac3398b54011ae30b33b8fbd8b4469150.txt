@@ -1,0 +1,56 @@
+`timescale 1ns / 1ps
+(* blackbox *)
+module origen_123597 (
+    output X,
+    input A,
+    input B,
+    input VPWR,
+    input VGND,
+    input VPB,
+    input VNB
+);
+endmodule
+
+(* blackbox *)
+module sky130_fd_sc_lp__buf_1 (
+    output X,
+    input A,
+    input VPWR,
+    input VGND,
+    input VPB,
+    input VNB
+);
+endmodule
+
+module and2 (
+    output X,
+    input A,
+    input B,
+    input VPWR,
+    input VGND,
+    input VPB,
+    input VNB
+);
+
+    wire and0_out_X;
+
+    sky130_fd_sc_lp__and2_1 and0 (
+        .X(and0_out_X),
+        .A(A),
+        .B(B),
+        .VPWR(VPWR),
+        .VGND(VGND),
+        .VPB(VPB),
+        .VNB(VNB)
+    );
+
+    sky130_fd_sc_lp__buf_1 buf0 (
+        .X(X),
+        .A(and0_out_X),
+        .VPWR(VPWR),
+        .VGND(VGND),
+        .VPB(VPB),
+        .VNB(VNB)
+    );
+
+endmodule

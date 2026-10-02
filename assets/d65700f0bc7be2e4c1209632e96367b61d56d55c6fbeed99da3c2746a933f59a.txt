@@ -1,0 +1,57 @@
+The Verilog module `nios_debug_slave_bridge_b` is designed to handle computer debug functions and state monitoring in a CPU. Its primary function is to control and manage debug breakpoints, trace memory control, and resetting mechanisms based on various input signals.
+
+1. **Summary**: 
+   The module facilitates CPU debugging by processing breakpoint hits, managing trace memory operations, and outputting control signals to indicate various actions or idle states.
+
+2. **Key Control Flow**:
+   - The reset logic is controlled by `reset_n` and `resetlatch` which determine the `jrst_n` signal to reset the module.
+   - `monitor_ready` directly influences the `st_ready_test_idle` status signal, indicating if the monitor is ready.
+   - Each debug break hit (`dbrk_hitX_latch`) in combination with `tracemem_on` signals triggers specific actions (`take_action_break_X` and `take_action_ocimem_X`). Conversely, if these combinations don't occur, it results in `take_no_action_break_X` signals.
+  
+3. **Important Data Processing and Signal Interactions**:
+   - Debug break hits (`dbrk_hitX_latch`) when combined with the `tracemem_on` signal generate specific action signals (`take_action_break_X`). For example, `take_action_break_a` is active if `dbrk_hit0_latch` and `tracemem_on` are both high.
+   - The joint action signals `take_action_ocimem_a` and `take_action_ocimem_b` are determined by `dbrk_hit3_latch` and `tracemem_tw` respectively, in conjunction with `tracemem_on`.
+   - The module sets the internal JTAG signals (`vji_*`) to fixed constant values ensuring steady state or idle operation.
+
+Detailed instructions for code generation:
+
+Module Interface:
+module nios_debug_slave_bridge_b (
+    MonDReg,
+    break_readreg,
+    clk,
+    dbrk_hit0_latch,
+    dbrk_hit1_latch,
+    dbrk_hit2_latch,
+    dbrk_hit3_latch,
+    debugack,
+    monitor_error,
+    monitor_ready,
+    reset_n,
+    resetlatch,
+    tracemem_on,
+    tracemem_trcdata,
+    tracemem_tw,
+    trc_im_addr,
+    trc_on,
+    trc_wrap,
+    trigbrktype,
+    trigger_state_1,
+    jdo,
+    jrst_n,
+    st_ready_test_idle,
+    take_action_break_a,
+    take_action_break_b,
+    take_action_break_c,
+    take_action_ocimem_a,
+    take_action_ocimem_b,
+    take_action_tracectrl,
+    take_no_action_break_a,
+    take_no_action_break_b,
+    take_no_action_break_c,
+    take_no_action_ocimem_a
+);
+
+Behavioral Clarifications:
+- Parameters are DATA_WIDTH=32, BYTEENABLE_WIDTH_LOG2=2, ADDRESS_WIDTH=32, UNALIGNED_ACCESS_ENABLE=0; write_data and fifo_readack are wire outputs driven by generate/assign (not reg).
+- When UNALIGNED_ACCESS_ENABLE=0: fifo_readack = fifo_empty==0 AND stall==0 AND waitrequest==0 AND enable==1 (start condition not required); write_data = fifo_data directly.

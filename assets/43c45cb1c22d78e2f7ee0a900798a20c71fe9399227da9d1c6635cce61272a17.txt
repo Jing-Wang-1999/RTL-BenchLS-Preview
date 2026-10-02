@@ -1,0 +1,58 @@
+module origen_158531(
+    input inp,
+    input clk,
+    output reg encout,
+    output reg decout
+);
+
+reg trig11, trig21, trig1, trig2, trig3, trig4, trig5, trig6, trig7;
+reg [6:0] counter1, counter2;
+
+always @(posedge clk) begin
+    // Encoder logic
+    if(counter1 == 7'd99) begin
+        trig11 = ~trig11;
+        counter1 = 7'd0;
+    end else begin
+        counter1 = counter1 + 7'd1;
+    end
+
+    if(inp) begin
+        trig21 = ~trig11;
+    end else begin
+        trig21 = trig11;
+    end
+
+    encout = trig11 ^ trig21;
+
+    // Decoder logic
+    if(counter2 == 7'd69) begin
+        trig3 = 1;
+        counter2 = 7'd0;
+    end else begin
+        counter2 = counter2 + 7'd1;
+    end
+
+    if(trig3) begin
+        if(encout) begin
+            trig2 = ~trig1;
+            trig7 = ~trig7;
+        end else begin
+            trig1 = ~trig2;
+            trig6 = ~trig6;
+        end
+    end
+
+    trig4 = trig5 ^ trig6 ^ trig7;
+
+    if(trig4) begin
+        trig3 = 1'b0;
+        trig5 = 1'b0;
+        trig6 = 1'b0;
+        trig7 = 1'b0;
+    end
+
+    decout = trig1 ^ trig2;
+end
+
+endmodule

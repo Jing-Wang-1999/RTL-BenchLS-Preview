@@ -1,0 +1,45 @@
+always @(posedge clk or posedge rst)
+begin
+  if (rst) begin
+    re_count     <= #1 4'd0;
+    receive      <= #1 1'b0;
+    sbuf_rxd     <= #1 8'h00;
+    sbuf_rxd_tmp <= #1 12'd0;
+    rx_done      <= #1 1'b1;
+    rxd_r        <= #1 1'b1;
+    rx_sam       <= #1 2'b00;
+  end else if (!rx_done) begin
+    receive <= #1 1'b0;
+    rx_done <= #1 1'b1;
+    sbuf_rxd <= #1 sbuf_rxd_tmp[10:3];
+  end else if (receive & (scon[7:6]==2'b00) & pres_ow) begin //mode 0
+    {sbuf_rxd_tmp, rx_done} <= #1 {rxd, sbuf_rxd_tmp};
+  end else if (receive & (scon[7:6]!=2'b00) & shift_re) begin //mode 1, 2, 3
+    re_count <= #1 re_count + 4'd1;
+    case (re_count) /* synopsys full_case parallel_case */
+      4'h7: rx_sam[0] <= #1 rxd;
+      4'h8: rx_sam[1] <= #1 rxd;
+      4'h9: begin
+        {sbuf_rxd_tmp, rx_done} <= #1 {(rxd==rx_sam[0] ? rxd : rx_sam[1]), sbuf_rxd_tmp};
+      end
+    endcase
+//
+//start receiving
+//
+  end else if (scon[7:6]==2'b00) begin //start mode 0
+    rx_done <= #1 1'b1;
+    if (ren && !ri && !receive) begin
+      receive      <= #1 1'b1;
+      sbuf_rxd_tmp <= #1 10'h0ff;
+    end
+  end else if (ren & shift_re) begin
+    rxd_r <= #1 rxd;
+    rx_done <= #1 1'b1;
+    re_count <= #1 4'h0;
+    receive <= #1 (rxd_r & !rxd);
+    sbuf_rxd_tmp <= #1 10'h1ff;
+  end else if (!ren) begin
+    rxd_r <= #1 rxd;
+  end else
+    rx_done <= #1 1'b1;
+end

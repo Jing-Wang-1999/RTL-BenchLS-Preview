@@ -1,0 +1,15 @@
+`timescale 1ns/1ps
+module tb;reg clk=0,rst=0;always #5 clk=~clk;
+task tick;begin @(posedge clk);#2;end endtask
+task reset;begin @(negedge clk);rst=1;repeat(3)tick;@(negedge clk);rst=0;end endtask
+initial begin #100000000;$fatal(1,"timeout");end
+reg [2:0] code;wire z,d,n;booth_radix4 dut(code,z,d,n);initial begin
+code=0;#2;if({z,d,n}!==3'b100)$fatal(1,"booth");
+code=1;#2;if({z,d,n}!==3'b000)$fatal(1,"booth");
+code=2;#2;if({z,d,n}!==3'b000)$fatal(1,"booth");
+code=3;#2;if({z,d,n}!==3'b010)$fatal(1,"booth");
+code=4;#2;if({z,d,n}!==3'b011)$fatal(1,"booth");
+code=5;#2;if({z,d,n}!==3'b001)$fatal(1,"booth");
+code=6;#2;if({z,d,n}!==3'b001)$fatal(1,"booth");
+code=7;#2;if({z,d,n}!==3'b100)$fatal(1,"booth");
+$display("RTL_BENCHLS_PASS");$finish(0);end endmodule

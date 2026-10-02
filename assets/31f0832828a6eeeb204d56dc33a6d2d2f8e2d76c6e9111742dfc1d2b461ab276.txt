@@ -1,0 +1,55 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cvfpu/pull/73",
+  "issue_url": "https://github.com/openhwgroup/cvfpu/issues/72",
+  "repository": "openhwgroup/cvfpu",
+  "pr_number": 73,
+  "issue_number": 72,
+  "verilog_files": [
+    "src/fpnew_fma.sv",
+    "src/fpnew_fma_multi.sv"
+  ],
+  "deletions": 5,
+  "additions": 12,
+  "patches": [
+    {
+      "filename": "src/fpnew_fma.sv",
+      "patch": "@@ -169,7 +169,7 @@ module fpnew_fma #(\n   // | FNMSUB   | \\c 1        | FNMADD: Invert sign of operands A and C\n   // | ADD      | \\c 0        | ADD: Set operand A to +1.0\n   // | ADD      | \\c 1        | SUB: Set operand A to +1.0, invert sign of operand C\n-  // | MUL      | \\c 0        | MUL: Set operand C to +0.0\n+  // | MUL      | \\c 0        | MUL: Set operand C to +0.0 or -0.0 depending on the rounding mode\n   // | *others* | \\c -        | *invalid*\n   // \\note \\c op_mod_q always inverts the sign of the addend.\n   always_comb begin : op_select\n@@ -192,8 +192,11 @@ module fpnew_fma #(\n         operand_a = '{sign: 1'b0, exponent: BIAS, mantissa: '0};\n         info_a    = '{is_normal: 1'b1, is_boxed: 1'b1, default: 1'b0}; //normal, boxed value.\n       end\n-      fpnew_pkg::MUL: begin // Set addend to -0 (for proper rounding with RDN)\n-        operand_c = '{sign: 1'b1, exponent: '0, mantissa: '0};\n+      fpnew_pkg::MUL: begin // Set addend to +0 or -0, depending whether the rounding mode is RDN\n+        if (inp_pipe_rnd_mode_q[NUM_INP_REGS] == fpnew_pkg::RDN)\n+          operand_c = '{sign: 1'b0, exponent: '0, mantissa: '0};\n+        else\n+          operand_c = '{sign: 1'b1, exponent: '0, mantissa: '0};\n         info_c    = '{is_zero: 1'b1, is_boxed: 1'b1, default: 1'b0}; //zero, boxed value.\n       end\n       default: begin // propagate don't cares",
+      "additions": 6,
+      "deletions": 3,
+      "changes": 9
+    },
+    {
+      "filename": "src/fpnew_fma_multi.sv",
+      "patch": "@@ -218,7 +218,7 @@ module fpnew_fma_multi #(\n   // | FNMSUB   | \\c 1        | FNMADD: Invert sign of operands A and C\n   // | ADD      | \\c 0        | ADD: Set operand A to +1.0\n   // | ADD      | \\c 1        | SUB: Set operand A to +1.0, invert sign of operand C\n-  // | MUL      | \\c 0        | MUL: Set operand C to +0.0\n+  // | MUL      | \\c 0        | MUL: Set operand C to +0.0 or -0.0 depending on the rounding mode\n   // | *others* | \\c -        | *invalid*\n   // \\note \\c op_mod_q always inverts the sign of the addend.\n   always_comb begin : op_select\n@@ -242,7 +242,11 @@ module fpnew_fma_multi #(\n         info_a    = '{is_normal: 1'b1, is_boxed: 1'b1, default: 1'b0}; //normal, boxed value.\n       end\n       fpnew_pkg::MUL: begin // Set addend to -0 (for proper rounding with RDN)\n-        operand_c = '{sign: 1'b1, exponent: '0, mantissa: '0};\n+      fpnew_pkg::MUL: begin // Set addend to +0 or -0, depending whether the rounding mode is RDN\n+        if (inp_pipe_rnd_mode_q[NUM_INP_REGS] == fpnew_pkg::RDN)\n+          operand_c = '{sign: 1'b0, exponent: '0, mantissa: '0};\n+        else\n+          operand_c = '{sign: 1'b1, exponent: '0, mantissa: '0};\n         info_c    = '{is_zero: 1'b1, is_boxed: 1'b1, default: 1'b0}; //zero, boxed value.\n       end\n       default: begin // propagate don't cares",
+      "additions": 6,
+      "deletions": 2,
+      "changes": 8
+    }
+  ],
+  "pr_info": {
+    "title": "Bugfix: correct sign for RDN in floating point multiplications",
+    "body": "Hi there!\r\n\r\nThis fixes the bug reported in #72.\r\nFeel free to edit the style.\r\n\r\nThanks!\r\nFlavien",
+    "state": "closed",
+    "created_at": "2023-02-15T17:14:36Z",
+    "updated_at": "2023-03-02T14:35:17Z",
+    "merged_at": "2023-03-02T14:35:17Z",
+    "user": "flaviens"
+  },
+  "issue_info": {
+    "title": "Bug report: wrong sign in fmul.d with RDN rounding mode",
+    "body": "Hi there!\r\n\r\nI found a bug in FPnew (bug found through Ariane).\r\n\r\n## Bug\r\n\r\nThe operand_c should not be signed for floating multiplications using RDN.\r\n\r\n## Observable consequences\r\n\r\nThe floating multiplication gives wrong results for some inputs with the RDN rounding mode.\r\n\r\nFor example, the  pseudo assembly code below executes incorrectly:\r\n```\r\nft0 = 0x0 # corresponds to value +0.0\r\nft1 = 0x00000000dc98da8a # corresponds to value +1.82854e-314\r\n\r\nfmul.d ft2, ft1, ft0\r\n```\r\n\r\nIn the end of the snippet:  \r\n- We expect the result to be 0x0, i.e., +0.0\r\n- We get the result          0x8000000000000000, i.e., -0.0\r\n\r\n## Related issues\r\n\r\nThis seems to be the underlying cause of the observations made in openhwgroup/core-v-verif#54,  openhwgroup/core-v-verif#63, part of openhwgroup/core-v-verif#68, [this external issue in core-v-verif](https://github.com/openhwgroup/cva6/issues/1416) and [this external issue in cv32e40p](https://github.com/openhwgroup/cv32e40p/issues/728).",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2023-02-15T17:13:31Z",
+    "updated_at": "2023-09-14T18:05:00Z"
+  },
+  "source_info": {
+    "source_file": "23.txt",
+    "line_number": 13
+  },
+  "base_commit": "c5c513595f6c7f3965773f08a802203051e119d4",
+  "head_commit": "81f4e42999b3253c80f4f5ed5eac8bfa4624882a",
+  "base_ref": "develop",
+  "task_id": "openhwgroup_cvfpu_73_72",
+  "lec_status": "useful_pass"
+}

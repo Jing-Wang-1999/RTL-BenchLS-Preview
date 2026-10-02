@@ -1,0 +1,56 @@
+always @ (posedge clk or negedge rstn)
+    if (~rstn) begin
+        data1_en <= 1'b0;
+        data2_en <= 1'b0;
+        data3_en <= 1'b0;
+        data4_en <= 1'b0;
+        data1    <= 0;
+        data2    <= 0;
+        data3    <= 0;
+        data4    <= 0;
+    end else begin
+        if          (data4_en) begin
+            if (o_rdy) begin
+                data4_en              <= 1'b0;
+                {data1, data2, data3} <= {data2, data3, data4};
+            end
+            
+        end else if (data3_en) begin
+            if (o_rdy & i_en) begin
+                {data1, data2, data3} <= {data2, data3, i_data};
+            end else if (o_rdy) begin
+                data3_en              <= 1'b0;
+                {data1, data2}        <= {data2, data3};
+            end else if (i_en) begin
+                data4_en              <= 1'b1;
+                data4                 <= i_data;
+            end
+            
+        end else if (data2_en) begin
+            if (o_rdy & i_en) begin
+                {data1, data2}        <= {data2, i_data};
+            end else if (o_rdy) begin
+                data2_en              <= 1'b0;
+                data1                 <= data2;
+            end else if (i_en) begin
+                data3_en              <= 1'b1;
+                data3                 <= i_data;
+            end
+            
+        end else if (data1_en) begin
+            if (o_rdy & i_en) begin
+                data1                 <= i_data;
+            end else if (o_rdy) begin
+                data1_en              <= 1'b0;
+            end else if (i_en) begin
+                data2_en              <= 1'b1;
+                data2                 <= i_data;
+            end
+        
+        end else begin
+            if (i_en) begin
+                data1_en              <= 1'b1;
+                data1                 <= i_data;
+            end
+        end
+    end

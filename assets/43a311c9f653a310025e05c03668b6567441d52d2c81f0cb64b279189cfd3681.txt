@@ -1,0 +1,37 @@
+{
+  "candidate_id": "large_module.0e4eabd8ca3c44febb76",
+  "reviewer_identity": "/root/screen_protocol_v2",
+  "independent_of_author": "/root/screen_compute_v2",
+  "decision": "pass",
+  "rtl_sha256": "d5fbd6124f7b4ac2a50a2dcfaa2a02bfe65f8cb9a387b3488111a257e833ca55",
+  "specification_sha256": "62e28b3ecf5fadad1632a2b60ab1189a0e4c081e5f4a03ff0c06c9689b677cff",
+  "rtl_reasonable": true,
+  "blocking_findings": [],
+  "evidence": [
+    {
+      "kind": "independent_full_source_and_specification_review",
+      "checks": [
+        "All128/256 key equations, Rcon timing, rotated versus unrotated S-box words and P0/P1 history ordering verified.",
+        "Reset clears all15 entries and history; clock/reset polarity and13/17 edge completion timing checked.",
+        "Live keylen change corner R=15 clarified by author after review: missing entry is not written, history/counter still advance.",
+        "External new_sboxw remains arbitrary; no assumption of an ideal S-box."
+      ]
+    },
+    {
+      "kind": "consulted_primary_local_reference_results",
+      "path": "scope1/task1_1_spec_to_rtl/results/complexity_admission_20260913_v2/reviews/large_module.0e4eabd8ca3c44febb76/upstream_run.log",
+      "sha256": "9f15dee5b5438fa6f286585e0cd9b8df022220fb5487fe5215461ba3fa282e67",
+      "result": "All9 upstream AES key expansion tests pass."
+    }
+  ],
+  "formal_scope_review": {
+    "mode": "sec",
+    "clock": "clk",
+    "reset_expression": "!reset_n",
+    "defaults_only": true,
+    "hidden_input_assumptions_required": false,
+    "scope_acceptable": true,
+    "qualification_controls_are_separate": true,
+    "notes": "All actual array elements reset. Public round=15 indexes no entry and is explicitly undefined, rather than assigned an invented zero."
+  }
+}

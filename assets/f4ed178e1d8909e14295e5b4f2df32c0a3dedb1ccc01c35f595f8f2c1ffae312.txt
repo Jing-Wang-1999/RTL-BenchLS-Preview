@@ -1,0 +1,14 @@
+// Conformal LEC RTL vs RTL: combinational equivalence (no netlist, no technology library).
+// Golden and revised in ./rtl/golden.v, ./rtl/revised.v.
+// Uses -SystemVerilog -sv09 for SV support (logic, always_comb, packages, ::, SV2009 features).
+// NOTE: Conformal uses // for comments. Do NOT use # (Conformal treats # as a command and aborts).
+
+set undefined cell black_box
+read design ./rtl/golden.v -SystemVerilog -sv09 -Golden
+read design ./rtl/revised.v -SystemVerilog -sv09 -Revised
+
+// Switch to LEC mode and compare
+set system mode lec
+add compared points -all
+compare
+exit -force

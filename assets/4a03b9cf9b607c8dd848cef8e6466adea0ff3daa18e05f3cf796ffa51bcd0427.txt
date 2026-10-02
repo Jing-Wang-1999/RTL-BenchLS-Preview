@@ -1,0 +1,31 @@
+**Module Specification: mg_09438**
+
+**Overview:**  
+A finite state machine controller for a sequential datapath operation, likely implementing a multiplication or shift-add algorithm.
+
+**Inputs:**  
+- **clock, reset:** Synchronous clock and active-high reset.  
+- **start:** Initiates the operation when asserted.  
+- **Nothing, Zero:** Status flags indicating completion conditions.  
+- **Q0:** Data bit determining whether an addition step is required.
+
+**Outputs (all active-high control signals):**  
+- **Ready:** Indicates the controller is idle and ready for a new start.  
+- **Load_regs:** Loads initial data into registers.  
+- **Decr_P:** Decrements a counter (e.g., iteration count).  
+- **Add_regs:** Triggers an addition operation based on Q0.  
+- **Shift_regs:** Commands a register shift operation.
+
+**Behavior:**  
+1. **Idle State:**  
+   - Ready is asserted.  
+   - On start, transitions to the Add state and asserts Load_regs to initialize registers.
+
+2. **Add State:**  
+   - Asserts Decr_P to decrement the counter.  
+   - If Q0 is high, asserts Add_regs to perform an addition.  
+   - Always transitions to the Shift state.
+
+3. **Shift State:**  
+   - Asserts Shift_regs to shift registers.  
+   - If Zero or Nothing is true, returns to Id

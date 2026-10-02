@@ -1,0 +1,222 @@
+always @* begin
+    axi_state_next = AXI_STATE_IDLE;
+
+    ram_rd_resp_ready_cmb = {RAM_SEG_COUNT{1'b0}};
+
+    stat_wr_op_finish_tag_next = stat_wr_op_finish_tag_reg;
+    stat_wr_op_finish_status_next = stat_wr_op_finish_status_reg;
+    stat_wr_op_finish_valid_next = 1'b0;
+    stat_wr_req_finish_tag_next = stat_wr_req_finish_tag_reg;
+    stat_wr_req_finish_status_next = stat_wr_req_finish_status_reg;
+    stat_wr_req_finish_valid_next = 1'b0;
+
+    axi_addr_next = axi_addr_reg;
+    axi_imm_next = axi_imm_reg;
+    axi_imm_en_next = axi_imm_en_reg;
+    axi_len_next = axi_len_reg;
+    axi_zero_len_next = axi_zero_len_reg;
+    offset_next = offset_reg;
+    strb_offset_mask_next = strb_offset_mask_reg;
+    last_cycle_offset_next = last_cycle_offset_reg;
+    ram_mask_next = ram_mask_reg;
+    ram_mask_valid_next = ram_mask_valid_reg;
+    cycle_count_next = cycle_count_reg;
+    last_cycle_next = last_cycle_reg;
+
+    mask_fifo_rd_ptr_next = mask_fifo_rd_ptr_reg;
+
+    op_table_tx_start_en = 1'b0;
+    op_table_tx_finish_en = 1'b0;
+
+    m_axi_awid_next = m_axi_awid_reg;
+    m_axi_awaddr_next = m_axi_awaddr_reg;
+    m_axi_awlen_next = m_axi_awlen_reg;
+    m_axi_awvalid_next = m_axi_awvalid_reg && !m_axi_awready;
+    m_axi_bready_next = 1'b0;
+
+    m_axi_wdata_int = ((IMM_ENABLE && axi_imm_en_reg) ? {2{{RAM_DATA_WIDTH{1'b0}} | axi_imm_reg}} : {2{ram_rd_resp_data}}) >> (RAM_DATA_WIDTH-offset_reg*AXI_WORD_SIZE);
+    m_axi_wstrb_int = strb_offset_mask_reg;
+    m_axi_wlast_int = 1'b0;
+    m_axi_wvalid_int = 1'b0;
+
+    // read response processing and AXI write generation
+    case (axi_state_reg)
+        AXI_STATE_IDLE: begin
+            // idle state, wait for command
+            ram_rd_resp_ready_cmb = {RAM_SEG_COUNT{1'b0}};
+
+            axi_addr_next = op_table_axi_addr[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+            axi_imm_next = op_table_imm[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+            axi_imm_en_next = op_table_imm_en[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+            axi_len_next = op_table_len[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+            axi_zero_len_next = op_table_zero_len[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+            offset_next = op_table_offset[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+            strb_offset_mask_next = axi_zero_len_next ? {AXI_STRB_WIDTH{1'b0}} : ({AXI_STRB_WIDTH{1'b1}} << (axi_addr_next & OFFSET_MASK));
+            last_cycle_offset_next = axi_addr_next + (axi_len_next & OFFSET_MASK);
+            cycle_count_next = op_table_cycle_count[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+            last_cycle_next = op_table_cycle_count[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]] == 0;
+
+            if (op_table_active[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]] && op_table_tx_start_ptr_reg != op_table_start_ptr_reg && (!m_axi_awvalid_reg || m_axi_awready)) begin
+                m_axi_awid_next = op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0];
+                m_axi_awaddr_next = axi_addr_next;
+                m_axi_awlen_next = cycle_count_next;
+                m_axi_awvalid_next = 1'b1;
+                op_table_tx_start_en = 1'b1;
+                axi_state_next = AXI_STATE_TRANSFER;
+            end else begin
+                axi_state_next = AXI_STATE_IDLE;
+            end
+        end
+        AXI_STATE_TRANSFER: begin
+            // transfer state, transfer data
+            ram_rd_resp_ready_cmb = {RAM_SEG_COUNT{1'b0}};
+
+            if (!(ram_mask_reg & ~ram_rd_resp_valid) && ram_mask_valid_reg && m_axi_wready_int) begin
+                // transfer in read data
+                ram_rd_resp_ready_cmb = ram_mask_reg;
+                ram_mask_valid_next = 1'b0;
+
+                // update counters
+                cycle_count_next = cycle_count_reg - 1;
+                last_cycle_next = cycle_count_next == 0;
+                offset_next = offset_reg + AXI_STRB_WIDTH;
+                strb_offset_mask_next = {AXI_STRB_WIDTH{1'b1}};
+
+                m_axi_wdata_int = ((IMM_ENABLE && axi_imm_en_reg) ? {2{{RAM_DATA_WIDTH{1'b0}} | axi_imm_reg}} : {2{ram_rd_resp_data}}) >> (RAM_DATA_WIDTH-offset_reg*AXI_WORD_SIZE);
+                m_axi_wstrb_int = strb_offset_mask_reg;
+                m_axi_wlast_int = 1'b0;
+                m_axi_wvalid_int = 1'b1;
+
+                if (last_cycle_reg) begin
+                    // no more data to transfer, finish operation
+                    m_axi_wlast_int = 1'b1;
+                    op_table_tx_finish_en = 1'b1;
+
+                    if (last_cycle_offset_reg) begin
+                        m_axi_wstrb_int = strb_offset_mask_reg & {AXI_STRB_WIDTH{1'b1}} >> (AXI_STRB_WIDTH - last_cycle_offset_reg);
+                    end
+
+                    // skip idle state if possible
+                    axi_addr_next = op_table_axi_addr[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+                    axi_imm_next = op_table_imm[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+                    axi_imm_en_next = op_table_imm_en[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+                    axi_len_next = op_table_len[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+                    axi_zero_len_next = op_table_zero_len[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+                    offset_next = op_table_offset[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+                    strb_offset_mask_next = axi_zero_len_next ? {AXI_STRB_WIDTH{1'b0}} : ({AXI_STRB_WIDTH{1'b1}} << (axi_addr_next & OFFSET_MASK));
+                    last_cycle_offset_next = axi_addr_next + (axi_len_next & OFFSET_MASK);
+                    cycle_count_next = op_table_cycle_count[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]];
+                    last_cycle_next = op_table_cycle_count[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]] == 0;
+
+                    if (op_table_active[op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0]] && op_table_tx_start_ptr_reg != op_table_start_ptr_reg && (!m_axi_awvalid_reg || m_axi_awready)) begin
+                        m_axi_awid_next = op_table_tx_start_ptr_reg[OP_TAG_WIDTH-1:0];
+                        m_axi_awaddr_next = axi_addr_next;
+                        m_axi_awlen_next = cycle_count_next;
+                        m_axi_awvalid_next = 1'b1;
+                        op_table_tx_start_en = 1'b1;
+                        axi_state_next = AXI_STATE_TRANSFER;
+                    end else begin
+                        axi_state_next = AXI_STATE_IDLE;
+                    end
+                end else begin
+                    axi_state_next = AXI_STATE_TRANSFER;
+                end
+            end else begin
+                axi_state_next = AXI_STATE_TRANSFER;
+            end
+        end
+    endcase
+
+    if (!ram_mask_valid_next && !mask_fifo_empty) begin
+        ram_mask_next = mask_fifo_mask[mask_fifo_rd_ptr_reg[MASK_FIFO_ADDR_WIDTH-1:0]];
+        ram_mask_valid_next = 1'b1;
+        mask_fifo_rd_ptr_next = mask_fifo_rd_ptr_reg+1;
+    end
+
+    op_table_write_complete_ptr = m_axi_bid;
+    if (m_axi_bresp == AXI_RESP_SLVERR) begin
+        op_table_write_complete_error = DMA_ERROR_AXI_WR_SLVERR;
+    end else if (m_axi_bresp == AXI_RESP_DECERR) begin
+        op_table_write_complete_error = DMA_ERROR_AXI_WR_DECERR;
+    end else begin
+        op_table_write_complete_error = DMA_ERROR_NONE;
+    end
+    op_table_write_complete_en = 1'b0;
+
+    m_axis_write_desc_status_tag_next = op_table_tag[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]];
+    if (m_axis_write_desc_status_valid_reg) begin
+        m_axis_write_desc_status_error_next = DMA_ERROR_NONE;
+    end else begin
+        m_axis_write_desc_status_error_next = m_axis_write_desc_status_error_reg;
+    end
+    m_axis_write_desc_status_valid_next = 1'b0;
+
+    stat_wr_req_finish_status_next = op_table_write_complete_error;
+    stat_wr_req_finish_valid_next = 1'b0;
+
+    stat_wr_op_finish_tag_next = stat_wr_op_finish_tag_reg;
+    stat_wr_op_finish_status_next = m_axis_write_desc_status_error_next;
+    stat_wr_op_finish_valid_next = 1'b0;
+
+    if (USE_AXI_ID) begin
+        // accept write completions
+        stat_wr_req_finish_tag_next = m_axi_bid;
+
+        m_axi_bready_next = 1'b1;
+        if (m_axi_bready && m_axi_bvalid) begin
+            op_table_write_complete_ptr = m_axi_bid;
+            op_table_write_complete_en = 1'b1;
+            stat_wr_req_finish_valid_next = 1'b1;
+        end
+
+        // commit operations in-order
+        op_table_finish_en = 1'b0;
+        dec_active_op = 1'b0;
+
+        if (op_table_active[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]] && op_table_write_complete[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]] && op_table_finish_ptr_reg != op_table_tx_finish_ptr_reg) begin
+            op_table_finish_en = 1'b1;
+            dec_active_op = 1'b1;
+
+            if (op_table_error_code[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]] != DMA_ERROR_NONE) begin
+                m_axis_write_desc_status_error_next = op_table_error_code[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]];
+            end
+
+            stat_wr_op_finish_status_next = m_axis_write_desc_status_error_next;
+
+            if (op_table_last[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]]) begin
+                m_axis_write_desc_status_tag_next = op_table_tag[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]];
+                m_axis_write_desc_status_valid_next = 1'b1;
+                stat_wr_op_finish_tag_next = stat_wr_op_finish_tag_reg + 1;
+                stat_wr_op_finish_valid_next = 1'b1;
+            end
+        end
+    end else begin
+        // accept write completions
+        op_table_finish_en = 1'b0;
+        dec_active_op = 1'b0;
+
+        stat_wr_req_finish_tag_next = op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0];
+
+        m_axi_bready_next = 1'b1;
+        if (m_axi_bready && m_axi_bvalid) begin
+            op_table_finish_en = 1'b1;
+            dec_active_op = 1'b1;
+            stat_wr_req_finish_valid_next = 1'b1;
+
+            if (m_axi_bresp == AXI_RESP_SLVERR) begin
+                m_axis_write_desc_status_error_next = DMA_ERROR_AXI_WR_SLVERR;
+            end else if (m_axi_bresp == AXI_RESP_DECERR) begin
+                m_axis_write_desc_status_error_next = DMA_ERROR_AXI_WR_DECERR;
+            end
+
+            stat_wr_op_finish_status_next = m_axis_write_desc_status_error_next;
+
+            if (op_table_last[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]]) begin
+                m_axis_write_desc_status_tag_next = op_table_tag[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]];
+                m_axis_write_desc_status_valid_next = 1'b1;
+                stat_wr_op_finish_tag_next = stat_wr_op_finish_tag_reg + 1;
+                stat_wr_op_finish_valid_next = 1'b1;
+            end
+        end
+    end
+end

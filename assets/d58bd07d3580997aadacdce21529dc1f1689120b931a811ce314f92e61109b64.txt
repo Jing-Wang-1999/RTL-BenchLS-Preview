@@ -1,0 +1,56 @@
+module origen_147619 (
+    input [8:0] address,
+    input clk,
+    input debugaccess,
+    input monitor_error,
+    input monitor_go,
+    input monitor_ready,
+    input reset_n,
+    input write,
+    input [31:0] writedata,
+    output [31:0] oci_ienable,
+    output [31:0] oci_reg_readdata,
+    output oci_single_step_mode,
+    output ocireg_ers,
+    output ocireg_mrs,
+    output take_action_ocireg
+);
+
+    reg [31:0] oci_ienable_reg = 32'h0000002F;
+    reg oci_single_step_mode_reg = 1'b0;
+
+    wire oci_reg_00_addressed = (address == 9'h100);
+    wire oci_reg_01_addressed = (address == 9'h101);
+    wire [31:0] oci_reg_readdata;
+    wire ocireg_ers = writedata[2];
+    wire ocireg_mrs = writedata[1];
+    wire ocireg_sstep = writedata[4];
+    wire take_action_oci_intr_mask_reg = write_strobe & oci_reg_01_addressed;
+    wire take_action_ocireg = write_strobe & oci_reg_00_addressed;
+    wire write_strobe = write & debugaccess;
+
+    assign oci_reg_readdata = (address == 9'h100) ? {28'b0, oci_single_step_mode, monitor_ready, monitor_error, monitor_go} :
+                              (address == 9'h101) ? oci_ienable :
+                              32'b0;
+
+    assign oci_ienable = oci_ienable_reg;
+    assign oci_single_step_mode = oci_single_step_mode_reg;
+    assign take_action_ocireg = take_action_ocireg;
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            oci_single_step_mode_reg <= 1'b0;
+        end else if (take_action_ocireg) begin
+            oci_single_step_mode_reg <= ocireg_sstep;
+        end
+    end
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            oci_ienable_reg <= 32'h0000002F;
+        end else if (take_action_oci_intr_mask_reg) begin
+            oci_ienable_reg <= writedata;
+        end
+    end
+
+endmodule

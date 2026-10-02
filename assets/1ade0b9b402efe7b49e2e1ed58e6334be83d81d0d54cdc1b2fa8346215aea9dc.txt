@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.475ae707e4725e076c2c.ddc1dcf40d7e",
+  "compile_check": {
+    "case_id": "s1derived.475ae707e4725e076c2c.ddc1dcf40d7e",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_057857",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_057857.af4bb9012baaa294/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.475ae707e4725e076c2c",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "475ae707e4725e076c2c535e40355a6875ba76db0eb25ed4f3ac9e026779b4d1",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.475ae707e4725e076c2c.ddc1dcf40d7e",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_057857.af4bb9012baaa294/private/commercial_positive.log",
+    "commercial_log_sha256": "d647dceaf141c721042a16200aa7c5db7f9aaf22d3fb52b78cb0cda65e76cb58",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_057857.af4bb9012baaa294/private/historical_harness/00_sec_origen_057857.tcl",
+    "executed_script_sha256": "db60f6a2eb1aa98da2c7d0ca1d3f15cba88bf25be6f49291c86cff4c6a516131",
+    "golden_tops": [
+      "origen_057857"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.origen_057857.af4bb9012baaa294",
+    "parent_id": "s1p.475ae707e4725e076c2c",
+    "revised_tops": [
+      "origen_057857"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_057857",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.475ae707e4725e076c2c.ddc1dcf40d7e",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The ports, asynchronous active-high reset, priority, hold cases, and ten-bit wrapping updates match.",
+        "rtl_excerpt": "`if (state_read) ... pdlptr <= pdlptr + 1'b1; else if (state_fetch) ...`",
+        "spec_excerpt": "`state_read` has priority and increments on `~destpdlp & pdlcnt & ~srcpdlpop`; otherwise `state_fetch` loads or decrements."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.475ae707e4725e076c2c",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "0062ab0ea1ba9edc2b8b07c2aaaf53c26e1f5677c1959f76764540717e493caa",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "475ae707e4725e076c2c535e40355a6875ba76db0eb25ed4f3ac9e026779b4d1",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_057857.af4bb9012baaa294/private/historical_harness/00_sec_origen_057857.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_057857.af4bb9012baaa294/private/historical_harness/01_sec_origen_057857.tcl"
+  ],
+  "parent_id": "s1p.475ae707e4725e076c2c",
+  "primary_review": {
+    "case_id": "s1derived.475ae707e4725e076c2c.ddc1dcf40d7e",
+    "checks": {
+      "behavior": "The prose calls reset synchronous, but both pointer blocks use asynchronous active-high reset.",
+      "boundaries": "Checked defaults, rollover, handshake, initialization, and exhaustive cases as applicable.",
+      "interface": "Compared every top-level port, direction, width, and parameter default.",
+      "rtl_reasonableness": "Reasonable hardware.",
+      "sequential_and_reset": "Checked combinational or edge behavior, reset, priority, enable, and hold semantics."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The prose calls reset synchronous, but both pointer blocks use asynchronous active-high reset.",
+        "rtl_excerpt": "always @(posedge clk or posedge reset)",
+        "spec_excerpt": "synchronous reset (reset)"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose calls reset synchronous, but both pointer blocks use asynchronous active-high reset.",
+        "rtl_evidence": "always @(posedge clk or posedge reset)",
+        "spec_evidence": "synchronous reset (reset)",
+        "type": "reset_polarity"
+      }
+    ],
+    "parent_id": "s1p.475ae707e4725e076c2c",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_06/s1derived.475ae707e4725e076c2c.ddc1dcf40d7e.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "475ae707e4725e076c2c535e40355a6875ba76db0eb25ed4f3ac9e026779b4d1",
+    "source_group": "S2",
+    "specification_sha256": "ddc1dcf40d7e752c589c68968c8e5e0c727eacd477b0d0399a1a91006c5d974c",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_06/s1derived.475ae707e4725e076c2c.ddc1dcf40d7e.md",
+  "qualified_specification_sha256": "0062ab0ea1ba9edc2b8b07c2aaaf53c26e1f5677c1959f76764540717e493caa",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_057857.af4bb9012baaa294/private/golden_design.v",
+  "rtl_sha256": "475ae707e4725e076c2c535e40355a6875ba76db0eb25ed4f3ac9e026779b4d1",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_057857.af4bb9012baaa294/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "ddc1dcf40d7e752c589c68968c8e5e0c727eacd477b0d0399a1a91006c5d974c",
+  "top_module": "origen_057857"
+}

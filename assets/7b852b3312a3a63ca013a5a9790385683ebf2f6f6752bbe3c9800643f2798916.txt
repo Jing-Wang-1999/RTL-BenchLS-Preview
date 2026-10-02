@@ -1,0 +1,95 @@
+always @*
+  begin
+    // Default to original value.
+    d_par           = q_par;
+    d_ar            = q_ar;
+    d_pd0           = q_pd0;
+    d_pd1           = q_pd1;
+    d_bg_bit3_shift = q_bg_bit3_shift;
+    d_bg_bit2_shift = q_bg_bit2_shift;
+    d_bg_bit1_shift = q_bg_bit1_shift;
+    d_bg_bit0_shift = q_bg_bit0_shift;
+
+    upd_v_cntrs = 1'b0;
+    inc_v_cntrs = 1'b0;
+    upd_h_cntrs = 1'b0;
+    inc_h_cntrs = 1'b0;
+
+    vram_a_sel = VRAM_A_SEL_RI;
+
+    if (en_in && ((nes_y_in < 239) || (nes_y_next_in == 0)))
+      begin
+        if (pix_pulse_in && (nes_x_in == 319))
+          begin
+            upd_h_cntrs = 1'b1;
+
+            if (nes_y_next_in != nes_y_in)
+              begin
+                if (nes_y_next_in == 0)
+                  upd_v_cntrs = 1'b1;
+                else
+                  inc_v_cntrs = 1'b1;
+              end
+          end
+
+        if ((nes_x_in < 256) || ((nes_x_in >= 320 && nes_x_in < 336)))
+          begin
+            if (pix_pulse_in)
+              begin
+                d_bg_bit3_shift = { q_bg_bit3_shift[8], q_bg_bit3_shift[8:1] };
+                d_bg_bit2_shift = { q_bg_bit2_shift[8], q_bg_bit2_shift[8:1] };
+                d_bg_bit1_shift = { 1'b0, q_bg_bit1_shift[15:1] };
+                d_bg_bit0_shift = { 1'b0, q_bg_bit0_shift[15:1] };
+              end
+
+            if (pix_pulse_in && (nes_x_in[2:0] == 3'h7))
+              begin
+                inc_h_cntrs         = 1'b1;
+
+                d_bg_bit3_shift[8]  = q_ar[1];
+                d_bg_bit2_shift[8]  = q_ar[0];
+
+                d_bg_bit1_shift[15] = q_pd1[0];
+                d_bg_bit1_shift[14] = q_pd1[1];
+                d_bg_bit1_shift[13] = q_pd1[2];
+                d_bg_bit1_shift[12] = q_pd1[3];
+                d_bg_bit1_shift[11] = q_pd1[4];
+                d_bg_bit1_shift[10] = q_pd1[5];
+                d_bg_bit1_shift[ 9] = q_pd1[6];
+                d_bg_bit1_shift[ 8] = q_pd1[7];
+
+                d_bg_bit0_shift[15] = q_pd0[0];
+                d_bg_bit0_shift[14] = q_pd0[1];
+                d_bg_bit0_shift[13] = q_pd0[2];
+                d_bg_bit0_shift[12] = q_pd0[3];
+                d_bg_bit0_shift[11] = q_pd0[4];
+                d_bg_bit0_shift[10] = q_pd0[5];
+                d_bg_bit0_shift[ 9] = q_pd0[6];
+                d_bg_bit0_shift[ 8] = q_pd0[7];
+              end
+
+            case (nes_x_in[2:0])
+              3'b000:
+                begin
+                  vram_a_sel = VRAM_A_SEL_NT_READ;
+                  d_par      = vram_d_in;
+                end
+              3'b001:
+                begin
+                  vram_a_sel = VRAM_A_SEL_AT_READ;
+                  d_ar       = vram_d_in >> { q_vtc[1], q_htc[1], 1'b0 };
+                end
+              3'b010:
+                begin
+                  vram_a_sel = VRAM_A_SEL_PT0_READ;
+                  d_pd0      = vram_d_in;
+                end
+              3'b011:
+                begin
+                  vram_a_sel = VRAM_A_SEL_PT1_READ;
+                  d_pd1      = vram_d_in;
+                end
+            endcase
+          end
+      end
+  end

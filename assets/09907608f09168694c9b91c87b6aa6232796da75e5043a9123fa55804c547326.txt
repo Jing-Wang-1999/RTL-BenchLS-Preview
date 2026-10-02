@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.9c982a5e4c2115d2af26.2cfbf40adb57",
+  "compile_check": {
+    "case_id": "s1derived.9c982a5e4c2115d2af26.2cfbf40adb57",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "oh_oai222",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_oai222.86b47d31f9519688/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.9c982a5e4c2115d2af26",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "9c982a5e4c2115d2af2685b4ccc9967bfe6da89013bf8c3f500227e6f96e64b6",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.9c982a5e4c2115d2af26.2cfbf40adb57",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_oai222.86b47d31f9519688/private/commercial_positive.log",
+    "commercial_log_sha256": "ac537dee1f5762e461b62643e1b0c869890779ccb6a5408d8689d5593236f647",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_oai222.86b47d31f9519688/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "oh_oai222"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.oh_oai222.86b47d31f9519688",
+    "parent_id": "s1p.9c982a5e4c2115d2af26",
+    "revised_tops": [
+      "oh_oai222"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "oh_oai222",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.9c982a5e4c2115d2af26.2cfbf40adb57",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Six width-DW inputs and the inverted conjunction of their three paired ORs are complete. Default DW1 and stateless behavior match; the gate array is reasonable for positive widths.",
+        "rtl_excerpt": "assign z = ~((a0 | a1) & (b0 | b1) & (c0 | c1));",
+        "specification_excerpt": "Each result bit is `z = ~((a0 | a1) & (b0 | b1) & (c0 | c1))`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.9c982a5e4c2115d2af26",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "d8d0baf0791684e4d4a9c57f4239f2b81fc773f4c1defb4030eeb885acec0ed2",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9c982a5e4c2115d2af2685b4ccc9967bfe6da89013bf8c3f500227e6f96e64b6",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_oai222.86b47d31f9519688/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_oai222.86b47d31f9519688/private/historical_harness/01_conformal_rtl_oh_oai222.do"
+  ],
+  "parent_id": "s1p.9c982a5e4c2115d2af26",
+  "primary_review": {
+    "case_id": "s1derived.9c982a5e4c2115d2af26.2cfbf40adb57",
+    "checks": {
+      "behavior": "The function agrees, but the interface default and timing are incomplete.",
+      "boundaries": "checked parameter default and vector width",
+      "interface": "checked against complete RTL port declarations",
+      "rtl_reasonableness": "reasonable synthesizable hardware for the stated function; compile diagnostic considered",
+      "sequential_and_reset": "combinational/no sequential state, except case-specific diagnostics stated in flaws"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The function agrees, but the interface default and timing are incomplete.",
+        "rtl_excerpt": "assign z = ~((a0|a1)&(b0|b1)&(c0|c1));",
+        "spec_excerpt": "z inverts the AND of three pairwise OR results."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The truncated prose omits DW's default and completion of the stateless contract.",
+        "rtl_evidence": "parameter DW=1 and one continuous assignment",
+        "spec_evidence": "ends at 'The module is designed'",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.9c982a5e4c2115d2af26",
+    "proposed_specification_path": "proposed_repairs_3_sol_01/s1derived.9c982a5e4c2115d2af26.2cfbf40adb57.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9c982a5e4c2115d2af2685b4ccc9967bfe6da89013bf8c3f500227e6f96e64b6",
+    "source_group": "S1",
+    "specification_sha256": "2cfbf40adb575911d7e42f8d95c54e7cd5f0b044240d7e725faa69d1dcad6bb8",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_01/s1derived.9c982a5e4c2115d2af26.2cfbf40adb57.md",
+  "qualified_specification_sha256": "d8d0baf0791684e4d4a9c57f4239f2b81fc773f4c1defb4030eeb885acec0ed2",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_oai222.86b47d31f9519688/private/golden_design.v",
+  "rtl_sha256": "9c982a5e4c2115d2af2685b4ccc9967bfe6da89013bf8c3f500227e6f96e64b6",
+  "source_corpus": "SEC-Flow-Star-repos-31.oh",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_oai222.86b47d31f9519688/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "2cfbf40adb575911d7e42f8d95c54e7cd5f0b044240d7e725faa69d1dcad6bb8",
+  "top_module": "oh_oai222"
+}

@@ -1,0 +1,60 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/966",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/965",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 966,
+  "issue_number": 965,
+  "verilog_files": [
+    "rtl/cv32e40p_core.sv",
+    "rtl/cv32e40p_top.sv"
+  ],
+  "deletions": 10,
+  "additions": 16,
+  "patches": [
+    {
+      "filename": "rtl/cv32e40p_core.sv",
+      "patch": "@@ -70,7 +70,8 @@ module cv32e40p_core\n     output logic [31:0] data_wdata_o,\n     input  logic [31:0] data_rdata_i,\n \n-    // apu-interconnect\n+    // CVFPU interface\n+    output logic                              apu_busy_o,\n     // handshake signals\n     output logic                              apu_req_o,\n     input  logic                              apu_gnt_i,\n@@ -163,7 +164,6 @@ module cv32e40p_core\n   logic               ctrl_busy;\n   logic               if_busy;\n   logic               lsu_busy;\n-  logic               apu_busy;\n \n   logic        [31:0] pc_ex;  // PC of last executed branch or cv.elw\n \n@@ -399,7 +399,7 @@ module cv32e40p_core\n       .if_busy_i  (if_busy),\n       .ctrl_busy_i(ctrl_busy),\n       .lsu_busy_i (lsu_busy),\n-      .apu_busy_i (apu_busy),\n+      .apu_busy_i (apu_busy_o),\n \n       // PULP cluster\n       .pulp_clock_en_i       (pulp_clock_en_i),\n@@ -634,7 +634,7 @@ module cv32e40p_core\n       .apu_write_regs_valid_o (apu_write_regs_valid),\n       .apu_write_dep_i        (apu_write_dep),\n       .apu_perf_dep_o         (perf_apu_dep),\n-      .apu_busy_i             (apu_busy),\n+      .apu_busy_i             (apu_busy_o),\n \n       // CSR ID/EX\n       .csr_access_ex_o      (csr_access_ex),\n@@ -818,9 +818,9 @@ module cv32e40p_core\n       .apu_perf_cont_o(perf_apu_cont),\n       .apu_perf_wb_o  (perf_apu_wb),\n       .apu_ready_wb_o (apu_ready_wb),\n-      .apu_busy_o     (apu_busy),\n+      .apu_busy_o     (apu_busy_o),\n \n-      // apu-interconnect\n+      // CVFPU interface\n       // handshake signals\n       .apu_req_o     (apu_req_o),\n       .apu_gnt_i     (apu_gnt_i),",
+      "additions": 6,
+      "deletions": 6,
+      "changes": 12
+    },
+    {
+      "filename": "rtl/cv32e40p_top.sv",
+      "patch": "@@ -70,7 +70,7 @@ module cv32e40p_top #(\n   import cv32e40p_apu_core_pkg::*;\n \n   // Core to FPU\n-  logic                              clk;\n+  logic                              apu_busy;\n   logic                              apu_req;\n   logic [   APU_NARGS_CPU-1:0][31:0] apu_operands;\n   logic [     APU_WOP_CPU-1:0]       apu_op;\n@@ -82,6 +82,8 @@ module cv32e40p_top #(\n   logic [                31:0]       apu_rdata;\n   logic [APU_NUSFLAGS_CPU-1:0]       apu_rflags;\n \n+  logic apu_clk_en, apu_clk;\n+\n   // Instantiate the Core\n   cv32e40p_core #(\n       .COREV_PULP      (COREV_PULP),\n@@ -119,6 +121,7 @@ module cv32e40p_top #(\n       .data_wdata_o (data_wdata_o),\n       .data_rdata_i (data_rdata_i),\n \n+      .apu_busy_o    (apu_busy),\n       .apu_req_o     (apu_req),\n       .apu_gnt_i     (apu_gnt),\n       .apu_operands_o(apu_operands),\n@@ -143,20 +146,23 @@ module cv32e40p_top #(\n \n   generate\n     if (FPU) begin : fpu_gen\n+\n+      assign apu_clk_en = apu_req | apu_busy;\n+\n       // FPU clock gate\n       cv32e40p_clock_gate core_clock_gate_i (\n           .clk_i       (clk_i),\n-          .en_i        (!core_sleep_o),\n+          .en_i        (apu_clk_en),\n           .scan_cg_en_i(scan_cg_en_i),\n-          .clk_o       (clk)\n+          .clk_o       (apu_clk)\n       );\n \n       // Instantiate the FPU wrapper\n       cv32e40p_fp_wrapper #(\n           .FPU_ADDMUL_LAT(FPU_ADDMUL_LAT),\n           .FPU_OTHERS_LAT(FPU_OTHERS_LAT)\n       ) fp_wrapper_i (\n-          .clk_i         (clk),\n+          .clk_i         (apu_clk),\n           .rst_ni        (rst_ni),\n           .apu_req_i     (apu_req),\n           .apu_gnt_o     (apu_gnt),",
+      "additions": 10,
+      "deletions": 4,
+      "changes": 14
+    }
+  ],
+  "pr_info": {
+    "title": "Issue #965 correction",
+    "body": null,
+    "state": "closed",
+    "created_at": "2024-03-21T17:44:59Z",
+    "updated_at": "2024-03-26T14:17:55Z",
+    "merged_at": "2024-03-25T17:14:11Z",
+    "user": "pascalgouedo"
+  },
+  "issue_info": {
+    "title": "FPU power consumption",
+    "body": "FPU has its own clock gating cell in cv32e40p_top which is only disabled when the Core is in sleep mode due to wfi instruction.\r\nMore power consumption power saving could be done by enabling its clock only when an FPU instruction is really executed.",
+    "labels": [
+      "Type:Enhancement",
+      "Status:Resolved",
+      "Component:RTL",
+      "PARAM:FPU"
+    ],
+    "state": "closed",
+    "created_at": "2024-03-21T11:43:16Z",
+    "updated_at": "2024-05-16T13:00:07Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 6
+  },
+  "base_commit": "bfeff283d544efbd53563aff4b759b5b7cfa0223",
+  "head_commit": "9420d7d53378ae5984e115b6f161d97d10c675af",
+  "base_ref": "dev",
+  "task_id": "openhwgroup_cv32e40p_966_965",
+  "lec_status": "useful_pass"
+}

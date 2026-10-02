@@ -1,0 +1,5 @@
+# `mg_03612` DMA request generator
+
+Inputs are `clk`, active-low asynchronous `rst`, `cfg[7:0]`, `status[1:0]`, `full_empty`, and `dma_ack`; output `dma_req` is registered. A combinational candidate requires both `cfg[0]` and `cfg[6]`. For `cfg[5:4]` equal to 0, 1, or 2 it additionally requires `full_empty` OR, respectively, `status<3`, `status[1]==0`, or `status==0`. For mode 3 it requires `full_empty` alone.
+
+On each rising edge, an intermediate register captures `candidate && !dma_ack`. On a following rising edge, `dma_req` sets only when both the intermediate register and current candidate are high and `dma_ack` is low. Once set it holds until a rising edge with `dma_ack=1`; if it is not yet set and the set condition is false, it holds low. Asserting `rst=0` asynchronously clears `dma_req`, but does not reset the intermediate register. The `#1` nonblocking delays are simulation delays and do not alter the edge-level contract.

@@ -1,0 +1,37 @@
+The given Verilog module, `crc32_polynomial_update`, computes and maintains a 32-bit Cyclic Redundancy Check (CRC) value, based on input data and control signals. The purpose of the module is to regularly update a CRC value used for error-checking purposes.
+
+Key Points and Operation:
+1. **Functionality**:
+   - Computes a 32-bit CRC from incoming 16-bit data packets.
+   - Stores intermediate and final CRC values in registers.
+
+2. **Control Flow**:
+   - On a high reset signal, the CRC registers are initialized to a predefined value (`32'hFFFFFFFF` for `crc_reg` and `16'hFFFF` for `crc`).
+   - If initialization (`init`) signal is high, the CRC registers are re-initialized to the same predefined values.
+   - If the calculation (`calc`) signal and `d_valid` are both high, the module computes the next CRC value using the input data `d` and updates the `crc_reg` register.
+   - If only `d_valid` is high and `calc` is low, the module performs a different update to the `crc_reg` register, reflecting another state of data processing.
+
+3. **Data Processing and Signal Interactions**:
+   - The `next_crc` wire holds the intermediate CRC calculations based on the input data `d` and the current state of `crc_reg`.
+   - The `next_crc` values are derived through bitwise operations involving specific bits of `crc_reg` and `d`, reflecting the polynomial used for CRC calculations.
+   - On every clock edge, depending on the control signals, `crc_reg` and `crc` are updated either with `next_crc` or specific transformations of the previous CRC values.
+   - The final 16-bit CRC is obtained by inverting selected bits from `next_crc` to keep track of the calculated checksum.
+
+This module systematically processes incoming data and updates the CRC value based on established CRC polynomial rules, with clear paths for initialization, calculation, and data processing controlled through enable signals and clock edges.
+
+Module Interface:
+module crc32_polynomial_update (
+   crc_reg,
+   crc,
+   d,
+   calc,
+   init,
+   d_valid,
+   clk,
+   reset
+);
+
+Behavioral Clarifications:
+- When calc is low and d_valid is high, crc_reg is updated as {crc_reg[15:0], 16'hFFFF} and the 16-bit crc output is the bitwise inversion of crc_reg[15:0] with bits reversed (LSB-first).
+- When calc is high and d_valid is high, the 16-bit crc output is the bitwise inversion of next_crc[31:16] with bits reversed (MSB of next_crc[31:16] becomes LSB of crc).
+- The next_crc computation uses CRC-16/CCITT polynomial applied to 16-bit input data combined with the current 32-bit crc_reg.

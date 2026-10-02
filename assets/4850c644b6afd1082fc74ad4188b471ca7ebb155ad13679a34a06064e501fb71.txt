@@ -1,0 +1,11 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/harder_4695f376e8c5f10d8377_positive.v0.v
+check_sec -analyze -imp -sv ./input/rtl/harder_4695f376e8c5f10d8377_positive.negative.v
+check_sec -elaborate -spec -top adder -disable_auto_bbox
+check_sec -elaborate -imp -top adder -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clk
+reset -expression {rst}
+check_sec -gen
+check_sec -prove -strategy proof

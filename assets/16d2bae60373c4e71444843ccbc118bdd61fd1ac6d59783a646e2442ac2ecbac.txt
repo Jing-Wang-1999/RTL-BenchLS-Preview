@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.1b08ea1c84e9f7362edd.2b9efb969345",
+  "compile_check": {
+    "case_id": "s1derived.1b08ea1c84e9f7362edd.2b9efb969345",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_00214",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_00214.2b7a132720896742/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.1b08ea1c84e9f7362edd",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "1b08ea1c84e9f7362edda3222245b23cd302886ed0ead8748314fb7dd4a10358",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.1b08ea1c84e9f7362edd.2b9efb969345",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_00214.2b7a132720896742/private/commercial_positive.log",
+    "commercial_log_sha256": "4c1d33b5c5ab63d5a2e715de4831bf367e679ae21d501cf8fbf785a406f5ae8c",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_00214.2b7a132720896742/private/historical_harness/00_sec_rtlpp_00214.tcl",
+    "executed_script_sha256": "d53b0d4030409fefd51d0c5d658306cdec6670928cfed1cdf69daef4391821f2",
+    "golden_tops": [
+      "rtlpp_00214"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.rtlpp_00214.2b7a132720896742",
+    "parent_id": "s1p.1b08ea1c84e9f7362edd",
+    "revised_tops": [
+      "rtlpp_00214"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_00214",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.1b08ea1c84e9f7362edd.2b9efb969345",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Both read ports independently hide physical entryzero and otherwise reflect the addressed32-bit state asynchronously. Low reset clears16 entries; enabledposedgewrite updates one entry, with same-address reads changing after the nonblocking update. Widths and read-enable tristates are complete.",
+        "rtl_excerpt": "read_a_value = 32'hzzzzzzzz;",
+        "specification_excerpt": "A disabled read port drives all 32 output bits to high impedance."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.1b08ea1c84e9f7362edd",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "3495a3415adf1f5baff8ec7d0e431a6a359951ea6dfdd08ac7bd9499be7e6105",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "1b08ea1c84e9f7362edda3222245b23cd302886ed0ead8748314fb7dd4a10358",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_00214.2b7a132720896742/private/historical_harness/00_sec_rtlpp_00214.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_00214.2b7a132720896742/private/historical_harness/01_sec_rtlpp_00214.tcl"
+  ],
+  "parent_id": "s1p.1b08ea1c84e9f7362edd",
+  "primary_review": {
+    "case_id": "s1derived.1b08ea1c84e9f7362edd.2b9efb969345",
+    "checks": {
+      "behavior": "The stated behavior agrees, but same-address update timing and register-zero write semantics need completion.",
+      "boundaries": "checked parameter defaults, widths, truth/arithmetic boundaries and priority",
+      "interface": "checked complete RTL interface against prose",
+      "rtl_reasonableness": "reasonable hardware for the stated function",
+      "sequential_and_reset": "checked state, clock, reset and hold behavior; combinational where stated"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The stated behavior agrees, but same-address update timing and register-zero write semantics need completion.",
+        "rtl_excerpt": "combinational reads special-case select 0; async active-low reset clears array; writes permit every address",
+        "spec_excerpt": "Enabled reads are asynchronous, disabled reads are Z, address zero reads zero, and reset clears all entries."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose truncates during read-during-write behavior and omits that writes to physical register 0 occur but remain hidden by hardwired-zero reads.",
+        "rtl_evidence": "combinational reads special-case select 0; async active-low reset clears array; writes permit every address",
+        "spec_evidence": "Enabled reads are asynchronous, disabled reads are Z, address zero reads zero, and reset clears all entries.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.1b08ea1c84e9f7362edd",
+    "proposed_specification_path": "proposed_repairs_3_sol_02/s1derived.1b08ea1c84e9f7362edd.2b9efb969345.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "1b08ea1c84e9f7362edda3222245b23cd302886ed0ead8748314fb7dd4a10358",
+    "source_group": "S4",
+    "specification_sha256": "2b9efb9693452bc564da7d6cfb17a4ed5b4c4577d669f4d294be59d287cd14fe",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_02/s1derived.1b08ea1c84e9f7362edd.2b9efb969345.md",
+  "qualified_specification_sha256": "3495a3415adf1f5baff8ec7d0e431a6a359951ea6dfdd08ac7bd9499be7e6105",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_00214.2b7a132720896742/private/golden_design.v",
+  "rtl_sha256": "1b08ea1c84e9f7362edda3222245b23cd302886ed0ead8748314fb7dd4a10358",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_00214.2b7a132720896742/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "2b9efb9693452bc564da7d6cfb17a4ed5b4c4577d669f4d294be59d287cd14fe",
+  "top_module": "rtlpp_00214"
+}

@@ -1,0 +1,36 @@
+always @(posedge sg_clk) begin
+    if (sg_resetn == 1'b0) begin
+      hwdesc_flags <= 'h00;
+      hwdesc_id <= 'h00;
+      dest_addr <= 'h00;
+      src_addr <= 'h00;
+      next_desc_addr <= 'h00;
+      y_length <= 'h00;
+      x_length <= 'h00;
+      src_stride <= 'h00;
+      dest_stride <= 'h00;
+    end else begin
+      if (sg_in_valid && sg_in_ready) begin
+        next_desc_addr <= first_desc_address;
+      end
+      if (m_axi_rvalid) begin
+        case (hwdesc_counter)
+        0: begin
+          hwdesc_id <= m_axi_rdata[63:32];
+          hwdesc_flags <= m_axi_rdata[1:0];
+          end
+        1: dest_addr <= m_axi_rdata[DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_DEST];
+        2: src_addr <= m_axi_rdata[DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SRC];
+        3: next_desc_addr <= m_axi_rdata[DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SG];
+        4: begin
+          x_length <= m_axi_rdata[63:32];
+          y_length <= m_axi_rdata[31:0];
+          end
+        5: begin
+          dest_stride <= m_axi_rdata[63:32];
+          src_stride <= m_axi_rdata[31:0];
+          end
+        endcase
+      end
+    end
+  end

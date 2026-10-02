@@ -1,0 +1,44 @@
+module __formal113_core_8ef47a672ec3
+(
+    input [15:0] Data_in,
+    input Clk,
+    input ip_resetn,
+    input global_resetn,
+    input write,
+    output reg [15:0] Data_out
+);
+
+    reg Write_once_status;
+
+    always @(posedge Clk or negedge ip_resetn)
+    begin
+        if (~ip_resetn)
+        begin
+            Data_out <= 16'h0000;
+            Write_once_status <= 1'b0;
+        end
+        else if (write & ~Write_once_status)
+        begin
+            Data_out <= Data_in & 16'hFFFE;
+            Write_once_status <= 1'b1; // Changed to keep Write_once_status independent
+        end
+        else
+        begin
+            Data_out[15:1] <= Data_out[15:1];
+            Data_out[0] <= Write_once_status;
+        end
+    end
+
+endmodule
+module write_once_register(
+  input wire [15:0] Data_in,
+  input wire [0:0] Clk,
+  input wire [0:0] ip_resetn,
+  input wire [0:0] global_resetn,
+  input wire [0:0] write,
+  output wire [15:0] Data_out
+);
+wire [15:0] __negative_output;
+__formal113_core_8ef47a672ec3 dut(.Data_in(Data_in), .Clk(Clk), .ip_resetn(ip_resetn), .global_resetn(global_resetn), .write(write), .Data_out(__negative_output));
+assign Data_out = __negative_output ^ 16'd1;
+endmodule

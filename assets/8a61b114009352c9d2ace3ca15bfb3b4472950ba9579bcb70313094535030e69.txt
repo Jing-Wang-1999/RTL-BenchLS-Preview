@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/272",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/270",
+  "repository": "lowRISC/ibex",
+  "pr_number": 272,
+  "issue_number": 270,
+  "verilog_files": [
+    "rtl/ibex_controller.sv"
+  ],
+  "deletions": 3,
+  "additions": 10,
+  "patches": [
+    {
+      "filename": "rtl/ibex_controller.sv",
+      "patch": "@@ -104,6 +104,8 @@ module ibex_controller (\n   logic stall;\n   logic halt_if;\n   logic halt_id;\n+  logic illegal_dret;\n+  logic illegal_insn;\n   logic exc_req;\n   logic exc_req_lsu;\n   logic special_req;\n@@ -119,7 +121,7 @@ module ibex_controller (\n   // glitches\n   always_ff @(negedge clk_i) begin\n     // print warning in case of decoding errors\n-    if ((ctrl_fsm_cs == DECODE) && instr_valid_i && illegal_insn_i) begin\n+    if ((ctrl_fsm_cs == DECODE) && instr_valid_i && illegal_insn) begin\n       $display(\"%t: Illegal instruction (core %0d) at PC 0x%h: 0x%h\", $time, ibex_core.core_id_i,\n                ibex_id_stage.pc_id_i, ibex_id_stage.instr_rdata_i);\n     end\n@@ -134,8 +136,13 @@ module ibex_controller (\n   assign load_err_d  = load_err_i;\n   assign store_err_d = store_err_i;\n \n+  // \"Executing DRET outside of Debug Mode causes an illegal instruction exception.\"\n+  // [Debug Spec v0.13.2, p.41]\n+  assign illegal_dret = dret_insn_i & ~debug_mode_q;\n+  assign illegal_insn = illegal_insn_i | illegal_dret;\n+\n   // exception requests\n-  assign exc_req     = ecall_insn_i | ebrk_insn_i | illegal_insn_i | instr_fetch_err_i;\n+  assign exc_req     = ecall_insn_i | ebrk_insn_i | illegal_insn | instr_fetch_err_i;\n \n   // LSU exception requests\n   assign exc_req_lsu = store_err_i | load_err_i;\n@@ -442,7 +449,7 @@ module ibex_controller (\n             exc_cause_o = EXC_CAUSE_INSTR_ACCESS_FAULT;\n             csr_mtval_o = pc_id_i;\n \n-          end else if (illegal_insn_i) begin\n+          end else if (illegal_insn) begin\n             exc_cause_o = EXC_CAUSE_ILLEGAL_INSN;\n             csr_mtval_o = instr_is_compressed_i ? {16'b0, instr_compressed_i} : instr_i;\n ",
+      "additions": 10,
+      "deletions": 3,
+      "changes": 13
+    }
+  ],
+  "pr_info": {
+    "title": "Fix behavior of DRET executed outside debug mode",
+    "body": "Executing a DRET instruction outside of debug mode now causes an illegal instruction exception as mandated by the Debug Spec v0.13.2 p.41.\r\n\r\nThis resolves lowRISC/ibex#270.",
+    "state": "closed",
+    "created_at": "2019-08-29T10:15:20Z",
+    "updated_at": "2019-08-29T14:06:15Z",
+    "merged_at": "2019-08-29T10:59:05Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "DRET treated as normal instruction in M-mode",
+    "body": "![Screenshot from 2019-08-28 16-50-42](https://user-images.githubusercontent.com/16736281/63900092-46c32080-c9b4-11e9-8d3a-15851f1eefc7.png)\r\nWhile executing this code in M-mode and with no external debug/irq stimulus applied, the log shows ibex executing a dret and then jumping to `PC=0x00000000`, and the instruction at this address raises an illegal instruction exception, causing a jump to our vectored trap handler at `0x8001c000`.\r\n![Screenshot from 2019-08-28 16-51-38](https://user-images.githubusercontent.com/16736281/63900184-9a356e80-c9b4-11e9-93f6-f0410a35a79c.png)\r\nIn the waveform, we see that ibex recognizes the `dret` instruction, raising `dret_insn_dec`, but then when the core jumps to `FLUSH` state it executes the instruction as normal, and sets the next pc to `PC_DRET`, the value stored in the `dpc` CSR, or `0x00000000`. However according to the debug spec, executing `dret` while not in Debug Mode should cause an illegal instruction exception (Debug Spec, chapter 4.6), which does not seem to be the case in this situation.",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "created_at": "2019-08-29T00:01:57Z",
+    "updated_at": "2019-08-29T16:24:50Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 300
+  },
+  "task_id": "lowRISC_ibex_272_270",
+  "lec_status": "useful_pass",
+  "base_commit": "68b170638ab4771623e5897d5cc44dd6f11a0872",
+  "head_commit": "7f46fa60350b023f19fcc7ce291090cbc53c8b59"
+}

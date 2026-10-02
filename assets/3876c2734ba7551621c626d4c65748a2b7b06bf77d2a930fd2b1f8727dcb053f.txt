@@ -1,0 +1,60 @@
+module origen_139566 (
+    input wire clk,
+    input wire key1,
+    input wire key2,
+    output reg da_clk,
+    output reg [7:0] da_db
+);
+
+// Parameters
+localparam CLOCK_FREQ = 100_000_000;
+localparam BASE_FREQ = 440;
+localparam FREQ_STEP = 100;
+localparam PHASE_ACCUM_WIDTH = 32;
+localparam LUT_ADDR_WIDTH = 8;
+localparam LUT_DATA_WIDTH = 8;
+
+// Internal signals
+reg [PHASE_ACCUM_WIDTH-1:0] phase_accum;
+reg [PHASE_ACCUM_WIDTH-1:0] phase_inc;
+wire [LUT_ADDR_WIDTH-1:0] lut_addr;
+reg [31:0] freq;
+
+// Sine LUT
+reg [LUT_DATA_WIDTH-1:0] sine_lut [0:(2**LUT_ADDR_WIDTH)-1];
+
+// Initialize sine LUT
+initial begin
+    integer i;
+    for (i = 0; i < 2**LUT_ADDR_WIDTH; i = i + 1) begin
+        sine_lut[i] = $rtoi(127.0 * $sin(2.0 * 3.14159 * i / (2**LUT_ADDR_WIDTH)) + 128.0);
+    end
+end
+
+// Frequency control
+always @(posedge clk) begin
+    if (key1 && key2)
+        freq <= BASE_FREQ + FREQ_STEP;
+    else if (key2)
+        freq <= BASE_FREQ - FREQ_STEP;
+    else
+        freq <= BASE_FREQ;
+    
+    phase_inc <= (freq << PHASE_ACCUM_WIDTH) / CLOCK_FREQ;
+end
+
+// Phase accumulator
+always @(posedge clk) begin
+    phase_accum <= phase_accum + phase_inc;
+end
+
+// LUT address generation
+assign lut_addr = phase_accum[PHASE_ACCUM_WIDTH-1:PHASE_ACCUM_WIDTH-LUT_ADDR_WIDTH];
+
+// Output generation
+always @(posedge clk) begin
+    da_db <= sine_lut[lut_addr];
+    da_clk <= ~da_clk;
+end
+
+endmodule

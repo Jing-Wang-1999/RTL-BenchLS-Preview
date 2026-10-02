@@ -1,0 +1,81 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+begin
+    // CSR - Machine
+    csr_mepc_q         <= 32'b0;
+    csr_sr_q           <= 32'b0;
+    csr_mcause_q       <= 32'b0;
+    csr_mtval_q        <= 32'b0;
+    csr_mtvec_q        <= 32'b0;
+    csr_mip_q          <= 32'b0;
+    csr_mie_q          <= 32'b0;
+    csr_mpriv_q        <= 2'd3;
+    csr_mcycle_q       <= 32'b0;
+    csr_mcycle_h_q     <= 32'b0;
+    csr_mscratch_q     <= 32'b0;
+    csr_mtimecmp_q     <= 32'b0;
+    csr_mtime_ie_q     <= 1'b0;
+    csr_medeleg_q      <= 32'b0;
+    csr_mideleg_q      <= 32'b0;
+
+    // CSR - Super
+    csr_sepc_q         <= 32'b0;
+    csr_stvec_q        <= 32'b0;
+    csr_scause_q       <= 32'b0;
+    csr_stval_q        <= 32'b0;
+    csr_satp_q         <= 32'b0;
+    csr_sscratch_q     <= 32'b0;
+
+    csr_mip_next_q     <= 32'b0;
+end
+else
+begin
+    // CSR - Machine
+    csr_mepc_q         <= csr_mepc_r;
+    csr_sr_q           <= csr_sr_r;
+    csr_mcause_q       <= csr_mcause_r;
+    csr_mtval_q        <= csr_mtval_r;
+    csr_mtvec_q        <= csr_mtvec_r;
+    csr_mip_q          <= csr_mip_r;
+    csr_mie_q          <= csr_mie_r;
+    csr_mpriv_q        <= SUPPORT_SUPER ? csr_mpriv_r : 2'd3;
+    csr_mcycle_q       <= csr_mcycle_r;
+    csr_mscratch_q     <= csr_mscratch_r;
+    csr_mtimecmp_q     <= SUPPORT_MTIMECMP ? csr_mtimecmp_r : 32'b0;
+    csr_mtime_ie_q     <= SUPPORT_MTIMECMP ? csr_mtime_ie_r : 1'b0;
+    csr_medeleg_q      <= SUPPORT_SUPER ? (csr_medeleg_r   & 32'h0000FFFF) : 32'b0;
+    csr_mideleg_q      <= SUPPORT_SUPER ? (csr_mideleg_r   & 32'h0000FFFF) : 32'b0;
+
+    // CSR - Super
+    csr_sepc_q         <= SUPPORT_SUPER ? (csr_sepc_r     & 32'hFFFFFFFF)     : 32'b0;
+    csr_stvec_q        <= SUPPORT_SUPER ? (csr_stvec_r    & 32'hFFFFFFFF)    : 32'b0;
+    csr_scause_q       <= SUPPORT_SUPER ? (csr_scause_r   & 32'h8000000F)   : 32'b0;
+    csr_stval_q        <= SUPPORT_SUPER ? (csr_stval_r    & 32'hFFFFFFFF)    : 32'b0;
+    csr_satp_q         <= SUPPORT_SUPER ? (csr_satp_r     & 32'hFFFFFFFF)     : 32'b0;
+    csr_sscratch_q     <= SUPPORT_SUPER ? (csr_sscratch_r & 32'hFFFFFFFF) : 32'b0;
+
+    csr_mip_next_q     <= buffer_mip_w ? csr_mip_next_r : 32'b0;
+
+    // Increment upper cycle counter on lower 32-bit overflow
+    if (csr_mcycle_q == 32'hFFFFFFFF)
+        csr_mcycle_h_q <= csr_mcycle_h_q + 32'd1;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end

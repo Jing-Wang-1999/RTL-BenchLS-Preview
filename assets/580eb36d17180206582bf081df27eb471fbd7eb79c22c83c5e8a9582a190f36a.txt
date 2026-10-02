@@ -1,0 +1,95 @@
+module autovcoder_118282 (
+    Q_reg_0,
+    NEXT_IA_OBUF,
+    Q_reg_1,
+    Q_reg_2,
+    CLR_IBUF,
+    Q_reg_3,
+    CLK_IBUF_BUFG,
+    Q_reg_4,
+    Q_reg_5,
+    JMP,
+    Q_reg_6,
+    Q_reg_7,
+    Q_reg_8
+);
+  output Q_reg_0;
+  output [0:0] NEXT_IA_OBUF;
+  output [1:0] Q_reg_1;
+  output Q_reg_2;
+  input CLR_IBUF;
+  input Q_reg_3;
+  input CLK_IBUF_BUFG;
+  input Q_reg_4;
+  input Q_reg_5;
+  input JMP;
+  input Q_reg_6;
+  input Q_reg_7;
+  input Q_reg_8;
+
+  wire CLK_IBUF_BUFG;
+  wire CLR_IBUF;
+  wire JMP;
+  wire [0:0] NEXT_IA_OBUF;
+  wire Q_reg_0;
+  wire [1:0] Q_reg_1;
+  wire Q_reg_2;
+  wire Q_reg_3;
+  wire Q_reg_4;
+  wire Q_reg_5;
+  wire Q_reg_6;
+  wire Q_reg_7;
+  wire Q_reg_8;
+  wire [1:1] S;
+
+  LUT1 #(
+      .INIT(2'h1)
+  ) \NEXT_IA_OBUFT[0]_inst_i_3 (
+      .I0(Q_reg_0),
+      .O (Q_reg_1[0])
+  );
+  LUT4 #(
+      .INIT(16'hF888)
+  ) \NEXT_IA_OBUFT[1]_inst_i_1 (
+      .I0(S),
+      .I1(Q_reg_4),
+      .I2(Q_reg_5),
+      .I3(JMP),
+      .O (NEXT_IA_OBUF)
+  );
+  (* SOFT_HLUTNM = "soft_lutpair0" *)
+  LUT2 #(
+      .INIT(4'h6)
+  ) \NEXT_IA_OBUFT[1]_inst_i_3 (
+      .I0(Q_reg_0),
+      .I1(Q_reg_7),
+      .O (S)
+  );
+  (* SOFT_HLUTNM = "soft_lutpair0" *)
+  LUT3 #(
+      .INIT(8'h78)
+  ) \NEXT_IA_OBUFT[2]_inst_i_3 (
+      .I0(Q_reg_0),
+      .I1(Q_reg_7),
+      .I2(Q_reg_8),
+      .O (Q_reg_1[1])
+  );
+  LUT2 #(
+      .INIT(4'h8)
+  ) Q_i_1__5 (
+      .I0(NEXT_IA_OBUF),
+      .I1(Q_reg_6),
+      .O (Q_reg_2)
+  );
+  FDRE #(
+      .INIT(1'b0),
+      .IS_C_INVERTED(1'b1)
+  ) Q_reg (
+      .C (CLK_IBUF_BUFG),
+      .CE(1'b1),
+      .D (Q_reg_3),
+      .Q (Q_reg_0),
+      .R (CLR_IBUF)
+  );
+endmodule
+

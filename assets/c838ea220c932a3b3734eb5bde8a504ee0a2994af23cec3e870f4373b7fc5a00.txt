@@ -1,0 +1,35 @@
+module rtlpp_01153 (
+    input [59:0] din,
+    output [67:0] dout
+);
+
+    wire [7:0] chk;
+
+    // chk[7]: XOR of bits 57,54,52,49,47,44,41,38,35,33,31,27,25,23,19,18,14,11,10,6,5,2,0
+    assign chk[7] = din[57] ^ din[54] ^ din[52] ^ din[49] ^ din[47] ^ din[44] ^ din[41] ^ din[38] ^ din[35] ^ din[33] ^ din[31] ^ din[27] ^ din[25] ^ din[23] ^ din[19] ^ din[18] ^ din[14] ^ din[11] ^ din[10] ^ din[6] ^ din[5] ^ din[2] ^ din[0];
+
+    // chk[6]: XOR of bits 57,55,52,49,46,44,42,39,36,34,30,28,26,22,20,17,14,13,9,6,4,2,1
+    assign chk[6] = din[57] ^ din[55] ^ din[52] ^ din[49] ^ din[46] ^ din[44] ^ din[42] ^ din[39] ^ din[36] ^ din[34] ^ din[30] ^ din[28] ^ din[26] ^ din[22] ^ din[20] ^ din[17] ^ din[14] ^ din[13] ^ din[9] ^ din[6] ^ din[4] ^ din[2] ^ din[1];
+
+    // chk[5]: XOR of bits 58,55,52,50,47,45,41,39,36,33,31,29,25,24,21,17,16,12,9,8,7,2,1
+    assign chk[5] = din[58] ^ din[55] ^ din[52] ^ din[50] ^ din[47] ^ din[45] ^ din[41] ^ din[39] ^ din[36] ^ din[33] ^ din[31] ^ din[29] ^ din[25] ^ din[24] ^ din[21] ^ din[17] ^ din[16] ^ din[12] ^ din[9] ^ din[8] ^ din[7] ^ din[2] ^ din[1];
+
+    // chk[4]: XOR of bits 58,55,53,50,47,44,43,40,37,34,32,28,26,23,20,18,15,12,11,7,5,3,1
+    assign chk[4] = din[58] ^ din[55] ^ din[53] ^ din[50] ^ din[47] ^ din[44] ^ din[43] ^ din[40] ^ din[37] ^ din[34] ^ din[32] ^ din[28] ^ din[26] ^ din[23] ^ din[20] ^ din[18] ^ din[15] ^ din[12] ^ din[11] ^ din[7] ^ din[5] ^ din[3] ^ din[1];
+
+    // chk[3]: XOR of bits 58,56,53,51,48,45,42,39,37,34,31,29,27,23,22,19,15,13,10,8,6,3,1,0
+    assign chk[3] = din[58] ^ din[56] ^ din[53] ^ din[51] ^ din[48] ^ din[45] ^ din[42] ^ din[39] ^ din[37] ^ din[34] ^ din[31] ^ din[29] ^ din[27] ^ din[23] ^ din[22] ^ din[19] ^ din[15] ^ din[13] ^ din[10] ^ din[8] ^ din[6] ^ din[3] ^ din[1] ^ din[0];
+
+    // chk[2]: XOR of bits 59,56,53,50,48,45,42,40,38,35,32,30,26,25,21,18,16,14,10,9,4,3,1,0
+    assign chk[2] = din[59] ^ din[56] ^ din[53] ^ din[50] ^ din[48] ^ din[45] ^ din[42] ^ din[40] ^ din[38] ^ din[35] ^ din[32] ^ din[30] ^ din[26] ^ din[25] ^ din[21] ^ din[18] ^ din[16] ^ din[14] ^ din[10] ^ din[9] ^ din[4] ^ din[3] ^ din[1] ^ din[0];
+
+    // chk[1]: XOR of bits 59,56,54,51,49,46,43,40,37,35,33,29,27,24,21,20,17,13,11,7,4,3,2,0
+    assign chk[1] = din[59] ^ din[56] ^ din[54] ^ din[51] ^ din[49] ^ din[46] ^ din[43] ^ din[40] ^ din[37] ^ din[35] ^ din[33] ^ din[29] ^ din[27] ^ din[24] ^ din[21] ^ din[20] ^ din[17] ^ din[13] ^ din[11] ^ din[7] ^ din[4] ^ din[3] ^ din[2] ^ din[0];
+
+    // chk[0]: XOR of bits 59,57,54,51,48,46,43,41,38,36,32,30,28,24,22,19,16,15,12,8,5,3,2,0
+    assign chk[0] = din[59] ^ din[57] ^ din[54] ^ din[51] ^ din[48] ^ din[46] ^ din[43] ^ din[41] ^ din[38] ^ din[36] ^ din[32] ^ din[30] ^ din[28] ^ din[24] ^ din[22] ^ din[19] ^ din[16] ^ din[15] ^ din[12] ^ din[8] ^ din[5] ^ din[3] ^ din[2] ^ din[0];
+
+    // Output composition: data bits in positions [67:8], check bits in [7:0]
+    assign dout = {din, chk};
+
+endmodule

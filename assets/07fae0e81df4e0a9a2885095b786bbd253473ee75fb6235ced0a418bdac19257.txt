@@ -1,0 +1,33 @@
+always @ (*)
+begin
+   nstate[1:0] = state[1:0];
+   case (state[1:0])
+      IDLE: 
+         if (key_start) nstate[1:0] = START;
+      START:
+      begin
+         nstate[1:0] = GENKEY1;
+      end
+      GENKEY1:
+      begin
+         if (sbox_out_valid)
+         begin
+            if (key_mode == 2'b00) //128 bit mode 4 x 10 + 4
+               if (round[3:0] == 4'd10)   nstate[1:0] = IDLE;
+               else                       nstate[1:0] = START;
+            else if (key_mode == 2'b01) // 192 bit mode 6 + 6 x 8 = 54 > 52
+               if (round[3:0] == 4'd8) nstate[1:0] = IDLE;
+               else                    nstate[1:0] = START;
+            else if (round[3:0] == 4'd7)// 256 bit mode 8 + 8 x 7 = 64 > 60
+               nstate[1:0] = IDLE;
+            else
+               nstate[1:0] = GENKEY_256;
+         end
+      end
+      GENKEY_256:
+      begin
+         if (sbox_out_valid)
+            nstate[1:0] = START;
+      end
+   endcase
+end

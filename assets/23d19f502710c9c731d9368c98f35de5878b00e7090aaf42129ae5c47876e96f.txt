@@ -1,0 +1,51 @@
+{
+  "additions": 1,
+  "base_commit": "592eaf648de3fdc0803761f9fb31390012587573",
+  "base_ref": "master",
+  "deletions": 1,
+  "head_commit": "f5b1e54de3a966976758f0b91244585f7c0c4339",
+  "issue_info": {
+    "body": "The ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT macro incorrectly uses alert_tx_o[0], which is for recoverable alerts. This causes top-level escalation tests to fail.",
+    "created_at": "2022-09-02T13:55:00Z",
+    "labels": [
+      "Component:DV",
+      "Priority:P1",
+      "Component:Security"
+    ],
+    "state": "closed",
+    "title": "[dv,sensor_ctrl] Fix WE_ONEHOT_ERROR assertion",
+    "updated_at": "2022-09-02T17:31:04Z"
+  },
+  "issue_number": 14735,
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/14735",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 1,
+      "changes": 2,
+      "deletions": 1,
+      "filename": "hw/top_earlgrey/ip/sensor_ctrl/rtl/sensor_ctrl.sv",
+      "patch": "@@ -330,5 +330,5 @@ module sensor_ctrl\n   assign cio_ast_debug_out_en_o = '1;\n \n   // Alert assertions for reg_we onehot check\n-  `ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[0])\n+  `ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[FatalAlert])\n endmodule // sensor_ctrl"
+    }
+  ],
+  "pr_info": {
+    "body": "Fixes #14735\r\n\r\nSigned-off-by: Guillermo Maturana <maturana@google.com>",
+    "created_at": "2022-09-02T14:27:01Z",
+    "merged_at": "2022-09-02T17:31:01Z",
+    "state": "closed",
+    "title": "[dv/sensor_ctrl] Fix alert for WE_ONEHOT_ERROR assertion",
+    "updated_at": "2022-09-02T17:31:06Z",
+    "user": "matutem"
+  },
+  "pr_number": 14737,
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/14737",
+  "repository": "lowRISC/opentitan",
+  "source_info": {
+    "line_number": 1796,
+    "source_file": "12.txt"
+  },
+  "task_id": "lowRISC_opentitan_14737_14735",
+  "verilog_files": [
+    "hw/top_earlgrey/ip/sensor_ctrl/rtl/sensor_ctrl.sv"
+  ]
+}

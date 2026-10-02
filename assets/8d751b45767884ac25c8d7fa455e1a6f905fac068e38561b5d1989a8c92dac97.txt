@@ -1,0 +1,97 @@
+module autovcoder_076424 (
+    clk_200M,
+    clk_24M,
+    clk_25M,
+    ddr_clk_81M,
+    ddr_locked,
+    ddr_reset,
+    locked,
+    peripheral_aresetn_200M,
+    peripheral_aresetn_25M,
+    peripheral_aresetn_81M,
+    peripheral_reset_25M,
+    sys_clock,
+    sys_reset
+);
+  output clk_200M;
+  output clk_24M;
+  output clk_25M;
+  input ddr_clk_81M;
+  input ddr_locked;
+  input ddr_reset;
+  output locked;
+  output [0:0] peripheral_aresetn_200M;
+  output [0:0] peripheral_aresetn_25M;
+  output [0:0] peripheral_aresetn_81M;
+  output [0:0] peripheral_reset_25M;
+  input sys_clock;
+  input sys_reset;
+
+  wire clk_wiz_1_clk_200M;
+  wire clk_wiz_1_locked;
+  wire clk_wiz_clk_24M;
+  wire clk_wiz_clk_25M;
+  wire clk_wiz_locked;
+  wire dcm_locked_1;
+  wire ext_reset_in_1;
+  wire [0:0] proc_sys_reset_0_peripheral_aresetn;
+  wire [0:0] proc_sys_reset_25M_peripheral_aresetn;
+  wire [0:0] proc_sys_reset_25M_peripheral_reset;
+  wire reset_1;
+  wire [0:0] rst_mig_7series_0_81M_peripheral_aresetn;
+  wire slowest_sync_clk_1;
+  wire sys_clock_1;
+
+  assign clk_200M = clk_wiz_1_clk_200M;
+  assign clk_24M = clk_wiz_clk_24M;
+  assign clk_25M = clk_wiz_clk_25M;
+  assign dcm_locked_1 = ddr_locked;
+  assign ext_reset_in_1 = ddr_reset;
+  assign locked = clk_wiz_locked;
+  assign peripheral_aresetn_200M[0] = proc_sys_reset_0_peripheral_aresetn;
+  assign peripheral_aresetn_25M[0] = proc_sys_reset_25M_peripheral_aresetn;
+  assign peripheral_aresetn_81M[0] = rst_mig_7series_0_81M_peripheral_aresetn;
+  assign peripheral_reset_25M[0] = proc_sys_reset_25M_peripheral_reset;
+  assign reset_1 = sys_reset;
+  assign slowest_sync_clk_1 = ddr_clk_81M;
+  assign sys_clock_1 = sys_clock;
+  m3_for_arty_a7_clk_wiz_1 clk_wiz (
+      .clk_24M(clk_wiz_clk_24M),
+      .clk_25M(clk_wiz_clk_25M),
+      .clk_in1(sys_clock_1),
+      .locked (clk_wiz_locked),
+      .resetn (reset_1)
+  );
+  m3_for_arty_a7_clk_wiz_0 clk_wiz_1 (
+      .clk_200M(clk_wiz_1_clk_200M),
+      .clk_in1 (sys_clock_1),
+      .locked  (clk_wiz_1_locked),
+      .resetn  (reset_1)
+  );
+  m3_for_arty_a7_proc_sys_reset_0_1 proc_sys_reset_0 (
+      .aux_reset_in(1'b1),
+      .dcm_locked(clk_wiz_1_locked),
+      .ext_reset_in(reset_1),
+      .mb_debug_sys_rst(1'b0),
+      .peripheral_aresetn(proc_sys_reset_0_peripheral_aresetn),
+      .slowest_sync_clk(clk_wiz_1_clk_200M)
+  );
+  m3_for_arty_a7_proc_sys_reset_0_0 proc_sys_reset_25M (
+      .aux_reset_in(1'b1),
+      .dcm_locked(clk_wiz_locked),
+      .ext_reset_in(reset_1),
+      .mb_debug_sys_rst(1'b0),
+      .peripheral_aresetn(proc_sys_reset_25M_peripheral_aresetn),
+      .peripheral_reset(proc_sys_reset_25M_peripheral_reset),
+      .slowest_sync_clk(clk_wiz_clk_25M)
+  );
+  m3_for_arty_a7_rst_mig_7series_0_81M_3 rst_mig_7series_0_81M (
+      .aux_reset_in(1'b1),
+      .dcm_locked(dcm_locked_1),
+      .ext_reset_in(ext_reset_in_1),
+      .mb_debug_sys_rst(1'b0),
+      .peripheral_aresetn(rst_mig_7series_0_81M_peripheral_aresetn),
+      .slowest_sync_clk(slowest_sync_clk_1)
+  );
+endmodule
+

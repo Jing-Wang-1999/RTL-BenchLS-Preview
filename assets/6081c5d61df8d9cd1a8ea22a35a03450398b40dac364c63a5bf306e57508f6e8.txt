@@ -1,0 +1,47 @@
+{
+  "additions": 9,
+  "base_commit": "a35cb6894715eed0ae8a50667ccb433630f746be",
+  "base_ref": "master",
+  "deletions": 8,
+  "head_commit": "88365f90a4b28c5b4d53593a2b88d58f685c3f2d",
+  "issue_info": {
+    "body": "The the for loop here can execute over each signal. The generate loop should be labeled and a begin/end statements inserted as well.\r\n  ```\r\n    for (genvar i=0;i<APU_NARGS_CPU;i++)\r\n        assign apu_operands[i]         = '0;\r\n        assign apu_waddr               = '0;\r\n        assign apu_flags               = '0;\r\n        assign apu_write_regs_o        = '0;\r\n        assign apu_read_regs_o         = '0;\r\n        assign apu_write_regs_valid_o  = '0;\r\n        assign apu_read_regs_valid_o   = '0;\r\n```\r\nProposed revision:\r\n   ```\r\n    genvar i;\r\n       for (i=0;i<APU_NARGS_CPU;i++) begin : apu_tie_off\r\n        assign apu_operands[i]         = 32'h00;\r\n       end\r\n        assign apu_waddr               = {APU_NDSFLAGS_CPU{1'b0}};\r\n        assign apu_flags               = 6'b0;\r\n        assign apu_write_regs_o        = 6'b0;\r\n        assign apu_read_regs_o         = 6'b0;\r\n        assign apu_write_regs_valid_o  = 1'b0;\r\n        assign apu_read_regs_valid_o   = 1'b0;\r\n\r\n```\r\n",
+    "created_at": "2018-03-19T16:50:20Z",
+    "labels": [],
+    "state": "closed",
+    "title": "Unused APU signal tying off logic in ID stage causes issues.",
+    "updated_at": "2020-02-11T16:08:27Z"
+  },
+  "issue_number": 33,
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/33",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 9,
+      "changes": 17,
+      "deletions": 8,
+      "filename": "rtl/riscv_id_stage.sv",
+      "patch": "@@ -899,14 +899,15 @@ module riscv_id_stage\n      assign apu_write_regs_valid_o   = apu_write_regs_valid;\n   end\n      else begin\n-       for (genvar i=0;i<APU_NARGS_CPU;i++)\n-        assign apu_operands[i]         = '0;\n-        assign apu_waddr               = '0;\n-        assign apu_flags               = '0;\n-        assign apu_write_regs_o        = '0;\n-        assign apu_read_regs_o         = '0;\n-        assign apu_write_regs_valid_o  = '0;\n-        assign apu_read_regs_valid_o   = '0;\n+       for (genvar i=0; i<APU_NARGS_CPU; i++) begin : apu_tie_off\n+         assign apu_operands[i]       = '0;\n+       end\n+       assign apu_waddr               = '0;\n+       assign apu_flags               = '0;\n+       assign apu_write_regs_o        = '0;\n+       assign apu_read_regs_o         = '0;\n+       assign apu_write_regs_valid_o  = '0;\n+       assign apu_read_regs_valid_o   = '0;\n      end\n   endgenerate\n "
+    }
+  ],
+  "pr_info": {
+    "body": "Add begin/end keywords to for statement in apu signal tieoff to explicitly denote that only the next line of code is going through a generate loop.\r\nFixes #33",
+    "created_at": "2018-06-22T13:07:01Z",
+    "merged_at": "2018-06-22T13:19:18Z",
+    "state": "closed",
+    "title": ":art: Improve for loop format",
+    "updated_at": "2018-06-22T13:22:06Z",
+    "user": "stmach"
+  },
+  "pr_number": 41,
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/41",
+  "repository": "openhwgroup/cv32e40p",
+  "source_info": {
+    "line_number": 175,
+    "source_file": "18.txt"
+  },
+  "task_id": "openhwgroup_cv32e40p_41_33",
+  "verilog_files": [
+    "rtl/riscv_id_stage.sv"
+  ]
+}

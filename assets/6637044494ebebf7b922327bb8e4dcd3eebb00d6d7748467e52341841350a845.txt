@@ -1,0 +1,21 @@
+The module is a bidirectional data path between a host interface and two FIFO-based serial interfaces (RX and TX). It operates on a clock with active-low reset.
+
+**Inputs:**
+- Clock (clk) and reset (rst_n).
+- Host-side: 8-bit send_char and send_en signal.
+- RX FIFO side: 8-bit rx_rdata, and status flags rx_fifo_dvalid, rx_fifo_full, rx_fifo_overrun, rx_fifo_underrun.
+- TX FIFO side: Status flags tx_fifo_full, tx_fifo_overrun, tx_fifo_underrun.
+
+**Outputs:**
+- Host-side: 8-bit rout and rout_en.
+- RX FIFO side: Read enable rx_rden.
+- TX FIFO side: 8-bit tx_wdata and write enable tx_wten.
+
+**Behavior:**
+The module continuously reads available data from the RX FIFO. The read enable (rx_rden) is asserted whenever the RX FIFO has valid data (rx_fifo_dvalid). The received data is latched on the clock edge when valid.
+
+The primary function is to forward data. The transmission path has two sources:
+1.  **Loopback:** Latched RX data is automatically written to the TX FIFO, provided the TX FIFO is not full. This write is enabled one cycle after the RX data is valid.
+2.  **Host Send:** Data from the host (send_char) is written to the TX FIFO when send_en is asserted, taking priority over loopback data.
+
+Thus, the TX write data (tx_wdata) is send_char during a host send, otherwise it is the latched RX data. The TX write enable (tx_wten) is active during a valid loopback cycle (if TX FIFO not full

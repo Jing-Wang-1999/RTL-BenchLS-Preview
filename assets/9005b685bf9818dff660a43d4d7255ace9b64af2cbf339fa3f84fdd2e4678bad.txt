@@ -1,0 +1,103 @@
+module autovcoder_018864 (
+    sp4_h_r,
+    sp4_r_v_b,
+    sp4_v_b,
+    sp12_h_r,
+    sp12_v_b,
+    cbitb,
+    prog,
+    slfop
+);
+  output sp12_h_r;
+
+  input prog, slfop;
+
+  output [2:0] sp4_h_r;
+  output [2:0] sp4_v_b;
+  output [1:0] sp12_v_b;
+  output [2:0] sp4_r_v_b;
+
+  input [11:0] cbitb;
+  supply0 gnd_;
+  //wire vddp_ = test.cds_globalsInst.vddp_;
+  supply1 vdd_;
+  supply0 GND_;
+  supply1 VDD_;
+
+
+
+  odrv12 I72_1_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[8]),
+      .sp12 (sp12_v_b[1])
+  );
+  odrv12 I72_0_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[7]),
+      .sp12 (sp12_v_b[0])
+  );
+  odrv12 I70 (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[3]),
+      .sp12 (sp12_h_r)
+  );
+  odrv4 I69_2_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[2]),
+      .sp4  (sp4_h_r[2])
+  );
+  odrv4 I69_1_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[1]),
+      .sp4  (sp4_h_r[1])
+  );
+  odrv4 I69_0_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[0]),
+      .sp4  (sp4_h_r[0])
+  );
+  odrv4 I71_2_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[6]),
+      .sp4  (sp4_v_b[2])
+  );
+  odrv4 I71_1_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[5]),
+      .sp4  (sp4_v_b[1])
+  );
+  odrv4 I71_0_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[4]),
+      .sp4  (sp4_v_b[0])
+  );
+  odrv4 I73_2_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[11]),
+      .sp4  (sp4_r_v_b[2])
+  );
+  odrv4 I73_1_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[10]),
+      .sp4  (sp4_r_v_b[1])
+  );
+  odrv4 I73_0_ (
+      .slfop(slfop),
+      .prog (prog),
+      .cbitb(cbitb[9]),
+      .sp4  (sp4_r_v_b[0])
+  );
+
+endmodule
+

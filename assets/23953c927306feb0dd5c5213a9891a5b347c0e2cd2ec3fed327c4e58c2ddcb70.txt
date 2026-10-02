@@ -1,0 +1,47 @@
+module autovcoder_056413 (
+    A16,
+    B16,
+    R16,
+    COUT_16,
+    csubtr_3_out_16
+);
+  input [15:0] A16;
+  input [15:0] B16;
+  output [15:0] R16;
+  output COUT_16;
+  input csubtr_3_out_16;
+
+  // Internal wires
+  wire [15:0] B16neg;
+
+  notgate_DATA_WIDTH16_96 notgate_inst0 (
+      .A(B16),
+      .Y(B16neg)
+  );
+  ksa_top_16b_128 ksa_top_16b_inst0 (
+      .c0(1'b1),
+      .i_a(A16),
+      .i_b({
+        B16[15],
+        B16[14],
+        B16[13],
+        B16[12],
+        B16[11],
+        B16[10],
+        B16neg[9],
+        B16[8],
+        B16[7],
+        B16[6],
+        B16[5],
+        B16[4],
+        B16[3],
+        B16neg[2],
+        B16neg[1],
+        B16neg[0]
+      }),
+      .o_s(R16),
+      .o_carry(COUT_16),
+      .csubtr_3_out_16(csubtr_3_out_16)
+  );
+endmodule
+

@@ -1,0 +1,24 @@
+This module implements a finite state machine (FSM) with five states. It processes a serial input signal and detects a specific error condition.
+
+**Inputs and Outputs**
+- Input Din: A single-bit serial data input.
+- Input clk: Clock signal for synchronous operation.
+- Input reset: Asynchronous reset signal; when high, the FSM returns to its initial state.
+- Output error: A single-bit error flag, asserted when the FSM is in State 4 and Din is high.
+- Output current_state: A 5-bit value representing the current active state.
+
+**Behavior**
+The FSM transitions between states based on the current state and the Din input value at each clock cycle. The states are encoded as follows: State 0 (binary 00001), State 1 (00011), State 2 (00100), State 3 (00010), and State 4 (10000). The state encoding uses a one-hot style.
+
+On reset, the machine initializes to State 0. The transition rules are:
+- From State 0: If Din is high, go to State 3; if Din is low, go to State 2.
+- From State 3: If Din is high, go to State 4; if Din is low, go to State 0.
+- From State 2: Always go to State 3.
+- From State 4: Always go to State 0.
+- From State 1: Always go to State 0.
+- For any undefined state (default case), transition to State 0.
+
+The error output is computed as the logical AND of the bit representing State 4 (the most significant bit of the state register) and the Din input. This means the error flag is only high when the FSM is in State 4 and Din is high simultaneously.
+
+**Allowed Sub-modules**
+Only standard comb

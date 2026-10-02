@@ -1,0 +1,12 @@
+always @ (posedge clock or posedge reset)
+begin
+	if (reset) 
+		count16 <= 4'b0;
+	else if (ce_16) 
+	begin 
+		if (rx_busy | (in_sync[1] == 1'b0))
+			count16 <= count16 + 4'b1;
+		else 
+			count16 <= 4'b0;
+	end 
+end

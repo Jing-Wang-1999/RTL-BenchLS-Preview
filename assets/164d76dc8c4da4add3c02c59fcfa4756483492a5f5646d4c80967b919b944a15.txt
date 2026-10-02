@@ -1,0 +1,135 @@
+module origen_147685 (
+    input wire clk,
+    input wire rst_n,
+    input wire PS2CLK,
+    input wire PS2DATA,
+    output reg [7:0] data_out,
+    output reg data_valid,
+    output reg busy,
+    output reg error
+);
+
+    // State encoding
+    typedef enum reg [2:0] {
+        IDLE   = 3'b000,
+        START  = 3'b001,
+        DATA   = 3'b010,
+        PARITY = 3'b011,
+        STOP   = 3'b100
+    } state_t;
+
+    state_t state, next_state;
+
+    // Internal signals
+    reg [7:0] shift_reg;
+    reg [3:0] bit_count;
+    reg parity_bit;
+    reg [1:0] ps2clk_sync;
+    reg [1:0] ps2data_sync;
+    wire ps2clk_falling_edge;
+
+    // Synchronize PS2CLK and PS2DATA to internal clock
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ps2clk_sync <= 2'b11;
+            ps2data_sync <= 2'b11;
+        end else begin
+            ps2clk_sync <= {ps2clk_sync[0], PS2CLK};
+            ps2data_sync <= {ps2data_sync[0], PS2DATA};
+        end
+    end
+
+    // Detect falling edge of PS2CLK
+    assign ps2clk_falling_edge = (ps2clk_sync[1] && !ps2clk_sync[0]);
+
+    // FSM state transition
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // FSM next state logic
+    always @(*) begin
+        next_state = state;
+        case (state)
+            IDLE: begin
+                if (ps2clk_falling_edge && !ps2data_sync[1]) begin
+                    next_state = START;
+                end
+            end
+            START: begin
+                if (ps2clk_falling_edge) begin
+                    next_state = DATA;
+                end
+            end
+            DATA: begin
+                if (ps2clk_falling_edge) begin
+                    if (bit_count == 4'd7) begin
+                        next_state = PARITY;
+                    end
+                end
+            end
+            PARITY: begin
+                if (ps2clk_falling_edge) begin
+                    next_state = STOP;
+                end
+            end
+            STOP: begin
+                if (ps2clk_falling_edge) begin
+                    next_state = IDLE;
+                end
+            end
+        endcase
+    end
+
+    // FSM output logic and data processing
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            data_out <= 8'b0;
+            data_valid <= 1'b0;
+            busy <= 1'b0;
+            error <= 1'b0;
+            shift_reg <= 8'b0;
+            bit_count <= 4'b0;
+            parity_bit <= 1'b0;
+        end else begin
+            data_valid <= 1'b0;
+            error <= 1'b0;
+            case (state)
+                IDLE: begin
+                    busy <= 1'b0;
+                    bit_count <= 4'b0;
+                end
+                START: begin
+                    busy <= 1'b1;
+                end
+                DATA: begin
+                    if (ps2clk_falling_edge) begin
+                        shift_reg <= {ps2data_sync[1], shift_reg[7:1]};
+                        bit_count <= bit_count + 1'b1;
+                    end
+                end
+                PARITY: begin
+                    if (ps2clk_falling_edge) begin
+                        parity_bit <= ps2data_sync[1];
+                    end
+                end
+                STOP: begin
+                    if (ps2clk_falling_edge) begin
+                        if (ps2data_sync[1] && (parity_bit == ~^shift_reg)) begin
+                            data_out <= shift_reg;
+                            data_valid <= 1'b1;
+                        end else begin
+                            error <= 1'b1;
+                        end
+                        busy <= 1'b0;
+                    end
+                end
+            endcase
+        end
+    end
+
+endmodule

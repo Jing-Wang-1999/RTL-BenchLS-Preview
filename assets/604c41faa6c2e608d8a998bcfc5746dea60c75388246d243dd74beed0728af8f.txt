@@ -1,0 +1,51 @@
+always @ (posedge clk or negedge rstn)
+    if (~rstn) begin
+        unflushed <= 1'b0;
+        r_count <= 0;
+        r_bytes <= 0;
+        o_tvalid <= 1'b0;
+        r_tlast  <= 1'b0;
+        o_tdata  <= 0;
+        o_tkeep  <= TKEEP_ALL_ZERO;
+    end else begin
+        if (o_tready)
+            o_tvalid <= 1'b0;
+        if (o_tready | ~o_tvalid) begin                                  // o_tready=1 or o_tvalid=0, then it is available to put a new data to output
+            if (unflushed) begin
+                unflushed <= 1'b0;
+                r_count <= 0;
+                r_bytes <= 0;
+                o_tvalid <= 1'b1;
+                r_tlast  <= 1'b1;
+                o_tdata  <= r_bytes;
+                o_tkeep  <= ~(TKEEP_ALL_ONE << r_count);                 // r_count of bytes is available, so there will be r_count of '1' on tkeep
+            end else begin
+                if (i_tvalid) begin
+                    if (t_count > POW_EW_W) begin                        // More than (1<<EW) bytes have been saved, so we must submit
+                        unflushed <= i_tlast;                            // if meet tlast, the remain bytes must also be submitted, so let unflushed=1, to submit it next cycle
+                        r_count  <= t_count[EW:0] - POW_EW;              // Equivalent to : r_count <= t_count - (1<<EW)
+                        {r_bytes, o_tdata} <= t_bytes;
+                        o_tvalid <= 1'b1;
+                        r_tlast  <= 1'b0;
+                        o_tkeep  <= TKEEP_ALL_ONE;                       // all bytes valid
+                    end else if (i_tlast ||                              // not enough bytes for submit, but meet i_tlast, may also need to submit
+                                 (SUBMIT_IMMEDIATE & (t_count == POW_EW_W)) ) begin  // if SUBMIT_IMMEDIATE=1 and just have enough bytes, also submit
+                        r_count  <= 0;
+                        r_bytes  <= 0;
+                        o_tvalid <= (t_count != 0);                      // for a spectcial case of zero-bytes packet, omit this packet (do not submit), otherwise submit
+                        r_tlast  <= (t_count != 0) & i_tlast;
+                        o_tdata  <= t_bytes[(8<<EW)-1:0];
+                        o_tkeep  <= ~(TKEEP_ALL_ONE << t_count);         // t_count bytes valid
+                    end else begin                                       // not enough bytes, and not meet i_tlast, dont submit
+                        r_count  <= t_count[EW:0];
+                        r_bytes  <= t_bytes[(8<<EW)-1:0];
+                        o_tvalid <= 1'b0;
+                        r_tlast  <= 1'b0;
+                        o_tdata  <= 0;
+                        o_tkeep  <= TKEEP_ALL_ZERO;
+                    end
+                end
+                // assign i_tready = 1;
+            end
+        end
+    end

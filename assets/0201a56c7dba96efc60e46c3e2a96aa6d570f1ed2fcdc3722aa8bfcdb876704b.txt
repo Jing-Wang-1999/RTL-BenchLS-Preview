@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+import argparse,json,subprocess,sys
+from pathlib import Path
+IVERILOG='/home/jwangjw/anaconda3/envs/securitylab/bin/iverilog'
+VVP='/home/jwangjw/anaconda3/envs/securitylab/bin/vvp'
+def run(argv,out,stem,timeout=30):
+ out.mkdir(parents=True,exist_ok=True)
+ try:
+  p=subprocess.run(argv,capture_output=True,timeout=timeout);rc=p.returncode;stdout=p.stdout;stderr=p.stderr
+ except subprocess.TimeoutExpired as e:rc=124;stdout=e.stdout or b'';stderr=e.stderr or b''
+ (out/(stem+'.stdout.log')).write_bytes(stdout);(out/(stem+'.stderr.log')).write_bytes(stderr);(out/(stem+'.command.json')).write_text(json.dumps({'argv':argv,'returncode':rc,'timeout_seconds':timeout},indent=2)+'\n');return rc,stdout.decode(errors='replace')
+def main():
+ p=argparse.ArgumentParser();p.add_argument('--payload',type=Path,required=True);p.add_argument('--candidate',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=False)
+ here=Path(__file__).resolve().parent;meta=json.loads((a.payload/'meta.json').read_text());files=[str(a.candidate/x) for x in meta['rtl_files']]
+ rc,_=run([IVERILOG,'-g2012','-s','wbuart','-o',str(a.output/'top.vvp'),*files],a.output,'top_compile')
+ compiled=rc==0
+ rc,_=run([IVERILOG,'-g2012','-s','tb','-o',str(a.output/'top_test.vvp'),*files,str(here/'wishbone_uart_tb.v')],a.output,'bus_compile') if compiled else (1,'')
+ rcs,log=run([VVP,str(a.output/'top_test.vvp')],a.output,'bus_simulate') if rc==0 else (1,'')
+ buspass=rc==0 and rcs==0 and log.strip()=='RTL_BENCHLS_PASS'
+ nrc,_=run([sys.executable,str(here/'replay_wbuart32_172.py'),str(a.payload),'--rtl-dir',str(a.candidate),'--output',str(a.output/'native_uart')],a.output,'native_driver',600)
+ native=json.loads((a.output/'native_uart/result.json').read_text()) if nrc==0 else {}
+ rows=[{'id':'wishbone_uart','passed':compiled and buspass}]+[{'id':x['id'],'passed':x['passed']} for x in native.get('testpoints',[])]
+ if len(rows)!=4:rows=[{'id':name,'passed':False} for name in ['wishbone_uart','bench/cpp/linetest.cpp','bench/cpp/speechtest.cpp','bench/cpp/helloworld.cpp']]
+ result={'compile_pass':compiled and native.get('compile_valid',False),'points':rows,'passed_testpoints':sum(x['passed'] for x in rows),'total_testpoints':4}
+ (a.output/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))
+if __name__=='__main__':main()

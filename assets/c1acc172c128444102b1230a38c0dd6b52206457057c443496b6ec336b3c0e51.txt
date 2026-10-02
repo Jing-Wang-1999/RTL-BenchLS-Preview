@@ -1,0 +1,5 @@
+# `origen_022932` AES MixColumns register
+
+Inputs are `i_clock`, `i_data[127:0]`, and `i_active`; output is `o_data[127:0]`. There is no reset. When `i_active` is high on a rising edge of `i_clock`, the module registers the AES MixColumns transformation of `i_data`. When `i_active` is low, the output register holds its prior value.
+
+Each 32-bit input word is divided into bytes `b0` through `b3` from most to least significant. Define `gm2(x)={x[6:0],1'b0} XOR (8'h1b when x[7]=1, otherwise 0)` and `gm3(x)=gm2(x) XOR x`. The transformed word is `{gm2(b0)^gm3(b1)^b2^b3, b0^gm2(b1)^gm3(b2)^b3, b0^b1^gm2(b2)^gm3(b3), gm3(b0)^b1^b2^gm2(b3)}`. Apply this independently to `i_data[127:96]`, `[95:64]`, `[63:32]`, and `[31:0]`, preserving word order. Before the first active clock edge, the register has no specified initialized value.

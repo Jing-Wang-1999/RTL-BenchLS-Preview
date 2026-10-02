@@ -1,0 +1,129 @@
+{
+  "case_id": "github/alexforencich/verilog-i2c/i2c_slave_axil_master",
+  "source_root_id": "github/alexforencich/verilog-i2c",
+  "source": {
+    "local_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/common/sources/rtl_repos_checkouts/alexforencich__verilog-i2c",
+    "origin": "https://github.com/alexforencich/verilog-i2c",
+    "revision": "a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+    "workspace_state": "complete_collected_repository"
+  },
+  "top_module": "i2c_slave_axil_master",
+  "rtl_files": [
+    "rtl/i2c_slave_axil_master.v",
+    "rtl/i2c_slave.v"
+  ],
+  "source_hashes": {
+    "rtl/i2c_slave.v": "64dac1c393ddd30263247e7679f3c8c4b3833753aa6128a90675914bbf6460ad",
+    "rtl/i2c_slave_axil_master.v": "ca2678780bd36cb23ea3bbb4601765ebc17a2dcdaf591ebcd97c898febbd1976",
+    "tb/axil.py": "981af403c3cd5d9bf1269547d1ff1219cef28bbd9cb8d3ded5e9c310fafd88d5",
+    "tb/axis_ep.py": "c50854b16ee278b0f85a1f164241bc5a1443aa049f38d365108b516810c7827d",
+    "tb/i2c.py": "768f6567bbba3a966a00b8222ea8397ef65f5807038518fdd8033579068ae784",
+    "tb/test_i2c_slave.py": "6770c17593e8bf745cf50867b4dece24bcfc6135def0de57071e9df30679b1e5",
+    "tb/test_i2c_slave.v": "e37545b33aae3c47c601d849875183e50d832132dcecfb911c338da436e345bb",
+    "tb/test_i2c_slave_axil_master.py": "78f01c3161fb993f0b2840e4710618f4113563632bba5d892a8c668611174f5b",
+    "tb/test_i2c_slave_axil_master.v": "f65d6a8c5c64ab7fa7488af87a057bb4eae0e6c9a809808e4c11a8e8bae808c8",
+    "tb/wb.py": "8453f544a97f7dc3a84935bcdde715dc95fd28e39d946929a0e7494b7a164716"
+  },
+  "testpoints": [
+    {
+      "id": "test_i2c_slave_axil_master",
+      "testbench": "tb/test_i2c_slave_axil_master.py",
+      "criterion": {
+        "pass": "pytest exit 0 and one collected test passed",
+        "fail": "Python assertion/exception, pytest failure, simulator compilation failure or timeout",
+        "scoring": "Entire Python+HDL harness is ONE testpoint; internal vectors are not separate points"
+      },
+      "golden_evidence": {
+        "command": [
+          "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/environment/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "test_i2c_slave_axil_master.py"
+        ],
+        "cwd": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave_axil_master/golden/tb",
+        "exit_code": 0,
+        "seconds": 26.021,
+        "log": "scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave_axil_master/golden.log"
+      },
+      "mutants": [
+        {
+          "diff": "scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave_axil_master/mutant.patch",
+          "execution": {
+            "command": [
+              "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/environment/bin/python",
+              "-m",
+              "pytest",
+              "-q",
+              "test_i2c_slave_axil_master.py"
+            ],
+            "cwd": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave_axil_master/mutant/tb",
+            "exit_code": 1,
+            "seconds": 0.766,
+            "log": "scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave_axil_master/mutant.log"
+          },
+          "compile_valid": true,
+          "detected": true,
+          "failure_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________________________________ test_bench __________________________________\n\n    def test_bench():\n        sim = Simulation(bench())\n>       sim.run()\n\ntest_i2c_slave_axil_master.py:390: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n../../../../../../environment/lib/python3.11/site-packages/myhdl/_Simulation.py:151: in run\n    waiter.next(waiters, actives, exc)\n../../../../../../environment/lib/python3.11/site-packages/myhdl/_Waiter.py:65: in next\n    clause = next(self.generator)\n             ^^^^^^^^^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    @instance\n    def check():\n        yield delay(100)\n        yield clk.posedge\n        rst.next = 1\n        yield clk.posedge\n        rst.next = 0\n        yield clk.posedge\n        yield delay(100)\n        yield clk.posedge\n    \n        # testbench stimulus\n    \n        enable.next = 1\n        device_address.next = 0x50\n    \n        yield clk.posedge\n        print(\"test 1: write\")\n        current_test.next = 1\n    \n        i2c_master_inst.init_write(0x50, b'\\x00\\x04'+b'\\x11\\x22\\x33\\x44')\n    \n        yield i2c_master_inst.wait()\n        yield clk.posedge\n    \n        while busy:\n            yield clk.posedge\n    \n        data = axil_ram_inst.read_mem(0, 32)\n        for i in range(0, len(data), 16):\n            print(\" \".join((\"{:02x}\".format(c) for c in bytearray(data[i:i+16]))))\n    \n>       assert axil_ram_inst.read_mem(4,4) == b'\\x11\\x22\\x33\\x44'\nE       assert b'\\x00\\x00\\x00\\x00' == b'\\x11\"3D'\nE         \nE         At index 0 diff: b'\\x00' != b'\\x11'\nE         Use -v to get more diff\n\ntest_i2c_slave_axil_master.py:261: AssertionError\n----------------------------- Captured stdout call -----------------------------\ntest 1: write\n[master] Write data a:0x50 d:00 04 11 22 33 44\n[slave2] Got start bit\n[port0] Write word addr: 0x0000fff8 prot: 0x2 wstrb: 0x0f data: 11 22 33 44\n00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\nLXT2 info: dumpfile test_i2c_slave_axil_master.lxt opened for output.\n=========================== short test summary info ============================\nFAILED test_i2c_slave_axil_master.py::test_bench - assert b'\\x00\\x00\\x00\\x00'...\n1 failed in 0.49s\n"
+        }
+      ]
+    },
+    {
+      "id": "test_i2c_slave",
+      "testbench": "tb/test_i2c_slave.py",
+      "criterion": {
+        "pass": "pytest exit 0 and one collected test passed",
+        "fail": "Python assertion/exception, pytest failure, simulator compilation failure or timeout",
+        "scoring": "Entire Python+HDL harness is ONE testpoint; internal vectors are not separate points"
+      },
+      "golden_evidence": {
+        "command": [
+          "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/environment/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "test_i2c_slave.py"
+        ],
+        "cwd": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave/golden/tb",
+        "exit_code": 0,
+        "seconds": 2.018,
+        "log": "scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave/golden.log"
+      },
+      "mutants": [
+        {
+          "diff": "scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave/mutant.patch",
+          "execution": {
+            "command": [
+              "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/environment/bin/python",
+              "-m",
+              "pytest",
+              "-q",
+              "test_i2c_slave.py"
+            ],
+            "cwd": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave/mutant/tb",
+            "exit_code": 0,
+            "seconds": 1.968,
+            "log": "scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/github__alexforencich__verilog-i2c/myhdl/i2c_slave/mutant.log"
+          },
+          "compile_valid": true,
+          "detected": false,
+          "failure_output": ".                                                                        [100%]\n1 passed in 1.69s\n"
+        }
+      ]
+    }
+  ],
+  "tools": {
+    "python": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/environment/bin/python",
+    "iverilog": "/home/jwangjw/anaconda3/envs/securitylab/bin/iverilog",
+    "vvp": "/home/jwangjw/anaconda3/envs/securitylab/bin/vvp",
+    "vpi_directory": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/github_a/myhdl_vpi"
+  },
+  "scoring": "passed testbenches / all testbenches",
+  "release_status": "qualified_execution_package_not_frozen",
+  "step4": "Includes the selected top upstream harness and the existing upstream harness of its i2c_master/i2c_slave dependency. Each Python+HDL pair is one testpoint; no separate axis_fifo harness exists in this pinned root.",
+  "pinned_source_hash_check": {
+    "matched": true,
+    "mismatches": [],
+    "checked_files": 10
+  }
+}

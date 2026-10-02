@@ -1,0 +1,118 @@
+module rtlpp_05312(
+    input clk,
+    input rst_n,
+    
+    output [31:0] inst_id,
+    output reg [31:2] pc_id,
+    
+    input jmp_condition_ex,
+    input [31:2] jmp_adr_ex,
+    input ecall_condition_ex,
+    input [31:2] csr_mtvec_ex,
+    input cmd_mret_ex,
+    input [31:2] csr_mepc_ex,
+    input cmd_sret_ex,
+    input [31:2] csr_sepc_ex,
+    input cmd_uret_ex,
+    input g_interrupt,
+    output post_jump_cmd_cond,
+    input g_exception,
+    
+    input [13:2] i_ram_radr,
+    output [31:0] i_ram_rdata,
+    input [13:2] i_ram_wadr,
+    input [31:0] i_ram_wdata,
+    input i_ram_wen,
+    input i_read_sel,
+    
+    input cpu_start,
+    input [31:2] start_adr,
+    input stall,
+    input stall_1shot,
+    input stall_dly,
+    input stall_ld,
+    input stall_ld_ex,
+    input rst_pipe,
+    output [31:0] pc_data
+);
+
+reg [31:2] pc_if;
+reg post_intr_ecall_exception;
+wire intr_ecall_exception = ecall_condition_ex | g_interrupt | g_exception;
+wire jump_cmd_cond = jmp_condition_ex | cmd_mret_ex | cmd_sret_ex | cmd_uret_ex;
+wire jmp_cond = intr_ecall_exception | (jump_cmd_cond & ~post_intr_ecall_exception);
+wire [31:2] jmp_adr = intr_ecall_exception ? csr_mtvec_ex :
+                      cmd_mret_ex ? csr_mepc_ex :
+                      cmd_sret_ex ? csr_sepc_ex : jmp_adr_ex;
+
+always @ (posedge clk or negedge rst_n) begin
+    if (~rst_n)
+        pc_if <= 30'd0;
+    else if (cpu_start)
+        pc_if <= start_adr;
+    else if (stall | stall_ld)
+        pc_if <= pc_if;    
+    else if (jmp_cond)
+        pc_if <= jmp_adr;
+    else
+        pc_if <= pc_if + 30'd1;
+end
+
+always @ (posedge clk or negedge rst_n) begin
+    if (~rst_n)
+        pc_id <= 30'd0;
+    else
+        pc_id <= pc_if;
+end
+
+assign pc_data = {pc_if, 2'd0};
+
+wire [31:0] inst_rdata_id;
+
+assign iram_radr = i_read_sel ? i_ram_radr : pc_if[13:2];
+assign i_ram_rdata = inst_rdata_id;
+
+reg [1024:0][31:0] memory;
+initial begin
+    $readmemh("memory_file.hex", memory);
+end
+
+always @(posedge clk) begin
+    if (i_ram_wen)
+        memory[i_ram_wadr] <= i_ram_wdata;
+end
+
+assign inst_rdata_id = memory[iram_radr];
+
+reg [31:0] inst_roll;
+
+always @ (posedge clk or negedge rst_n) begin   
+    if (~rst_n)
+        inst_roll <= 32'd0;
+    else if (rst_pipe)
+        inst_roll <= 32'd0;    
+    else if (stall_1shot | stall_ld)
+        inst_roll <= inst_rdata_id;
+end
+
+assign inst_id = (stall_dly | stall_ld_ex) ? inst_roll : inst_rdata_id;
+
+always @ (posedge clk or negedge rst_n) begin   
+    if (~rst_n)
+        post_intr_ecall_exception <= 1'b0;
+    else
+        post_intr_ecall_exception <= intr_ecall_exception;
+end
+
+reg post_jump_cmd_c;
+
+always @ (posedge clk or negedge rst_n) begin   
+    if (~rst_n)
+        post_jump_cmd_c <= 1'b0;
+    else
+        post_jump_cmd_c <= jump_cmd_cond;
+end
+
+assign post_jump_cmd_cond = post_jump_cmd_c;
+
+endmodule

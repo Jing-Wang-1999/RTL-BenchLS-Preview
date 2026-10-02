@@ -1,0 +1,45 @@
+module origen_098224 (
+    input wire clk,
+    input wire rst_n,
+    input wire wrt,
+    input wire [10:0] SPEED,
+    output reg PWM
+);
+
+    // Parameters for PWM calculation
+    parameter FACTOR = 4; // Example constant factor for multiplication
+    parameter OFFSET = 100; // Example offset for addition
+
+    // Internal signals
+    reg [13:0] q1; // 14-bit down counter
+    reg [13:0] pwm_period; // Calculated PWM period
+
+    // Synchronize SPEED input and calculate PWM period
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            pwm_period <= 14'd0;
+        end else if (wrt) begin
+            pwm_period <= (SPEED * FACTOR) + OFFSET;
+        end
+    end
+
+    // Down counter logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            q1 <= 14'd0;
+            PWM <= 1'b0;
+        end else begin
+            if (wrt) begin
+                q1 <= pwm_period;
+            end else if (q1 > 0) begin
+                q1 <= q1 - 1;
+            end else begin
+                q1 <= pwm_period;
+            end
+
+            // PWM output logic
+            PWM <= (q1 > (pwm_period >> 1)) ? 1'b1 : 1'b0;
+        end
+    end
+
+endmodule

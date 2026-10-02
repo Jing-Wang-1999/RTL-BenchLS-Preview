@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   axi_protocol_converter_5.v0, axi_protocol_converter_5.v1, axi_protocol_converter_5, aclk, -none
+set DESIGN_NAME_GOLDEN "axi_protocol_converter_5.v0"
+set DESIGN_NAME "axi_protocol_converter_5.v1"
+set TOP_NAME "axi_protocol_converter_5"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_918b0269a05cd6dd.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_918b0269a05cd6dd.negative.v
+check_sec -elaborate -spec -top axi_protocol_converter_5 -disable_auto_bbox
+check_sec -elaborate -imp -top axi_protocol_converter_5 -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock aclk 
+reset -none
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

@@ -1,0 +1,76 @@
+always@(posedge clk)
+  begin
+    if( degrees > 32'd360)
+	begin
+	  
+//////////////// If input value greater than 360 ///////////////
+	  
+  if (divider_out > 32'd270)
+	begin
+	quad <= 2'b11;
+	degrees_tmp2 <= divider_out - 32'd270;
+   	end
+   else
+
+	if (divider_out > 32'd180 && (divider_out < 32'd270 || divider_out == 32'd270))
+	begin
+	quad <= 2'b10;
+	degrees_tmp2 <= divider_out - 32'd180;
+	end
+	else
+	  
+	if (divider_out > 32'd90 && (divider_out < 32'd180 || divider_out == 32'd180))
+		begin
+		degrees_tmp2 <= 32'd180 - divider_out;
+		quad <= 2'b01;
+		end
+	else
+		begin
+		degrees_tmp2 <= divider_out;
+		quad <= 2'b00;
+		end
+	end  // >360
+	////////////////////////end of divider///////////////////
+   else
+
+ 
+
+////////////// If input value is between 181 and 360//////////
+  
+   if (degrees > 32'd180 && (degrees < 32'd360 || degrees == 32'd360))
+	begin
+	degrees_tmp1 <= degrees - 32'd180;
+	
+	begin
+	  if(degrees_tmp1 >32'd90)
+	    begin
+	      quad <= 2'b11;
+	      degrees_tmp2 <= 32'd180 - degrees_tmp1;
+	      end
+	      
+	      else
+	        begin
+	          quad <= 2'b10;
+	        degrees_tmp2 <= degrees_tmp1;
+	         end
+	         
+	         end
+	
+	end
+   else
+
+//////////// If input value is between 91 and 180//////////////
+
+   if (degrees > 32'd90 && (degrees < 32'd180 || degrees == 32'd180))
+	begin
+	quad <= 2'b01;
+	degrees_tmp2 <= 32'd180 - degrees;
+	end
+   else
+
+	begin
+	quad <= 2'b00;
+	degrees_tmp2 <= degrees;
+	end
+ 	
+end

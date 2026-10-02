@@ -1,0 +1,17 @@
+module origen_064019 (
+    input wire clk,
+    input wire outsig,
+    input wire oe,
+    inout wire pad
+);
+    reg sampled_outsig;
+    reg sampled_oe;
+
+    always @(posedge clk) begin
+        sampled_outsig <= outsig;
+        sampled_oe <= oe;
+    end
+
+    assign pad = sampled_oe ? sampled_outsig : 1'bz;
+
+endmodule

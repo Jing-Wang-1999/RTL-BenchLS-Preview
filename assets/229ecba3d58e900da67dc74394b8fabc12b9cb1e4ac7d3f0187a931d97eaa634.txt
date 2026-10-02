@@ -1,0 +1,54 @@
+### Module Specification: Autovcoder_026774
+
+#### Overview
+This module is a configurable 21-to-1 multiplexer (MUX) that selects one of 20 primary data inputs or a placeholder based on a 5-bit selection signal. It outputs a 32-bit data word corresponding to the selected input. The design is parameterized to allow flexible input and output widths, though all inputs and outputs default to 32 bits. The module is optimized for low latency with a single-stage pipeline option.
+
+#### Primary Function
+- **Multiplexing Operation**: The core function is to select a single 32-bit data value from up to 20 data inputs (`din1` through `din20`) using a 5-bit selection input (`din21`). The selection follows a binary tree structure, where each bit of the selector chooses between pairs of inputs or intermediate results across five levels of logic.
+- **Output**: The selected 32-bit data is provided on the `dout` output port.
+
+#### Inputs and Outputs
+- **Data Inputs (`din1` to `din20`)**:
+  - Twenty 32-bit input ports carrying data to be multiplexed.
+  - Each input’s width can be customized via parameters (`din1_WIDTH` to `din20_WIDTH`), but defaults to 32 bits.
+- **Selection Input (`din21`)**:
+  - A 5-bit input that determines which data input is selected.
+  - The selection is treated as an unsigned integer. Values 0–19 directly select `din1` through `din20`, respectively. Values 20–31 result in undefined output behavior (implementation-specific, typically selecting a default or last valid input).
+- **Data Output (`dout`)**:
+  - A 32-bit output port that delivers the selected data input.
+  - Its width is configurable via `dout_WIDTH` (default 32 bits).
+
+#### Parameters
+The module supports the following parameters for customization:
+- `ID`: An identifier for the module instance (default 0).
+- `NUM_STAGE`: Specifies pipeline stages; a value of 1 indicates purely combinational logic with no registers.
+- `din1_WIDTH` to `din20_WIDTH`: Individual widths for each data input (default 32 bits each).
+- `dout_WIDTH`: Width of the output data (default 32 bits).
+
+#### Internal Operation
+- **Selection Logic**: The 5-bit selector (`din21`) is split into its individual bits. The multiplexing occurs in five sequential levels:
+  1. **Level 1**: Uses selector bit 0 to choose between pairs of the 20 data inputs, reducing them to 10 intermediate signals.
+  2. **Level 2**: Uses selector bit 1 to choose between pairs of Level 1 results, reducing to 5 intermediate signals.
+  3. **Level 3**: Uses selector bit 2 to choose between pairs of Level 2 results, reducing to 3 intermediate signals.
+  4. **Level 4**: Uses selector bit 3 to choose between pairs of Level 3 results, reducing to 2 intermediate signals.
+  5. **Level 5**: Uses selector bit 4 to choose between the two remaining signals, producing the final output.
+- **Combinational Path**: The entire selection process is combinational when `NUM_STAGE` is 1, meaning the output updates immediately upon any input change.
+- **Signal Flow**: The design avoids registered delays, ensuring minimal latency. No clock or reset signals are required.
+
+#### Performance and Timing
+- **Latency**: The output is available after a propagation delay through five levels of multiplexing logic. No pipeline registers are inserted if `NUM_STAGE` is 1.
+- **Throughput**: The module can accept new inputs every cycle in pipelined configurations, though the base version is purely combinational.
+
+#### Allowed Sub-Modules
+The implementation may utilize:
+- Basic multiplexer cells (e.g., 2-to-1 MUXes) for each selection level.
+- No arithmetic, memory, or complex logic blocks are required; the design relies solely on multiplexing.
+
+#### Use Cases
+- Suitable for applications requiring dynamic selection from multiple data sources, such as data routing switches, programmable logic controllers, or processor operand selectors.
+- Can be integrated into larger systems where configurable input widths are needed, though all inputs and outputs typically match in bit-width.
+
+#### Notes
+- The module assumes selector values correspond to valid input indices (0–19). Out-of-range values may lead to unspecified output.
+- All data inputs and outputs are handled as unsigned binary values unless externally interpreted otherwise.
+- The parameter `NUM_STAGE` allows future expansion for pipelined versions, but the current implementation is combinational.

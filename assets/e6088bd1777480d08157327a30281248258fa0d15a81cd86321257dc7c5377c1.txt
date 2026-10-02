@@ -1,0 +1,31 @@
+# HLS_fp17_mul_core_chn_b_rsci_chn_b_wait_dp Module Specification
+
+## Overview
+This module implements a data path controller for managing channel B resource interface signals with wait state handling. It coordinates data flow and handshake signals between a producer and consumer, implementing buffering and flow control logic.
+
+## Inputs
+- **nvdla_core_clk**: System clock signal for synchronous operations
+- **nvdla_core_rstn**: Active-low asynchronous reset signal
+- **chn_b_rsci_oswt**: Output stage wait signal indicating downstream readiness
+- **chn_b_rsci_biwt**: Buffer input wait signal indicating data availability
+- **chn_b_rsci_bdwt**: Buffer data wait signal for flow control
+- **chn_b_rsci_d[16:0]**: 17-bit input data from the channel
+
+## Outputs
+- **chn_b_rsci_bawt**: Buffer availability wait signal (indicates buffer has valid data)
+- **chn_b_rsci_wen_comp**: Write enable completion signal (indicates when write operation is complete)
+- **chn_b_rsci_d_mxwt[16:0]**: 17-bit multiplexed output data
+
+## Functional Behavior
+
+### Data Path Logic
+The module maintains a 17-bit data buffer (chn_b_rsci_d_bfwt) that stores data on clock edges. A multiplexer selects between fresh input data and buffered data based on a control signal (chn_b_rsci_bcwt). The output data (chn_b_rsci_d_mxwt) reflects either the current input or the previously buffered value.
+
+### Wait State Management
+The module implements a buffered wait state mechanism using the chn_b_rsci_bcwt register. This register tracks whether data is currently buffered and waiting for downstream consumption. The buffer availability signal (chn_b_rsci_bawt) is asserted when either new data is available (chn_b_rsci_biwt) or data is buffered (chn_b_rsci_bcwt).
+
+### Write Enable Logic
+The write enable completion signal (chn_b_rsci_wen_comp) indicates that a write operation can proceed. It is asserted when either the output stage is not waiting (oswt is low) or the buffer has data available (bawt is high).
+
+### State Update
+On each clock cycle, the buffered wait state is updated based on the current buffer

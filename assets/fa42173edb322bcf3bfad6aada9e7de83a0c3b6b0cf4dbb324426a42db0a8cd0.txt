@@ -1,0 +1,65 @@
+# Implement the PRESENT-80 encryption project
+
+Read `specification/project.txt` (original project document) and
+`specification/algorithm.txt` (the accompanying cipher paper). PDFs are supplied
+alongside their text extractions. Implement all six modules and files declared
+in `output_contract.json`; exact interfaces are in `interfaces/modules.v`.
+Create the RTL under `rtl/verilog/` in this workspace. Do not submit chat code
+blocks instead of files. All six modules are evaluated, including integration.
+
+This is the fixed 80-bit-key, 64-bit-block encryption-only configuration.
+The implementation is synthesizable Verilog/SystemVerilog without simulation
+system tasks, initial/final blocks, delays, force/release, or external includes.
+No extra RTL files are collected. You may create scratch files and your own tests.
+
+## Required behavior and document corrections
+
+The following clarification is authoritative where the original PDF disagrees.
+Its architecture I/O table swaps data_load/key_load descriptions; the operation
+section gives the correct meanings. Its 30-clock completion statement is an
+off-by-one error for the supplied iterative architecture and PRESENT algorithm.
+
+- On each rising clk_i edge, key_load has first priority: load all 80 bits of
+  data_i into the key register; hold the state and round counter. This also
+  applies when both load signals are high.
+- Otherwise, data_load loads data_i[63:0] into the 64-bit state and sets the
+  5-bit round counter to 1. Hold the key. Ignore data_i[79:64] on this load.
+- Otherwise, perform one cipher round: new state is permutation(substitution
+  (old state XOR old key[79:16])); update the key with the old round counter;
+  increment the counter modulo 32. All these updates occur together.
+- data_o continuously equals current state XOR current key[79:16]. There is no
+  reset or done port. Values before key and plaintext initialization are undefined.
+- After loading the key, then the plaintext, apply exactly 31 normal rising
+  edges to obtain the ciphertext (33 rising edges including the two loads).
+  The core continues computing on later edges; it does not stop after round 31.
+  Reload a key and plaintext for each independent encryption.
+
+The combinational modules have these contracts:
+
+| Module | Behavior |
+|---|---|
+| sbox | Map hex inputs 0..F to C,5,6,B,9,0,A,D,3,E,F,8,4,7,1,2 |
+| substitution | Apply sbox independently to each of sixteen 4-bit nibbles |
+| permutation | Input bit i goes to output bit (16*i) mod 63 for i<63; bit 63 stays at 63 |
+| sub_per | Apply substitution followed by permutation |
+| key_update | Rotate the 80-bit input left by 61, apply sbox to bits 79:76, then XOR round_counter into bits 19:15 |
+
+Use the documented hierarchy: top uses sub_per and key_update; sub_per uses
+substitution and permutation; substitution and key_update use sbox. Internal
+signal and instance names are your choice.
+
+## Available development feedback
+
+You have terminal and file-editor tools and Icarus Verilog 12.0 (`iverilog`,
+`vvp`). Read files, implement modules, compile, write tests, inspect failures,
+and revise iteratively. Run `python3 checks/check.py` for project compilation
+and one public zero-key/zero-plaintext example. The private evaluator also
+checks the individual modules, other vectors, and cycle-level control behavior.
+Its tests, expected values, and reference RTL are not available during your run.
+
+The eight equally weighted verification points cover sbox, substitution,
+permutation, sub_per, key_update, published encryption vectors, additional
+encryption sequences, and load/restart/counter-wrap behavior. Missing required
+files, forbidden simulation constructs, or failed top compilation give 0/8.
+Otherwise each point contributes one point if all of its checks pass. Full
+project success requires 8/8 and all gates. Call finish after saving your files.

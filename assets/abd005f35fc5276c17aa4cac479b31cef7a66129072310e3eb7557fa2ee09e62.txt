@@ -1,0 +1,7 @@
+# `mg_05772` multi-channel gain stage
+
+Parameters are `work_mode` (default 0), `color_channels` (default 3), and `color_width` (default 8). Inputs are `clk`, active-low `rst_n`, signed `lm_gain[color_width:0]`, `in_enable`, and packed channel data `in_data[color_channels*color_width-1:0]`. Outputs are `out_ready` and packed `out_data` of the same channel width.
+
+For the supported default `work_mode=0`, each unsigned input channel is zero-extended and, on each rising `clk` edge while `rst_n` and `in_enable` are high, added to `lm_gain` into a signed `color_width+2`-bit register. That register clears asynchronously when either `rst_n` or `in_enable` goes low. On every rising `clk` edge, a channel output register becomes zero for a negative sum, all ones when the next-highest sum bit indicates positive overflow, or the low `color_width` sum bits otherwise. `out_data` is all zero until ready, then exposes all channel output registers.
+
+An internal three-bit enable counter also clears asynchronously when `rst_n` or `in_enable` is low, increments on rising `clk` edges while enabled until it reaches 2, and then holds at 2. `out_ready` is high exactly when this counter equals 2. For nonzero `work_mode`, each channel input is additionally captured on the rising edge of `in_enable` before the same processing.

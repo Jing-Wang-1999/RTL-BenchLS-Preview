@@ -1,0 +1,5 @@
+# NV_NVDLA_CDP_DP_INTP_UNIT_pipe_p10
+
+Inputs are `nvdla_op_gated_clk_fp16`, active-low asynchronous `nvdla_core_rstn`, payload `fp_mul_sync_in_pd_d2[16:0]`, input valid `fp_mul_sync_in_vld_d2`, and downstream ready `fp_mul_sync_in_rdy_d3`. Outputs are registered payload `fp_mul_sync_in_pd_d3[16:0]`, output valid `fp_mul_sync_in_vld_d3`, and combinational upstream ready `fp_mul_sync_in_rdy_d2`.
+
+This is a one-entry ready/valid register. Upstream ready is `fp_mul_sync_in_rdy_d3 || !fp_mul_sync_in_vld_d3`. At a rising clock edge when upstream ready is one, valid captures input valid; when input valid is also one, payload captures the input payload. While upstream ready is zero, payload and valid hold. Reset asynchronously clears valid but does not reset payload. Output payload is stored payload and output valid is stored valid. Empty-stage input appears after one rising edge; simultaneous downstream consumption and replacement is allowed. Optional simulation assertions do not alter functional outputs.

@@ -1,0 +1,14 @@
+module origen_107873 (
+    input signed [63:0] A,
+    input signed [63:0] B,
+    output [63:0] mult_low,
+    input [63:0] value,
+    input direction,
+    input [5:0] distance,
+    output [63:0] shifted
+);
+    wire signed [127:0] mult_full;
+    assign mult_full = A * B;
+    assign mult_low = mult_full[63:0];
+    assign shifted = direction ? (value >> distance) : (value << distance);
+endmodule

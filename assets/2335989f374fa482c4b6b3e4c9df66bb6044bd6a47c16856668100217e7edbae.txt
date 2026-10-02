@@ -1,0 +1,161 @@
+module origen_124320 (
+    input wire i_Clk,
+    input wire i_RX_Serial,
+    input wire i_TX_Load,
+    input wire [7:0] i_TX_Byte,
+    output reg o_RX_Done,
+    output reg [7:0] o_RX_Byte,
+    output reg o_TX_Active,
+    output reg o_TX_Serial,
+    output reg o_TX_Done
+);
+
+    // Parameters
+    parameter CLKS_PER_BIT = 87; // Assuming 115200 baud rate with 10MHz clock
+    parameter IDLE = 2'b00;
+    parameter START = 2'b01;
+    parameter DATA = 2'b10;
+    parameter STOP = 2'b11;
+
+    // RX registers
+    reg [1:0] r_RX_State = IDLE;
+    reg [7:0] r_RX_Data = 8'h00;
+    reg [7:0] r_Clock_Count = 0;
+    reg [2:0] r_Bit_Index = 0;
+
+    // TX registers
+    reg [1:0] r_TX_State = IDLE;
+    reg [7:0] r_TX_Data = 8'h00;
+    reg [7:0] r_Clock_Count_TX = 0;
+    reg [2:0] r_Bit_Index_TX = 0;
+
+    // RX logic
+    always @(posedge i_Clk) begin
+        case (r_RX_State)
+            IDLE: begin
+                o_RX_Done <= 1'b0;
+                r_Clock_Count <= 0;
+                r_Bit_Index <= 0;
+
+                if (i_RX_Serial == 1'b0)
+                    r_RX_State <= START;
+                else
+                    r_RX_State <= IDLE;
+            end
+
+            START: begin
+                if (r_Clock_Count == (CLKS_PER_BIT - 1) / 2) begin
+                    if (i_RX_Serial == 1'b0) begin
+                        r_Clock_Count <= 0;
+                        r_RX_State <= DATA;
+                    end else
+                        r_RX_State <= IDLE;
+                end else begin
+                    r_Clock_Count <= r_Clock_Count + 1;
+                    r_RX_State <= START;
+                end
+            end
+
+            DATA: begin
+                if (r_Clock_Count < CLKS_PER_BIT - 1) begin
+                    r_Clock_Count <= r_Clock_Count + 1;
+                    r_RX_State <= DATA;
+                end else begin
+                    r_Clock_Count <= 0;
+                    r_RX_Data[r_Bit_Index] <= i_RX_Serial;
+
+                    if (r_Bit_Index < 7) begin
+                        r_Bit_Index <= r_Bit_Index + 1;
+                        r_RX_State <= DATA;
+                    end else begin
+                        r_Bit_Index <= 0;
+                        r_RX_State <= STOP;
+                    end
+                end
+            end
+
+            STOP: begin
+                if (r_Clock_Count < CLKS_PER_BIT - 1) begin
+                    r_Clock_Count <= r_Clock_Count + 1;
+                    r_RX_State <= STOP;
+                end else begin
+                    o_RX_Done <= 1'b1;
+                    o_RX_Byte <= r_RX_Data;
+                    r_Clock_Count <= 0;
+                    r_RX_State <= IDLE;
+                end
+            end
+
+            default:
+                r_RX_State <= IDLE;
+        endcase
+    end
+
+    // TX logic
+    always @(posedge i_Clk) begin
+        case (r_TX_State)
+            IDLE: begin
+                o_TX_Serial <= 1'b1;
+                o_TX_Done <= 1'b0;
+                r_Clock_Count_TX <= 0;
+                r_Bit_Index_TX <= 0;
+
+                if (i_TX_Load) begin
+                    r_TX_Data <= i_TX_Byte;
+                    r_TX_State <= START;
+                end else
+                    r_TX_State <= IDLE;
+            end
+
+            START: begin
+                o_TX_Active <= 1'b1;
+                o_TX_Serial <= 1'b0;
+
+                if (r_Clock_Count_TX < CLKS_PER_BIT - 1) begin
+                    r_Clock_Count_TX <= r_Clock_Count_TX + 1;
+                    r_TX_State <= START;
+                end else begin
+                    r_Clock_Count_TX <= 0;
+                    r_TX_State <= DATA;
+                end
+            end
+
+            DATA: begin
+                o_TX_Serial <= r_TX_Data[r_Bit_Index_TX];
+
+                if (r_Clock_Count_TX < CLKS_PER_BIT - 1) begin
+                    r_Clock_Count_TX <= r_Clock_Count_TX + 1;
+                    r_TX_State <= DATA;
+                end else begin
+                    r_Clock_Count_TX <= 0;
+
+                    if (r_Bit_Index_TX < 7) begin
+                        r_Bit_Index_TX <= r_Bit_Index_TX + 1;
+                        r_TX_State <= DATA;
+                    end else begin
+                        r_Bit_Index_TX <= 0;
+                        r_TX_State <= STOP;
+                    end
+                end
+            end
+
+            STOP: begin
+                o_TX_Serial <= 1'b1;
+
+                if (r_Clock_Count_TX < CLKS_PER_BIT - 1) begin
+                    r_Clock_Count_TX <= r_Clock_Count_TX + 1;
+                    r_TX_State <= STOP;
+                end else begin
+                    o_TX_Done <= 1'b1;
+                    o_TX_Active <= 1'b0;
+                    r_Clock_Count_TX <= 0;
+                    r_TX_State <= IDLE;
+                end
+            end
+
+            default:
+                r_TX_State <= IDLE;
+        endcase
+    end
+
+endmodule

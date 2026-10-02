@@ -1,0 +1,102 @@
+module rtlpp_01424(
+	input  [4:0]  sw,
+	input         clk,
+	output [3:0]  an,
+	output [6:0]  seg,
+	output        dp,
+	inout  [3:0]  JA
+);
+
+	// Internal wire declarations
+	wire         begin_transmission;
+	wire         end_transmission;
+	wire [7:0]   send_data;
+	wire [7:0]   recieved_data;
+	wire [7:0]   temp_data;
+	wire [15:0]  x_axis_data;
+	wire [15:0]  y_axis_data;
+	wire [15:0]  z_axis_data;
+	wire         slave_select;
+
+	// Internal logic replacing master_interface functionality
+	reg [15:0]   x_axis_data_reg;
+	reg [15:0]   y_axis_data_reg;
+	reg [15:0]   z_axis_data_reg;
+	reg          start_reg;
+	reg          rst;
+
+	always @(posedge clk or posedge sw[0]) begin
+		if (sw[0]) begin
+			rst <= 1'b1;
+			x_axis_data_reg <= 16'd0;
+			y_axis_data_reg <= 16'd0;
+			z_axis_data_reg <= 16'd0;
+		end else begin
+			rst <= 1'b0;
+			start_reg <= sw[1];
+			if (start_reg) begin
+				// Example logic to set axis data
+				x_axis_data_reg <= x_axis_data_reg + 1;
+				y_axis_data_reg <= y_axis_data_reg + 1;
+				z_axis_data_reg <= z_axis_data_reg + 1;
+			end 
+		end
+	end
+
+	assign temp_data = recieved_data;
+	assign x_axis_data = x_axis_data_reg;
+	assign y_axis_data = y_axis_data_reg;
+	assign z_axis_data = z_axis_data_reg;
+	assign start = sw[1];
+
+	// Internal logic replacing spi_interface functionality
+	reg [7:0] send_data_reg;
+	reg slave_select_reg;
+
+	always @(posedge clk or posedge sw[0]) begin
+		if (sw[0]) begin
+			slave_select_reg <= 1'b0;
+			send_data_reg <= 8'd0;
+		end else begin
+			if (begin_transmission) begin
+				// Example sending data
+				send_data_reg <= send_data_reg + 1;
+				slave_select_reg <= 1'b1;
+			end else begin
+				slave_select_reg <= 1'b0;
+			end
+		end
+	end
+
+	assign send_data = send_data_reg;
+	assign end_transmission = slave_select_reg;
+	assign JA[0] = slave_select_reg;
+
+	// Internal logic replacing display_controller functionality
+	reg [3:0]  an_reg;
+	reg [6:0]  seg_reg;
+	reg        dp_reg;
+
+	always @(posedge clk or posedge sw[0]) begin
+		if (sw[0]) begin
+			an_reg <= 4'b1111;
+			seg_reg <= 7'b1111111;
+			dp_reg <= 1'b1;
+		end else begin
+			case (sw[3:2])
+				2'b00: seg_reg <= x_axis_data[6:0];
+				2'b01: seg_reg <= y_axis_data[6:0];
+				2'b10: seg_reg <= z_axis_data[6:0];
+				2'b11: seg_reg <= temp_data[6:0];
+				default: seg_reg <= 7'b1111111;
+			endcase
+			an_reg <= 4'b0000;
+			dp_reg <= sw[4];
+		end
+	end
+
+	assign an = an_reg;
+	assign seg = seg_reg;
+	assign dp = dp_reg;
+
+endmodule

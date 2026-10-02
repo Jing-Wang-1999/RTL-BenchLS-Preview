@@ -1,0 +1,50 @@
+module __formal113_core_629379f58452 (
+    address,
+    byteenable,
+    chipselect,
+    clk,
+    clken,
+    write,
+    writedata,
+    readdata
+);
+
+  output reg [31:0] readdata;
+  input [9:0] address;
+  input [3:0] byteenable;
+  input chipselect;
+  input clk;
+  input clken;
+  input write;
+  input [31:0] writedata;
+
+  reg [31:0] mem [0:1023];
+  wire wren;
+
+  assign wren = chipselect & write;
+
+  always @(posedge clk)
+    if (clken) begin
+        if (wren) begin
+          if (byteenable[0]) mem[address][7:0] <= writedata[7:0];
+          if (byteenable[1]) mem[address][15:8] <= writedata[15:8];
+          if (byteenable[2]) mem[address][23:16] <= writedata[23:16];
+          if (byteenable[3]) mem[address][31:24] <= writedata[31:24];
+        end
+        readdata <= mem[address];
+    end
+endmodule
+module ddr2_sequencer_ram(
+  input wire [9:0] address,
+  input wire [3:0] byteenable,
+  input wire [0:0] chipselect,
+  input wire [0:0] clk,
+  input wire [0:0] clken,
+  input wire [0:0] write,
+  input wire [31:0] writedata,
+  output wire [31:0] readdata
+);
+wire [31:0] __negative_output;
+__formal113_core_629379f58452 dut(.address(address), .byteenable(byteenable), .chipselect(chipselect), .clk(clk), .clken(clken), .write(write), .writedata(writedata), .readdata(__negative_output));
+assign readdata = __negative_output ^ 32'd1;
+endmodule

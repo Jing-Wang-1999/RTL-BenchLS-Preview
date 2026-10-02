@@ -1,0 +1,57 @@
+`timescale 1 ns / 1 ps
+
+module origen_154827 #(
+    parameter N = 4
+) (
+    // Outputs
+    output reg [7:0] data_00,
+    output reg [7:0] data_11,
+    output reg valid_00,
+    output reg valid_11,
+    output reg clk_4f,
+    output reg clk_2f,
+    output reg reset,
+
+    // Inputs
+    input [7:0] data_000_synt,
+    input [7:0] data_000_cond,
+    input valid_000_synt,
+    input valid_000_cond
+);
+
+    initial begin
+        // Initialize output signals
+        data_00 = 8'h00;
+        data_11 = 8'h00;
+        valid_00 = 2'b00;
+        valid_11 = 2'b00;
+        reset = 1'b0;
+
+        // Generate clocks
+        clk_4f = 1'b0;
+        clk_2f = 1'b0;
+        forever #(N) clk_4f = ~clk_4f;
+        forever #(2*N) clk_2f = ~clk_2f;
+
+        // Release reset after 10 time units
+        #(10*N) reset = 1'b1;
+
+        // Generate output signals
+        repeat (2) begin
+            #(4*N) data_00 = 8'hff;
+            valid_00 = 2'b11;
+            #(4*N) data_00 = 8'h00;
+            valid_00 = 2'b00;
+        end
+
+        repeat (2) begin
+            #(4*N) data_11 = 8'hdd;
+            valid_11 = 2'b11;
+            #(4*N) data_11 = 8'h00;
+            valid_11 = 2'b00;
+        end
+
+        #(8*N) $finish;
+    end
+
+endmodule

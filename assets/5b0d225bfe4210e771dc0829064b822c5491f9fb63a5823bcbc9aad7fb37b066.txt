@@ -1,0 +1,54 @@
+module origen_220876 #(
+    parameter DATA_WIDTH = 36,
+    parameter ADDR_WIDTH = 14,
+    parameter RAM_DEPTH = 1024,
+    parameter DOUT_PIPE_NUMBER = 1,
+    parameter RAM_TYPE = "block",
+    parameter CASCADE_HEIGHT = -1
+)(
+    input  wire                  clka,
+    input  wire                  ena,
+    input  wire                  wea,
+    input  wire [ADDR_WIDTH-1:0] addra,
+    input  wire [DATA_WIDTH-1:0] dina,
+    input  wire                  clkb,
+    input  wire                  enb,
+    input  wire [ADDR_WIDTH-1:0] addrb,
+    output wire [DATA_WIDTH-1:0] doutb,
+    output wire                  doutb_valid
+);
+
+    (* ram_style = RAM_TYPE *)
+    reg [DATA_WIDTH-1:0] ram [RAM_DEPTH-1:0];
+    (* cascade_height = CASCADE_HEIGHT *)
+    reg [DATA_WIDTH-1:0] ram_dout;
+    reg [DOUT_PIPE_NUMBER:0] ram_en_pipe_reg;
+
+    always @(posedge clka) begin
+        if (ena && wea) begin
+            ram[addra] <= dina;
+        end
+    end
+
+    always @(posedge clkb) begin
+        if (enb) begin
+            ram_dout <= ram[addrb];
+        end
+        ram_en_pipe_reg <= {ram_en_pipe_reg[DOUT_PIPE_NUMBER-1:0], enb};
+    end
+
+    generate
+        if (DOUT_PIPE_NUMBER == 0) begin
+            assign doutb = ram_dout;
+            assign doutb_valid = enb;
+        end else begin
+            reg [DATA_WIDTH-1:0] doutb_reg;
+            always @(posedge clkb) begin
+                doutb_reg <= ram_dout;
+            end
+            assign doutb = doutb_reg;
+            assign doutb_valid = ram_en_pipe_reg[DOUT_PIPE_NUMBER];
+        end
+    endgenerate
+
+endmodule

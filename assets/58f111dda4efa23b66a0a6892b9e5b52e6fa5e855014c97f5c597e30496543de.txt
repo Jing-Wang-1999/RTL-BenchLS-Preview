@@ -1,0 +1,105 @@
+module rtlpp_06517
+(
+   input         clock,
+   input         reset,
+   input         ena,
+   
+   input         phi_n,
+   input         phi_en,
+   input  [15:0] addr,
+   input   [7:0] din,
+   output  [7:0] dout,
+   input   [7:0] cpu_di,		
+   input         m1_n,
+   input         iorq_n,
+   input         rd_n,
+   input         wr_n,
+   output        int_n,
+   output        nmi,
+   
+   input         cursor,
+   
+   output  [7:0] audio_l,
+   output  [7:0] audio_r
+);
+
+wire soft_reset = (ena && ~iorq_n && m1_n && addr[15:0] == 16'hF8FF);
+wire reset_n = ~(soft_reset | reset) & ena;
+
+wire ctc_ce_n = ~(ena && ~iorq_n && m1_n && addr[15:2] == {12'hF88, 2'b00});
+
+wire ay_sel = (ena && ~iorq_n && ~wr_n && addr[15:9] == {4'hF, 3'b100} && addr[7:4] == 4'h8);
+
+wire ctc_counter_0_to;
+wire ctc_counter_3_trg;
+
+// Embedded z80ctc_top module
+reg [7:0] ctc_registers [0:3];
+reg [7:0] ctc_temp;
+reg ctc_clk_edge;
+reg ctc_int_n;
+reg [3:0] ctc_counters;
+assign ctc_counter_0_to = ctc_counters[0];
+assign ctc_counter_3_trg = ctc_counters[3];
+
+always @(negedge phi_n or posedge reset) begin
+	if (reset) begin
+		ctc_counters <= 4'b0000;
+		ctc_clk_edge <= 1'b0;
+	end else begin
+		ctc_clk_edge <= ~ctc_clk_edge;
+		if (ctc_counters[0]) begin
+			ctc_counters[0] <= 1'b0;
+		end else begin
+			ctc_counters[0] <= 1'b1;
+		end
+		if (ctc_counters[3]) begin
+			ctc_counters[3] <= 1'b0;
+		end else begin
+			ctc_counters[3] <= 1'b1;
+		end
+	end
+end
+
+assign int_n = ctc_int_n;
+assign dout = ctc_temp;
+
+// Embedded YM2149 modules
+reg [9:0] al;
+reg [9:0] ar;
+reg [7:0] chl_a, chl_b, chl_c;
+reg [7:0] chr_a, chr_b, chr_c;
+
+// YM2149 interface for left audio channel
+always @(posedge clock) begin
+	if (~reset_n) begin
+		chl_a <= 8'h00;
+		chl_b <= 8'h00;
+		chl_c <= 8'h00;
+	end else if (ay_sel & addr[2]) begin
+		chl_a <= din;
+		chl_b <= din;
+		chl_c <= din;
+	end
+end
+
+// YM2149 interface for right audio channel
+always @(posedge clock) begin
+	if (~reset_n) begin
+		chr_a <= 8'h00;
+		chr_b <= 8'h00;
+		chr_c <= 8'h00;
+	end else if (ay_sel & addr[3]) begin
+		chr_a <= din;
+		chr_b <= din;
+		chr_c <= din;
+	end
+end
+
+assign al = {2'b00, chl_a} + {2'b00, chl_b} + {2'b00, chl_c};
+assign audio_l = al[9:2] + al[9:4];
+
+assign ar = {2'b00, chr_a} + {2'b00, chr_b} + {2'b00, chr_c};
+assign audio_r = ar[9:2] + ar[9:4];
+
+endmodule

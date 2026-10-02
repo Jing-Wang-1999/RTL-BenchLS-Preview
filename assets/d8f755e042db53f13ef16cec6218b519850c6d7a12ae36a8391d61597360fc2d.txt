@@ -1,0 +1,17 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Auto-generated for design DFFQX4A12TR
+set DESIGN_NAME_GOLDEN "DFFQX4A12TR.v0"
+set DESIGN_NAME "DFFQX4A12TR.v1"
+set TOP_NAME "_MAGMA_CELL_FF_"
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/${DESIGN_NAME_GOLDEN}.v
+check_sec -analyze -imp -sv ./input/rtl/${DESIGN_NAME}.v
+check_sec -elaborate -spec -top ${TOP_NAME} -disable_auto_bbox
+check_sec -elaborate -imp -top ${TOP_NAME} -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock CLOCK
+reset -none
+check_sec -gen
+check_sec -prove -strategy proof

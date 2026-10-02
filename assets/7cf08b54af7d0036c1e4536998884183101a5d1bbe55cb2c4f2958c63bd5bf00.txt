@@ -1,0 +1,49 @@
+The Verilog module `fpu_division_prenormalizer` is designed to pre-normalize operands for floating-point division in the OpenRISC 1200 Floating-Point Unit (FPU). It takes two floating-point inputs, `opa_i` and `opb_i`, and processes them to produce three main outputs: the adjusted exponent `exp_10_o`, the normalized dividend `dvdnd_50_o`, and the normalized divisor `dvsor_27_o`.
+
+### Primary Function
+The module processes two floating-point inputs to calculate the normalized forms of the dividend and the divisor, along with their adjusted exponents for use in division operations.
+
+### Key Control Flow and Decision Points
+1. **Exponent and Fraction Extraction:**
+   - The exponents and fractions of the operands `opa_i` and `opb_i` are extracted and assigned to intermediate wires `s_expa`, `s_expb`, `s_fracta`, and `s_fractb`.
+
+2. **Denormalization Check:**
+   - Checks if the operands are denormalized (exponent is zero) and generates flags `s_opa_dn` and `s_opb_dn`.
+
+3. **Leading Zero Detection:**
+   - It detects the number of leading zeros in the 24-bit fraction parts of the operands `s_fracta_24` and `s_fractb_24`, and stores the counts in registers `s_dvd_zeros` and `s_div_zeros` using large case statements.
+
+4. **Fraction Left Shifting:**
+   - The module shifts the 24-bit fractions left by the number of leading zeros to normalize them. The results are stored in `fracta_lshift_intermediate` and `fractb_lshift_intermediate`.
+
+5. **Exponent Adjustment:**
+   - The exponents of the operands are adjusted for the leading zeros and denormalized flags within a synchronous always block, and the final exponent difference is computed and stored in `s_exp_10_o`.
+
+### Important Data Processing and Signal Interactions
+1. **Normalization:**
+   - The leading zeros in both operand fractions are counted to facilitate shifting and normalization of the fractions, ensuring accurate division operations.
+
+2. **Intermediate Calculations:**
+   - The normalized fractions are computed by shifting the original fractions left by the counted leading zeros.
+
+3. **Final Outputs:**
+   - `dvdnd_50_o` is the normalized dividend prepared for the division (concatenated with zeros to a 50-bit width).
+   - `dvsor_27_o` is the normalized divisor prepared for the division.
+   - `exp_10_o` represents the adjusted exponent difference after considering normalization and denormalization factors.
+
+In summary, the module pre-normalizes two floating-point inputs by extracting their exponents and fractions, detecting leading zeros, normalizing the fractions, and adjusting the exponents accordingly to produce outputs that are ready for subsequent division operations.
+
+Module Interface:
+module fpu_division_prenormalizer
+  (
+   clk_i,
+   opa_i,
+   opb_i,
+   exp_10_o,
+   dvdnd_50_o,
+   dvsor_27_o
+   );
+
+Behavioral Clarifications:
+- Parameters: FP_WIDTH=32, FRAC_WIDTH=23, EXP_WIDTH=8. Outputs dvdnd_50_o is 50 bits wide and dvsor_27_o is 27 bits wide; exp_10_o is a 10-bit registered output updated on posedge clk_i.
+- Leading-zero counts (6-bit each) are computed combinationally via casez on the 24-bit normalized fraction. The exponent adjustment pipeline takes two posedge clk_i cycles: first cycle latches biased exponents, second cycle computes the difference with bias 127 and leading-zero correction.

@@ -1,0 +1,2157 @@
+schoolMIPS CPU Core
+
+      Stanislav Zhelnio
+            2018
+Project download link:
+https://github.com/MIPSfpga/schoolMIPS
+
+Project documents:
+https://github.com/MIPSfpga/schoolMIPS/wiki
+                      Thanks to
+• David Harris and Sarah Harris, the authors of the great
+  book “Digital Design and Computer Architecture”.
+  schoolMIPS is based on the CPU that is described in this
+  book
+• the team of the “Digital Design and Computer
+  Architecture” book translators
+• “Young Russian Chip Architects” Conference Members
+• Yuri Panchul, Senior Hardware Design Engineer at
+  Imagination Technologies and MIPS. The author of the
+  schoolMIPS Idea.
+• Stanislav Zhelnio, CPU architecture, code and docs
+• Alexander Romanov, MIEM HSE, CPU architecture, test
+  and port
+           What is schoolMIPS?
+
+• the simplest CPU core
+• designed for using in the basic course of digital
+  design and computer architecture
+• written on pure Verilog
+• subset of MIPS instructions implemented
+  schoolMIPS versions and features
+
+
+
+
+                                                                                                05_pipeline_ahb
+                                                                              04_pipeline_irq
+                                                                              03_pipeline
+                                               00_simple
+                   Feature \ GIT branch
+
+
+
+
+                                                           01_mmio
+                                                                     02_irq
+
+
+                                                                              (H&H)
+Single cycle CPU                               V           V          V       V         V        V
+Example program (assembler)                    V           V          V       V         V        V
+Build scripts                                     shell                        make
+Data memory (Block RAM)                                    V          V       V         V        V
+Basic memory mapped IO (single cycle access)               V
+System Timer, Interrupts & Exceptions                                 V                 V        V
+Pipelined CPU                                                                 V         V        V
+Pipelined memory mapped IO (AHB-Lite)                                                            V
+Scratchpad RAM                                                                                   V
+Example program (C)                                                                              V
+                 Introduction
+• Microarchitecture: how to       Application
+                                   Software
+                                                   programs
+
+
+  implement an architecture in     Operating
+                                   Systems
+                                                 device drivers
+
+  hardware                        Architecture
+                                                  instructions
+                                                    registers
+
+                                     Micro-       datapaths
+
+• Processor:
+                                  architecture    controllers
+
+                                                   adders
+                                     Logic
+  – Datapath: functional blocks
+                                                  memories
+
+                                    Digital       AND gates
+    (ALU, Register File, etc)       Circuits      NOT gates
+
+                                    Analog         amplifiers
+                                    Circuits        filters
+
+  – Control: control signals        Devices
+                                                  transistors
+                                                    diodes
+
+
+                                    Physics        electrons
+            Microarchitecture
+• Multiple implementations for a single
+  architecture :
+  – Single-cycle: Each instruction executes in a single
+    cycle
+  – Multicycle: Each instruction is broken into series
+    of shorter steps
+  – Pipelined: Each instruction broken up into series
+    of steps & multiple instructions execute at once
+ The schoolMIPS CPU (00_simple)
+• Single-cycle
+• no Data Memory
+• The word by word addressing of Instruction
+  Memory
+• Subset of MIPS Instructions:
+  – R-type instructions (both operands are from RF):
+    addu, or, srl, sltu, subu
+  – I-type instructions (one of operand is a constant):
+    addiu, lui
+  – I-type instructions (branch):
+    beq, bne
+           Architectural State
+
+• Determines everything about a processor :
+
+  – Program Counter (PC)
+
+  – Register File (RF)
+    with 32 General Purpose Registers (GPR)
+
+  – memory (instructions, data)
+                          MIPS State Elements
+
+      CLK                                     CLK                         CLK
+PC'         PC                                      WE3                         WE
+ 32         32                           5
+                                              A1          RD1   32
+                 32
+                      A      RD     32
+                                         5
+                                              A2          RD2   32        A   RD
+                      Instruction                                    32              32
+                        Memory                                             Data
+                                         5
+                                              A3                          Memory
+                                                    Register
+                                              WD3                         WD
+                                         32           File           32
+                schoolMIPS: addiu instruction
+ Step 1: Fetch instruction
+
+
+
+                   CLK                      CLK
+                                                  WE3
+                         PC                 A1
+                              A      RD                 RD1
+
+                                            A2          RD2
+                              Instruction
+                                Memory      A3
+                                                  Register
+                                            WD3
+                                                    File
+
+
+
+
+I-type. Integer Add Immediate, rt = rs + Immediate
+31 op 26   25 rs 21 20 rt 16 15                   Immediate   0
+                schoolMIPS: addiu instruction
+ Step 2: Read source operands from RF
+
+
+
+                   CLK                                      CLK
+                                                    25:21         WE3
+                         PC                 instr           A1
+                              A      RD                                 RD1
+
+                                                            A2          RD2
+                              Instruction
+                                Memory                      A3
+                                                                  Register
+                                                            WD3
+                                                                    File
+
+
+
+
+I-type. Integer Add Immediate, rt = rs + Immediate
+31 op 26   25 rs 21 20 rt 16 15                                   Immediate   0
+                schoolMIPS: addiu instruction
+ Step 3: Sign-extend the immediate operand
+
+
+
+                   CLK                                      CLK
+                                                    25:21         WE3
+                         PC                 instr           A1
+                              A      RD                                 RD1
+
+                                                            A2          RD2
+                              Instruction
+                                Memory                      A3
+                                                                  Register
+                                                            WD3
+                                                                    File
+
+
+
+
+                                                    15:0                      signImm
+                                                             Sign Extend
+
+
+
+
+I-type. Integer Add Immediate, rt = rs + Immediate
+31 op 26   25 rs 21 20 rt 16 15                                   Immediate             0
+                schoolMIPS: addiu instruction
+ Step 4: compute the arithmetic operation result
+
+
+                                                                                           aluControl
+
+
+                   CLK                                      CLK
+                                                    25:21         WE3
+                         PC                 instr           A1                          srcA
+                              A      RD                                 RD1
+
+
+
+
+                                                                                                ALU
+                                                                                                      result
+                                                            A2          RD2             srcB
+                              Instruction
+                                Memory                      A3
+                                                                  Register
+                                                            WD3
+                                                                    File
+
+
+
+
+                                                    15:0                      signImm
+                                                             Sign Extend
+
+
+
+
+I-type. Integer Add Immediate, rt = rs + Immediate
+31 op 26   25 rs 21 20 rt 16 15                                   Immediate                0
+                schoolMIPS: addiu instruction
+ Step 5: write the result to the Register File
+
+                                                                 regWrite
+                                                                                               aluControl
+
+
+                   CLK                                      CLK
+                                                    25:21          WE3
+                         PC                 instr           A1                              srcA
+                              A      RD                                     RD1
+
+
+
+
+                                                                                                    ALU
+                                                                                                          result
+                                                            A2              RD2             srcB
+                              Instruction           20:16
+                                Memory                      A3
+                                                                  Register
+                                                            WD3
+                                                                    File
+
+
+
+
+                                                    15:0                          signImm
+                                                             Sign Extend
+
+
+
+
+I-type. Integer Add Immediate, rt = rs + Immediate
+31 op 26   25 rs 21 20 rt 16 15                                    Immediate                   0
+                schoolMIPS: addiu instruction
+ Step 6: Determine address of next instruction
+
+                                                                    regWrite
+                                                                                                  aluControl
+
+
+                   CLK                                         CLK
+                                                       25:21          WE3
+                         PC                    instr           A1                              srcA
+                              A        RD                                      RD1
+
+
+
+
+                                                                                                       ALU
+                                                                                                             result
+                                                               A2              RD2             srcB
+                              Instruction              20:16
+                                Memory                         A3
+                                                                     Register
+                                                               WD3
+                                                                       File
+
+
+
+                                      pcNext
+                                  +
+
+
+
+
+                                                       15:0                          signImm
+                         1                                      Sign Extend
+
+
+
+
+I-type. Integer Add Immediate, rt = rs + Immediate
+31 op 26   25 rs 21 20 rt 16 15                                       Immediate                   0
+                schoolMIPS: addu instruction
+ • Read the second operand from Register File
+
+                                                                    regWrite
+                                                                                                  aluControl
+
+
+                   CLK                                         CLK
+                                                       25:21          WE3
+                         PC                    instr           A1                              srcA
+                              A        RD                                      RD1
+
+
+
+
+                                                                                                       ALU
+                                                                                                             result
+                                                       20:16
+                                                               A2              RD2             srcB
+                              Instruction              20:16
+                                Memory                         A3
+                                                                     Register
+                                                               WD3
+                                                                       File
+
+
+
+                                      pcNext
+                                  +
+
+
+
+
+                                                       15:0                          signImm
+                         1                                      Sign Extend
+
+
+
+
+R-type. Integer Add Unsigned, rd = rs + rt
+31 op 26    25 rs 21 20 rt 16 15 rd 11                                10 sa 6             5 funct 0
+                schoolMIPS: addu instruction
+ • use the register value operand (rt) instead of sign
+ extended value
+                                                                    regWrite                   aluSrc
+                                                                                                        aluControl
+
+
+                   CLK                                         CLK
+                                                       25:21          WE3
+                         PC                    instr           A1                                   srcA
+                              A        RD                                      RD1
+
+
+
+
+                                                                                                             ALU
+                                                                                                                   result
+                                                       20:16
+                                                               A2              RD2               0 srcB
+                              Instruction              20:16
+                                Memory                         A3                                1
+                                                                     Register
+                                                               WD3
+                                                                       File
+
+
+
+                                      pcNext
+                                  +
+
+
+
+
+                                                       15:0                          signImm
+                         1                                      Sign Extend
+
+
+
+
+R-type. Integer Add Unsigned, rd = rs + rt
+31 op 26    25 rs 21 20 rt 16 15 rd 11                                10 sa 6             5 funct 0
+                schoolMIPS: addu instruction
+ •Write the result to rd (instead of rt)
+
+                                                                    regWrite         regDst    aluSrc
+                                                                                                        aluControl
+
+
+                   CLK                                         CLK
+                                                       25:21          WE3
+                         PC                    instr           A1                                   srcA
+                              A        RD                                      RD1
+
+
+
+
+                                                                                                             ALU
+                                                                                                                   result
+                                                       20:16
+                                                               A2              RD2               0 srcB
+                              Instruction
+                                Memory                         A3                                1
+                                                                     Register
+                                                               WD3
+                                                                       File
+                                                       20:16
+                                                                                       0
+                                                       15:11
+                                                                                       1
+                                      pcNext
+                                  +
+
+
+
+
+                                                       15:0                          signImm
+                         1                                      Sign Extend
+
+
+
+
+R-type. Integer Add Unsigned, rd = rs + rt
+31 op 26    25 rs 21 20 rt 16 15 rd 11                                10 sa 6              5 funct 0
+                  schoolMIPS: srl instruction
+ • read the shift amount from instruction
+
+                                                                     regWrite         regDst    aluSrc
+                                                                                                         aluControl
+                                                        10:6
+
+                    CLK                                         CLK
+                                                                       WE3                           shift
+                                                        25:21
+                          PC                    instr           A1                                   srcA
+                               A        RD                                      RD1
+
+
+
+
+                                                                                                              ALU
+                                                                                                                    result
+                                                        20:16
+                                                                A2              RD2               0 srcB
+                               Instruction
+                                 Memory                         A3                                1
+                                                                      Register
+                                                                WD3
+                                                                        File
+                                                        20:16
+                                                                                        0
+                                                        15:11
+                                                                                        1
+                                       pcNext
+                                   +
+
+
+
+
+                                                        15:0                          signImm
+                          1                                      Sign Extend
+
+
+
+
+R-type. Shift Right Logical, rd = (uns)rt >> sa
+31 op 26    25 rs 21 20 rt 16 15 rd 11                                 10 sa 6              5 funct 0
+                       schoolMIPS: beq instruction
+ • determine address of next instruction
+
+                                                                        regWrite         regDst    aluSrc
+                                                                                                            aluControl
+                                                           10:6
+
+           pcSrc       CLK                                         CLK                                                    aluZero
+                                                                          WE3                           shift
+                                                           25:21
+                   0         PC                    instr           A1                                   srcA
+                                  A        RD                                      RD1
+
+
+
+
+                                                                                                                    ALU
+                   1                                                                                                      result
+                                                           20:16
+                                                                   A2              RD2               0 srcB
+                                  Instruction
+                                    Memory                         A3                                1
+                                                                         Register
+                                                                   WD3
+                                                                           File
+                                                           20:16
+                                                                                           0
+                                                           15:11
+                                                                                           1
+                                          pcNext
+                                      +
+
+
+
+
+                                                           15:0                          signImm
+                             1                                      Sign Extend
+                                                                                                                pcBranch
+
+
+
+
+                                                                                                            +
+I-type. Branch On Equal, if (Rs == Rt) PC += (int)offset
+31 op 26    25 rs 21 20 rt 16 15                                          Immediate                         0
+            schoolMIPS: beq instruction
+                                                                               branch                  pcSrc
+                                                        condZero
+                                                        aluZero                                        aluControl
+                                                31:26
+                                                        cmdOper
+                                                 5:0                     Control Unit
+                                                        cmdFunk
+
+                                                10:6               regWrite         regDst    aluSrc
+            CLK                                         CLK
+                                                              WE3                              shift
+        0
+                                                25:21
+                                                        A1                                                       aluZero
+                  PC                    instr                                                  srcA
+                       A        RD                                    RD1
+
+
+
+
+                                                                                                           ALU
+        1                                                                                                        result
+                                                20:16
+                                                        A2            RD2                    0 srcB
+                       Instruction
+                         Memory                         A3                                   1
+                                                              Register
+                                                        WD3
+                                                                File
+                                                20:16
+                                                                                0
+                                                15:11
+                                                                                1
+                               pcNext
+                           +
+
+
+
+
+                                                15:0                          signImm
+                  1                                       Sign Extend
+                                                                                                       pcBranch
+
+
+
+
+                                                                                                 +
+• decision to branch or not depending on aluZero
+                             schoolMIPS CPU
+                                                                       branch                  pcSrc
+                                                condZero
+                                                aluZero                                        aluControl
+                                        31:26
+                                                cmdOper
+                                         5:0                     Control Unit
+                                                cmdFunk
+
+                                        10:6               regWrite         regDst    aluSrc
+    CLK                                         CLK
+                                                      WE3                              shift
+0
+                                        25:21
+                                                A1                                                       aluZero
+          PC                    instr                                                  srcA
+               A        RD                                    RD1
+
+
+
+
+                                                                                                   ALU
+1                                                                                                        result
+                                        20:16
+                                                A2            RD2                    0 srcB
+               Instruction
+                 Memory                         A3                                   1
+                                                      Register
+                                                WD3
+                                                        File
+                                        20:16
+                                                                        0
+                                        15:11
+                                                                        1
+                       pcNext
+                   +
+
+
+
+
+                                        15:0                          signImm
+          1                                       Sign Extend
+                                                                                               pcBranch
+
+
+
+
+                                                                                         +
+               schoolMIPS Modules
+
+• Datapath
+  – Program Counter (PC)
+  – Instruction Memory
+  – Register File
+  – Arithmetic Logic Unit(ALU)
+  – Sign Extending module (Sign Extend)
+  – Adders for calculation the next instruction address
+    (pcNext и pcBranch)
+  – Multiplexors (pcSrc, regDst и aluSrc)
+• Control
+           schoolMIPS Program Counter
+                                                 CLK
+
+                                                       PC
+// sm_cpu.v (line 33)                       32         32
+sm_register r_pc(clk ,rst_n, pc_new, pc);
+…
+// sm_register.v (line 3-15)
+module sm_register
+(
+    input                 clk,
+    input                 rst,
+    input      [ 31 : 0 ] d,
+    output reg [ 31 : 0 ] q
+);
+    always @ (posedge clk or negedge rst)
+    if(~rst)
+        q <= 32'b0;
+           else
+        q <= d;
+endmodule
+        schoolMIPS Instruction Memory
+// sm_cpu.v (line 35-37)
+                                              A      RD
+sm_rom reset_rom(pc, instr);             32                 32
+                                              Instruction
+…                                               Memory
+// sm_rom.v (line 2-17)
+module sm_rom
+#(
+    parameter SIZE = 64
+)
+(
+    input [31:0] a,
+    output [31:0] rd
+);
+    reg [31:0] rom [SIZE - 1:0];
+    assign rd = rom [a];
+
+   initial begin
+       $readmemh ("program.hex", rom);
+   end
+
+endmodule
+              schoolMIPS Register File
+// sm_cpu.v (line 161-182)
+module sm_register_file                           CLK
+(                                                     WE3
+    input clk,                                  5
+                                                  A1         RD1   32
+    input [ 4:0] a0,                            5
+                                                  A2         RD2   32
+    input [ 4:0] a1,
+    input [ 4:0] a2,                            5
+                                                  A3
+                                                      Register
+    input [ 4:0] a3,                              WD3
+                                               32       File
+    output [31:0] rd0,
+    output [31:0] rd1,
+    output [31:0] rd2,
+    input [31:0] wd3,
+    input we3
+);
+    reg [31:0] rf [31:0];
+    assign rd0 = (a0 != 0) ? rf [a0] : 32'b0; //for debug
+    assign rd1 = (a1 != 0) ? rf [a1] : 32'b0;
+    assign rd2 = (a2 != 0) ? rf [a2] : 32'b0;
+
+    always @ (posedge clk)
+        if(we3) rf [a3] <= wd3;
+endmodule
+                     schoolMIPS ALU
+
+                                            srcB      srcA
+                                                             shift
+
+                                                                oper
+                                                ALU
+oper2:0   Function    Description
+  000     ADD         A+ B                   result    zero
+
+  001     OR          A| B
+  010     LUI         B << 16
+  011     SRL         B >> shift        // sm_cpu.vh (line 11-17)
+  100     SLTU        (A < B) ? 1 : 0   `define ALU_ADD 3'b000
+                                        `define ALU_OR   3'b001
+  101     SUBU        A- B              `define ALU_LUI 3'b010
+  110     reserved                      `define ALU_SRL 3'b011
+                                        `define ALU_SLTU 3'b100
+  111     reserved
+                                        `define ALU_SUBU 3'b101
+                    schoolMIPS ALU
+// sm_cpu.v (line 137-159)
+module sm_alu (
+    input      [31:0] srcA,                     srcB srcA
+    input      [31:0] srcB,                                 shift
+    input      [ 2:0] oper,
+    input      [ 4:0] shift,                                  oper
+    output            zero,                        ALU
+    output reg [31:0] result
+);
+    always @ (*) begin                          result  zero
+        case (oper)
+            default   : result = srcA + srcB;
+            `ALU_ADD : result = srcA + srcB;
+            `ALU_OR   : result = srcA | srcB;
+            `ALU_LUI : result = (srcB << 16);
+            `ALU_SRL : result = srcB >> shift;
+            `ALU_SLTU : result = (srcA < srcB) ? 1 : 0;
+            `ALU_SUBU : result = srcA - srcB;
+        endcase
+    end
+    assign zero = (result == 0);
+endmodule
+       schoolMIPS Adders and Sign Extend
+
+//program counter   sm_cpu.v (line 28-31)                      PC
+wire [31:0] pc;                                                               pcNext
+
+
+
+
+                                                                          +
+wire [31:0] pcBranch;
+                                                                1
+wire [31:0] pcNext = pc + 1;
+
+
+//sign extension   sm_cpu.v (line 64)
+wire [31:0] signImm
+    = { {16 { instr[15] }}, instr[15:0] };   Instr[15:0]                      signImm
+                                                            Sign Extend
+
+
+
+
+//branch address calculation    sm_cpu.v (line 65)         signImm
+assign pcBranch = pcNext + signImm;                                            pcBranch
+
+
+
+
+                                                                          +
+                                                           pcNext
+               schoolMIPS Multiplexors
+                                                                  pcSrc
+
+                                                      pcNext       0
+// next PC mux: branch or +1 (line 32)                                     pc_new
+                                                    pcBranch       1
+wire [31:0] pc_new = ~pcSrc ? pcNext : pcBranch;
+
+
+
+                                                                  regDst
+// register file address A3 (line 44)              Instr[20:16]    0
+wire [ 4:0] a3                                                     1
+                                                                           A3
+                                                   Instr[15:11]
+     = regDst ? instr[15:11] : instr[20:16];
+
+
+                                                                  aluSrc
+
+// alu source B (line 68)                                RD2       0
+                                                                           srcB
+wire [31:0] srcB = aluSrc ? signImm : rd2;           signImm       1
+                schoolMIPS I-type Instructions
+
+//instruction operation code    sm_cpu.vh (line 21-27)
+`define C_ADDIU 6'b001001 // I-type, Integer Add Immediate Unsigned
+                          // Rd = Rs + Immed
+`define C_BEQ 6'b000100   // I-type, Branch On Equal
+                          // if (Rs == Rt) PC += (int)offset
+`define C_LUI 6'b001111   // I-type, Load Upper Immediate
+                          // Rt = Immed << 16
+`define C_BNE 6'b000101   // I-type, Branch on Not Equal
+                          // if (Rs != Rt) PC += (int)offset
+
+
+
+
+ I-type. Integer Add Immediate, rt = rs + Immediate
+ 31 op 26   25 rs 21 20 rt 16 15               Immediate   0
+               schoolMIPS R-type Instructions
+//instruction operation code    sm_cpu.vh (line 19-41)
+`define C_SPEC 6'b000000 // Special instructions
+                         // (depends on function field)
+
+//instruction function field
+`define F_ADDU 6'b100001 // R-type, Integer Add Unsigned
+                         // Rd = Rs + Rt
+`define F_OR   6'b100101 // R-type, Logical OR
+                         // Rd = Rs | Rt
+`define F_SRL 6'b000010 // R-type, Shift Right Logical
+                         // Rd = Rs∅ >> shift
+`define F_SLTU 6'b101011 // R-type, Set on Less Than Unsigned
+                         // Rd = (Rs∅ < Rt∅) ? 1 : 0
+`define F_SUBU 6'b100011 // R-type, Unsigned Subtract
+                         // Rd = Rs – Rt
+`define F_ANY 6'b??????
+
+
+ R-type. Integer Add Unsigned, rd = rs + rt
+ 31 op 26    25 rs 21 20 rt 16 15 rd 11       10 sa 6   5 funct 0
+                  schoolMIPS Control Signals (1)
+Instr   cmdOper    cmdFunc             branch               condZero                 regDst               regWrite                aluSrc   aluControl
+
+
+
+
+                                                                                            branch                  pcSrc
+                                                                     condZero
+                                                                     aluZero                                        aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                     Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite         regDst    aluSrc
+                        CLK                                          CLK
+                                                                           WE3                              shift
+                    0
+                                                             25:21
+                                                                     A1                                                       aluZero
+                              PC                    instr                                                   srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                        ALU
+                    1                                                                                                         result
+                                                             20:16
+                                                                     A2            RD2                    0 srcB
+                                   Instruction
+                                     Memory                          A3                                   1
+                                                                           Register
+                                                                     WD3
+                                                                             File
+                                                             20:16
+                                                                                             0
+                                                             15:11
+                                                                                             1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                        Sign Extend
+                                                                                                                    pcBranch
+
+                                                                                                              +
+                   schoolMIPS Control Signals (2)
+ Instr   cmdOper    cmdFunc             branch               condZero                 regDst               regWrite                aluSrc   aluControl
+addiu    001001     ??????                                                                                                                     000
+
+
+
+
+                                                                                             branch                  pcSrc
+                                                                      condZero
+                                                                      aluZero                                        aluControl
+                                                              31:26
+                                                                      cmdOper
+                                                               5:0                     Control Unit
+                                                                      cmdFunk
+
+                                                              10:6               regWrite         regDst    aluSrc
+                         CLK                                          CLK
+                                                                            WE3                              shift
+                     0
+                                                              25:21
+                                                                      A1                                                       aluZero
+                               PC                    instr                                                   srcA
+                                    A        RD                                     RD1
+
+
+
+
+                                                                                                                         ALU
+                     1                                                                                                         result
+                                                              20:16
+                                                                      A2            RD2                    0 srcB
+                                    Instruction
+                                      Memory                          A3                                   1
+                                                                            Register
+                                                                      WD3
+                                                                              File
+                                                              20:16
+                                                                                              0
+                                                              15:11
+                                                                                              1
+                                            pcNext
+                                        +
+
+
+
+
+                                                              15:0                          signImm
+                               1                                        Sign Extend
+                                                                                                                     pcBranch
+
+                                                                                                               +
+                   schoolMIPS Control Signals (3)
+ Instr   cmdOper    cmdFunc             branch               condZero                 regDst                regWrite                aluSrc   aluControl
+addiu    001001     ??????                  0                         0                                                                         000
+
+
+
+
+                                                                                             branch                   pcSrc
+                                                                      condZero
+                                                                      aluZero                                         aluControl
+                                                              31:26
+                                                                      cmdOper
+                                                               5:0                      Control Unit
+                                                                      cmdFunk
+
+                                                              10:6               regWrite          regDst    aluSrc
+                         CLK                                          CLK
+                                                                             WE3                              shift
+                     0
+                                                              25:21
+                                                                      A1                                                        aluZero
+                               PC                    instr                                                    srcA
+                                    A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                     1                                                                                                          result
+                                                              20:16
+                                                                      A2            RD2                     0 srcB
+                                    Instruction
+                                      Memory                          A3                                    1
+                                                                             Register
+                                                                      WD3
+                                                                               File
+                                                              20:16
+                                                                                               0
+                                                              15:11
+                                                                                               1
+                                            pcNext
+                                        +
+
+
+
+
+                                                              15:0                          signImm
+                               1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+                   schoolMIPS Control Signals (4)
+ Instr   cmdOper    cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc   aluControl
+addiu    001001     ??????                  0                         0                     0                                                    000
+
+
+
+
+                                                                                             branch                    pcSrc
+                                                                      condZero
+                                                                      aluZero                                          aluControl
+                                                              31:26
+                                                                      cmdOper
+                                                               5:0                      Control Unit
+                                                                      cmdFunk
+
+                                                              10:6               regWrite           regDst    aluSrc
+                         CLK                                          CLK
+                                                                             WE3                               shift
+                     0
+                                                              25:21
+                                                                      A1                                                         aluZero
+                               PC                    instr                                                     srcA
+                                    A        RD                                     RD1
+
+
+
+
+                                                                                                                           ALU
+                     1                                                                                                           result
+                                                              20:16
+                                                                      A2            RD2                      0 srcB
+                                    Instruction
+                                      Memory                          A3                                     1
+                                                                             Register
+                                                                      WD3
+                                                                               File
+                                                              20:16
+                                                                                                0
+                                                              15:11
+                                                                                                1
+                                            pcNext
+                                        +
+
+
+
+
+                                                              15:0                          signImm
+                               1                                          Sign Extend
+                                                                                                                       pcBranch
+
+                                                                                                                 +
+                   schoolMIPS Control Signals (5)
+ Instr   cmdOper    cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001     ??????                  0                         0                     0                     1                        1      000
+
+
+
+
+                                                                                             branch                    pcSrc
+                                                                      condZero
+                                                                      aluZero                                          aluControl
+                                                              31:26
+                                                                      cmdOper
+                                                               5:0                      Control Unit
+                                                                      cmdFunk
+
+                                                              10:6               regWrite           regDst    aluSrc
+                         CLK                                          CLK
+                                                                             WE3                               shift
+                     0
+                                                              25:21
+                                                                      A1                                                         aluZero
+                               PC                    instr                                                     srcA
+                                    A        RD                                     RD1
+
+
+
+
+                                                                                                                           ALU
+                     1                                                                                                           result
+                                                              20:16
+                                                                      A2            RD2                      0 srcB
+                                    Instruction
+                                      Memory                          A3                                     1
+                                                                             Register
+                                                                      WD3
+                                                                               File
+                                                              20:16
+                                                                                                0
+                                                              15:11
+                                                                                                1
+                                            pcNext
+                                        +
+
+
+
+
+                                                              15:0                          signImm
+                               1                                          Sign Extend
+                                                                                                                       pcBranch
+
+                                                                                                                 +
+                   schoolMIPS Control Signals (6)
+ Instr   cmdOper    cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001     ??????                  0                         0                     0                     1                        1      000
+
+
+
+
+                                                                                             branch                    pcSrc
+                                                                      condZero
+                                                                      aluZero                                          aluControl
+                                                              31:26
+                                                                      cmdOper
+                                                               5:0                      Control Unit
+                                                                      cmdFunk
+
+                                                              10:6               regWrite           regDst    aluSrc
+                         CLK                                          CLK
+                                                                             WE3                               shift
+                     0
+                                                              25:21
+                                                                      A1                                                         aluZero
+                               PC                    instr                                                     srcA
+                                    A        RD                                     RD1
+
+
+
+
+                                                                                                                           ALU
+                     1                                                                                                           result
+                                                              20:16
+                                                                      A2            RD2                      0 srcB
+                                    Instruction
+                                      Memory                          A3                                     1
+                                                                             Register
+                                                                      WD3
+                                                                               File
+                                                              20:16
+                                                                                                0
+                                                              15:11
+                                                                                                1
+                                            pcNext
+                                        +
+
+
+
+
+                                                              15:0                          signImm
+                               1                                          Sign Extend
+                                                                                                                       pcBranch
+
+                                                                                                                 +
+                   schoolMIPS Control Signals (7)
+ Instr   cmdOper    cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001     ??????                  0                         0                     0                     1                        1      000
+addu     000000     100001                                                                                                                        000
+
+
+
+
+                                                                                             branch                    pcSrc
+                                                                      condZero
+                                                                      aluZero                                          aluControl
+                                                              31:26
+                                                                      cmdOper
+                                                               5:0                      Control Unit
+                                                                      cmdFunk
+
+                                                              10:6               regWrite           regDst    aluSrc
+                         CLK                                          CLK
+                                                                             WE3                               shift
+                     0
+                                                              25:21
+                                                                      A1                                                         aluZero
+                               PC                    instr                                                     srcA
+                                    A        RD                                     RD1
+
+
+
+
+                                                                                                                           ALU
+                     1                                                                                                           result
+                                                              20:16
+                                                                      A2            RD2                      0 srcB
+                                    Instruction
+                                      Memory                          A3                                     1
+                                                                             Register
+                                                                      WD3
+                                                                               File
+                                                              20:16
+                                                                                                0
+                                                              15:11
+                                                                                                1
+                                            pcNext
+                                        +
+
+
+
+
+                                                              15:0                          signImm
+                               1                                          Sign Extend
+                                                                                                                       pcBranch
+
+                                                                                                                 +
+                   schoolMIPS Control Signals (8)
+ Instr   cmdOper    cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001     ??????                  0                         0                     0                     1                        1      000
+addu     000000     100001                  0                         0                                                                           000
+
+
+
+
+                                                                                             branch                    pcSrc
+                                                                      condZero
+                                                                      aluZero                                          aluControl
+                                                              31:26
+                                                                      cmdOper
+                                                               5:0                      Control Unit
+                                                                      cmdFunk
+
+                                                              10:6               regWrite           regDst    aluSrc
+                         CLK                                          CLK
+                                                                             WE3                               shift
+                     0
+                                                              25:21
+                                                                      A1                                                         aluZero
+                               PC                    instr                                                     srcA
+                                    A        RD                                     RD1
+
+
+
+
+                                                                                                                           ALU
+                     1                                                                                                           result
+                                                              20:16
+                                                                      A2            RD2                      0 srcB
+                                    Instruction
+                                      Memory                          A3                                     1
+                                                                             Register
+                                                                      WD3
+                                                                               File
+                                                              20:16
+                                                                                                0
+                                                              15:11
+                                                                                                1
+                                            pcNext
+                                        +
+
+
+
+
+                                                              15:0                          signImm
+                               1                                          Sign Extend
+                                                                                                                       pcBranch
+
+                                                                                                                 +
+                   schoolMIPS Control Signals (9)
+ Instr   cmdOper    cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001     ??????                  0                         0                     0                     1                        1      000
+addu     000000     100001                  0                         0                     1                                                     000
+
+
+
+
+                                                                                             branch                    pcSrc
+                                                                      condZero
+                                                                      aluZero                                          aluControl
+                                                              31:26
+                                                                      cmdOper
+                                                               5:0                      Control Unit
+                                                                      cmdFunk
+
+                                                              10:6               regWrite           regDst    aluSrc
+                         CLK                                          CLK
+                                                                             WE3                               shift
+                     0
+                                                              25:21
+                                                                      A1                                                         aluZero
+                               PC                    instr                                                     srcA
+                                    A        RD                                     RD1
+
+
+
+
+                                                                                                                           ALU
+                     1                                                                                                           result
+                                                              20:16
+                                                                      A2            RD2                      0 srcB
+                                    Instruction
+                                      Memory                          A3                                     1
+                                                                             Register
+                                                                      WD3
+                                                                               File
+                                                              20:16
+                                                                                                0
+                                                              15:11
+                                                                                                1
+                                            pcNext
+                                        +
+
+
+
+
+                                                              15:0                          signImm
+                               1                                          Sign Extend
+                                                                                                                       pcBranch
+
+                                                                                                                 +
+               schoolMIPS Control Signals (10)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+
+
+
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+               schoolMIPS Control Signals (11)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+
+
+
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+               schoolMIPS Control Signals (12)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+srl      000000    000010                                                                                                                        011
+
+
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+               schoolMIPS Control Signals (13)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+srl      000000    000010                  0                         0                                                                           011
+
+
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+               schoolMIPS Control Signals (14)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+srl      000000    000010                  0                         0                     1                                                     011
+
+
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+               schoolMIPS Control Signals (15)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+srl      000000    000010                  0                         0                     1                     1                        0      011
+
+
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+               schoolMIPS Control Signals (16)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+srl      000000    000010                  0                         0                     1                     1                        0      011
+
+
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+               schoolMIPS Control Signals (17)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+srl      000000    000010                  0                         0                     1                     1                        0      011
+beq      000100    ??????                                                                                                                        101
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+                                                                                                                +
+               schoolMIPS Control Signals (18)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+srl      000000    000010                  0                         0                     1                     1                        0      011
+beq      000100    ??????                  1                         1                     0                     0                        0      101
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+                 schoolMIPS Control Signals (19)
+  Instr   cmdOper   cmdFunc                branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+ addiu    001001        ??????                 0                         0                     0                     1                        1      000
+ addu     000000        100001                 0                         0                     1                     1                        0      000
+ srl      000000        000010                 0                         0                     1                     1                        0      011
+ beq      000100        ??????                 1                         1                     0                     0                        0      101
+
+                                                                                                branch                    pcSrc
+                                                                         condZero
+                                                                         aluZero                                          aluControl
+                                                                 31:26
+                                                                         cmdOper
+                                                                  5:0                      Control Unit
+                                                                         cmdFunk
+
+                                                                 10:6               regWrite           regDst    aluSrc
+Rs != Rd => no branch       CLK                                          CLK
+                                                                                WE3                               shift
+                        0
+                                                                 25:21
+                                                                         A1                                                         aluZero
+                                  PC                    instr                                                     srcA
+                                       A        RD                                     RD1
+
+
+
+
+                                                                                                                              ALU
+                        1                                                                                                           result
+                                                                 20:16
+                                                                         A2            RD2                      0 srcB
+                                       Instruction
+                                         Memory                          A3                                     1
+                                                                                Register
+                                                                         WD3
+                                                                                  File
+                                                                 20:16
+                                                                                                   0
+                                                                 15:11
+                                                                                                   1
+                                               pcNext
+                                           +
+
+
+
+
+                                                                 15:0                          signImm
+                                  1                                          Sign Extend
+                                                                                                                          pcBranch
+
+                                                                                                                    +
+                schoolMIPS Control Signals (20)
+  Instr   cmdOper    cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+ addiu    001001     ??????                  0                         0                     0                     1                        1      000
+ addu     000000     100001                  0                         0                     1                     1                        0      000
+ srl      000000     000010                  0                         0                     1                     1                        0      011
+ beq      000100     ??????                  1                         1                     0                     0                        0      101
+
+                                                                                              branch                    pcSrc
+                                                                       condZero
+                                                                       aluZero                                          aluControl
+                                                               31:26
+                                                                       cmdOper
+                                                                5:0                      Control Unit
+                                                                       cmdFunk
+
+                                                               10:6               regWrite           regDst    aluSrc
+Rs == Rd => branch        CLK                                          CLK
+                                                                              WE3                               shift
+                      0
+                                                               25:21
+                                                                       A1                                                         aluZero
+                                PC                    instr                                                     srcA
+                                     A        RD                                     RD1
+
+
+
+
+                                                                                                                            ALU
+                      1                                                                                                           result
+                                                               20:16
+                                                                       A2            RD2                      0 srcB
+                                     Instruction
+                                       Memory                          A3                                     1
+                                                                              Register
+                                                                       WD3
+                                                                                File
+                                                               20:16
+                                                                                                 0
+                                                               15:11
+                                                                                                 1
+                                             pcNext
+                                         +
+
+
+
+
+                                                               15:0                          signImm
+                                1                                          Sign Extend
+                                                                                                                        pcBranch
+
+                                                                                                                  +
+               schoolMIPS Control Signals (21)
+ Instr   cmdOper   cmdFunc             branch               condZero                 regDst                 regWrite                aluSrc    aluControl
+addiu    001001    ??????                  0                         0                     0                     1                        1      000
+addu     000000    100001                  0                         0                     1                     1                        0      000
+srl      000000    000010                  0                         0                     1                     1                        0      011
+beq      000100    ??????                  1                         1                     0                     0                        0      101
+
+                                                                                            branch                    pcSrc
+                                                                     condZero
+                                                                     aluZero                                          aluControl
+                                                             31:26
+                                                                     cmdOper
+                                                              5:0                      Control Unit
+                                                                     cmdFunk
+
+                                                             10:6               regWrite           regDst    aluSrc
+                        CLK                                          CLK
+                                                                            WE3                               shift
+                    0
+                                                             25:21
+                                                                     A1                                                         aluZero
+                              PC                    instr                                                     srcA
+                                   A        RD                                     RD1
+
+
+
+
+                                                                                                                          ALU
+                    1                                                                                                           result
+                                                             20:16
+                                                                     A2            RD2                      0 srcB
+                                   Instruction
+                                     Memory                          A3                                     1
+                                                                            Register
+                                                                     WD3
+                                                                              File
+                                                             20:16
+                                                                                               0
+                                                             15:11
+                                                                                               1
+                                           pcNext
+                                       +
+
+
+
+
+                                                             15:0                          signImm
+                              1                                          Sign Extend
+                                                                                                                      pcBranch
+
+                                                                                                                +
+                     schoolMIPS Control
+                       Branch Signals
+// control unit (line 95-134)                              branch                pcSrc
+module sm_control                        condZero
+                                         aluZero                                 aluControl
+(
+    input      [5:0] cmdOper,            cmdOper
+                                                      Control Unit
+                                         cmdFunk
+    input      [5:0] cmdFunk,
+    input            aluZero,                     regWrite     regDst   aluSrc
+
+    output           pcSrc,
+    output reg       regDst,
+    output reg       regWrite,
+    output reg       aluSrc,
+    output reg [2:0] aluControl
+);
+    reg branch;
+    reg condZero;
+    assign pcSrc = branch & (aluZero == condZero);
+
+    always @ (*) begin
+    ...
+    end
+endmodule
+                      schoolMIPS Control
+                        Control Signals
+// control unit (line 95-134)
+module sm_control                                                     branch               pcSrc
+...                                             condZero
+    always @ (*) begin                          aluZero                                    aluControl
+
+        //control signals default values        cmdOper
+        branch = 1'b0;                                          Control Unit
+                                                cmdFunk
+        condZero = 1'b0;                                   regWrite      regDst   aluSrc
+        regDst = 1'b0;
+        regWrite = 1'b0;
+        aluSrc = 1'b0;
+        aluControl = `ALU_ADD;
+
+            casez( {cmdOper,cmdFunk} )
+              default               : ;
+               { `C_SPEC, `F_ADDU } : begin
+                                         regDst = 1'b1;
+                                         regWrite = 1'b1;
+                                         aluControl = `ALU_ADD;
+                                       end
+              ...
+            endcase
+    end
+endmodule
+    schoolMIPS and FPGA debug board
+
+            sm_top
+                                               imAddr         schoolMIPS
+                       Instruction                             (sm_cpu)
+                        Memory                 imData
+
+
+
+
+                                                                              sm_hex_display
+    rst_n                                                Register
+                                                           File
+            clkIn
+                                                        A0        RD0
+clkEnable                                                                                      regData
+                     sm_clk_divider        clk                          MUX
+
+                                                             PC
+
+
+
+
+               clkDevide             regAddr
+            schoolMIPS Programming
+
+ ASM
+             • gcc (MIPS toolchain)
+ ELF
+binary
+             • BIN2HEX converter
+HEX file
+             • synthesis tool (Quartus Prime)
+SOF file
+             • programmer (Quartus Prime)
+ FPGA
+  chip
+           See details in User Manual
+           MIPS Assembler Program
+            # program/01_fibonacci/main.S (line 3-13)
+ ASM
+                     .text
+
+            start:    move $t0, $0
+ ELF                  li   $t1, 1
+binary                move $v0, $t1
+
+            fibonacci: addu $t0, $t0, $t1
+HEX file               move $v0, $t0
+                       addu $t1, $t0, $t1
+                       move $v0, $t1
+                       b    fibonacci
+SOF file
+
+
+ FPGA
+  chip        gcc (MIPS toolchain)
+           Binary Executable File
+
+ ASM
+
+
+
+ ELF
+binary
+
+
+
+HEX file
+
+
+
+SOF file
+
+
+ FPGA
+  chip        BIN2HEX converter
+           MIPS Assembler Program
+             # program/01_fibonacci/main.S (line 3-13)
+ ASM
+                      .text
+
+             start:    move $t0, $0
+ ELF                   li   $t1, 1
+binary                 move $v0, $t1
+
+             fibonacci: addu $t0, $t0, $t1
+HEX file                move $v0, $t0
+                        addu $t1, $t0, $t1
+                        move $v0, $t1
+                        b    fibonacci
+SOF file
+
+
+ FPGA
+  chip     MARS (MIPS Assembler and Runtime Simulator)
+                HEX-file
+
+ ASM
+
+
+
+ ELF
+binary                             *.v, *.vh
+                                Verilog Sources
+
+
+HEX file
+               sm_rom.v
+            $readmemh (…);
+
+SOF file
+
+
+ FPGA
+  chip     synthesis tool (Quartus Prime)
+           FPGA Configuration File
+
+ ASM
+
+
+
+ ELF
+binary
+
+
+
+HEX file
+
+
+
+SOF file
+
+
+ FPGA
+  chip
+  Configured FPGA chip on the Debug Board
+
+ ASM
+
+
+
+ ELF
+binary
+
+
+
+HEX file
+
+
+
+SOF file
+
+
+ FPGA
+  chip
+               What is Next?
+• The great book “Digital Design and Computer
+  Architecture” by David Harris and Sarah Harris
+  The free translation (Russian) can be downloaded
+  from MIPS Academic Community (link)
+
+• MIPSfpga – provides the RTL source code of the
+  MIPS microAptiv UP core for implementation on
+  an FPGA (including SoC and Labs). This core is a
+  member of the same microcontroller family
+  found in many embedded devices, including the
+  popular PIC32MZ & PIC32MK microcontrollers
+  from Microchip and the Artik 1 from Samsung
+  (link)
+  Thank you!
+Your questions?
+

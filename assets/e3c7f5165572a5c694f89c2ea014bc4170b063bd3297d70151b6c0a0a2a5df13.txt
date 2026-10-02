@@ -1,0 +1,49 @@
+{
+  "additions": 1,
+  "base_commit": "0fcb0d14312fdc65f4851b7f964c7567cc96e703",
+  "base_ref": "master",
+  "deletions": 1,
+  "head_commit": "e5bcc4f8f3892192fdfb1e000789238905e49644",
+  "issue_info": {
+    "body": "### Description\n\nWhen building some block-level simulations with VCS (for example, `util/dvsim/dvsim.py hw/ip/hmac/dv/hmac_sim_cfg.hjson -i hmac_smoke --build-only`), the tool spits out a warning:\n```\nWarning-[IDTS] Ignoring dynamic type sensitivity\n/nas/lowrisc/tools/synopsys/vcs/W-2024.09/etc/uvm-1.2/base/uvm_globals.svh, 241\n\"cs\"\n  Dynamic types used in always_comb, always_latch, always (@*) will be ignored\n  for the inferred sensitivity list. \n  \n  Declared at: \n  /nas/lowrisc/tools/synopsys/vcs/W-2024.09/etc/uvm-1.2/base/uvm_globals.svh, \n  239\n  Originating call: \n  ../src/lowrisc_tlul_trans_intg_0.1/rtl/tlul_rsp_intg_gen.sv, 83\n```\n\nThis turns out to be caused by the following code:\n```systemverilog\n`ifndef SYNTHESIS\n  always_comb begin\n    if (tl_i.d_valid) begin\n      `ASSERT_I(RspZero_A, RspIntgInIsZero -> ~|tl_i.d_user.rsp_intg)\n      `ASSERT_I(UserZero_A, UserInIsZero -> ~|tl_i.d_user)\n    end\n  end\n`endif\n```\nand the guts of `ASSERT_I` do things involving `string`, which is a problem for `always_comb`.\n\nI think the fix is simple: switch to using `always @(tl_i) ...`",
+    "created_at": "2025-03-26T13:38:32Z",
+    "labels": [
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "title": "[dv,rtl] VCS build warning from tlul_rsp_intg_gen.sv",
+    "updated_at": "2025-03-30T20:50:18Z"
+  },
+  "issue_number": 26737,
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/26737",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 1,
+      "changes": 2,
+      "deletions": 1,
+      "filename": "hw/ip/tlul/rtl/tlul_rsp_intg_gen.sv",
+      "patch": "@@ -78,7 +78,7 @@ module tlul_rsp_intg_gen import tlul_pkg::*; #(\n // the code below is not meant to be synthesized,\n // but it is intended to be used in simulation and FPV\n `ifndef SYNTHESIS\n-  always_comb begin\n+  always @(tl_i) begin\n     if (tl_i.d_valid) begin\n       `ASSERT_I(RspZero_A, RspIntgInIsZero -> ~|tl_i.d_user.rsp_intg)\n       `ASSERT_I(UserZero_A, UserInIsZero -> ~|tl_i.d_user)"
+    }
+  ],
+  "pr_info": {
+    "body": "- This fix is there to solve issue #26737",
+    "created_at": "2025-03-26T13:49:47Z",
+    "merged_at": "2025-03-27T09:28:07Z",
+    "state": "closed",
+    "title": "[dv,rtl] Solve build warn from tlul_rsp_intg_gen",
+    "updated_at": "2025-03-27T09:28:07Z",
+    "user": "martin-velay"
+  },
+  "pr_number": 26738,
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/26738",
+  "repository": "lowRISC/opentitan",
+  "source_info": {
+    "line_number": 68,
+    "source_file": "12.txt"
+  },
+  "task_id": "lowRISC_opentitan_26738_26737",
+  "verilog_files": [
+    "hw/ip/tlul/rtl/tlul_rsp_intg_gen.sv"
+  ]
+}

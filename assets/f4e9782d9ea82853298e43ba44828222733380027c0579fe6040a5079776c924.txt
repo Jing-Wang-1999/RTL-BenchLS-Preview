@@ -1,0 +1,135 @@
+module autovcoder_068681 (
+    Q,
+    seq_clr,
+    seq_cnt_en,
+    slowest_sync_clk
+);
+  output [5:0] Q;
+  input seq_clr;
+  input seq_cnt_en;
+  input slowest_sync_clk;
+
+  wire [5:0] Q;
+  wire clear;
+  wire [5:0] q_int0;
+  wire seq_clr;
+  wire seq_cnt_en;
+  wire slowest_sync_clk;
+
+  LUT1 #(
+      .INIT(2'h1)
+  ) \q_int[0]_i_1 (
+      .I0(Q[0]),
+      .O (q_int0[0])
+  );
+  (* SOFT_HLUTNM = "soft_lutpair1" *)
+  LUT2 #(
+      .INIT(4'h6)
+  ) \q_int[1]_i_1 (
+      .I0(Q[0]),
+      .I1(Q[1]),
+      .O (q_int0[1])
+  );
+  (* SOFT_HLUTNM = "soft_lutpair1" *)
+  LUT3 #(
+      .INIT(8'h78)
+  ) \q_int[2]_i_1 (
+      .I0(Q[0]),
+      .I1(Q[1]),
+      .I2(Q[2]),
+      .O (q_int0[2])
+  );
+  (* SOFT_HLUTNM = "soft_lutpair0" *)
+  LUT4 #(
+      .INIT(16'h7F80)
+  ) \q_int[3]_i_1 (
+      .I0(Q[1]),
+      .I1(Q[0]),
+      .I2(Q[2]),
+      .I3(Q[3]),
+      .O (q_int0[3])
+  );
+  (* SOFT_HLUTNM = "soft_lutpair0" *)
+  LUT5 #(
+      .INIT(32'h7FFF8000)
+  ) \q_int[4]_i_1 (
+      .I0(Q[2]),
+      .I1(Q[0]),
+      .I2(Q[1]),
+      .I3(Q[3]),
+      .I4(Q[4]),
+      .O (q_int0[4])
+  );
+  LUT1 #(
+      .INIT(2'h1)
+  ) \q_int[5]_i_1 (
+      .I0(seq_clr),
+      .O (clear)
+  );
+  LUT6 #(
+      .INIT(64'h7FFFFFFF80000000)
+  ) \q_int[5]_i_2 (
+      .I0(Q[3]),
+      .I1(Q[1]),
+      .I2(Q[0]),
+      .I3(Q[2]),
+      .I4(Q[4]),
+      .I5(Q[5]),
+      .O (q_int0[5])
+  );
+  FDRE #(
+      .INIT(1'b1)
+  ) \q_int_reg[0] (
+      .C (slowest_sync_clk),
+      .CE(seq_cnt_en),
+      .D (q_int0[0]),
+      .Q (Q[0]),
+      .R (clear)
+  );
+  FDRE #(
+      .INIT(1'b1)
+  ) \q_int_reg[1] (
+      .C (slowest_sync_clk),
+      .CE(seq_cnt_en),
+      .D (q_int0[1]),
+      .Q (Q[1]),
+      .R (clear)
+  );
+  FDRE #(
+      .INIT(1'b1)
+  ) \q_int_reg[2] (
+      .C (slowest_sync_clk),
+      .CE(seq_cnt_en),
+      .D (q_int0[2]),
+      .Q (Q[2]),
+      .R (clear)
+  );
+  FDRE #(
+      .INIT(1'b1)
+  ) \q_int_reg[3] (
+      .C (slowest_sync_clk),
+      .CE(seq_cnt_en),
+      .D (q_int0[3]),
+      .Q (Q[3]),
+      .R (clear)
+  );
+  FDRE #(
+      .INIT(1'b1)
+  ) \q_int_reg[4] (
+      .C (slowest_sync_clk),
+      .CE(seq_cnt_en),
+      .D (q_int0[4]),
+      .Q (Q[4]),
+      .R (clear)
+  );
+  FDRE #(
+      .INIT(1'b1)
+  ) \q_int_reg[5] (
+      .C (slowest_sync_clk),
+      .CE(seq_cnt_en),
+      .D (q_int0[5]),
+      .Q (Q[5]),
+      .R (clear)
+  );
+endmodule
+

@@ -1,0 +1,13 @@
+always @(posedge clk) begin
+    if (prescale_count_reg != 0) begin
+        prescale_count_reg <= prescale_count_reg - 1;
+    end else begin
+        prescale_count_reg <= prescale;
+        time_count_reg <= time_count_reg + 1;
+    end
+
+    if (rst) begin
+        prescale_count_reg <= 0;
+        time_count_reg <= 0;
+    end
+end

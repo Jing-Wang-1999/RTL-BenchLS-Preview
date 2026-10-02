@@ -1,0 +1,44 @@
+The module named "origen_018345" is designed to manage serial data transmission using a finite state machine with data bits and stop bits. It operates based on a clock signal and a reset signal, and it transitions through various states to handle data transmission. Below is a detailed specification of its behavior, inputs, outputs, and internal operations:
+
+### Parameters:
+- **DBIT**: This parameter specifies the number of data bits to be transmitted. It is set to 8 by default, meaning the module handles 8-bit data.
+- **SB_TICK**: This parameter defines the number of clock ticks required for the stop bits. It is set to 16 by default.
+
+### Inputs:
+- **clk**: The clock signal that drives the state transitions and operations within the module.
+- **reset**: A signal used to reset the module to its initial state.
+- **tx_start**: A signal indicating the start of data transmission.
+- **s_tick**: A signal representing a tick for synchronization purposes during transmission.
+- **din**: An 8-bit input data bus carrying the data to be transmitted.
+
+### Outputs:
+- **tx_done_tick**: A signal indicating the completion of a transmission cycle.
+- **tx**: The output signal representing the transmitted data bit.
+
+### Internal States:
+The module uses a finite state machine with four symbolic states:
+- **idle**: The initial state where the module waits for a transmission start signal.
+- **start**: The state where the transmission of the start bit occurs.
+- **data**: The state where the actual data bits are transmitted sequentially.
+- **stop**: The state where the stop bits are transmitted, marking the end of a data transmission cycle.
+
+### Internal Registers:
+- **state_reg**: Holds the current state of the finite state machine.
+- **state_next**: Determines the next state of the finite state machine.
+- **s_reg**: Counts the ticks for synchronization during transmission.
+- **s_next**: Determines the next value for the tick counter.
+- **n_reg**: Counts the number of data bits transmitted.
+- **n_next**: Determines the next value for the data bit counter.
+- **b_reg**: Holds the current data bits being transmitted.
+- **b_next**: Determines the next value for the data bits.
+- **tx_reg**: Holds the current value of the transmitted bit.
+- **tx_next**: Determines the next value for the transmitted bit.
+
+### Behavior:
+1. **Idle State**: The module remains in the idle state until the `tx_start` signal is received. Upon receiving this signal, it transitions to the start state, initializes the tick counter, and loads the input data into the buffer.
+
+2. **Start State**: The module transmits the start bit by setting the `tx` output low. It waits for 16 ticks (as defined by `s_tick`) before transitioning to the data state.
+
+3. **Data State**: The module sequentially transmits each bit of the data. It shifts the data buffer right after each bit is transmitted and increments the bit counter. Once all data bits are transmitted, it transitions to the stop state.
+
+4. **Stop State**: The module transmits the stop bits by setting the `tx` output high. It waits for the number of ticks specified by `SB_TICK` before transitioning back to the idle state and

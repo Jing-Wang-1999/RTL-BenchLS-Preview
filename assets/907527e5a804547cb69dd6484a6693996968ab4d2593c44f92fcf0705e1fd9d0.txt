@@ -1,0 +1,13 @@
+always @ (posedge aclk or negedge aresetn) begin
+        if (aresetn == 1'b0) begin
+            rdptr <= {(ADDR_WIDTH+1){1'b0}};
+        end
+        else if (srst || flush) begin
+            rdptr <= {(ADDR_WIDTH+1){1'b0}};
+        end
+        else begin
+            if (pull == 1'b1 && empty_flag == 1'b0) begin
+                rdptr <= rdptr + 1'b1;
+            end
+        end
+    end

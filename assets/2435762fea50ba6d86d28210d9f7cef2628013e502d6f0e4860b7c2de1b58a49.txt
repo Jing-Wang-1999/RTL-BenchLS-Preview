@@ -1,0 +1,177 @@
+module rtlpp_09203(
+    input  clock,
+    input  reset,
+    input  Read,                
+    input  Write,               
+    input  [8:0] DataIn,        
+    output reg [16:0] DataOut,  
+    output Ack,                 
+    output DataReady,           
+    output BootResetCPU,        
+    output BootWriteMem,        
+    output reg [17:0] BootAddr, 
+    output reg [31:0] BootData, 
+    input RxD,                  
+    output TxD                  
+    );
+
+    localparam [4:0]    IDLE=0, WRITE=1, READ=2, BUSW=3, XHEAD1=4, XHEAD2=5, XHEAD3=6, XSIZE1=7, XSIZE2=8, XSIZE3=9, 
+                        XOFST1=10, XOFST2=11, XOFST3=12, XDATA1=13, XDATA2=14, XDATA3=15, XDATA4=16, XADDRI=17;
+
+    wire uart_write; 
+    reg  uart_read;
+    wire uart_data_ready;
+    wire [7:0] uart_data_in;
+    wire [7:0] uart_data_out;
+    wire [8:0] uart_rx_count;
+
+    reg [8:0] DataIn_r;             
+    wire DisableBoot = DataIn_r[8]; 
+    reg [28:0] BootTimedEnable;     
+    reg  BootSwEnabled;             
+    wire BootProtoEnabled;          
+    reg [17:0] rx_count;            
+    reg [17:0] rx_size;             
+    reg  [4:0] state;
+
+    always @(posedge clock) begin
+        if (reset) begin
+            state <= IDLE;
+        end
+        else begin
+            case (state)
+                IDLE:    begin
+                            if      (Write)                              state <= WRITE;
+                            else if (Read)                               state <= READ;
+                            else if (BootProtoEnabled & uart_data_ready) state <= XHEAD1;
+                            else                                         state <= IDLE;
+                         end
+                WRITE:   state <= BUSW;
+                READ:    state <= BUSW;
+                BUSW:    state <= ~(Read | Write) ? IDLE : BUSW;
+                XHEAD1:  state <= (uart_data_out == 8'h58) ? XHEAD2 : IDLE;                                 
+                XHEAD2:  state <= (uart_data_ready) ? ((uart_data_out == 8'h55) ? XHEAD3 : IDLE) : XHEAD2;  
+                XHEAD3:  state <= (uart_data_ready) ? ((uart_data_out == 8'h4D) ? XSIZE1 : IDLE) : XHEAD3;  
+                XSIZE1:  state <= (uart_data_ready) ? ((uart_data_out[7:2] == 6'b000000) ? XSIZE2 : IDLE) : XSIZE1;
+                XSIZE2:  state <= (uart_data_ready) ? XSIZE3 : XSIZE2;
+                XSIZE3:  state <= (uart_data_ready) ? XOFST1 : XSIZE3;
+                XOFST1:  state <= (uart_data_ready) ? XOFST2 : XOFST1;
+                XOFST2:  state <= (uart_data_ready) ? XOFST3 : XOFST2;
+                XOFST3:  state <= (uart_data_ready) ? XDATA1 : XOFST3;
+                XDATA1:  state <= (uart_data_ready) ? XDATA2 : XDATA1;
+                XDATA2:  state <= (uart_data_ready) ? XDATA3 : XDATA2;
+                XDATA3:  state <= (uart_data_ready) ? XDATA4 : XDATA3;
+                XDATA4:  state <= (uart_data_ready) ? XADDRI : XDATA4;
+                XADDRI:  state <= (rx_count == rx_size) ? IDLE : XDATA1;
+                default: state <= IDLE;
+            endcase
+        end
+    end
+
+    always @(*) begin
+        case (state)
+            IDLE:    uart_read <= 0;
+            WRITE:   uart_read <= 0;
+            READ:    uart_read <= 1;
+            BUSW:    uart_read <= 0;
+            XHEAD1:  uart_read <= uart_data_ready;
+            XHEAD2:  uart_read <= uart_data_ready;
+            XHEAD3:  uart_read <= uart_data_ready;
+            XSIZE1:  uart_read <= uart_data_ready;
+            XSIZE2:  uart_read <= uart_data_ready;
+            XSIZE3:  uart_read <= uart_data_ready;
+            XOFST1:  uart_read <= uart_data_ready;
+            XOFST2:  uart_read <= uart_data_ready;
+            XOFST3:  uart_read <= uart_data_ready;
+            XDATA1:  uart_read <= uart_data_ready;
+            XDATA2:  uart_read <= uart_data_ready;
+            XDATA3:  uart_read <= uart_data_ready;
+            XDATA4:  uart_read <= uart_data_ready;
+            XADDRI:  uart_read <= 0;
+            default: uart_read <= 0;
+        endcase
+    end
+
+    always @(posedge clock) begin
+        DataIn_r <= ((state == IDLE) & Write) ? DataIn : DataIn_r;
+    end
+
+    always @(posedge clock) begin
+        DataOut <= (reset) ? 17'h00000 : ((state == READ) ? {uart_rx_count[8:0], uart_data_out[7:0]} : DataOut);
+    end
+
+    always @(posedge clock) begin
+        BootTimedEnable <= (reset) ? 29'h00000000 : (BootTimedEnable != 29'h1dcd6500) ? BootTimedEnable + 1 : BootTimedEnable; 
+        BootSwEnabled <= (reset) ? 1 : ((state == WRITE) ? ~DisableBoot : BootSwEnabled);
+    end
+
+    assign BootResetCPU = (state != IDLE) && (state != WRITE) && (state != READ) && (state != BUSW) &&
+                          (state != XHEAD1) && (state != XHEAD2) && (state != XHEAD3) && (state != XSIZE1);
+    assign BootWriteMem = (state == XADDRI);
+    assign uart_write   = ((state == WRITE) & ~DisableBoot) | 
+                          (uart_data_ready & ((state == XSIZE3) | (state == XDATA1) | (state == XDATA2) | (state == XDATA3) | (state == XDATA4)));
+    assign uart_data_in = (state == WRITE) ? DataIn_r[7:0] : uart_data_out;
+    assign Ack          = (state == BUSW);
+    assign DataReady    = uart_data_ready;
+    assign BootProtoEnabled = BootSwEnabled | (BootTimedEnable != 29'h1dcd6500);
+
+    always @(posedge clock) begin
+        BootData[31:24] <= (reset) ? 8'h00 : (((state == XDATA1) & uart_data_ready) ? uart_data_out : BootData[31:24]);
+        BootData[23:16] <= (reset) ? 8'h00 : (((state == XDATA2) & uart_data_ready) ? uart_data_out : BootData[23:16]);
+        BootData[15:8]  <= (reset) ? 8'h00 : (((state == XDATA3) & uart_data_ready) ? uart_data_out : BootData[15:8]);
+        BootData[7:0]   <= (reset) ? 8'h00 : (((state == XDATA4) & uart_data_ready) ? uart_data_out : BootData[7:0]);
+    end
+
+    always @(posedge clock) begin
+        if (reset) begin
+            BootAddr <= 18'h00000;
+        end
+        else if (state == XADDRI) begin
+            BootAddr <= BootAddr + 1;
+        end
+        else begin
+            BootAddr[17:16] <= ((state == XOFST1) & uart_data_ready) ? uart_data_out[1:0] : BootAddr[17:16];
+            BootAddr[15:8]  <= ((state == XOFST2) & uart_data_ready) ? uart_data_out[7:0] : BootAddr[15:8];
+            BootAddr[7:0]   <= ((state == XOFST3) & uart_data_ready) ? uart_data_out[7:0] : BootAddr[7:0];
+        end
+    end
+
+    always @(posedge clock) begin
+        rx_count <= (state == IDLE) ? 18'h00000 : ((state == XADDRI) ? rx_count + 1 : rx_count);
+    end
+
+    always @(posedge clock) begin
+        rx_size[17:16] <= (reset) ? 2'b00 : (((state == XSIZE1) & uart_data_ready) ? uart_data_out[1:0] : rx_size[17:16]);
+        rx_size[15:8]  <= (reset) ? 8'h00 : (((state == XSIZE2) & uart_data_ready) ? uart_data_out[7:0] : rx_size[15:8]);
+        rx_size[7:0]   <= (reset) ? 8'h00 : (((state == XSIZE3) & uart_data_ready) ? uart_data_out[7:0] : rx_size[7:0]);
+    end
+
+    // Simple UART logic integrated directly inside the main module
+    reg [7:0] uart_reg;
+    reg [8:0] uart_counter;
+    reg uart_data_ready_flag;
+
+    always @(posedge clock or posedge reset) begin
+        if (reset) begin
+            uart_reg <= 8'h00;
+            uart_counter <= 9'h000;
+            uart_data_ready_flag <= 0;
+        end else begin
+            if (uart_write) begin
+                uart_reg <= uart_data_in;
+                uart_counter <= uart_counter + 1;
+                uart_data_ready_flag <= 1;
+            end else if (uart_read) begin
+                uart_data_ready_flag <= 0;
+            end else begin
+                uart_data_ready_flag <= uart_data_ready_flag;
+            end
+        end
+    end
+
+    assign uart_data_out = uart_reg;
+    assign uart_data_ready = uart_data_ready_flag;
+    assign uart_rx_count = uart_counter;
+    assign TxD = RxD;
+
+endmodule

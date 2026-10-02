@@ -1,0 +1,8 @@
+always @(posedge clk or posedge rst)
+ if (rst) begin
+   int_ack_t <= #1 1'b0;
+   int_vec_buff <= #1 8'h00;
+ end else if (intr) begin
+   int_ack_t <= #1 1'b1;
+   int_vec_buff <= #1 int_v;
+ end else if (rd && (ea_rom_sel || iack_i) && !pc_wr_r2) int_ack_t <= #1 1'b0;

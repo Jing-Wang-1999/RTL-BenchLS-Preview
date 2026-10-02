@@ -1,0 +1,225 @@
+// Required path: cia/cia8520.v
+module cia8520(
+    input nRES, 
+    input ECLK, 
+
+    input        nCS, 
+    input  [3:0] RS,  
+    input        RW,  
+    input  [7:0] DBi, 
+    output [7:0] DBo, 
+
+    input  [7:0] PRAi, 
+    output [7:0] PRAo, 
+    output [7:0] PRAd, 
+
+    input  [7:0] PRBi, 
+    output [7:0] PRBo, 
+    output [7:0] PRBd, 
+
+    input      nFLAG, 
+    output reg nPC,   
+
+    input  SPi, 
+    output SPo, 
+    output SPd, 
+
+    input      CNTi, 
+    output reg CNTo, 
+
+    input TOD, 
+
+    output nIRQ 
+  );
+endmodule
+
+// Required path: cia/cia8520_top.v
+module cia(
+    
+    input nRES,
+    input ECLK,
+    input nCS,
+    input RW,
+    input [3:0] RS,
+    inout [7:0] DB,
+
+    
+    inout [7:0] PA,
+    inout [7:0] PB,
+
+    
+    output nPC,
+    input nFLAG,
+
+    
+    inout CNT,
+    inout SP,
+
+    
+    input TOD,
+
+    
+    output nIRQ
+  );
+endmodule
+
+// Required path: cia/cia_decoder.v
+module cia_decoder(
+    input  [3:0] adr_i, 
+
+    
+    input  [7:0] pra_i,
+    input  [7:0] prb_i,
+    input  [7:0] ddra_i,
+    input  [7:0] ddrb_i,
+    input  [7:0] talo_i,
+    input  [7:0] tahi_i,
+    input  [7:0] tblo_i,
+    input  [7:0] tbhi_i,
+    input  [7:0] todlo_i,
+    input  [7:0] todmid_i,
+    input  [7:0] todhi_i,
+    input  [7:0] ext_i,
+    input  [7:0] sdr_i,
+    input  [7:0] icr_i,
+    input  [7:0] cra_i,
+    input  [7:0] crb_i,
+
+    
+    output [7:0] dat_o,
+
+    
+    output pra_o,
+    output prb_o,
+    output ddra_o,
+    output ddrb_o,
+    output talo_o,
+    output tahi_o,
+    output tblo_o,
+    output tbhi_o,
+    output todlo_o,
+    output todmid_o,
+    output todhi_o,
+    output ext_o,
+    output sdr_o,
+    output icr_o,
+    output cra_o,
+    output crb_o
+  );
+endmodule
+
+// Required path: cia/cia_handshake.v
+module cia_handshake(
+    input clk_i, 
+
+    input prb_i, 
+    input flg_ni, 
+
+    
+    output     pls_o, 
+    output reg pc_no   
+  );
+endmodule
+
+// Required path: cia/cia_interrupts.v
+module cia_irq(
+    input clk_i,   
+    input rst_i,   
+
+    
+    input ta_i,    
+    input tb_i,    
+    input alrm_i,  
+    input sp_i,    
+    input flg_i,   
+
+    
+    input [4:0] msk_i,  
+    input       clr_i,  
+
+    
+    output reg [4:0] icr_o, 
+    output           irq_o  
+  );
+endmodule
+
+// Required path: cia/cia_serial.v
+module cia_serial(
+    input clk_i, 
+    input rst_i, 
+
+    input  [7:0] dat_i, 
+    output [7:0] dat_o, 
+
+    
+    input       unfl_i, 
+    input       cnt_i,  
+    output reg  cnt_o,  
+
+    input      sp_i, 
+    output reg sp_o, 
+
+    input      spmd_i, 
+    input      spoe_i, 
+    output reg spoe_o, 
+
+    output     spo_o, 
+    output reg spi_o  
+  );
+endmodule
+
+// Required path: cia/cia_timer.v
+module cia_timer(
+    input clk_i, 
+    input rst_i, 
+
+    
+    input cnt_i,  
+    input omd_i,  
+    input str_i,  
+    input fld_i,  
+
+    
+    input fste_i, 
+    input frle_i, 
+
+    
+    input      [15:0] lch_i, 
+    output reg [15:0] cnt_o, 
+
+    
+    output     run_o, 
+    output reg pls_o, 
+    output     prb_o, 
+    output     unfl_o 
+  );
+endmodule
+
+// Required path: cia/cia_tod.v
+module cia_tod(
+    input clk_i, 
+    input rst_i, 
+
+    input tod_i, 
+
+    
+    input sel_i, 
+    input we_i,  
+
+    
+    input sel_alrm_i,  
+    input sel_todlo_i, 
+    input sel_todmi_i,
+    input sel_todhi_i, 
+
+    
+    input      [23:0] alrm_i,  
+    input      [23:0] count_i, 
+    output reg [23:0] latch_o, 
+
+    
+    output cnt_o, 
+    input  cnt_i, 
+    output pls_o  
+  );
+endmodule

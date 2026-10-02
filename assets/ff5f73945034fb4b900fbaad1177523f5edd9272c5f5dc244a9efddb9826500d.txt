@@ -1,0 +1,93 @@
+{
+  "case_id": "s1derived.3e44c62795a5126b54cb.b97935dc6bf4",
+  "compile_check": {
+    "case_id": "s1derived.3e44c62795a5126b54cb.b97935dc6bf4",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "p_SSYNC3DO_S_PPP",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.3e44c62795a5126b54cb.b97935dc6bf4/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "3e44c62795a5126b54cbb63c52aee1a2287e322c7b61fc5f1fd643f0be0f6f8c",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.3e44c62795a5126b54cb.b97935dc6bf4",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.3e44c62795a5126b54cb",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "p_SSYNC3DO_S_PPP"
+  },
+  "independent_review": {
+    "case_id": "s1derived.3e44c62795a5126b54cb.b97935dc6bf4",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Asynchronous active-low set, three-edge latency, lack of initialization, and empty supplied dependency match.",
+        "rtl_excerpt": "`if(~set_) {q,d1,d0}<=3'b111; else {q,d1,d0}<={d1,d0,d};`",
+        "spec_excerpt": "\u201csets {q,d1,d0} to 3'b111 ... shifts ... {d1,d0,d}\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.3e44c62795a5126b54cb",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "ea6fff8107097e074f382c9fe60fa8bb1a2f2625a5ffc8c9302d67cd8d583d24",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3e44c62795a5126b54cbb63c52aee1a2287e322c7b61fc5f1fd643f0be0f6f8c",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.3e44c62795a5126b54cb",
+  "primary_review": {
+    "case_id": "s1derived.3e44c62795a5126b54cb.b97935dc6bf4",
+    "checks": {
+      "behavior": "The shift direction is described but input-to-output latency is not explicit.",
+      "boundaries": "Simultaneous falling set and clock behavior resolves through the set guard; no reset exists.",
+      "interface": "clk, d, set_, and q match.",
+      "rtl_reasonableness": "RTL compiles because the otherwise empty first_stage_of_sync dependency is supplied.",
+      "sequential_and_reset": "Active-low set is asynchronous and forces all three stages high."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The full three-stage observable delay is not stated before truncation.",
+        "rtl_excerpt": "{q,d1,d0} <= {d1,d0,d};",
+        "specification_excerpt": "It includes a sub-module first_stage"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose ends in the dependency name and omits the three-cycle latency, no-initial-value behavior, and the helper's empty/no-effect contract.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.3e44c62795a5126b54cb",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.3e44c62795a5126b54cb.b97935dc6bf4.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3e44c62795a5126b54cbb63c52aee1a2287e322c7b61fc5f1fd643f0be0f6f8c",
+    "source_group": "S1",
+    "specification_sha256": "b97935dc6bf416d27cb1e6c940b5bcd693a210ebd19f2109d4434304835e0833",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.3e44c62795a5126b54cb.b97935dc6bf4.md",
+  "qualified_specification_sha256": "ea6fff8107097e074f382c9fe60fa8bb1a2f2625a5ffc8c9302d67cd8d583d24",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.3e44c62795a5126b54cb.b97935dc6bf4/private/golden_design.v",
+  "rtl_sha256": "3e44c62795a5126b54cbb63c52aee1a2287e322c7b61fc5f1fd643f0be0f6f8c",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.3e44c62795a5126b54cb.b97935dc6bf4/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "b97935dc6bf416d27cb1e6c940b5bcd693a210ebd19f2109d4434304835e0833",
+  "top_module": "p_SSYNC3DO_S_PPP"
+}

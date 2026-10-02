@@ -1,0 +1,59 @@
+module origen_003965 #(
+    parameter dw = 14,
+    parameter adv = 3861,
+    parameter delta = 264
+) (
+    input uclk,
+    input sclk,
+    output [dw-1:0] phase,
+    output fault
+);
+
+    reg div;
+    reg [dw-1:0] osc, acc, phase_r;
+    reg capture, fault_r;
+    wire msb, nsb, peak, move, dir;
+    wire dn, up;
+
+    // Clock divider
+    always @(posedge uclk) begin
+        div <= ~div;
+    end
+
+    // Capture div signal
+    always @(posedge sclk) begin
+        capture <= div;
+    end
+
+    // Main logic
+    always @(posedge sclk) begin
+        // Phase adjustment
+        if (move) begin
+            if (dir)
+                phase_r <= phase_r + delta;
+            else
+                phase_r <= phase_r - delta;
+        end
+
+        // Fault detection
+        fault_r <= move & peak;
+
+        // Oscillator and accumulator update
+        osc <= osc + adv;
+        acc <= osc + phase_r;
+    end
+
+    // Signal assignments
+    assign msb = acc[dw-1];
+    assign nsb = acc[dw-2];
+    assign peak = msb ^ nsb;
+    assign move = capture ^ msb;
+    assign dir = capture;
+    assign dn = move & ~dir;
+    assign up = move & dir;
+
+    // Output assignments
+    assign phase = phase_r;
+    assign fault = fault_r;
+
+endmodule

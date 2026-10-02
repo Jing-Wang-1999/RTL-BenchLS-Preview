@@ -1,0 +1,59 @@
+module origen_108266 (
+    input Clk,
+    input [10:0] read_address,
+    output reg [23:0] data_out
+);
+
+    reg [23:0] mem [0:1600];
+
+    initial begin
+        $readmemh("image.txt", mem);
+    end
+
+    always @(posedge Clk) begin
+        if (read_address <= 1600)
+            data_out <= mem[read_address];
+        else
+            data_out <= 24'b0;
+    end
+endmodule
+
+module enemyRAM (
+    input Clk,
+    input [9:0] read_address,
+    output reg [23:0] data_out
+);
+
+    reg [23:0] mem [0:900];
+
+    initial begin
+        $readmemh("bad-guy.txt", mem);
+    end
+
+    always @(posedge Clk) begin
+        if (read_address <= 900)
+            data_out <= mem[read_address];
+        else
+            data_out <= 24'b0;
+    end
+endmodule
+
+module laserRAM (
+    input Clk,
+    input [9:0] read_address,
+    output reg [23:0] data_out
+);
+
+    reg [23:0] mem [0:980];
+
+    initial begin
+        $readmemh("laser.txt", mem);
+    end
+
+    always @(posedge Clk) begin
+        if (read_address <= 980)
+            data_out <= mem[read_address];
+        else
+            data_out <= 24'b0;
+    end
+endmodule

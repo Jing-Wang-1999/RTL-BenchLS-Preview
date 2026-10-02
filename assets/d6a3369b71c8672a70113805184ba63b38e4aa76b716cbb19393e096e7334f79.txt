@@ -1,0 +1,21 @@
+module origen_085719(
+    input [15:0] A,
+    input [15:0] B,
+    input CI,
+    output [15:0] S,
+    output CO,
+    output OFL
+);
+    wire [16:0] sum;
+
+    // Perform the addition with carry-in
+    assign sum = A + B + CI;
+
+    // Assign the sum and carry-out
+    assign S = sum[15:0];
+    assign CO = sum[16];
+
+    // Overflow detection
+    assign OFL = (A[15] == B[15]) && (A[15] != S[15]);
+
+endmodule

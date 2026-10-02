@@ -1,0 +1,56 @@
+always @ (posedge clk) begin
+    f_sof <= ef_sof & rstn;
+    f_limit <= P_LIMIT;
+    f_An <= P_AINIT;
+    if(~rstn | ef_sof) begin
+        {f_e, f_eof, f_runi, f_rune, f_merr, f_k, f_rc, f_ri, f_on, f_cb, f_cn, f_q, f_write_en} <= 0;
+    end else begin
+        on = 2'd0;
+        rc = (ef_fc|~ef_runi) ? 16'd0 : f_rc;
+        ri = f_ri;
+        Ao = (f_write_en & f_q==ef_q) ? f_An : (g_write_en & g_q==ef_q) ? g_An : ef_Ao;
+        abserr = ef_err<$signed(10'd0) ? $unsigned(-ef_err) : $unsigned(ef_err);
+        merr = 10'd0;
+        Ainc = 10'd0;
+        f_write_en <= ef_write_en;
+        k = func_get_k(Ao, ef_No, ef_rt);
+        f_cb <= ef_fc ? 16'd0 : f_rc;
+        f_cn <= {1'b0,J[ri]} + 5'd1;
+        if(ef_runi) begin
+            rc = rc + 16'd1;
+            if(rc >= (16'd1<<J[ri])) begin
+                on = on + 2'd1;
+                rc = rc - (16'd1<<J[ri]);
+                if(ri < 5'd31) ri = ri + 5'd1;
+            end
+            if(ef_lc & (rc > 16'd0))
+                on = on + 2'd1;
+        end else if(ef_rune) begin
+            f_limit <= P_LIMIT - 5'd1 - {1'b0,J[ri]};
+            if (ri > 5'd0) ri = ri - 5'd1;
+            map = ~( (ef_err==10'd0) | ( (ef_err>$signed(10'd0)) ^ (k==4'd0 & ef_2BleN) ) );
+            merr = (abserr<<1) - {9'd0,ef_rt} - {9'd0,map};
+            Ainc = ((merr + {9'd0,~ef_rt}) >> 1);
+        end else begin
+            map = (~P_LOSSY) & (k==4'd0) & ef_2BleN;
+            if(ef_err < $signed(10'd0))
+                merr = (abserr<<1) - 10'd1 - {9'd0,map};
+            else
+                merr = (abserr<<1) + {9'd0,map};
+            Ainc = (ef_err < $signed(10'd0)) ? $unsigned(-ef_err) : $unsigned(ef_err);
+        end
+        if(ef_e) begin
+            f_rc <= rc;
+            f_ri <= ri;
+        end
+        f_An <= A_update(ef_No[6], Ao, Ainc);
+        f_e <= ef_e;
+        f_eof <= ef_eof;
+        f_runi <= ef_runi;
+        f_rune <= ef_rune;
+        f_merr <= merr;
+        f_k <= k;
+        f_on <= on;
+        f_q <= ef_q;
+    end
+end

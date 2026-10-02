@@ -1,0 +1,28 @@
+module rtlpp_00933 (
+    input A1,
+    input A2,
+    input B1_N,
+    input VPWR,
+    input VGND,
+    input VPB,
+    input VNB,
+    output X
+);
+
+    wire and_out;
+    wire b1;
+    wire or_out;
+
+    // NOT gate for active-low B1_N
+    assign b1 = ~B1_N;
+
+    // AND gate for A1 and A2
+    assign and_out = A1 & A2;
+
+    // OR gate for (A1 AND A2) OR (NOT B1_N)
+    assign or_out = and_out | b1;
+
+    // Power-aware output: X = or_out when VPWR is high, else pulled to VGND
+    assign X = VPWR ? or_out : VGND;
+
+endmodule

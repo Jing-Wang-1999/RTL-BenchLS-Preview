@@ -1,0 +1,52 @@
+always @* begin
+    stat_rx_lfc_pkt_next = 1'b0;
+    stat_rx_lfc_xon_next = 1'b0;
+    stat_rx_lfc_xoff_next = 1'b0;
+    stat_rx_pfc_pkt_next = 1'b0;
+    stat_rx_pfc_xon_next = 0;
+    stat_rx_pfc_xoff_next = 0;
+
+    if (cfg_quanta_clk_en && rx_lfc_ack) begin
+        if (lfc_quanta_reg > cfg_quanta_step) begin
+            lfc_quanta_next = lfc_quanta_reg - cfg_quanta_step;
+        end else begin
+            lfc_quanta_next = 0;
+        end
+    end else begin
+        lfc_quanta_next = lfc_quanta_reg;
+    end
+
+    lfc_req_next = (lfc_quanta_reg != 0) && rx_lfc_en && cfg_rx_lfc_en;
+
+    for (k = 0; k < 8; k = k + 1) begin
+        if (cfg_quanta_clk_en && rx_pfc_ack[k]) begin
+            if (pfc_quanta_reg[k] > cfg_quanta_step) begin
+                pfc_quanta_next[k] = pfc_quanta_reg[k] - cfg_quanta_step;
+            end else begin
+                pfc_quanta_next[k] = 0;
+            end
+        end else begin
+            pfc_quanta_next[k] = pfc_quanta_reg[k];
+        end
+
+        pfc_req_next[k] = (pfc_quanta_reg[k] != 0) && rx_pfc_en[k] && cfg_rx_pfc_en;
+    end
+
+    if (mcf_valid) begin
+        if (mcf_opcode == cfg_rx_lfc_opcode && cfg_rx_lfc_en) begin
+            stat_rx_lfc_pkt_next = 1'b1;
+            stat_rx_lfc_xon_next = {mcf_params[7:0], mcf_params[15:8]} == 0;
+            stat_rx_lfc_xoff_next = {mcf_params[7:0], mcf_params[15:8]} != 0;
+            lfc_quanta_next = {mcf_params[7:0], mcf_params[15:8], {QFB{1'b0}}};
+        end else if (PFC_ENABLE && mcf_opcode == cfg_rx_pfc_opcode && cfg_rx_pfc_en) begin
+            stat_rx_pfc_pkt_next = 1'b1;
+            for (k = 0; k < 8; k = k + 1) begin
+                if (mcf_params[k+8]) begin
+                    stat_rx_pfc_xon_next[k] = {mcf_params[16+(k*16)+0 +: 8], mcf_params[16+(k*16)+8 +: 8]} == 0;
+                    stat_rx_pfc_xoff_next[k] = {mcf_params[16+(k*16)+0 +: 8], mcf_params[16+(k*16)+8 +: 8]} != 0;
+                    pfc_quanta_next[k] = {mcf_params[16+(k*16)+0 +: 8], mcf_params[16+(k*16)+8 +: 8], {QFB{1'b0}}};
+                end
+            end
+        end
+    end
+end

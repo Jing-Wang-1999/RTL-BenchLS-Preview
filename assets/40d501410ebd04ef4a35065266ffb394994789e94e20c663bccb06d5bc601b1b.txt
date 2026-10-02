@@ -1,0 +1,30 @@
+The module is a pipeline stage register that buffers control signals and data for a processor's memory access or writeback stage. It operates synchronously with a clock and includes asynchronous reset and stall logic.
+
+Inputs:
+- clockIn: The system clock signal.
+- reset: Asynchronous reset; when high, all outputs are cleared to zero.
+- stall: When high (with memStall also high), prevents updates, holding current outputs.
+- memStall: When high (with stall also high), prevents updates, holding current outputs.
+- haltIn: Propagated control signal to halt pipeline.
+- regWriteIn: Control signal indicating a register write operation.
+- mem2RegIn: Control signal selecting memory data vs. ALU result for writeback.
+- memWriteIn: Control signal to write to memory.
+- memReadIn: Control signal to read from memory.
+- data1In: 32-bit data operand (e.g., ALU result or address).
+- data2In: 32-bit data operand (e.g., store data or second operand).
+- regIn: 5-bit destination register address.
+- reg2In: 5-bit secondary register address (e.g., source for store).
+
+Outputs:
+- haltOut: Buffered halt signal.
+- regWriteOut: Buffered register write control.
+- mem2RegOut: Buffered memory-to-register control.
+- memWriteOut: Buffered memory write control.
+- memReadOut: Buffered memory read control.
+- data1Out: Buffered 32-bit data.
+- data2Out: Buffered 32-bit data.
+- regOut: Buffered destination register address.
+- reg2Out: Buffered secondary register address.
+
+Behavior:
+On every rising clock edge, if reset is asserted, all outputs are set to zero. If reset is not asserted and neither stall nor memStall is asserted, all input values are transferred to their corresponding outputs. If either stall or memStall is asserted, the outputs

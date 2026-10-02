@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.215dac293c2c10c68a71.aad5e8e78c91",
+  "compile_check": {
+    "case_id": "s1derived.215dac293c2c10c68a71.aad5e8e78c91",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "ct_f_spsram_128x104",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.215dac293c2c10c68a71.aad5e8e78c91/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "215dac293c2c10c68a7103a0d9329d7acd226ede4d2d3e3a43ab28bd8260d436",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.215dac293c2c10c68a71.aad5e8e78c91",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.215dac293c2c10c68a71",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "ct_f_spsram_128x104"
+  },
+  "independent_review": {
+    "case_id": "s1derived.215dac293c2c10c68a71.aad5e8e78c91",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Fixed port/default constraints, bank slicing, held address, write-first output, and uninitialized state match.",
+        "rtl_excerpt": "`ram_wen0 = !CEN && !WEN[25] && !GWEN; ... ram_wen3 = ...WEN[103]...;`",
+        "spec_excerpt": "\u201cwhole-bank write enables !CEN && !GWEN && !WEN[25], then ... 51, 77, and 103\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.215dac293c2c10c68a71",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "d80c3fa2ac077b4b71193e71f99dbde2dd675fba5cc69e84ccaa029480a19a1f",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "215dac293c2c10c68a7103a0d9329d7acd226ede4d2d3e3a43ab28bd8260d436",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.215dac293c2c10c68a71",
+  "primary_review": {
+    "case_id": "s1derived.215dac293c2c10c68a71.aad5e8e78c91",
+    "checks": {
+      "behavior": "Four-bank split matches; mask semantics do not.",
+      "boundaries": "Write-first outputs and saved address start unknown.",
+      "interface": "Fixed top ports match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "No reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Four-bank split matches; mask semantics do not. No reset.",
+        "rtl_excerpt": "only WEN[25], [51], [77], [103] are referenced; no reset",
+        "spec_excerpt": "\u201cindividual write control for each bit\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "Prose implies individual WEN bits, but only four bits gate whole banks; defaults and uninitialized state are omitted.",
+        "rtl_evidence": "only WEN[25], [51], [77], [103] are referenced; no reset",
+        "spec_evidence": "\u201cindividual write control for each bit\u201d",
+        "type": "write_mask_and_initial_state"
+      }
+    ],
+    "parent_id": "s1p.215dac293c2c10c68a71",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.215dac293c2c10c68a71.aad5e8e78c91.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "215dac293c2c10c68a7103a0d9329d7acd226ede4d2d3e3a43ab28bd8260d436",
+    "source_group": "S1",
+    "specification_sha256": "aad5e8e78c917a630ea1827790dbf5a545b736fec82ce547103b9055d5788a5c",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.215dac293c2c10c68a71.aad5e8e78c91.md",
+  "qualified_specification_sha256": "d80c3fa2ac077b4b71193e71f99dbde2dd675fba5cc69e84ccaa029480a19a1f",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.215dac293c2c10c68a71.aad5e8e78c91/private/golden_design.v",
+  "rtl_sha256": "215dac293c2c10c68a7103a0d9329d7acd226ede4d2d3e3a43ab28bd8260d436",
+  "source_corpus": "SEC-Flow-Star-repos-32.openc910",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.215dac293c2c10c68a71.aad5e8e78c91/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "aad5e8e78c917a630ea1827790dbf5a545b736fec82ce547103b9055d5788a5c",
+  "top_module": "ct_f_spsram_128x104"
+}

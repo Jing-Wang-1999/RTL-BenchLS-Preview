@@ -1,0 +1,66 @@
+module vmw_NV_NVDLA_BDMA_cq_flopram_rwsa_20x161 (
+   Wa0, we0, Di0,
+   Ra0, Do0
+   );
+
+input  [4:0] Wa0;
+input            we0;
+input  [160:0] Di0;
+input  [4:0] Ra0;
+output [160:0] Do0;
+
+// Only visible during Spyglass to avoid blackboxes.
+`ifdef SPYGLASS_FLOPRAM
+
+assign Do0 = 161'd0;
+wire dummy = 1'b0 | (|Wa0) | (|we0) | (|Di0) | (|Ra0);
+
+`endif
+
+// synopsys translate_off
+`ifndef SYNTH_LEVEL1_COMPILE
+`ifndef SYNTHESIS
+reg [160:0] mem[19:0];
+
+// expand mem for debug ease
+`ifdef EMU_EXPAND_FLOPRAM_MEM
+wire [160:0] Q0 = mem[0];
+wire [160:0] Q1 = mem[1];
+wire [160:0] Q2 = mem[2];
+wire [160:0] Q3 = mem[3];
+wire [160:0] Q4 = mem[4];
+wire [160:0] Q5 = mem[5];
+wire [160:0] Q6 = mem[6];
+wire [160:0] Q7 = mem[7];
+wire [160:0] Q8 = mem[8];
+wire [160:0] Q9 = mem[9];
+wire [160:0] Q10 = mem[10];
+wire [160:0] Q11 = mem[11];
+wire [160:0] Q12 = mem[12];
+wire [160:0] Q13 = mem[13];
+wire [160:0] Q14 = mem[14];
+wire [160:0] Q15 = mem[15];
+wire [160:0] Q16 = mem[16];
+wire [160:0] Q17 = mem[17];
+wire [160:0] Q18 = mem[18];
+wire [160:0] Q19 = mem[19];
+`endif
+
+// asynchronous ram writes
+always @(*) begin
+  if ( we0 == 1'b1 ) begin
+    #0.1;
+    mem[Wa0] = Di0;
+  end
+end
+
+assign Do0 = mem[Ra0];
+`endif
+`endif
+// synopsys translate_on
+
+// synopsys dc_script_begin
+// synopsys dc_script_end
+
+// g2c if { [find / -null_ok -subdesign vmw_NV_NVDLA_BDMA_cq_flopram_rwsa_20x161] != {} } { set_attr preserve 1 [find / -subdesign vmw_NV_NVDLA_BDMA_cq_flopram_rwsa_20x161] }
+endmodule

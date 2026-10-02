@@ -1,0 +1,60 @@
+module autovcoder_024510 (
+    data,
+    data_l,
+    decodeout_l
+);
+
+  input [3:0] data, data_l;
+  output [15:0] decodeout_l;
+
+
+  wire [3:0] sel, bottom;
+  //wire [15:0] decodeout_l;
+
+
+  // decode top order bits
+
+  decode2to4 decodeupper (
+      .datain  (data[3:2]),
+      .datain_l(data_l[3:2]),
+      .dataout (sel[3:0])
+  );
+
+  // decode lower order bits
+
+  decode2to4 decodelower (
+      .datain  (data[1:0]),
+      .datain_l(data_l[1:0]),
+      .dataout (bottom[3:0])
+  );
+
+  // now use the top order bits to select the proper lower order bits
+
+
+  finalsel4 finalsel4_3 (
+      .sel (~sel[3]),
+      .data(~bottom[3:0]),
+      .out (decodeout_l[15:12])
+  );
+
+  finalsel4 finalsel4_2 (
+      .sel (~sel[2]),
+      .data(~bottom[3:0]),
+      .out (decodeout_l[11:8])
+  );
+
+  finalsel4 finalsel4_1 (
+      .sel (~sel[1]),
+      .data(~bottom[3:0]),
+      .out (decodeout_l[7:4])
+  );
+
+  finalsel4 finalsel4_0 (
+      .sel (~sel[0]),
+      .data(~bottom[3:0]),
+      .out (decodeout_l[3:0])
+  );
+
+
+endmodule
+

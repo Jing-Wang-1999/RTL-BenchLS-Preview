@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.5c89786fbffdcf3ddfef.4bd85406f28c",
+  "compile_check": {
+    "case_id": "s1derived.5c89786fbffdcf3ddfef.4bd85406f28c",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_05942",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05942.fb039c841974b7e7/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.5c89786fbffdcf3ddfef",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "5c89786fbffdcf3ddfef7ae8fed819b59843b68530113aa3202da45709059d16",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.5c89786fbffdcf3ddfef.4bd85406f28c",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05942.fb039c841974b7e7/private/commercial_positive.log",
+    "commercial_log_sha256": "fbe549877dbc8261281a6f429d15ccc2625fb5e84f7fb6e1eb31256ff80017b6",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05942.fb039c841974b7e7/private/historical_harness/00_sec_mg_05942.tcl",
+    "executed_script_sha256": "2fbfbae81625422955aa4f859b0c508947470450f6beb27003371d27af0f4f06",
+    "golden_tops": [
+      "mg_05942"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.mg_05942.fb039c841974b7e7",
+    "parent_id": "s1p.5c89786fbffdcf3ddfef",
+    "revised_tops": [
+      "mg_05942"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_05942",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.5c89786fbffdcf3ddfef.4bd85406f28c",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The last nonblocking assignment wins in the stall branch, so PC captures input while controls/data clear and instruction becomes0x20. Reset instead clearsPC; full interface matches.",
+        "rtl_excerpt": "me_pc <= ex_pc;",
+        "specification_excerpt": "`me_pc` captures `ex_pc`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.5c89786fbffdcf3ddfef",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "56dd541bb5dcbd68dad9a55f7b25d5c3847227e45da5032f9bc72007889af0f7",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5c89786fbffdcf3ddfef7ae8fed819b59843b68530113aa3202da45709059d16",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05942.fb039c841974b7e7/private/historical_harness/00_sec_mg_05942.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05942.fb039c841974b7e7/private/historical_harness/01_sec_mg_05942.tcl"
+  ],
+  "parent_id": "s1p.5c89786fbffdcf3ddfef",
+  "primary_review": {
+    "case_id": "s1derived.5c89786fbffdcf3ddfef.4bd85406f28c",
+    "checks": {
+      "behavior": "Checked reset, bubble-on-stall, and normal transfer.",
+      "boundaries": "Checked stall PC exception and duplicate assignment resolution.",
+      "interface": "All EX and ME signals and widths match.",
+      "rtl_reasonableness": "Reasonable pipeline register.",
+      "sequential_and_reset": "Active-high asynchronous reset has priority."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "A standalone contract needs the missing normal-operation branch.",
+        "rtl_excerpt": "else begin ... me_instr<=ex_instr; me_pc <= ex_pc;",
+        "spec_excerpt": "The instruction is set to NOP"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose ends during stall behavior and omits the ordinary transfer branch.",
+        "rtl_evidence": "else begin me_aluresult <= ex_aluresult; ... me_pc <= ex_pc; end",
+        "spec_evidence": "The instruction is set to NOP",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.5c89786fbffdcf3ddfef",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.5c89786fbffdcf3ddfef.4bd85406f28c.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5c89786fbffdcf3ddfef7ae8fed819b59843b68530113aa3202da45709059d16",
+    "source_group": "S5",
+    "specification_sha256": "4bd85406f28cfac054650f6edc13375aa55c34d4f710c675fc8e1bfce2d11d91",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.5c89786fbffdcf3ddfef.4bd85406f28c.md",
+  "qualified_specification_sha256": "56dd541bb5dcbd68dad9a55f7b25d5c3847227e45da5032f9bc72007889af0f7",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05942.fb039c841974b7e7/private/golden_design.v",
+  "rtl_sha256": "5c89786fbffdcf3ddfef7ae8fed819b59843b68530113aa3202da45709059d16",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05942.fb039c841974b7e7/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "4bd85406f28cfac054650f6edc13375aa55c34d4f710c675fc8e1bfce2d11d91",
+  "top_module": "mg_05942"
+}

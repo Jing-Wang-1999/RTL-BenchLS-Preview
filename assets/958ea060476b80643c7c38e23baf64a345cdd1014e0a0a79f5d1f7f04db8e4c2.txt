@@ -1,0 +1,28 @@
+The module named `autovcoder_103973` is designed to perform conditional bit manipulation and shifting operations on a 16-bit input signal. It takes three inputs: a 16-bit vector `x`, a 4-bit vector `b`, and a single-bit signal `alufn`. The module produces a 16-bit output `shiftOutput`.
+
+### Inputs:
+1. **x (16 bits)**: This is the primary data input on which the module performs operations.
+2. **b (4 bits)**: This input determines the specific operations to be performed on the data. Each bit in `b` corresponds to a different stage of manipulation.
+3. **alufn (1 bit)**: This signal dictates the mode of operation. It influences whether certain bits are filled with zeros or ones during the manipulation process.
+
+### Output:
+- **shiftOutput (16 bits)**: This is the final result after processing the input `x` through various stages of manipulation dictated by `b` and `alufn`.
+
+### Internal Registers:
+- **w, y, z (16 bits each)**: These are intermediate registers used to store the results of each stage of manipulation before producing the final output.
+
+### Behavior:
+The module operates in two main modes based on the value of `alufn`:
+
+1. **Mode 0 (`alufn` is 0 or `alufn` is 1 and the least significant bit of `x` is 0)**:
+   - The module processes the input `x` through four stages, each controlled by the corresponding bit in `b`.
+   - **Stage 1** (`b[3]`): If `b[3]` is 0, `w` is set to `x`. If `b[3]` is 1, the upper 8 bits of `w` are set to the lower 8 bits of `x`, and the lower 8 bits of `w` are filled with zeros.
+   - **Stage 2** (`b[2]`): If `b[2]` is 0, `y` is set to `w`. If `b[2]` is 1, the upper 12 bits of `y` are set to the lower 12 bits of `w`, and the lower 4 bits of `y` are filled with zeros.
+   - **Stage 3** (`b[1]`): If `b[1]` is 0, `z` is set to `y`. If `b[1]` is 1, the upper 14 bits of `z` are set to the lower 14 bits of `y`, and the lower 2 bits of `z` are filled with zeros.
+   - **Stage 4** (`b[0]`): If `b[0]` is 0, `shiftOutput` is set to `z`. If `b[0]` is 1, the upper 15 bits of `shiftOutput` are set to the lower 15 bits of `z`, and the least significant bit of `shiftOutput` is filled with zero.
+
+2. **Mode 1 (`alufn` is 1 and the least significant bit of `x` is 1)**:
+   - The module processes the input `x` similarly through four stages, but with different filling values.
+   - **Stage 1** (`b[3]`): If `b[3]` is 0, `w` is set to `x`. If `b[3]` is 1, the upper 8 bits of `w` are set to the lower 8 bits of `x`, and the lower 8 bits of `w` are filled with ones (0xFF).
+   - **Stage 2** (`b[2]`): If `b[2]` is 0, `y` is set to `w`. If `b[2]` is 1, the upper 12 bits of `y` are set to the lower 12 bits of `w`, and the lower 4 bits of `y` are filled with ones (0xF).
+   - **Stage 3** (`b[1]`): If `b[1]` is 0, `z` is set to `y`. If `b[1]

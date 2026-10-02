@@ -1,0 +1,124 @@
+module autovcoder_076736 #(
+    parameter DWIDTH = 1'b1,  // Sync Data input
+    parameter RESET_VAL = 1'b0,  // Reset value (either 1'b1 or 1'b0)
+    parameter MIN_PERIOD = 1'b0,       // When non-zero, input data delays are used rather than random N/N+1 flop delays. Timescale is used for delay (must be in 1ps/1ps timestep) & use 90% Tperiod
+    parameter METASTABILITY_EN = 1'b1,  // Default allows enable of metastability simulation
+    parameter SINGLE_BUS_META = 1'b1  // Default set BUS type synchronizer to meta the same cycle
+) (
+    input  wire              clk,      // clock
+    input  wire              rst_n,    // async reset
+    input  wire [DWIDTH-1:0] data_in,  // data in
+    output wire [DWIDTH-1:0] data_out  // data out
+);
+
+
+`ifdef ALTR_HPS_BITSYNC_RANDOM_META
+
+`ifdef ALTR_RACE_SIM_FIX
+  wire [DWIDTH-1:0] dly_1ps_data_in;
+  wire [DWIDTH-1:0] data_out_1ps;
+  assign #1 dly_1ps_data_in[DWIDTH-1:0] = data_in[DWIDTH-1:0];
+  assign #1 data_out[DWIDTH-1:0] = data_out_1ps[DWIDTH-1:0];
+`endif
+
+  generate
+    genvar i;
+    if (RESET_VAL == 0) begin : reset_clr
+      ctech_lib_doublesync_rstb #(
+          .WIDTH(DWIDTH),
+          .MIN_PERIOD(MIN_PERIOD),
+          .METASTABILITY_EN(METASTABILITY_EN),
+          .SINGLE_BUS_META(SINGLE_BUS_META)
+      ) altr_nonsynthesizable_bit_sync_inst (
+`ifdef ALTR_RACE_SIM_FIX
+          .o   (data_out_1ps[DWIDTH-1:0]),
+          .d   (dly_1ps_data_in[DWIDTH-1:0]),
+`else
+          .o   (data_out[DWIDTH-1:0]),
+          .d   (data_in[DWIDTH-1:0]),
+`endif
+          .rstb(rst_n),
+          .clk (clk)
+      );
+    end else begin : preset_clr
+      ctech_lib_doublesync_setb #(
+          .WIDTH(DWIDTH),
+          .MIN_PERIOD(MIN_PERIOD),
+          .METASTABILITY_EN(METASTABILITY_EN),
+          .SINGLE_BUS_META(SINGLE_BUS_META)
+      ) altr_nonsynthesizable_bit_sync_inst (
+`ifdef ALTR_RACE_SIM_FIX
+          .o   (data_out_1ps[DWIDTH-1:0]),
+          .d   (dly_1ps_data_in[DWIDTH-1:0]),
+`else
+          .o   (data_out[DWIDTH-1:0]),
+          .d   (data_in[DWIDTH-1:0]),
+`endif
+          .setb(rst_n),
+          .clk (clk)
+      );
+    end
+  endgenerate
+
+`else
+
+`ifdef ALTR_RACE_SIM_FIX
+  wire [DWIDTH-1:0] dly_1ps_data_in;
+  wire [DWIDTH-1:0] data_out_1ps;
+  assign #1 dly_1ps_data_in[DWIDTH-1:0] = data_in[DWIDTH-1:0];
+  assign #1 data_out[DWIDTH-1:0] = data_out_1ps[DWIDTH-1:0];
+`endif
+
+  generate
+    genvar i;
+    if (RESET_VAL == 0) begin : reset_clr
+      for (i = 0; i < DWIDTH; i = i + 1) begin : bit_sync_clr_i
+
+        f05fmw203as1d03x5 altr_dont_touch_bit_sync_inst (
+`ifdef ALTR_RACE_SIM_FIX
+            .o   (data_out_1ps[i]),
+            .d   (dly_1ps_data_in[i]),
+`else
+            .o   (data_out[i]),
+            .d   (data_in[i]),
+`endif
+            .ssb (1'b1),
+            .si  (1'b0),
+            .rb  (rst_n),
+`ifndef INTCNOPWR
+            .vcc (),
+            .vssx(),
+`endif
+            .clk (clk)
+        );
+
+      end
+    end else begin : preset_clr
+      for (i = 0; i < DWIDTH; i = i + 1) begin : bit_sync_pst_i
+
+        f05fmw20cas1d03x5 altr_dont_touch_bit_sync_preset_inst (
+`ifdef ALTR_RACE_SIM_FIX
+            .o   (data_out_1ps[i]),
+            .d   (dly_1ps_data_in[i]),
+`else
+            .o   (data_out[i]),
+            .d   (data_in[i]),
+`endif
+            .ssb (1'b1),
+            .si  (1'b0),
+            .psb (rst_n),
+`ifndef INTCNOPWR
+            .vcc (),
+            .vssx(),
+`endif
+            .clk (clk)
+        );
+
+      end
+    end
+  endgenerate
+
+`endif
+
+endmodule
+

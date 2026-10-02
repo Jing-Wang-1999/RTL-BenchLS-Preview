@@ -1,0 +1,45 @@
+# S-Box 1 Module Specification
+
+## Overview
+This module implements a substitution box (S-box), which is a fundamental component commonly used in cryptographic algorithms, particularly in block ciphers like DES (Data Encryption Standard). The S-box performs a non-linear transformation by mapping input values to output values according to a fixed lookup table.
+
+## Inputs
+- **in**: A 6-bit input signal that serves as the index into the substitution table. This input can represent any value from 0 to 63 (decimal).
+
+## Outputs
+- **out**: A 4-bit output signal that provides the substituted value corresponding to the input. This output can represent any value from 0 to 15 (decimal).
+
+## Functional Behavior
+
+The module performs a combinational logic operation that maps each possible 6-bit input value to a specific 4-bit output value. The mapping is defined by a fixed lookup table with 64 entries (corresponding to all possible 6-bit input combinations).
+
+### Substitution Table Mapping
+
+The module implements the following transformation:
+- When the input is 0, the output is 15
+- When the input is 1, the output is 3
+- When the input is 2, the output is 1
+- When the input is 3, the output is 13
+- And so on, following the complete 64-entry lookup table
+
+The complete mapping covers all 64 possible input values (0 through 63) and maps each to one of 16 possible output values (0 through 15).
+
+### Operation Characteristics
+
+1. **Combinational Logic**: The output responds immediately to changes in the input with no clock dependency. The transformation is purely combinational.
+
+2. **Non-linear Transformation**: The mapping is non-linear and appears pseudo-random, which is typical for cryptographic S-boxes designed to provide confusion in cipher operations.
+
+3. **Fixed Mapping**: The substitution table is hardcoded and immutable. Each input value always produces the same corresponding output value.
+
+4. **Complete Coverage**: Every possible 6-bit input value has a defined output, ensuring no undefined states exist.
+
+## Design Constraints
+
+- No sub-modules are required or allowed. This is a self-contained lookup table implementation.
+- The module operates asynchronously with respect to any clock signal.
+- The output changes whenever the input changes, subject only to propagation delays inherent in the hardware implementation.
+
+## Typical Use Case
+
+This S-box would typically be instantiated as part of a larger cryptographic system, where it serves to introduce non-linearity into the encryption or decryption process. Multiple S-boxes might be used in parallel or in sequence, with this particular S-box representing one specific substitution function among potentially several others in the complete cipher implementation.

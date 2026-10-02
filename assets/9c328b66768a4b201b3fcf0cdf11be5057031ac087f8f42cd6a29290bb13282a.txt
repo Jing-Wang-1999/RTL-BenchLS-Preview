@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.19f1d933374c8ae483c9.ddb72dea2b39",
+  "compile_check": {
+    "case_id": "s1derived.19f1d933374c8ae483c9.ddb72dea2b39",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "FP32_ADD_mgc_shift_l_v4",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.19f1d933374c8ae483c9.ddb72dea2b39/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "19f1d933374c8ae483c9e2ec6ee57282b1ac38ea3a2ce781bcffbd6d3abb5e77",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.19f1d933374c8ae483c9.ddb72dea2b39",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.19f1d933374c8ae483c9",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "FP32_ADD_mgc_shift_l_v4"
+  },
+  "independent_review": {
+    "case_id": "s1derived.19f1d933374c8ae483c9.ddb72dea2b39",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The helper prepends selected sign/zero bit then fills all remaining upperworkingbits with that bit before leftshift. Output truncation and shiftcountunsigned match, including widening beyond width_a+1. Allfourparameterdefaults and input/outputwidths agree.",
+        "rtl_excerpt": "parameter ilen = width_a+1;",
+        "specification_excerpt": "Extend a on the left to `max(width_a+1,width_z)` bits"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.19f1d933374c8ae483c9",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "f614512fa874e64e1ffc8425e61c25e56547006c4826bf48a279b85b049c3dcf",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "19f1d933374c8ae483c9e2ec6ee57282b1ac38ea3a2ce781bcffbd6d3abb5e77",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.19f1d933374c8ae483c9",
+  "primary_review": {
+    "case_id": "s1derived.19f1d933374c8ae483c9.ddb72dea2b39",
+    "checks": {
+      "behavior": "Compared full equations, lookup transforms, state transitions, handshakes, and dataflow.",
+      "boundaries": "Checked default/disabled cases, simultaneous controls, saturation, arithmetic widths, invalid addresses, and startup state.",
+      "interface": "Compared complete ports, widths, parameters, and defaults.",
+      "rtl_reasonableness": "The preserved repository RTL implements a coherent hardware function.",
+      "sequential_and_reset": "Checked reset polarity/timing, priority, enables, holds, initialization, and latency."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file semantic comparison supports revise.",
+        "rtl_excerpt": "RTL defaults 4/1/2/8, sign- or zero-extends before shifting, and left shift fills low positions with zero.",
+        "spec_excerpt": "The prose omits defaults and incorrectly describes left-shift vacated positions as sign-filled."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose omits defaults and incorrectly describes left-shift vacated positions as sign-filled.",
+        "rtl_evidence": "RTL defaults 4/1/2/8, sign- or zero-extends before shifting, and left shift fills low positions with zero.",
+        "spec_evidence": "The prose omits defaults and incorrectly describes left-shift vacated positions as sign-filled.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.19f1d933374c8ae483c9",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.19f1d933374c8ae483c9.ddb72dea2b39.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "19f1d933374c8ae483c9e2ec6ee57282b1ac38ea3a2ce781bcffbd6d3abb5e77",
+    "source_group": "S1",
+    "specification_sha256": "ddb72dea2b39ce5f745f04e627fad28493d3f90fd76667643d944b57b0ca03f9",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.19f1d933374c8ae483c9.ddb72dea2b39.md",
+  "qualified_specification_sha256": "f614512fa874e64e1ffc8425e61c25e56547006c4826bf48a279b85b049c3dcf",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.19f1d933374c8ae483c9.ddb72dea2b39/private/golden_design.v",
+  "rtl_sha256": "19f1d933374c8ae483c9e2ec6ee57282b1ac38ea3a2ce781bcffbd6d3abb5e77",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.19f1d933374c8ae483c9.ddb72dea2b39/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "ddb72dea2b39ce5f745f04e627fad28493d3f90fd76667643d944b57b0ca03f9",
+  "top_module": "FP32_ADD_mgc_shift_l_v4"
+}

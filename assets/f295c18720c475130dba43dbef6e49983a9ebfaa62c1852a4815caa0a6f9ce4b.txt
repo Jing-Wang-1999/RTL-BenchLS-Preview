@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.74dfda9e36e2cb6176fa.1ad1bf782913",
+  "compile_check": {
+    "case_id": "s1derived.74dfda9e36e2cb6176fa.1ad1bf782913",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "ad_iobuf",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.ad_iobuf.af121c3fc3b25d61/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.74dfda9e36e2cb6176fa",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "74dfda9e36e2cb6176fa3d441bc2cdb66d2ec784e6df95b8f60f53e771761294",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.74dfda9e36e2cb6176fa.1ad1bf782913",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.ad_iobuf.af121c3fc3b25d61/private/commercial_positive.log",
+    "commercial_log_sha256": "157adc7390155c35f1dc1821cfa4bf700f020e0e1567c8cada8cb92cec4ab19a",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.ad_iobuf.af121c3fc3b25d61/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "ad_iobuf"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.ad_iobuf.af121c3fc3b25d61",
+    "parent_id": "s1p.74dfda9e36e2cb6176fa",
+    "revised_tops": [
+      "ad_iobuf"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "ad_iobuf",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.74dfda9e36e2cb6176fa.1ad1bf782913",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The repair matches the per-bit tri-state polarity, continuous pin observation, DATA_WIDTH default, and combinational timing.",
+        "rtl_excerpt": "assign dio_p[n] = (dio_t[n] == 1'b1) ? 1'bz : dio_i[n];",
+        "spec_excerpt": "When dio_t[n]=0, the module drives dio_p[n] with dio_i[n]; when dio_t[n]=1, it releases dio_p[n] to high impedance."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.74dfda9e36e2cb6176fa",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "230ecb9706ff17ceb3c5d3f504fafd6bc6f9f4b717a1dfe76ac0eca40a30a968",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "74dfda9e36e2cb6176fa3d441bc2cdb66d2ec784e6df95b8f60f53e771761294",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.ad_iobuf.af121c3fc3b25d61/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.ad_iobuf.af121c3fc3b25d61/private/historical_harness/01_conformal_rtl_ad_iobuf.do"
+  ],
+  "parent_id": "s1p.74dfda9e36e2cb6176fa",
+  "primary_review": {
+    "case_id": "s1derived.74dfda9e36e2cb6176fa.1ad1bf782913",
+    "checks": {
+      "behavior": "Each pin is driven from dio_i when enabled and sensed continuously on dio_o.",
+      "boundaries": "dio_t=1 releases to Z; dio_t=0 drives the corresponding bit.",
+      "interface": "All four DATA_WIDTH-bit ports match.",
+      "rtl_reasonableness": "A bidirectional I/O buffer array is reasonable.",
+      "sequential_and_reset": "No clock, reset, or state."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Each pin is driven from dio_i when enabled and sensed continuously on dio_o. No clock, reset, or state.",
+        "rtl_excerpt": "parameter DATA_WIDTH=1; dio_o[n]=dio_p[n]; dio_p[n]=dio_t[n] ? Z : dio_i[n]",
+        "spec_excerpt": "\u201cWhen dio_t is low\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends before stating the drive-low behavior and omits DATA_WIDTH=1 and dio_o sensing.",
+        "rtl_evidence": "parameter DATA_WIDTH=1; dio_o[n]=dio_p[n]; dio_p[n]=dio_t[n] ? Z : dio_i[n]",
+        "spec_evidence": "\u201cWhen dio_t is low\u201d",
+        "type": "truncated_observable_behavior"
+      }
+    ],
+    "parent_id": "s1p.74dfda9e36e2cb6176fa",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.74dfda9e36e2cb6176fa.1ad1bf782913.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "74dfda9e36e2cb6176fa3d441bc2cdb66d2ec784e6df95b8f60f53e771761294",
+    "source_group": "S1",
+    "specification_sha256": "1ad1bf782913ca13b086ad66fdbc8ea22412ab7f1328c92a4117c7481222ba08",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.74dfda9e36e2cb6176fa.1ad1bf782913.md",
+  "qualified_specification_sha256": "230ecb9706ff17ceb3c5d3f504fafd6bc6f9f4b717a1dfe76ac0eca40a30a968",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.ad_iobuf.af121c3fc3b25d61/private/golden_design.v",
+  "rtl_sha256": "74dfda9e36e2cb6176fa3d441bc2cdb66d2ec784e6df95b8f60f53e771761294",
+  "source_corpus": "SEC-Flow-Star-repos-10.analog-hdl",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.ad_iobuf.af121c3fc3b25d61/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "1ad1bf782913ca13b086ad66fdbc8ea22412ab7f1328c92a4117c7481222ba08",
+  "top_module": "ad_iobuf"
+}

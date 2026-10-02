@@ -1,0 +1,74 @@
+{
+  "additions": 64,
+  "base_commit": "0243e081119ad971a045097f0b74b552d5d1fab4",
+  "base_ref": "master",
+  "deletions": 49,
+  "head_commit": "a73052cf45dad80a6bf086ab6aa3687c774ebc21",
+  "issue_info": {
+    "body": "There are a few assertions in ibex_load_store_unit which are not disabled while reset is asserted. This could cause some false firing if some signals are x when reset is asserted.\r\n\r\ne.g. ibex_load_store_unit.sv:457\r\n\r\n```\r\n  assert property (\r\n    @(posedge clk) (CS == IDLE) |-> (data_rvalid_i == 1'b0) );\r\n\r\n```",
+    "created_at": "2019-08-29T14:48:23Z",
+    "labels": [
+      "Type:Enhancement",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "title": "Assertion needs to be disabled while reset is asserted",
+    "updated_at": "2019-11-15T09:23:05Z"
+  },
+  "issue_number": 274,
+  "issue_url": "https://github.com/lowRISC/ibex/issues/274",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 9,
+      "changes": 12,
+      "deletions": 3,
+      "filename": "rtl/ibex_fetch_fifo.sv",
+      "patch": "@@ -220,8 +220,14 @@ module ibex_fetch_fifo #(\n   // Assertions //\n   ////////////////\n `ifndef VERILATOR\n-  assert property (\n-    @(posedge clk_i) disable iff (!rst_ni)\n-    (in_valid_i) |-> ((valid_q[DEPTH-1] == 1'b0) || (clear_i == 1'b1)) );\n+  // must not push and pop simultaneously when FIFO full\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (in_valid_i && pop_fifo) |-> (!valid_q[DEPTH-1] || clear_i)) else\n+    $display(\"Simultaneous pushing and popping not supported when FIFO full\");\n+\n+  // must not push to FIFO when full\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (in_valid_i) |-> (!valid_q[DEPTH-1] || clear_i)) else\n+    $display(\"Must not push when FIFO full\");\n `endif\n endmodule"
+    },
+    {
+      "additions": 16,
+      "changes": 33,
+      "deletions": 17,
+      "filename": "rtl/ibex_id_stage.sv",
+      "patch": "@@ -610,28 +610,27 @@ module ibex_id_stage #(\n   ////////////////\n \n `ifndef VERILATOR\n-  // make sure that branch decision is valid when jumping\n-  assert property (\n-    @(posedge clk_i) (branch_decision_i !== 1'bx || branch_in_dec == 1'b0) ) else\n-      $display(\"Branch decision is X\");\n+  // branch decision must be valid when jumping\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (branch_decision_i !== 1'bx || !branch_in_dec)) else\n+    $display(\"Branch decision is X\");\n \n `ifdef CHECK_MISALIGNED\n-  assert property (\n-    @(posedge clk_i) (~lsu_addr_incr_req_i) ) else\n-      $display(\"Misaligned memory access at %x\",pc_id_i);\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (!lsu_addr_incr_req_i)) else\n+    $display(\"Misaligned memory access at %x\",pc_id_i);\n `endif\n \n-  // the instruction delivered to the ID stage should always be valid\n-  assert property (\n-    @(posedge clk_i) (instr_valid_i & ~(illegal_c_insn_i | instr_fetch_err_i)) |->\n-        (!$isunknown(instr_rdata_i)) ) else\n-      $display(\"Instruction is valid, but has at least one X\");\n-\n-  // make sure multicycles enable signals are unique\n-  assert property (\n-    @(posedge clk_i) ~(data_req_dec & multdiv_en_dec)) else\n-      $display(\"Multicycles enable signals are not unique\");\n+  // instruction delivered to ID stage must always be valid\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (instr_valid_i && !(illegal_c_insn_i || instr_fetch_err_i)) |->\n+      (!$isunknown(instr_rdata_i))) else\n+    $display(\"Instruction is valid, but has at least one X\");\n \n+  // multicycle enable signals must be unique\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      ($onehot0({data_req_dec, multdiv_en_dec, branch_in_dec, jump_in_dec}))) else\n+    $display(\"Multicycle enable signals are not unique\");\n `endif\n \n endmodule"
+    },
+    {
+      "additions": 19,
+      "changes": 28,
+      "deletions": 9,
+      "filename": "rtl/ibex_if_stage.sv",
+      "patch": "@@ -256,15 +256,25 @@ module ibex_if_stage #(\n   // Assertions //\n   ////////////////\n `ifndef VERILATOR\n-  // the boot address needs to be aligned to 256 bytes\n-  assert property (\n-    @(posedge clk_i) (boot_addr_i[7:0] == 8'h00) ) else\n-      $error(\"The provided boot address is not aligned to 256 bytes\");\n-\n-  // assert that the address is word aligned when request is sent\n-  assert property (\n-    @(posedge clk_i) (instr_req_o) |-> (instr_addr_o[1:0] == 2'b00) ) else\n-      $display(\"Instruction address not word aligned\");\n+  // boot address must be aligned to 256 bytes\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (boot_addr_i[7:0] == 8'h00)) else\n+    $error(\"Provided boot address not aligned to 256 bytes\");\n+\n+  // errors must only be sent together with rvalid\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (instr_err_i) |-> (instr_rvalid_i)) else\n+    $display(\"Instruction error not sent with rvalid\");\n+\n+  // address must not contain X when request is sent\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (instr_req_o) |-> (!$isunknown(instr_addr_o))) else\n+    $display(\"Instruction address not valid\");\n+\n+  // address must be word aligned when request is sent\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (instr_req_o) |-> (instr_addr_o[1:0] == 2'b00)) else\n+    $display(\"Instruction address not word aligned\");\n `endif\n \n endmodule"
+    },
+    {
+      "additions": 20,
+      "changes": 40,
+      "deletions": 20,
+      "filename": "rtl/ibex_load_store_unit.sv",
+      "patch": "@@ -483,25 +483,25 @@ module ibex_load_store_unit (\n   ////////////////\n \n `ifndef VERILATOR\n-  // there should not be an rvalid unless the FSM is handlling it\n-  assert property (\n-    @(posedge clk_i) (data_rvalid_i) |-> ((ls_fsm_cs == WAIT_RVALID) ||\n-        (ls_fsm_cs == WAIT_RVALID_MIS) || (ls_fsm_cs == WAIT_RVALID_DONE)) ) else\n-      $display(\"Data response valid received without expecting it\");\n-\n-  // assert that errors are only sent at the same time as rvalid\n-  assert property (\n-    @(posedge clk_i) (data_err_i) |-> (data_rvalid_i) ) else\n-      $display(\"Data error not sent with rvalid\");\n-\n-  // assert that the address does not contain X when request is sent\n-  assert property (\n-    @(posedge clk_i) (data_req_o) |-> (!$isunknown(data_addr_o)) ) else\n-      $display(\"Data address not valid\");\n-\n-  // assert that the address is word aligned when request is sent\n-  assert property (\n-    @(posedge clk_i) (data_req_o) |-> (data_addr_o[1:0] == 2'b00) ) else\n-      $display(\"Data address not word aligned\");\n+  // there must not be an rvalid unless the FSM is handlling it\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (data_rvalid_i) |-> ((ls_fsm_cs == WAIT_RVALID) ||\n+      (ls_fsm_cs == WAIT_RVALID_MIS) || (ls_fsm_cs == WAIT_RVALID_DONE))) else\n+    $display(\"Data response valid received without expecting it\");\n+\n+  // errors must only be sent together with rvalid\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (data_err_i) |-> (data_rvalid_i)) else\n+    $display(\"Data error not sent with rvalid\");\n+\n+  // address must not contain X when request is sent\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (data_req_o) |-> (!$isunknown(data_addr_o))) else\n+    $display(\"Data address not valid\");\n+\n+  // address must be word aligned when request is sent\n+  assert property (@(posedge clk_i) disable iff (!rst_ni)\n+      (data_req_o) |-> (data_addr_o[1:0] == 2'b00)) else\n+    $display(\"Data address not word aligned\");\n `endif\n endmodule"
+    }
+  ],
+  "pr_info": {
+    "body": "This PR updates the assertions to not fire while the core is in reset. This resolves #274. In addition, some assertions are updated and some new assertions are added.",
+    "created_at": "2019-11-14T11:50:48Z",
+    "merged_at": "2019-11-15T09:23:05Z",
+    "state": "closed",
+    "title": "[rtl] Update assertions",
+    "updated_at": "2019-11-15T10:08:58Z",
+    "user": "vogelpi"
+  },
+  "pr_number": 472,
+  "pr_url": "https://github.com/lowRISC/ibex/pull/472",
+  "repository": "lowRISC/ibex",
+  "source_info": {
+    "line_number": 230,
+    "source_file": "14.txt"
+  },
+  "task_id": "lowRISC_ibex_472_274",
+  "verilog_files": [
+    "rtl/ibex_fetch_fifo.sv",
+    "rtl/ibex_id_stage.sv",
+    "rtl/ibex_if_stage.sv",
+    "rtl/ibex_load_store_unit.sv"
+  ]
+}

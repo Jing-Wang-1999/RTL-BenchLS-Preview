@@ -1,0 +1,9 @@
+always @(posedge clk or posedge rst)
+begin
+  if (rst)
+    pc <= #1 16'h0;
+  else if (pc_wr_r2)
+    pc <= #1 pc_buf;
+  else if (rd & !int_ack_t)
+    pc <= #1 pc_buf - 16'h8 + {13'h0, op_pos} + {14'h0, op_length};
+end

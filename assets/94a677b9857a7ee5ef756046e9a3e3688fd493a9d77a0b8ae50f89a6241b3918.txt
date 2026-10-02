@@ -1,0 +1,129 @@
+module origen_033681 (
+    input [5:0] OperationCode,
+    output reg RegisterDestination,
+    output reg ALUSource,
+    output reg MemoryToRegister,
+    output reg RegisterWrite,
+    output reg MemoryRead,
+    output reg MemoryWrite,
+    output reg Branch,
+    output reg Jump,
+    output reg [1:0] ALUOperation,
+    output reg SignZero
+);
+
+    always @(*) begin
+        // Default values for unsupported opcodes
+        RegisterDestination = 1'b0;
+        ALUSource = 1'b0;
+        MemoryToRegister = 1'b0;
+        RegisterWrite = 1'b0;
+        MemoryRead = 1'b0;
+        MemoryWrite = 1'b0;
+        Branch = 1'b0;
+        Jump = 1'b0;
+        ALUOperation = 2'b00;
+        SignZero = 1'b0;
+
+        case (OperationCode)
+            // R-Type Instructions (000000)
+            6'b000000: begin
+                RegisterDestination = 1'b1;
+                ALUSource = 1'b0;
+                MemoryToRegister = 1'b0;
+                RegisterWrite = 1'b1;
+                MemoryRead = 1'b0;
+                MemoryWrite = 1'b0;
+                Branch = 1'b0;
+                Jump = 1'b0;
+                ALUOperation = 2'b10;
+                SignZero = 1'b0;  // Don't care for R-type
+            end
+
+            // Load Word (100011)
+            6'b100011: begin
+                RegisterDestination = 1'b0;
+                ALUSource = 1'b1;
+                MemoryToRegister = 1'b1;
+                RegisterWrite = 1'b1;
+                MemoryRead = 1'b1;
+                MemoryWrite = 1'b0;
+                Branch = 1'b0;
+                Jump = 1'b0;
+                ALUOperation = 2'b00;  // Add for address calculation
+                SignZero = 1'b1;       // Sign-extend immediate
+            end
+
+            // Store Word (101011)
+            6'b101011: begin
+                RegisterDestination = 1'b0;  // Don't care
+                ALUSource = 1'b1;
+                MemoryToRegister = 1'b0;     // Don't care
+                RegisterWrite = 1'b0;
+                MemoryRead = 1'b0;
+                MemoryWrite = 1'b1;
+                Branch = 1'b0;
+                Jump = 1'b0;
+                ALUOperation = 2'b00;  // Add for address calculation
+                SignZero = 1'b1;       // Sign-extend immediate
+            end
+
+            // Branch on Not Equal (000101)
+            6'b000101: begin
+                RegisterDestination = 1'b0;  // Don't care
+                ALUSource = 1'b0;
+                MemoryToRegister = 1'b0;     // Don't care
+                RegisterWrite = 1'b0;
+                MemoryRead = 1'b0;
+                MemoryWrite = 1'b0;
+                Branch = 1'b1;
+                Jump = 1'b0;
+                ALUOperation = 2'b01;  // Subtract for comparison
+                SignZero = 1'b1;       // Sign-extend immediate
+            end
+
+            // XOR Immediate (001110)
+            6'b001110: begin
+                RegisterDestination = 1'b0;
+                ALUSource = 1'b1;
+                MemoryToRegister = 1'b0;
+                RegisterWrite = 1'b1;
+                MemoryRead = 1'b0;
+                MemoryWrite = 1'b0;
+                Branch = 1'b0;
+                Jump = 1'b0;
+                ALUOperation = 2'b11;  // XOR operation
+                SignZero = 1'b0;       // Zero-extend immediate
+            end
+
+            // Jump (000010)
+            6'b000010: begin
+                RegisterDestination = 1'b0;  // Don't care
+                ALUSource = 1'b0;            // Don't care
+                MemoryToRegister = 1'b0;     // Don't care
+                RegisterWrite = 1'b0;
+                MemoryRead = 1'b0;
+                MemoryWrite = 1'b0;
+                Branch = 1'b0;
+                Jump = 1'b1;
+                ALUOperation = 2'b00;  // Don't care
+                SignZero = 1'b0;       // Don't care
+            end
+
+            // Default case for unsupported opcodes
+            default: begin
+                RegisterDestination = 1'b0;
+                ALUSource = 1'b0;
+                MemoryToRegister = 1'b0;
+                RegisterWrite = 1'b0;
+                MemoryRead = 1'b0;
+                MemoryWrite = 1'b0;
+                Branch = 1'b0;
+                Jump = 1'b0;
+                ALUOperation = 2'b00;
+                SignZero = 1'b0;
+            end
+        endcase
+    end
+
+endmodule

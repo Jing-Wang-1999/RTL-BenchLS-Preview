@@ -1,0 +1,24 @@
+module oh_oai222 #(parameter DW = 8)(
+    input  [DW-1:0] a0,
+    input  [DW-1:0] a1,
+    input  [DW-1:0] b0,
+    input  [DW-1:0] b1,
+    input  [DW-1:0] c0,
+    input  [DW-1:0] c1,
+    output [DW-1:0] z
+);
+
+    wire [DW-1:0] or_a;
+    wire [DW-1:0] or_b;
+    wire [DW-1:0] or_c;
+    wire [DW-1:0] and_result;
+
+    assign or_a = a0 | a1;
+    assign or_b = b0 | b1;
+    assign or_c = c0 | c1;
+
+    assign and_result = or_a & or_b & or_c;
+
+    assign z = ~and_result;
+
+endmodule

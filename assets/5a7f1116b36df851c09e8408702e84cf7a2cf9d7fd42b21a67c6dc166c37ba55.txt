@@ -1,0 +1,136 @@
+module origen_123337 #(
+    parameter VCO_FREQUENCY = 100_000_000,  // 100 MHz
+    parameter N_DIVIDER = 10,
+    parameter M_DIVIDER = 1,
+    parameter K_DIVIDER = 1
+) (
+    input wire ref_signal,
+    input wire fb_signal,
+    output wire out_signal
+);
+
+    // Internal signals
+    wire phase_diff, control_signal, vco_out, divided_vco, ref_freq;
+    reg [31:0] k_divider_value;
+
+    // Phase detector
+    phase_detector pd (
+        .ref_signal(ref_signal),
+        .fb_signal(fb_signal),
+        .phase_diff(phase_diff)
+    );
+
+    // Charge pump and loop filter
+    charge_pump_filter cpf (
+        .phase_diff(phase_diff),
+        .control_signal(control_signal)
+    );
+
+    // Voltage-controlled oscillator (VCO)
+    vco #(.FREQUENCY(VCO_FREQUENCY)) vco_inst (
+        .control_signal(control_signal),
+        .out_signal(vco_out)
+    );
+
+    // N-divider
+    divider #(.RATIO(N_DIVIDER)) n_div (
+        .in_signal(vco_out),
+        .out_signal(divided_vco)
+    );
+
+    // M-divider
+    divider #(.RATIO(M_DIVIDER)) m_div (
+        .in_signal(divided_vco),
+        .out_signal(ref_freq)
+    );
+
+    // K-divider (programmable)
+    divider k_div (
+        .in_signal(ref_freq),
+        .out_signal(out_signal),
+        .ratio(k_divider_value)
+    );
+
+    // K-divider control logic
+    always @(posedge ref_signal) begin
+        if (phase_diff > 0)
+            k_divider_value <= k_divider_value + 1;
+        else if (phase_diff < 0)
+            k_divider_value <= k_divider_value - 1;
+    end
+
+    // Initialize K-divider value
+    initial begin
+        k_divider_value = K_DIVIDER;
+    end
+
+endmodule
+
+// Phase detector module
+module phase_detector (
+    input wire ref_signal,
+    input wire fb_signal,
+    output reg phase_diff
+);
+    always @(posedge ref_signal or posedge fb_signal) begin
+        if (ref_signal && !fb_signal)
+            phase_diff <= 1;
+        else if (!ref_signal && fb_signal)
+            phase_diff <= -1;
+        else
+            phase_diff <= 0;
+    end
+endmodule
+
+// Charge pump and loop filter module
+module charge_pump_filter (
+    input wire phase_diff,
+    output reg control_signal
+);
+    always @(phase_diff) begin
+        if (phase_diff > 0)
+            control_signal <= control_signal + 1;
+        else if (phase_diff < 0)
+            control_signal <= control_signal - 1;
+    end
+endmodule
+
+// Voltage-controlled oscillator (VCO) module
+module vco #(
+    parameter FREQUENCY = 100_000_000
+) (
+    input wire [31:0] control_signal,
+    output reg out_signal
+);
+    real period;
+    initial begin
+        period = 1.0 / FREQUENCY;
+    end
+
+    always begin
+        out_signal = 1'b1;
+        #(period/2);
+        out_signal = 1'b0;
+        #(period/2);
+    end
+endmodule
+
+// Divider module
+module divider #(
+    parameter RATIO = 1
+) (
+    input wire in_signal,
+    output reg out_signal,
+    input wire [31:0] ratio
+);
+    reg [31:0] counter;
+
+    always @(posedge in_signal) begin
+        if (counter == (ratio == 0 ? RATIO - 1 : ratio - 1)) begin
+            counter <= 0;
+            out_signal <= ~out_signal;
+        end else begin
+            counter <= counter + 1;
+        end
+    end
+endmodule

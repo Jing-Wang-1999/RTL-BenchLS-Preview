@@ -1,0 +1,47 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cvfpu/pull/97",
+  "issue_url": "https://github.com/openhwgroup/cvfpu/issues/83",
+  "repository": "openhwgroup/cvfpu",
+  "pr_number": 97,
+  "issue_number": 83,
+  "verilog_files": [
+    "src/fpnew_cast_multi.sv"
+  ],
+  "deletions": 1,
+  "additions": 5,
+  "patches": [
+    {
+      "filename": "src/fpnew_cast_multi.sv",
+      "patch": "@@ -443,7 +443,11 @@ module fpnew_cast_multi #(\n       // By default right shift mantissa to be an integer\n       denorm_shamt = unsigned'(MAX_INT_WIDTH - 1 - input_exp_q);\n       // overflow: when converting to unsigned the range is larger by one\n-      if (input_exp_q >= signed'(fpnew_pkg::int_width(int_fmt_q2) - 1 + op_mod_q2)) begin\n+      if ((input_exp_q >= signed'(fpnew_pkg::int_width(int_fmt_q2) - 1 + op_mod_q2))    // Exponent larger than max int range,\n+          && !(!op_mod_q2                                                               // unless cast to signed int\n+               && input_sign_q                                                          // and input value is larges negative int value\n+               && (input_exp_q == signed'(fpnew_pkg::int_width(int_fmt_q2) - 1))\n+               && (input_mant_q == {1'b1, {INT_MAN_WIDTH-1{1'b0}}}))) begin\n         denorm_shamt    = '0; // prevent shifting\n         of_before_round = 1'b1;\n       // underflow",
+      "additions": 5,
+      "deletions": 1,
+      "changes": 6
+    }
+  ],
+  "pr_info": {
+    "title": "cast: fix conversion to signed integer",
+    "body": "Correctly convert signed integers of negative max-magnitude value without erroneously flagging an overflow condition\r\n\r\nIssue: #83",
+    "state": "closed",
+    "created_at": "2023-08-02T07:40:45Z",
+    "updated_at": "2023-08-02T10:16:30Z",
+    "merged_at": "2023-08-02T09:19:14Z",
+    "user": "gregdavill"
+  },
+  "issue_info": {
+    "title": "Conversion from FP32 -2^31 to INT32 sets NV status",
+    "body": "In v0.7.0, converting the FP32 value -2147483648.0 to INT32 produces the result 0x80000000 and sets the NV status flag. However, the input value can be exactly represented as an INT32.\r\n\r\nTest case:\r\n\r\n      operands_i = '{0: 32'hcf000000, 1: 32'h00000000, 2: 32'h00000000};\r\n      rnd_mode_i = RNE;\r\n      op_i = F2I;\r\n      op_mod_i = 1'b0;\r\n      src_fmt_i = FP32;\r\n      int_fmt_i = INT32;\r\n\r\nRoot cause: \r\n[These lines](https://github.com/openhwgroup/cvfpu/blob/12c32ec71e3ee359a56f017eba139b6c281381dc/src/fpnew_cast_multi.sv#L443-L445) do not take account of the fact that for the valid input value, the exponent is exactly 31. If the sign is negative and the mantissa is 0x80000000 in this case, there should not be overflow.\r\n",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2023-03-31T04:31:09Z",
+    "updated_at": "2023-10-26T07:36:42Z"
+  },
+  "source_info": {
+    "source_file": "23.txt",
+    "line_number": 11
+  },
+  "base_commit": "d829f388c3d12d49b960c3362cfa9ebaf58c04fe",
+  "head_commit": "06038c670533172820c889ce10710e9c198d7c7b",
+  "base_ref": "develop",
+  "task_id": "openhwgroup_cvfpu_97_83",
+  "lec_status": "useful_pass"
+}

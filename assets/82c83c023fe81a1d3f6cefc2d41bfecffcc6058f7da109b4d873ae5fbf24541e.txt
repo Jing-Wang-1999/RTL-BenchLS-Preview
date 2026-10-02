@@ -1,0 +1,124 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module clk_ctl (
+   
+       clk_o,
+   
+       mclk,
+       reset_n, 
+       clk_div_ratio 
+   );
+
+
+
+
+
+parameter  WD = 'h1;
+
+
+
+
+   input        mclk          ;
+   input        reset_n       ;
+   input [WD:0] clk_div_ratio ;
+                               
+   
+
+
+
+   output       clk_o             ; 
+
+               
+
+
+
+
+reg  [WD-1:0]    high_count       ; 
+reg  [WD-1:0]    low_count        ; 
+reg              mclk_div         ; 
+
+
+assign clk_o  = mclk_div;
+
+always @ (posedge mclk or negedge reset_n)
+begin 
+   if(reset_n == 1'b0) 
+   begin 
+      high_count  <= 'h0;
+      low_count   <= 'h0;
+      mclk_div    <= 'b0;
+   end   
+   else 
+   begin 
+      if(high_count != 0)
+      begin 
+         high_count    <= high_count - 1;
+         mclk_div      <= 1'b1;
+      end   
+      else if(low_count != 0)
+      begin 
+         low_count     <= low_count - 1;
+         mclk_div      <= 1'b0;
+      end   
+      else
+      begin 
+         high_count    <= clk_div_ratio[WD:1] + clk_div_ratio[0];
+         low_count     <= clk_div_ratio[WD:1] + 1;
+         mclk_div      <= ~mclk_div;
+      end   
+   end   
+end   
+
+
+endmodule 
+

@@ -1,0 +1,42 @@
+### Module Specification: Instruction Decoder (origen_173586)
+
+**Overview**
+This module is a combinational instruction decoder for a simple processor. It takes a 6-bit operation code (opcode) as input and generates the corresponding control signals that govern the processor's datapath. The decoder determines the instruction type and sets the control outputs accordingly to execute operations like arithmetic, memory access, branching, and jumping.
+
+**Inputs**
+- `opCode` (6 bits): The operation code extracted from an instruction. It identifies the specific instruction to be executed.
+
+**Outputs**
+All outputs are single-bit control signals unless otherwise noted:
+- `regDst`: Selects the destination register for write-back operations.
+- `aluSrc`: Determines whether the ALU's second operand comes from a register (0) or an immediate value (1).
+- `memToReg`: Chooses whether to write data from memory (1) or from the ALU result (0) back to a register.
+- `regWrite`: Enables writing to the register file.
+- `memRead`: Enables reading from data memory.
+- `memWrite`: Enables writing to data memory.
+- `branch`: Activates branch execution when set.
+- `aluOp` (2 bits): Provides a high-level operation code for the ALU control unit.
+- `jmp`: Activates a jump instruction when set.
+
+**Behavior**
+The decoder interprets the `opCode` input and sets the control outputs based on predefined instruction types. The behavior is defined as follows:
+
+1. **Jump Instruction** (`opCode` = 000010): Activates the `jmp` signal. All other control signals are deactivated except `aluOp`, which is set to 00 (typically indicating no ALU operation or a pass-through).
+
+2. **R-type Instruction** (`opCode` = 000000): Used for register-based arithmetic/logic operations. Sets `regDst` to select the destination register from the instruction fields, enables `regWrite`, and sets `aluOp` to 10 (indicating ALU should decode further from the instruction's function field).
+
+3. **Load Instruction** (`opCode` = 100011): Reads data from memory into a register. Sets `aluSrc` to use an immediate offset, `memToReg` to write memory data to the register, enables `regWrite` and `memRead`, and sets `aluOp` to 00 (typically for address calculation).
+
+4. **Store Instruction** (`opCode` = 101011): Writes data from a register to memory. Sets `aluSrc` to use an immediate offset, enables `memWrite`, and sets `aluOp` to 00 (for address calculation). Register write is disabled.
+
+5. **Branch Instruction** (`opCode` = 000100): Activates the `branch` signal for conditional jumps. Sets `aluOp` to 01 (typically for comparison operations). All memory and register write signals are disabled.
+
+6. **Add Immediate Instruction** (`opCode` = 001000): Performs addition with an immediate value. Sets `aluSrc` to use the immediate, enables `regWrite`, and sets `aluOp` to 11 (indicating addition).
+
+7. **Default Case**: For any `opCode` not explicitly listed, all control signals are deactivated (set to 0), and `aluOp` is set to 00. This ensures safe operation for undefined opcodes.
+
+**Allowed Sub-modules**
+None. This module is purely combinational and should be implemented without any sub-modules, using only basic logic gates or lookup tables as needed.
+
+**Timing and Operation**
+- The

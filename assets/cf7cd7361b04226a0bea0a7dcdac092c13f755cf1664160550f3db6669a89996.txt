@@ -1,0 +1,56 @@
+module origen_131379 (
+    input wire m_aclk,
+    input wire s_aclk,
+    input wire s_aresetn,
+    input wire s_axis_tvalid,
+    input wire [31:0] s_axis_tdata,
+    input wire m_axis_tready,
+    output wire s_axis_tready,
+    output wire m_axis_tvalid,
+    output wire [31:0] m_axis_tdata,
+    output wire [9:0] axis_wr_data_count,
+    output wire [9:0] axis_rd_data_count
+);
+
+    // Internal signals
+    wire full;
+    wire empty;
+    reg [31:0] fifo_mem [0:1023];
+    reg [9:0] wr_ptr, rd_ptr;
+    reg [9:0] wr_count, rd_count;
+
+    // Write logic
+    always @(posedge s_aclk or negedge s_aresetn) begin
+        if (!s_aresetn) begin
+            wr_ptr <= 10'd0;
+            wr_count <= 10'd0;
+        end else if (s_axis_tvalid && s_axis_tready) begin
+            fifo_mem[wr_ptr] <= s_axis_tdata;
+            wr_ptr <= wr_ptr + 1;
+            wr_count <= wr_count + 1;
+        end
+    end
+
+    // Read logic
+    always @(posedge m_aclk or negedge s_aresetn) begin
+        if (!s_aresetn) begin
+            rd_ptr <= 10'd0;
+            rd_count <= 10'd0;
+        end else if (m_axis_tvalid && m_axis_tready) begin
+            rd_ptr <= rd_ptr + 1;
+            rd_count <= rd_count - 1;
+        end
+    end
+
+    // Output assignments
+    assign s_axis_tready = !full;
+    assign m_axis_tvalid = !empty;
+    assign m_axis_tdata = fifo_mem[rd_ptr];
+    assign axis_wr_data_count = wr_count;
+    assign axis_rd_data_count = rd_count;
+
+    // Full and empty flags
+    assign full = (wr_count == 10'd1024);
+    assign empty = (rd_count == 10'd0);
+
+endmodule

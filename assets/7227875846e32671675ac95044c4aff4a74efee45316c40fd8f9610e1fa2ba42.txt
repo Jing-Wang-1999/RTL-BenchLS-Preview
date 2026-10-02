@@ -1,0 +1,106 @@
+module autovcoder_005107 (
+    // inputs:
+    data,
+    rdaddress,
+    rdclken,
+    wraddress,
+    wrclock,
+    wren,
+
+    // outputs:
+    q
+);
+
+  output [127:0] q;
+  input [127:0] data;
+  input [23:0] rdaddress;
+  input rdclken;
+  input [23:0] wraddress;
+  input wrclock;
+  input wren;
+
+  //PETES CHANGE - make memory 32 bits to match instr.dat/data.dat
+  //reg     [127: 0] mem_array [16777215: 0];
+  reg  [ 31:0] mem_array    [67108863 : 0];
+  wire [127:0] q;
+  reg  [ 23:0] read_address;
+
+  //PETES CHANGE
+  initial begin
+    //This is TOO big for 256 MB RAM!  We right shift data by 1
+    $readmemh("instr.dat", mem_array, 'h100_0000);
+    $readmemh("data.dat", mem_array, 'h400_0000 >> 1);
+  end
+
+
+  //synthesis translate_off
+  //////////////// SIMULATION-ONLY CONTENTS
+  always @(rdaddress) begin
+    read_address = rdaddress;
+  end
+
+
+  // Data read is asynchronous.
+  //PETES CHANGE - make memory 32 bits to match instr.dat/data.dat
+  //assign q = mem_array[read_address];
+  assign q = {
+    mem_array[{read_address, 2'd3}],
+    mem_array[{read_address, 2'd2}],
+    mem_array[{read_address, 2'd1}],
+    mem_array[{read_address, 2'd0}]
+  };
+
+  always @(posedge wrclock) begin
+    // Write data
+    if (wren)
+      //PETES CHANGE - make memory 32 bits to match instr.dat/data.dat
+      //mem_array[wraddress] <= data;
+      {mem_array[{
+        wraddress, 2'd3
+      }], mem_array[{
+        wraddress, 2'd2
+      }], mem_array[{
+        wraddress, 2'd1
+      }], mem_array[{
+        wraddress, 2'd0
+      }]} <= data;
+
+  end
+
+
+
+  //////////////// END SIMULATION-ONLY CONTENTS
+
+  //synthesis translate_on
+  //synthesis read_comments_as_HDL on
+  //  always @(rdaddress)
+  //    begin
+  //      read_address = rdaddress;
+  //    end
+  //
+  //
+  //  lpm_ram_dp lpm_ram_dp_component
+  //    (
+  //      .data (data),
+  //      .q (q),
+  //      .rdaddress (read_address),
+  //      .rdclken (rdclken),
+  //      .wraddress (wraddress),
+  //      .wrclock (wrclock),
+  //      .wren (wren)
+  //    );
+  //
+  //  defparam lpm_ram_dp_component.lpm_file = "UNUSED",
+  //           lpm_ram_dp_component.lpm_hint = "USE_EAB=ON",
+  //           lpm_ram_dp_component.lpm_indata = "REGISTERED",
+  //           lpm_ram_dp_component.lpm_outdata = "UNREGISTERED",
+  //           lpm_ram_dp_component.lpm_rdaddress_control = "UNREGISTERED",
+  //           lpm_ram_dp_component.lpm_width = 128,
+  //           lpm_ram_dp_component.lpm_widthad = 24,
+  //           lpm_ram_dp_component.lpm_wraddress_control = "REGISTERED",
+  //           lpm_ram_dp_component.suppress_memory_conversion_warnings = "ON";
+  //
+  //synthesis read_comments_as_HDL off
+
+endmodule
+

@@ -1,0 +1,42 @@
+module MS_FLIPFLOP(C, R, S, Q, Qn, Y);
+    input C;
+    input R;
+    input S;
+    output Q;
+    output Qn;
+    output Y;
+
+    wire XLXN_5;
+    wire XLXN_10;
+    wire Y_DUMMY;
+
+    assign Y = Y_DUMMY;
+    
+    // Instantiating first CSR_LATCH_MUSER_MS_FLIPFLOP logic
+    wire XLXN_6_a;
+    wire XLXN_7_a;
+    wire Q_DUMMY_a;
+    wire Qbar_DUMMY_a;
+    
+    assign Y_DUMMY = Q_DUMMY_a;
+    assign XLXN_6_a = ~(C & S);
+    assign XLXN_7_a = ~(R & C);
+    assign Q_DUMMY_a = ~(Qbar_DUMMY_a & XLXN_6_a);
+    assign Qbar_DUMMY_a = ~(XLXN_7_a & Q_DUMMY_a);
+    
+    // Inversion logic
+    assign XLXN_10 = ~C;
+
+    // Instantiating second CSR_LATCH_MUSER_MS_FLIPFLOP logic
+    wire XLXN_6_b;
+    wire XLXN_7_b;
+    wire Q_DUMMY_b;
+    wire Qbar_DUMMY_b;
+
+    assign Q = Q_DUMMY_b;
+    assign Qn = Qbar_DUMMY_b;
+    assign XLXN_6_b = ~(XLXN_10 & Y_DUMMY);
+    assign XLXN_7_b = ~(XLXN_5 & XLXN_10);
+    assign Q_DUMMY_b = ~(Qbar_DUMMY_b & XLXN_6_b);
+    assign Qbar_DUMMY_b = ~(XLXN_7_b & Q_DUMMY_b);
+endmodule

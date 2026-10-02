@@ -1,0 +1,10 @@
+always @(posedge clk) begin
+    if (resetn == 1'b0) begin
+      acked <= {NUM_M{1'b0}};
+    end else begin
+      if (s_valid & s_ready)
+        acked <= {NUM_M{1'b0}};
+      else
+        acked <= acked | (m_ready & m_valid);
+    end
+  end

@@ -1,0 +1,4 @@
+# `SDP_Y_CORE_Y_mul_core_chn_mul_op_rsci_chn_mul_op_wait_dp`
+The module has scalar inputs `nvdla_core_clk`, active-low asynchronous reset `nvdla_core_rstn`, `chn_mul_op_rsci_oswt`, `chn_mul_op_rsci_biwt`, and `chn_mul_op_rsci_bdwt`; input `chn_mul_op_rsci_d[127:0]`; scalar outputs `chn_mul_op_rsci_bawt`, `chn_mul_op_rsci_wen_comp`; and output `chn_mul_op_rsci_d_mxwt[127:0]`.
+
+Let state `bcwt` and buffer `d_bfwt[127:0]`. Combinationally, `bawt=biwt|bcwt`, `wen_comp=(~oswt)|bawt`, and `d_mxwt` selects current `d` when `bcwt=0` and buffered `d_bfwt` when `bcwt=1`. On the falling edge of reset, `bcwt` and `d_bfwt` clear to zero. Otherwise, at each rising clock edge, `bcwt <= (bcwt|biwt)&~bdwt` and `d_bfwt <= d_mxwt`. Thus `bdwt` clears pending state with priority in the next-state equation, and while pending the buffer holds its previous value because the mux selects it. The mux is an internal function; no external submodule is required.

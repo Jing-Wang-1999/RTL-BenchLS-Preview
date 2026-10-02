@@ -1,0 +1,68 @@
+module avalon_memory_mapped_master (
+   ADDRESS, BEGINTRANSFER, BYTE_ENABLE, READ, WRITE, WRITEDATA, LOCK,
+   BURSTCOUNT, done, data_read,
+   CLK, RESET, READDATA, WAITREQUEST, READDATAVALID, data_to_write,
+   rnw, start, bytes, address_to_access
+) ;
+
+   input CLK;
+   input RESET;
+
+   output [31:0] ADDRESS;
+   output BEGINTRANSFER;
+   output [3:0] BYTE_ENABLE;
+   output READ;
+   input [31:0] READDATA;
+   output WRITE;
+   output [31:0] WRITEDATA;
+   output LOCK;
+   input WAITREQUEST;
+   input READDATAVALID;
+   output BURSTCOUNT;
+   input [31:0] data_to_write;
+   input rnw;
+   input start;
+   input [3:0] bytes;   
+   input [31:0] address_to_access;
+   output done;
+   output [31:0] data_read;
+   
+   reg [31:0] ADDRESS_REG;
+   reg BEGINTRANSFER_REG;
+   reg BURSTCOUNT_REG;
+   reg [3:0] BYTE_ENABLE_REG;
+   reg LOCK_REG;
+   reg READ_REG;
+   reg WRITE_REG;
+   reg [31:0] WRITEDATA_REG;
+   reg [31:0] data_read_REG;
+   
+   reg [1:0] state;
+   reg [1:0] next_state;
+   
+   parameter STATE_IDLE = 2'b00;
+   parameter STATE_WAIT = 2'b01;
+   parameter STATE_DONE = 2'b10;
+
+   assign ADDRESS = ADDRESS_REG;
+   assign BEGINTRANSFER = BEGINTRANSFER_REG;
+   assign BYTE_ENABLE = BYTE_ENABLE_REG;
+   assign BURSTCOUNT = BURSTCOUNT_REG;
+   assign LOCK = LOCK_REG;
+   assign READ = READ_REG;
+   assign WRITE = WRITE_REG;
+   assign WRITEDATA = WRITEDATA_REG;
+   assign data_read = data_read_REG;
+   assign done = (state == STATE_DONE);
+   
+   always @(posedge CLK or posedge RESET) begin
+      if (RESET) begin
+         state <= STATE_IDLE;
+      end else begin
+         state <= next_state;
+      end
+   end
+
+   /* RTL_BENCHLS_MASK: restore missing process */
+
+endmodule

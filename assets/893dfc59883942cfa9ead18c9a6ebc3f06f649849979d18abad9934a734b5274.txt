@@ -1,0 +1,198 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module spi_core (
+
+               clk,
+               reset_n,
+               
+        
+             reg_cs,
+             reg_wr,
+             reg_addr,
+             reg_wdata,
+             reg_be,
+
+            
+            reg_rdata,
+            reg_ack,
+
+          
+               sck                ,
+               so                 ,
+               si                 ,
+               cs_n  
+
+           );
+ 
+input               clk                           ;
+input               reset_n                       ;          
+
+
+
+
+
+input               reg_cs                        ;
+input               reg_wr                        ;
+input [3:0]         reg_addr                      ;
+input [31:0]        reg_wdata                     ;
+input [3:0]         reg_be                        ;
+
+
+output [31:0]       reg_rdata                     ;
+output              reg_ack                       ;
+
+
+
+
+
+output              sck                           ; 
+output              so                            ; 
+input               si                            ; 
+output [3:0]        cs_n                          ; 
+
+
+
+
+
+wire [7:0]          byte_in                       ;
+wire [7:0]          byte_out                      ;
+
+
+wire  [1:0]         cfg_tgt_sel                   ;
+
+wire                cfg_op_req                    ; 
+wire  [1:0]         cfg_op_type                   ; 
+wire  [1:0]         cfg_transfer_size             ; 
+wire  [5:0]         cfg_sck_period                ; 
+wire  [4:0]         cfg_sck_cs_period             ; 
+wire  [7:0]         cfg_cs_byte                   ; 
+wire  [31:0]        cfg_datain                    ; 
+wire  [31:0]        cfg_dataout                   ; 
+wire                hware_op_done                 ; 
+
+spi_if  u_spi_if
+          (
+          . clk                         (clk                          ), 
+          . reset_n                     (reset_n                      ),
+
+           
+          . sck_pe                      (sck_pe                       ),
+          . sck_int                     (sck_int                      ),
+          . cs_int_n                    (cs_int_n                     ),
+          . byte_in                     (byte_in                      ),
+          . load_byte                   (load_byte                    ),
+          . byte_out                    (byte_out                     ),
+          . shift_out                   (shift_out                    ),
+          . shift_in                    (shift_in                     ),
+
+          . cfg_tgt_sel                 (cfg_tgt_sel                  ),
+
+          . sck                         (sck                          ),
+          . so                          (so                           ),
+          . si                          (si                           ),
+          . cs_n                        (cs_n                         )
+           );
+
+
+spi_ctl  u_spi_ctrl
+       ( 
+          . clk                         (clk                          ),
+          . reset_n                     (reset_n                      ),
+
+          . cfg_op_req                  (cfg_op_req                   ),
+          . cfg_op_type                 (cfg_op_type                  ),
+          . cfg_transfer_size           (cfg_transfer_size            ),
+          . cfg_sck_period              (cfg_sck_period               ),
+          . cfg_sck_cs_period           (cfg_sck_cs_period            ),
+          . cfg_cs_byte                 (cfg_cs_byte                  ),
+          . cfg_datain                  (cfg_datain                   ),
+          . cfg_dataout                 (cfg_dataout                  ),
+          . op_done                     (hware_op_done                ),
+
+          . sck_int                     (sck_int                      ),
+          . cs_int_n                    (cs_int_n                     ),
+          . sck_pe                      (sck_pe                       ),
+          . sck_ne                      (sck_ne                       ),
+          . shift_out                   (shift_out                    ),
+          . shift_in                    (shift_in                     ),
+          . load_byte                   (load_byte                    ),
+          . byte_out                    (byte_out                     ),
+          . byte_in                     (byte_in                      )
+         
+         );
+
+
+
+
+spi_cfg u_cfg (
+
+          . mclk                        (clk                          ),
+          . reset_n                     (reset_n                      ),
+
+        
+          . reg_cs                      (reg_cs                       ),
+          . reg_wr                      (reg_wr                       ),
+          . reg_addr                    (reg_addr                     ),
+          . reg_wdata                   (reg_wdata                    ),
+          . reg_be                      (reg_be                       ),
+
+            
+          . reg_rdata                   (reg_rdata                    ),
+          . reg_ack                     (reg_ack                      ),
+
+
+           
+          . cfg_tgt_sel                 (cfg_tgt_sel                  ),
+          . cfg_op_req                  (cfg_op_req                   ), 
+          . cfg_op_type                 (cfg_op_type                  ), 
+          . cfg_transfer_size           (cfg_transfer_size            ), 
+          . cfg_sck_period              (cfg_sck_period               ), 
+          . cfg_sck_cs_period           (cfg_sck_cs_period            ), 
+          . cfg_cs_byte                 (cfg_cs_byte                  ), 
+          . cfg_datain                  (cfg_datain                   ), 
+          . cfg_dataout                 (cfg_dataout                  ), 
+          . hware_op_done               (hware_op_done                )  
+
+        );
+
+endmodule

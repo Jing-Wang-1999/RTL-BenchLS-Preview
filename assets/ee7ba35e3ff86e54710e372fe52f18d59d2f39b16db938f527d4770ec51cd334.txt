@@ -1,0 +1,22 @@
+always @(posedge rst or posedge clk)
+begin
+  if (rst) begin
+    op_pos <= #1 3'h0;
+  end else if (pc_wr_r2) begin
+    op_pos <= #1 3'h4;// - op_length;////****??????????
+/*  end else if (inc_pc & rd) begin
+    op_pos[2]   <= #1 op_pos[2] & !op_pos[1] & op_pos[0] & (&op_length);
+    op_pos[1:0] <= #1 op_pos[1:0] + op_length;
+//    op_pos   <= #1 {1'b0, op_pos[1:0]} + {1'b0, op_length};
+  end else if (rd) begin
+    op_pos <= #1 op_pos + {1'b0, op_length};
+  end*/
+  end else if (inc_pc & rd) begin
+    op_pos[2]   <= #1 op_pos[2] & !op_pos[1] & op_pos[0] & (&op_length);
+    op_pos[1:0] <= #1 op_pos[1:0] + op_length;
+//    op_pos   <= #1 {1'b0, op_pos[1:0]} + {1'b0, op_length};
+//  end else if (istb & rd) begin
+  end else if (rd) begin
+    op_pos <= #1 op_pos + {1'b0, op_length};
+  end
+end

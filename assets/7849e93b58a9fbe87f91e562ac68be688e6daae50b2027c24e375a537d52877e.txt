@@ -1,0 +1,44 @@
+always @(*)
+ begin
+  next_state_byte = state_byte;
+  case(state_byte)
+   IDLE: next_state_byte = (write) ? BYTE_0 : IDLE;
+   BYTE_0:
+    begin
+     if(size_in == BYTE)
+      begin
+       if(!write && !has_data)
+        next_state_byte = IDLE;
+      end
+     else
+      begin
+       next_state_byte = BYTE_1;
+      end
+    end
+   BYTE_1:
+    begin
+     if(size_in == HALF_WORD)
+      begin
+       if(has_data || (write && !buffer_full))
+        next_state_byte = BYTE_0;
+       else
+        next_state_byte = IDLE;
+      end
+     else
+      begin
+       next_state_byte = BYTE_2;
+      end
+    end
+   BYTE_2:
+    begin
+     next_state_byte = BYTE_3;
+    end
+   BYTE_3:
+    begin
+     if(has_data || (write && !buffer_full))
+      next_state_byte = BYTE_0;
+     else
+      next_state_byte = IDLE;
+    end
+  endcase
+ end

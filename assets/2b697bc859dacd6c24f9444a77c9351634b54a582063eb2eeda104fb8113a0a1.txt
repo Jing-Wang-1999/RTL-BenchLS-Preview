@@ -1,0 +1,52 @@
+module origen_205373(
+    input change, start, on, alert, clk, div_clk,
+    input [1:0] state,
+    output reg finished, alarm, off, show_beg
+);
+
+    reg [3:0] last_change, beg, last_on, last_start, last_alert, last_state;
+    reg [3:0] counter, last_counter;
+
+    always @(posedge clk) begin
+        if (!on && last_on) begin
+            beg <= 1;
+        end
+        if (state != 2'b00 && !last_start && start) begin
+            beg <= 1;
+        end
+        if (state != 2'b00 && !last_change && change && state != 2'b10) begin
+            beg <= 1;
+        end
+        if (on && !last_alert && alert && state == 2'b10) begin
+            counter <= 16;
+            last_counter <= counter;
+            beg <= 1;
+        end
+        if (counter != 0) begin
+            counter <= counter - 1;
+            beg <= counter[0];
+        end
+        if (last_counter != 0 && counter == 0) begin
+            finished <= 1;
+            last_counter <= 0;
+            beg <= 0;
+        end
+        last_change <= change;
+        last_on <= on;
+        last_start <= start;
+        last_alert <= alert;
+        last_state <= state;
+    end
+
+    always @(*) begin
+        if (off || state == 2'b00) begin
+            alarm = 0;
+        end else if (beg) begin
+            alarm = 1;
+        end else begin
+            alarm = 0;
+        end
+        show_beg = beg;
+    end
+
+endmodule

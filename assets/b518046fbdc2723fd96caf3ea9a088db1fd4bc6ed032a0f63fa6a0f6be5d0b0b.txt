@@ -1,0 +1,60 @@
+module rtlpp_06736 (
+
+                       address,
+                       byteenable,
+                       chipselect,
+                       clk,
+                       clken,
+                       freeze,
+                       reset,
+                       reset_req,
+                       write,
+                       writedata,
+                       readdata
+                    )
+;
+  parameter INIT_FILE = "lab9_soc_ocm.hex";
+
+  output reg [ 31: 0] readdata;
+  input      [  9: 0] address;
+  input      [  3: 0] byteenable;
+  input               chipselect;
+  input               clk;
+  input               clken;
+  input               freeze;
+  input               reset;
+  input               reset_req;
+  input               write;
+  input      [ 31: 0] writedata;
+
+  reg [31:0] memory [0:1023]; // Memory array with 1024 words of 32 bits each
+  wire clocken0;
+  wire wren;
+  integer i;
+
+  assign wren = chipselect & write;
+  assign clocken0 = clken & ~reset_req;
+
+  // Initializing memory from the file
+  initial
+  begin
+    if (INIT_FILE != "")
+      $readmemh(INIT_FILE, memory);
+  end
+
+  always @(posedge clk)
+  begin
+    if (clocken0) 
+    begin
+      if (wren)
+      begin
+        // Handle byte enable logic while writing to memory
+        for (i = 0; i < 4; i = i + 1) begin
+          if (byteenable[i])
+            memory[address][(i*8)+:8] = writedata[(i*8)+:8];
+        end
+      end
+      readdata <= memory[address];
+    end
+  end
+endmodule

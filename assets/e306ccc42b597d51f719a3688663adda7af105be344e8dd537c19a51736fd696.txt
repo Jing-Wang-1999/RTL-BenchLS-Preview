@@ -1,0 +1,49 @@
+// This file is based on Zhekai Zhang's code
+
+`timescale 1ns / 1ps
+
+`include "utility.v"
+
+module mem_ctrl
+	#(
+	parameter PORT_COUNT = 2,
+	parameter DATA_WIDTH_BYTE = 4,
+	parameter ADDR_WIDTH_BYTE = 4
+	)
+	(
+	CLK, RST,
+	
+	send_flag, send_data, send_length,
+	recv_flag, recv_data, recv_length,
+	
+	sendable, receivable,
+	
+	rw_flag_,		
+	addr_, 
+	read_data_, write_data_, write_mask_,
+	busy, done
+    );
+localparam DATA_WIDTH = 	8 * DATA_WIDTH_BYTE;
+localparam ADDR_WIDTH = 	8 * ADDR_WIDTH_BYTE;
+localparam LENGTH_WIDTH = 	`CLOG2(DATA_WIDTH_BYTE) + 1;
+localparam PORT_COUNT_BIT = `CLOG2(PORT_COUNT);
+localparam SEND_BYTE = 		DATA_WIDTH_BYTE + ADDR_WIDTH_BYTE + DATA_WIDTH_BYTE / 8 + 1;
+localparam NO_PORT = (1 << (PORT_COUNT_BIT + 1)) - 1;
+localparam STATE_IDLE = 0;
+localparam STATE_WAIT_FOR_RECV = 1;
+input CLK, RST;
+output reg send_flag;
+output reg [SEND_BYTE*8-1:0] send_data;
+output reg [4:0] send_length;
+output reg recv_flag;
+input [SEND_BYTE*8-1:0] recv_data;
+input [4:0] recv_length;
+input sendable, receivable;
+input [PORT_COUNT*2-1:0] 					rw_flag_;
+input [PORT_COUNT * ADDR_WIDTH-1:0] 		addr_;
+output [PORT_COUNT * DATA_WIDTH-1:0] 		read_data_;
+input [PORT_COUNT * DATA_WIDTH-1:0] 		write_data_;
+input [PORT_COUNT * DATA_WIDTH_BYTE-1:0]	write_mask_;
+output reg [PORT_COUNT-1:0]					busy;
+output reg [PORT_COUNT-1:0] 				done;
+endmodule

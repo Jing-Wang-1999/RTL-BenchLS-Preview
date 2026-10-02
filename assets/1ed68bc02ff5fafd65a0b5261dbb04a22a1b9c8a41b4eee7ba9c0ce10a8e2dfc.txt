@@ -1,0 +1,5 @@
+# HLS_cdp_icvt_core_staller
+
+Inputs are `nvdla_core_clk`, active-low asynchronous reset `nvdla_core_rstn`, and one-bit completion signals `chn_data_in_rsci_wen_comp` and `chn_data_out_rsci_wen_comp`. Outputs are one-bit `core_wen` and registered `core_wten`.
+
+Combinationally, `core_wen` is the AND of the two completion inputs. Whenever reset falls low, `core_wten` clears to 0. On each rising edge of `nvdla_core_clk` while reset is high, `core_wten` captures the complement of the current `core_wen`. Thus `core_wten` is a one-cycle registered indication that the core was not enabled. There are no submodules.

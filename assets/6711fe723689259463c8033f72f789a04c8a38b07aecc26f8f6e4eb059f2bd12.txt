@@ -1,0 +1,49 @@
+module autovcoder_067068 (
+    A,
+    B,
+    B_INV,
+    CIN,
+    OP,
+    OUTPUT,
+    OPout,
+    COUT,
+    B_INVout
+);
+  //1 BIT ALU module that decides between arithmetic addition,subtraction or
+  //bitwise logical AND,XOR. 
+  input B_INV, CIN, A, B;
+  input [1:0] OP;
+  output OUTPUT, COUT, B_INVout;
+  output [1:0] OPout;
+  supply1 vdd;
+  wire secondMUXin0;
+  wire secondMUXin1;
+  wire E1;
+  wire E0;
+  not (E0, OP[1]);
+  nand (E1, E0, OP[0]);
+  one_bit_adder_subtracter arithmetic (
+      CIN,
+      B_INV,
+      A,
+      B,
+      secondMUXin0,
+      COUT
+  );
+  Logical_Operations logical (
+      secondMUXin1,
+      A,
+      B,
+      E1
+  );
+  mux2_1 finalexit (
+      OUTPUT,
+      secondMUXin1,
+      secondMUXin0,
+      E0
+  );
+  bufif1 (OPout[0], OP[0], vdd);
+  bufif1 (OPout[1], OP[1], vdd);
+  bufif1 (B_INVout, B_INV, vdd);
+endmodule
+

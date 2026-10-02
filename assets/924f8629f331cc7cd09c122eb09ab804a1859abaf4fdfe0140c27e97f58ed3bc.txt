@@ -1,0 +1,28 @@
+module autovcoder_096725 (
+    input [31:0] A,
+    input [31:0] B,
+    input [31:0] ins,
+    input shift,
+    input AluB_1,
+    input syscall,
+    output reg [31:0] aluX,
+    output reg [31:0] aluY
+);
+    always @(*) begin
+        // aluX selection
+        case (shift)
+            1'b0: aluX = A;
+            1'b1: aluX = B;
+            default: aluX = 32'b0;
+        endcase
+
+        // aluY selection
+        case ({syscall, AluB_1})
+            2'b00: aluY = B;
+            2'b01: aluY = ins;
+            2'b10: aluY = 32'd10;
+            2'b11: aluY = 32'd10;
+            default: aluY = 32'b0;
+        endcase
+    end
+endmodule

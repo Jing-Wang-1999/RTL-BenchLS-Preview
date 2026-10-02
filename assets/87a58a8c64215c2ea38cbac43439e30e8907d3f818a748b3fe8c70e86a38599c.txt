@@ -1,0 +1,9 @@
+always @(posedge i_clk)
+	if (i_reset)
+		will_overflow <= 1'b0;
+	else if (i_rd)
+		will_overflow <= (will_overflow)&&(i_wr);
+	else if (w_write)
+		will_overflow <= (will_overflow)||(w_waddr_plus_two == rd_addr);
+	else if (w_waddr_plus_one == rd_addr)
+		will_overflow <= 1'b1;

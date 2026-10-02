@@ -1,0 +1,52 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/23560",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/19789",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 23560,
+  "issue_number": 19789,
+  "verilog_files": [
+    "hw/ip/entropy_src/rtl/entropy_src_core.sv"
+  ],
+  "deletions": 5,
+  "additions": 19,
+  "patches": [
+    {
+      "filename": "hw/ip/entropy_src/rtl/entropy_src_core.sv",
+      "patch": "@@ -165,6 +165,8 @@ module entropy_src_core import entropy_src_pkg::*; #(\n   logic                      sfifo_esfinal_int_err;\n   logic [2:0]                sfifo_esfinal_err;\n \n+  logic                   es_sfifo_int_err;\n+\n   logic [SeedLen-1:0]     esfinal_data;\n   logic                   esfinal_fips_flag;\n \n@@ -880,18 +882,30 @@ module entropy_src_core import entropy_src_pkg::*; #(\n       sfifo_esfinal_not_empty && es_route_to_sw && es_data_reg_rd_en && es_enable_fo[2];\n \n \n+  // Collect all internal FIFO errors.\n+  assign es_sfifo_int_err = sfifo_esrng_int_err ||\n+                            sfifo_distr_int_err ||\n+                            sfifo_observe_int_err ||\n+                            sfifo_esfinal_int_err;\n+\n+  // Counter, internal FIFO errors and FSM errors are structural errors and are always active\n+  // regardless of the functional state.\n+  logic fatal_loc_events;\n+  assign fatal_loc_events = es_cntr_err_sum ||\n+                            es_sfifo_int_err ||\n+                            es_main_sm_err_sum ||\n+                            es_ack_sm_err_sum ||\n+                            sha3_state_error_sum;\n+\n   // set the interrupt sources\n   assign event_es_fatal_err = (es_enable_fo[3] &&\n                                  (sfifo_esrng_err_sum   ||\n                                   sfifo_distr_err_sum   ||\n                                   sfifo_observe_err_sum ||\n                                   sfifo_esfinal_err_sum ||\n                                   sfifo_test_err_sum) ) ||\n-                              es_ack_sm_err_sum ||\n-                              es_main_sm_err_sum ||\n-                              es_cntr_err_sum || // prim_count err is always active\n                               sha3_rst_storage_err_sum ||\n-                              sha3_state_error_sum;\n+                              fatal_loc_events;\n \n   // set fifo errors that are single instances of source\n   assign sfifo_esrng_err_sum = (|sfifo_esrng_err) ||\n@@ -2836,7 +2850,7 @@ module entropy_src_core import entropy_src_pkg::*; #(\n     .sha3_start_o         (sha3_start_raw),\n     .sha3_process_o       (sha3_process),\n     .sha3_done_o          (sha3_done),\n-    .local_escalate_i     (es_cntr_err_sum),\n+    .local_escalate_i     (fatal_loc_events),\n     .main_sm_alert_o      (es_main_sm_alert),\n     .main_sm_idle_o       (es_main_sm_idle),\n     .main_sm_state_o      (es_main_sm_state),",
+      "additions": 19,
+      "deletions": 5,
+      "changes": 24
+    }
+  ],
+  "pr_info": {
+    "title": "[entropy_src] Locally escalate upon internal FIFO errors and FSM errors",
+    "body": "Previously, these errors would trigger a fatal alert but not cause a local escalation (i.e. lock up the main SM). Since all these errors are structural errors that can't occur e.g. due to how the module currently operates but instead due to FI attacks only, these errors should also cause a local escalation.\r\n\r\nThis change better aligns ENTROPY_SRC with EDN and CSRNG.\r\n\r\nThis resolves lowRISC/OpenTitan#19789.",
+    "state": "closed",
+    "created_at": "2024-06-07T11:02:32Z",
+    "updated_at": "2024-06-13T09:26:41Z",
+    "merged_at": "2024-06-07T14:51:52Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "[edn] FIFO error does not cause local escalation",
+    "body": "### Description\n\nCurrently FIFO errors do not cause local escalation as can be seen in this snippet from the edn_core.sv:\r\n\r\nhttps://github.com/lowRISC/opentitan/blob/e13ff43f1b951c00ea2e24cafa60f7ac11d04e01/hw/ip/edn/rtl/edn_core.sv?plain=1#L295-L307\r\n\r\nOther errors like counter or state machine errors cause the SM to enter an error state, while after a FIFO error the SM continues its operation. \r\n\r\nAccording to secure hardware design guideline [5.2](https://opentitan.org/book/doc/security/implementation_guidelines/hardware/index.html#recommendation-5-alerts) we should \"prefer to take a local action (clearing/randomizing state, cease processing) in addition to generating the alert\".\r\n\r\nThere could very well be a reason for not escalating locally but I couldn't find any reason in the documentation or in the lines of code above.\r\n\r\nShould this be changed in the design (local escalation on FIFO error) or documented why *no* local escalation is preferable in this case?",
+    "labels": [
+      "Type:Question",
+      "Component:RTL",
+      "Subsystem:Entropy",
+      "IP:edn"
+    ],
+    "state": "closed",
+    "created_at": "2023-09-29T08:30:24Z",
+    "updated_at": "2024-06-07T14:51:53Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 472
+  },
+  "base_commit": "8b49fe4df823a0954d679e31a6aedae0928feaeb",
+  "head_commit": "d03aee075e05e7e7f1e4f5b344aeee2570565b4c",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_23560_19789",
+  "lec_status": "useful_pass"
+}

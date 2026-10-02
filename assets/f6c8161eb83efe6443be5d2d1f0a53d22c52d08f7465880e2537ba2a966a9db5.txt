@@ -1,0 +1,10 @@
+always_comb begin
+
+        if (slv_aw_targeted == '0)
+            i_awready = aw_misrouting;
+        else
+            i_awready = '0;
+            for (int i = 0; i < SLV_NB; i++)
+                if (slv_aw_targeted[i])
+                    i_awready = o_awready[i] & !wch_full;
+    end

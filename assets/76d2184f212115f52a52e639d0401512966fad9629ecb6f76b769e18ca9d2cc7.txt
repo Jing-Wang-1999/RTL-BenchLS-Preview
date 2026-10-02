@@ -1,0 +1,111 @@
+module rtlpp_09190 (
+  input sys_clk,
+  output [15:0] ddr3_a,
+  output [2:0] ddr3_ba,
+  output ddr3_reset_n,
+  output ddr3_ck_p,
+  output ddr3_ck_n,
+  output ddr3_cke,
+  output ddr3_cs_n,
+  output ddr3_ras_n,
+  output ddr3_cas_n,
+  output ddr3_we_n,
+  inout [31:0] ddr3_dq,
+  inout [3:0] ddr3_dqs_p,
+  inout [3:0] ddr3_dqs_n,
+  output [3:0] ddr3_dm,
+  output ddr3_odt,
+  input ddr3_rzq,
+  output eth1_tx_clk,
+  output eth1_tx_ctl,
+  output [3:0] eth1_tx_d,
+  input eth1_rx_clk,
+  input eth1_rx_ctl,
+  input [3:0] eth1_rx_d,
+  output eth1_mdc,
+  inout eth1_mdio,
+  inout link_st,
+  inout rx_er,
+  inout phy_int,
+  inout eth_rst,
+  inout phy_led1,
+  output qspi_ss0,
+  output qspi_clk,
+  inout [3:0] qspi_io,
+  output sdio_clk,
+  inout sdio_cmd,
+  inout [3:0] sdio_d,
+  input usb1_clk,
+  output usb1_stp,
+  input usb1_dir,
+  input usb1_nxt,
+  inout [7:0] usb1_d,
+  inout usb1_rst,
+  input uart0_rx,
+  output uart0_tx,
+  inout hps_scl,
+  inout hps_sda,
+  output hdmi_clk,
+  output reg hdmi_de,
+  output reg hdmi_hsync,
+  output reg hdmi_vsync,
+  output [23:0] hdmi_data,
+  output hdmi_spdif,
+  input hdmi_spdifout,
+  input hdmi_int,
+  output ct_hpd,
+  output ls_oe,
+  output cec_clk,
+  inout fmc_scl,
+  inout fmc_sda,
+  inout fmc_pg_c2m,
+  inout fmc_prsnt_m2c,
+  inout cpu_gpio_0,
+  inout cpu_gpio_1,
+  inout led_hps_1,
+  inout led_hps_2,
+  inout therm_n,
+  inout alert_n,
+  inout user_btn_hps,
+  inout status,
+  inout as_rst,
+  inout qspi_rst
+);
+
+  wire sys_resetn;
+  wire [7:0] hdmi_red_i;
+  wire [7:0] hdmi_grn_i; 
+  wire [7:0] hdmi_blu_i;
+
+  assign ct_hpd = 1'b1;
+  assign ls_oe = 1'b1;
+  assign cec_clk = 1'b0;
+
+  // Embedded "ddr12" module
+  reg [3:0] shift_buf;
+  always @(posedge hdmi_clk) begin
+    shift_buf <= {shift_buf[2:0], shift_buf[3]};
+  end
+
+  assign hdmi_data[11:0] = {hdmi_red_i[7:4], hdmi_blu_i[3:0], hdmi_grn_i[7:4], hdmi_grn_i[3:0], hdmi_blu_i[7:4], hdmi_red_i[3:0]};
+  assign hdmi_data[23:12] = 12'h000;
+
+  // Inline "system_bd" logic
+  always @(posedge sys_clk or negedge sys_resetn) begin
+    if (!sys_resetn) begin
+      // Reset logic here if needed
+    end else begin
+      // System block functionality here
+    end
+  end
+
+  // Port connections for inline "system_bd" logic
+  assign eth1_tx_clk = eth1_rx_clk; // Example, more logic needed based on specific functionality
+  assign eth1_tx_d = eth1_rx_d;
+  assign hdmi_red_i = {8{1'b0}}; // Example, dummy assignment or logic needed
+  assign hdmi_grn_i = {8{1'b0}};
+  assign hdmi_blu_i = {8{1'b0}};
+
+  // ... continue with other assignments and logic embeddings based on the functionality needed to replace "system_bd"
+
+endmodule

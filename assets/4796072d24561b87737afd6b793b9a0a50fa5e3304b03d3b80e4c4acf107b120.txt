@@ -1,0 +1,23 @@
+module delay_module (
+    input [31:0] addr,
+    input clk,
+    input [31:0] datain,
+    output [31:0] dataout,
+    input debug,
+    input enb,
+    input [3:0] web
+);
+  // Delay logic example
+  reg [31:0] delay_memory [0:255];
+  reg [31:0] delayed_data;
+  
+  assign dataout = delayed_data;
+  
+  always @(posedge clk) begin
+    if (enb) begin
+      if (web)
+        delay_memory[addr] <= datain;
+      delayed_data <= delay_memory[addr];
+    end
+  end
+endmodule

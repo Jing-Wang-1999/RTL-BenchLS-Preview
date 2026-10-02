@@ -1,0 +1,47 @@
+module autovcoder_117277 (
+    ParityCalc_PDATA,
+    ParityCalc_DataValid,
+    ParityCalc_ParType,
+    ParityCalc_ParBit
+);
+  input [7:0] ParityCalc_PDATA;
+  input ParityCalc_DataValid;
+  input ParityCalc_ParType;
+  output ParityCalc_ParBit;
+
+  // Internal wires
+  wire n1;
+  wire n2;
+  wire n3;
+  wire n4;
+
+  XNOR2X2M U1 (
+      .A(ParityCalc_PDATA[7]),
+      .B(ParityCalc_PDATA[6]),
+      .Y(n4)
+  );
+  XNOR2X2M U2 (
+      .A(ParityCalc_PDATA[3]),
+      .B(ParityCalc_PDATA[2]),
+      .Y(n3)
+  );
+  XOR3XLM U3 (
+      .A(ParityCalc_ParType),
+      .B(n1),
+      .C(n2),
+      .Y(ParityCalc_ParBit)
+  );
+  XOR3XLM U4 (
+      .A(ParityCalc_PDATA[1]),
+      .B(ParityCalc_PDATA[0]),
+      .C(n3),
+      .Y(n2)
+  );
+  XOR3XLM U5 (
+      .A(ParityCalc_PDATA[5]),
+      .B(ParityCalc_PDATA[4]),
+      .C(n4),
+      .Y(n1)
+  );
+endmodule
+

@@ -1,0 +1,60 @@
+module origen_063255 (
+    input clk,
+    input rst_n,
+    input start,
+    input valid,
+    input done,
+    output reg valid_out,
+    output reg [9:0] counter
+);
+
+    reg [1:0] state, next_state;
+    parameter S0 = 2'b00; // idle
+    parameter S1 = 2'b01; // transient
+    parameter S2 = 2'b10; // counting
+    parameter S3 = 2'b11; // completion
+
+    // State register
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= S0;
+            counter <= 10'b1111111111;
+        end else begin
+            state <= next_state;
+
+            if (state == S0 || state == S1) begin
+                counter <= 10'b0;
+            end else if (state == S2 || state == S3) begin
+                if (valid) begin
+                    counter <= counter + 1;
+                end
+            end
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            S0: begin
+                if (start) next_state = S2;
+                else next_state = S0;
+            end
+            S1: next_state = S2;
+            S2: begin
+                if (counter == 10'b0100000110) next_state = S3;
+                else next_state = S2;
+            end
+            S3: begin
+                if (done) next_state = S0;
+                else next_state = S3;
+            end
+            default: next_state = S0;
+        endcase
+    end
+
+    // Output logic
+    always @(*) begin
+        valid_out = (state == S3) && valid;
+    end
+
+endmodule

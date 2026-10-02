@@ -1,0 +1,114 @@
+module origen_096824 (
+    input wire clk,
+    input wire rst_n,
+    input wire nmi,
+    output reg [2:0] address,
+    output reg [7:0] ppu_data,
+    output reg ppu_rw,
+    output reg ppu_cs
+);
+
+    // State encoding
+    localparam IDLE = 4'd0,
+               WRITE_FINE_X_SCROLL = 4'd1,
+               WAIT_4 = 4'd2,
+               WRITE_NEXT_BYTE = 4'd3,
+               WAIT_3 = 4'd4,
+               WRITE_SPR_Y_ADDR = 4'd5,
+               WAIT_0 = 4'd6,
+               WRITE_SPR_Y = 4'd7,
+               WAIT_1 = 4'd8,
+               WRITE_SPR_X_ADDR = 4'd9,
+               WAIT_2 = 4'd10,
+               WRITE_SPR_X = 4'd11;
+
+    reg [3:0] state, next_state;
+    reg [7:0] spr_x [0:199];
+    reg [7:0] spr_y [0:199];
+    reg [7:0] fine_scroll;
+    reg [7:0] sprite_index;
+    reg nmi_prev;
+
+    initial begin
+        $readmemh("spr_x.mem", spr_x);
+        $readmemh("spr_y.mem", spr_y);
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE;
+            fine_scroll <= 8'd0;
+            sprite_index <= 8'd0;
+            nmi_prev <= 1'b0;
+        end else begin
+            state <= next_state;
+            nmi_prev <= nmi;
+            if (state == IDLE && nmi && !nmi_prev) begin
+                fine_scroll <= fine_scroll + 1'b1;
+                sprite_index <= 8'd0;
+            end else if (state == WRITE_SPR_X) begin
+                sprite_index <= sprite_index + 1'b1;
+            end
+        end
+    end
+
+    always @(*) begin
+        next_state = state;
+        address = 3'b000;
+        ppu_data = 8'b0;
+        ppu_rw = 1'b1;
+        ppu_cs = 1'b1;
+
+        case (state)
+            IDLE:
+                if (nmi && !nmi_prev) next_state = WRITE_FINE_X_SCROLL;
+            WRITE_FINE_X_SCROLL: begin
+                address = 3'b101;
+                ppu_data = {fine_scroll[7:3], 3'b000};
+                ppu_cs = 1'b0;
+                next_state = WAIT_4;
+            end
+            WAIT_4:
+                next_state = WRITE_NEXT_BYTE;
+            WRITE_NEXT_BYTE: begin
+                address = 3'b101;
+                ppu_data = {3'b000, fine_scroll[7:3]};
+                ppu_cs = 1'b0;
+                next_state = WAIT_3;
+            end
+            WAIT_3:
+                next_state = WRITE_SPR_Y_ADDR;
+            WRITE_SPR_Y_ADDR: begin
+                address = 3'b011;
+                ppu_data = {sprite_index, 1'b0};
+                ppu_cs = 1'b0;
+                next_state = WAIT_0;
+            end
+            WAIT_0:
+                next_state = WRITE_SPR_Y;
+            WRITE_SPR_Y: begin
+                address = 3'b100;
+                ppu_data = spr_y[sprite_index];
+                ppu_cs = 1'b0;
+                next_state = WAIT_1;
+            end
+            WAIT_1:
+                next_state = WRITE_SPR_X_ADDR;
+            WRITE_SPR_X_ADDR: begin
+                address = 3'b011;
+                ppu_data = {sprite_index, 1'b1};
+                ppu_cs = 1'b0;
+                next_state = WAIT_2;
+            end
+            WAIT_2:
+                next_state = WRITE_SPR_X;
+            WRITE_SPR_X: begin
+                address = 3'b100;
+                ppu_data = spr_x[sprite_index];
+                ppu_cs = 1'b0;
+                next_state = (sprite_index == 8'd199) ? IDLE : WRITE_SPR_Y_ADDR;
+            end
+        endcase
+    end
+
+endmodule

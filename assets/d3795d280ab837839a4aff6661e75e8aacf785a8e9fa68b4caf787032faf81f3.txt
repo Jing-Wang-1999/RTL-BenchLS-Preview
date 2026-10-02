@@ -1,0 +1,9 @@
+always @(posedge sg_clk) begin
+    if (sg_resetn == 1'b0) begin
+      hwdesc_counter <= 'h0;
+    end else if (m_axi_rvalid) begin
+      hwdesc_counter <= hwdesc_counter + 1'b1;
+    end else if (hwdesc_state == STATE_DESC_READY) begin
+      hwdesc_counter <= 'h0;
+    end
+  end

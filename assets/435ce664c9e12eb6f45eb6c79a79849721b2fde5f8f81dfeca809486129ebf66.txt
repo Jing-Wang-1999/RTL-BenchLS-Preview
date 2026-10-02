@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.94f64772815f8fbb4a16.5823a36c7e4b",
+  "compile_check": {
+    "case_id": "s1derived.94f64772815f8fbb4a16.5823a36c7e4b",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_02012",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_02012.2d9a3b830a0460d7/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.94f64772815f8fbb4a16",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "94f64772815f8fbb4a162773991b275cd03c74be72324bed5d804ca27e178d5c",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.94f64772815f8fbb4a16.5823a36c7e4b",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_02012.2d9a3b830a0460d7/private/commercial_positive.log",
+    "commercial_log_sha256": "5a30d1cc8727d8b423919414a573330789d6bd406305c5a26dadd6ba8404165d",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_02012.2d9a3b830a0460d7/private/historical_harness/00_sec_rtlpp_02012.tcl",
+    "executed_script_sha256": "426d952e6226db69c76be3b3315feb02bdd55e4242ebe743c9a2075a1c972a4e",
+    "golden_tops": [
+      "rtlpp_02012"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.rtlpp_02012.2d9a3b830a0460d7",
+    "parent_id": "s1p.94f64772815f8fbb4a16",
+    "revised_tops": [
+      "rtlpp_02012"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_02012",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.94f64772815f8fbb4a16.5823a36c7e4b",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Re-read corrected standalone spec: all bus/scalar widths now match. Default bypass and optional exact selector-based shifts, fragment storage and reset/start priority agree with full RTL.",
+        "rtl_excerpt": "assign write_data = fifo_data;",
+        "specification_excerpt": "For stored selector `s`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.94f64772815f8fbb4a16",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "95063655a9a436d07f9c0a28975f41ff3287aa1971dfc154739b3947b13342c0",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "94f64772815f8fbb4a162773991b275cd03c74be72324bed5d804ca27e178d5c",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_02012.2d9a3b830a0460d7/private/historical_harness/00_sec_rtlpp_02012.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_02012.2d9a3b830a0460d7/private/historical_harness/01_sec_rtlpp_02012.tcl"
+  ],
+  "parent_id": "s1p.94f64772815f8fbb4a16",
+  "primary_review": {
+    "case_id": "s1derived.94f64772815f8fbb4a16.5823a36c7e4b",
+    "checks": {
+      "behavior": "Checked pass-through and enabled alignment paths.",
+      "boundaries": "Checked address offsets and read-ack gating.",
+      "interface": "All ports and parameter defaults match.",
+      "rtl_reasonableness": "Reasonable aligner, especially in supported default pass-through mode.",
+      "sequential_and_reset": "Checked reset, start priority, and fragment capture."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Start captures the calculated selector rather than clearing it.",
+        "rtl_excerpt": "<= bytes_to_next_boundary_minus_one",
+        "spec_excerpt": "shift amount register resets"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The spec says start resets the shift selector, but RTL loads it from the current address-derived offset.",
+        "rtl_evidence": "else if (start) bytes_to_next_boundary_minus_one_d1 <= bytes_to_next_boundary_minus_one",
+        "spec_evidence": "When a start signal is asserted, the shift amount register resets",
+        "type": "semantic_mismatch"
+      }
+    ],
+    "parent_id": "s1p.94f64772815f8fbb4a16",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.94f64772815f8fbb4a16.5823a36c7e4b.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "94f64772815f8fbb4a162773991b275cd03c74be72324bed5d804ca27e178d5c",
+    "source_group": "S4",
+    "specification_sha256": "5823a36c7e4b54d723121aff04c818bc2b2cbfa960a9bd3be38e2b3a19573cd4",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.94f64772815f8fbb4a16.5823a36c7e4b.md",
+  "qualified_specification_sha256": "95063655a9a436d07f9c0a28975f41ff3287aa1971dfc154739b3947b13342c0",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_02012.2d9a3b830a0460d7/private/golden_design.v",
+  "rtl_sha256": "94f64772815f8fbb4a162773991b275cd03c74be72324bed5d804ca27e178d5c",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_02012.2d9a3b830a0460d7/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "5823a36c7e4b54d723121aff04c818bc2b2cbfa960a9bd3be38e2b3a19573cd4",
+  "top_module": "rtlpp_02012"
+}

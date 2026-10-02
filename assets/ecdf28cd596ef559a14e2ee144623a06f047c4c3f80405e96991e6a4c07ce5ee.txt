@@ -1,0 +1,101 @@
+module origen_048466 #(
+    parameter DEVICE = "7SERIES"
+) (
+    input  wire [15:0] i,
+    input  wire [3:0]  s,
+    output wire        o
+);
+
+generate
+    if (DEVICE == "VIRTEX6" || DEVICE == "SPARTAN6" || DEVICE == "7SERIES") begin : gen_optimized
+        wire [3:0] lut6_out;
+        wire [1:0] muxf7_out;
+
+        (* DONT_TOUCH = "yes" *)
+        (* BOX_TYPE = "PRIMITIVE" *)
+        LUT6 #(
+            .INIT(64'hFF00F0F0CCCCAAAA)
+        ) i_lut6_0 (
+            .I0(i[0]), .I1(i[1]), .I2(i[2]), .I3(i[3]),
+            .I4(s[0]), .I5(s[1]),
+            .O(lut6_out[0])
+        );
+
+        (* DONT_TOUCH = "yes" *)
+        (* BOX_TYPE = "PRIMITIVE" *)
+        LUT6 #(
+            .INIT(64'hFF00F0F0CCCCAAAA)
+        ) i_lut6_1 (
+            .I0(i[4]), .I1(i[5]), .I2(i[6]), .I3(i[7]),
+            .I4(s[0]), .I5(s[1]),
+            .O(lut6_out[1])
+        );
+
+        (* DONT_TOUCH = "yes" *)
+        (* BOX_TYPE = "PRIMITIVE" *)
+        LUT6 #(
+            .INIT(64'hFF00F0F0CCCCAAAA)
+        ) i_lut6_2 (
+            .I0(i[8]), .I1(i[9]), .I2(i[10]), .I3(i[11]),
+            .I4(s[0]), .I5(s[1]),
+            .O(lut6_out[2])
+        );
+
+        (* DONT_TOUCH = "yes" *)
+        (* BOX_TYPE = "PRIMITIVE" *)
+        LUT6 #(
+            .INIT(64'hFF00F0F0CCCCAAAA)
+        ) i_lut6_3 (
+            .I0(i[12]), .I1(i[13]), .I2(i[14]), .I3(i[15]),
+            .I4(s[0]), .I5(s[1]),
+            .O(lut6_out[3])
+        );
+
+        (* DONT_TOUCH = "yes" *)
+        (* BOX_TYPE = "PRIMITIVE" *)
+        MUXF7 i_mux7_0 (
+            .I0(lut6_out[0]),
+            .I1(lut6_out[1]),
+            .S(s[2]),
+            .O(muxf7_out[0])
+        );
+
+        (* DONT_TOUCH = "yes" *)
+        (* BOX_TYPE = "PRIMITIVE" *)
+        MUXF7 i_mux7_1 (
+            .I0(lut6_out[2]),
+            .I1(lut6_out[3]),
+            .S(s[2]),
+            .O(muxf7_out[1])
+        );
+
+        (* DONT_TOUCH = "yes" *)
+        (* BOX_TYPE = "PRIMITIVE" *)
+        MUXF8 i_mux8 (
+            .I0(muxf7_out[0]),
+            .I1(muxf7_out[1]),
+            .S(s[3]),
+            .O(o)
+        );
+    end else begin : gen_rtl
+        assign o = i[s];
+    end
+endgenerate
+
+// Primitive modules for simulation
+`ifndef SYNTHESIS
+module LUT6(input I0, I1, I2, I3, I4, I5, output O);
+    parameter [63:0] INIT = 64'h0000000000000000;
+    assign O = INIT[{I5,I4,I3,I2,I1,I0}];
+endmodule
+
+module MUXF7(input I0, I1, S, output O);
+    assign O = S ? I1 : I0;
+endmodule
+
+module MUXF8(input I0, I1, S, output O);
+    assign O = S ? I1 : I0;
+endmodule
+`endif
+
+endmodule

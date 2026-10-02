@@ -1,0 +1,17 @@
+module mg_01612 (address_in,clock,q);
+parameter LUT_SIZE = 6; 
+  parameter NUM_STAGES = 78; 
+  input [31:0] address_in; 
+  input clock; 
+  output [31:0] q; 
+  reg [31:0] ram[0:(2**LUT_SIZE)*NUM_STAGES]; 
+  reg [31:0] q; 
+  initial 
+  begin 
+  $readmemh("output.hex.mif",ram); 
+  end 
+  always@(posedge clock) 
+  begin 
+  q = ram[address_in]; 
+  end 
+ endmodule

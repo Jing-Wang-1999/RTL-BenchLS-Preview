@@ -1,0 +1,43 @@
+### Module Specification: origen_210950
+
+**Overview**
+This module is a control signal decoder for an Arithmetic Logic Unit (ALU) within a processor. It interprets a primary operation code and a secondary function field to generate control signals for the ALU and related hardware units (multiplier/divider, shifters, and jump register logic). The outputs determine the ALU operation, special register accesses, and data path selections.
+
+**Inputs**
+- `alu_op` (2 bits): Primary ALU operation selector. This field is examined first to determine if the operation is a simple arithmetic/logic instruction or if further decoding via the `funct` field is required.
+- `funct` (6 bits): Function code. When `alu_op` has a specific value, this field is decoded to select a detailed instruction from a set of R-type (register) instructions.
+
+**Outputs**
+All outputs are generated combinationally based on the inputs.
+- `alu_ctrl` (3 bits): The control code sent to the ALU to select its operation (e.g., AND, ADD, SUBTRACT).
+- `jr` (1 bit): Jump Register signal. When asserted, indicates a "JR" (Jump Register) instruction is being executed.
+- `MHI` (1 bit): Move to HI signal. Controls writing to the HI special-purpose register.
+- `MLO` (1 bit): Move to LO signal. Controls writing to the LO special-purpose register.
+- `HILO` (1 bit): HI/LO Access signal. Indicates an operation (multiplication or division) that uses or updates the HI and LO registers.
+- `MultToReg` (1 bit): Multiplier-to-Register signal. Controls multiplexing to select data from the multiplier/divider unit (in HI/LO) for writing to a general-purpose register.
+- `shift` (1 bit): Shift Operation signal. Indicates the current instruction is a shift (SLL or SRL), which may affect operand routing.
+
+**Functional Behavior**
+The module's logic follows a priority-based decode sequence:
+
+1.  **Primary ALU Operation Decode (`alu_op`):**
+    *   If `alu_op` is `00`, the operation is an unconditional ADD. The `alu_ctrl` is set for ADD (`010`). All other control outputs (`jr`, `MHI`, `MLO`, `HILO`, `MultToReg`, `shift`) are deasserted (set to 0).
+    *   If `alu_op` is `01`, the operation is an unconditional SUBTRACT. The `alu_ctrl` is set for SUBTRACT (`110`). All other control outputs are deasserted.
+
+2.  **Secondary Function Decode (`funct`):**
+    *   If `alu_op` is any value other than `00` or `01` (handled by the `else` branch), the `funct` input is decoded to determine the specific R-type instruction.
+    *   The following `funct` codes are recognized, with all unspecified codes mapping to a default safe state (`alu_ctrl=000`, other outputs 0):
+        *   `100100` (AND): Sets `alu_ctrl` to `000`.
+        *   `100101` (OR): Sets `alu_ctrl` to `001`.
+        *   `100000` (ADD): Sets `alu_ctrl` to `010`.
+        *   `100010` (SUB): Sets `alu_ctrl` to `110`.
+        *   `101010` (SLT - Set Less Than): Sets `alu_ctrl` to `111`.
+        *   `000000` (SLL - Shift Left Logical): Sets `alu_ctrl` to `100` and asserts the `shift` signal.
+        *   `000010` (SRL - Shift Right Logical): Sets `alu_ctrl` to `101` and asserts the `shift` signal.
+        *   `001000` (JR - Jump Register): Sets `alu_ctrl` to `000` and asserts the `jr` signal.
+        *   `011000` (MULT - Multiply): Sets `alu_ctrl` to `000` and asserts the `MHI`, `MLO`, `HILO`, and `MultToReg` signals.
+        *   `011010` (DIV - Divide): Sets `alu_ctrl` to `000` and asserts the `MHI`, `MLO`, `HILO`, and `MultToReg` signals.
+    *   For all decoded R-type instructions except MULT, DIV, JR, SLL, and SRL, the signals `jr`, `MHI`, `MLO`, `HILO`, `MultToReg`, and `shift` remain deasserted.
+
+**Allowed Sub-modules**
+This module is purely combinational decoding logic. No sub-modules are required or allowed; it must be implemented as direct logic derived from the specified truth table.

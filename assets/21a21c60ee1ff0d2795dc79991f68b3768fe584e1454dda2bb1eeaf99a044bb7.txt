@@ -1,0 +1,96 @@
+module origen_101688 (
+    input wire clock_IN,
+    input wire clock_EN,
+    input wire cpuDataRW_SEL,
+    input wire activationTrigger,
+    input wire renderMode,
+    input wire [1:0] memStager,
+    input wire [14:0] address_IN,
+    input wire [7:0] data_IN,
+    output reg operationDone,
+    output reg [7:0] data_OUT,
+    output reg [7:0] dataRender_OUT,
+    inout wire [13:0] addressData_IN_OUT,
+    output reg addressLatch_EN,
+    output reg read_EN,
+    output reg write_EN
+);
+
+    reg [7:0] memDataBuffer;
+    reg operationQueued;
+    reg isWriteOperation;
+    reg [13:0] addressData_OUT;
+    reg addressData_OE;
+
+    assign addressData_IN_OUT = addressData_OE ? addressData_OUT : 14'bz;
+
+    always @(posedge clock_IN) begin
+        if (clock_EN) begin
+            case (memStager)
+                2'b00: begin // Address latching stage
+                    if (address_IN < 15'h3F00 && operationQueued) begin
+                        addressLatch_EN <= 1'b1;
+                        addressData_OUT <= address_IN[13:0];
+                        addressData_OE <= 1'b1;
+                    end else begin
+                        addressLatch_EN <= 1'b0;
+                        addressData_OE <= 1'b0;
+                    end
+                    read_EN <= 1'b0;
+                    write_EN <= 1'b0;
+                end
+                2'b01: begin // Prepare for read/write
+                    addressLatch_EN <= 1'b0;
+                    if (operationQueued) begin
+                        if (isWriteOperation) begin
+                            addressData_OUT <= data_IN;
+                            addressData_OE <= 1'b1;
+                        end else begin
+                            addressData_OE <= 1'b0; // High-Z for read
+                        end
+                    end
+                end
+                2'b10: begin // Execute read/write
+                    if (operationQueued) begin
+                        if (isWriteOperation) begin
+                            write_EN <= 1'b1;
+                        end else begin
+                            read_EN <= 1'b1;
+                            memDataBuffer <= addressData_IN_OUT[7:0];
+                        end
+                    end
+                end
+                2'b11: begin // Complete operation
+                    read_EN <= 1'b0;
+                    write_EN <= 1'b0;
+                    addressData_OE <= 1'b0;
+                    if (operationQueued) begin
+                        operationDone <= 1'b1;
+                        operationQueued <= 1'b0;
+                        if (!isWriteOperation) begin
+                            data_OUT <= memDataBuffer;
+                        end
+                    end
+                    if (renderMode) begin
+                        dataRender_OUT <= memDataBuffer;
+                    end
+                end
+            endcase
+        end
+    end
+
+    always @(posedge activationTrigger) begin
+        if (address_IN < 15'h3F00) begin
+            operationQueued <= 1'b1;
+            operationDone <= 1'b0;
+        end
+    end
+
+    always @(negedge activationTrigger) begin
+        isWriteOperation <= cpuDataRW_SEL;
+        if (cpuDataRW_SEL) begin
+            memDataBuffer <= data_IN;
+        end
+    end
+
+endmodule

@@ -1,0 +1,9 @@
+# Check how X values end up in C decoder
+
+Currently, X values can end up in the C decoder when the IF stage does not have a valid instruction. This requires the assertions in the C decoder to be qualified with `instr_valid` (see #536).
+
+We allow X values for uninitialized memories and the DV environment can drive them on the external bus. It seems that the X can come from both the uninitialized flops in the prefetch buffer (`ibex_fetch_fifo.sv`) or the bus signal directly, or a combination of the two (depending on the requested address, and FIFO fill status).
+
+We need to understand where exactly these X come from in this particular case.
+
+

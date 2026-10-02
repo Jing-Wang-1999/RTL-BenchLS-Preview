@@ -1,0 +1,22 @@
+This module is a 4-stage shift register with synchronized output capture. It operates on 16-bit data words.
+
+**Inputs:**
+*   `clk`: System clock.
+*   `rst`: Active-low asynchronous reset.
+*   `enable`: Active-high enable signal. When high, allows data shifting and output capture.
+*   `counter`: A 2-bit control signal.
+*   `data_in`: 16-bit input data word.
+
+**Outputs:**
+*   `data_out0`, `data_out1`, `data_out2`, `data_out3`: Four 16-bit registered output words.
+
+**Behavior:**
+The module contains two synchronous, reset-controlled processes.
+
+1.  **Shift Register Process:** On every positive clock edge when the system is not reset:
+    *   If `rst` is low, the four internal storage registers (`data0`, `data1`, `data2`, `data3`) are cleared to zero.
+    *   If `rst` is high and `enable` is high, the registers perform a shift operation: `data_in` is stored into `data0`, the old value of `data0` shifts into `data1`, `data1` shifts into `data2`, and `data2` shifts into `data3`. This creates a pipeline of the last four input samples.
+
+2.  **Output Capture Process:** On every positive clock edge when the system is not reset:
+    *   If `rst` is low, all four output registers are cleared to zero.
+    *   If `rst` is high, `enable` is high, and the `counter` signal equals 3 (binary '11'), the current values of the four internal shift registers are copied in parallel to the corresponding output ports (`data_out0` through `data_out3`).

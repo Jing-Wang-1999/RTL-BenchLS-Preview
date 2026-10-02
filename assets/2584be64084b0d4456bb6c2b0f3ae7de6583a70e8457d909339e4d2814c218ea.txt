@@ -1,0 +1,18 @@
+always @(posedge clk) begin
+    // register inputs
+    for (i = 0; i < S_COUNT; i = i + 1) begin
+        if (s_axis_tready[i]) begin
+            s_axis_tdata_reg[i*DATA_WIDTH +: DATA_WIDTH] <= s_axis_tdata[i*DATA_WIDTH +: DATA_WIDTH];
+            s_axis_tkeep_reg[i*KEEP_WIDTH +: KEEP_WIDTH] <= s_axis_tkeep[i*KEEP_WIDTH +: KEEP_WIDTH];
+            s_axis_tvalid_reg[i] <= s_axis_tvalid[i];
+            s_axis_tlast_reg[i] <= s_axis_tlast[i];
+            s_axis_tid_reg[i*S_ID_WIDTH +: S_ID_WIDTH_INT] <= s_axis_tid[i*S_ID_WIDTH +: S_ID_WIDTH_INT];
+            s_axis_tdest_reg[i*DEST_WIDTH +: DEST_WIDTH] <= s_axis_tdest[i*DEST_WIDTH +: DEST_WIDTH];
+            s_axis_tuser_reg[i*USER_WIDTH +: USER_WIDTH] <= s_axis_tuser[i*USER_WIDTH +: USER_WIDTH];
+        end
+    end
+
+    if (rst) begin
+        s_axis_tvalid_reg <= 0;
+    end
+end

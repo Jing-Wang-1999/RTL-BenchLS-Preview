@@ -1,0 +1,133 @@
+module origen_117150 #(
+    parameter MDIO_CLK_DIV = 32
+) (
+    input wire clk,
+    input wire rst_n,
+    input wire ren,
+    input wire wen,
+    input wire [4:0] phy_addr,
+    input wire [4:0] reg_addr,
+    input wire [15:0] wdata,
+    output reg [15:0] rdata,
+    output reg rw_ready,
+    output reg mdio_clk,
+    inout wire mdio_io
+);
+
+    // States
+    localparam IDLE = 3'd0;
+    localparam PREAMBLE = 3'd1;
+    localparam FRAME = 3'd2;
+    localparam TURNAROUND = 3'd3;
+    localparam DATA = 3'd4;
+    localparam COMPLETE = 3'd5;
+
+    reg [2:0] state, next_state;
+    reg [5:0] clk_div_count;
+    reg [5:0] bit_count;
+    reg [63:0] frame;
+    reg mdio_out, mdio_oe;
+    reg [15:0] read_data;
+
+    // MDIO clock generation
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            clk_div_count <= 0;
+            mdio_clk <= 0;
+        end else if (clk_div_count == MDIO_CLK_DIV - 1) begin
+            clk_div_count <= 0;
+            mdio_clk <= ~mdio_clk;
+        end else begin
+            clk_div_count <= clk_div_count + 1;
+        end
+    end
+
+    // State machine
+    always @(posedge mdio_clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // Next state logic and output control
+    always @(*) begin
+        next_state = state;
+        mdio_out = 1'b1;
+        mdio_oe = 1'b1;
+        rw_ready = 1'b0;
+
+        case (state)
+            IDLE: begin
+                if (ren || wen) begin
+                    next_state = PREAMBLE;
+                    frame = {32'hFFFFFFFF, 2'b01, wen ? 2'b01 : 2'b10, phy_addr, reg_addr, wen ? 2'b10 : 2'b00, wen ? wdata : 16'h0000};
+                    bit_count = 0;
+                end
+            end
+            PREAMBLE: begin
+                mdio_out = frame[63];
+                if (bit_count == 31) begin
+                    next_state = FRAME;
+                    bit_count = 0;
+                end else begin
+                    bit_count = bit_count + 1;
+                end
+            end
+            FRAME: begin
+                mdio_out = frame[31-bit_count];
+                if (bit_count == 13) begin
+                    next_state = TURNAROUND;
+                    bit_count = 0;
+                end else begin
+                    bit_count = bit_count + 1;
+                end
+            end
+            TURNAROUND: begin
+                if (wen) begin
+                    mdio_out = frame[17-bit_count];
+                end else begin
+                    mdio_oe = 1'b0;
+                end
+                if (bit_count == 1) begin
+                    next_state = DATA;
+                    bit_count = 0;
+                end else begin
+                    bit_count = bit_count + 1;
+                end
+            end
+            DATA: begin
+                if (wen) begin
+                    mdio_out = frame[15-bit_count];
+                end else begin
+                    mdio_oe = 1'b0;
+                    read_data[15-bit_count] = mdio_io;
+                end
+                if (bit_count == 15) begin
+                    next_state = COMPLETE;
+                end else begin
+                    bit_count = bit_count + 1;
+                end
+            end
+            COMPLETE: begin
+                rw_ready = 1'b1;
+                if (!ren && !wen) begin
+                    next_state = IDLE;
+                end
+            end
+        endcase
+    end
+
+    // Output assignments
+    assign mdio_io = mdio_oe ? mdio_out : 1'bz;
+
+    always @(posedge mdio_clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rdata <= 16'h0000;
+        end else if (state == COMPLETE && !wen) begin
+            rdata <= read_data;
+        end
+    end
+
+endmodule

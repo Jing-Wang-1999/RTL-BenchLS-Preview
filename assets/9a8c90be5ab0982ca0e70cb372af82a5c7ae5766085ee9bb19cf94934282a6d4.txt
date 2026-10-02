@@ -1,0 +1,52 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/12384",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/12382",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 12384,
+  "issue_number": 12382,
+  "verilog_files": [
+    "hw/ip/spi_device/rtl/spid_readbuffer.sv"
+  ],
+  "deletions": 1,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "hw/ip/spi_device/rtl/spid_readbuffer.sv",
+      "patch": "@@ -146,7 +146,7 @@ module spid_readbuffer #(\n     end\n   end\n \n-  assign event_watermark_o = !watermark_crossed && watermark_cross ;\n+  assign event_watermark_o = active && !watermark_crossed && watermark_cross ;\n \n   ///////////////////\n   // State Machine //",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "[spi_device] Attenuate watermark event when Not Active",
+    "body": "This commit fixes the logic error that generates the watermark event\r\neven the address does not target the Read buffer.\r\n\r\nIt was due to the event_watermark raises the signal regardless of the\r\n`active` condition.\r\n\r\nRelated issue: #12382",
+    "state": "closed",
+    "created_at": "2022-04-28T20:38:47Z",
+    "updated_at": "2022-04-28T22:47:07Z",
+    "merged_at": "2022-04-28T22:46:47Z",
+    "user": "eunchan"
+  },
+  "issue_info": {
+    "title": "[spi_device] Read Buffer raises watermark event while not in Active",
+    "body": "Read buffer raises the watermark event even if the address points to the mailbox buffer.\r\n\r\nIt is due to that the logic does not refer `active` signal while raising the event but only uses the signal when latching the event. So that `watermark_crossed` is not set but `event_watermark_o` becomes high.\r\n\r\nFound in pre_dv tests.\r\n\r\nCC: @weicaiyang",
+    "labels": [
+      "Priority:P1",
+      "Type:Bug",
+      "Component:RTL",
+      "IP:spi_device"
+    ],
+    "state": "closed",
+    "created_at": "2022-04-28T18:48:48Z",
+    "updated_at": "2022-04-28T22:47:02Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 2074
+  },
+  "base_commit": "b8f9e0e93a9a167838ca060cf618536b7e3ab415",
+  "head_commit": "ca1e4f05df3df87280565499dbfb17ff91191d0d",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_12384_12382",
+  "lec_status": "useful_pass"
+}

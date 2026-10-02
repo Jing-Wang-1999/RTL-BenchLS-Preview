@@ -1,0 +1,53 @@
+module origen_212266 (
+    input [7:0] din,
+    input wr_en,
+    input clk_50m,
+    input clken,
+    output reg tx,
+    output reg tx_busy
+);
+
+localparam STATE_IDLE  = 2'b00;
+localparam STATE_START = 2'b01;
+localparam STATE_DATA  = 2'b10;
+localparam STATE_STOP  = 2'b11;
+
+reg [1:0] state;
+reg [2:0] bitpos;
+reg [7:0] data;
+
+always @(posedge clk_50m) begin
+    if (!clken) begin
+        // Do nothing
+    end else begin
+        case (state)
+            STATE_IDLE: begin
+                tx_busy <= 1'b0;
+                if (wr_en) begin
+                    data <= din;
+                    state <= STATE_START;
+                    tx_busy <= 1'b1;
+                end
+            end
+            STATE_START: begin
+                tx <= 1'b0; // Start bit
+                state <= STATE_DATA;
+                bitpos <= 0;
+            end
+            STATE_DATA: begin
+                tx <= data[bitpos];
+                if (bitpos == 7) begin
+                    state <= STATE_STOP;
+                end else begin
+                    bitpos <= bitpos + 1;
+                end
+            end
+            STATE_STOP: begin
+                tx <= 1'b1; // Stop bit
+                state <= STATE_IDLE;
+            end
+        endcase
+    end
+end
+
+endmodule

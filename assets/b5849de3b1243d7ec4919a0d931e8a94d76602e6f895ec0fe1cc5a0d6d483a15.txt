@@ -1,0 +1,9 @@
+always @(posedge clk)
+	if(cs_le | wb_we_i)
+		case(bus_width)		// synopsys full_case parallel_case
+		   2'h0:	acs_addr <=  wb_addr_i[23:0];
+		   2'h1:	acs_addr <=  wb_addr_i[24:1];
+		   2'h2:	acs_addr <=  wb_addr_i[25:2];
+		endcase
+	else
+	if(next_adr)		acs_addr <=  acs_addr_pl1;

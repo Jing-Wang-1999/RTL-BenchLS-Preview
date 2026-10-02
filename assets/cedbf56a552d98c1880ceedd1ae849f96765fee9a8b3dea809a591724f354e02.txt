@@ -1,0 +1,5 @@
+# origen_007269
+
+Inputs are `clk`, active-low asynchronous `rst`, `tx_en`, `tx_data[7:0]`, and clock-enable `bpsclk`; outputs are `tx_stop` and `tx_out`. Reset immediately sets `tx_out=1`, clears `tx_stop`, and sets phase 0.
+
+State advances only on rising `clk` edges with `bpsclk=1`. In phase 0, `tx_en=0` holds all state; `tx_en=1` emits start bit 0, clears `tx_stop`, and advances. Phases 1–8 emit `tx_data[0]` through `tx_data[7]`. Phases 9–10 emit stop bit 1. Phase 11 asserts `tx_stop` for the following enabled interval and advances without changing `tx_out`. Phase 12 returns to phase 0 and clears `tx_stop`, again leaving `tx_out` high. While `bpsclk=0`, every register holds. `tx_data` is read live during phases 1–8 and is not latched at start. A new transfer can begin only from phase 0.

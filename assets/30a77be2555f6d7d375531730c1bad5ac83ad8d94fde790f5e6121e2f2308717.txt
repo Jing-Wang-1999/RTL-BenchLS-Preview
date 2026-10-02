@@ -1,0 +1,31 @@
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        tmrb <= 16'h0;
+        tmrb_buf <= 16'h0;
+        tmrb_flag <= 1'b0;
+    end
+    else if (clk7_en) begin
+        if (wr && tblo) begin
+            tmrb <= {tmrb[15:8], data_in};
+        end
+        if (wr && tbhi) begin
+            tmrb <= {data_in, tmrb[7:0]};
+        end
+        if (wr && (tblo || tbhi)) begin
+            tmrb_flag <= 1'b0;
+        end
+        if (eclk && !tmrb_flag) begin
+            if (tmrb == 16'h0001) begin
+                tmrb_flag <= 1'b1;
+                tmrb <= tmrb_buf;
+            end
+            else begin
+                tmrb <= tmrb - 16'h0001;
+            end
+        end
+        if (wr && crb) begin
+            tmrb_flag <= data_in[0];
+        end
+        tmrb_buf <= tmrb;
+    end
+end

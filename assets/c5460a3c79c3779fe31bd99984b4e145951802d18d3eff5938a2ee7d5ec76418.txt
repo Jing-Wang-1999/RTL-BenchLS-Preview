@@ -1,0 +1,101 @@
+module rtlpp_01184 (
+  ARVALID,
+  ARREADY,
+  RVALID,
+  RLAST,
+  RREADY,
+  RRESP,
+  ARADDR,
+  RDATA,
+  ARCACHE,
+  ARPROT,
+  ARLEN,
+  ARBURST,
+  ARLOCK,
+  ARQOS,
+  ARREGION,
+  ARSIZE,
+  addr,
+  en,
+  data,
+  cache,
+  caddr,
+  cready,
+  ready,
+  write_addr,
+  write_data,
+  write_signal,
+  clk_memory,
+  aresetn
+);
+
+output wire ARVALID;
+input wire ARREADY;
+input wire RVALID;
+input wire RLAST;
+output wire RREADY;
+input wire [1 : 0] RRESP;
+output wire [26 : 0] ARADDR;
+input wire [63 : 0] RDATA;
+output wire [3 : 0] ARCACHE;
+output wire [2 : 0] ARPROT;
+output wire [7 : 0] ARLEN;
+output wire [1 : 0] ARBURST;
+output wire [0 : 0] ARLOCK;
+output wire [3 : 0] ARQOS;
+output wire [3 : 0] ARREGION;
+output wire [2 : 0] ARSIZE;
+input wire [20 : 0] addr;
+input wire en;
+output wire [7 : 0] data;
+output wire [63 : 0] cache;
+output wire [20 : 3] caddr;
+output wire cready;
+output wire ready;
+input wire [20 : 0] write_addr;
+input wire [7 : 0] write_data;
+input wire write_signal;
+input wire clk_memory;
+input wire aresetn;
+
+// Internal logic for ram_read module
+
+reg [63:0] memory [0:2047]; // Example memory storage
+reg [63:0] read_cache;
+reg [7:0] read_data;
+
+assign ARVALID = en;
+assign ARADDR = {addr, 3'b000};
+assign ARCACHE = 4'b1111; // Example cache setting
+assign ARPROT = 3'b000; // Example protection setting
+assign ARLEN = 8'b00000001; // Example burst length
+assign ARBURST = 2'b01; // Example burst type
+assign ARLOCK = 1'b0; // Example lock setting
+assign ARQOS = 4'b0000; // Example QoS setting
+assign ARREGION = 4'b0000; // Example region setting
+assign ARSIZE = 3'b011; // Example size setting
+
+assign RREADY = en && ARREADY;
+
+always @(posedge clk_memory or negedge aresetn) begin
+  if (!aresetn) begin
+    read_cache <= 0;
+    read_data <= 0;
+  end else begin
+    if (RVALID && RREADY) begin
+      read_cache <= RDATA;
+      read_data <= RDATA[7:0];
+    end
+    if (write_signal) begin
+      memory[write_addr] <= {56'b0, write_data};
+    end
+  end
+end
+
+assign cache = read_cache;
+assign data = read_data;
+assign caddr = addr[20:3];
+assign cready = RVALID && RREADY;
+assign ready = RVALID;
+
+endmodule

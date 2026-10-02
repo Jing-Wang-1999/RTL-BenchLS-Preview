@@ -1,0 +1,19 @@
+**Specification: Signal Router Module**
+
+This module acts as a simple signal router and data realigner between two interfaces.
+
+**Inputs:**
+- *out_0r*: A single-bit request signal from the output interface.
+- *inp_0a*: A single-bit acknowledgment signal from the input interface.
+- *inp_0d*: A 18-bit data bus from the input interface.
+
+**Outputs:**
+- *out_0a*: A single-bit acknowledgment signal to the output interface, directly passing the input acknowledgment (*inp_0a*).
+- *out_0d*: A 16-bit data bus to the output interface, formed by shifting the input data bus (*inp_0d*) left by one bit. Specifically, *out_0d* bits [15:0] map to *inp_0d* bits [16:1].
+- *inp_0r*: A single-bit request signal to the input interface, directly passing the output request (*out_0r*).
+
+**Behavior:**
+The module transparently routes control signals (*request* and *acknowledgment*) between interfaces in both directions. For data, it performs a fixed one-bit left shift, discarding the least significant bit (*inp_0d[0]*) and the most significant bit (*inp_0d[17]*), effectively truncating the input data width from 18 bits to 16 bits.
+
+**Allowed Sub-modules:**
+None. This is a purely combinational module with no internal state or sub-modules.

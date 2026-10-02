@@ -1,0 +1,105 @@
+module origen_141120 (
+    input wire clk50,
+    input wire rst,
+    input wire RxD,
+    output wire sram_sramEnable_o,
+    output wire sram_writeEnable_o,
+    output wire sram_readEnable_o,
+    output wire [19:0] sram_addr_o,
+    inout wire [31:0] sram_data_io,
+    output wire flash_flashByte_o,
+    output wire flash_flashVpen_o,
+    output wire flash_flashRP_o,
+    output wire flash_flashSTS_o,
+    output wire flash_flashEnable_o,
+    output wire flash_flashCE1_o,
+    output wire flash_flashCE2_o,
+    output wire flash_readEnable_o,
+    output wire flash_writeEnable_o,
+    output wire [22:0] flash_addr_o,
+    output wire TxD
+);
+
+    // Internal signals
+    wire cpu_sram_enable;
+    wire cpu_sram_write;
+    wire cpu_sram_read;
+    wire [19:0] cpu_sram_addr;
+    wire [31:0] cpu_sram_data_out;
+    wire [31:0] cpu_sram_data_in;
+    wire cpu_flash_enable;
+    wire cpu_flash_write;
+    wire cpu_flash_read;
+    wire [22:0] cpu_flash_addr;
+    wire [7:0] cpu_flash_data_out;
+    reg [7:0] cpu_flash_data_in;
+
+    // CPU module (placeholder)
+    reg cpu_sram_enable_reg, cpu_sram_write_reg, cpu_sram_read_reg;
+    reg [19:0] cpu_sram_addr_reg;
+    reg [31:0] cpu_sram_data_out_reg;
+    reg cpu_flash_enable_reg, cpu_flash_write_reg, cpu_flash_read_reg;
+    reg [22:0] cpu_flash_addr_reg;
+    reg [7:0] cpu_flash_data_out_reg;
+    reg TxD_reg;
+
+    always @(posedge clk50 or posedge rst) begin
+        if (rst) begin
+            cpu_sram_enable_reg <= 0;
+            cpu_sram_write_reg <= 0;
+            cpu_sram_read_reg <= 0;
+            cpu_sram_addr_reg <= 0;
+            cpu_sram_data_out_reg <= 0;
+            cpu_flash_enable_reg <= 0;
+            cpu_flash_write_reg <= 0;
+            cpu_flash_read_reg <= 0;
+            cpu_flash_addr_reg <= 0;
+            cpu_flash_data_out_reg <= 0;
+            TxD_reg <= 1;
+        end else begin
+            // Add CPU logic here
+        end
+    end
+
+    assign cpu_sram_enable = cpu_sram_enable_reg;
+    assign cpu_sram_write = cpu_sram_write_reg;
+    assign cpu_sram_read = cpu_sram_read_reg;
+    assign cpu_sram_addr = cpu_sram_addr_reg;
+    assign cpu_sram_data_out = cpu_sram_data_out_reg;
+    assign cpu_flash_enable = cpu_flash_enable_reg;
+    assign cpu_flash_write = cpu_flash_write_reg;
+    assign cpu_flash_read = cpu_flash_read_reg;
+    assign cpu_flash_addr = cpu_flash_addr_reg;
+    assign cpu_flash_data_out = cpu_flash_data_out_reg;
+    assign TxD = TxD_reg;
+
+    // SRAM module (placeholder)
+    assign sram_sramEnable_o = cpu_sram_enable;
+    assign sram_writeEnable_o = cpu_sram_write;
+    assign sram_readEnable_o = cpu_sram_read;
+    assign sram_addr_o = cpu_sram_addr;
+    assign sram_data_io = cpu_sram_write ? cpu_sram_data_out : 32'bz;
+    assign cpu_sram_data_in = sram_data_io;
+
+    // Flash memory module (placeholder)
+    assign flash_flashEnable_o = cpu_flash_enable;
+    assign flash_writeEnable_o = cpu_flash_write;
+    assign flash_readEnable_o = cpu_flash_read;
+    assign flash_addr_o = cpu_flash_addr;
+    assign flash_flashByte_o = 1'b1; // Assuming 8-bit mode
+    assign flash_flashVpen_o = 1'b1; // Voltage programming enabled
+    assign flash_flashRP_o = 1'b1; // Read protection disabled
+    assign flash_flashSTS_o = 1'b0; // Status output (placeholder)
+    assign flash_flashCE1_o = ~cpu_flash_enable; // Active low
+    assign flash_flashCE2_o = 1'b1; // Assuming single chip
+
+    // Flash data connection (placeholder)
+    reg [7:0] flash_data_reg;
+    always @(posedge clk50) begin
+        if (cpu_flash_write)
+            flash_data_reg <= cpu_flash_data_out;
+        else if (cpu_flash_read)
+            cpu_flash_data_in <= flash_data_reg;
+    end
+
+endmodule

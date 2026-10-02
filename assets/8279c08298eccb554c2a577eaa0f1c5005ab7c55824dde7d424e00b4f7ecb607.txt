@@ -1,0 +1,93 @@
+module ROM(
+	input [11:0] Address,
+	input Clock,
+	output [7:0] Data
+);
+	// Dummy definition: logic should be replaced with actual memory logic
+	assign Data = 8'h00;
+endmodule
+
+module rtlpp_06150(
+    port_id,
+    read_strobe, in_port,
+    write_strobe, out_port,
+    interrupt, interrupt_ack,
+    reset, clk
+);
+
+// Signal declarations
+output [7:0]  port_id;
+output        read_strobe;
+input  [7:0]  in_port;
+output        write_strobe;
+output [7:0]  out_port;
+input         interrupt;
+output        interrupt_ack;
+input         reset;
+input         clk;
+
+// Internal wires
+wire cpu_reset;
+wire pb_sleep;
+wire [11:0] address;
+wire [17:0] instruction;
+wire bram_enable;
+
+// Assignments
+assign cpu_reset = reset;
+assign pb_sleep = 1'b0;
+
+// CPU internal logic (kcpsm6 module embedded)
+reg [7:0] port_id_reg;
+reg read_strobe_reg;
+reg write_strobe_reg;
+reg [7:0] out_port_reg;
+reg interrupt_ack_reg;
+reg [11:0] address_reg;
+reg [17:0] instruction_reg;
+reg bram_enable_reg;
+
+// Example simplified CPU logic
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        // Resetting all signals
+        port_id_reg <= 8'b0;
+        read_strobe_reg <= 0;
+        write_strobe_reg <= 0;
+        out_port_reg <= 8'b0;
+        interrupt_ack_reg <= 0;
+        address_reg <= 12'b0;
+        instruction_reg <= 18'b0;
+        bram_enable_reg <= 0;
+    end else begin
+        // Dummy behavior for illustration
+        // A real implementation would have a full CPU logic
+        address_reg <= address_reg + 1;
+        bram_enable_reg <= 1;
+        instruction_reg <= instruction_reg + 1;
+    end
+end
+
+assign port_id = port_id_reg;
+assign read_strobe = read_strobe_reg;
+assign write_strobe = write_strobe_reg;
+assign out_port = out_port_reg;
+assign interrupt_ack = interrupt_ack_reg;
+
+// Dummy ROM logic (program module embedded)
+reg [17:0] program_memory [0:4095];
+
+initial begin
+    // Loading program memory
+    // In a practical scenario, this would be the program loaded into ROM
+    // For the sake of the example, we leave it uninitialized
+    $readmemb("program_memory.dat", program_memory);
+end
+
+always @(posedge clk) begin
+    if (bram_enable_reg) begin
+        instruction_reg <= program_memory[address_reg];
+    end
+end
+
+endmodule

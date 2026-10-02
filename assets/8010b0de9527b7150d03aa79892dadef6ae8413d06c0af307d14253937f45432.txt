@@ -1,0 +1,52 @@
+module origen_127415 (
+    input D,
+    input SLEEP_B,
+    input NOTIFIER,
+    input KAPWR,
+    input VGND,
+    input VPWR,
+    output reg Q
+);
+
+    initial begin
+        Q = 1'bX;
+        #20 force D = 1'b0;
+        #20 force KAPWR = 1'b0;
+        #20 force NOTIFIER = 1'b0;
+        #20 force SLEEP_B = 1'b0;
+        #20 force VGND = 1'b0;
+        #20 force VPWR = 1'b0;
+        #20 force D = 1'b1;
+        #20 force KAPWR = 1'b1;
+        #20 force NOTIFIER = 1'b1;
+        #20 force SLEEP_B = 1'b1;
+        #20 force VGND = 1'b1;
+        #20 force VPWR = 1'b1;
+        #20 force D = 1'b0;
+        #20 force KAPWR = 1'b0;
+        #20 force NOTIFIER = 1'b0;
+        #20 force SLEEP_B = 1'b0;
+        #20 force VGND = 1'b0;
+        #20 force VPWR = 1'b0;
+        #20 force VPWR = 1'b1;
+        #20 force VGND = 1'b1;
+        #20 force SLEEP_B = 1'b1;
+        #20 force NOTIFIER = 1'b1;
+        #20 force KAPWR = 1'b1;
+        #20 force D = 1'b1;
+        #20 force VPWR = 1'bX;
+        #20 force VGND = 1'bX;
+        #20 force SLEEP_B = 1'bX;
+        #20 force NOTIFIER = 1'bX;
+        #20 force KAPWR = 1'bX;
+        #20 force D = 1'bX;
+    end
+
+    always @(posedge VPWR or negedge VGND) begin
+        if (!VGND)
+            Q <= 1'b0;
+        else if (VPWR && !SLEEP_B)
+            Q <= D;
+    end
+
+endmodule

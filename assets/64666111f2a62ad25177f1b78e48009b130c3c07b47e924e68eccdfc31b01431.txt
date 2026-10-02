@@ -1,0 +1,1011 @@
+/*****************************************************************************\
+|                      Copyright (C) 2021-2023 Luke Wren                      |
+|                     SPDX-License-Identifier: Apache-2.0                     |
+\*****************************************************************************/
+
+// Little instructions go in, big instructions come out
+
+`default_nettype none
+
+module hazard3_instr_decompress #(
+/*****************************************************************************\
+|                      Copyright (C) 2021-2022 Luke Wren                      |
+|                     SPDX-License-Identifier: Apache-2.0                     |
+\*****************************************************************************/
+
+// Hazard3 CPU configuration parameters
+
+// To configure Hazard3 you can either edit this file, or set parameters on
+// your top-level instantiation, it's up to you. These parameters are all
+// plumbed through Hazard3's internal hierarchy to the appropriate places.
+
+// If you add a parameter here, you should add a matching line to
+// hazard3_config_inst.vh to propagate the parameter through module
+// instantiations.
+
+// ----------------------------------------------------------------------------
+// Reset state configuration
+
+// RESET_VECTOR: Address of first instruction executed.
+parameter RESET_VECTOR        = 32'h00000000,
+
+// MTVEC_INIT: Initial value of trap vector base. Bits clear in MTVEC_WMASK
+// will never change from this initial value. Bits set in MTVEC_WMASK can be
+// written/set/cleared as normal.
+//
+// Note that mtvec bits 1:0 do not affect the trap base (as per RISC-V spec).
+// Bit 1 is don't care, bit 0 selects the vectoring mode: unvectored if == 0
+// (all traps go to mtvec), vectored if == 1 (exceptions go to mtvec, IRQs to
+// mtvec + mcause * 4). This means MTVEC_INIT also sets the initial vectoring
+// mode.
+parameter MTVEC_INIT          = 32'h00000000,
+
+// ----------------------------------------------------------------------------
+// Standard RISC-V ISA support
+
+// EXTENSION_A: Support for atomic read/modify/write instructions
+parameter EXTENSION_A         = 1,
+
+// EXTENSION_C: Support for compressed (variable-width) instructions
+parameter EXTENSION_C         = 1,
+
+// EXTENSION_E: Implement the RV32E base extension rather than RV32I. This
+// reduces the number of integer registers from 31 to 15.
+parameter EXTENSION_E         = 0,
+
+// EXTENSION_M: Support for hardware multiply/divide/modulo instructions
+parameter EXTENSION_M         = 1,
+
+// EXTENSION_ZBA: Support for Zba address generation instructions
+parameter EXTENSION_ZBA       = 0,
+
+// EXTENSION_ZBB: Support for Zbb basic bit manipulation instructions
+parameter EXTENSION_ZBB       = 0,
+
+// EXTENSION_ZBC: Support for Zbc carry-less multiplication instructions
+parameter EXTENSION_ZBC       = 0,
+
+// EXTENSION_ZBKB: Support for Zbkb basic bit manipulation for cryptography
+// Requires: Zbb. (This flag enables instructions in Zbkb which aren't in Zbb.)
+parameter EXTENSION_ZBKB      = 0,
+
+// EXTENSION_ZBKX: support for Zbkx crossbar permutation instructions
+parameter EXTENSION_ZBKX      = 0,
+
+// EXTENSION_ZBS: Support for Zbs single-bit manipulation instructions
+parameter EXTENSION_ZBS       = 0,
+
+// EXTENSION_ZCB: Support for Zcb basic additional compressed instructions
+// Requires: EXTENSION_C. (Some Zcb instructions also require Zbb or M.)
+// Note Zca is equivalent to C, as we do not support the F extension.
+parameter EXTENSION_ZCB       = 0,
+
+// EXTENSION_ZCLSD: Support for Zclsd compressed load/store pair instructions
+// Requires: EXTENSION_ZILSD, EXTENSION_C.
+parameter EXTENSION_ZCLSD     = 0,
+
+// EXTENSION_ZCMP: Support for Zcmp push/pop instructions.
+// Requires: EXTENSION_C.
+parameter EXTENSION_ZCMP      = 0,
+
+// EXTENSION_ZIFENCEI: Support for the fence.i instruction
+// Optional, since a plain branch/jump will also flush the prefetch queue.
+parameter EXTENSION_ZIFENCEI  = 0,
+
+// EXTENSION_ZILSD: Support for Zilsd load/store pair instructions
+parameter EXTENSION_ZILSD     = 0,
+
+// ----------------------------------------------------------------------------
+// Custom RISC-V extensions
+
+// EXTENSION_XH3B: Custom bit-extract-multiple instructions for Hazard3
+parameter EXTENSION_XH3BEXTM  = 0,
+
+// EXTENSION_XH3IRQ: Custom preemptive, prioritised interrupt support. Can be
+// disabled if an external interrupt controller (e.g. PLIC) is used. If
+// disabled, and NUM_IRQS > 1, the external interrupts are simply OR'd into
+// mip.meip.
+parameter EXTENSION_XH3IRQ    = 0,
+
+// EXTENSION_XH3PMPM: PMPCFGMx CSRs to enforce PMP regions in M-mode without
+// locking. Unlike ePMP mseccfg.rlb, locked and unlocked regions can coexist
+parameter EXTENSION_XH3PMPM   = 0,
+
+// EXTENSION_XH3POWER: Custom power management controls for Hazard3
+parameter EXTENSION_XH3POWER  = 0,
+
+// ----------------------------------------------------------------------------
+// Standard CSR support
+
+// Note the Zicsr extension is implied by any of CSR_M_MANDATORY, CSR_M_TRAP,
+// CSR_COUNTER.
+
+// CSR_M_MANDATORY: Bare minimum CSR support e.g. misa. Spec says must = 1 if
+// CSRs are present, but I won't tell anyone.
+parameter CSR_M_MANDATORY     = 1,
+
+// CSR_M_TRAP: Include M-mode trap-handling CSRs, and enable trap support.
+parameter CSR_M_TRAP          = 1,
+
+// CSR_COUNTER: Include performance counters and Zicntr CSRs
+parameter CSR_COUNTER         = 0,
+
+// U_MODE: Support the U (user) execution mode. In U mode, the core performs
+// unprivileged bus accesses, and software's access to CSRs is restricted.
+// Additionally, if the PMP is included, the core may restrict U-mode
+// software's access to memory.
+// Requires: CSR_M_TRAP.
+parameter U_MODE              = 0,
+
+// PMP_REGIONS: Number of physical memory protection regions, or 0 for no PMP.
+// PMP is more useful if U mode is supported, but this is not a requirement.
+parameter PMP_REGIONS         = 0,
+
+// PMP_GRAIN: This is the "G" parameter in the privileged spec. Minimum PMP
+// region size is 1 << (G + 2) bytes.  If G > 0, PMCFG.A can not be set to
+// NA4 (will get set to OFF instead). If G > 1, the G - 1 LSBs of pmpaddr are
+// read-only-0 when PMPCFG.A is OFF, and read-only-1 when PMPCFG.A is NAPOT.
+parameter PMP_GRAIN           = 0,
+
+// PMP_MATCH_NAPOT: Enable PMP support for the NAPOT (naturally-aligned
+// power-of-two) and NA4 (naturally-aligned four-byte) matching modes. When
+// disabled, attempting to select these modes will set the PMP region to OFF.
+parameter PMP_MATCH_NAPOT     = 1,
+
+// PMP_MATCH_TOR: Enable PMP support for the TOR (top-of-range) matching mode.
+// When disabled, attempting to select this mode will set the region to OFF.
+parameter PMP_MATCH_TOR       = 0,
+
+// PMPADDR_HARDWIRED: If a bit is 1, the corresponding region's pmpaddr and
+// pmpcfg registers are read-only. PMP_GRAIN is ignored on hardwired regions.
+// It's recommended to make hardwired regions the highest-numbered, so they
+// can be overridden by lower-numbered regions.
+parameter PMP_HARDWIRED       = {(PMP_REGIONS > 0 ? PMP_REGIONS : 1){1'b0}},
+
+// PMPADDR_HARDWIRED_ADDR: Values of pmpaddr registers whose PMP_HARDWIRED
+// bits are set to 1. Non-hardwired regions reset to all-zeroes.
+parameter PMP_HARDWIRED_ADDR  = {(PMP_REGIONS > 0 ? PMP_REGIONS : 1){32'h0}},
+
+// PMPCFG_RESET_VAL: Values of pmpcfg registers whose PMP_HARDWIRED bits are
+// set to 1. Non-hardwired regions reset to all zeroes.
+parameter PMP_HARDWIRED_CFG   = {(PMP_REGIONS > 0 ? PMP_REGIONS : 1){8'h00}},
+
+// DEBUG_SUPPORT: Support for run/halt and instruction injection from an
+// external Debug Module, support for Debug Mode, and Debug Mode CSRs.
+// Requires: CSR_M_MANDATORY, CSR_M_TRAP.
+parameter DEBUG_SUPPORT       = 0,
+
+// BREAKPOINT_TRIGGERS: Number of triggers which support type=2 execute=1
+// (but not store/load=1, i.e. not a watchpoint). Requires: DEBUG_SUPPORT
+parameter BREAKPOINT_TRIGGERS = 0,
+
+// ----------------------------------------------------------------------------
+// External interrupt support
+
+// NUM_IRQS: Number of external IRQs. Minimum 1, maximum 512. Note that if
+// EXTENSION_XH3IRQ (Hazard3 interrupt controller) is disabled then multiple
+// external interrupts are simply OR'd into mip.meip.
+parameter NUM_IRQS            = 1,
+
+// IRQ_PRIORITY_BITS: Number of priority bits implemented for each interrupt
+// in meipra, if EXTENSION_XH3IRQ is enabled. The number of distinct levels
+// is (1 << IRQ_PRIORITY_BITS). Minimum 0, max 4. Note that multiple priority
+// levels with a large number of IRQs will have a severe effect on timing.
+parameter IRQ_PRIORITY_BITS   = 0,
+
+// IRQ_INPUT_BYPASS: disable the input registers on the external interrupts,
+// to reduce latency by one cycle. Can be applied on an IRQ-by-IRQ basis.
+// Ignored if EXTENSION_XH3IRQ is disabled.
+parameter IRQ_INPUT_BYPASS    = {(NUM_IRQS > 0 ? NUM_IRQS : 1){1'b0}},
+
+// ----------------------------------------------------------------------------
+// ID registers
+
+// JEDEC JEP106-compliant vendor ID, can be left at 0 if "not implemented or
+// [...] this is a non-commercial implementation" (RISC-V spec).
+// 31:7 is continuation code count, 6:0 is ID. Parity bit is not stored.
+parameter MVENDORID_VAL       = 32'h0,
+
+// Pointer to configuration structure blob, or all-zeroes. Must be at least
+// 4-byte-aligned.
+parameter MCONFIGPTR_VAL      = 32'h0,
+
+// ----------------------------------------------------------------------------
+// Performance/size options
+
+// REDUCED_BYPASS: Remove all forwarding paths except X->X (so back-to-back
+// ALU ops can still run at 1 CPI), to save area.
+parameter REDUCED_BYPASS      = 0,
+
+// MULDIV_UNROLL: Bits per clock for multiply/divide circuit, if present. Must
+// be a power of 2.
+parameter MULDIV_UNROLL       = 1,
+
+// MUL_FAST: Use single-cycle multiply circuit for MUL instructions, retiring
+// to stage 3. The sequential multiply/divide circuit is still used for MULH*
+parameter MUL_FAST            = 0,
+
+// MUL_FASTER: Retire fast multiply results to stage 2 instead of stage 3.
+// Throughput is the same, but latency is reduced from 2 cycles to 1 cycle.
+// Requires: MUL_FAST.
+parameter MUL_FASTER          = 0,
+
+// MULH_FAST: extend the fast multiply circuit to also cover MULH*, and remove
+// the multiply functionality from the sequential multiply/divide circuit.
+// Requires: MUL_FAST
+parameter MULH_FAST           = 0,
+
+// FAST_BRANCHCMP: Instantiate a separate comparator (eq/lt/ltu) for branch
+// comparisons, rather than using the ALU. Improves fetch address delay,
+// especially if Zba extension is enabled. Disabling may save area.
+parameter FAST_BRANCHCMP      = 1,
+
+// RESET_REGFILE: whether to support reset of the general purpose registers.
+// There are around 1k bits in the register file, so the reset can be
+// disabled e.g. to permit block-RAM inference on FPGA.
+parameter RESET_REGFILE       = 0,
+
+// BRANCH_PREDICTOR: enable branch prediction. The branch predictor consists
+// of a single BTB entry which is allocated on a taken backward branch, and
+// cleared on a mispredicted nontaken branch, a fence.i or a trap. Successful
+// prediction eliminates the 1-cyle fetch bubble on a taken branch, usually
+// making tight loops faster.
+parameter BRANCH_PREDICTOR    = 0,
+
+// MTVEC_WMASK: Mask of which bits in mtvec are writable. Full writability is
+// recommended, because a common idiom in setup code is to set mtvec just
+// past code that may trap, as a hardware "try {...} catch" block.
+//
+// - The vectoring mode can be made fixed by clearing the LSB of MTVEC_WMASK
+//
+// - In vectored mode, the vector table must be aligned to its size, rounded
+//   up to a power of two.
+parameter MTVEC_WMASK         = 32'hfffffffd,
+
+// ----------------------------------------------------------------------------
+// Port size parameters (do not modify)
+
+parameter W_ADDR              = 32,   // Do not modify
+parameter W_DATA              = 32    // Do not modify
+) (
+	input  wire        clk,
+	input  wire        rst_n,
+
+	input  wire [31:0] instr_in,
+
+	output reg         instr_is_32bit,
+	output reg  [31:0] instr_out,
+
+	// If instruction is a non-final uop, need to suppress PC update, and null
+	// the PC offset in the mepc address in stage 3.
+	output wire        instr_out_is_uop,
+	output wire        instr_out_is_final_uop,
+	output wire        instr_out_uop_no_pc_update,
+	// Indicate instr_out is a uop from the noninterruptible part of a uop
+	// sequence. If one uop is noninterruptible, all following uops until the
+	// end of the sequence are also noninterruptible.
+	output wire        instr_out_uop_atomic,
+	// Current ucode sequence is stalled on downstream execution
+	input  wire        instr_out_uop_stall,
+	input  wire        instr_out_uop_clear,
+
+	// To regnum decoder in frontend
+	output wire [3:0]  df_uop_step,
+
+	output reg         invalid
+);
+
+/*****************************************************************************\
+|                      Copyright (C) 2021-2022 Luke Wren                      |
+|                     SPDX-License-Identifier: Apache-2.0                     |
+\*****************************************************************************/
+
+localparam RV_RS1_LSB = 15;
+localparam RV_RS1_BITS = 5;
+localparam RV_RS2_LSB = 20;
+localparam RV_RS2_BITS = 5;
+localparam RV_RD_LSB = 7;
+localparam RV_RD_BITS = 5;
+
+// Note: these are preprocessor macros, rather than the usual localparams,
+// because it's quite difficult to get a definitive citation from 1364-2005
+// for whether Z values are propagated through a localparam to a casez.
+// Multiple tools complain about it, so just this once I'll use macros.
+
+
+
+
+// Base ISA (some of these are Z now)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// M extension
+
+
+
+
+
+
+
+
+
+// A extension
+
+
+
+
+
+
+
+
+
+
+
+
+// Zba (address generation)
+
+
+
+
+// Zbb (basic bit manipulation)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Zbc (carry-less multiply)
+
+
+
+
+// Zbs (single-bit manipulation)
+
+
+
+
+
+
+
+
+
+// Zbkb (basic bit manipulation for crypto) (minus those in Zbb)
+
+
+
+
+
+
+// Zbkc is a subset of Zbc.
+
+// Zbkx (crossbar permutation)
+
+
+
+// Zilsd (load/store pair)
+
+
+
+// Hazard3 custom instructions
+
+// Xh3bextm (Hazard3 multi-bit extract): multi-bit versions of bext/bexti from Zbs
+
+
+
+// C Extension
+
+
+
+
+
+
+
+
+// addi16sp when rd=2:
+
+
+
+
+
+
+
+
+
+
+
+
+// jr if !rs2:
+
+// jalr if !rs2:
+
+
+
+
+// Zcb simple additional compressed instructions
+
+
+
+
+
+
+
+
+
+
+
+
+// Zclsd load/store pair instructions
+
+
+
+
+
+// Zcmp push/pop instructions
+
+
+
+
+
+
+
+// Copies provided here with 0 instead of ? so that these can be used to build 32-bit instructions in the decompressor
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Non-RV32I instructions for Zcb:
+
+
+
+
+
+// Non-RV32I instructions for Zclsd:
+
+
+
+
+
+localparam W_REGADDR = 5;
+localparam PASSTHROUGH = ~|EXTENSION_C;
+
+// Long-register formats: cr, ci, css
+// Short-register formats: ciw, cl, cs, cb, cj
+wire [W_REGADDR-1:0] rd_l  = instr_in[11:7];
+wire [W_REGADDR-1:0] rs1_l = instr_in[11:7];
+wire [W_REGADDR-1:0] rs2_l = instr_in[6:2];
+wire [W_REGADDR-1:0] rd_s  = {2'b01, instr_in[4:2]};
+wire [W_REGADDR-1:0] rs1_s = {2'b01, instr_in[9:7]};
+wire [W_REGADDR-1:0] rs2_s = {2'b01, instr_in[4:2]};
+
+// Mapping of cx -> x immediate formats (we are *expanding* instructions, not
+// decoding them):
+
+wire [31:0] imm_ci = {
+	{7{instr_in[12]}},
+	instr_in[6:2],
+	20'h00000
+};
+
+wire [31:0] imm_cj = {
+	instr_in[12],
+	instr_in[8],
+	instr_in[10:9],
+	instr_in[6],
+	instr_in[7],
+	instr_in[2],
+	instr_in[11],
+	instr_in[5:3],
+	{9{instr_in[12]}},
+	12'h000
+};
+
+wire [31:0] imm_cb ={
+	{4{instr_in[12]}},
+	instr_in[6:5],
+	instr_in[2],
+	13'h0000,
+	instr_in[11:10],
+	instr_in[4:3],
+	instr_in[12],
+	7'h00
+};
+
+wire [31:0] imm_c_lb = {
+	10'h0,
+	instr_in[5],
+	instr_in[6],
+	20'h00000
+};
+
+wire [31:0] imm_c_lh = {
+	10'h000,
+	instr_in[5],
+	1'b0,
+	20'h00000
+};
+
+function [31:0] rfmt_rd;  input [4:0] rd;  begin rfmt_rd  = {20'h00000, rd, 7'h00};   end endfunction
+function [31:0] rfmt_rs1; input [4:0] rs1; begin rfmt_rs1 = {12'h000, rs1, 15'h0000}; end endfunction
+function [31:0] rfmt_rs2; input [4:0] rs2; begin rfmt_rs2 = {7'h00, rs2, 20'h00000};  end endfunction
+
+// ----------------------------------------------------------------------------
+// Push/pop and friends
+
+// The longest uop sequence is a maximal cm.popretz:
+//
+// - 13x lw                     (counter = 0..12)
+// - 1x addi to set a0 to zero  (counter = 13   ) < atomic section
+// - 1x jalr to jump through ra (counter = 14   ) < atomic section
+// - 1x addi to adjust sp       (counter = 15   ) < atomic section
+
+wire [3:0] uop_ctr;
+reg  [3:0] uop_ctr_nxt_in_seq;
+reg        in_uop_seq;
+reg        uop_no_pc_update;
+
+wire zcmp_is_pushpop = instr_in[12];
+wire uop_seq_end      = |EXTENSION_ZCMP && (zcmp_is_pushpop ? uop_ctr == 4'hf : uop_ctr[0]);
+wire uop_atomic       = |EXTENSION_ZCMP && (zcmp_is_pushpop ? uop_ctr >= 4'he : uop_ctr[0]);
+
+wire [3:0] uop_ctr_nxt =
+	instr_out_uop_clear ? 4'h0    :
+	instr_out_uop_stall ? uop_ctr : uop_ctr_nxt_in_seq;
+
+assign instr_out_is_uop = in_uop_seq;
+assign instr_out_is_final_uop = uop_seq_end;
+assign instr_out_uop_atomic = uop_atomic;
+assign instr_out_uop_no_pc_update = uop_no_pc_update;
+assign df_uop_step = uop_ctr;
+
+// The offset from current sp value to the lowest-addressed saved register, +64.
+wire [3:0] zcmp_rlist = instr_in[7:4];
+wire [3:0] zcmp_n_regs = zcmp_rlist == 4'hf ? 4'hd : zcmp_rlist - 4'h3;
+wire       zcmp_rlist_invalid = zcmp_rlist < 4'h4 || (|EXTENSION_E && zcmp_rlist > 4'h6);
+
+wire [11:0] zcmp_stack_adj_base =
+	zcmp_rlist == 4'hf ? 12'h040 :
+	zcmp_rlist >= 4'hc ? 12'h030 :
+	zcmp_rlist >= 4'h8 ? 12'h020 : 12'h010;
+
+wire [11:0] zcmp_stack_adj = zcmp_stack_adj_base + {6'h00, instr_in[3:2], 4'h0};
+
+// Note we perform all load/stores before moving the stack pointer.
+wire [11:0] zcmp_stack_lw_offset = -{6'h00, {zcmp_n_regs - uop_ctr}, 2'h0} + zcmp_stack_adj;
+wire [11:0] zcmp_stack_sw_offset = -{6'h00, {zcmp_n_regs - uop_ctr}, 2'h0};
+
+wire [4:0] zcmp_ls_reg =
+	uop_ctr == 4'h0 ? 5'd01 : // ra
+	uop_ctr == 4'h1 ? 5'd08 : // s0
+	uop_ctr == 4'h2 ? 5'd09 : // s1
+	5'd15 + {1'b0, uop_ctr};  // s2-s11 (s2 == x18)
+
+wire [31:0] zcmp_push_sw_instr = 32'b00000000000000000010000000100011 | rfmt_rs1(5'd2) | rfmt_rs2(zcmp_ls_reg) | {
+	zcmp_stack_sw_offset[11:5], 13'h0000, zcmp_stack_sw_offset[4:0], 7'h00
+};
+
+wire [31:0] zcmp_pop_lw_instr = 32'b00000000000000000010000000000011 | rfmt_rd(zcmp_ls_reg) | rfmt_rs1(5'd2)| {
+	zcmp_stack_lw_offset[11:0], 20'h00000
+};
+
+wire [31:0] zcmp_push_stack_adj_instr = 32'b00000000000000000000000000010011 | rfmt_rd(5'd2) | rfmt_rs1(5'd2) | {
+	-zcmp_stack_adj,
+	20'h00000
+};
+
+wire [31:0] zcmp_pop_stack_adj_instr = 32'b00000000000000000000000000010011 | rfmt_rd(5'd2) | rfmt_rs1(5'd2) | {
+	zcmp_stack_adj,
+	20'h00000
+};
+
+wire [4:0] zcmp_sa01_r1s = {|instr_in[9:8], ~|instr_in[9:8], instr_in[9:7]};
+wire [4:0] zcmp_sa01_r2s = {|instr_in[4:3], ~|instr_in[4:3], instr_in[4:2]};
+
+wire       zcmp_sa01_invalid = |EXTENSION_E && |{instr_in[9:8], instr_in[4:3]};
+
+// ----------------------------------------------------------------------------
+
+generate
+if (PASSTHROUGH) begin: instr_passthrough
+	always @ (*) begin
+		instr_is_32bit = 1'b1;
+		instr_out = instr_in;
+		invalid = 1'b0;
+	end
+end else begin: instr_decompress
+	always @ (*) begin
+		if (instr_in[1:0] == 2'b11) begin
+			instr_is_32bit = 1'b1;
+			instr_out = instr_in;
+			invalid = 1'b0;
+			in_uop_seq = 1'b0;
+			uop_no_pc_update = 1'b0;
+			uop_ctr_nxt_in_seq = uop_ctr;
+		end else begin
+			instr_is_32bit = 1'b0;
+			instr_out = 32'd0;
+			invalid = 1'b0;
+			in_uop_seq = 1'b0;
+			uop_no_pc_update = 1'b0;
+			uop_ctr_nxt_in_seq = uop_ctr;
+			casez (instr_in[15:0])
+			16'b000???????????00: begin
+				instr_out = 32'b00000000000000000000000000010011 | rfmt_rd(rd_s) | rfmt_rs1(5'd2)
+					| {2'h0, instr_in[10:7], instr_in[12:11], instr_in[5], instr_in[6], 2'b00, 20'h00000};
+				invalid   = ~|instr_in[12:2]; // Always-invalid all-zeroes instruction
+			end
+			16'b010???????????00:   instr_out = 32'b00000000000000000010000000000011 | rfmt_rd(rd_s) | rfmt_rs1(rs1_s)
+				| {5'h00, instr_in[5], instr_in[12:10], instr_in[6], 2'b00, 20'h00000};
+			16'b110???????????00:   instr_out = 32'b00000000000000000010000000100011 | rfmt_rs2(rs2_s) | rfmt_rs1(rs1_s)
+				| {5'h00, instr_in[5], instr_in[12], 13'h0000, instr_in[11:10], instr_in[6], 2'b00, 7'h00};
+			16'b000???????????01: instr_out = 32'b00000000000000000000000000010011 | rfmt_rd(rd_l) | rfmt_rs1(rs1_l) | imm_ci;
+			16'b001???????????01:  instr_out = 32'b00000000000000000000000001101111  | rfmt_rd(5'd1) | imm_cj;
+			16'b101???????????01:    instr_out = 32'b00000000000000000000000001101111  | rfmt_rd(5'd0) | imm_cj;
+			16'b010???????????01:   instr_out = 32'b00000000000000000000000000010011 | rfmt_rd(rd_l) | imm_ci;
+			16'b011???????????01: begin
+				if (rd_l == 5'd2) begin
+					// addi16sp
+					instr_out = 32'b00000000000000000000000000010011 | rfmt_rd(5'd2) | rfmt_rs1(5'd2) |
+						{{3{instr_in[12]}}, instr_in[4:3], instr_in[5], instr_in[2], instr_in[6], 24'h000000};
+				end else begin
+					instr_out = 32'b00000000000000000000000000110111 | rfmt_rd(rd_l) | {{15{instr_in[12]}}, instr_in[6:2], 12'h000};
+				end
+				invalid = ~|{instr_in[12], instr_in[6:2]}; // RESERVED if imm == 0
+			end
+			16'b0000??????????10: instr_out = 32'b00000000000000000001000000010011 | rfmt_rd(rs1_l) | rfmt_rs1(rs1_l) | imm_ci;
+			16'b100001????????01: instr_out = 32'b01000000000000000101000000010011 | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | imm_ci;
+			16'b100000????????01: instr_out = 32'b00000000000000000101000000010011 | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | imm_ci;
+			16'b100?10????????01: instr_out = 32'b00000000000000000111000000010011 | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | imm_ci;
+			16'b100011???11???01:  instr_out = 32'b00000000000000000111000000110011  | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | rfmt_rs2(rs2_s);
+			16'b100011???10???01:   instr_out = 32'b00000000000000000110000000110011   | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | rfmt_rs2(rs2_s);
+			16'b100011???01???01:  instr_out = 32'b00000000000000000100000000110011  | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | rfmt_rs2(rs2_s);
+			16'b100011???00???01:  instr_out = 32'b01000000000000000000000000110011  | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | rfmt_rs2(rs2_s);
+			16'b1001??????????10: begin
+				if (|rs2_l) begin
+					instr_out = 32'b00000000000000000000000000110011 | rfmt_rd(rd_l) | rfmt_rs1(rs1_l) | rfmt_rs2(rs2_l);
+				end else if (|rs1_l) begin // jalr
+					instr_out = 32'b00000000000000000000000001100111 | rfmt_rd(5'd1) | rfmt_rs1(rs1_l);
+				end else begin // ebreak
+					instr_out = 32'b00000000000100000000000001110011;
+				end
+			end
+			16'b1000??????????10: begin
+				if (|rs2_l) begin // mv
+					instr_out = 32'b00000000000000000000000000110011 | rfmt_rd(rd_l) | rfmt_rs2(rs2_l);
+				end else begin // jr
+					instr_out = 32'b00000000000000000000000001100111 | rfmt_rs1(rs1_l);
+					invalid = ~|rs1_l; // RESERVED
+				end
+			end
+			16'b010???????????10: begin
+				instr_out = 32'b00000000000000000010000000000011 | rfmt_rd(rd_l) | rfmt_rs1(5'd2) |
+					{4'h0, instr_in[3:2], instr_in[12], instr_in[6:4], 2'b00, 20'h00000};
+				invalid = ~|rd_l; // RESERVED
+			end
+			16'b110???????????10:    instr_out = 32'b00000000000000000010000000100011 | rfmt_rs2(rs2_l) | rfmt_rs1(5'd2)
+				| {4'h0, instr_in[8:7], instr_in[12], 13'h0000, instr_in[11:9], 2'b00, 7'h00};
+			16'b110???????????01:     instr_out = 32'b00000000000000000000000001100011 | rfmt_rs1(rs1_s) | imm_cb;
+			16'b111???????????01:     instr_out = 32'b00000000000000000001000001100011 | rfmt_rs1(rs1_s) | imm_cb;
+
+			// Optional Zcb instructions:
+			16'b100000????????00: begin
+				instr_out = 32'b00000000000000000100000000000011    | rfmt_rd(rd_s)  | rfmt_rs1(rs1_s) | imm_c_lb;
+				invalid = ~|EXTENSION_ZCB;
+			end
+			16'b100001???0????00: begin
+				instr_out = 32'b00000000000000000101000000000011    | rfmt_rd(rd_s)  | rfmt_rs1(rs1_s) | imm_c_lh;
+				invalid = ~|EXTENSION_ZCB;
+			end
+			16'b100001???1????00: begin
+				instr_out = 32'b00000000000000000001000000000011     | rfmt_rd(rd_s)  | rfmt_rs1(rs1_s) | imm_c_lh;
+				invalid = ~|EXTENSION_ZCB;
+			end
+			16'b100010????????00: begin
+				instr_out = 32'b00000000000000000000000000100011     | rfmt_rs2(rd_s) | rfmt_rs1(rs1_s) | imm_c_lb >> 13;
+				invalid = ~|EXTENSION_ZCB;
+			end
+			16'b100011???0????00: begin
+				instr_out = 32'b00000000000000000001000000100011     | rfmt_rs2(rd_s) | rfmt_rs1(rs1_s) | imm_c_lh >> 13;
+				invalid = ~|EXTENSION_ZCB;
+			end
+			16'b100111???1100001: begin
+				instr_out = 32'b00000000000000000111000000010011   | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | 32'h0ff00000;
+				invalid = ~|EXTENSION_ZCB;
+			end
+			16'b100111???1100101: begin
+				instr_out = 32'b01100000010000000001000000010011 | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s);
+				invalid = ~|EXTENSION_ZCB || ~|EXTENSION_ZBB;
+			end
+			16'b100111???1101001: begin
+				instr_out = 32'b00001000000000000100000000110011 | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s);
+				invalid = ~|EXTENSION_ZCB || ~|EXTENSION_ZBB;
+			end
+			16'b100111???1101101: begin
+				instr_out = 32'b01100000010100000001000000010011 | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s);
+				invalid = ~|EXTENSION_ZCB || ~|EXTENSION_ZBB;
+			end
+			16'b100111???1110101: begin
+				instr_out = 32'b00000000000000000100000000010011   | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | 32'hfff00000;
+				invalid = ~|EXTENSION_ZCB;
+			end
+			16'b100111???10???01: begin
+				instr_out = 32'b00000010000000000000000000110011    | rfmt_rd(rs1_s) | rfmt_rs1(rs1_s) | rfmt_rs2(rs2_s);
+				invalid = ~|EXTENSION_ZCB || ~|EXTENSION_M;
+			end
+
+			// Optional Zclsd instructions:
+			16'b011??????????000: begin
+				instr_out = 32'b00000000000000000011000000000011 | rfmt_rd(rd_s) | rfmt_rs1(rs1_s)
+					| {4'h0, instr_in[6:5], instr_in[12:10], 3'b000, 20'h00000};
+				invalid = ~|EXTENSION_ZILSD || ~|EXTENSION_ZCLSD;
+			end
+			16'b111??????????000: begin
+				instr_out = 32'b00000000000000000011000000100011 | rfmt_rs2(rs2_s) | rfmt_rs1(rs1_s)
+					| {4'h0, instr_in[6:5], instr_in[12], 13'h0000, instr_in[11:10], 3'b000, 7'h00};
+				invalid = ~|EXTENSION_ZILSD || ~|EXTENSION_ZCLSD;
+			end
+			16'b011?????0?????10: begin
+				instr_out = 32'b00000000000000000011000000000011 | rfmt_rd(rd_l) | rfmt_rs1(5'd2) |
+					{3'h0, instr_in[4:2], instr_in[12], instr_in[6:5], 3'b000, 20'h00000};
+				invalid = ~|EXTENSION_ZILSD || ~|EXTENSION_ZCLSD || ~|rd_l; // RESERVED
+			end
+			16'b111??????????010: begin
+				instr_out = 32'b00000000000000000011000000100011 | rfmt_rs2(rs2_l) | rfmt_rs1(5'd2)
+					| {3'h0, instr_in[9:7], instr_in[12], 13'h0000, instr_in[11:10], 3'b000, 7'h00};
+				invalid = ~|EXTENSION_ZILSD || ~|EXTENSION_ZCLSD;
+			end
+
+			// Optional Zcmp instructions:
+			16'b10111000??????10: if (~|EXTENSION_ZCMP || zcmp_rlist_invalid) begin
+				invalid = 1'b1;
+			end else if (uop_ctr == 4'hf) begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = 4'h0;
+				instr_out = zcmp_push_stack_adj_instr;
+			end else begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = uop_ctr + 4'h1;
+				instr_out = zcmp_push_sw_instr;
+				uop_no_pc_update = 1'b1;
+				if (uop_ctr_nxt_in_seq == zcmp_n_regs) begin
+					uop_ctr_nxt_in_seq = 4'hf;
+				end
+			end
+
+			16'b10111010??????10: if (~|EXTENSION_ZCMP || zcmp_rlist_invalid) begin
+				invalid = 1'b1;
+			end else if (uop_ctr == 4'hf) begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = 4'h0;
+				instr_out = zcmp_pop_stack_adj_instr;
+			end else begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = uop_ctr + 4'h1;
+				uop_no_pc_update = 1'b1;
+				instr_out = zcmp_pop_lw_instr;
+				if (uop_ctr_nxt_in_seq == zcmp_n_regs) begin
+					uop_ctr_nxt_in_seq = 4'hf;
+				end
+			end
+
+			16'b10111110??????10: if (~|EXTENSION_ZCMP || zcmp_rlist_invalid) begin
+				invalid = 1'b1;
+			end else if (uop_ctr == 4'he) begin
+				// Note although this is only the first instruction in the uninterruptible sequence,
+				// we mark this instruction as uninterruptible: there is some special case logic to
+				// allow this jump to execute without flushing the final stack adjust uop, which can
+				// cause the wrong exception PC to be sampled if this uop is interrupted.
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = uop_ctr + 4'h1;
+				instr_out = 32'b00000000000000000000000001100111 | rfmt_rs1(5'd1);
+			end else if (uop_ctr == 4'hf) begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = 4'h0;
+				uop_no_pc_update = 1'b1;
+				instr_out = zcmp_pop_stack_adj_instr;
+			end else begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = uop_ctr + 4'h1;
+				instr_out = zcmp_pop_lw_instr;
+				uop_no_pc_update = 1'b1;
+				if (uop_ctr_nxt_in_seq == zcmp_n_regs) begin
+					uop_ctr_nxt_in_seq = 4'he;
+				end
+			end
+
+			16'b10111100??????10: if (~|EXTENSION_ZCMP || zcmp_rlist_invalid) begin
+				invalid = 1'b1;
+			end else if (uop_ctr == 4'hd) begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = uop_ctr + 4'h1;
+				uop_no_pc_update = 1'b1;
+				instr_out = 32'b00000000000000000000000000010011 | rfmt_rd(5'd10); // li a0, 0
+			end else if (uop_ctr == 4'he) begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = uop_ctr + 4'h1;
+				instr_out = 32'b00000000000000000000000001100111 | rfmt_rs1(5'd1);
+			end else if (uop_ctr == 4'hf) begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = 4'h0;
+				uop_no_pc_update = 1'b1;
+				instr_out = zcmp_pop_stack_adj_instr;
+			end else begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = uop_ctr + 4'h1;
+				uop_no_pc_update = 1'b1;
+				instr_out = zcmp_pop_lw_instr;
+				if (uop_ctr_nxt_in_seq == zcmp_n_regs) begin
+					uop_ctr_nxt_in_seq = 4'hd;
+				end
+			end
+
+			16'b101011???01???10: if (~|EXTENSION_ZCMP || zcmp_sa01_invalid) begin
+				invalid = 1'b1;
+			end else if (uop_ctr == 4'h0) begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = uop_ctr + 4'h1;
+				uop_no_pc_update = 1'b1;
+				instr_out = 32'b00000000000000000000000000010011 | rfmt_rd(zcmp_sa01_r1s) | rfmt_rs1(5'd10);
+			end else begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = 4'h0;
+				instr_out = 32'b00000000000000000000000000010011 | rfmt_rd(zcmp_sa01_r2s) | rfmt_rs1(5'd11);
+			end
+
+			16'b101011???11???10: if (~|EXTENSION_ZCMP || zcmp_sa01_invalid) begin
+				invalid = 1'b1;
+			end else if (uop_ctr == 4'h0) begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = uop_ctr + 4'h1;
+				uop_no_pc_update = 1'b1;
+				instr_out = 32'b00000000000000000000000000010011 | rfmt_rd(5'd10) | rfmt_rs1(zcmp_sa01_r1s);
+			end else begin
+				in_uop_seq = 1'b1;
+				uop_ctr_nxt_in_seq = 4'h0;
+				instr_out = 32'b00000000000000000000000000010011 | rfmt_rd(5'd11) | rfmt_rs1(zcmp_sa01_r2s);
+			end
+
+			default: invalid = 1'b1;
+			endcase
+		end
+	end
+end
+endgenerate
+
+generate
+if (EXTENSION_ZCMP) begin: have_uop_ctr
+	reg [3:0] uop_ctr_r;
+	assign uop_ctr = uop_ctr_r;
+	always @ (posedge clk or negedge rst_n) begin
+		if (!rst_n) begin
+			uop_ctr_r <= 4'h0;
+		end else begin
+			uop_ctr_r <= uop_ctr_nxt;
+
+
+
+
+
+
+
+
+
+
+		end
+	end
+end else begin: no_uop_ctr
+	assign uop_ctr = 4'h0;
+end
+endgenerate
+
+endmodule
+
+
+`default_nettype wire
+

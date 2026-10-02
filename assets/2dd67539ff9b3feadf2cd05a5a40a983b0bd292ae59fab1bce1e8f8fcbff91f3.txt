@@ -1,0 +1,58 @@
+module origen_191265(
+    input ide_dior,
+    input ide_diow,
+    input [2:0] ide_cs,
+    input [2:0] ide_da,
+    inout [15:0] ide_data_bus
+);
+
+    reg [15:0] data_out;
+    reg [7:0] cmd;
+    reg [7:0] status;
+    reg [7:0] drvhead;
+    reg [15:0] fifo;
+
+    wire is_rd = ide_dior & (|ide_cs);
+    wire is_wr = ide_diow & (|ide_cs);
+
+    always @(*) begin
+        if (is_rd) begin
+            if (ide_da == 3'd0) begin
+                if (fifo > 0) begin
+                    fifo = fifo - 1;
+                    data_out = 16'h5aa5;
+                end else begin
+                    status = 8'h50;
+                    cmd = 8'h00;
+                end
+            end else if (ide_da == 3'd7) begin
+                data_out = {8'h00, status};
+            end
+        end else if (is_wr) begin
+            if (ide_da == 3'd6) begin
+                drvhead = ide_data_bus[7:0];
+            end else if (ide_da == 3'd7) begin
+                cmd = ide_data_bus[7:0];
+                if (cmd == 8'h20) begin
+                    status = 8'h58;
+                    fifo = 16'h0100;
+                end
+            end
+        end
+    end
+
+    assign ide_data_bus = is_rd ? data_out : 16'bz;
+
+    initial begin
+        $display("fake_ide module initialized");
+    end
+
+    always @(posedge is_rd) begin
+        $display("Read operation: addr=%b, data=%h", ide_da, data_out);
+    end
+
+    always @(posedge is_wr) begin
+        $display("Write operation: addr=%b, data=%h", ide_da, ide_data_bus[7:0]);
+    end
+
+endmodule

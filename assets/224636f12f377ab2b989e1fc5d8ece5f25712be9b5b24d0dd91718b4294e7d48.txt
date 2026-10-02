@@ -1,0 +1,24 @@
+This module is a synchronous finite-state machine with three states (S0, S1, S2) that detects specific patterns in an input stream and generates an output. It operates on a rising clock edge and includes an asynchronous active-high reset.
+
+Inputs:
+- **clk**: Clock signal
+- **rst**: Asynchronous reset; when high, the system returns to initial state S0 with output 0
+- **in**: Single-bit input data stream
+
+Output:
+- **out**: Single-bit output, registered (updated on clock edges)
+
+Behavior:
+From reset (state S0, output 0):
+- If `in` is 1, transition to S1 (output remains 0)
+- If `in` is 0, remain in S0 (output 0)
+
+From S1 (output 0):
+- If `in` is 1, transition to S0 and set output to 1
+- If `in` is 0, transition to S2 (output 0)
+
+From S2 (output 0):
+- If `in` is 1, remain in S2 and set output to 1
+- If `in` is 0, transition to S1 (output 0)
+
+Essentially, the output is 1 only in two specific transitions: from S1 to S0 when `in` is 1, or staying in S2 when `in` is 1. The design recognizes sequences where `in` is high at particular state positions, generating a pulse-like output under those conditions.

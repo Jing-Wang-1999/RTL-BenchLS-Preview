@@ -1,0 +1,56 @@
+always @ (posedge clk or negedge rstn)
+    if(~rstn) begin
+        stat <= IDLE;
+        itoa_en <= 1'b0;
+        itoa_val <= 0;
+        vcnt <= 0;
+        cnt <= 0;
+        eov <= 8'h20;
+    end else begin
+        itoa_en <= 1'b0;
+        case(stat)
+            IDLE: if(i_en)
+                stat <= SELECT;
+            SELECT: begin
+                if         (vcnt==3'd0) begin
+                    vcnt <= vcnt + 3'd1;
+                    stat <= WAIT;
+                    itoa_en <= 1'b1;
+                    itoa_val <= i_val0;
+                    eov <= 8'h20;
+                end else if(vcnt==3'd1) begin
+                    vcnt <= vcnt + 3'd1;
+                    stat <= WAIT;
+                    itoa_en <= 1'b1;
+                    itoa_val <= i_val1;
+                    eov <= 8'h20;
+                end else if(vcnt==3'd2) begin
+                    vcnt <= vcnt + 3'd1;
+                    stat <= WAIT;
+                    itoa_en <= 1'b1;
+                    itoa_val <= i_val2;
+                    eov <= 8'h20;
+                end else if(vcnt==3'd3) begin
+                    vcnt <= vcnt + 3'd1;
+                    stat <= WAIT;
+                    itoa_en <= 1'b1;
+                    itoa_val <= i_val3;
+                    eov <= 8'h0A;
+                end else begin
+                    vcnt <= 3'd0;
+                    stat <= IDLE;
+                    eov <= 8'h20;
+                end
+            end
+            WAIT:
+                stat <= PARSING;
+            PARSING: if(itoa_oen)
+                stat <= SENDING;
+            default: //SENDING:
+                if(tx_rdy) begin
+                    cnt <= cnt + 3'd1;
+                    if(cnt==3'd7)
+                        stat <= SELECT;
+                end
+        endcase
+    end

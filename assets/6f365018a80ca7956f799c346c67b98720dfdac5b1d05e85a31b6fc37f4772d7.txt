@@ -1,0 +1,63 @@
+The Verilog module defines a register file with 32 registers, each 32 bits wide, intended to store and provide values to specific output registers commonly used in a processor. This module includes mechanisms for reading from and writing to these registers.
+
+1. **Primary Function:** The module manages a 32-register file by facilitating read and write operations based on control signals, specifically for processor register operations.
+
+2. **Control Flow and Decision Points:**
+   - On reset (`rst`), all 32 registers are initialized to zero.
+   - On each positive clock edge (`clk`), if `RegWrite` is asserted and `Wt_addr` is not zero, the data input `Wt_data` is written to the register specified by `Wt_addr`.
+
+3. **Data Processing and Interactions:**
+   - For any read operation, the values in the registers specified by `Rs1_addr` and `Rs2_addr` are output as `Rs1_data` and `Rs2_data` respectively.
+   - If `Rs1_addr` or `Rs2_addr` is zero, the corresponding output (`Rs1_data` or `Rs2_data`) will be zero, simulating a zero register.
+   - In every clock cycle, specific registers are continuously output to named signals (`x0`, `ra`, `sp`, `gp`, `tp`, `t0`, `t1`, `t2`, `s0`, `s1`, `a0`, `a1`, `a2`, `a3`, `a4`, `a5`, `a6`, `a7`, `s2`, `s3`, `s4`, `s5`, `s6`, `s7`, `s8`, `s9`, `s10`, `s11`, `t3`, `t4`, `t5`, `t6`) representing various registers in a processor.
+
+This structure ensures efficient read/write operations based on the external control signals while maintaining persistent outputs for critical registers typically used in processor operations.
+
+Module Interface:
+module datapath_register_bank (
+  input wire clk,
+  input wire rst,
+  input wire RegWrite,
+  input wire [4:0] Rs1_addr,
+  input wire [4:0] Rs2_addr,
+  input wire [4:0] Wt_addr,
+  input wire [31:0] Wt_data,
+  output reg [31:0] Rs1_data,
+  output reg [31:0] Rs2_data,
+  output reg [31:0] x0,
+  output reg [31:0] ra,
+  output reg [31:0] sp,
+  output reg [31:0] gp,
+  output reg [31:0] tp,
+  output reg [31:0] t0,
+  output reg [31:0] t1,
+  output reg [31:0] t2,
+  output reg [31:0] s0,
+  output reg [31:0] s1,
+  output reg [31:0] a0,
+  output reg [31:0] a1,
+  output reg [31:0] a2,
+  output reg [31:0] a3,
+  output reg [31:0] a4,
+  output reg [31:0] a5,
+  output reg [31:0] a6,
+  output reg [31:0] a7,
+  output reg [31:0] s2,
+  output reg [31:0] s3,
+  output reg [31:0] s4,
+  output reg [31:0] s5,
+  output reg [31:0] s6,
+  output reg [31:0] s7,
+  output reg [31:0] s8,
+  output reg [31:0] s9,
+  output reg [31:0] s10,
+  output reg [31:0] s11,
+  output reg [31:0] t3,
+  output reg [31:0] t4,
+  output reg [31:0] t5,
+  output reg [31:0] t6
+);
+
+Behavioral Clarifications:
+- rst is synchronous active-high. There is one sequential always block (posedge clk or posedge rst) for register writes, and one combinational always block (*) for all read outputs including the 32 named register outputs.
+- The named register outputs (x0 through t6) follow the RISC-V ABI register mapping: x0=reg[0], ra=reg[1], sp=reg[2], ..., t6=reg[31].

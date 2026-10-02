@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+"""Evaluate the three complete upstream dma_if_axi cocotb benches."""
+import argparse, concurrent.futures, hashlib, json, os, shutil, signal, subprocess, time
+from pathlib import Path
+import xml.etree.ElementTree as ET
+ENV=Path('/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/environment')
+TOOLS=Path('/home/jwangjw/anaconda3/envs/securitylab/bin')
+def execute(point,tree,out):
+    name=point['target'];cwd=tree/'tb'/name;log=out/(name+'.log');xml=cwd/'results.xml';start=time.monotonic()
+    env={**os.environ,'PATH':str(ENV/'bin')+':'+str(TOOLS)+':'+os.environ['PATH'],'PYTHONPATH':str(tree/'tb'),'RANDOM_SEED':'1','PYTHONDONTWRITEBYTECODE':'1'}
+    for key in ['TESTCASE','COCOTB_TEST_FILTER','MODULE','TOPLEVEL','COCOTB_RESULTS_FILE','OFFSET_GROUP']:env.pop(key,None)
+    cmd=['make','SIM=icarus','WAVES=0']
+    with log.open('w') as f:
+        p=subprocess.Popen(cmd,cwd=cwd,env=env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+        try:rc=p.wait(timeout=900);timed=False
+        except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait();rc=None;timed=True
+    artifact=cwd/'sim_build/sim.vvp';cases=[];parse_error=None
+    if xml.is_file():
+        try:cases=ET.parse(xml).getroot().findall('.//testcase')
+        except ET.ParseError as e:parse_error=str(e)
+        shutil.copy2(xml,out/(name+'.xml'))
+    names=[c.get('name') for c in cases];failures=sum(bool(c.findall('failure') or c.findall('error') or c.findall('skipped')) for c in cases)
+    passed=rc==0 and not timed and artifact.is_file() and set(names)==set(point['expected_internal_test_names']) and len(names)==len(set(names)) and failures==0
+    return {'id':point['id'],'target':name,'command':cmd,'cwd':str(cwd),'environment':{'PATH':env['PATH'],'PYTHONPATH':env['PYTHONPATH'],'RANDOM_SEED':'1'},'exit_code':rc,'timeout':timed,'seconds':round(time.monotonic()-start,3),'compile_valid':artifact.is_file(),'internal_test_names':names,'internal_failures_or_skips':failures,'xml_parse_error':parse_error,'passed':passed,'log':str(log),'log_sha256':hashlib.sha256(log.read_bytes()).hexdigest(),'xml':str(out/(name+'.xml')) if xml.is_file() else None}
+def main():
+    ap=argparse.ArgumentParser();ap.add_argument('package',type=Path);ap.add_argument('--rtl-dir',type=Path);ap.add_argument('--output',required=True,type=Path);a=ap.parse_args();a.package=a.package.resolve();a.output=a.output.resolve();a.output.mkdir(parents=True,exist_ok=False)
+    meta=json.loads((a.package/'meta.json').read_text());tree=a.output/'work';shutil.copytree(a.package/'source',tree)
+    if a.rtl_dir:
+        for rel in meta['rtl_files']:
+            p=a.rtl_dir.resolve()/rel
+            if not p.is_file():raise FileNotFoundError('Required candidate RTL missing: '+str(p))
+            shutil.copy2(p,tree/rel)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:rows=list(pool.map(lambda p:execute(p,tree,a.output),meta['testpoints']))
+    result={'compile_valid':all(r['compile_valid'] for r in rows),'passed_testpoints':sum(r['passed'] for r in rows),'total_testpoints':len(rows),'score':sum(r['passed'] for r in rows)/len(rows),'testpoints':rows}
+    (a.output/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items() if k!='testpoints'}))
+if __name__=='__main__':main()

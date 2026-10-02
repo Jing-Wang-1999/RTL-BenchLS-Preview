@@ -1,0 +1,48 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/1136",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/1134",
+  "repository": "lowRISC/ibex",
+  "pr_number": 1136,
+  "issue_number": 1134,
+  "verilog_files": [
+    "rtl/ibex_cs_registers.sv"
+  ],
+  "deletions": 0,
+  "additions": 3,
+  "patches": [
+    {
+      "filename": "rtl/ibex_cs_registers.sv",
+      "patch": "@@ -532,6 +532,9 @@ module ibex_cs_registers #(\n             dcsr_d.prv = PRIV_LVL_M;\n           end\n \n+          // Read-only for SW\n+          dcsr_d.cause = dcsr_q.cause;\n+\n           // currently not supported:\n           dcsr_d.nmip = 1'b0;\n           dcsr_d.mprven = 1'b0;",
+      "additions": 3,
+      "deletions": 0,
+      "changes": 3
+    }
+  ],
+  "pr_info": {
+    "title": "[rtl] Fix illegal write to DCSR cause field",
+    "body": "- This field is read-only to software, and so should retain its previous\r\n  value on a write. This fixes #1134.\r\n\r\nSigned-off-by: Tom Roberts <tomroberts@lowrisc.org>",
+    "state": "closed",
+    "created_at": "2020-10-14T15:06:03Z",
+    "updated_at": "2020-10-14T16:35:05Z",
+    "merged_at": "2020-10-14T16:35:01Z",
+    "user": "tomeroberts"
+  },
+  "issue_info": {
+    "title": "Access rights - Illegal Write to Read Only Field - DCSR's cause",
+    "body": "####  RISC-V Specification\r\n\r\n> External Debug Support [4.8.1]\r\n\r\n####  Issue Description\r\n\r\nA read only field of `dcsr` is written. \r\n\r\n#### Steps to Reproduce\r\n\r\nAs shown below, while in debug mode, the instruction `csrrwi x17, dcsr, 0x4` updates the value of the `cause` field of `dcsr`, which has a read only access right.\r\n\r\n![dcsr_cause_write](https://user-images.githubusercontent.com/54367010/95985860-6ff77800-0e25-11eb-916e-ab3b01f116b6.PNG)\r\n\r\n---\r\nProduct: OneSpin 360 DV-Verify\r\nApp: Processor Verification App\r\nTool's version: 2020.2.0",
+    "labels": [
+      "Type:Bug"
+    ],
+    "state": "closed",
+    "created_at": "2020-10-14T12:16:55Z",
+    "updated_at": "2020-10-14T16:35:01Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 106
+  },
+  "task_id": "lowRISC_ibex_1136_1134",
+  "lec_status": "useful_pass",
+  "base_commit": "1a9545baaf973c361d4ee5ac7b715d5957a4ceef",
+  "head_commit": "5b77ee678c319757de314944d7d2512490e8a50f"
+}

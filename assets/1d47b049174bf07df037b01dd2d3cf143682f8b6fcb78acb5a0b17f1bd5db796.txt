@@ -1,0 +1,49 @@
+module autovcoder_024639 (
+    EX_MA_RegWr,
+    EX_MA_MemtoReg,
+    EX_MA_MemWr,  // 完成
+    ID_EX_IR,
+    EX_MA_IR,
+    MA_WB_IR,
+    ID_EX_MemWr,
+    MA_WB_RegWr,
+    ALUSrc_A,
+    ALUSrc_B,
+    MemSrc,
+    ALUSrc
+);
+  input EX_MA_RegWr, EX_MA_MemtoReg, EX_MA_MemWr, ID_EX_MemWr, MA_WB_RegWr, ALUSrc;
+  input [31:0] ID_EX_IR, EX_MA_IR, MA_WB_IR;
+  output [1:0] ALUSrc_A, ALUSrc_B;
+  output MemSrc;
+  reg [1:0] ALUSrc_A, ALUSrc_B;
+  reg MemSrc;
+
+  initial begin
+    ALUSrc_A = 2'b00;
+    if (ALUSrc == 1) ALUSrc_B = 2'b11;
+    else ALUSrc_B = 2'b00;
+    MemSrc = 0;
+  end
+
+  always @(*) begin
+    ALUSrc_A = 2'b00;
+    if (ALUSrc == 1) ALUSrc_B = 2'b11;
+    else ALUSrc_B = 2'b00;
+
+    if ((EX_MA_RegWr & ~EX_MA_MemtoReg & (EX_MA_IR[15:11] == ID_EX_IR[25:21])) == 1)
+      ALUSrc_A = 2'b01;
+    if ((EX_MA_RegWr & ~EX_MA_MemtoReg & (EX_MA_IR[15:11] == ID_EX_IR[20:16])) == 1)
+      ALUSrc_B = 2'b01;
+    if ((MA_WB_RegWr & ~ID_EX_MemWr &  // 此处对书上的组合逻辑做了修改
+        (MA_WB_IR[20:16] == ID_EX_IR[25:21] | MA_WB_IR[15:11] == ID_EX_IR[25:21])) == 1)
+      ALUSrc_A = 2'b10;
+    if ((MA_WB_RegWr & ~ID_EX_MemWr &  // 此处对书上的组合逻辑做了修改
+        (MA_WB_IR[20:16] == ID_EX_IR[20:16] | MA_WB_IR[15:11] == ID_EX_IR[20:16])) == 1)
+      ALUSrc_B = 2'b10;
+
+    if (MA_WB_RegWr & EX_MA_MemWr & (MA_WB_IR[20:16] == EX_MA_IR[20:16]) == 1) MemSrc = 1;
+    else MemSrc = 0;
+  end
+endmodule
+

@@ -1,0 +1,30 @@
+always @ (posedge clk) begin 
+
+      bank_row <= (bank_st == 3'b010) ? b2x_addr : bank_row;
+
+      if (~reset_n) begin
+	 l_start <= 1'b0;
+	 l_last <= 1'b0;
+	 l_id <= 1'b0;
+	 l_len <= 1'b0;
+	 l_wrap <= 1'b0;
+	 l_write <= 1'b0;
+	 l_raddr <= 1'b0;
+	 l_caddr <= 1'b0;
+         l_sdr_dma_last <= 1'b0;
+      end
+      else begin
+        if (b2r_ack) begin
+  	   l_start <= r2b_start;
+  	   l_last <= r2b_last;
+  	   l_id <= r2b_req_id;
+  	   l_len <= r2b_len;
+  	   l_wrap <= r2b_wrap;
+  	   l_write <= r2b_write;
+  	   l_raddr <= r2b_raddr;
+  	   l_caddr <= r2b_caddr;
+           l_sdr_dma_last <= sdr_dma_last;
+        end // if (b2r_ack)
+      end
+
+   end

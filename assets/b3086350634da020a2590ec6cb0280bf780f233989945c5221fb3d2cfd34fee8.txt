@@ -1,0 +1,24 @@
+always @(posedge clk_i)
+begin
+  if (rst_i)
+  begin
+    busy_bit <= 0;  
+    dat_bcd_o <= 0;
+  end
+  else if (start_i && ~busy_bit)
+  begin
+    busy_bit <= 1;
+    bin_reg <= dat_binary_i;
+    bcd_reg <= 0;
+  end
+  else if (busy_bit && ce_i && bit_count_done && ~start_i)
+  begin
+    busy_bit <= 0;
+    dat_bcd_o <= bcd_next;
+  end
+  else if (busy_bit && ce_i && ~bit_count_done)
+  begin
+    bcd_reg <= bcd_next;
+    bin_reg <= bin_next;
+  end
+end

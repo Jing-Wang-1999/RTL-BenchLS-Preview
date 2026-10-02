@@ -1,0 +1,78 @@
+module mg_03197 (
+    input wire [15:0] lin,
+    output wire [9:0] man,
+    output wire [2:0] exp
+);
+
+    reg [9:0] man_reg;
+    reg [2:0] exp_reg;
+
+    always @(*) begin
+        casez (lin[15:9])
+            7'b10?????: begin
+                man_reg = lin[15:6];
+                exp_reg = 3'd7;
+            end
+            7'b110????: begin
+                man_reg = lin[14:5];
+                exp_reg = 3'd6;
+            end
+            7'b1110???: begin
+                man_reg = lin[13:4];
+                exp_reg = 3'd5;
+            end
+            7'b11110??: begin
+                man_reg = lin[12:3];
+                exp_reg = 3'd4;
+            end
+            7'b111110?: begin
+                man_reg = lin[11:2];
+                exp_reg = 3'd3;
+            end
+            7'b1111110: begin
+                man_reg = lin[10:1];
+                exp_reg = 3'd2;
+            end
+            7'b1111111: begin
+                man_reg = lin[9:0];
+                exp_reg = 3'd1;
+            end
+            7'b01?????: begin
+                man_reg = lin[15:6];
+                exp_reg = 3'd7;
+            end
+            7'b001????: begin
+                man_reg = lin[14:5];
+                exp_reg = 3'd6;
+            end
+            7'b0001???: begin
+                man_reg = lin[13:4];
+                exp_reg = 3'd5;
+            end
+            7'b00001??: begin
+                man_reg = lin[12:3];
+                exp_reg = 3'd4;
+            end
+            7'b000001?: begin
+                man_reg = lin[11:2];
+                exp_reg = 3'd3;
+            end
+            7'b0000001: begin
+                man_reg = lin[10:1];
+                exp_reg = 3'd2;
+            end
+            7'b0000000: begin
+                man_reg = lin[9:0];
+                exp_reg = 3'd1;
+            end
+            default: begin
+                man_reg = lin[9:0];
+                exp_reg = 3'd1;
+            end
+        endcase
+    end
+
+    assign man = man_reg;
+    assign exp = exp_reg;
+
+endmodule

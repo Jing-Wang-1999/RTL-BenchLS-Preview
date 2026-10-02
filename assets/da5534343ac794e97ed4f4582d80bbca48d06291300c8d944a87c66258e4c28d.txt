@@ -1,0 +1,50 @@
+module origen_160544(
+    input clk,
+    input rst,
+    input [31:0] InstructionBus,
+    input [2:0] APSelBus,
+    input DataACKIn,
+    output reg DataACKOut,
+    output reg [7:0] AluCode,
+    output reg [23:0] DecoderData,
+    output reg [2:0] RegSelX,
+    output reg [2:0] RegSelY,
+    output reg [2:0] RegSelZ
+);
+
+always @(posedge clk or negedge rst) begin
+    if (!rst) begin
+        DataACKOut <= DataACKIn;
+        AluCode <= InstructionBus[7:0];
+        case (AluCode)
+            8'h00: begin
+                DecoderData <= 24'b0;
+                RegSelX <= InstructionBus[26:24];
+                RegSelY <= InstructionBus[29:27];
+                RegSelZ <= InstructionBus[22:20];
+            end
+            8'h01: begin
+                DecoderData <= 24'b0;
+                RegSelX <= InstructionBus[26:24];
+                RegSelY <= InstructionBus[29:27];
+                RegSelZ <= InstructionBus[22:20];
+            end
+            // Add more cases for other instructions
+            default: begin
+                DecoderData <= 24'b0;
+                RegSelX <= 3'b0;
+                RegSelY <= 3'b0;
+                RegSelZ <= 3'b0;
+            end
+        endcase
+    end else begin
+        DataACKOut <= 1'b0;
+        AluCode <= 8'b0;
+        DecoderData <= 24'b0;
+        RegSelX <= 3'b0;
+        RegSelY <= 3'b0;
+        RegSelZ <= 3'b0;
+    end
+end
+
+endmodule

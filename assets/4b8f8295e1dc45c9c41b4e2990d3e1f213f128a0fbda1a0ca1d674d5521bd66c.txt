@@ -1,0 +1,21 @@
+`ifdef verilator
+always @(posedge clk_i) if (!rst_i) begin
+    // CSR SIM_CTRL (or DSCRATCH)
+    if ((csr_waddr_i == `CSR_DSCRATCH || csr_waddr_i == `CSR_SIM_CTRL) && ~(|exception_i))
+    begin
+        case (csr_wdata_i & 32'hFF000000)
+        `CSR_SIM_CTRL_EXIT:
+        begin
+            //exit(csr_wdata_i[7:0]);
+            $finish;
+            $finish;
+        end
+        `CSR_SIM_CTRL_PUTC:
+        begin
+            $write("%c", csr_wdata_i[7:0]);
+        end
+        endcase
+    end
+
+end
+`endif

@@ -1,0 +1,21 @@
+The module generates a simple graphics overlay for a 640x480 pixel video display. It draws three solid, non-overlapping rectangles on a black background.
+
+**Inputs:**
+- `video_on`: An active-high signal. When low, the module outputs black.
+- `pixel_x` and `pixel_y`: 10-bit coordinates (0-639, 0-479) indicating the current pixel location being processed.
+
+**Outputs:**
+- `graph_on`: An active-high signal indicating the current pixel coordinate falls within any of the three rectangles.
+- `fig_RGB`: An 8-bit RGB color output for the current pixel.
+
+**Behavior:**
+The module defines three fixed rectangular regions:
+1.  A large header box spanning from X=160 to 479 and Y=64 to 255.
+2.  A smaller footer-left box spanning from X=48 to 303 and Y=352 to 447.
+3.  A smaller footer-right box spanning from X=336 to 591 and Y=352 to 447.
+
+All three boxes are drawn with the same solid color (RGB value 0x1E). The background is black (RGB 0x00).
+
+The output logic operates per pixel. If the `video_on` signal is inactive, the output `fig_RGB` is forced to black. When `video_on` is active, the module checks if the current (`pixel_x`, `pixel_y`) lies inside the header box. If so, it outputs the box color. If not, it checks the footer-left box, then the footer-right box, outputting the color if inside. If the pixel is outside all boxes, it outputs black. The `graph_on` output is high whenever the pixel is inside any of the three boxes.
+
+**Allowed Sub-modules:** None. The design is purely combinational and comparison logic.

@@ -1,0 +1,85 @@
+/*
+ * CIA 8520 Address Decoder and Read Multiplexer
+ * 
+ * Combinatorial module that decodes the 4-bit register address (RS3-RS0)
+ * and routes data between the CIA's internal registers and the data bus.
+ * 
+ * Design notes:
+ * - Pure combinatorial logic (no clock, no state)
+ * - One-hot decoding for address selection (adr_sel)
+ * - Generates individual strobe signals for each register
+ * - Multiplexes 16 input registers onto single 8-bit output bus
+ * 
+ * Register Map (MOS 8520 compatible):
+ *   $0 (0x0) - PRA     : Port A data register
+ *   $1 (0x1) - PRB     : Port B data register
+ *   $2 (0x2) - DDRA    : Port A data direction (0=input, 1=output)
+ *   $3 (0x3) - DDRB    : Port B data direction
+ *   $4 (0x4) - TA_LO   : Timer A low byte
+ *   $5 (0x5) - TA_HI   : Timer A high byte
+ *   $6 (0x6) - TB_LO   : Timer B low byte
+ *   $7 (0x7) - TB_HI   : Timer B high byte
+ *   $8 (0x8) - TOD_LO  : Time of day counter LSB
+ *   $9 (0x9) - TOD_MID : Time of day counter
+ *   $A (0xA) - TOD_HI  : Time of day counter MSB
+ *   $B (0xB) - EXT     : Extension register
+ *   $C (0xC) - SDR     : Serial data register
+ *   $D (0xD) - ICR     : Interrupt control register
+ *   $E (0xE) - CRA     : Control register A
+ *   $F (0xF) - CRB     : Control register B
+ * 
+ * Usage:
+ * - Address strobe outputs (pra_o, prb_o, etc.) are used by parent module
+ *   to detect register access and trigger side effects (e.g., PC pulse on PRB access,
+ *   TOD latch on TOD_HI read, timer reload on TA_HI/TB_HI write)
+ * - Data output (dat_o) provides the read value for the selected register
+ * - All outputs are valid within the same combinatorial path as adr_i
+ * 
+ * Implementation:
+ * - One-hot decode using shift: 16'b1 << adr_i (synthesizes to simple logic)
+ * - Read mux using OR of masked inputs (synthesizes to efficient mux tree)
+ * - No critical paths: fully combinatorial, no feedback
+ */
+module cia_decoder(
+    input  [3:0] adr_i, 
+
+    
+    input  [7:0] pra_i,
+    input  [7:0] prb_i,
+    input  [7:0] ddra_i,
+    input  [7:0] ddrb_i,
+    input  [7:0] talo_i,
+    input  [7:0] tahi_i,
+    input  [7:0] tblo_i,
+    input  [7:0] tbhi_i,
+    input  [7:0] todlo_i,
+    input  [7:0] todmid_i,
+    input  [7:0] todhi_i,
+    input  [7:0] ext_i,
+    input  [7:0] sdr_i,
+    input  [7:0] icr_i,
+    input  [7:0] cra_i,
+    input  [7:0] crb_i,
+
+    
+    output [7:0] dat_o,
+
+    
+    output pra_o,
+    output prb_o,
+    output ddra_o,
+    output ddrb_o,
+    output talo_o,
+    output tahi_o,
+    output tblo_o,
+    output tbhi_o,
+    output todlo_o,
+    output todmid_o,
+    output todhi_o,
+    output ext_o,
+    output sdr_o,
+    output icr_o,
+    output cra_o,
+    output crb_o
+  );
+endmodule

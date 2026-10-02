@@ -1,0 +1,9 @@
+always @(posedge req_clk) begin
+    if (req_resetn == 1'b0) begin
+      to_complete_count <= 'h0;
+    end else if (completion_req & ~do_compl) begin
+      to_complete_count <= to_complete_count + 1;
+    end else if (~completion_req & do_compl) begin
+      to_complete_count <= to_complete_count - 1;
+    end
+  end

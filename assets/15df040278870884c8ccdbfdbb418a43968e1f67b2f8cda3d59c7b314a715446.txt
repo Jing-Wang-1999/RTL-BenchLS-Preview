@@ -1,0 +1,57 @@
+module origen_127318 (
+    input wire clk,
+    input wire rst_n,
+    input wire [255:0] data_in,
+    input wire [7:0] sel,
+    input wire upstream_valid,
+    output wire upstream_ready,
+    output wire [7:0] result,
+    output wire downstream_valid,
+    input wire downstream_ready
+);
+
+    reg [7:0] accumulator;
+    reg [2:0] cycle_count;
+    wire mux_out;
+    wire [7:0] acc_out;
+    reg acc_valid;
+
+    // 256-to-1 multiplexer
+    assign mux_out = data_in[sel];
+
+    // Accumulator
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            accumulator <= 8'b0;
+            cycle_count <= 3'b0;
+            acc_valid <= 1'b0;
+        end else if (upstream_valid && upstream_ready) begin
+            accumulator <= (cycle_count == 3'b111) ? mux_out : accumulator + mux_out;
+            cycle_count <= cycle_count + 1'b1;
+            acc_valid <= (cycle_count == 3'b111);
+        end
+    end
+
+    assign acc_out = accumulator;
+
+    // Final output module
+    reg [7:0] final_result;
+    reg final_valid;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            final_result <= 8'b0;
+            final_valid <= 1'b0;
+        end else if (acc_valid) begin
+            final_result <= acc_out;
+            final_valid <= 1'b1;
+        end else if (downstream_ready && downstream_valid) begin
+            final_valid <= 1'b0;
+        end
+    end
+
+    assign result = final_result;
+    assign downstream_valid = final_valid;
+    assign upstream_ready = !final_valid || downstream_ready;
+
+endmodule

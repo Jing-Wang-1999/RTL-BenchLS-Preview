@@ -1,0 +1,27 @@
+always @* begin
+    // transfer sink ready state to source
+    m_axis_tvalid_next = m_axis_tvalid_reg;
+    temp_m_axis_tvalid_next = temp_m_axis_tvalid_reg;
+
+    store_axis_int_to_output = 1'b0;
+    store_axis_int_to_temp = 1'b0;
+    store_axis_temp_to_output = 1'b0;
+
+    if (m_axis_tready_int_reg) begin
+        // input is ready
+        if (m_axis_tready || !USE_READY || !m_axis_tvalid_reg) begin
+            // output is ready or currently not valid, transfer data to output
+            m_axis_tvalid_next = m_axis_tvalid_int;
+            store_axis_int_to_output = 1'b1;
+        end else begin
+            // output is not ready, store input in temp
+            temp_m_axis_tvalid_next = m_axis_tvalid_int;
+            store_axis_int_to_temp = 1'b1;
+        end
+    end else if (m_axis_tready || !USE_READY) begin
+        // input is not ready, but output is ready
+        m_axis_tvalid_next = temp_m_axis_tvalid_reg;
+        temp_m_axis_tvalid_next = 1'b0;
+        store_axis_temp_to_output = 1'b1;
+    end
+end

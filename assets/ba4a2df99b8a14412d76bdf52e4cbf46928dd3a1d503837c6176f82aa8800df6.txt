@@ -1,0 +1,50 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/169",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/162",
+  "repository": "lowRISC/ibex",
+  "pr_number": 169,
+  "issue_number": 162,
+  "verilog_files": [
+    "rtl/ibex_id_stage.sv"
+  ],
+  "deletions": 1,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "rtl/ibex_id_stage.sv",
+      "patch": "@@ -622,7 +622,7 @@ module ibex_id_stage #(\n         if ((data_req_dec & lsu_valid_i) | (~data_req_dec & ex_valid_i)) begin\n           id_wb_fsm_ns            = IDLE;\n           instr_multicycle_done_n = 1'b1;\n-          regfile_we_wb           = regfile_we_dec;\n+          regfile_we_wb           = regfile_we_dec & ~lsu_load_err_i;\n           instr_ret_o             = 1'b1;\n         end else begin\n           stall_lsu               = data_req_dec;",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "ID/EX stage: do not write to register file upon load errors",
+    "body": "This commit fixes the write back FSM to not store values returned from\r\nmemory to the register file when the LSU is reporting a load error.\r\n\r\nThis bug was reported by @ivanmgribeiro. This commit resolves #162.",
+    "state": "closed",
+    "created_at": "2019-07-17T12:10:27Z",
+    "updated_at": "2019-07-18T11:32:40Z",
+    "merged_at": "2019-07-18T10:28:14Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "Load instructions that cause an error still write to registers",
+    "body": "Hi,\r\nThere seems to be a bug in Ibex when performing a read from memory which returns an error.\r\n\r\nI would expect that when the memory slave sets data_err high, the core would not write the data that was read in into a register, but it appears to still be written to the register regardless.\r\n\r\nWhat i observe is that the data is still written into the register.\r\n\r\nI'm using the following instructions:\r\n```\r\naddi r2, r0, 1\r\nlw r2, r2[2]\r\naddi r3, r2, 1\r\n```\r\nWhen using the load word instruction, the register is overwritten with 0x0, but when using load halfword or load byte, it seems to actually read what is returned by memory and store it in the register.\r\n\r\nMy memory slave is configured such that accesses outside of the range 0x80000000 - 0x80007fff will set data_err high.\r\n\r\nI've performed a fix that seemed to work locally by changing the line\r\nhttps://github.com/lowRISC/ibex/blob/b7ef64b62da74afe52bb40165e17a7e87539d47a/rtl/ibex_id_stage.sv#L283\r\nto\r\n```\r\nassign regfile_we = (illegal_csr_insn_i || !instr_executing || lsu_load_err_i) ? 1'b0          :\r\n```\r\n\r\nThis fix seems to work with other failing loads as well, but I'm not sure that it conforms to your style guide or whether it should be done here or at some other point in the code.",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "created_at": "2019-07-16T15:47:49Z",
+    "updated_at": "2019-07-18T10:28:14Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 324
+  },
+  "base_commit": "f12b94c2a21dfb4779be5c4b9c460eb3f3c48323",
+  "head_commit": "b4a38a847218f42e4534f24e19ab18b2b0c0115d",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_169_162",
+  "lec_status": "useful_pass"
+}

@@ -1,0 +1,5 @@
+# Pattern-gated data capture (`origen_178419`)
+
+Inputs are scalar `ready`, `clk`, active-high asynchronous `reset`, and `datain[7:0]`; output `dataout[7:0]` is registered. There are no parameters.
+
+Reset immediately selects state 0 and clears dataout. At rising edges otherwise: state 0 enters state 1 when ready, else holds; state 1 enters state 2 when datain equals `8'hf0`, else returns to state 0; state 2 returns to state 0 when ready, else holds; unused state 3 returns to state 0. On an edge whose pre-edge state is state 2 and ready is high, dataout captures the current datain. It holds on all other non-reset edges. The `f0` word is only a preceding pattern gate and is not itself captured unless also presented during the later state-2 ready edge.

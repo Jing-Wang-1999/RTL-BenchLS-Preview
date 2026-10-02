@@ -1,0 +1,28 @@
+{
+  "candidate_id": "large_module.c64e6858a806f0919811",
+  "reviewer_identity": "/root/screen_protocol_v3",
+  "independent_of_primary_author": true,
+  "decision": "pass",
+  "rtl_sha256": "7d415cbe92c6c034f162cf78e370cf4449f00eb36fde6e7220e5e0db010284a2",
+  "specification_sha256": "147963a5e026f0ab55b5290f32f35ef182e1dd0c2abe84b1dc3490494cff920a",
+  "rtl_reasonable": true,
+  "blocking_findings": [],
+  "evidence": [
+    "Independently read entire immutable source and all final specification, including default-disabled feature paths.",
+    "Verified hazard3_config/width/operation constants against specification, no optional macros enabled.",
+    "Checked all CSR map rows and H3MISA constants, raw illegal MEICONTEXT write behavior, simultaneous trap/write priorities.",
+    "Requested and verified correction of trap_addr vector offset: requires global active IRQ as well as pending source/mode.",
+    "Reviewed separate clk/clk_always_on domains and reset of interrupt samples; no clocks tied together."
+  ],
+  "formal_scope_review": {
+    "top_module": "hazard3_csr",
+    "mode": "sec",
+    "clock": null,
+    "reset_expression": "!rst_n",
+    "preprocessor_defines": [],
+    "ready_for_controls": true,
+    "notes": "Independent clk and clk_always_on remain unconstrained with clock -none; never tie these clocks. Default features pending include audit.",
+    "clock_command": "clock -none",
+    "scope_notes": "Distinct clocks remain independent; clock-none symbolic event modeling required; no synchrony assumption."
+  }
+}

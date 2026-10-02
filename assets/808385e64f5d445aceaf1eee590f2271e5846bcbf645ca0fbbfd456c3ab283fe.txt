@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.095dca22d666cfad682b.483f21723ef4",
+  "compile_check": {
+    "case_id": "s1derived.095dca22d666cfad682b.483f21723ef4",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "servile_arbiter",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.095dca22d666cfad682b.483f21723ef4/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "095dca22d666cfad682bfcce64826de955ed97c493d6a0d24a88e41bc723674d",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.095dca22d666cfad682b.483f21723ef4",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.095dca22d666cfad682b",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "servile_arbiter"
+  },
+  "independent_review": {
+    "case_id": "s1derived.095dca22d666cfad682b.483f21723ef4",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Address/data/ack routing and instruction priority are completely specified and implemented.",
+        "rtl_excerpt": "`o_wb_mem_adr = i_wb_cpu_ibus_stb ? i_wb_cpu_ibus_adr : i_wb_cpu_dbus_adr; ... we = ... & !i_wb_cpu_ibus_stb;`",
+        "spec_excerpt": "\u201cInstruction strobe has priority for memory address, suppresses memory write enable\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.095dca22d666cfad682b",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "73130cae3f822ac22ac57d660cc0fc79fd465dc871937377bbe373416eda4410",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "095dca22d666cfad682bfcce64826de955ed97c493d6a0d24a88e41bc723674d",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.095dca22d666cfad682b",
+  "primary_review": {
+    "case_id": "s1derived.095dca22d666cfad682b.483f21723ef4",
+    "checks": {
+      "behavior": "Address/write/strobe arbitration matches.",
+      "boundaries": "Instruction strobe alone controls ack routing and write suppression.",
+      "interface": "All bus ports and widths match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Combinational."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Address/write/strobe arbitration matches. Combinational.",
+        "rtl_excerpt": "o_wb_cpu_dbus_ack=i_wb_mem_ack & !i_wb_cpu_ibus_stb",
+        "spec_excerpt": "The final sentence ends \u201cThe data bus\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends before completing acknowledge behavior and does not state that data ack can assert without data strobe whenever instruction strobe is low.",
+        "rtl_evidence": "o_wb_cpu_dbus_ack=i_wb_mem_ack & !i_wb_cpu_ibus_stb",
+        "spec_evidence": "The final sentence ends \u201cThe data bus\u201d.",
+        "type": "truncated_acknowledge_semantics"
+      }
+    ],
+    "parent_id": "s1p.095dca22d666cfad682b",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.095dca22d666cfad682b.483f21723ef4.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "095dca22d666cfad682bfcce64826de955ed97c493d6a0d24a88e41bc723674d",
+    "source_group": "S1",
+    "specification_sha256": "483f21723ef403e796c2b2c3f0653cf2aaf41cf73e8094ebbcf9af9439b900d9",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.095dca22d666cfad682b.483f21723ef4.md",
+  "qualified_specification_sha256": "73130cae3f822ac22ac57d660cc0fc79fd465dc871937377bbe373416eda4410",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.095dca22d666cfad682b.483f21723ef4/private/golden_design.v",
+  "rtl_sha256": "095dca22d666cfad682bfcce64826de955ed97c493d6a0d24a88e41bc723674d",
+  "source_corpus": "SEC-Flow-Star-repos-7.serv",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.095dca22d666cfad682b.483f21723ef4/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "483f21723ef403e796c2b2c3f0653cf2aaf41cf73e8094ebbcf9af9439b900d9",
+  "top_module": "servile_arbiter"
+}

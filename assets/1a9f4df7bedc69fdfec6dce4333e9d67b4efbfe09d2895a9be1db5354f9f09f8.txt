@@ -1,0 +1,69 @@
+module autovcoder_121483 (
+    input  [15:0] x,
+    input  [15:0] y,
+    output [31:0] p
+);
+
+
+  // First complement 
+  wire [15:0] x_abs;
+  assign x_abs = x ^ {16{x[15]}};
+
+  // is upper n-Q bits zero
+  wire not_zeroUpX;
+  assign not_zeroUpX = |(x_abs[15:7]);
+
+  wire [8:0] x_up;
+  assign x_up = {x_abs[14:7], 1'b1};
+
+  wire [8:0] xTMP;
+  assign xTMP = not_zeroUpX ? x_up : x_abs[8:0];
+
+
+  // First complement 
+  wire [15:0] y_abs;
+  assign y_abs = y ^ {16{y[15]}};
+
+  // is upper n-Q bits zero
+  wire not_zeroUpY;
+  assign not_zeroUpY = |(y_abs[15:7]);
+
+
+  wire [8:0] y_up;
+  assign y_up = {y_abs[14:7], 1'b1};
+
+  wire [8:0] yTMP;
+  assign yTMP = not_zeroUpY ? y_up : y_abs[8:0];
+
+  wire [17:0] pTMP;
+  wire zeroTMP;
+  ADAPT_9bit Nested (
+      xTMP,
+      yTMP,
+      zeroTMP,
+      pTMP
+  );
+
+  wire [1:0] ctrl_sig;
+  assign ctrl_sig[1] = not_zeroUpX & not_zeroUpY;
+  assign ctrl_sig[0] = not_zeroUpX ^ not_zeroUpY;
+
+  wire [31:0] p_abs;
+
+  fixedShift FinalShift (
+      pTMP,
+      ctrl_sig,
+      p_abs
+  );
+
+  wire [31:0] p_tmp;
+
+  wire p_sgn;
+  assign p_sgn = x[15] ^ y[15];
+
+  assign p_tmp = {32{p_sgn}} ^ p_abs;
+
+  assign p = zeroTMP ? 32'b0 : p_tmp;
+
+endmodule
+

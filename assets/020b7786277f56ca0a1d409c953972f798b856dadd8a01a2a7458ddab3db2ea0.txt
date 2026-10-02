@@ -1,0 +1,63 @@
+module origen_138496 (
+    input clka,
+    input wea,
+    input [12:0] addra,
+    input [7:0] dina,
+    output reg [7:0] douta
+);
+
+reg [7:0] mem [0:8191];
+
+integer i;
+initial begin
+    for (i = 0; i < 8192; i = i + 1) begin
+        mem[i] = 8'b0;
+    end
+end
+
+always @(posedge clka) begin
+    if (wea) begin
+        mem[addra] <= dina;
+    end
+    douta <= mem[addra];
+end
+
+endmodule
+
+module testbench;
+    reg clka;
+    reg wea;
+    reg [12:0] addra;
+    reg [7:0] dina;
+    wire [7:0] douta;
+
+    memory dut (
+        .clka(clka),
+        .wea(wea),
+        .addra(addra),
+        .dina(dina),
+        .douta(douta)
+    );
+
+    initial begin
+        clka = 0;
+        forever #5 clka = ~clka;
+    end
+
+    initial begin
+        wea = 0;
+        addra = 0;
+        dina = 0;
+
+        #10 wea = 1;
+        addra = 13'h123;
+        dina = 8'h45;
+
+        #10 wea = 0;
+
+        #10 $display("Data read from address 0x123: %h", douta);
+
+        #10 $finish;
+    end
+
+endmodule

@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.6f80cb0dd08a1ff897b4.04e36b2621d0",
+  "compile_check": {
+    "case_id": "s1derived.6f80cb0dd08a1ff897b4.04e36b2621d0",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "addsub",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.addsub.b6cad451b1a9483b/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.6f80cb0dd08a1ff897b4",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "6f80cb0dd08a1ff897b4358a4031ed7037cf2658a5edb919ff166b094850faf2",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.6f80cb0dd08a1ff897b4.04e36b2621d0",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.addsub.b6cad451b1a9483b/private/commercial_positive.log",
+    "commercial_log_sha256": "b9b4b08bff786da4be5af42bf14a900bb9dbc4176ac1bd4e42918048331f6298",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.addsub.b6cad451b1a9483b/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "addsub"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.addsub.b6cad451b1a9483b",
+    "parent_id": "s1p.6f80cb0dd08a1ff897b4",
+    "revised_tops": [
+      "addsub"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "addsub",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.6f80cb0dd08a1ff897b4.04e36b2621d0",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The repair accurately distinguishes the generic expression-sizing behavior from the METHOD=1 carry-chain implementation and states that other METHOD values leave o undriven.",
+        "rtl_excerpt": "assign o = sub ? (a - b) : (a + b);",
+        "spec_excerpt": "When METHOD=0, o is a+b when sub=0 and a-b when sub=1, using Verilog unsigned expression sizing"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.6f80cb0dd08a1ff897b4",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "41d532b4dd4fc16faf636b03db45d567d9a7ecaa18935792262ff8ac7337c532",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6f80cb0dd08a1ff897b4358a4031ed7037cf2658a5edb919ff166b094850faf2",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.addsub.b6cad451b1a9483b/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.addsub.b6cad451b1a9483b/private/historical_harness/01_conformal_rtl_addsub.do"
+  ],
+  "parent_id": "s1p.6f80cb0dd08a1ff897b4",
+  "primary_review": {
+    "case_id": "s1derived.6f80cb0dd08a1ff897b4.04e36b2621d0",
+    "checks": {
+      "behavior": "METHOD 0 selects + or -; METHOD 1 implements the same carry-chain operation.",
+      "boundaries": "Subtraction wraps according to Verilog unsigned sizing; METHOD outside 0/1 leaves o undriven.",
+      "interface": "sub, a, b, and WIDTH+1 output match.",
+      "rtl_reasonableness": "Both supported implementations are reasonable.",
+      "sequential_and_reset": "Purely combinational generated logic."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "METHOD 0 selects + or -; METHOD 1 implements the same carry-chain operation. Purely combinational generated logic.",
+        "rtl_excerpt": "parameter WIDTH=16; parameter METHOD=1; only METHOD 0 and 1 generate drivers",
+        "spec_excerpt": "\u201cchoice of method is determined by METHOD\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "WIDTH=16 is given, but METHOD=1 is omitted and unsupported METHOD values are not bounded.",
+        "rtl_evidence": "parameter WIDTH=16; parameter METHOD=1; only METHOD 0 and 1 generate drivers",
+        "spec_evidence": "\u201cchoice of method is determined by METHOD\u201d",
+        "type": "missing_parameter_default"
+      }
+    ],
+    "parent_id": "s1p.6f80cb0dd08a1ff897b4",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.6f80cb0dd08a1ff897b4.04e36b2621d0.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6f80cb0dd08a1ff897b4358a4031ed7037cf2658a5edb919ff166b094850faf2",
+    "source_group": "S1",
+    "specification_sha256": "04e36b2621d0e910dc079625aad2fbdafe975d1b639534512df5234ebaf2a305",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.6f80cb0dd08a1ff897b4.04e36b2621d0.md",
+  "qualified_specification_sha256": "41d532b4dd4fc16faf636b03db45d567d9a7ecaa18935792262ff8ac7337c532",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.addsub.b6cad451b1a9483b/private/golden_design.v",
+  "rtl_sha256": "6f80cb0dd08a1ff897b4358a4031ed7037cf2658a5edb919ff166b094850faf2",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.addsub.b6cad451b1a9483b/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "04e36b2621d0e910dc079625aad2fbdafe975d1b639534512df5234ebaf2a305",
+  "top_module": "addsub"
+}

@@ -1,0 +1,30 @@
+The module named "origen_147193" is designed to manage data writing operations across multiple ports. It acts as a multiplexer that selects one of ten input ports based on a selection signal and forwards the corresponding data to a single output port.
+
+### Inputs:
+1. **wr_port_select**: A 16-bit input signal used to select which port's data will be forwarded to the output. Each bit corresponds to a specific port, allowing selection of one active port at a time.
+
+2. **portX_wr_en (X = 0 to 9)**: A set of ten individual enable signals, each corresponding to one of the ten ports. These are 1-bit signals indicating whether the respective port is enabled for writing.
+
+3. **portX_wr_addr (X = 0 to 9)**: Ten 32-bit address inputs, each associated with a port. These specify the memory address where the data should be written.
+
+4. **portX_wr_data (X = 0 to 9)**: Ten 512-bit data inputs, each linked to a port. These contain the actual data to be written to the specified address.
+
+5. **portX_wr_mask (X = 0 to 9)**: Ten 64-bit mask inputs, each corresponding to a port. These masks determine which parts of the data are valid and should be written, allowing for selective data writing.
+
+### Outputs:
+1. **muxed_port_wr_en**: A 1-bit output signal that reflects the enable status of the selected port. It indicates whether the selected port's data is valid for writing.
+
+2. **muxed_port_wr_addr**: A 32-bit output that provides the address from the selected port, indicating where the data should be written.
+
+3. **muxed_port_wr_data**: A 512-bit output that carries the data from the selected port to be written to the specified address.
+
+4. **muxed_port_wr_mask**: A 64-bit output that forwards the mask from the selected port, specifying which parts of the data are valid for writing.
+
+### Behavior:
+The module continuously monitors the `wr_port_select` input to determine which port's data should be forwarded to the output. It uses a case structure to match the selection signal with one of the ten ports. When a match is found, the module outputs the corresponding enable signal, address, data, and mask from the selected port. If no valid port is selected (i.e., the selection signal does not match any predefined port codes), the module defaults to outputting zero values for all outputs, indicating no valid data is available for writing.
+
+### Allowed Sub-modules:
+The module does not explicitly specify or require any sub-modules. It operates independently, relying solely on its input signals to perform the multiplexing function.
+
+### Use Case:
+This module is useful in systems where multiple data sources need to be selectively written to a single destination, such as in memory management units or data routing systems. It provides a flexible mechanism for controlling which data source is active at any given time, based on external control signals.

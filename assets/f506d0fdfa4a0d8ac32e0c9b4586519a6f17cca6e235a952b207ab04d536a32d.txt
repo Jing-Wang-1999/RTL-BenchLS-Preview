@@ -1,0 +1,56 @@
+module origen_016050 #(
+    parameter DATA_W = 24,
+    parameter DETECT_THRESHOLD = 24'h000100,
+    parameter DETECT_W = 4
+) (
+    input wire i2s_bclk,
+    input wire i2s_wclk,
+    input wire din,
+    output reg [DATA_W-1:0] dataL,
+    output reg [DATA_W-1:0] dataR,
+    output reg detectL,
+    output reg detectR
+);
+
+    localparam DETECT_MAX = (1 << DETECT_W) - 1;
+
+    reg [DATA_W-1:0] shiftReg;
+    reg [DETECT_W-1:0] detectCntL, detectCntR;
+    reg i2s_wclk_prev;
+    reg [4:0] bitCounter;
+
+    wire i2s_wclk_posedge = i2s_wclk && !i2s_wclk_prev;
+
+    always @(posedge i2s_bclk) begin
+        i2s_wclk_prev <= i2s_wclk;
+
+        if (i2s_wclk_posedge) begin
+            bitCounter <= 0;
+        end else if (bitCounter < DATA_W) begin
+            shiftReg <= {shiftReg[DATA_W-2:0], din};
+            bitCounter <= bitCounter + 1;
+
+            if (bitCounter == DATA_W - 1) begin
+                if (i2s_wclk) begin
+                    dataR <= shiftReg;
+                    if ($signed(shiftReg) >= $signed(DETECT_THRESHOLD) || $signed(shiftReg) <= -$signed(DETECT_THRESHOLD)) begin
+                        detectCntR <= 0;
+                    end else if (detectCntR < DETECT_MAX) begin
+                        detectCntR <= detectCntR + 1;
+                    end
+                end else begin
+                    dataL <= shiftReg;
+                    if ($signed(shiftReg) >= $signed(DETECT_THRESHOLD) || $signed(shiftReg) <= -$signed(DETECT_THRESHOLD)) begin
+                        detectCntL <= 0;
+                    end else if (detectCntL < DETECT_MAX) begin
+                        detectCntL <= detectCntL + 1;
+                    end
+                end
+            end
+        end
+
+        detectL <= (detectCntL == DETECT_MAX);
+        detectR <= (detectCntR == DETECT_MAX);
+    end
+
+endmodule

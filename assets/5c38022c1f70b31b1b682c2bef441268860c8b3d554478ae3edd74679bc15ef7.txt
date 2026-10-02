@@ -1,0 +1,37 @@
+This module is a single-element buffer with flow control, designed to transfer data words of configurable width between a producer and a consumer. It uses a ready/valid handshake protocol on both its input and output interfaces.
+
+**Interfaces**
+*   **Clock and Reset:** A clock (`clk`) and an active-high synchronous reset (`rst`).
+*   **Input Interface:** Accepts data from a producer.
+    *   `din`: The input data word, `G_WIDTH` bits wide.
+    *   `din_last`: A flag indicating the current input word is the last in a sequence.
+    *   `din_valid`: Asserted by the producer to indicate `din` and `din_last` are valid.
+    *   `din_ready`: Asserted by this module to indicate it can accept input.
+    *   A transfer occurs on the input interface when both `din_valid` and `din_ready` are high.
+*   **Output Interface:** Presents data to a consumer.
+    *   `dout`: The output data word, `G_WIDTH` bits wide.
+    *   `dout_last`: A flag indicating the current output word is the last in a sequence.
+    *   `dout_valid`: Asserted by this module to indicate `dout` and `dout_last` are valid.
+    *   `dout_ready`: Asserted by the consumer to indicate it can accept output.
+    *   A transfer occurs on the output interface when both `dout_valid` and `dout_ready` are high.
+
+**Internal Storage**
+The module contains one internal storage register. This register holds one data word (`G_WIDTH` bits) and its associated `last` flag.
+
+**Functional Behavior**
+The module's primary function is to decouple the input and output handshakes by storing one transferred data item. Its operation is defined by the state of its internal storage register:
+
+1.  **Empty State:** The internal register contains no valid data.
+    *   The module asserts `din_ready` to accept new input.
+    *   It deasserts `dout_valid` as it has no data to present.
+    *   When an input handshake occurs, the data and its `last` flag are stored. The module then transitions to a non-empty state.
+
+2.  **Non-Empty State:** The internal register holds valid data.
+    *   The module asserts `dout_valid` to present the stored data and `last` flag on the output interface.
+    *   The module's readiness for new input (`din_ready`) depends on the consumer:
+        *   If the consumer is ready (`dout_ready` is high), the module also asserts `din_ready`. This allows a simultaneous input handshake and output handshake in the same cycle, effectively bypassing the buffer.
+        *   If the consumer is not ready (`dout_ready` is low), the module deasserts `din_ready`, blocking new input until the stored item is consumed.
+    *   When an output handshake occurs, the internal register is cleared, and the module returns to the Empty State.
+
+**Reset**
+When reset is asserted, the internal storage register is cleared, placing the module in the Empty State. All output signals are driven to

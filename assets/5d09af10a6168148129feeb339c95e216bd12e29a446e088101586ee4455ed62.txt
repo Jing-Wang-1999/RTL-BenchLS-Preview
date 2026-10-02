@@ -1,0 +1,41 @@
+module mg_07349 (
+    rst_n,
+    clk,
+    clken,
+    d,
+    dump,
+    out,
+    valid
+);
+    input rst_n;
+    input clk;
+    input clken;
+    input d;
+    input dump;
+    output out;
+    output valid;
+
+    reg [15:0] state;
+    wire next_out;
+    wire [15:0] next_state;
+    wire update_condition;
+
+    assign out = state[15];
+
+    assign update_condition = dump || (out == d);
+
+    assign next_state = update_condition ?
+        {state[14:1], 1'b0} :
+        {state[14] ^ 1'b1, state[13:2], state[1] ^ 1'b1, 1'b1};
+
+    assign next_out = next_state[15];
+    assign valid = (next_state == 16'h800D);
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= 16'hFFFF;
+        end else if (clken) begin
+            state <= next_state;
+        end
+    end
+endmodule

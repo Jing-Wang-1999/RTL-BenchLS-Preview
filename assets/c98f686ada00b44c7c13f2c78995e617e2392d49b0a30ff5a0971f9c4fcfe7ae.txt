@@ -1,0 +1,77 @@
+module rtlpp_05296 (
+    input  wire clk,
+    input  wire rst_n,
+    input  wire cpu_start,
+    input  wire quit_cmd,
+    output wire stall,
+    output wire stall_1shot,
+    output wire stall_dly,
+    output wire rst_pipe,
+    output wire rst_pipe_id,
+    output wire rst_pipe_ex,
+    output wire rst_pipe_ma,
+    output wire rst_pipe_wb
+);
+
+    reg cpu_run_state;
+    reg stall_dly_reg;
+    reg rst_pipe_reg;
+    reg [3:0] rst_pipe_stages;
+
+    // CPU run state logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            cpu_run_state <= 1'b0;
+        end else begin
+            if (quit_cmd) begin
+                cpu_run_state <= 1'b0;
+            end else if (cpu_start) begin
+                cpu_run_state <= 1'b1;
+            end
+        end
+    end
+
+    // Stall outputs
+    assign stall = ~cpu_run_state;
+    
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            stall_dly_reg <= 1'b1;
+        end else begin
+            stall_dly_reg <= stall;
+        end
+    end
+    
+    assign stall_dly = stall_dly_reg;
+    assign stall_1shot = stall & ~stall_dly_reg;
+
+    // Pipeline reset generation
+    wire start_reset = cpu_start & ~cpu_run_state;
+    wire end_reset   = quit_cmd & cpu_run_state;
+    wire rst_pipe_next = start_reset | end_reset;
+    
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rst_pipe_reg <= 1'b0;
+        end else begin
+            rst_pipe_reg <= rst_pipe_next;
+        end
+    end
+    
+    assign rst_pipe = rst_pipe_reg;
+
+    // Pipeline stage reset propagation
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rst_pipe_stages <= 4'b0;
+        end else begin
+            rst_pipe_stages <= {rst_pipe_stages[2:0], rst_pipe_reg};
+        end
+    end
+    
+    assign rst_pipe_id = rst_pipe_stages[0];
+    assign rst_pipe_ex = rst_pipe_stages[1];
+    assign rst_pipe_ma = rst_pipe_stages[2];
+    assign rst_pipe_wb = rst_pipe_stages[3];
+
+endmodule

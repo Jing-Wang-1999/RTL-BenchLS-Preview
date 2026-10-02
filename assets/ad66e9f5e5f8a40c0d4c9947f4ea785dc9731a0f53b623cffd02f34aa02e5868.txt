@@ -1,0 +1,143 @@
+module rtlpp_00875(
+    input iCLK,         
+    input iRST_n,       
+    input iIRDA,        
+    output oDATA_READY,  
+    output [31:0] oDATA         
+);
+
+parameter IDLE               = 2'b00;    
+parameter GUIDANCE           = 2'b01;    
+parameter DATAREAD           = 2'b10;    
+
+parameter IDLE_HIGH_DUR      =  262143;  
+parameter GUIDE_LOW_DUR      =  230000;  
+parameter GUIDE_HIGH_DUR     =  210000;  
+parameter DATA_HIGH_DUR      =  41500;	 
+parameter BIT_AVAILABLE_DUR  =  20000;   
+
+reg [31:0] oDATA;                 
+reg [17:0] idle_count;            
+reg idle_count_flag;       
+reg [17:0] state_count;           
+reg state_count_flag;     
+reg [17:0] data_count;            
+reg data_count_flag; 
+reg [5:0] bitcount;  
+reg [1:0] state;         
+reg [31:0] data;   
+reg [31:0] data_buf;   
+reg data_ready; 
+
+assign oDATA_READY = data_ready;
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        idle_count <= 0;
+    else if (idle_count_flag)
+        idle_count <= idle_count + 1'b1;
+    else if (state != IDLE)
+        idle_count <= 0;
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        idle_count_flag <= 1'b0;
+    else if ((state == IDLE) && !iIRDA)
+        idle_count_flag <= 1'b1;
+    else 
+        idle_count_flag <= 1'b0;
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        state_count <= 0;
+    else if (state_count_flag)
+        state_count <= state_count + 1'b1;
+    else  
+        state_count <= 0;
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        state_count_flag <= 1'b0;
+    else if ((state == GUIDANCE) && iIRDA)
+        state_count_flag <= 1'b1;
+    else  
+        state_count_flag <= 1'b0;
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        data_count <= 1'b0;
+    else if(data_count_flag)
+        data_count <= data_count + 1'b1;
+    else 
+        data_count <= 1'b0;
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        data_count_flag <= 0;
+    else if ((state == DATAREAD) && iIRDA)
+        data_count_flag <= 1'b1;
+    else
+        data_count_flag <= 1'b0;
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        bitcount <= 6'b0;
+    else if (state == DATAREAD) begin
+        if (data_count == 20000)
+            bitcount <= bitcount + 1'b1; 
+    end else
+        bitcount <= 6'b0;
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        state <= IDLE;
+    else
+        case (state)
+            IDLE: if (idle_count > GUIDE_LOW_DUR)
+                state <= GUIDANCE;
+            GUIDANCE: if (state_count > GUIDE_HIGH_DUR)
+                state <= DATAREAD;
+            DATAREAD: if ((data_count >= IDLE_HIGH_DUR) || (bitcount >= 33))
+                state <= IDLE;
+            default: state <= IDLE;
+        endcase
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        data <= 0;
+    else if (state == DATAREAD) begin
+        if (data_count >= DATA_HIGH_DUR)
+            data[bitcount-1'b1] <= 1'b1;  
+    end else
+        data <= 0;
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        data_ready <= 1'b0;
+    else if (bitcount == 32) begin
+        if (data[31:24] == ~data[23:16]) begin
+            data_buf <= data;
+            data_ready <= 1'b1;
+        end else
+            data_ready <= 1'b0;
+    end else
+        data_ready <= 1'b0;
+end
+
+always @(posedge iCLK or negedge iRST_n) begin
+    if (!iRST_n)
+        oDATA <= 32'b0000;
+    else if (data_ready)
+        oDATA <= data_buf;
+end
+
+endmodule

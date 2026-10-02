@@ -1,0 +1,88 @@
+module autovcoder_099568 (
+    add1,
+    add2,
+    cin,
+    result,
+    cout
+);
+  input [3:0] add1;
+  input [3:0] add2;
+  input cin;
+  output [3:0] result;
+  output cout;
+
+  // Internal wires
+  wire [3:0] p;
+  wire [3:0] g;
+  wire [3:1] c_mid;
+
+  XOR2_X1 U5 (
+      .Z(p[3]),
+      .B(add1[3]),
+      .A(add2[3])
+  );
+  XOR2_X1 U6 (
+      .Z(p[2]),
+      .B(add1[2]),
+      .A(add2[2])
+  );
+  XOR2_X1 U7 (
+      .Z(p[1]),
+      .B(add1[1]),
+      .A(add2[1])
+  );
+  XOR2_X1 U8 (
+      .Z(p[0]),
+      .B(add1[0]),
+      .A(add2[0])
+  );
+  bit1adder_54 block_0__bit1adder_module (
+      .g(g[0]),
+      .p(p[0]),
+      .cin(cin),
+      .sum(result[0]),
+      .count(c_mid[1])
+  );
+  bit1adder_53 block_1__bit1adder_module (
+      .g(g[1]),
+      .p(p[1]),
+      .cin(c_mid[1]),
+      .sum(result[1]),
+      .count(c_mid[2])
+  );
+  bit1adder_52 block_2__bit1adder_module (
+      .g(g[2]),
+      .p(p[2]),
+      .cin(c_mid[2]),
+      .sum(result[2]),
+      .count(c_mid[3])
+  );
+  bit1adder_51 block_3__bit1adder_module (
+      .g(g[3]),
+      .p(p[3]),
+      .cin(c_mid[3]),
+      .sum(result[3]),
+      .count(cout)
+  );
+  AND2_X1 U1 (
+      .ZN(g[3]),
+      .A2(add1[3]),
+      .A1(add2[3])
+  );
+  AND2_X1 U2 (
+      .ZN(g[1]),
+      .A2(add1[1]),
+      .A1(add2[1])
+  );
+  AND2_X1 U3 (
+      .ZN(g[2]),
+      .A2(add1[2]),
+      .A1(add2[2])
+  );
+  AND2_X1 U4 (
+      .ZN(g[0]),
+      .A2(add1[0]),
+      .A1(add2[0])
+  );
+endmodule
+

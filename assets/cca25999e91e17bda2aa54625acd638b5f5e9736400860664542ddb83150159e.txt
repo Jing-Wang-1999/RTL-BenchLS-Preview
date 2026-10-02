@@ -1,0 +1,160 @@
+module rtlpp_00187 (
+    CLK, RST, 
+    CE, WE, SEL, 
+    DATI, DATO,
+    RXD, TXD, CTS, RTS
+);
+
+    input  CLK;          
+    input  RST;          
+    input  CE;           
+    input  WE;           
+    input  [3:0]SEL;     
+    input  [31:0] DATI;  
+    output [31:0] DATO;  
+    input  RXD;          
+    output TXD;          
+    input  CTS;          
+    output RTS;          
+
+    reg    WRTXD, RDRXD;
+    reg    WRTXD1, RDRXD1;
+    reg    [31:0] DATO;
+							
+    wire   sio_ce, sio_ce_x4;		   
+    reg    [7:0] din_i;  
+    wire   [7:0] dout_o; 
+    reg    re_i, we_i;
+    wire   full_o, empty_o;
+    reg    [7:0] div0;
+    reg    [7:0] div1;  
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST == 1'b1)
+            div0[7:0] <= 8'h00;
+        else if ((CE == 1'b1) && (WE == 1'b1) && (SEL[3] == 1'b1))
+            div0[7:0] <= DATI[31:24];
+    end
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST == 1'b1)
+            div1[7:0] <= 8'h00;
+        else if ((CE == 1'b1) && (WE == 1'b1) && (SEL[2] == 1'b1))
+            div1[7:0] <= DATI[23:16];
+    end
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST == 1'b1)
+            din_i[7:0] <= 8'h00;
+        else if (WRTXD)
+            din_i[7:0] <= DATI[7:0];
+    end
+
+    always @(CE or div0 or div1 or full_o or empty_o or dout_o) begin
+        if (CE == 1'b1)
+            begin
+                DATO[31:24] <= div0[7:0];
+                DATO[23:16] <= div1[7:0];
+                DATO[15: 8] <= {6'h00, full_o, empty_o};
+                DATO[ 7: 0] <= dout_o;
+            end
+        else
+            begin
+                DATO[31:0] <= 32'h00000000;
+            end
+    end
+
+    always @(CE or WE or SEL) begin
+        if ((CE == 1'b1) && (WE == 1'b1) && (SEL[0] == 1'b1))
+            WRTXD <= 1'b1;
+        else
+            WRTXD <= 1'b0;
+    end				
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            WRTXD1 <= 1'b0;
+        else
+            WRTXD1 <= WRTXD;
+    end
+
+    always @(WRTXD or WRTXD1) begin
+        we_i <= ~WRTXD & WRTXD1; 
+    end
+
+    always @(CE or WE or SEL) begin
+        if ((CE == 1'b1) && (WE == 1'b0) && (SEL[0] == 1'b1))
+            RDRXD <= 1'b1;
+        else
+            RDRXD <= 1'b0;
+    end				
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            RDRXD1 <= 1'b0;
+        else
+            RDRXD1 <= RDRXD;
+    end
+
+    always @(RDRXD or RDRXD1) begin
+        re_i <= ~RDRXD & RDRXD1; 
+    end
+
+    // Logic for sasc_top module
+    reg [7:0] tx_data;
+    reg tx_busy, rx_ready;
+    reg tx_start, rx_start;
+    wire tx_done, rx_done;
+
+    // TX and RX logic here - simplified versions
+    // TX Logic
+    always @(posedge CLK or posedge RST) begin
+        if (RST) begin
+            tx_busy <= 0;
+            tx_start <= 0;
+        end else if (we_i) begin
+            tx_data <= din_i;
+            tx_start <= 1;
+        end else begin
+            tx_start <= 0;
+        end
+    end
+
+    assign tx_done = ~tx_busy; // Example, replace with actual TX done signal
+    assign TXD = tx_data[0]; // Example, replace with actual TX logic
+
+    // RX Logic
+    always @(posedge CLK or posedge RST) begin
+        if (RST) begin
+            rx_ready <= 0;
+            rx_start <= 0;
+        end else if (~empty_o) begin
+            rx_ready <= 1;
+            rx_start <= 1;
+        end else begin
+            rx_start <= 0;
+        end
+    end
+
+    assign rx_done = rx_ready; // Example, replace with actual RX done signal
+    assign dout_o = RXD; // Example, replace with actual RX logic
+
+    assign full_o = tx_busy; // Example
+    assign empty_o = ~rx_ready; // Example
+
+    // Logic for sasc_brg module
+    reg [15:0] baudrate_counter;
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            baudrate_counter <= 16'h0000;
+        else
+            baudrate_counter <= baudrate_counter + 1;
+    end
+
+    assign sio_ce = (baudrate_counter == 16'h0000);
+    assign sio_ce_x4 = (baudrate_counter[1:0] == 2'b00);
+
+    assign RTS = ~CTS; // Example, replace with actual flow control logic
+
+endmodule

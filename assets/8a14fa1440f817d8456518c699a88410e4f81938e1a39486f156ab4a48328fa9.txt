@@ -1,0 +1,25 @@
+**Specification: Moving Average Filter with Valid Data Indicator**
+
+This module implements a low-pass moving average filter for analog-to-digital converter (ADC) data, providing a smoothed output and a validity signal.
+
+**Inputs:**
+- **Clock (clk):** System clock for synchronous operation.
+- **Active-low reset (rstn):** Initializes the module when low.
+- **Sample (sample):** Trigger signal indicating new ADC data is available.
+- **Raw data input (raw_data_in):** ADC_WIDTH-bit wide input data (default 8 bits).
+
+**Outputs:**
+- **Averaged data (ave_data_out):** ADC_WIDTH-bit filtered output, representing the moving average of recent samples.
+- **Data valid (data_out_valid):** Asserts high for one clock cycle when a new valid averaged output is available.
+
+**Behavior:**
+The module calculates the average of the most recent 2^LPF_DEPTH_BITS samples (default 16 samples for 4-bit depth). On each rising edge of the sample signal, the raw input data is accumulated. After collecting the specified number of samples, the accumulated value is right-shifted by LPF_DEPTH_BITS (equivalent to division) to compute the average, which is then output. The data_out_valid signal asserts simultaneously with the new averaged output.
+
+**Sub-modules:**
+None. This is a self-contained module using only internal registers for accumulation, counting, and data storage.
+
+**Reset:**
+On reset (rstn low), all internal registers and outputs are cleared. The module begins fresh accumulation upon reset release.
+
+**Timing:**
+Outputs update synchronously with the clock. The averaged output and valid signal are available one clock cycle after the final sample in the averaging window is collected.

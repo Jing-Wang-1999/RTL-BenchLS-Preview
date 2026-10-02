@@ -1,0 +1,106 @@
+module autovcoder_101522 (
+    input wire rst,
+    input wire clk_sys,
+    input wire ce,
+
+    input wire [23:0] vol,
+    input wire [ 7:0] env,
+
+    input wire [23:0] freq,
+    input wire [ 8:0] octave,
+    input wire [ 2:0] freq_en,
+
+    input wire [2:0] noise_en,
+    input wire [1:0] noise_freq,
+
+    input wire wr_addr,
+    input wire wr_data,
+
+    output wire [21:0] out
+);
+
+  wire tone0, tone1, tone2, noise;
+  wire pulse_noise, pulse_envelope;
+  wire [21:0] out0, out1, out2;
+
+  saa1099_tone freq_gen0 (
+      .rst(rst),
+      .clk_sys(clk_sys),
+      .ce(ce),
+      .out(tone0),
+      .octave(octave[8:6]),
+      .freq(freq[23:16]),
+      .pulse(pulse_noise)
+  );
+  saa1099_tone freq_gen1 (
+      .rst(rst),
+      .clk_sys(clk_sys),
+      .ce(ce),
+      .out(tone1),
+      .octave(octave[5:3]),
+      .freq(freq[15:8]),
+      .pulse(pulse_envelope)
+  );
+  saa1099_tone freq_gen2 (
+      .rst(rst),
+      .clk_sys(clk_sys),
+      .ce(ce),
+      .out(tone2),
+      .octave(octave[2:0]),
+      .freq(freq[7:0]),
+      .pulse()
+  );
+  saa1099_noise noise_gen (
+      .rst(rst),
+      .clk_sys(clk_sys),
+      .ce(ce),
+      .pulse_noise(pulse_noise),
+      .noise_freq(noise_freq),
+      .out(noise)
+  );
+
+  saa1099_amp amp0 (
+      .rst(rst),
+      .clk_sys(clk_sys),
+      .noise(noise),
+      .wr_addr(wr_addr),
+      .wr_data(wr_data),
+      .pulse_envelope(pulse_envelope),
+      .mixmode({noise_en[0], freq_en[0]}),
+      .tone(tone0),
+      .envreg(0),
+      .vol(vol[23:16]),
+      .out(out0)
+  );
+  saa1099_amp amp1 (
+      .rst(rst),
+      .clk_sys(clk_sys),
+      .noise(noise),
+      .wr_addr(wr_addr),
+      .wr_data(wr_data),
+      .pulse_envelope(pulse_envelope),
+      .mixmode({noise_en[1], freq_en[1]}),
+      .tone(tone1),
+      .envreg(0),
+      .vol(vol[15:8]),
+      .out(out1)
+  );
+  saa1099_amp amp2 (
+      .rst(rst),
+      .clk_sys(clk_sys),
+      .noise(noise),
+      .wr_addr(wr_addr),
+      .wr_data(wr_data),
+      .pulse_envelope(pulse_envelope),
+      .mixmode({noise_en[2], freq_en[2]}),
+      .tone(tone2),
+      .envreg(env),
+      .vol(vol[7:0]),
+      .out(out2)
+  );
+
+  assign out[10:0]  = out0[8:0] + out1[8:0] + out2[8:0];
+  assign out[21:11] = out0[17:9] + out1[17:9] + out2[17:9];
+
+endmodule
+

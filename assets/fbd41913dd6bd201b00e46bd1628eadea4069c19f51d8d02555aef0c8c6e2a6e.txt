@@ -1,0 +1,100 @@
+module autovcoder_026774 #(
+    parameter ID = 0,
+    parameter NUM_STAGE = 1,
+    parameter din1_WIDTH = 32,
+    parameter din2_WIDTH = 32,
+    parameter din3_WIDTH = 32,
+    parameter din4_WIDTH = 32,
+    parameter din5_WIDTH = 32,
+    parameter din6_WIDTH = 32,
+    parameter din7_WIDTH = 32,
+    parameter din8_WIDTH = 32,
+    parameter din9_WIDTH = 32,
+    parameter din10_WIDTH = 32,
+    parameter din11_WIDTH = 32,
+    parameter din12_WIDTH = 32,
+    parameter din13_WIDTH = 32,
+    parameter din14_WIDTH = 32,
+    parameter din15_WIDTH = 32,
+    parameter din16_WIDTH = 32,
+    parameter din17_WIDTH = 32,
+    parameter din18_WIDTH = 32,
+    parameter din19_WIDTH = 32,
+    parameter din20_WIDTH = 32,
+    parameter dout_WIDTH = 32
+) (
+    input  wire [din1_WIDTH-1:0]  din1,
+    input  wire [din2_WIDTH-1:0]  din2,
+    input  wire [din3_WIDTH-1:0]  din3,
+    input  wire [din4_WIDTH-1:0]  din4,
+    input  wire [din5_WIDTH-1:0]  din5,
+    input  wire [din6_WIDTH-1:0]  din6,
+    input  wire [din7_WIDTH-1:0]  din7,
+    input  wire [din8_WIDTH-1:0]  din8,
+    input  wire [din9_WIDTH-1:0]  din9,
+    input  wire [din10_WIDTH-1:0] din10,
+    input  wire [din11_WIDTH-1:0] din11,
+    input  wire [din12_WIDTH-1:0] din12,
+    input  wire [din13_WIDTH-1:0] din13,
+    input  wire [din14_WIDTH-1:0] din14,
+    input  wire [din15_WIDTH-1:0] din15,
+    input  wire [din16_WIDTH-1:0] din16,
+    input  wire [din17_WIDTH-1:0] din17,
+    input  wire [din18_WIDTH-1:0] din18,
+    input  wire [din19_WIDTH-1:0] din19,
+    input  wire [din20_WIDTH-1:0] din20,
+    input  wire [4:0]             din21,
+    output wire [dout_WIDTH-1:0] dout
+);
+
+    // Level 1: 20 inputs -> 10 intermediate signals
+    wire [dout_WIDTH-1:0] level1 [0:9];
+    
+    assign level1[0] = din21[0] ? din2 : din1;
+    assign level1[1] = din21[0] ? din4 : din3;
+    assign level1[2] = din21[0] ? din6 : din5;
+    assign level1[3] = din21[0] ? din8 : din7;
+    assign level1[4] = din21[0] ? din10 : din9;
+    assign level1[5] = din21[0] ? din12 : din11;
+    assign level1[6] = din21[0] ? din14 : din13;
+    assign level1[7] = din21[0] ? din16 : din15;
+    assign level1[8] = din21[0] ? din18 : din17;
+    assign level1[9] = din21[0] ? din20 : din19;
+
+    // Level 2: 10 inputs -> 5 intermediate signals
+    wire [dout_WIDTH-1:0] level2 [0:4];
+    
+    assign level2[0] = din21[1] ? level1[1] : level1[0];
+    assign level2[1] = din21[1] ? level1[3] : level1[2];
+    assign level2[2] = din21[1] ? level1[5] : level1[4];
+    assign level2[3] = din21[1] ? level1[7] : level1[6];
+    assign level2[4] = din21[1] ? level1[9] : level1[8];
+
+    // Level 3: 5 inputs -> 3 intermediate signals
+    wire [dout_WIDTH-1:0] level3 [0:2];
+    
+    assign level3[0] = din21[2] ? level2[1] : level2[0];
+    assign level3[1] = din21[2] ? level2[3] : level2[2];
+    assign level3[2] = level2[4];  // Unpaired input passes through
+
+    // Level 4: 3 inputs -> 2 intermediate signals
+    wire [dout_WIDTH-1:0] level4 [0:1];
+    
+    assign level4[0] = din21[3] ? level3[1] : level3[0];
+    assign level4[1] = level3[2];  // Unpaired input passes through
+
+    // Level 5: 2 inputs -> final output
+    wire [dout_WIDTH-1:0] pre_out;
+    assign pre_out = din21[4] ? level4[1] : level4[0];
+
+    // Output assignment (combinational when NUM_STAGE = 1)
+    generate
+        if (NUM_STAGE == 1) begin
+            assign dout = pre_out;
+        end else begin
+            // For pipelined versions (not implemented per spec)
+            assign dout = pre_out;
+        end
+    endgenerate
+
+endmodule

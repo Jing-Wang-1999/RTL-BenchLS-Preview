@@ -1,0 +1,284 @@
+/*
+ * Copyright 2013, Homer Hsing <homer.hsing@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+
+
+
+
+
+module round2in1(in, round_const_1, round_const_2, out);
+    input  [1599:0] in;
+    input  [63:0]   round_const_1, round_const_2;
+    output [1599:0] out;
+
+    /* "a ~ g" for round 1 */
+    wire   [63:0]   a[4:0][4:0];
+    wire   [63:0]   b[4:0];
+    wire   [63:0]   c[4:0][4:0], d[4:0][4:0], e[4:0][4:0], f[4:0][4:0], g[4:0][4:0];
+
+    /* "aa ~ gg" for round 2 */
+    wire   [63:0]   bb[4:0];
+    wire   [63:0]   cc[4:0][4:0], dd[4:0][4:0], ee[4:0][4:0], ff[4:0][4:0], gg[4:0][4:0];
+
+    genvar x, y;
+
+    /* assign "a[x][y][z] == in[w(5y+x)+z]" */
+    generate
+      for(y=0; y<5; y=y+1)
+        begin : L0
+          for(x=0; x<5; x=x+1)
+            begin : L1
+              assign a[x][y] = in[1599 - 64*(5*y+x) : 1599 - 64*(5*y+x) - 63];
+            end
+        end
+    endgenerate
+
+    /* calc "b[x] == a[x][0] ^ a[x][1] ^ ... ^ a[x][4]" */
+    generate
+      for(x=0; x<5; x=x+1)
+        begin : L2
+          assign b[x] = a[x][0] ^ a[x][1] ^ a[x][2] ^ a[x][3] ^ a[x][4];
+        end
+    endgenerate
+
+    /* calc "c == theta(a)" */
+    generate
+      for(y=0; y<5; y=y+1)
+        begin : L3
+          for(x=0; x<5; x=x+1)
+            begin : L4
+              assign c[x][y] = a[x][y] ^ b[(x == 0 ? 4 : x - 1)] ^ {b[(x == 4 ? 0 : x + 1)][62:0], b[(x == 4 ? 0 : x + 1)][63]};
+            end
+        end
+    endgenerate
+
+    /* calc "d == rho(c)" */
+    assign d[0][0] = c[0][0];
+    assign d[1][0] = {c[1][0][62:0], c[1][0][63]};
+    assign d[2][0] = {c[2][0][63-62:0], c[2][0][63:63-62+1]};
+    assign d[3][0] = {c[3][0][63-28:0], c[3][0][63:63-28+1]};
+    assign d[4][0] = {c[4][0][63-27:0], c[4][0][63:63-27+1]};
+    assign d[0][1] = {c[0][1][63-36:0], c[0][1][63:63-36+1]};
+    assign d[1][1] = {c[1][1][63-44:0], c[1][1][63:63-44+1]};
+    assign d[2][1] = {c[2][1][63-6:0], c[2][1][63:63-6+1]};
+    assign d[3][1] = {c[3][1][63-55:0], c[3][1][63:63-55+1]};
+    assign d[4][1] = {c[4][1][63-20:0], c[4][1][63:63-20+1]};
+    assign d[0][2] = {c[0][2][63-3:0], c[0][2][63:63-3+1]};
+    assign d[1][2] = {c[1][2][63-10:0], c[1][2][63:63-10+1]};
+    assign d[2][2] = {c[2][2][63-43:0], c[2][2][63:63-43+1]};
+    assign d[3][2] = {c[3][2][63-25:0], c[3][2][63:63-25+1]};
+    assign d[4][2] = {c[4][2][63-39:0], c[4][2][63:63-39+1]};
+    assign d[0][3] = {c[0][3][63-41:0], c[0][3][63:63-41+1]};
+    assign d[1][3] = {c[1][3][63-45:0], c[1][3][63:63-45+1]};
+    assign d[2][3] = {c[2][3][63-15:0], c[2][3][63:63-15+1]};
+    assign d[3][3] = {c[3][3][63-21:0], c[3][3][63:63-21+1]};
+    assign d[4][3] = {c[4][3][63-8:0], c[4][3][63:63-8+1]};
+    assign d[0][4] = {c[0][4][63-18:0], c[0][4][63:63-18+1]};
+    assign d[1][4] = {c[1][4][63-2:0], c[1][4][63:63-2+1]};
+    assign d[2][4] = {c[2][4][63-61:0], c[2][4][63:63-61+1]};
+    assign d[3][4] = {c[3][4][63-56:0], c[3][4][63:63-56+1]};
+    assign d[4][4] = {c[4][4][63-14:0], c[4][4][63:63-14+1]};
+
+    /* calc "e == pi(d)" */
+    assign e[0][0] = d[0][0];
+    assign e[0][2] = d[1][0];
+    assign e[0][4] = d[2][0];
+    assign e[0][1] = d[3][0];
+    assign e[0][3] = d[4][0];
+    assign e[1][3] = d[0][1];
+    assign e[1][0] = d[1][1];
+    assign e[1][2] = d[2][1];
+    assign e[1][4] = d[3][1];
+    assign e[1][1] = d[4][1];
+    assign e[2][1] = d[0][2];
+    assign e[2][3] = d[1][2];
+    assign e[2][0] = d[2][2];
+    assign e[2][2] = d[3][2];
+    assign e[2][4] = d[4][2];
+    assign e[3][4] = d[0][3];
+    assign e[3][1] = d[1][3];
+    assign e[3][3] = d[2][3];
+    assign e[3][0] = d[3][3];
+    assign e[3][2] = d[4][3];
+    assign e[4][2] = d[0][4];
+    assign e[4][4] = d[1][4];
+    assign e[4][1] = d[2][4];
+    assign e[4][3] = d[3][4];
+    assign e[4][0] = d[4][4];
+
+    /* calc "f = chi(e)" */
+    generate
+      for(y=0; y<5; y=y+1)
+        begin : L5
+          for(x=0; x<5; x=x+1)
+            begin : L6
+              assign f[x][y] = e[x][y] ^ ((~ e[(x == 4 ? 0 : x + 1)][y]) & e[(x == 3 ? 0 : x == 4 ? 1 : x + 2)][y]);
+            end
+        end
+    endgenerate
+
+    /* calc "g = iota(f)" */
+    generate
+      for(x=0; x<64; x=x+1)
+        begin : L60
+          if(x==0 || x==1 || x==3 || x==7 || x==15 || x==31 || x==63)
+            assign g[0][0][x] = f[0][0][x] ^ round_const_1[x];
+          else
+            assign g[0][0][x] = f[0][0][x];
+        end
+    endgenerate
+    
+    generate
+      for(y=0; y<5; y=y+1)
+        begin : L7
+          for(x=0; x<5; x=x+1)
+            begin : L8
+              if(x!=0 || y!=0)
+                assign g[x][y] = f[x][y];
+            end
+        end
+    endgenerate
+
+    /* round 2 */
+
+    /* calc "bb[x] == g[x][0] ^ g[x][1] ^ ... ^ g[x][4]" */
+    generate
+      for(x=0; x<5; x=x+1)
+        begin : L12
+          assign bb[x] = g[x][0] ^ g[x][1] ^ g[x][2] ^ g[x][3] ^ g[x][4];
+        end
+    endgenerate
+
+    /* calc "cc == theta(g)" */
+    generate
+      for(y=0; y<5; y=y+1)
+        begin : L13
+          for(x=0; x<5; x=x+1)
+            begin : L14
+              assign cc[x][y] = g[x][y] ^ bb[(x == 0 ? 4 : x - 1)] ^ {bb[(x == 4 ? 0 : x + 1)][62:0], bb[(x == 4 ? 0 : x + 1)][63]};
+            end
+        end
+    endgenerate
+
+    /* calc "dd == rho(cc)" */
+    assign dd[0][0] = cc[0][0];
+    assign dd[1][0] = {cc[1][0][62:0], cc[1][0][63]};
+    assign dd[2][0] = {cc[2][0][63-62:0], cc[2][0][63:63-62+1]};
+    assign dd[3][0] = {cc[3][0][63-28:0], cc[3][0][63:63-28+1]};
+    assign dd[4][0] = {cc[4][0][63-27:0], cc[4][0][63:63-27+1]};
+    assign dd[0][1] = {cc[0][1][63-36:0], cc[0][1][63:63-36+1]};
+    assign dd[1][1] = {cc[1][1][63-44:0], cc[1][1][63:63-44+1]};
+    assign dd[2][1] = {cc[2][1][63-6:0], cc[2][1][63:63-6+1]};
+    assign dd[3][1] = {cc[3][1][63-55:0], cc[3][1][63:63-55+1]};
+    assign dd[4][1] = {cc[4][1][63-20:0], cc[4][1][63:63-20+1]};
+    assign dd[0][2] = {cc[0][2][63-3:0], cc[0][2][63:63-3+1]};
+    assign dd[1][2] = {cc[1][2][63-10:0], cc[1][2][63:63-10+1]};
+    assign dd[2][2] = {cc[2][2][63-43:0], cc[2][2][63:63-43+1]};
+    assign dd[3][2] = {cc[3][2][63-25:0], cc[3][2][63:63-25+1]};
+    assign dd[4][2] = {cc[4][2][63-39:0], cc[4][2][63:63-39+1]};
+    assign dd[0][3] = {cc[0][3][63-41:0], cc[0][3][63:63-41+1]};
+    assign dd[1][3] = {cc[1][3][63-45:0], cc[1][3][63:63-45+1]};
+    assign dd[2][3] = {cc[2][3][63-15:0], cc[2][3][63:63-15+1]};
+    assign dd[3][3] = {cc[3][3][63-21:0], cc[3][3][63:63-21+1]};
+    assign dd[4][3] = {cc[4][3][63-8:0], cc[4][3][63:63-8+1]};
+    assign dd[0][4] = {cc[0][4][63-18:0], cc[0][4][63:63-18+1]};
+    assign dd[1][4] = {cc[1][4][63-2:0], cc[1][4][63:63-2+1]};
+    assign dd[2][4] = {cc[2][4][63-61:0], cc[2][4][63:63-61+1]};
+    assign dd[3][4] = {cc[3][4][63-56:0], cc[3][4][63:63-56+1]};
+    assign dd[4][4] = {cc[4][4][63-14:0], cc[4][4][63:63-14+1]};
+
+    /* calc "ee == pi(dd)" */
+    assign ee[0][0] = dd[0][0];
+    assign ee[0][2] = dd[1][0];
+    assign ee[0][4] = dd[2][0];
+    assign ee[0][1] = dd[3][0];
+    assign ee[0][3] = dd[4][0];
+    assign ee[1][3] = dd[0][1];
+    assign ee[1][0] = dd[1][1];
+    assign ee[1][2] = dd[2][1];
+    assign ee[1][4] = dd[3][1];
+    assign ee[1][1] = dd[4][1];
+    assign ee[2][1] = dd[0][2];
+    assign ee[2][3] = dd[1][2];
+    assign ee[2][0] = dd[2][2];
+    assign ee[2][2] = dd[3][2];
+    assign ee[2][4] = dd[4][2];
+    assign ee[3][4] = dd[0][3];
+    assign ee[3][1] = dd[1][3];
+    assign ee[3][3] = dd[2][3];
+    assign ee[3][0] = dd[3][3];
+    assign ee[3][2] = dd[4][3];
+    assign ee[4][2] = dd[0][4];
+    assign ee[4][4] = dd[1][4];
+    assign ee[4][1] = dd[2][4];
+    assign ee[4][3] = dd[3][4];
+    assign ee[4][0] = dd[4][4];
+
+    /* calc "ff = chi(ee)" */
+    generate
+      for(y=0; y<5; y=y+1)
+        begin : L15
+          for(x=0; x<5; x=x+1)
+            begin : L16
+              assign ff[x][y] = ee[x][y] ^ ((~ ee[(x == 4 ? 0 : x + 1)][y]) & ee[(x == 3 ? 0 : x == 4 ? 1 : x + 2)][y]);
+            end
+        end
+    endgenerate
+
+    /* calc "gg = iota(ff)" */
+    generate
+      for(x=0; x<64; x=x+1)
+        begin : L160
+          if(x==0 || x==1 || x==3 || x==7 || x==15 || x==31 || x==63)
+            assign gg[0][0][x] = ff[0][0][x] ^ round_const_2[x];
+          else
+            assign gg[0][0][x] = ff[0][0][x];
+        end
+    endgenerate
+    
+    generate
+      for(y=0; y<5; y=y+1)
+        begin : L17
+          for(x=0; x<5; x=x+1)
+            begin : L18
+              if(x!=0 || y!=0)
+                assign gg[x][y] = ff[x][y];
+            end
+        end
+    endgenerate
+
+    /* assign "out[w(5y+x)+z] == out_var[x][y][z]" */
+    generate
+      for(y=0; y<5; y=y+1)
+        begin : L99
+          for(x=0; x<5; x=x+1)
+            begin : L100
+              assign out[1599 - 64*(5*y+x) : 1599 - 64*(5*y+x) - 63] = gg[x][y];
+            end
+        end
+    endgenerate
+endmodule
+
+
+
+
+
+
+
+

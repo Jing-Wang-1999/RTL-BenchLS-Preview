@@ -1,0 +1,46 @@
+always @ (posedge clk or negedge rstn)
+    if (~rstn) begin
+        state    <= S_IDLE;
+        rxbits   <= 9'b0;
+        rxcnt    <= 4'd0;
+        cycle    <= 1;
+        countp   <= 33'h1_0000_0000;
+    end else begin
+        case (state)
+            S_IDLE : begin
+                if ((count1 >= THREE_QUARTER_BAUD_CYCLES) && (rx_d1 == 1'b0))  // receive a '0' which is followed by continuous '1' for half baud cycles
+                    state <= S_RX;
+                rxcnt  <= 4'd0;
+                cycle  <= 2;                                                   // we've already receive a '0', so here cycle  = 2
+                countp <= (33'h1_0000_0000 - 33'd1);                           // we've already receive a '0', so here countp = initial_value - 1
+            end
+            
+            S_RX :
+                if ( cycle < cycles[rxcnt] ) begin                             // cycle loop from 1 to cycles[rxcnt]
+                    cycle  <= cycle + 1;
+                    countp <= rx_d1 ? (countp + 33'd1) : (countp - 33'd1);
+                end else begin
+                    cycle  <= 1;                                               // reset counter
+                    countp <= 33'h1_0000_0000;                                 // reset counter
+                    
+                    if ( rxcnt < TOTAL_BITS_MINUS1 ) begin                     // rxcnt loop from 0 to TOTAL_BITS_MINUS1
+                        rxcnt <= rxcnt + 4'd1;
+                        if ((rxcnt == 4'd0) && (rxbit == 1'b1))                // except start bit, but get '1'
+                            state <= S_IDLE;                                   // RX failed, back to IDLE
+                    end else begin
+                        rxcnt <= 4'd0;
+                        state <= S_STOP_BIT;
+                    end
+                    
+                    rxbits <= {rxbit, rxbits[8:1]};                            // put current rxbit to MSB of rxbits, and right shift other bits
+                end
+            
+            default :  // S_STOP_BIT
+                if ( cycle < THREE_QUARTER_BAUD_CYCLES) begin                  // cycle loop from 1 to THREE_QUARTER_BAUD_CYCLES
+                    cycle <= cycle + 1;
+                end else begin
+                    cycle <= 1;                                                // reset counter
+                    state <= S_IDLE;                                           // back to IDLE
+                end
+        endcase
+    end

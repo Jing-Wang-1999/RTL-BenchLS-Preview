@@ -1,0 +1,110 @@
+module rtlpp_07962
+(
+   input         clock,
+   input         reset,
+   input         ena,
+   
+   input         phi_n,
+   input         phi_en,
+   input  [15:0] addr,
+   input   [7:0] din,
+   output  [7:0] dout,
+   input   [7:0] cpu_di,		
+   input         m1_n,
+   input         iorq_n,
+   input         rd_n,
+   input         wr_n,
+   output        int_n,
+   output        nmi,
+   
+   input         cursor,
+   
+   output  [7:0] audio_l,
+   output  [7:0] audio_r
+);
+
+wire soft_reset = (ena && ~iorq_n && m1_n && addr[15:0] == 16'hF8FF);
+wire reset_n = ~(soft_reset | reset) & ena;
+
+wire ctc_ce_n = ~(ena && ~iorq_n && m1_n && addr[15:2] == {12'hF88, 2'b00});
+
+wire ay_sel = (ena && ~iorq_n && ~wr_n && addr[15:9] == {4'hF, 3'b100} && addr[7:4] == 4'h8);
+
+wire ctc_counter_0_to;
+wire ctc_counter_3_trg;
+reg [7:0] dout_reg;
+reg int_n_reg;
+reg nmi_reg;
+
+// Internal logic for a simplified z80ctc_top module
+always @(posedge clock or negedge reset_n) begin
+    if (!reset_n) begin
+        dout_reg <= 8'b0;
+        int_n_reg <= 1'b1;
+        nmi_reg <= 1'b0;
+    end else if (!ctc_ce_n) begin
+        // Simplified behavior of CTC (as a placeholder)
+        dout_reg <= 8'b0;  // Replace with actual CTC behavior if available
+        int_n_reg <= 1'b1;  // Replace with actual interrupt logic
+        nmi_reg <= 1'b1;   // Replace with actual NMI logic
+    end
+end
+assign dout = dout_reg;
+assign int_n = int_n_reg;
+assign nmi = nmi_reg;
+
+wire ay_clock = ctc_counter_0_to | phi_n;
+reg  ay_ce;
+always @(posedge clock) begin
+	reg ay_clock_d;
+
+	ay_clock_d <= ay_clock;
+	ay_ce <= (~ay_clock_d & ay_clock);
+end
+
+wire [7:0] chl_a, chl_b, chl_c;
+wire [7:0] chr_a, chr_b, chr_c;
+
+// Simplified internal logic for YM2149 module (psg_left)
+reg [7:0] chl_a_reg, chl_b_reg, chl_c_reg;
+always @(posedge clock or negedge reset_n) begin
+    if (!reset_n) begin
+        chl_a_reg <= 8'b0;
+        chl_b_reg <= 8'b0;
+        chl_c_reg <= 8'b0;
+    end else if (ay_sel & addr[2]) begin
+        // Simplified behavior of YM2149 (as a placeholder)
+        chl_a_reg <= din;  // Replace with actual tone generator behavior
+        chl_b_reg <= din;  // Replace with actual tone generator behavior
+        chl_c_reg <= din;  // Replace with actual tone generator behavior
+    end
+end
+assign chl_a = chl_a_reg;
+assign chl_b = chl_b_reg;
+assign chl_c = chl_c_reg;
+
+// Simplified internal logic for YM2149 module (psg_right)
+reg [7:0] chr_a_reg, chr_b_reg, chr_c_reg;
+always @(posedge clock or negedge reset_n) begin
+    if (!reset_n) begin
+        chr_a_reg <= 8'b0;
+        chr_b_reg <= 8'b0;
+        chr_c_reg <= 8'b0;
+    end else if (ay_sel & addr[3]) begin
+        // Simplified behavior of YM2149 (as a placeholder)
+        chr_a_reg <= din;  // Replace with actual tone generator behavior
+        chr_b_reg <= din;  // Replace with actual tone generator behavior
+        chr_c_reg <= din;  // Replace with actual tone generator behavior
+    end
+end
+assign chr_a = chr_a_reg;
+assign chr_b = chr_b_reg;
+assign chr_c = chr_c_reg;
+
+wire [9:0] al = {2'b00, chl_a} + {2'b00, chl_b} + {2'b00, chl_c};
+assign audio_l = al[9:2] + al[9:4];
+
+wire [9:0] ar = {2'b00, chr_a} + {2'b00, chr_b} + {2'b00, chr_c};
+assign audio_r = ar[9:2] + ar[9:4];
+
+endmodule

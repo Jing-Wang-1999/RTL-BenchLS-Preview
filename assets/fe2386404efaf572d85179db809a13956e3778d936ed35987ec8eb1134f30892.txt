@@ -1,0 +1,21 @@
+always @(posedge clk) begin
+    m_axis_csum_valid_reg <= 1'b0;
+
+    if (sum_valid_reg[LEVELS-2]) begin
+        sum_acc_temp = sum_reg[LEVELS-2][16+LEVELS-1-1:0] + sum_acc_reg;
+        sum_acc_temp = sum_acc_temp[15:0] + (sum_acc_temp >> 16);
+        sum_acc_temp = sum_acc_temp[15:0] + sum_acc_temp[16];
+
+        if (sum_last_reg[LEVELS-2]) begin
+            m_axis_csum_reg <= sum_acc_temp;
+            m_axis_csum_valid_reg <= 1'b1;
+            sum_acc_reg <= 0;
+        end else begin
+            sum_acc_reg <= sum_acc_temp;
+        end
+    end
+
+    if (rst) begin
+        m_axis_csum_valid_reg <= 1'b0;
+    end
+end

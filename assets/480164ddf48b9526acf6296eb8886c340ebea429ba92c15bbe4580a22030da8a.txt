@@ -1,0 +1,50 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/166",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/163",
+  "repository": "lowRISC/ibex",
+  "pr_number": 166,
+  "issue_number": 163,
+  "verilog_files": [
+    "rtl/ibex_decoder.sv"
+  ],
+  "deletions": 10,
+  "additions": 11,
+  "patches": [
+    {
+      "filename": "rtl/ibex_decoder.sv",
+      "patch": "@@ -253,19 +253,20 @@ module ibex_decoder #(\n \n       OPCODE_BRANCH: begin // Branch\n         branch_in_dec_o       = 1'b1;\n+        // Check branch condition selection\n+        unique case (instr[14:12])\n+          3'b000:  alu_operator_o = ALU_EQ;\n+          3'b001:  alu_operator_o = ALU_NE;\n+          3'b100:  alu_operator_o = ALU_LT;\n+          3'b101:  alu_operator_o = ALU_GE;\n+          3'b110:  alu_operator_o = ALU_LTU;\n+          3'b111:  alu_operator_o = ALU_GEU;\n+          default: illegal_insn   = 1'b1;\n+        endcase\n         if (instr_new_i) begin\n           // Evaluate branch condition\n           alu_op_a_mux_sel_o  = OP_A_REG_A;\n           alu_op_b_mux_sel_o  = OP_B_REG_B;\n-          unique case (instr[14:12])\n-            3'b000:  alu_operator_o = ALU_EQ;\n-            3'b001:  alu_operator_o = ALU_NE;\n-            3'b100:  alu_operator_o = ALU_LT;\n-            3'b101:  alu_operator_o = ALU_GE;\n-            3'b110:  alu_operator_o = ALU_LTU;\n-            3'b111:  alu_operator_o = ALU_GEU;\n-            default: illegal_insn   = 1'b1;\n-          endcase\n         end else begin\n           // Calculate jump target in EX\n           alu_op_a_mux_sel_o  = OP_A_CURRPC;\n@@ -422,7 +423,7 @@ module ibex_decoder #(\n \n         if (instr[31]) begin\n           illegal_insn = 1'b1;\n-        end else if (!instr[28]) begin // non bit-manipulation instructions\n+        end else begin\n           unique case ({instr[30:25], instr[14:12]})\n             // RV32I ALU operations\n             {6'b00_0000, 3'b000}: alu_operator_o = ALU_ADD;   // Add",
+      "additions": 11,
+      "deletions": 10,
+      "changes": 21
+    }
+  ],
+  "pr_info": {
+    "title": "Decoder: fix signaling and detection of illegal instructions",
+    "body": "This commit fixes two bugs in the decoder:\r\n\r\n1. For illegal branch condition selections, the illegal instruction\r\ncondition must be signaled as long as the instruction is being executed\r\nand not just during the first cycle, as the controller cannot interrupt\r\nmulticycle instructions.\r\n\r\n2. Illegal instructions should also be signaled when `instr[28]` is set\r\nfor register-register ALU operations. Previously, these were not\r\nsignaled as the original design used `instr[28]` to encode custom bit-\r\nmanipulation instructions.\r\n\r\nThese bugs were discovered by @taoliug. This resolves issue #163.",
+    "state": "closed",
+    "created_at": "2019-07-17T09:38:37Z",
+    "updated_at": "2019-07-17T10:18:36Z",
+    "merged_at": "2019-07-17T10:04:16Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "7d10b363 is not decoded as illegal instruction",
+    "body": "Based on the RISC-V instruction encoding, 7d10b363 doesn't map to any legal instruction. The trace log shows the instruction as INVALID. However, the id_stage doesn't assert the illegal_insn signal, and the core continues executing the instructions without jump to exception handling routine. Looks like the core can only detect illegal compressed instructions and illegal CSR instructions.\r\n\r\nSpike log\r\n\r\n```\r\ncore   0: 0xffffffff8000faaa (0x7d10b363) unknown\r\ncore   0: exception trap_illegal_instruction, epc 0xffffffff8000faaa\r\ncore   0:           tval 0x0000000000000000\r\ncore   0: 0x000000008001d000 (0x00007119) addi    sp, sp, -128\r\n```\r\n\r\nibex log\r\n```\r\n            22039000           10921 8000faa8 40b6d693 srai             x13, x13, 0x40b     x13=0x00000000 x13:0x00000000\r\n            22041000           10922 8000faaa 7d10b363 INVALID                             \r\n            22047000           10925 8000faae 001d0d13 addi             x26, x26, 1         x26=0x5fab433a x26:0x5fab4339\r\n\r\n```",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "created_at": "2019-07-16T20:12:01Z",
+    "updated_at": "2019-07-17T12:16:30Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 325
+  },
+  "base_commit": "c96ece04296c3c69df578d760aa8a66f9b886fef",
+  "head_commit": "3bcbb50630a7cb0278623a8a1f5d262e0220dd86",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_166_163",
+  "lec_status": "useful_pass"
+}

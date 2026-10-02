@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/1595",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/1587",
+  "repository": "lowRISC/ibex",
+  "pr_number": 1595,
+  "issue_number": 1587,
+  "verilog_files": [
+    "shared/rtl/ram_2p.sv"
+  ],
+  "deletions": 0,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "shared/rtl/ram_2p.sv",
+      "patch": "@@ -68,6 +68,7 @@ module ram_2p #(\n   prim_ram_2p #(\n     .Width(32),\n     .Depth(Depth),\n+    .DataBitsPerMask(8),\n     .MemInitFile(MemInitFile)\n   ) u_ram (\n     .clk_a_i   (clk_i),",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1
+    }
+  ],
+  "pr_info": {
+    "title": "[ram_2p] Set DataBitsPerMask parameter for prim_ram_2p",
+    "body": "It turned out that with the default value of 1, Vivado infers a separate 18 Kbit BRAM instance for each bit of the 32-bit word for the FPGA examples. This can be very wasteful in terms of resource utilization especially for smaller configurations.\r\n\r\nAs our examples don't use ECC or parity and mainly target simualation and FPGA, it's better to use a value of 8 for the DataBitsPerMask parameter. Vivado will then not distribute words across different BRAM instances which results in more efficient FPGA resource utilization.\r\n\r\nFor a detailed analysis and explanation, please refer to lowRISC/Ibex#1587.",
+    "state": "closed",
+    "created_at": "2022-04-01T13:21:55Z",
+    "updated_at": "2022-04-05T15:05:19Z",
+    "merged_at": "2022-04-01T14:32:46Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "changing MEM_SIZE does not affect BRAM utilization ",
+    "body": "I wanted to check if 2 KB memory works with IBEX ARTY A7 example. The default is 64 KB with FPGAPowerAnalysis option set to '0' and 256 KB otherwise.\r\n\r\nI changed top_artya7.sv file such as:\r\n//  parameter int          MEM_SIZE          = FPGAPowerAnalysis == 0 ? 64 * 1024 : 256 * 1024;\r\n parameter int          MEM_SIZE          = 2 * 1024; // use 2 KB RAM for instr & data\r\n\r\nI checked both synthesis results for 64 KB and 2 KB, somehow BRAM utilization numbers are the same: 16\r\n\r\nI checked synth reports (top_artya7.vds) and synth utilization reports (top_artya7_utilization_synth.rpt) and be sure that the parameters related to memory are really consistent according to my changes: \r\n\r\nThe log for 2 KB synth from top_artya7.vds\r\n\r\nINFO: [Synth 8-6157] synthesizing module 'top_artya7' [/home/mbaykenar/ibex_mba/ibex/build/lowrisc_ibex_top_artya7_0.1/src/lowrisc_ibex_top_artya7_0.1/rtl/top_artya7.sv:5]\r\n    Parameter FPGAPowerAnalysis bound to: 32'sb00000000000000000000000000000000\r\n    Parameter MEM_SIZE bound to: 32'sb00000000000000000000100000000000\r\n    Parameter MEM_START bound to: 0 - type: integer\r\n    Parameter MEM_MASK bound to: 32'b00000000000000000000011111111111\r\n    Parameter SRAMInitFile bound to: ../../../../../examples/sw/led/led.vmem - type: string\r\n\r\nINFO: [Synth 8-6157] synthesizing module 'ram_2p' [/home/mbaykenar/ibex_mba/ibex/build/lowrisc_ibex_top_artya7_0.1/src/lowrisc_ibex_fpga_xilinx_shared_0/rtl/ram_2p.sv:11]\r\n    Parameter Depth bound to: 32'sb00000000000000000000001000000000\r\n    Parameter MemInitFile bound to: ../../../../../examples/sw/led/led.vmem - type: string\r\n    Parameter Aw bound to: 32'sb00000000000000000000000000001001\r\nINFO: [Synth 8-6157] synthesizing module 'prim_ram_2p' [/home/mbaykenar/ibex_mba/ibex/build/lowrisc_ibex_top_artya7_0.1/src/lowrisc_prim_abstract_ram_2p_0/prim_ram_2p.sv:14]\r\n    Parameter Width bound to: 32'sb00000000000000000000000000100000\r\n    Parameter Depth bound to: 32'sb00000000000000000000001000000000\r\n    Parameter DataBitsPerMask bound to: 32'sb00000000000000000000000000000001\r\n    Parameter MemInitFile bound to: ../../../../../examples/sw/led/led.vmem - type: string\r\n    Parameter Aw bound to: 32'sb00000000000000000000000000001001\r\nINFO: [Synth 8-6157] synthesizing module 'prim_generic_ram_2p' [/home/mbaykenar/ibex_mba/ibex/build/lowrisc_ibex_top_artya7_0.1/src/lowrisc_prim_generic_ram_2p_0/rtl/prim_generic_ram_2p.sv:9]\r\n    Parameter Width bound to: 32'sb00000000000000000000000000100000\r\n    Parameter Depth bound to: 32'sb00000000000000000000001000000000\r\n    Parameter DataBitsPerMask bound to: 32'sb00000000000000000000000000000001\r\n    Parameter MemInitFile bound to: ../../../../../examples/sw/led/led.vmem - type: string\r\n    Parameter Aw bound to: 32'sb00000000000000000000000000001001\r\n    Parameter MaskWidth bound to: 32'sb00000000000000000000000000100000\r\n\r\nThe log for 64 KB synth:\r\n\r\nINFO: [Synth 8-6157] synthesizing module 'top_artya7' [/home/mbaykenar/ibex_mba/ibex/build/lowrisc_ibex_top_artya7_0.1/src/lowrisc_ibex_top_artya7_0.1/rtl/top_artya7.sv:5]\r\n    Parameter FPGAPowerAnalysis bound to: 32'sb00000000000000000000000000000000\r\n    Parameter MEM_SIZE bound to: 32'sb00000000000000010000000000000000\r\n    Parameter MEM_START bound to: 0 - type: integer\r\n    Parameter MEM_MASK bound to: 32'b00000000000000001111111111111111\r\n    Parameter SRAMInitFile bound to: ../../../../../examples/sw/led/led.vmem - type: string\r\n\r\nINFO: [Synth 8-6157] synthesizing module 'ram_2p' [/home/mbaykenar/ibex_mba/ibex/build/lowrisc_ibex_top_artya7_0.1/src/lowrisc_ibex_fpga_xilinx_shared_0/rtl/ram_2p.sv:11]\r\n    Parameter Depth bound to: 32'sb00000000000000000100000000000000\r\n    Parameter MemInitFile bound to: ../../../../../examples/sw/led/led.vmem - type: string\r\n    Parameter Aw bound to: 32'sb00000000000000000000000000001110\r\nINFO: [Synth 8-6157] synthesizing module 'prim_ram_2p' [/home/mbaykenar/ibex_mba/ibex/build/lowrisc_ibex_top_artya7_0.1/src/lowrisc_prim_abstract_ram_2p_0/prim_ram_2p.sv:14]\r\n    Parameter Width bound to: 32'sb00000000000000000000000000100000\r\n    Parameter Depth bound to: 32'sb00000000000000000100000000000000\r\n    Parameter DataBitsPerMask bound to: 32'sb00000000000000000000000000000001\r\n    Parameter MemInitFile bound to: ../../../../../examples/sw/led/led.vmem - type: string\r\n    Parameter Aw bound to: 32'sb00000000000000000000000000001110\r\nINFO: [Synth 8-6157] synthesizing module 'prim_generic_ram_2p' [/home/mbaykenar/ibex_mba/ibex/build/lowrisc_ibex_top_artya7_0.1/src/lowrisc_prim_generic_ram_2p_0/rtl/prim_generic_ram_2p.sv:9]\r\n    Parameter Width bound to: 32'sb00000000000000000000000000100000\r\n    Parameter Depth bound to: 32'sb00000000000000000100000000000000\r\n    Parameter DataBitsPerMask bound to: 32'sb00000000000000000000000000000001\r\n    Parameter MemInitFile bound to: ../../../../../examples/sw/led/led.vmem - type: string\r\n    Parameter Aw bound to: 32'sb00000000000000000000000000001110\r\n    Parameter MaskWidth bound to: 32'sb00000000000000000000000000100000\r\n\r\n\r\nI see that the parameters on prim_generic_ram_2p.sv are elaborated correctly:\r\n\r\n2 KB (32-bit * 512 = 2 KB)\r\n    Parameter Width bound to: 32'sb00000000000000000000000000100000\r\n    Parameter Depth bound to: 32'sb00000000000000000000001000000000\r\n64 KB (32-bit * 16384 = 64 KB)\r\n    Parameter Width bound to: 32'sb00000000000000000000000000100000\r\n    Parameter Depth bound to: 32'sb00000000000000000100000000000000\r\n\r\nI also checked detailed module level utilization and found out that all the BRAM instances are utilized for ram_2p. The register file utilizes LUT RAMs.\r\n\r\nDo I miss a detail on synthesizing for 2 KB RAM or what can cause inferring same amount of BRAM for 64 KB and 2 KB ?\r\n\r\nRegards,\r\n\r\n## My Environment\r\n\r\n**EDA tool and version:**\r\nVIVADO 2020.2\r\n\r\n**Operating system:**\r\nUBUNTU 20.04\r\n\r\n**Version of the Ibex source code:**\r\n6bb67e20f8a7c670e4baf5fe8f130a5ef360f411\r\n",
+    "labels": [
+      "Type:Question"
+    ],
+    "state": "closed",
+    "created_at": "2022-03-28T12:09:18Z",
+    "updated_at": "2022-04-04T07:10:42Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 56
+  },
+  "base_commit": "2fc4cde7d269e69c77f784468959779cef2f3a55",
+  "head_commit": "19745cf3f7b199359649661cffd93933b737afa4",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_1595_1587",
+  "lec_status": "useful_pass"
+}

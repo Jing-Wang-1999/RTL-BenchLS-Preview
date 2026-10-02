@@ -1,0 +1,24 @@
+The module is a synchronous 8-bit arithmetic logic unit (ALU) with registered outputs.
+
+**Inputs:**
+- `clk`: System clock.
+- `rst_n`: Active-low asynchronous reset.
+- `opcode` (3-bit): Selects the operation to perform.
+- `dina` (8-bit): First data input operand.
+- `dinb` (8-bit): Second data input operand.
+
+**Outputs:**
+- `cout` (1-bit): Carry-out flag. Only valid for the addition operation.
+- `dout` (8-bit): Registered result of the selected operation.
+
+**Behavior:**
+On every positive clock edge, the module samples its inputs and computes a new result. An active-low reset asynchronously clears both `cout` and `dout` to zero.
+
+The operation performed is determined by the `opcode`:
+- `000`: Addition. Outputs the 8-bit sum of `dina` and `dinb`. `cout` is the carry-out from this addition.
+- `001`: Absolute Difference. Outputs the absolute value of `dina` minus `dinb`. `cout` is cleared.
+- `010`: Bitwise AND of `dina` and `dinb`. `cout` is cleared.
+- `011`: Bitwise OR of `dina` and `dinb`. `cout` is cleared.
+- `100`: Bitwise XOR of `dina` and `dinb`. `cout` is cleared.
+- `101`: Logical Left Shift. `dina` is shifted left by the number of bits specified by the three least significant bits of `dinb`. Vacated bits are filled with zeros. `cout` is cleared.
+- `110`: Logical

@@ -1,0 +1,14 @@
+module mg_02963(input clk,input [widthad-1:0] addr_a,output reg [width-1:0] q_a,input [widthad-1:0] addr_b,output reg [width-1:0] q_b);
+parameter width = 20; 
+ parameter widthad = 8; 
+ parameter datafile = "./designs/sound/src/opl2_attack_rom.hex"; 
+ reg [width-1:0] mem [(2**widthad)-1:0]; 
+ initial 
+ begin 
+ $readmemh(datafile, mem); 
+ end 
+ always @(posedge clk) begin 
+  q_a <= mem[addr_a]; 
+  q_b <= mem[addr_b]; 
+ end 
+ endmodule

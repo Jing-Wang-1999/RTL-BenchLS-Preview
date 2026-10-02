@@ -1,0 +1,71 @@
+`timescale 1ns/1ps
+module tb;
+localparam MODE = 1;
+localparam BIT_TIME = 320;
+reg clk=0; always #5 clk=~clk;
+reg rst=1, valid=0, ready=1, rxline=1;
+reg [7:0] data=0;
+wire txd, txready, rxvalid, txbusy, rxbusy, overrun, frame_error;
+wire [7:0] rxdata;
+wire rxd = MODE==2 ? txd : rxline;
+uart dut(.clk(clk),.rst(rst),.s_axis_tdata(data),.s_axis_tvalid(valid),
+ .s_axis_tready(txready),.m_axis_tdata(rxdata),.m_axis_tvalid(rxvalid),
+ .m_axis_tready(ready),.rxd(rxd),.txd(txd),.tx_busy(txbusy),.rx_busy(rxbusy),
+ .rx_overrun_error(overrun),.rx_frame_error(frame_error),.prescale(16'd4));
+reg [7:0] expected[0:3];
+integer received=0, i;
+always @(posedge clk) if (!rst && rxvalid && ready) begin
+ if (received>=4) $fatal(1,"unexpected receive");
+ if (rxdata !== expected[received]) $fatal(1,"receive data mismatch");
+ received=received+1;
+end
+task send_axis(input [7:0] value);
+ begin
+  @(negedge clk); data=value; valid=1;
+  @(posedge clk); while (!txready) @(posedge clk);
+  @(negedge clk); valid=0;
+ end
+endtask
+task check_tx(input [7:0] value);
+ integer b;
+ begin
+  @(negedge txd); #(BIT_TIME/2);
+  if(txd!==0) $fatal(1,"start bit mismatch");
+  for(b=0;b<8;b=b+1) begin
+   #BIT_TIME; if(txd!==value[b]) $fatal(1,"transmit data mismatch");
+  end
+  #BIT_TIME; if(txd!==1) $fatal(1,"stop bit mismatch");
+  #BIT_TIME;
+ end
+endtask
+task send_serial(input [7:0] value);
+ integer b;
+ begin
+  @(negedge clk); rxline=0; #BIT_TIME;
+  for(b=0;b<8;b=b+1) begin rxline=value[b]; #BIT_TIME; end
+  rxline=1; #(2*BIT_TIME);
+ end
+endtask
+initial begin
+ expected[0]=8'h00; expected[1]=8'h55; expected[2]=8'ha5; expected[3]=8'hff;
+ repeat(4) @(negedge clk); rst=0; repeat(4) @(negedge clk);
+ if(txd!==1 || txbusy!==0 || rxbusy!==0) $fatal(1,"reset/idle mismatch");
+ for(i=0;i<4;i=i+1) begin
+  if(MODE==1) begin
+   ready=0; send_serial(expected[i]);
+   repeat(12) begin
+    @(negedge clk);
+    if(rxvalid!==1 || rxdata!==expected[i]) $fatal(1,"receive backpressure mismatch");
+   end
+   ready=1; repeat(3) @(negedge clk);
+  end else begin
+   fork send_axis(expected[i]); check_tx(expected[i]); join
+  end
+ end
+ repeat(100) @(negedge clk);
+ if(MODE!=0 && received!=4) $fatal(1,"receive count mismatch");
+ if(overrun!==0 || frame_error!==0) $fatal(1,"unexpected receive error");
+ $display("RTL_BENCHLS_PASS"); $finish(0);
+end
+initial begin #2000000; $fatal(1,"UART behavioral watchdog"); end
+endmodule

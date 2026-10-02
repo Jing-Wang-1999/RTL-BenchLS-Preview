@@ -1,0 +1,56 @@
+module origen_195507(
+    output reg clk_2f,
+    output reg clk_f,
+    output reg valid_in,
+    output reg [7:0] data_in,
+    output reg reset,
+    input [7:0] lane_0,
+    input [7:0] lane_1,
+    input valid_0,
+    input valid_1,
+    input [7:0] lane_0_synth,
+    input [7:0] lane_1_synth,
+    input valid_0_synth,
+    input valid_1_synth
+);
+
+    initial begin
+        $dumpfile("probador.vcd");
+        $dumpvars(0, probador);
+    end
+
+    initial begin
+        reset = 0;
+        #1 reset = 1;
+    end
+
+    always begin
+        clk_2f = 1'b0;
+        #0.5 clk_2f = 1'b1;
+        #0.5;
+    end
+
+    always begin
+        clk_f = 1'b0;
+        #1 clk_f = 1'b1;
+        #1;
+    end
+
+    initial begin
+        #1;
+        valid_in = 1'b0;
+        data_in = 8'h00;
+        #2 valid_in = 1'b1;
+        data_in = 8'h55;
+        #2 valid_in = 1'b0;
+        data_in = 8'hAA;
+        #2 valid_in = 1'b1;
+        data_in = 8'h33;
+        #2 valid_in = 1'b0;
+        data_in = 8'h66;
+        #2 valid_in = 1'b1;
+        data_in = 8'hCC;
+        #4 $finish;
+    end
+
+endmodule

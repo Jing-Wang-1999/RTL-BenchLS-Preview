@@ -1,0 +1,77 @@
+module origen_173586 (
+    input [5:0] opCode,
+    output reg regDst,
+    output reg aluSrc,
+    output reg memToReg,
+    output reg regWrite,
+    output reg memRead,
+    output reg memWrite,
+    output reg branch,
+    output reg [1:0] aluOp,
+    output reg jmp
+);
+
+    always @(*) begin
+        // Default values
+        regDst = 1'b0;
+        aluSrc = 1'b0;
+        memToReg = 1'b0;
+        regWrite = 1'b0;
+        memRead = 1'b0;
+        memWrite = 1'b0;
+        branch = 1'b0;
+        aluOp = 2'b00;
+        jmp = 1'b0;
+
+        case (opCode)
+            // Jump Instruction
+            6'b000010: begin
+                jmp = 1'b1;
+                aluOp = 2'b00;
+            end
+            
+            // R-type Instruction
+            6'b000000: begin
+                regDst = 1'b1;
+                regWrite = 1'b1;
+                aluOp = 2'b10;
+            end
+            
+            // Load Instruction
+            6'b100011: begin
+                aluSrc = 1'b1;
+                memToReg = 1'b1;
+                regWrite = 1'b1;
+                memRead = 1'b1;
+                aluOp = 2'b00;
+            end
+            
+            // Store Instruction
+            6'b101011: begin
+                aluSrc = 1'b1;
+                memWrite = 1'b1;
+                aluOp = 2'b00;
+            end
+            
+            // Branch Instruction
+            6'b000100: begin
+                branch = 1'b1;
+                aluOp = 2'b01;
+            end
+            
+            // Add Immediate Instruction
+            6'b001000: begin
+                aluSrc = 1'b1;
+                regWrite = 1'b1;
+                aluOp = 2'b11;
+            end
+            
+            // Default case (undefined opcodes)
+            default: begin
+                // All signals already set to 0 by default assignment
+                aluOp = 2'b00;
+            end
+        endcase
+    end
+
+endmodule

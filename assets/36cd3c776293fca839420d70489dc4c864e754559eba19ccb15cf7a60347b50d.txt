@@ -1,0 +1,125 @@
+module origen_142078 #(
+    parameter N = 1024,  // Number of input samples
+    parameter M = 1024,  // Number of output samples
+    parameter NUM_FFT_POINTS = 1024,  // Number of FFT points
+    parameter DATA_WIDTH = 16,  // Width of input/output samples
+    parameter FRAC_BITS = 14  // Number of fractional bits for fixed-point arithmetic
+)(
+    input wire clk,
+    input wire rst_n,
+    input wire [N*DATA_WIDTH-1:0] audio_in,
+    input wire ctrl_in,
+    output reg [M*DATA_WIDTH-1:0] audio_out
+);
+
+    // Local parameters
+    localparam ALPHA = 16'h0CCC;  // Alpha value for noise estimation (0.8 in fixed-point)
+
+    // Internal signals
+    reg [DATA_WIDTH-1:0] fft_input [0:NUM_FFT_POINTS-1];
+    wire [DATA_WIDTH-1:0] fft_output [0:NUM_FFT_POINTS-1];
+    reg [DATA_WIDTH-1:0] ifft_input [0:NUM_FFT_POINTS-1];
+    wire [DATA_WIDTH-1:0] ifft_output [0:NUM_FFT_POINTS-1];
+    reg [DATA_WIDTH-1:0] noise_spectrum [0:NUM_FFT_POINTS-1];
+    reg [DATA_WIDTH-1:0] denoised_spectrum [0:NUM_FFT_POINTS-1];
+
+    // FFT and IFFT modules
+    fft #(
+        .N(NUM_FFT_POINTS),
+        .DATA_WIDTH(DATA_WIDTH),
+        .FRAC_BITS(FRAC_BITS)
+    ) fft_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .input_data(fft_input),
+        .output_data(fft_output)
+    );
+
+    ifft #(
+        .N(NUM_FFT_POINTS),
+        .DATA_WIDTH(DATA_WIDTH),
+        .FRAC_BITS(FRAC_BITS)
+    ) ifft_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .input_data(ifft_input),
+        .output_data(ifft_output)
+    );
+
+    // Main process
+    integer i;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            for (i = 0; i < NUM_FFT_POINTS; i = i + 1) begin
+                fft_input[i] <= 0;
+                noise_spectrum[i] <= 0;
+                denoised_spectrum[i] <= 0;
+                ifft_input[i] <= 0;
+            end
+        end else begin
+            // Load input data into FFT input buffer
+            for (i = 0; i < N; i = i + 1) begin
+                fft_input[i] <= audio_in[i*DATA_WIDTH +: DATA_WIDTH];
+            end
+
+            // Estimate noise spectrum when ctrl_in is low
+            if (!ctrl_in) begin
+                for (i = 0; i < NUM_FFT_POINTS; i = i + 1) begin
+                    noise_spectrum[i] <= ((ALPHA * noise_spectrum[i]) + ((1 - ALPHA) * fft_output[i])) >> FRAC_BITS;
+                end
+            end
+
+            // Perform spectral subtraction
+            for (i = 0; i < NUM_FFT_POINTS; i = i + 1) begin
+                if (fft_output[i] > noise_spectrum[i]) begin
+                    denoised_spectrum[i] <= fft_output[i] - noise_spectrum[i];
+                end else begin
+                    denoised_spectrum[i] <= 0;
+                end
+            end
+
+            // Prepare IFFT input
+            for (i = 0; i < NUM_FFT_POINTS; i = i + 1) begin
+                ifft_input[i] <= denoised_spectrum[i];
+            end
+
+            // Output denoised audio
+            for (i = 0; i < M; i = i + 1) begin
+                audio_out[i*DATA_WIDTH +: DATA_WIDTH] <= ifft_output[i];
+            end
+        end
+    end
+
+endmodule
+
+// FFT module (simplified, actual implementation would be more complex)
+module fft #(
+    parameter N = 1024,
+    parameter DATA_WIDTH = 16,
+    parameter FRAC_BITS = 14
+)(
+    input wire clk,
+    input wire rst_n,
+    input wire [DATA_WIDTH-1:0] input_data [0:N-1],
+    output wire [DATA_WIDTH-1:0] output_data [0:N-1]
+);
+    // FFT implementation goes here
+    // This is a placeholder for the actual FFT algorithm
+    assign output_data = input_data; // Placeholder: just pass through the data
+endmodule
+
+// IFFT module (simplified, actual implementation would be more complex)
+module ifft #(
+    parameter N = 1024,
+    parameter DATA_WIDTH = 16,
+    parameter FRAC_BITS = 14
+)(
+    input wire clk,
+    input wire rst_n,
+    input wire [DATA_WIDTH-1:0] input_data [0:N-1],
+    output wire [DATA_WIDTH-1:0] output_data [0:N-1]
+);
+    // IFFT implementation goes here
+    // This is a placeholder for the actual IFFT algorithm
+    assign output_data = input_data; // Placeholder: just pass through the data
+endmodule

@@ -1,0 +1,106 @@
+module autovcoder_012865 (
+    NewMuxIn,
+    MiscContIn,
+    ContBeta,
+    MiscMuxOut
+);
+
+  input [20:0] NewMuxIn;
+  input [7:0] MiscContIn;
+  output ContBeta;
+  output [10:0] MiscMuxOut;
+
+  wire [3:0] tempOut1, tempOut2, tempOut3;
+
+  and2 MML0 (
+      .A(MiscContIn[0]),
+      .B(MiscContIn[1]),
+      .Y(ContBeta)
+  );
+  inv
+      MML1 (
+          .A(ContBeta),
+          .Y(NotContBeta)
+      ),
+      MML2 (
+          .A(MiscContIn[2]),
+          .Y(NotContIn2)
+      );
+
+  Mux4bit_2_1 MML3 (
+      NewMuxIn[3:0],
+      NewMuxIn[7:4],
+      NotContIn2,
+      tempOut1
+  );
+  Mux4bit_4_1 MML4 (
+      NewMuxIn[11:8],
+      NewMuxIn[15:12],
+      {4'b1111},
+      {4'b1111},
+      NotContBeta,
+      MiscContIn[2],
+      tempOut2
+  );
+
+  // MiscMuxOut[3:0] and MiscMuxOut[7:4]
+  Mask_And4bit MML5 (
+      tempOut1,
+      ContBeta,
+      tempOut3
+  );
+  Invert4 MML6 (
+      tempOut3,
+      MiscMuxOut[3:0]
+  );
+  Mask_And4bit MML7 (
+      tempOut2,
+      MiscContIn[3],
+      MiscMuxOut[7:4]
+  );
+
+  // MiscMuxOut[8] -- out818
+  inv MML8 (
+      .A(NewMuxIn[20]),
+      .Y(NotMuxIn20)
+  );
+  XOR2b MML9 (
+      .A(NotMuxIn20),
+      .B(NewMuxIn[16]),
+      .Y(tempMuxin)
+  );
+  Mux4_1 MML10 (
+      NewMuxIn[19],
+      tempMuxin,
+      NewMuxIn[17],
+      NewMuxIn[18],
+      MiscContIn[5],
+      MiscContIn[4],
+      tempMuxout
+  );
+  nand2 MML11 (
+      .A(MiscContIn[6]),
+      .B(MiscContIn[7]),
+      .Y(tempMuxcont)
+  );
+  and2 MML12 (
+      .A(tempMuxcont),
+      .B(tempMuxout),
+      .Y(MiscMuxOut[8])
+  );
+
+  // MiscMuxOut[9] -- out813
+  XOR2b MML13 (
+      .A(tempMuxin),
+      .B(NewMuxIn[18]),
+      .Y(MiscMuxOut[9])
+  );
+
+  // MiscMuxOut[10]=not(SumXbus[8]) -- out623
+  inv MML14 (
+      .A(NewMuxIn[18]),
+      .Y(MiscMuxOut[10])
+  );
+
+endmodule
+

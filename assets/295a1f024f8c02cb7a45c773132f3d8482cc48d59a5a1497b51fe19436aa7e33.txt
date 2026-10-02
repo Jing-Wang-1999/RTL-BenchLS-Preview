@@ -1,0 +1,71 @@
+{
+  "candidate_target_id": "github_alexforencich_axi_register_direct_v1::rtl/axi_register_wr.v::axi_register_wr",
+  "construction_hold": false,
+  "file_path": "rtl/axi_register_wr.v",
+  "formal_contracts": [
+    {
+      "clock": "clk",
+      "clock_edge": "posedge",
+      "compare": "all declared output ports",
+      "defines": [],
+      "includes": [],
+      "input_assumptions": [],
+      "mode": "sec",
+      "parameter_override_required": false,
+      "parameters": {
+        "ADDR_WIDTH": "32",
+        "AWUSER_ENABLE": "0",
+        "AWUSER_WIDTH": "1",
+        "AW_REG_TYPE": "1",
+        "BUSER_ENABLE": "0",
+        "BUSER_WIDTH": "1",
+        "B_REG_TYPE": "1",
+        "DATA_WIDTH": "32",
+        "ID_WIDTH": "8",
+        "STRB_WIDTH": "(DATA_WIDTH/8)",
+        "WUSER_ENABLE": "0",
+        "WUSER_WIDTH": "1",
+        "W_REG_TYPE": "2"
+      },
+      "reset_expression": "rst",
+      "reset_semantics": "synchronous active-high",
+      "source_files": [
+        "rtl/axi_register_wr.v"
+      ],
+      "top": "axi_register_wr",
+      "unit_id": "axi_register_wr"
+    }
+  ],
+  "helper_files": [],
+  "literal_module_count": 1,
+  "mask_granularity": "module",
+  "masked_modules": [
+    "axi_register_wr"
+  ],
+  "noncomment_lines": 485,
+  "parent_case_id": "github_alexforencich_axi_register_direct_v1",
+  "parent_manifest_sha256": "a944ca663196d2da65fee18624c48d4fd517d3050f38a0e0704fe2e627d19d35",
+  "parent_path": "scope2/task2_1_spec_to_project/cases/github_alexforencich_axi_register_direct_v1",
+  "rank": 4,
+  "reference_path": "scope2/task2_1_spec_to_project/cases/github_alexforencich_axi_register_direct_v1/private/reference/rtl/axi_register_wr.v",
+  "reference_sha256": "02dd26f56ee04ad834a28e02ef2726852ab527fb23c3a88b377f3ce55a719c4b",
+  "retained_context_files": [
+    "rtl/axi_register.v",
+    "rtl/axi_register_rd.v"
+  ],
+  "retained_public_evidence": [
+    {
+      "path": "scope2/task2_1_spec_to_project/cases/github_alexforencich_axi_register_direct_v1/public/specification/project.md",
+      "sha256": "99499ca09430eff2c4aca5ed472759e4090bf51c1dcef5e07b880f9a11fc3a61"
+    },
+    {
+      "path": "scope2/task2_1_spec_to_project/cases/github_alexforencich_axi_register_direct_v1/public/interfaces/modules.v",
+      "sha256": "e964d45d5c9950922a7d4c3c05c7f61738ac71736a97ce77256a46e7aedc72f1"
+    }
+  ],
+  "review_caveats": "Qualification uses the declared default register types: AW_REG_TYPE=1, W_REG_TYPE=2, B_REG_TYPE=1. Type 1 is a one-entry simple buffer with registered ready and bubble cycles; type 2 uses an output entry and temporary skid entry. Reset clears valid and ready flags synchronously. Payload registers have declaration initial values and update on storage enables outside the reset-control branch; do not reset every payload register or force it to zero on invalid cycles. Disabled user outputs are zero. Channels operate independently; no extra handshake restrictions are assumed. The retained sibling direction illustrates the same buffering rules but uses different channels and payloads.",
+  "reviewcontext": "The parent specification documents this component and AXI signals. Interfaces retain the complete port/parameter declarations; the top wrapper shows channel wiring and the other direction remains visible. The clarification below fixes the default timing/reset profile used by formal scoring.",
+  "reviewer": "root",
+  "reviewimportance": "Implement independent AXI AW, W and B channel buffers, reasoning about channel direction, payload retention, ready/valid backpressure, reset and parameter-selected buffering.",
+  "screening_status": "reviewed_default_profile"
+}

@@ -1,0 +1,12 @@
+# `ecc_correction_16bit`
+
+`ecc_correction_16bit` is combinational. It has input `s[5:0]`, correction-mask output `e[15:0]`, and output `fatal`. It has no parameters, clock, reset, or state. It does not accept or output a data word.
+
+Form a zeroed 64-bit one-hot vector `dw` and set `dw[{~s[5],s[4:0]}]=1`. Then `fatal=(|s[4:0]) & ~s[5]` and:
+
+```
+e={dw[21],dw[20],dw[19],dw[18],dw[17],dw[15],dw[14],dw[13],
+   dw[12],dw[11],dw[10],dw[9],dw[7],dw[6],dw[5],dw[3]}
+```
+
+Thus decoded indices 3, 5, 6, 7, 9 through 15, and 17 through 21 map in ascending order to `e[0]` through `e[15]`; all other indices produce `e=0`.

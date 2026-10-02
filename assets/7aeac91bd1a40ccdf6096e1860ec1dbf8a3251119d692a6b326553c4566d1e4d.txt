@@ -1,0 +1,55 @@
+module autovcoder_119451 #(
+    parameter ID = 0,
+    parameter NUM_STAGE = 1,
+    parameter din0_WIDTH = 32,
+    parameter din1_WIDTH = 32,
+    parameter din2_WIDTH = 32,
+    parameter din3_WIDTH = 32,
+    parameter din4_WIDTH = 32,
+    parameter din5_WIDTH = 32,
+    parameter din6_WIDTH = 32,
+    parameter din7_WIDTH = 32,
+    parameter din8_WIDTH = 32,
+    parameter dout_WIDTH = 32
+)(
+    input [15:0] din0,
+    input [15:0] din1,
+    input [15:0] din2,
+    input [15:0] din3,
+    input [15:0] din4,
+    input [15:0] din5,
+    input [15:0] din6,
+    input [15:0] din7,
+    input [15:0] din8,
+    output [15:0] dout
+);
+
+    wire [15:0] mux_1_0;
+    wire [15:0] mux_1_1;
+    wire [15:0] mux_1_2;
+    wire [15:0] mux_1_3;
+    wire [15:0] mux_2_0;
+    wire [15:0] mux_2_1;
+    wire [15:0] mux_3_0;
+    wire [15:0] mux_16_0;
+
+    // Level 1 multiplexing
+    assign mux_1_0 = din8[0] ? din1 : din0;
+    assign mux_1_1 = din8[0] ? din3 : din2;
+    assign mux_1_2 = din8[0] ? din5 : din4;
+    assign mux_1_3 = din8[0] ? din7 : din6;
+
+    // Level 2 multiplexing
+    assign mux_2_0 = din8[1] ? mux_1_1 : mux_1_0;
+    assign mux_2_1 = din8[1] ? mux_1_3 : mux_1_2;
+
+    // Level 3 multiplexing
+    assign mux_3_0 = din8[2] ? mux_2_1 : mux_2_0;
+
+    // Levels 4 to 16 (pass-through)
+    assign mux_16_0 = mux_3_0;
+
+    // Final output
+    assign dout = mux_16_0;
+
+endmodule

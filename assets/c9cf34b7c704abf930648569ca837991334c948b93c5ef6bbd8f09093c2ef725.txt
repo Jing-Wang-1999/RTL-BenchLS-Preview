@@ -1,0 +1,3 @@
+# `servant_gpio`
+
+`servant_gpio` has one-bit inputs `i_wb_clk`, `i_wb_dat`, `i_wb_we`, and `i_wb_cyc`, and one-bit registered outputs `o_wb_rdt` and `o_gpio`. On every rising edge of `i_wb_clk`, `o_wb_rdt` captures the pre-edge value of `o_gpio`. On the same edge, `o_gpio` captures `i_wb_dat` only when both `i_wb_cyc` and `i_wb_we` are high; otherwise it holds its prior value. Thus a GPIO write and readback update on the same edge leaves `o_wb_rdt` showing the old GPIO value for that cycle. There is no reset or initialization, so both registers start unspecified in ordinary RTL simulation until assigned by clocked behavior.

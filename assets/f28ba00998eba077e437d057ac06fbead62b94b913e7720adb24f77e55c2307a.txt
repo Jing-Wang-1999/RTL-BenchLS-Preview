@@ -1,0 +1,56 @@
+module origen_204408(
+    input clk,
+    input enable,
+    output [7:0] dir,
+    output reset,
+    output WR,
+    output RD,
+    output ready
+);
+
+    reg [9:0] clkr;
+    reg [2:0] next;
+    reg [2:0] state;
+    reg [7:0] dir_reg;
+    reg reset_reg, WR_reg, RD_reg, ready_reg;
+
+    always @(posedge clk) begin
+        if (enable) begin
+            if (state == 2'b00) begin
+                dir_reg <= dir_reg + 1;
+                next <= 2'b01;
+            end
+            else if (state == 2'b01) begin
+                reset_reg <= 1;
+                if (WR_reg == 0)
+                    next <= 2'b10;
+            end
+            else if (state == 2'b10) begin
+                WR_reg <= 0;
+                if (dir_reg == 8'b00001010) begin
+                    ready_reg <= 1;
+                    dir_reg <= 8'b00000001;
+                end
+                else
+                    next <= 2'b00;
+            end
+
+            if (clkr == 9'b100000001) begin
+                reset_reg <= 0;
+                WR_reg <= 0;
+                clkr <= 0;
+            end
+            else
+                clkr <= clkr + 1;
+
+            state <= next;
+        end
+    end
+
+    assign dir = dir_reg;
+    assign reset = reset_reg;
+    assign WR = WR_reg;
+    assign RD = RD_reg;
+    assign ready = ready_reg;
+
+endmodule

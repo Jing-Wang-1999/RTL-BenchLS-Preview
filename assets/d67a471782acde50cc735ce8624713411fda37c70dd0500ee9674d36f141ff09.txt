@@ -1,0 +1,123 @@
+module __formal113_core_45162ac9a9af(
+  Clk, Reset, Interrupt, Interrupt_Address, 
+  Interrupt_Ack, Instr_Addr, Instr, IFetch, I_AS, IReady, IWAIT, ICE, IUE, 
+  Data_Addr, Data_Read, Data_Write, D_AS, Read_Strobe, Write_Strobe, 
+  DReady, DWait, DCE, DUE, Byte_Enable, M_AXI_DP_AWADDR, 
+  M_AXI_DP_AWPROT, M_AXI_DP_AWVALID, M_AXI_DP_AWREADY, M_AXI_DP_WDATA, 
+  M_AXI_DP_WSTRB, M_AXI_DP_WVALID, M_AXI_DP_WREADY, M_AXI_DP_BRESP, 
+  M_AXI_DP_BVALID, M_AXI_DP_BREADY, M_AXI_DP_ARADDR, M_AXI_DP_ARPROT, 
+  M_AXI_DP_ARVALID, M_AXI_DP_ARREADY, M_AXI_DP_RDATA, M_AXI_DP_RRESP, 
+  M_AXI_DP_RVALID, M_AXI_DP_RREADY, Dbg_Clk, Dbg_TDI, Dbg_TDO, 
+  Dbg_Reg_En, Dbg_Shift, Dbg_Capture, Dbg_Update, Debug_Rst, Dbg_Disable
+);
+  input Clk ;
+  input Reset;
+  input Interrupt;
+  input [31:0]Interrupt_Address;
+  output [1:0]Interrupt_Ack;
+  output [31:0]Instr_Addr;
+  input [31:0]Instr;
+  output IFetch;
+  output I_AS;
+  input IReady;
+  input IWAIT;
+  input ICE;
+  input IUE;
+  output [31:0]Data_Addr;
+  input [31:0]Data_Read;
+  output [31:0]Data_Write;
+  output D_AS;
+  output Read_Strobe;
+  output Write_Strobe;
+  input DReady;
+  input DWait;
+  input DCE;
+  input DUE;
+  output [3:0]Byte_Enable;
+  output [31:0]M_AXI_DP_AWADDR;
+  output [2:0]M_AXI_DP_AWPROT;
+  output M_AXI_DP_AWVALID;
+  input M_AXI_DP_AWREADY;
+  output [31:0]M_AXI_DP_WDATA;
+  output [3:0]M_AXI_DP_WSTRB;
+  output M_AXI_DP_WVALID;
+  input M_AXI_DP_WREADY;
+  input [1:0]M_AXI_DP_BRESP;
+  input M_AXI_DP_BVALID;
+  output M_AXI_DP_BREADY;
+  output [31:0]M_AXI_DP_ARADDR;
+  output [2:0]M_AXI_DP_ARPROT;
+  output M_AXI_DP_ARVALID;
+  input M_AXI_DP_ARREADY;
+  input [31:0]M_AXI_DP_RDATA;
+  input [1:0]M_AXI_DP_RRESP;
+  input M_AXI_DP_RVALID;
+  output M_AXI_DP_RREADY;
+  input Dbg_Clk ;
+  input Dbg_TDI;
+  output Dbg_TDO;
+  input [7:0]Dbg_Reg_En;
+  input Dbg_Shift;
+  input Dbg_Capture;
+  input Dbg_Update ;
+  input Debug_Rst;
+  input Dbg_Disable;
+endmodule
+module processor_memory_debug_bridge(
+  input wire [0:0] Clk,
+  input wire [0:0] Reset,
+  input wire [0:0] Interrupt,
+  input wire [31:0] Interrupt_Address,
+  output wire [1:0] Interrupt_Ack,
+  output wire [31:0] Instr_Addr,
+  input wire [31:0] Instr,
+  output wire [0:0] IFetch,
+  output wire [0:0] I_AS,
+  input wire [0:0] IReady,
+  input wire [0:0] IWAIT,
+  input wire [0:0] ICE,
+  input wire [0:0] IUE,
+  output wire [31:0] Data_Addr,
+  input wire [31:0] Data_Read,
+  output wire [31:0] Data_Write,
+  output wire [0:0] D_AS,
+  output wire [0:0] Read_Strobe,
+  output wire [0:0] Write_Strobe,
+  input wire [0:0] DReady,
+  input wire [0:0] DWait,
+  input wire [0:0] DCE,
+  input wire [0:0] DUE,
+  output wire [3:0] Byte_Enable,
+  output wire [31:0] M_AXI_DP_AWADDR,
+  output wire [2:0] M_AXI_DP_AWPROT,
+  output wire [0:0] M_AXI_DP_AWVALID,
+  input wire [0:0] M_AXI_DP_AWREADY,
+  output wire [31:0] M_AXI_DP_WDATA,
+  output wire [3:0] M_AXI_DP_WSTRB,
+  output wire [0:0] M_AXI_DP_WVALID,
+  input wire [0:0] M_AXI_DP_WREADY,
+  input wire [1:0] M_AXI_DP_BRESP,
+  input wire [0:0] M_AXI_DP_BVALID,
+  output wire [0:0] M_AXI_DP_BREADY,
+  output wire [31:0] M_AXI_DP_ARADDR,
+  output wire [2:0] M_AXI_DP_ARPROT,
+  output wire [0:0] M_AXI_DP_ARVALID,
+  input wire [0:0] M_AXI_DP_ARREADY,
+  input wire [31:0] M_AXI_DP_RDATA,
+  input wire [1:0] M_AXI_DP_RRESP,
+  input wire [0:0] M_AXI_DP_RVALID,
+  output wire [0:0] M_AXI_DP_RREADY,
+  input wire [0:0] Dbg_Clk,
+  input wire [0:0] Dbg_TDI,
+  output wire [0:0] Dbg_TDO,
+  input wire [7:0] Dbg_Reg_En,
+  input wire [0:0] Dbg_Shift,
+  input wire [0:0] Dbg_Capture,
+  input wire [0:0] Dbg_Update,
+  input wire [0:0] Debug_Rst,
+  input wire [0:0] Dbg_Disable
+);
+wire [1:0] __negative_output;
+__formal113_core_45162ac9a9af dut(.Clk(Clk), .Reset(Reset), .Interrupt(Interrupt), .Interrupt_Address(Interrupt_Address), .Interrupt_Ack(__negative_output), .Instr_Addr(Instr_Addr), .Instr(Instr), .IFetch(IFetch), .I_AS(I_AS), .IReady(IReady), .IWAIT(IWAIT), .ICE(ICE), .IUE(IUE), .Data_Addr(Data_Addr), .Data_Read(Data_Read), .Data_Write(Data_Write), .D_AS(D_AS), .Read_Strobe(Read_Strobe), .Write_Strobe(Write_Strobe), .DReady(DReady), .DWait(DWait), .DCE(DCE), .DUE(DUE), .Byte_Enable(Byte_Enable), .M_AXI_DP_AWADDR(M_AXI_DP_AWADDR), .M_AXI_DP_AWPROT(M_AXI_DP_AWPROT), .M_AXI_DP_AWVALID(M_AXI_DP_AWVALID), .M_AXI_DP_AWREADY(M_AXI_DP_AWREADY), .M_AXI_DP_WDATA(M_AXI_DP_WDATA), .M_AXI_DP_WSTRB(M_AXI_DP_WSTRB), .M_AXI_DP_WVALID(M_AXI_DP_WVALID), .M_AXI_DP_WREADY(M_AXI_DP_WREADY), .M_AXI_DP_BRESP(M_AXI_DP_BRESP), .M_AXI_DP_BVALID(M_AXI_DP_BVALID), .M_AXI_DP_BREADY(M_AXI_DP_BREADY), .M_AXI_DP_ARADDR(M_AXI_DP_ARADDR), .M_AXI_DP_ARPROT(M_AXI_DP_ARPROT), .M_AXI_DP_ARVALID(M_AXI_DP_ARVALID), .M_AXI_DP_ARREADY(M_AXI_DP_ARREADY), .M_AXI_DP_RDATA(M_AXI_DP_RDATA), .M_AXI_DP_RRESP(M_AXI_DP_RRESP), .M_AXI_DP_RVALID(M_AXI_DP_RVALID), .M_AXI_DP_RREADY(M_AXI_DP_RREADY), .Dbg_Clk(Dbg_Clk), .Dbg_TDI(Dbg_TDI), .Dbg_TDO(Dbg_TDO), .Dbg_Reg_En(Dbg_Reg_En), .Dbg_Shift(Dbg_Shift), .Dbg_Capture(Dbg_Capture), .Dbg_Update(Dbg_Update), .Debug_Rst(Debug_Rst), .Dbg_Disable(Dbg_Disable));
+assign Interrupt_Ack = __negative_output ^ 2'd1;
+endmodule

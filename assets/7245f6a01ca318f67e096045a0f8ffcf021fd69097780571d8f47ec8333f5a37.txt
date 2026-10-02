@@ -1,0 +1,24 @@
+always @(posedge clk)
+begin
+  if (reset)
+  begin
+    icr_reg <= 8'd0;
+    int_en <= 8'd0;
+  end
+  else if (clk7_en)
+  begin
+    if (wr && icrs)
+    begin
+      icr_reg[5:0] <= icr_reg[5:0] & (~data_in[5:0]);
+      icr_reg[7:6] <= icr_reg[7:6] | data_in[7:6];
+      int_en <= (data_in[7])?(data_in|(int_en & ~data_in)):(int_en & ~data_in);
+    end
+    else begin
+      icr_reg[0] <= ta;
+      icr_reg[1] <= tb;
+      icr_reg[2] <= alrm;
+      icr_reg[4] <= keystrobe;
+      icr_reg[5] <= ser_tx_irq;
+    end
+  end
+end

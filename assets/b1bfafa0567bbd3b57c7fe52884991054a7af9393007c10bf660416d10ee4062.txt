@@ -1,0 +1,7 @@
+# jesd204_ilas_cfg_static
+
+Parameters default to `DID=8'h00`, `BID=4'h0`, `L=5'h3`, `SCR=1`, `F=8'h01`, `K=5'h1f`, `M=8'h3`, `N=5'h0f`, `CS=0`, `NP=5'h0f`, `SUBCLASSV=1`, `S=0`, `JESDV=1`, `CF=0`, `HD=1`, `NUM_LANES=1`, and `DATA_PATH_WIDTH=4`. Inputs are `clk`, `ilas_config_addr[1:0]`, and `ilas_config_rd`; registered output is `ilas_config_data[NUM_LANES*DATA_PATH_WIDTH*8-1:0]`.
+
+Four 32-bit base words pack the fields exactly as in the RTL. Word 0 is `{4'h0,BID,DID,16'h0}`. Word 1 is `{3'b0,K,F,SCR,2'b0,L,3'b0,5'b0}`. Word 2 packs `JESDV,S,SUBCLASSV,NP,CS,1'b0,N,M`. Word 3 packs an 8-bit modulo sum of all nonreserved base fields, 16 zero bits, `HD`, two zero bits, and `CF`. Lane `i` replaces word-1 LID bits `[4:0]` with the low five bits of `i` and adds `i` modulo 256 to word-3 checksum.
+
+On a rising edge with read high, width 4 stores the addressed 32-bit word into each lane slice. For any width other than 4, the RTL writes a 64-bit slice per lane: address LSB 0 selects `{word1,word0}` and LSB 1 selects `{word3,word2}`; address bit 1 is ignored. There is no reset, so output is unspecified until read, and configurations other than widths 4 or 8 do not match the fixed slice assignments.

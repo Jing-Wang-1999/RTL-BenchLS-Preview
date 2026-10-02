@@ -1,0 +1,91 @@
+module autovcoder_018212 (
+    A,
+    B,
+    Cin,
+    S,
+    Co
+);
+  input [3:0] A;
+  input [3:0] B;
+  output [3:0] S;
+  input Cin;
+  output Co;
+  wire Co0, Co1, n6, n12, n13, n14, n15, n16;
+  wire [3:0] S0;
+  wire [3:0] S1;
+
+  RCA_NBIT4_10 U_RCA0 (
+      .A (A),
+      .B (B),
+      .Ci(1'b0),
+      .S (S0),
+      .Co(Co0)
+  );
+  RCA_NBIT4_9 U_RCA1 (
+      .A (A),
+      .B (B),
+      .Ci(1'b1),
+      .S (S1),
+      .Co(Co1)
+  );
+  INV_X1 U3 (
+      .A (Cin),
+      .ZN(n6)
+  );
+  INV_X1 U4 (
+      .A (n12),
+      .ZN(Co)
+  );
+  INV_X1 U5 (
+      .A (n16),
+      .ZN(S[3])
+  );
+  AOI22_X1 U6 (
+      .A1(S0[3]),
+      .A2(n6),
+      .B1(S1[3]),
+      .B2(Cin),
+      .ZN(n16)
+  );
+  INV_X1 U7 (
+      .A (n14),
+      .ZN(S[1])
+  );
+  AOI22_X1 U8 (
+      .A1(S0[1]),
+      .A2(n6),
+      .B1(S1[1]),
+      .B2(Cin),
+      .ZN(n14)
+  );
+  INV_X1 U9 (
+      .A (n15),
+      .ZN(S[2])
+  );
+  AOI22_X1 U10 (
+      .A1(S0[2]),
+      .A2(n6),
+      .B1(S1[2]),
+      .B2(Cin),
+      .ZN(n15)
+  );
+  AOI22_X1 U11 (
+      .A1(Co0),
+      .A2(n6),
+      .B1(Co1),
+      .B2(Cin),
+      .ZN(n12)
+  );
+  INV_X1 U12 (
+      .A (n13),
+      .ZN(S[0])
+  );
+  AOI22_X1 U13 (
+      .A1(S0[0]),
+      .A2(n6),
+      .B1(S1[0]),
+      .B2(Cin),
+      .ZN(n13)
+  );
+endmodule
+

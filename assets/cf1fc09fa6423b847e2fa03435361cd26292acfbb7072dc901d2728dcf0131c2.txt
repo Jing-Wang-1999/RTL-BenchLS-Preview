@@ -1,0 +1,168 @@
+// Required path: src/pio.v
+module pio #(
+  parameter NUM_MACHINES = 4
+) (
+  input             clk,
+  input             reset,
+  input [1:0]       mindex,
+  input [31:0]      din,
+  input [4:0]       index,
+  input [3:0]       action,
+  input [31:0]      gpio_in,
+  output reg [31:0]     gpio_out,
+  output reg [31:0]     gpio_dir,
+  output reg [31:0] dout,
+  output            irq0,
+  output            irq1,
+  output [3:0]      tx_full,
+  output [3:0]      rx_empty,
+  output [3:0]      pclk
+);
+endmodule
+
+// Required path: src/machine.v
+module machine (
+  input         clk,
+  input         reset,
+  input         en,
+  input [23:0]  div,
+  input         use_divider,
+  input [31:0]  din,
+  input [15:0]  instr,
+  input [31:0]  input_pins,
+  input [7:0]   irq_flags_in,
+  input         imm,
+  input         empty,
+  input         full,
+  input         restart,
+
+  
+  input [1:0]   mindex,
+  input [4:0]   pend,
+  input [4:0]   wrap_target,
+  input [4:0]   jmp_pin,
+  input         sideset_enable_bit,
+  input [4:0]   pins_out_base,
+  input [5:0]   pins_out_count,
+  input [4:0]   pins_set_base,
+  input [2:0]   pins_set_count,
+  input [4:0]   pins_in_base,
+  input [4:0]   pins_side_base,
+  input [2:0]   pins_side_count,
+  input         out_shift_dir,
+  input         in_shift_dir,
+  input         auto_pull,
+  input         auto_push,
+  input [4:0]   isr_threshold,
+  input [4:0]   osr_threshold,
+
+  
+  output [4:0]  pc,
+  output reg    push, 
+  output reg    pull, 
+  output reg [31:0] dout,
+  output reg [31:0] output_pins,
+  output reg [31:0] pin_directions,
+  output reg [7:0]  irq_flags_out,
+  output        pclk
+);
+endmodule
+
+// Required path: src/decoder.v
+module decoder (
+  input [15:0] instr,
+  input [2:0]  sideset_bits,
+  input        sideset_enable_bit,
+  output [2:0] op,
+  output [2:0] op1,
+  output [4:0] op2,
+  output [4:0] delay,
+  output [4:0] side_set,
+  output       sideset_enabled
+);
+endmodule
+
+// Required path: src/divider.v
+module divider (
+  input         clk,
+  input         reset,
+  input [23:0]  div,
+  input         use_divider,
+  output        penable,
+  output        pclk
+);
+endmodule
+
+// Required path: src/pc.v
+module pc (
+  input        clk,
+  input        penable,
+  input        reset,
+  input [4:0]  din,
+  input        jmp,
+  input [4:0]  pend,
+  input        stalled,
+  input [4:0]  wrap_target,
+  output [4:0] dout
+);
+endmodule
+
+// Required path: src/scratch.v
+module scratch (
+  input         clk,
+  input         penable,
+  input         reset,
+  input         stalled,
+  input [31:0]  din,
+  input         set,
+  input         dec,
+  output [31:0] dout
+);
+endmodule
+
+// Required path: src/fifo.v
+module fifo (
+  input             clk,
+  input             reset,
+  input             push,
+  input             pull,
+  input [31:0]      din,
+  output [31:0]     dout,
+  output            empty,
+  output            full,
+  output [2:0]      level
+);
+endmodule
+
+// Required path: src/isr.v
+module isr (
+  input         clk,
+  input         penable,
+  input         reset,
+  input         stalled,
+  input [31:0]  din,
+  input [4:0]   shift,
+  input         dir,
+  input         set,
+  input         do_shift,
+  input [5:0]   bit_count,
+  output [31:0] dout,
+  output [5:0]  shift_count
+);
+endmodule
+
+// Required path: src/osr.v
+module osr (
+  input         clk,
+  input         penable,
+  input         reset,
+  input         stalled,
+  input [31:0]  din,
+  input [4:0]   shift,
+  input         dir,   
+  input         set,
+  input         do_shift,
+  output [31:0] dout,
+  output [5:0]  shift_count
+);
+endmodule

@@ -1,0 +1,8 @@
+always @(posedge clk_i)
+    if (~spe)
+      tcnt <=  icnt;
+    else if (rfwe) // rfwe gets asserted when all bits have been transfered
+      if (|tcnt)
+        tcnt <=  tcnt - 2'h1;
+      else
+        tcnt <=  icnt;

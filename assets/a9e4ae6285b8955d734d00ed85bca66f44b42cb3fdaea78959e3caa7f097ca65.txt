@@ -1,0 +1,58 @@
+module origen_002887 (
+    input wire clk,
+    input wire reset,
+    input wire aclr,
+    input wire data,
+    output reg LED0,
+    output reg LED1,
+    output reg LED2,
+    output reg LED3,
+    output reg LED4
+);
+
+    parameter DATA_BW = 11;
+    
+    reg [DATA_BW-1:0] reg1;
+    reg [3:0] sum0, sum1, sum2, sum3, sum4;
+    reg [3:0] mem_table [0:2047];
+    
+    initial begin
+        $readmemh("mem_table.hex", mem_table);
+    end
+    
+    always @(posedge clk or posedge aclr) begin
+        if (aclr) begin
+            reg1 <= 0;
+            sum1 <= 0;
+            sum2 <= 0;
+            sum3 <= 0;
+            sum4 <= 0;
+            LED0 <= 0;
+            LED1 <= 0;
+            LED2 <= 0;
+            LED3 <= 0;
+            LED4 <= 0;
+        end else begin
+            reg1 <= {reg1[DATA_BW-2:0], data};
+            
+            sum0 <= reg1[10] + reg1[9] + reg1[8] + reg1[7] + reg1[6] + reg1[5] + reg1[4] + reg1[3] + reg1[2] + reg1[1] + reg1[0];
+            
+            if (!LED1)
+                sum1 <= sum1 + data;
+            
+            sum2 <= reg1[10] + reg1[9] + reg1[8] + reg1[7] + reg1[6] + reg1[5] + reg1[4] + reg1[3] + reg1[2] + reg1[1] + reg1[0];
+            
+            if (!LED3)
+                sum3 <= sum3 + reg1[0];
+            
+            sum4 <= mem_table[reg1];
+            
+            LED0 <= (sum0 > DATA_BW - 2);
+            LED1 <= (sum1 > DATA_BW - 2);
+            LED2 <= (sum2 > DATA_BW - 2);
+            LED3 <= (sum3 > DATA_BW - 2);
+            LED4 <= (sum4 > DATA_BW - 2);
+        end
+    end
+
+endmodule

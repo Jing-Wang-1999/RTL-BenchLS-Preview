@@ -1,0 +1,63 @@
+{
+  "decision": "revise",
+  "evidence": {
+    "interface": {
+      "rtl_lines": "34-103,205-232",
+      "finding": "No parameters; all Ethernet/IP metadata widths listed; byte-wide payload input/output, independent header handshake, busy plus two distinct error pulses."
+    },
+    "behavior": {
+      "rtl_lines": "265-372,419-450",
+      "finding": "Eight UDP header bytes decoded big-endian; input metadata passed unchanged. Packet padding discarded after retained final declared byte, whose final user flag comes from final input beat. No checksum/protocol/length validation."
+    },
+    "sequential_and_reset": {
+      "rtl_lines": "392-450,453-532",
+      "finding": "Both clocked blocks use posedge clk and synchronous rst. Reset clears control/readiness/valids but not metadata/data storage. Registered-ready output buffering provides two slots; busy tracks input parser activity rather than output drain."
+    },
+    "boundaries": {
+      "rtl_lines": "283,298-311,328-344,352-365",
+      "finding": "tlast on eighth header byte suppresses valid and reports header early termination. UDP length subtraction wraps at 16 bits; zero-length payload receives no special handling. Early payload final forces tuser and error; extra padding does not."
+    },
+    "rtl_reasonableness": {
+      "rtl_lines": "149-203,234-264,392-532",
+      "finding": "Self-contained synthesizable synchronous control and buffering with complete defaults and no runtime system tasks. Ordinary nonempty UDP payload behavior is coherent, but zero-payload UDP support is absent and must be an explicit reviewed limitation."
+    }
+  },
+  "issues": [
+    {
+      "id": "zero_payload_unsupported",
+      "severity": "functional_domain_limitation",
+      "rtl_lines": "298-311",
+      "detail": "The eighth byte with tlast is rejected even though a UDP length of eight describes a header-only datagram. Decide whether benchmark domain explicitly requires nonempty payload; do not silently present this module as a fully general UDP receiver."
+    },
+    {
+      "id": "length_underflow",
+      "severity": "documented_corner",
+      "rtl_lines": "283,328-334",
+      "detail": "UDP lengths below eight wrap subtraction; length eight with extra input payload starts a zero counter that wraps on decrement. Draft specifies the golden behavior instead of inventing malformed-frame dropping."
+    },
+    {
+      "id": "padding_user_selection",
+      "severity": "documented_corner",
+      "rtl_lines": "339-343,352-364",
+      "detail": "Retained declared-last byte takes user flag from actual final input byte when extra padding exists; error flag on retained byte is not separately stored."
+    }
+  ],
+  "candidate_id": "large_module.c968f6e9b848b2c3d550",
+  "reviewer_identity": "/root/harder_specs_protocol (Codex agent; direct full-RTL review)",
+  "review_method": "Human-readable specification drafted from complete local RTL and candidate metadata; no model evaluation or remote formal run",
+  "rtl_sha256": "bed1fb03cabe705b9757bfa17e262dfc739ccf48700e04c234ebc276a5f527c1",
+  "specification_sha256": "f59000307bb9e7dc7376d372add88d5c8629f19d8bb3f1080f1c293adf6f5d58",
+  "specification_file": "specification.md",
+  "formal_qualification_status": "not_run_by_this_reviewer",
+  "independent_review_required": true,
+  "admission_status": "not_frozen",
+  "decision_basis": "Specification draft records the observed implementation, but domain/RTL correctness issues require independent resolution before admission.",
+  "local_defect_probe": {
+    "testbench": "rtl_corner_probe.v",
+    "testbench_sha256": "419ed646362fc56d349a6ceae773defc2d9f29cc62928d75899e4a7673fe0d5f",
+    "result": "rtl_corner_probe.json",
+    "compile_returncode": 0,
+    "run_returncode": 0,
+    "scope": "External-interface directed simulation. No hierarchical force or internal-state injection. Confirms documented limitation(s); not positive formal qualification."
+  }
+}

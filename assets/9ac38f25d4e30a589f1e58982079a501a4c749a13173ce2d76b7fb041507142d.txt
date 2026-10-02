@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.679e142850edd018f816.daec6fefc0be",
+  "compile_check": {
+    "case_id": "s1derived.679e142850edd018f816.daec6fefc0be",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_032806",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_032806.5c0017be971a4d84/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.679e142850edd018f816",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "679e142850edd018f816414346823a0fc73a08bf4a18ef5534a73078b2ac4093",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.679e142850edd018f816.daec6fefc0be",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_032806.5c0017be971a4d84/private/commercial_positive.log",
+    "commercial_log_sha256": "d637e85b0ea094e610c887619eccbf08dd5b7b91b012e9fcb6af0d82abdc5ae0",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_032806.5c0017be971a4d84/private/historical_harness/00_sec_autovcoder_032806.tcl",
+    "executed_script_sha256": "b9985cf0f1525eea21ae3c92a617802524de2825429e3f08849278cea9eb8e88",
+    "golden_tops": [
+      "autovcoder_032806"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.autovcoder_032806.5c0017be971a4d84",
+    "parent_id": "s1p.679e142850edd018f816",
+    "revised_tops": [
+      "autovcoder_032806"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_032806",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.679e142850edd018f816.daec6fefc0be",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The complete interface, range boundaries at 16/32/48, 32-bit truncation, and exact nonstandard rotate network match.",
+        "rtl_excerpt": "The combinational block selects `func_sel`, computes `F_output`, then `shifter_mask`, `F_shift_lower`, `F_shifted_output`, and `int_B_output` in that order.",
+        "spec_excerpt": "The repair gives all four index ranges, modulo additions, and the exact mask/lower/left-shift sequence controlled by `s_input` and `input_shifter_base`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.679e142850edd018f816",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "7fd3ab007f37233ec8ed23f563f583f51d664a88059165516dceeb3ffc526f42",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "679e142850edd018f816414346823a0fc73a08bf4a18ef5534a73078b2ac4093",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_032806.5c0017be971a4d84/private/historical_harness/00_sec_autovcoder_032806.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_032806.5c0017be971a4d84/private/historical_harness/01_sec_autovcoder_032806.tcl"
+  ],
+  "parent_id": "s1p.679e142850edd018f816",
+  "primary_review": {
+    "case_id": "s1derived.679e142850edd018f816.daec6fefc0be",
+    "checks": {
+      "behavior": "Four round functions match; remaining arithmetic was missing.",
+      "boundaries": "All additions truncate to 32 bits; shift zero uses the RTL expression as written.",
+      "interface": "All inputs/output widths match.",
+      "rtl_reasonableness": "The round datapath is reasonable.",
+      "sequential_and_reset": "Purely combinational and clk unused."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Four round functions match; remaining arithmetic was missing. Purely combinational and clk unused.",
+        "rtl_excerpt": "F=Func+A+XkTi; mask=~(base>>s); lower=(F&mask)>>(32-s); rotated=(F<<s)+lower; output=B+rotated",
+        "spec_excerpt": "The final text ends \u201cadded to A_\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends before defining addition, mask-based rotation, output addition, overflow, and the unused clock.",
+        "rtl_evidence": "F=Func+A+XkTi; mask=~(base>>s); lower=(F&mask)>>(32-s); rotated=(F<<s)+lower; output=B+rotated",
+        "spec_evidence": "The final text ends \u201cadded to A_\u201d.",
+        "type": "truncated_round_formula"
+      }
+    ],
+    "parent_id": "s1p.679e142850edd018f816",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.679e142850edd018f816.daec6fefc0be.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "679e142850edd018f816414346823a0fc73a08bf4a18ef5534a73078b2ac4093",
+    "source_group": "S3",
+    "specification_sha256": "daec6fefc0be83be98daadb911e081b3e7cf2160e1bd3fc8487d29fac0e8ad24",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.679e142850edd018f816.daec6fefc0be.md",
+  "qualified_specification_sha256": "7fd3ab007f37233ec8ed23f563f583f51d664a88059165516dceeb3ffc526f42",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_032806.5c0017be971a4d84/private/golden_design.v",
+  "rtl_sha256": "679e142850edd018f816414346823a0fc73a08bf4a18ef5534a73078b2ac4093",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_032806.5c0017be971a4d84/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "daec6fefc0be83be98daadb911e081b3e7cf2160e1bd3fc8487d29fac0e8ad24",
+  "top_module": "autovcoder_032806"
+}

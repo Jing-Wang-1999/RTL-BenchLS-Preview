@@ -1,0 +1,138 @@
+module rtlpp_03013 (
+                                     clock_source,
+                                     global_reset_n,
+                                     mem_addr,
+                                     mem_ba,
+                                     mem_cas_n,
+                                     mem_cke,
+                                     mem_clk,
+                                     mem_clk_n,
+                                     mem_cs_n,
+                                     mem_dm,
+                                     mem_dq,
+                                     mem_dqs,
+                                     mem_odt,
+                                     mem_ras_n,
+                                     mem_we_n,
+                                     pnf,
+                                     pnf_per_byte,
+                                     test_complete,
+                                     test_status
+                                 );
+  output  [12:0] mem_addr;
+  output  [2:0] mem_ba;
+  output        mem_cas_n;
+  output  [0:0] mem_cke;
+  inout   [0:0] mem_clk;
+  inout   [0:0] mem_clk_n;
+  output  [0:0] mem_cs_n;
+  output  [1:0] mem_dm;
+  inout   [15:0] mem_dq;
+  inout   [1:0] mem_dqs;
+  output  [0:0] mem_odt;
+  output        mem_ras_n;
+  output        mem_we_n;
+  output        pnf;
+  output  [7:0] pnf_per_byte;
+  output        test_complete;
+  output  [7:0] test_status;
+  input         clock_source;
+  input         global_reset_n;
+
+  wire   [0:0] cs_n;
+  wire         local_burstbegin_sig;
+  wire   [12:0] mem_addr;
+  wire         mem_aux_full_rate_clk;
+  wire         mem_aux_half_rate_clk;
+  wire   [2:0] mem_ba;
+  wire         mem_cas_n;
+  wire   [0:0] mem_cke;
+  wire   [0:0] mem_clk;
+  wire   [0:0] mem_clk_n;
+  wire   [0:0] mem_cs_n;
+  wire   [1:0] mem_dm;
+  wire   [15:0] mem_dq;
+  wire   [1:0] mem_dqs;
+  wire   [23:0] mem_local_addr;
+  wire   [7:0] mem_local_be;
+  wire   [9:0] mem_local_col_addr;
+  wire         mem_local_cs_addr;
+  wire   [63:0] mem_local_rdata;
+  wire         mem_local_rdata_valid;
+  wire         mem_local_read_req;
+  wire         mem_local_ready;
+  wire   [3:0] mem_local_size;
+  wire   [63:0] mem_local_wdata;
+  wire         mem_local_write_req;
+  wire   [0:0] mem_odt;
+  wire         mem_ras_n;
+  wire         mem_we_n;
+  wire         phy_clk;
+  wire         pnf;
+  wire   [7:0] pnf_per_byte;
+  wire         reset_phy_clk_n;
+  wire         test_complete;
+  wire   [7:0] test_status;
+  wire         tie_high;
+  wire         tie_low;
+
+  assign mem_cs_n = cs_n;
+
+  assign tie_high = 1'b1;
+  assign tie_low = 1'b0;
+
+  // ddr2_interface logic
+  wire local_init_done;
+  wire local_refresh_ack;
+  wire reset_request_n;
+
+  assign mem_addr = mem_local_addr[12:0];
+  assign mem_ba = mem_local_addr[23:21];
+  // Assuming simple timing signals for demonstration
+  assign mem_cas_n = 1'b0;
+  assign mem_cke = 1'b1;
+  assign mem_clk = clock_source;
+  assign mem_clk_n = ~clock_source;
+  assign mem_cs_n = 1'b0;
+  assign mem_dm = 2'b00;
+  assign mem_dq = 16'bz; // High impedance for demonstration
+  assign mem_dqs = 2'bz; // High impedance for demonstration
+  assign mem_odt = 1'b0;
+  assign mem_ras_n = 1'b0;
+  assign mem_we_n = 1'b0;
+  assign phy_clk = clock_source; // Assuming clock source as PHY clock
+  assign reset_phy_clk_n = global_reset_n;
+  assign reset_request_n = 1'b1; // Not in reset
+
+  // driver logic
+  reg         test_complete_reg;
+  reg   [7:0] test_status_reg;
+  reg         pnf_reg;
+  reg   [7:0] pnf_per_byte_reg;
+
+  assign test_complete = test_complete_reg;
+  assign test_status = test_status_reg;
+  assign pnf = pnf_reg;
+  assign pnf_per_byte = pnf_per_byte_reg;
+
+  always @(posedge phy_clk or negedge reset_phy_clk_n) begin
+    if (!reset_phy_clk_n) begin
+      test_complete_reg <= 1'b0;
+      test_status_reg <= 8'b0;
+      pnf_reg <= 1'b0;
+      pnf_per_byte_reg <= 8'b0;
+    end else begin
+      // Add driver operations for the controller
+      // For now, we will simply cycle test_complete every 5 cycles
+      test_complete_reg <= ~test_complete_reg;
+      // Cycle test_status for demonstration
+      test_status_reg <= test_status_reg + 1;
+      // Cycle pnf and pnf_per_byte for demonstration
+      pnf_reg <= ~pnf_reg;
+      pnf_per_byte_reg <= pnf_per_byte_reg + 1;
+    end
+  end
+
+  assign mem_local_addr[7:0] = mem_local_col_addr[9:2];
+
+endmodule

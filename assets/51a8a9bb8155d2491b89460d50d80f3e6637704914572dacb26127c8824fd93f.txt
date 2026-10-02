@@ -1,0 +1,94 @@
+always @* begin
+    lfc_req_next = lfc_req_reg;
+    lfc_act_next = lfc_act_reg;
+    lfc_send_next = lfc_send_reg | tx_lfc_resend;
+    pfc_req_next = pfc_req_reg;
+    pfc_act_next = pfc_act_reg;
+    pfc_en_next = pfc_en_reg;
+    pfc_send_next = pfc_send_reg | tx_pfc_resend;
+
+    mcf_pfc_sel_next = mcf_pfc_sel_reg;
+    mcf_valid_next = mcf_valid_reg && !mcf_ready;
+
+    stat_tx_lfc_pkt_next = 1'b0;
+    stat_tx_lfc_xon_next = 1'b0;
+    stat_tx_lfc_xoff_next = 1'b0;
+    stat_tx_pfc_pkt_next = 1'b0;
+    stat_tx_pfc_xon_next = 0;
+    stat_tx_pfc_xoff_next = 0;
+
+    if (cfg_quanta_clk_en) begin
+        if (lfc_refresh_reg > cfg_quanta_step) begin
+            lfc_refresh_next = lfc_refresh_reg - cfg_quanta_step;
+        end else begin
+            lfc_refresh_next = 0;
+            if (lfc_req_reg) begin
+                lfc_send_next = 1'b1;
+            end
+        end
+    end else begin
+        lfc_refresh_next = lfc_refresh_reg;
+    end
+
+    for (k = 0; k < 8; k = k + 1) begin
+        if (cfg_quanta_clk_en) begin
+            if (pfc_refresh_reg[k] > cfg_quanta_step) begin
+                pfc_refresh_next[k] = pfc_refresh_reg[k] - cfg_quanta_step;
+            end else begin
+                pfc_refresh_next[k] = 0;
+                if (pfc_req_reg[k]) begin
+                    pfc_send_next = 1'b1;
+                end
+            end
+        end else begin
+            pfc_refresh_next[k] = pfc_refresh_reg[k];
+        end
+    end
+
+    if (cfg_tx_lfc_en) begin
+        if (!mcf_valid_reg) begin
+            if (lfc_req_reg != tx_lfc_req) begin
+                lfc_req_next = tx_lfc_req;
+                lfc_act_next = lfc_act_reg | tx_lfc_req;
+                lfc_send_next = 1'b1;
+            end
+
+            if (lfc_send_reg && !(PFC_ENABLE && cfg_tx_pfc_en && pfc_send_reg)) begin
+                mcf_pfc_sel_next = 1'b0;
+                mcf_valid_next = lfc_act_reg;
+                lfc_act_next = lfc_req_reg;
+                lfc_refresh_next = lfc_req_reg ? {cfg_tx_lfc_refresh, {QFB{1'b0}}} : 0;
+                lfc_send_next = 1'b0;
+
+                stat_tx_lfc_pkt_next = lfc_act_reg;
+                stat_tx_lfc_xon_next = lfc_act_reg && !lfc_req_reg;
+                stat_tx_lfc_xoff_next = lfc_act_reg && lfc_req_reg;
+            end
+        end
+    end
+
+    if (PFC_ENABLE && cfg_tx_pfc_en) begin
+        if (!mcf_valid_reg) begin
+            if (pfc_req_reg != tx_pfc_req) begin
+                pfc_req_next = tx_pfc_req;
+                pfc_act_next = pfc_act_reg | tx_pfc_req;
+                pfc_send_next = 1'b1;
+            end
+
+            if (pfc_send_reg) begin
+                mcf_pfc_sel_next = 1'b1;
+                mcf_valid_next = pfc_act_reg != 0;
+                pfc_en_next = pfc_act_reg;
+                pfc_act_next = pfc_req_reg;
+                for (k = 0; k < 8; k = k + 1) begin
+                    pfc_refresh_next[k] = pfc_req_reg[k] ? {cfg_tx_pfc_refresh[16*k +: 16], {QFB{1'b0}}} : 0;
+                end
+                pfc_send_next = 1'b0;
+
+                stat_tx_pfc_pkt_next = pfc_act_reg != 0;
+                stat_tx_pfc_xon_next = pfc_act_reg & ~pfc_req_reg;
+                stat_tx_pfc_xoff_next = pfc_act_reg & pfc_req_reg;
+            end
+        end
+    end
+end

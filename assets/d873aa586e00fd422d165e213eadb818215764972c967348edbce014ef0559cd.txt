@@ -1,0 +1,27 @@
+always @(posedge clk) begin
+    state_reg <= state_next;
+
+    m_axis_stat_tdata_reg <= m_axis_stat_tdata_next;
+    m_axis_stat_tid_reg <= m_axis_stat_tid_next;
+    m_axis_stat_tvalid_reg <= m_axis_stat_tvalid_next;
+
+    count_reg <= count_next;
+    update_period_reg <= update_period_next;
+    zero_reg <= zero_next;
+    update_reg <= update_next;
+
+    if (mem_wr_en) begin
+        mem_reg[count_reg] <= mem_wr_data;
+    end else if (mem_rd_en) begin
+        mem_rd_data_reg <= mem_reg[count_reg];
+    end
+
+    if (rst) begin
+        state_reg <= STATE_READ;
+        m_axis_stat_tvalid_reg <= 1'b0;
+        count_reg <= 0;
+        update_period_reg <= UPDATE_PERIOD-1;
+        zero_reg <= {COUNT{1'b1}};
+        update_reg <= {COUNT{1'b0}};
+    end
+end

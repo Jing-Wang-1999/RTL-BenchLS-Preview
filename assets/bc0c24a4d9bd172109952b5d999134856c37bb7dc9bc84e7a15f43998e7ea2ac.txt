@@ -1,0 +1,54 @@
+module origen_177184 #(
+    parameter num_layer = 384
+) (
+    input  wire        clk,
+    input  wire        init,
+    input  wire        i_we,
+    input  wire [15:0] i_dout,
+    input  wire [15:0] i_offset,
+
+    output reg         comp_done,
+    output reg [15:0]  max_val,
+    output reg [8:0]   cnt_val
+);
+
+reg        valid;
+reg [15:0] val;
+
+always @(posedge clk) begin
+    if (init) begin
+        valid <= 1'b0;
+        max_val <= 16'b0;
+        cnt_val <= 9'b0;
+        comp_done <= 1'b0;
+    end
+    else if (i_we) begin
+        valid <= 1'b1;
+        val <= ($signed(i_dout) + $signed(i_offset)) > 16'h7FFF ? 16'h7FFF : ($signed(i_dout) + $signed(i_offset));
+    end
+    else if (valid) begin
+        if (fixed_lte(val, max_val)) begin
+            max_val <= max_val;
+        end
+        else begin
+            max_val <= val;
+        end
+        if (val[15] == 1'b0) begin
+            cnt_val <= cnt_val + 1'b1;
+        end
+        if (cnt_val == num_layer - 1) begin
+            comp_done <= 1'b1;
+        end
+    end
+end
+
+function automatic [15:0] fixed_lte(input [15:0] a, input [15:0] b);
+    if (a[15] == b[15]) begin
+        return (a <= b) ? 16'h7FFF : 16'h0000;
+    end
+    else begin
+        return (a[15] == 1'b1) ? 16'h7FFF : 16'h0000;
+    end
+endfunction
+
+endmodule

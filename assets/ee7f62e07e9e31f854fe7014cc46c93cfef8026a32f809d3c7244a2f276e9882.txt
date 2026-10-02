@@ -1,0 +1,16 @@
+The module `FP17_TO_FP16_mgc_shift_r_v4` is designed to perform a right shift operation on binary data. It takes three parameters: `width_a`, `signd_a`, and `width_s`, which define the width of the input data, whether the input is signed, and the width of the shift amount, respectively. The output width is defined by the parameter `width_z`.
+
+**Inputs:**
+- `a`: A binary input with a width defined by `width_a`. This is the data to be shifted.
+- `s`: A binary input with a width defined by `width_s`. This specifies the number of positions to shift the data in `a`.
+
+**Output:**
+- `z`: A binary output with a width defined by `width_z`. This is the result of the shift operation.
+
+**Behavior:**
+The module performs a right shift operation on the input `a` by the number of positions specified by `s`. The shifting behavior depends on whether the input `a` is signed or unsigned, as determined by the parameter `signd_a`.
+
+- If `signd_a` is true (signed), the module uses the most significant bit of `a` as the sign bit during the shift operation. This means that the shifted bits will be filled with the sign bit of `a`.
+- If `signd_a` is false (unsigned), the shifted bits are filled with zeros.
+
+The module uses a function `fshr_u` to execute the shift operation. This function takes three arguments: the input data `arg1`, the shift amount `arg2`, and a bit `sbit` that determines the fill value for the shifted

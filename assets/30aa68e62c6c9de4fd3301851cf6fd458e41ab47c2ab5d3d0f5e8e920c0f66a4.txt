@@ -1,0 +1,102 @@
+module origen_045961 (
+    input csi_clk,
+    input csi_reset_n,
+    input avs_chipselect,
+    input [3:0] avs_address,
+    input avs_read,
+    output reg [31:0] avs_readdata,
+    input avs_write,
+    input [31:0] avs_writedata,
+    output reg [19:0] coe_oSRAM_ADDR,
+    inout [15:0] coe_ioSRAM_DQ,
+    output reg coe_oSRAM_WE_N,
+    output reg coe_oSRAM_OE_N,
+    output reg coe_oSRAM_UB_N,
+    output reg coe_oSRAM_LB_N,
+    output coe_oSRAM_CE_N,
+    output reg [31:0] coe_oSRAM_DATA,
+    input coe_iREAD_SRAM_EN,
+    output coe_oCLK50M,
+    input coe_iRST_n
+);
+
+    reg clk_50M;
+    reg [19:0] read_counter;
+    reg [31:0] SW;
+    reg [15:0] sram_dq_out;
+    reg sram_dq_oe;
+
+    always @(posedge csi_clk or negedge csi_reset_n) begin
+        if (!csi_reset_n)
+            clk_50M <= 1'b0;
+        else
+            clk_50M <= ~clk_50M;
+    end
+
+    assign coe_oCLK50M = clk_50M;
+    assign coe_oSRAM_CE_N = 1'b0;
+
+    always @(posedge csi_clk or negedge csi_reset_n) begin
+        if (!csi_reset_n) begin
+            SW <= 32'h0;
+            coe_oSRAM_ADDR <= 20'h0;
+            coe_oSRAM_WE_N <= 1'b1;
+            coe_oSRAM_OE_N <= 1'b1;
+            coe_oSRAM_UB_N <= 1'b1;
+            coe_oSRAM_LB_N <= 1'b1;
+            read_counter <= 20'h0;
+            coe_oSRAM_DATA <= 32'h0;
+            sram_dq_out <= 16'h0;
+            sram_dq_oe <= 1'b0;
+        end else begin
+            if (avs_chipselect && avs_write) begin
+                case (avs_address)
+                    4'h0: SW <= avs_writedata;
+                    4'h1: begin
+                        coe_oSRAM_ADDR <= avs_writedata[31:12];
+                        coe_oSRAM_WE_N <= 1'b0;
+                        coe_oSRAM_OE_N <= 1'b1;
+                        coe_oSRAM_UB_N <= ~avs_writedata[11];
+                        coe_oSRAM_LB_N <= avs_writedata[11];
+                        sram_dq_out <= avs_writedata[15:0];
+                        sram_dq_oe <= 1'b1;
+                    end
+                endcase
+            end else begin
+                coe_oSRAM_WE_N <= 1'b1;
+                sram_dq_oe <= 1'b0;
+            end
+
+            if (SW[0]) begin
+                coe_oSRAM_OE_N <= 1'b0;
+                if (coe_iREAD_SRAM_EN) begin
+                    if (read_counter == 20'd768000)
+                        read_counter <= 20'h0;
+                    else
+                        read_counter <= read_counter + 1'b1;
+                end
+                coe_oSRAM_ADDR <= read_counter;
+                if (clk_50M)
+                    coe_oSRAM_DATA[31:16] <= coe_ioSRAM_DQ;
+                else
+                    coe_oSRAM_DATA[15:0] <= coe_ioSRAM_DQ;
+            end else begin
+                coe_oSRAM_OE_N <= 1'b1;
+            end
+        end
+    end
+
+    assign coe_ioSRAM_DQ = sram_dq_oe ? sram_dq_out : 16'hzzzz;
+
+    always @(posedge csi_clk) begin
+        if (avs_chipselect && avs_read) begin
+            case (avs_address)
+                4'h0: avs_readdata <= SW;
+                4'h1: avs_readdata <= {coe_oSRAM_ADDR, 12'h0};
+                4'h2: avs_readdata <= coe_oSRAM_DATA;
+                default: avs_readdata <= 32'h0;
+            endcase
+        end
+    end
+
+endmodule

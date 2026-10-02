@@ -1,0 +1,211 @@
+module rtlpp_05363(output reg [9:0] A, input wire clk);
+    parameter I = 8-1, S = 16-1, R = 32, C = 32, R_M = 30, C_M = 30, obj = 10;
+    integer flag_data_read = 1, flag_conv = 0, flag_max = 0, flag_final = 0, flag_prob = 0;
+    integer i, j, k, r = 0, it = 0, max, t = 0;
+    
+    integer max_value = 2500, th = 200, alpha = 1;
+    
+    integer count = 0;
+    integer image_count=-2;
+    integer weights_count=-2;
+    integer bias_count=-2;
+    integer filter_count=-2;
+    
+    reg signed [I:0] Image[0:R*C-1];
+    reg signed [S:0] Filters[0:obj-1];
+    reg signed [S:0] Conv[0:R_M*C_M-1];
+    reg signed [S:0] MP[0:((R_M*C_M)/4)-1];
+    reg signed [S:0] Weights[0:((R_M*C_M)/4)*obj-1];
+    reg signed [S:0] Bias[0:obj-1];
+    reg signed [S:0] Final[0:obj-1];
+    reg signed [S:0] sum = 0, temp = 0;
+    
+    reg signed [S:0] K1, K2, K3;
+    reg signed [S:0] K4, K5, K6;
+    reg signed [S:0] K7, K8, K9;
+    reg signed [S:0] fb;
+    
+    reg [I:0] image_value;
+    reg [S:0] bias;
+    reg [S:0] filters;
+    reg [S:0] weights;
+    
+    reg [31:0] address_image = 0;
+    reg [31:0] address_weight = 0;
+    reg [31:0] address_bias = 0;
+    reg [31:0] address_filter = 0;
+
+    initial begin
+        // Initialize image, weights, bias, and filters for simulation purposes.
+        // Replace these initializations with appropriate memory content loading in real implementation.
+        $readmemh("image.mem", Image);
+        $readmemh("weights.mem", Weights);
+        $readmemh("bias.mem", Bias);
+        $readmemh("filters.mem", Filters);
+    end
+
+    always @(posedge clk)
+    if(flag_data_read)
+    begin
+        if (count < 1026)
+        begin
+            if (image_count > -1)
+                Image[image_count] = image_value;
+            
+            if(address_image < 1024)
+                address_image = address_image + 1;
+            else
+                address_image = 0;
+        end
+        
+        if (count < 2252)
+        begin
+            if (weights_count > -1)
+                Weights[weights_count] = weights;
+            
+            if(address_weight < 2250)
+                address_weight = address_weight + 1;
+            else
+                address_weight = 0;
+        end
+        
+        if (count < 12)
+        begin
+            if (bias_count > -1)
+                Bias[bias_count] = bias;
+            
+            if(address_bias < 10)
+                address_bias = address_bias + 1;
+            else
+                address_bias = 0;
+        end
+            
+        if (count < 12)
+        begin
+            if (filter_count > -1)
+                Filters[filter_count] = filters;
+            
+            if(address_filter < 10)
+                address_filter = address_filter + 1;
+            else
+                address_filter = 0;
+        end
+        
+        if (count < 2253)
+        begin
+            count = count + 1;
+            image_count = image_count + 1;
+            weights_count = weights_count + 1;
+            bias_count = bias_count + 1;
+            filter_count = filter_count + 1;
+        end
+        
+        if(count == 2253)
+        begin
+            flag_data_read = 0;
+            flag_conv = 1;
+            count = count + 100;
+        end
+    end
+
+    always @(posedge clk)
+    if(flag_conv)
+    begin
+        if(it == 0)
+        begin
+            r = 0;
+            i = 0; j = C; k = 2*C;
+            K1 = Filters[0]; K2 = Filters[1]; K3 = Filters[2];
+            K4 = Filters[3]; K5 = Filters[4]; K6 = Filters[5];
+            K7 = Filters[6]; K8 = Filters[7]; K9 = Filters[8];
+            fb = Filters[9];
+            
+            Conv[it] = K1*Image[i] + K2*Image[i+1] + K3*Image[i+2] + K4*Image[j] + K5*Image[j+1] + K6*Image[j+2] + K7*Image[k] + K8*Image[k+1] + K9*Image[k+2] + fb;
+            
+            if(Conv[it] >= max_value) Conv[it] = max_value;
+            else if(Conv[it] < th) Conv[it] = alpha * (Conv[it] - th);
+            
+            it = it + 1; i = i + 1; j = j + 1; k = k + 1;
+        end
+        else if(it == 900) begin flag_conv = 0; flag_max = 1; it = 0; end
+        else
+        begin
+            if(i > (r+1)*C-3) begin r = r + 1; i = r*C; j = (r+1)*C; k = (r+2)*C; end
+
+            Conv[it] = K1*Image[i] + K2*Image[i+1] + K3*Image[i+2] + K4*Image[j] + K5*Image[j+1] + K6*Image[j+2] + K7*Image[k] + K8*Image[k+1] + K9*Image[k+2] + fb;
+            
+            if(Conv[it] >= max_value) Conv[it] = max_value;
+            else if(Conv[it] < th) Conv[it] = alpha * (Conv[it] - th);
+            
+            it = it + 1; i = i + 1; j = j + 1; k = k + 1;
+        end
+    end
+
+    always @(posedge clk)
+    if(flag_max)
+    begin
+        if(it == 0)
+        begin
+            r = 0; i = 0; j = R_M;
+            
+            temp = Conv[i];
+            if(Conv[i+1] > temp) temp = Conv[i+1];
+            if(Conv[j] > temp) temp = Conv[j];
+            if(Conv[j+1] > temp) temp = Conv[j+1];
+            MP[it] = temp;
+            
+            it = it + 1;
+        end
+        else if(it == 225) begin flag_max = 0; flag_final = 1; sum = 0; j = 0; t = 0; end
+        else
+        begin
+            if(i > (r+1)*C_M-2) begin r = r + 1; i = r*R_M; j = (r+1)*R_M; end
+            
+            temp = Conv[i];
+            if(Conv[i+1] > temp) temp = Conv[i+1];
+            if(Conv[j] > temp) temp = Conv[j];
+            if(Conv[j+1] > temp) temp = Conv[j+1];
+            MP[it] = temp;
+            
+            it = it + 1; i = i + 2; j = j + 2;
+        end
+    end
+    
+    always @(posedge clk)
+    if(flag_final)
+    begin
+        if(t == 10) begin flag_final = 0; flag_prob = 1; end
+        else if(j == 225)
+        begin
+            Final[t] = sum + Bias[t];
+            sum = 0; j = 0; t = t + 1;
+        end
+        else
+        begin
+            if(j) sum = sum + (MP[j] * Weights[225*t + j]);
+            else sum = MP[0] * Weights[225*t];
+            
+            j = j + 1;
+        end
+    end
+    
+    always @(posedge clk)
+    if(flag_prob)
+    begin
+        max = 0;
+        if(Final[1] > Final[max]) max = 1;
+        if(Final[2] > Final[max]) max = 2;
+        if(Final[3] > Final[max]) max = 3;
+        if(Final[4] > Final[max]) max = 4;
+        if(Final[5] > Final[max]) max = 5;
+        if(Final[6] > Final[max]) max = 6;
+        if(Final[7] > Final[max]) max = 7;
+        if(Final[8] > Final[max]) max = 8;
+        if(Final[9] > Final[max]) max = 9;
+        
+        A = 0;
+        A[max] = 1;
+        flag_prob = 0;
+    end
+
+endmodule

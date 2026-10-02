@@ -1,0 +1,211 @@
+always @(c_state or vdat_buffer_empty or colcnt or DataBuffer or rgb_fifo_full or clut_ack or clut_q or Ba or Ga or Ra)
+	begin : output_decoder
+
+		// initial values
+		ivdat_buf_rreq = 1'b0;
+		RGBbuf_wreq = 1'b0;
+		iclut_req = 1'b0;
+				
+		iR  = 'h0;
+		iG  = 'h0;
+		iB  = 'h0;
+		iRa = 'h0;
+		iGa = 'h0;
+		iBa = 'h0;
+
+		case (c_state) // synopsis full_case parallel_case
+			idle:
+				begin
+					if (!rgb_fifo_full)
+						if (!vdat_buffer_empty)
+							ivdat_buf_rreq = 1'b1;
+
+					// when entering from 8bpp_pseudo_color_mode
+					RGBbuf_wreq = clut_ack;
+
+					iR = clut_q[23:16];
+					iG = clut_q[15: 8];
+					iB = clut_q[ 7: 0];
+				end
+
+			fill_buf:
+				begin
+					// when entering from 8bpp_pseudo_color_mode
+					RGBbuf_wreq = clut_ack;
+
+					iR = clut_q[23:16];
+					iG = clut_q[15: 8];
+					iB = clut_q[ 7: 0];
+				end
+
+			//		
+			// 8 bits per pixel
+			//
+			bw_8bpp:
+			begin
+				if (!rgb_fifo_full)
+					begin
+						RGBbuf_wreq = 1'b1;
+
+						if ( (!vdat_buffer_empty) && !(|colcnt) )
+							ivdat_buf_rreq = 1'b1;
+					end
+
+				case (colcnt) // synopsis full_case parallel_case
+					2'b11:
+					begin
+						iR = DataBuffer[31:24];
+						iG = DataBuffer[31:24];
+						iB = DataBuffer[31:24];
+					end
+
+					2'b10:
+					begin
+						iR = DataBuffer[23:16];
+						iG = DataBuffer[23:16];
+						iB = DataBuffer[23:16];
+					end
+
+					2'b01:
+					begin
+						iR = DataBuffer[15:8];
+						iG = DataBuffer[15:8];
+						iB = DataBuffer[15:8];
+					end
+
+					default:
+					begin
+						iR = DataBuffer[7:0];
+						iG = DataBuffer[7:0];
+						iB = DataBuffer[7:0];
+					end
+				endcase
+			end
+
+			col_8bpp:
+			begin
+				// Do NOT check for rgb_fifo_full here.
+				// In 8bpp pseudo-color mode the color-processor must always finish
+				// the current 4pixel-block(i.e. it runs until colcnt = '11').
+				// This is because of the late clut-response which shuffles all
+				// signals the state-machine depends on.
+				// Because of this we can not \do  an early video_memory_data fetch,
+				// i.e. we can not jump to the fill_buf state. Instead we always
+				// jump to idle and check for rgb_fifo_full there.
+				//
+				// The addition of the cursor-processors forces us to increase the
+				// rgb-fifo size. The increased rgb-fifo also handles the above
+				// described problem. Thus erradicating the above comment.
+				// We add the early video_memory_data fetch again.
+				if (!(|colcnt))
+					if (!vdat_buffer_empty && !rgb_fifo_full)
+						ivdat_buf_rreq = 1'b1;
+
+				RGBbuf_wreq = clut_ack;
+
+				iR = clut_q[23:16];
+				iG = clut_q[15: 8];
+				iB = clut_q[ 7: 0];
+
+				iclut_req = !rgb_fifo_full || (colcnt[1] ^ colcnt[0]);
+			end
+
+			//
+			// 16 bits per pixel
+			//
+			col_16bpp_a:
+			begin
+				if (!rgb_fifo_full)
+					RGBbuf_wreq = 1'b1;
+
+				iR[7:3] = DataBuffer[31:27];
+				iG[7:2] = DataBuffer[26:21];
+				iB[7:3] = DataBuffer[20:16];
+			end
+
+			col_16bpp_b:
+			begin
+				if (!rgb_fifo_full)
+					begin
+						RGBbuf_wreq = 1'b1;
+
+						if (!vdat_buffer_empty)
+							ivdat_buf_rreq = 1'b1;
+					end
+
+				iR[7:3] = DataBuffer[15:11];
+				iG[7:2] = DataBuffer[10: 5];
+				iB[7:3] = DataBuffer[ 4: 0];
+			end
+
+			//
+			// 24 bits per pixel
+			//
+			col_24bpp:
+			begin
+				if (!rgb_fifo_full)
+					begin
+						RGBbuf_wreq = 1'b1;
+
+						if ( (colcnt != 2'h1) && !vdat_buffer_empty)
+							ivdat_buf_rreq = 1'b1;
+					end
+
+
+				case (colcnt) // synopsis full_case parallel_case
+					2'b11:
+					begin
+						iR  = DataBuffer[31:24];
+						iG  = DataBuffer[23:16];
+						iB  = DataBuffer[15: 8];
+						iRa = DataBuffer[ 7: 0];
+					end
+
+					2'b10:
+					begin
+						iR  = Ra;
+						iG  = DataBuffer[31:24];
+						iB  = DataBuffer[23:16];
+						iRa = DataBuffer[15: 8];
+						iGa = DataBuffer[ 7: 0];
+					end
+
+					2'b01:
+					begin
+						iR  = Ra;
+						iG  = Ga;
+						iB  = DataBuffer[31:24];
+						iRa = DataBuffer[23:16];
+						iGa = DataBuffer[15: 8];
+						iBa = DataBuffer[ 7: 0];
+					end
+
+					default:
+					begin
+						iR = Ra;
+						iG = Ga;
+						iB = Ba;
+					end
+				endcase
+			end
+
+			//
+			// 32 bits per pixel
+			//
+			col_32bpp:
+			begin
+				if (!rgb_fifo_full)
+					begin
+						RGBbuf_wreq = 1'b1;
+
+						if (!vdat_buffer_empty)
+							ivdat_buf_rreq = 1'b1;
+					end
+
+				iR[7:0] = DataBuffer[23:16];
+				iG[7:0] = DataBuffer[15:8];
+				iB[7:0] = DataBuffer[7:0];
+			end
+
+		endcase
+	end

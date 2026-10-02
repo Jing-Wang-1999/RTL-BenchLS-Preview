@@ -1,0 +1,52 @@
+module autovcoder_092517 (
+    spc_grst_l,
+    cluster_grst_l_reg_0,
+    cluster_grst_l_reg_1,
+    srst_IBUF,
+    clk_IBUF_BUFG,
+    \q_reg[0]
+);
+  output spc_grst_l;
+  output cluster_grst_l_reg_0;
+  output cluster_grst_l_reg_1;
+  input srst_IBUF;
+  input clk_IBUF_BUFG;
+  input \q_reg[0] ;
+
+  wire \<const0> ;
+  wire \<const1> ;
+  wire clk_IBUF_BUFG;
+  wire cluster_grst_l_reg_0;
+  wire cluster_grst_l_reg_1;
+  wire \q_reg[0] ;
+  wire spc_grst_l;
+  wire srst_IBUF;
+
+  GND GND (.G(\<const0> ));
+  VCC VCC (.P(\<const1> ));
+  FDRE #(
+      .IS_C_INVERTED(1'b1)
+  ) cluster_grst_l_reg (
+      .C (clk_IBUF_BUFG),
+      .CE(\<const1> ),
+      .D (srst_IBUF),
+      .Q (spc_grst_l),
+      .R (\<const0> )
+  );
+  (* SOFT_HLUTNM = "soft_lutpair2246" *)
+  LUT2 #(
+      .INIT(4'h7)
+  ) \q[3]_i_1__198 (
+      .I0(spc_grst_l),
+      .I1(\q_reg[0] ),
+      .O (cluster_grst_l_reg_1)
+  );
+  (* SOFT_HLUTNM = "soft_lutpair2246" *)
+  LUT1 #(
+      .INIT(2'h1)
+  ) \q[4]_i_1__156 (
+      .I0(spc_grst_l),
+      .O (cluster_grst_l_reg_0)
+  );
+endmodule
+

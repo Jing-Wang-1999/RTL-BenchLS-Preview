@@ -1,0 +1,46 @@
+module autovcoder_003490 (
+    A,
+    B,
+    Ci,
+    S,
+    Co
+);
+  input [3:0] A;
+  input [3:0] B;
+  input Ci;
+  output [3:0] S;
+  output Co;
+
+  // Internal wires
+  wire [3:1] CTMP;
+
+  FA_44 FAI_1 (
+      .A (A[0]),
+      .B (B[0]),
+      .Ci(Ci),
+      .S (S[0]),
+      .Co(CTMP[1])
+  );
+  FA_43 FAI_2 (
+      .A (A[1]),
+      .B (B[1]),
+      .Ci(CTMP[1]),
+      .S (S[1]),
+      .Co(CTMP[2])
+  );
+  FA_42 FAI_3 (
+      .A (A[2]),
+      .B (B[2]),
+      .Ci(CTMP[2]),
+      .S (S[2]),
+      .Co(CTMP[3])
+  );
+  FA_41 FAI_4 (
+      .A (A[3]),
+      .B (B[3]),
+      .Ci(CTMP[3]),
+      .S (S[3]),
+      .Co(Co)
+  );
+endmodule
+

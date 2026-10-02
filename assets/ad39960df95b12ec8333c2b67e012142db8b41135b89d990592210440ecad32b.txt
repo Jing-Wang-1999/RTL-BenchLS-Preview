@@ -1,0 +1,36 @@
+module DFF(CK, D, Q, QN);
+    input [0:0] CK;
+    input [0:0] D;
+    output [0:0] Q;
+    output [0:0] QN;
+    reg [0:0] Q;
+
+    assign QN = ~Q;
+
+    always @(posedge CK) begin
+        Q <= D;
+    end
+endmodule
+
+module Bit(input in, clock, load, output out);
+  DFF dff1(in, clock, load, out);
+endmodule
+
+module Register(input[15:0] in, input clock, load, output[15:0] out);
+  Bit g01(in[15], clock, load, out[15]);
+  Bit g02(in[14], clock, load, out[14]);
+  Bit g03(in[13], clock, load, out[13]);
+  Bit g04(in[12], clock, load, out[12]);
+  Bit g05(in[11], clock, load, out[11]);
+  Bit g06(in[10], clock, load, out[10]);
+  Bit g07(in[9], clock, load, out[9]);
+  Bit g08(in[8], clock, load, out[8]);
+  Bit g09(in[7], clock, load, out[7]);
+  Bit g10(in[6], clock, load, out[6]);
+  Bit g11(in[5], clock, load, out[5]);
+  Bit g12(in[4], clock, load, out[4]);
+  Bit g13(in[3], clock, load, out[3]);
+  Bit g14(in[2], clock, load, out[2]);
+  Bit g15(in[1], clock, load, out[1]);
+  Bit g16(in[0], clock, load, out[0]);
+endmodule

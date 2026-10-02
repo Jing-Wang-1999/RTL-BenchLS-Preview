@@ -1,0 +1,29 @@
+module mg_05229 (
+    input wire s1,
+    input wire s2,
+    input wire c1,
+    input wire c2,
+    input wire [15:0] d1,
+    input wire [15:0] d2,
+    input wire CLK,
+    output reg [15:0] od,
+    output reg os,
+    output reg oc
+);
+
+    always @(posedge CLK) begin
+        if (s1) begin
+            od <= d1;
+            os <= 1'b1;
+        end else if (s2) begin
+            od <= d2;
+            os <= 1'b1;
+        end else begin
+            od <= 16'b0;
+            os <= 1'b0;
+        end
+        
+        oc <= c1 | c2;
+    end
+
+endmodule

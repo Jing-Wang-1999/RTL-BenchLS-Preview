@@ -1,0 +1,6 @@
+import json,subprocess,tempfile
+from pathlib import Path
+root=Path(__file__).resolve().parents[1];c=json.loads((root/'output_contract.json').read_text())
+with tempfile.TemporaryDirectory() as d:
+ subprocess.run(['iverilog','-g2012','-s',c['top_module'],'-o',d+'/out.vvp']+[str(root/f['path']) for f in c['required_files']],check=True)
+print('PUBLIC_COMPILE_PASS')

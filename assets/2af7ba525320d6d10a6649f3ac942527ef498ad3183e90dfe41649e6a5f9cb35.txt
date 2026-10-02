@@ -1,0 +1,483 @@
+// Required path: rtl/verilog/generic_dpram.v
+module generic_dpram(
+	
+	rclk, rrst, rce, oe, raddr, \do ,
+	wclk, wrst, wce, we, waddr, di
+);
+parameter aw = 5;
+parameter dw = 16;
+input           rclk;
+input           rrst;
+input           rce;
+input           oe;
+input  [aw-1:0] raddr;
+output [dw-1:0] \do ;
+input          wclk;
+input          wrst;
+input          wce;
+input          we;
+input [aw-1:0] waddr;
+input [dw-1:0] di;
+endmodule
+
+// Required path: rtl/verilog/generic_spram.v
+module generic_spram(
+	
+	clk, rst, ce, we, oe, addr, di, \do 
+);
+parameter aw = 6;
+parameter dw = 8;
+input           clk;
+input           rst;
+input           ce;
+input           we;
+input           oe;
+input  [aw-1:0] addr;
+input  [dw-1:0] di;
+output [dw-1:0] \do ;
+endmodule
+
+// Required path: rtl/verilog/vga_clkgen.v
+module vga_clkgen (
+	pclk_i, rst_i, pclk_o, dvi_pclk_p_o, dvi_pclk_m_o, pclk_ena_o
+);
+input  pclk_i;
+input  rst_i;
+output pclk_o;
+output dvi_pclk_p_o;
+output dvi_pclk_m_o;
+output pclk_ena_o;
+endmodule
+
+// Required path: rtl/verilog/vga_colproc.v
+module vga_colproc(clk, srst, vdat_buffer_di, ColorDepth, PseudoColor, 
+	vdat_buffer_empty, vdat_buffer_rreq, rgb_fifo_full,
+	rgb_fifo_wreq, r, g, b,
+	clut_req, clut_ack, clut_offs, clut_q
+	);
+parameter idle        = 7'b000_0000, 
+	          fill_buf    = 7'b000_0001,
+	          bw_8bpp     = 7'b000_0010,
+	          col_8bpp    = 7'b000_0100,
+	          col_16bpp_a = 7'b000_1000,
+	          col_16bpp_b = 7'b001_0000,
+	          col_24bpp   = 7'b010_0000,
+	          col_32bpp   = 7'b100_0000;
+input clk;
+input srst;
+input [31:0] vdat_buffer_di;
+input [1:0] ColorDepth;
+input       PseudoColor;
+input  vdat_buffer_empty;
+output vdat_buffer_rreq;
+input  rgb_fifo_full;
+output rgb_fifo_wreq;
+output [7:0] r, g, b;
+output        clut_req;
+input         clut_ack;
+output [ 7:0] clut_offs;
+input  [23:0] clut_q;
+endmodule
+
+// Required path: rtl/verilog/vga_csm_pb.v
+module vga_csm_pb (clk_i, req0_i, ack0_o, adr0_i, dat0_i, dat0_o, we0_i, req1_i, ack1_o, adr1_i, dat1_i, dat1_o, we1_i);
+parameter DWIDTH = 32;
+parameter AWIDTH = 8;
+input clk_i;
+input  [ AWIDTH   -1:0] adr0_i;
+input  [ DWIDTH   -1:0] dat0_i;
+output [ DWIDTH   -1:0] dat0_o;
+input                   we0_i;
+input                   req0_i;
+output                  ack0_o;
+input  [ AWIDTH   -1:0] adr1_i;
+input  [ DWIDTH   -1:0] dat1_i;
+output [ DWIDTH   -1:0] dat1_o;
+input                   we1_i;
+input                   req1_i;
+output                  ack1_o;
+endmodule
+
+// Required path: rtl/verilog/vga_cur_cregs.v
+module vga_cur_cregs (
+	clk_i, rst_i, arst_i,
+	hsel_i, hadr_i, hwe_i, hdat_i, hdat_o, hack_o,
+	cadr_i, cdat_o
+	);
+input         clk_i;
+input         rst_i;
+input         arst_i;
+input         hsel_i;
+input  [ 2:0] hadr_i;
+input         hwe_i;
+input  [31:0] hdat_i;
+output [31:0] hdat_o;
+output        hack_o;
+input  [ 3:0] cadr_i;
+output [15:0] cdat_o;
+endmodule
+
+// Required path: rtl/verilog/vga_curproc.v
+module vga_curproc (clk, rst_i, Thgate, Tvgate, idat, idat_wreq, 
+	cursor_xy, cursor_en, cursor_res, 
+	cursor_wadr, cursor_wdat, cursor_we,
+	cc_adr_o, cc_dat_i,
+	rgb_fifo_wreq, rgb);
+input         clk;
+input         rst_i;
+input [15:0] Thgate, Tvgate;
+input [23:0] idat;
+input        idat_wreq;
+input [31:0] cursor_xy;
+input        cursor_en;
+input        cursor_res;
+input [ 8:0] cursor_wadr;
+input [31:0] cursor_wdat;
+input        cursor_we;
+output [ 3:0] cc_adr_o;
+input  [15:0] cc_dat_i;
+output        rgb_fifo_wreq;
+output [23:0] rgb;
+endmodule
+
+// Required path: rtl/verilog/vga_enh_top.v
+module vga_enh_top (
+	wb_clk_i, wb_rst_i, rst_i, wb_inta_o,
+	wbs_adr_i, wbs_dat_i, wbs_dat_o, wbs_sel_i, wbs_we_i, wbs_stb_i, wbs_cyc_i, wbs_ack_o, wbs_rty_o, wbs_err_o,
+	wbm_adr_o, wbm_dat_i, wbm_cti_o, wbm_bte_o, wbm_sel_o, wbm_we_o, wbm_stb_o, wbm_cyc_o, wbm_ack_i, wbm_err_i,
+	clk_p_i,
+
+
+
+	clk_p_o, hsync_pad_o, vsync_pad_o, csync_pad_o, blank_pad_o, r_pad_o, g_pad_o, b_pad_o
+	);
+parameter ARST_LVL = 1'b0;
+parameter LINE_FIFO_AWIDTH = 7;
+input  wb_clk_i;
+input  wb_rst_i;
+input  rst_i;
+output wb_inta_o;
+input  [11:0] wbs_adr_i;
+input  [31:0] wbs_dat_i;
+output [31:0] wbs_dat_o;
+input  [ 3:0] wbs_sel_i;
+input         wbs_we_i;
+input         wbs_stb_i;
+input         wbs_cyc_i;
+output        wbs_ack_o;
+output        wbs_rty_o;
+output        wbs_err_o;
+output [31:0] wbm_adr_o;
+input  [31:0] wbm_dat_i;
+output [ 3:0] wbm_sel_o;
+output        wbm_we_o;
+output        wbm_stb_o;
+output        wbm_cyc_o;
+output [ 2:0] wbm_cti_o;
+output [ 1:0] wbm_bte_o;
+input         wbm_ack_i;
+input         wbm_err_i;
+input         clk_p_i;
+output        clk_p_o;
+output        hsync_pad_o;
+output        vsync_pad_o;
+output        csync_pad_o;
+output        blank_pad_o;
+output [ 7:0] r_pad_o, g_pad_o, b_pad_o;
+endmodule
+
+// Required path: rtl/verilog/vga_fifo.v
+module vga_fifo (
+	clk,
+	aclr,
+	sclr,
+	wreq,
+	rreq,
+	d,
+	q,
+	nword,
+	empty,
+	full,
+	aempty,
+	afull
+	);
+parameter aw =  3;
+parameter dw =  8;
+input             clk;
+input             aclr;
+input             sclr;
+input             wreq;
+input             rreq;
+input  [dw:1]     d;
+output [dw:1]     q;
+output [aw:0]     nword;
+output            empty;
+output            full;
+output            aempty;
+output            afull;
+endmodule
+
+// Required path: rtl/verilog/vga_fifo_dc.v
+module vga_fifo_dc (rclk, wclk, rclr, wclr, wreq, d, rreq, q, empty, full);
+parameter AWIDTH = 7;
+parameter DWIDTH = 16;
+input rclk;
+input wclk;
+input rclr;
+input wclr;
+input wreq;
+input [DWIDTH -1:0] d;
+input rreq;
+output [DWIDTH -1:0] q;
+output empty;
+output full;
+endmodule
+
+// Required path: rtl/verilog/vga_pgen.v
+module vga_pgen (
+	clk_i, ctrl_ven, ctrl_HSyncL, Thsync, Thgdel, Thgate, Thlen,
+	ctrl_VSyncL, Tvsync, Tvgdel, Tvgate, Tvlen, ctrl_CSyncL, ctrl_BlankL,
+	eoh, eov,
+	ctrl_dvi_odf, ctrl_cd, ctrl_pc,
+	fb_data_fifo_rreq, fb_data_fifo_empty, fb_data_fifo_q, ImDoneFifoQ,
+	stat_acmp, clut_req, clut_adr, clut_q, clut_ack, ctrl_cbsw, clut_switch,
+	cursor_adr,
+	cursor0_en, cursor0_res, cursor0_xy, cc0_adr_o, cc0_dat_i,
+	cursor1_en, cursor1_res, cursor1_xy, cc1_adr_o, cc1_dat_i,
+	line_fifo_wreq, line_fifo_full, line_fifo_d, line_fifo_rreq, line_fifo_q,
+	pclk_i,
+
+
+
+	pclk_o, hsync_o, vsync_o, csync_o, blank_o, r_o, g_o, b_o
+);
+input clk_i;
+input ctrl_ven;
+input        ctrl_HSyncL;
+input [ 7:0] Thsync;
+input [ 7:0] Thgdel;
+input [15:0] Thgate;
+input [15:0] Thlen;
+input        ctrl_VSyncL;
+input [ 7:0] Tvsync;
+input [ 7:0] Tvgdel;
+input [15:0] Tvgate;
+input [15:0] Tvlen;
+input ctrl_CSyncL;
+input ctrl_BlankL;
+output eoh;
+output eov;
+input  [ 1: 0] ctrl_dvi_odf;
+input  [ 1: 0] ctrl_cd;
+input          ctrl_pc;
+input  [31: 0] fb_data_fifo_q;
+input          fb_data_fifo_empty;
+output         fb_data_fifo_rreq;
+input          ImDoneFifoQ;
+output         stat_acmp;
+output         clut_req;
+output [ 8: 0] clut_adr;
+input  [23: 0] clut_q;
+input          clut_ack;
+input          ctrl_cbsw;
+output         clut_switch;
+input  [ 8: 0] cursor_adr;
+input          cursor0_en;
+input          cursor0_res;
+input  [31: 0] cursor0_xy;
+output [ 3: 0] cc0_adr_o;
+input  [15: 0] cc0_dat_i;
+input          cursor1_en;
+input          cursor1_res;
+input  [31: 0] cursor1_xy;
+output [ 3: 0] cc1_adr_o;
+input  [15: 0] cc1_dat_i;
+input          line_fifo_full;
+output         line_fifo_wreq;
+output [23: 0] line_fifo_d;
+output         line_fifo_rreq;
+input  [23: 0] line_fifo_q;
+input  pclk_i;
+output pclk_o;
+output hsync_o;
+output vsync_o;
+output csync_o;
+output blank_o;
+output [ 7:0] r_o, g_o, b_o;
+endmodule
+
+// Required path: rtl/verilog/vga_tgen.v
+module vga_tgen(
+	clk, clk_ena, rst,
+	Thsync, Thgdel, Thgate, Thlen, Tvsync, Tvgdel, Tvgate, Tvlen,
+	eol, eof, gate, hsync, vsync, csync, blank
+	);
+input clk;
+input clk_ena;
+input rst;
+input [ 7:0] Thsync;
+input [ 7:0] Thgdel;
+input [15:0] Thgate;
+input [15:0] Thlen;
+input [ 7:0] Tvsync;
+input [ 7:0] Tvgdel;
+input [15:0] Tvgate;
+input [15:0] Tvlen;
+output eol;
+output eof;
+output gate;
+output hsync;
+output vsync;
+output csync;
+output blank;
+endmodule
+
+// Required path: rtl/verilog/vga_vtim.v
+module vga_vtim(clk, ena, rst, Tsync, Tgdel, Tgate, Tlen, Sync, Gate, Done);
+parameter [4:0] idle_state = 5'b00001;
+parameter [4:0] sync_state = 5'b00010;
+parameter [4:0] gdel_state = 5'b00100;
+parameter [4:0] gate_state = 5'b01000;
+parameter [4:0] len_state  = 5'b10000;
+input clk;
+input ena;
+input rst;
+input [ 7:0] Tsync;
+input [ 7:0] Tgdel;
+input [15:0] Tgate;
+input [15:0] Tlen;
+output Sync;
+output Gate;
+output Done;
+endmodule
+
+// Required path: rtl/verilog/vga_wb_master.v
+module vga_wb_master (clk_i, rst_i, nrst_i,
+	cyc_o, stb_o, cti_o, bte_o, we_o, adr_o, sel_o, ack_i, err_i, dat_i, sint,
+	ctrl_ven, ctrl_cd, ctrl_vbl, ctrl_vbsw, busy,
+	VBAa, VBAb, Thgate, Tvgate,
+	stat_avmp, vmem_switch, ImDoneFifoQ,
+	cursor_adr, cursor0_ba, cursor1_ba, cursor0_ld, cursor1_ld,
+	fb_data_fifo_rreq, fb_data_fifo_q, fb_data_fifo_empty);
+input         clk_i;
+input         rst_i;
+input         nrst_i;
+output        cyc_o;
+output        stb_o;
+output [ 2:0] cti_o;
+output [ 1:0] bte_o;
+output        we_o;
+output [31:0] adr_o;
+output [ 3:0] sel_o;
+input         ack_i;
+input         err_i;
+input [31:0]  dat_i;
+output        sint;
+input       ctrl_ven;
+input [1:0] ctrl_cd;
+input [1:0] ctrl_vbl;
+input       ctrl_vbsw;
+output      busy;
+input [31: 2] VBAa;
+input [31: 2] VBAb;
+input [15:0] Thgate;
+input [15:0] Tvgate;
+output stat_avmp;
+output vmem_switch;
+output ImDoneFifoQ;
+output [ 8: 0] cursor_adr;
+input  [31:11] cursor0_ba;
+input  [31:11] cursor1_ba;
+input          cursor0_ld;
+input          cursor1_ld;
+input          fb_data_fifo_rreq;
+output [31: 0] fb_data_fifo_q;
+output         fb_data_fifo_empty;
+endmodule
+
+// Required path: rtl/verilog/vga_wb_slave.v
+module vga_wb_slave(
+	clk_i, rst_i, arst_i, adr_i, dat_i, dat_o, sel_i, we_i, stb_i, cyc_i, ack_o, rty_o, err_o, inta_o,
+	wbm_busy, dvi_odf, bl, csl, vsl, hsl, pc, cd, vbl, cbsw, vbsw, ven, avmp, acmp,
+	cursor0_res, cursor0_en, cursor0_xy, cursor0_ba, cursor0_ld, cc0_adr_i, cc0_dat_o,
+	cursor1_res, cursor1_en, cursor1_xy, cursor1_ba, cursor1_ld, cc1_adr_i, cc1_dat_o,
+	vbsint_in, cbsint_in, hint_in, vint_in, luint_in, sint_in,
+	Thsync, Thgdel, Thgate, Thlen, Tvsync, Tvgdel, Tvgate, Tvlen, VBARa, VBARb,
+	clut_acc, clut_ack, clut_q
+	);
+parameter REG_ADR_HIBIT = 7;
+parameter [REG_ADR_HIBIT : 0] CTRL_ADR  = 6'b00_0000;
+parameter [REG_ADR_HIBIT : 0] STAT_ADR  = 6'b00_0001;
+parameter [REG_ADR_HIBIT : 0] HTIM_ADR  = 6'b00_0010;
+parameter [REG_ADR_HIBIT : 0] VTIM_ADR  = 6'b00_0011;
+parameter [REG_ADR_HIBIT : 0] HVLEN_ADR = 6'b00_0100;
+parameter [REG_ADR_HIBIT : 0] VBARA_ADR = 6'b00_0101;
+parameter [REG_ADR_HIBIT : 0] VBARB_ADR = 6'b00_0110;
+parameter [REG_ADR_HIBIT : 0] C0XY_ADR  = 6'b00_1100;
+parameter [REG_ADR_HIBIT : 0] C0BAR_ADR = 6'b00_1101;
+parameter [REG_ADR_HIBIT : 0] CCR0_ADR  = 6'b01_0???;
+parameter [REG_ADR_HIBIT : 0] C1XY_ADR  = 6'b01_1100;
+parameter [REG_ADR_HIBIT : 0] C1BAR_ADR = 6'b01_1101;
+parameter [REG_ADR_HIBIT : 0] CCR1_ADR  = 6'b10_0???;
+input         clk_i;
+input         rst_i;
+input         arst_i;
+input  [11:2] adr_i;
+input  [31:0] dat_i;
+output [31:0] dat_o;
+input  [ 3:0] sel_i;
+input         we_i;
+input         stb_i;
+input         cyc_i;
+output        ack_o;
+output        rty_o;
+output        err_o;
+output        inta_o;
+input  wbm_busy;
+output [1:0] dvi_odf;
+output bl;
+output csl;
+output vsl;
+output hsl;
+output pc;
+output [1:0] cd;
+output [1:0] vbl;
+output cbsw;
+output vbsw;
+output ven;
+output         cursor0_res;
+output         cursor0_en;
+output [31: 0] cursor0_xy;
+output [31:11] cursor0_ba;
+output         cursor0_ld;
+input  [ 3: 0] cc0_adr_i;
+output [15: 0] cc0_dat_o;
+output         cursor1_res;
+output         cursor1_en;
+output [31: 0] cursor1_xy;
+output [31:11] cursor1_ba;
+output         cursor1_ld;
+input  [ 3: 0] cc1_adr_i;
+output [15: 0] cc1_dat_o;
+input avmp;
+input acmp;
+input vbsint_in;
+input cbsint_in;
+input hint_in;
+input vint_in;
+input luint_in;
+input sint_in;
+output [ 7:0] Thsync;
+output [ 7:0] Thgdel;
+output [15:0] Thgate;
+output [15:0] Thlen;
+output [ 7:0] Tvsync;
+output [ 7:0] Tvgdel;
+output [15:0] Tvgate;
+output [15:0] Tvlen;
+output [31:2] VBARa;
+output [31:2] VBARb;
+output        clut_acc;
+input         clut_ack;
+input  [23:0] clut_q;
+endmodule

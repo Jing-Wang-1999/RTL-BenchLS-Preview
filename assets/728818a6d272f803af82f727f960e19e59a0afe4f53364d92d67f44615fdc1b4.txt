@@ -1,0 +1,52 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/9936",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/9741",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 9936,
+  "issue_number": 9741,
+  "verilog_files": [
+    "hw/ip/spi_device/rtl/spi_passthrough.sv"
+  ],
+  "deletions": 3,
+  "additions": 20,
+  "patches": [
+    {
+      "filename": "hw/ip/spi_device/rtl/spi_passthrough.sv",
+      "patch": "@@ -454,7 +454,6 @@ module spi_passthrough\n     cmd_info.valid, // valid bit is checked before latching into cmd_info\n     cmd_info.opcode,\n     cmd_info.addr_mode,\n-    cmd_info.payload_swap_en,\n     cmd_info.opcode,\n     cmd_info.upload,\n     cmd_info.busy\n@@ -562,10 +561,28 @@ module spi_passthrough\n \n   // SPI swap (merging Addr & Payload)\n   logic swap_en, swap_data, addr_swap_en, payload_swap_en;\n+\n+  // Latch cmd_info config signals in output clock.\n+  // cmd_info structure is latched in input clock.  But addr_swap_en and\n+  // payload_swap_en affects the output path (from host to the downstream flash\n+  // device).  as the output delay is bigger than the half of SCK, these paths\n+  // violates timing regardless of the path delay.  By latching the configs\n+  // into output clock (inverted SCK), it alleviates the timing budget.\n+  logic cmd_info_addr_swap_en_outclk, cmd_info_payload_swap_en_outclk;\n+  always_ff @(posedge clk_out_i or negedge rst_ni) begin\n+    if (!rst_ni) begin\n+      cmd_info_addr_swap_en_outclk    <= 1'b 0;\n+      cmd_info_payload_swap_en_outclk <= 1'b 0;\n+    end else begin\n+      cmd_info_addr_swap_en_outclk    <= cmd_info.addr_swap_en;\n+      cmd_info_payload_swap_en_outclk <= cmd_info.payload_swap_en;\n+    end\n+  end\n+\n   assign addr_swap_en    = addr_phase_outclk\n-                         & cmd_info.addr_swap_en;\n+                         & cmd_info_addr_swap_en_outclk;\n   assign payload_swap_en = payload_replace_outclk\n-                         & cmd_info.payload_swap_en;\n+                         & cmd_info_payload_swap_en_outclk;\n \n   assign swap_en   = addr_swap_en | payload_swap_en ;\n   assign swap_data = (addr_swap_en) ? addr_swap : payload_swap ;",
+      "additions": 20,
+      "deletions": 3,
+      "changes": 23
+    }
+  ],
+  "pr_info": {
+    "title": "[spi_device] latch swap configs at outclk",
+    "body": "As described in the issue #9741 , the configs that affect the output\r\npath directly should be latched in the output clock (inverted SCK).\r\n\r\nAs of now, address swap and payload swap affect the output datapath.",
+    "state": "closed",
+    "created_at": "2022-01-07T17:38:06Z",
+    "updated_at": "2022-08-31T18:59:51Z",
+    "merged_at": "2022-01-12T18:57:33Z",
+    "user": "eunchan"
+  },
+  "issue_info": {
+    "title": "[spi_device] Passthrough to use outclock-ed `addr_swap_en`, `payload_swap_en`",
+    "body": "The current data swap logic inside the passthrough module uses `cmd_info` data structure directly.\r\nThe `cmd_info` is latched in SPI Input clock when the 8th command is received.\r\n\r\nSo, STA analyzes the timing path from INPUT clock to SCK output clock. The output delay of the pads is greater than the half clock cycle due to the huge external delay (PCB -> downstream device and return).\r\n\r\nThe logic shall be latched into SCK output clock.\r\n\r\nReported by @arnonsha \r\n\r\nCC: @tjaychen ",
+    "labels": [
+      "Priority:P1",
+      "Type:Bug",
+      "IP:spi_device",
+      "Milestone:D3"
+    ],
+    "state": "closed",
+    "created_at": "2021-12-16T19:21:59Z",
+    "updated_at": "2022-03-09T00:22:19Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 1802
+  },
+  "base_commit": "4e5922faedac8099279d0e6fc39655f9ac598b16",
+  "head_commit": "eaaca95f672f849708df336fe3ff9bca4b56dc58",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_9936_9741",
+  "lec_status": "useful_pass"
+}

@@ -1,0 +1,59 @@
+// XOR 8-bit module
+module origen_126382 (
+    input [7:0] A,
+    input [7:0] B,
+    output [7:0] C
+);
+
+    assign C = A ^ B;
+
+endmodule
+
+// Testbench for XOR 8-bit module
+module xor_8bit_tb;
+    reg [7:0] A, B;
+    wire [7:0] C;
+
+    // Instantiate the Unit Under Test (UUT)
+    xor_8bit uut (
+        .A(A),
+        .B(B),
+        .C(C)
+    );
+
+    initial begin
+        // Test case 1
+        A = 8'b10101010;
+        B = 8'b01010101;
+        #10;
+        if (C !== 8'b11111111) $display("Test case 1 failed");
+
+        // Test case 2
+        A = 8'b11110000;
+        B = 8'b00001111;
+        #10;
+        if (C !== 8'b11111111) $display("Test case 2 failed");
+
+        // Test case 3
+        A = 8'b11001100;
+        B = 8'b10101010;
+        #10;
+        if (C !== 8'b01100110) $display("Test case 3 failed");
+
+        // Test case 4
+        A = 8'b00000000;
+        B = 8'b11111111;
+        #10;
+        if (C !== 8'b11111111) $display("Test case 4 failed");
+
+        // Test case 5
+        A = 8'b10101010;
+        B = 8'b10101010;
+        #10;
+        if (C !== 8'b00000000) $display("Test case 5 failed");
+
+        $display("Testbench completed");
+        $finish;
+    end
+
+endmodule

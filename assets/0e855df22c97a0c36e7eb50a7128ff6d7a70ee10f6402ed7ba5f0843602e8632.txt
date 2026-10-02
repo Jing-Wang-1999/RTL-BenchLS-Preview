@@ -1,0 +1,15 @@
+always @(*) begin 
+        if (spike_out && (stim_tmp_gt_thr_exc || stim_gt_thr_exc)) begin
+            state_phasic_lock_next = param_phasic_en;
+            state_mixed_lock_next  = param_mixed_en;
+        end else if (event_tref && state_spkout_done && (~|state_core || state_refrac) && stim_tmp_gt_thr_exc) begin
+            state_phasic_lock_next = param_phasic_en;
+            state_mixed_lock_next  = param_mixed_en;
+        end else if (~stim_gt_thr_exc) begin
+            state_phasic_lock_next = 1'b0;
+            state_mixed_lock_next  = 1'b0;
+        end else begin
+            state_phasic_lock_next = state_phasic_lock;
+            state_mixed_lock_next  = state_mixed_lock;
+        end
+    end

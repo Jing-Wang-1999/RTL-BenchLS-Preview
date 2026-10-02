@@ -1,0 +1,58 @@
+module origen_002844(input A, B, C, output Y);
+    wire w1, w2, w3;
+    not(w1, C);
+    or(w2, A, w1);
+    or(w3, w1, B);
+    and(Y, w2, w3);
+endmodule
+
+module gateLevel_2(input B, output Y);
+    not(Y, B);
+endmodule
+
+module gateLevel_3(input B, C, output Y);
+    wire w1;
+    not(w1, B);
+    or(Y, w1, C);
+endmodule
+
+module gateLevel_4(input A, B, C, output Y);
+    wire w1, w2, w3, w4;
+    not(w1, A);
+    not(w2, C);
+    or(w3, w1, B);
+    or(w4, B, w2);
+    and(Y, w3, w4);
+endmodule
+
+module operadores_1(input A, B, C, D, output Y);
+    assign Y = (!A & !B & !C & !D) | (!A & !B & !C & D) | (!A & !B & C & !D) | (!A & B & !C & !D) |
+                (A & !B & !C & !D) | (A & !B & !C & D) | (A & !B & C & !D) | (A & B & !C & !D);
+endmodule
+
+module operadores_2(input A, B, C, D, output Y);
+    assign Y = A & (!A | B | C | !D);
+endmodule
+
+module operadores_3(input A, B, C, D, output Y);
+    assign Y = (!B & !C & !D) | (A & !C) | (A & !B) | (A & C & !D);
+endmodule
+
+module operadores_4(input A, B, C, D, output Y);
+    assign Y = (B | D) & (A | B | !C);
+endmodule
+
+module alarma_sop(input A, B, C, output Y);
+    assign Y = (A & !B & !C) | (A & !B & C) | (A & B & C);
+endmodule
+
+module alarma_pos(input A, B, C, output Y);
+    assign Y = A & (!B | C);
+endmodule
+
+module alarma_k(input A, B, C, output Y);
+    wire w1, w2;
+    not(w1, B);
+    or(w2, w1, C);
+    and(Y, A, w2);
+endmodule

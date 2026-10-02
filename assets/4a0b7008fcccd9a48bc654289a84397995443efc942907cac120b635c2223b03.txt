@@ -1,0 +1,50 @@
+module autovcoder_003928 (
+    A0,
+    A1,
+    A2,
+    A3,
+    B0,
+    B1,
+    C0,
+    C1,
+    Y
+);
+  input A0, A1, A2, A3, B0, B1, C0, C1;
+  output Y;
+
+  wire int_res_0, int_res_1, int_res_2;
+
+  /////////////////////////////////////
+  //          FUNCTIONALITY          //
+  /////////////////////////////////////
+
+  or (int_res_0, A0, A1, A2, A3);
+  or (int_res_1, B0, B1);
+  or (int_res_2, C0, C1);
+  nand (Y, int_res_0, int_res_1, int_res_2);
+
+  /////////////////////////////////////
+  //             TIMING              //
+  /////////////////////////////////////
+
+  specify
+    specparam tpd_A0_Y = 0;
+    specparam tpd_A1_Y = 0;
+    specparam tpd_A2_Y = 0;
+    specparam tpd_A3_Y = 0;
+    specparam tpd_B0_Y = 0;
+    specparam tpd_B1_Y = 0;
+    specparam tpd_C0_Y = 0;
+    specparam tpd_C1_Y = 0;
+
+    (A0 => Y) = tpd_A0_Y;
+    (A1 => Y) = tpd_A1_Y;
+    (A2 => Y) = tpd_A2_Y;
+    (A3 => Y) = tpd_A3_Y;
+    (B0 => Y) = tpd_B0_Y;
+    (B1 => Y) = tpd_B1_Y;
+    (C0 => Y) = tpd_C0_Y;
+    (C1 => Y) = tpd_C1_Y;
+  endspecify
+endmodule
+

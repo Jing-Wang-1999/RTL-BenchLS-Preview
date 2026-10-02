@@ -1,0 +1,11 @@
+--- golden/RTL/ftdi_245fifo/ftdi_245fifo_top.v
++++ mutant/RTL/ftdi_245fifo/ftdi_245fifo_top.v
+@@ -83,7 +83,7 @@
+ wire [(8<<CHIP_EW)-1:0] ftdi_data_out;
+ wire [(1<<CHIP_EW)-1:0] ftdi_be_out;
+ 
+-assign ftdi_data    = ftdi_master_oe ? ftdi_data_out : {(8<<CHIP_EW){1'bZ}};     // tri-state driver
++assign ftdi_data    = ftdi_master_oe ? ~ftdi_data_out : {(8<<CHIP_EW){1'bZ}};     // tri-state driver
+ assign ftdi_be      = ftdi_master_oe ? ftdi_be_out   : {(1<<CHIP_EW){1'bZ}};     // tri-state driver
+ 
+ 

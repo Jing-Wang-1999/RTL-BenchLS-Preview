@@ -1,0 +1,157 @@
+// Required path: rtl/AddRoundKey.v
+module AddRoundKey
+#
+(
+parameter DATA_W = 128            
+)
+(
+input clk,                        
+input reset,                      
+input data_valid_in,              
+input key_valid_in,               
+input [DATA_W-1:0] data_in,       
+input [DATA_W-1:0] round_key,     
+output reg valid_out,             
+output reg [DATA_W-1:0] data_out  
+)
+;
+endmodule
+
+// Required path: rtl/KeyExpantion.v
+module KeyExpantion
+#
+(
+parameter DATA_W = 128,               
+parameter KEY_L = 128,                
+parameter NO_ROUNDS = 10              
+)
+(
+input clk,                            
+input reset,                          
+input valid_in,                       
+input [KEY_L-1:0] cipher_key,         
+output [(NO_ROUNDS*DATA_W)-1:0] W,    
+output [NO_ROUNDS-1:0] valid_out      
+);
+endmodule
+
+// Required path: rtl/MixColumns.v
+module MixColumns
+#
+(
+parameter DATA_W = 128             
+)
+(
+input clk,                         
+input reset,                       
+input valid_in,                    
+input [DATA_W-1:0] data_in,        
+output reg valid_out,              
+output reg [DATA_W-1:0] data_out   
+)
+;
+endmodule
+
+// Required path: rtl/Round.v
+module Round
+#
+(
+parameter DATA_W = 128            
+)
+(
+input clk,                        
+input reset,                      
+input data_valid_in,              
+input key_valid_in,               
+input [DATA_W-1:0] data_in,       
+input [DATA_W-1:0] round_key,     
+output  valid_out,                
+output  [DATA_W-1:0] data_out     
+)
+;
+endmodule
+
+// Required path: rtl/RoundKeyGen.v
+module RoundKeyGen
+#
+(
+parameter KEY_L = 128,     
+parameter WORD = 32        
+)
+(
+input clk,                           
+input reset,                         
+input [WORD-1:0] RCON_Word,          
+input valid_in,                      
+input [KEY_L-1:0] key,               
+output reg [KEY_L-1:0]round_key,     
+output reg valid_out                 
+);
+endmodule
+
+// Required path: rtl/SBox.v
+module SBox               
+(
+input clk,               
+input reset,             
+input valid_in,          
+input [7:0] addr,        
+output reg [7:0] dout    
+);
+endmodule
+
+// Required path: rtl/ShiftRows.v
+module ShiftRows
+#
+(
+parameter DATA_W = 128       
+)
+(
+input clk,                  
+input reset,                
+input valid_in,             
+input [DATA_W-1:0] data_in,  
+output reg valid_out,         
+output reg [DATA_W-1:0] data_out 
+)
+;
+endmodule
+
+// Required path: rtl/SubBytes.v
+module SubBytes
+#
+(
+ parameter DATA_W = 128,       
+ parameter NO_BYTES = DATA_W >> 3  
+)
+(
+input clk,                     
+input reset,                   
+input valid_in,                
+input [DATA_W-1:0] data_in,    
+output reg valid_out,          
+output [DATA_W-1:0] data_out   
+)
+;
+endmodule
+
+// Required path: rtl/Top_PipelinedCipher.v
+module Top_PipelinedCipher
+#
+(
+parameter DATA_W = 128,      
+parameter KEY_L = 128,       
+parameter NO_ROUNDS = 10     
+)
+
+(
+input clk,                       
+input reset,                     
+input data_valid_in,             
+input cipherkey_valid_in,        
+input [KEY_L-1:0] cipher_key,    
+input [DATA_W-1:0] plain_text,   
+output valid_out,                
+output [DATA_W-1:0] cipher_text  
+);
+endmodule

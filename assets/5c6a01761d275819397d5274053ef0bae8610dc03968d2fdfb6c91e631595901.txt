@@ -1,0 +1,5 @@
+# autovcoder_101198
+
+Parameter `WORDLENGTH=16` sets all data widths. Inputs are `clk`, active-low asynchronous `rst`, `enable`, `counter[1:0]`, and `data_in[WORDLENGTH-1:0]`. Outputs are `data_out0` through `data_out3`, each `WORDLENGTH` bits.
+
+Asserting reset clears four pipeline registers and all four output registers immediately. On each rising clock edge with reset high and `enable=1`, the pipeline shifts: `data0` captures `data_in`, and `data1`, `data2`, and `data3` capture the previous preceding stages. With `enable=0`, it holds. Independently on the same edge, when `enable=1` and `counter=2'b11`, outputs capture the pre-edge values of `data0` through `data3`; otherwise outputs hold. Therefore a simultaneous pipeline shift and output capture exposes the old pipeline contents. Reset has priority. There are no submodules.

@@ -1,0 +1,20 @@
+module mg_03689 #(parameter WIDTH = 8, parameter RESET_VALUE = 0) (
+    input [WIDTH-1:0] DataIn,
+    input Write,
+    input Clk,
+    input Reset,
+    input SyncReset,
+    output reg [WIDTH-1:0] DataOut
+);
+
+always @(posedge Clk or posedge Reset) begin
+    if (Reset) begin
+        DataOut <= RESET_VALUE;
+    end else if (SyncReset) begin
+        DataOut <= RESET_VALUE;
+    end else if (Write) begin
+        DataOut <= DataIn;
+    end
+end
+
+endmodule

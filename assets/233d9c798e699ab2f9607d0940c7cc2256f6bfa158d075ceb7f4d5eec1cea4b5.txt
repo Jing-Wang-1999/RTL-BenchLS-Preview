@@ -1,0 +1,22 @@
+always @(posedge clk)
+begin
+	if (rst) begin
+		add_enable <= 0;
+		sub_enable <= 0;
+		mul_enable <= 0;
+		div_enable <= 0;
+		addsub_out <= 0;
+		addsub_sign <= 0;
+		exp_addsub <= 0;
+		end
+	else begin
+		add_enable <= (add_enable_0 | add_enable_1) & op_enable;
+		sub_enable <= (sub_enable_0 | sub_enable_1) & op_enable;
+		mul_enable <= (fpu_op_reg == 3'b010) & op_enable;
+		div_enable <= (fpu_op_reg == 3'b011) & op_enable & enable_reg_3;
+			// div_enable needs to be high for two clock cycles
+		addsub_out <= add_enable ? sum_out : diff_out;
+		addsub_sign <= add_enable ? add_sign : sub_sign;
+		exp_addsub <= add_enable ? { 1'b0, exp_add_out} : { 1'b0, exp_sub_out};
+		end
+end

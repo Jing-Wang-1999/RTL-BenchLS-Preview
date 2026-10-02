@@ -1,0 +1,40 @@
+{
+  "case_id": "fast_aes_10cycle",
+  "rtl_files": [
+    "aes_10cycle_10stage/aes_cipher_top.v",
+    "aes_10cycle_10stage/aes_key_expand_128.v",
+    "aes_10cycle_10stage/aes_rcon.v",
+    "aes_10cycle_10stage/aes_sbox.v"
+  ],
+  "points": [
+    {
+      "case_id": "aes_10cycle_10stage",
+      "compile_command": [
+        "/home/jwangjw/anaconda3/bin/iverilog",
+        "-g2012",
+        "-s",
+        "test",
+        "-o",
+        "../simulation.vvp",
+        "-I",
+        "aes_10cycle_10stage",
+        "aes_10cycle_10stage/aes_cipher_top.v",
+        "aes_10cycle_10stage/aes_key_expand_128.v",
+        "aes_10cycle_10stage/aes_rcon.v",
+        "aes_10cycle_10stage/aes_sbox.v",
+        "aes_10cycle_10stage/test_bench_top.v"
+      ],
+      "run_command": [
+        "/home/jwangjw/anaconda3/bin/vvp",
+        "-i",
+        "-n",
+        "simulation.vvp"
+      ],
+      "protocol": "aes_first_suite",
+      "tb": "aes_10cycle_10stage/test_bench_top.v",
+      "dut_tops": [
+        "aes_cipher_top"
+      ]
+    }
+  ]
+}

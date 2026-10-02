@@ -1,0 +1,9 @@
+# Avg
+
+## Interface
+
+Parameters `BITWIDTH=8` and `LENGTH=4` define element width and count. Input `data[BITWIDTH*LENGTH-1:0]` packs `LENGTH` signed two's-complement elements; element `i` is `data[i*BITWIDTH +: BITWIDTH]`. Output `result` is a signed `BITWIDTH`-bit value.
+
+## Behavior
+
+Combinationally, sign-extend and sum all elements in a Verilog `integer` accumulator, divide that signed sum by positive `LENGTH`, and assign the quotient to `result`. Verilog signed division truncates toward zero. Assignment retains the low `BITWIDTH` bits if the quotient is outside the output range. Valid configurations require `BITWIDTH>0`, `LENGTH>0`, and a total sum representable by the implementation's `integer` type. There is no clock, reset, state, or latency.

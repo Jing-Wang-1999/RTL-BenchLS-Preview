@@ -1,0 +1,134 @@
+module autovcoder_111939 (
+    input clk,
+    input reset,
+    output io_enq_ready,
+    input io_enq_valid,
+    input [25:0] io_enq_bits_addr,
+    input [4:0] io_enq_bits_tag,
+    input io_enq_bits_rw,
+    input io_deq_ready,
+    output io_deq_valid,
+    output [25:0] io_deq_bits_addr,
+    output [4:0] io_deq_bits_tag,
+    output io_deq_bits_rw,
+    output [1:0] io_count
+);
+
+  wire [1:0] T0;
+  wire ptr_diff;
+  reg deq_ptr;
+  wire T1;
+  wire T2;
+  wire T3;
+  wire do_deq;
+  wire T4;
+  wire do_flow;
+  wire T5;
+  reg enq_ptr;
+  wire T6;
+  wire T7;
+  wire T8;
+  wire do_enq;
+  wire T9;
+  wire T10;
+  wire T11;
+  wire ptr_match;
+  reg maybe_full;
+  wire T12;
+  wire T13;
+  wire T14;
+  wire T15;
+  wire [31:0] T16;
+  wire [5:0] T17;
+  wire T18;
+  wire [31:0] T19;
+  reg [31:0] ram[1:0];
+  wire [31:0] T20;
+  wire [31:0] T21;
+  wire [31:0] T22;
+  wire [5:0] T23;
+  wire [4:0] T24;
+  wire [25:0] T25;
+  wire [4:0] T26;
+  wire [25:0] T27;
+  wire T28;
+  wire empty;
+  wire T29;
+  wire T30;
+  wire full;
+
+`ifndef SYNTHESIS
+  integer initvar;
+  initial begin
+    #0.002;
+    deq_ptr = {1{$random}};
+    enq_ptr = {1{$random}};
+    maybe_full = {1{$random}};
+    for (initvar = 0; initvar < 2; initvar = initvar + 1) ram[initvar] = {1{$random}};
+  end
+`endif
+
+  assign io_count = T0;
+  assign T0 = {T11, ptr_diff};
+  assign ptr_diff = enq_ptr - deq_ptr;
+  assign T1 = reset ? 1'h0 : T2;
+  assign T2 = do_deq ? T3 : deq_ptr;
+  assign T3 = deq_ptr + 1'h1;
+  assign do_deq = T5 & T4;
+  assign T4 = do_flow ^ 1'h1;
+  assign do_flow = 1'h0;
+  assign T5 = io_deq_ready & io_deq_valid;
+  assign T6 = reset ? 1'h0 : T7;
+  assign T7 = do_enq ? T8 : enq_ptr;
+  assign T8 = enq_ptr + 1'h1;
+  assign do_enq = T10 & T9;
+  assign T9 = do_flow ^ 1'h1;
+  assign T10 = io_enq_ready & io_enq_valid;
+  assign T11 = maybe_full & ptr_match;
+  assign ptr_match = enq_ptr == deq_ptr;
+  assign T12 = reset ? 1'h0 : T13;
+  assign T13 = T14 ? do_enq : maybe_full;
+  assign T14 = do_enq != do_deq;
+  assign io_deq_bits_rw = T15;
+  assign T15 = T16[1'h0:1'h0];
+  assign T16 = {T25, T17};
+  assign T17 = {T24, T18};
+  assign T18 = T19[1'h0:1'h0];
+  assign T19 = ram[deq_ptr];
+  always @(posedge clk) if (do_enq) ram[enq_ptr] <= T21;
+  assign T21 = T22;
+  assign T22 = {io_enq_bits_addr, T23};
+  assign T23 = {io_enq_bits_tag, io_enq_bits_rw};
+  assign T24 = T19[3'h5:1'h1];
+  assign T25 = T19[5'h1f:3'h6];
+  assign io_deq_bits_tag = T26;
+  assign T26 = T16[3'h5:1'h1];
+  assign io_deq_bits_addr = T27;
+  assign T27 = T16[5'h1f:3'h6];
+  assign io_deq_valid = T28;
+  assign T28 = empty ^ 1'h1;
+  assign empty = ptr_match & T29;
+  assign T29 = maybe_full ^ 1'h1;
+  assign io_enq_ready = T30;
+  assign T30 = full ^ 1'h1;
+  assign full = ptr_match & maybe_full;
+
+  always @(posedge clk) begin
+    if (reset) begin
+      deq_ptr <= 1'h0;
+    end else if (do_deq) begin
+      deq_ptr <= T3;
+    end
+    if (reset) begin
+      enq_ptr <= 1'h0;
+    end else if (do_enq) begin
+      enq_ptr <= T8;
+    end
+    if (reset) begin
+      maybe_full <= 1'h0;
+    end else if (T14) begin
+      maybe_full <= do_enq;
+    end
+  end
+endmodule
+

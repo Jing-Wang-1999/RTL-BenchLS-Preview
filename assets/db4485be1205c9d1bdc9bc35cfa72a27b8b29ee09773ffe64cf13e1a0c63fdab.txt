@@ -1,0 +1,23 @@
+module origen_166168 (
+    input  wire clk,
+    output wire cclk,
+    output wire vclk,
+    output reg  iclk
+);
+
+    // In synthesis, cclk and vclk are derived from a DCM.
+    // For simulation/non-synthesis, tie them directly to clk.
+    assign cclk = clk;
+    assign vclk = clk;
+
+    // Internal inverted clock generation
+    always @(posedge cclk) begin
+        iclk <= ~iclk;
+    end
+
+    // Initialize iclk to 0
+    initial begin
+        iclk = 1'b0;
+    end
+
+endmodule

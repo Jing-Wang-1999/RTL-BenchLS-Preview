@@ -1,0 +1,155 @@
+module origen_119988 (
+    inout wire sda,
+    inout wire scl,
+    input wire rst
+);
+
+parameter i2c_delay = 5; // Configurable delay for I2C timing
+
+reg sda_oe, scl_oe;
+reg sda_o, scl_o;
+
+assign sda = sda_oe ? sda_o : 1'bz;
+assign scl = scl_oe ? scl_o : 1'bz;
+
+task automatic start_bit;
+    begin
+        sda_oe = 1; sda_o = 1;
+        scl_oe = 1; scl_o = 1;
+        #(i2c_delay);
+        sda_o = 0;
+        #(i2c_delay);
+        scl_o = 0;
+    end
+endtask
+
+task automatic stop_bit;
+    begin
+        sda_oe = 1; sda_o = 0;
+        scl_oe = 1; scl_o = 0;
+        #(i2c_delay);
+        scl_o = 1;
+        #(i2c_delay);
+        sda_o = 1;
+        #(i2c_delay);
+        sda_oe = 0; scl_oe = 0;
+    end
+endtask
+
+task automatic send_byte(input [7:0] data);
+    integer i;
+    begin
+        for (i = 7; i >= 0; i = i - 1) begin
+            sda_o = data[i];
+            #(i2c_delay);
+            scl_o = 1;
+            #(i2c_delay * 2);
+            scl_o = 0;
+            #(i2c_delay);
+        end
+        sda_oe = 0; // Release SDA for ACK
+    end
+endtask
+
+task automatic detect_ack;
+    begin
+        sda_oe = 0;
+        #(i2c_delay);
+        scl_o = 1;
+        #(i2c_delay);
+        if (sda === 1'b0)
+            $display("ACK received");
+        else
+            $display("NACK received");
+        #(i2c_delay);
+        scl_o = 0;
+    end
+endtask
+
+task automatic restart;
+    begin
+        sda_oe = 0;
+        #(i2c_delay);
+        scl_o = 1;
+        #(i2c_delay);
+        start_bit;
+    end
+endtask
+
+task automatic receive_byte(output [7:0] data);
+    integer i;
+    begin
+        sda_oe = 0;
+        for (i = 7; i >= 0; i = i - 1) begin
+            #(i2c_delay);
+            scl_o = 1;
+            #(i2c_delay);
+            data[i] = sda;
+            #(i2c_delay);
+            scl_o = 0;
+        end
+    end
+endtask
+
+task automatic gen_scl(input integer cycles);
+    integer i;
+    begin
+        for (i = 0; i < cycles; i = i + 1) begin
+            #(i2c_delay);
+            scl_o = 1;
+            #(i2c_delay * 2);
+            scl_o = 0;
+            #(i2c_delay);
+        end
+    end
+endtask
+
+task automatic gen_ack;
+    begin
+        sda_oe = 1; sda_o = 0;
+        #(i2c_delay);
+        scl_o = 1;
+        #(i2c_delay * 2);
+        scl_o = 0;
+        #(i2c_delay);
+        sda_oe = 0;
+    end
+endtask
+
+task automatic i2c_write(input [6:0] addr, input [7:0] index, input [7:0] data);
+    begin
+        start_bit;
+        send_byte({addr, 1'b0});
+        detect_ack;
+        send_byte(index);
+        detect_ack;
+        send_byte(data);
+        detect_ack;
+        stop_bit;
+        $display("I2C Write: Addr=%h, Index=%h, Data=%h", addr, index, data);
+    end
+endtask
+
+task automatic i2c_read(input [6:0] addr, input [7:0] index, output [7:0] data);
+    begin
+        start_bit;
+        send_byte({addr, 1'b0});
+        detect_ack;
+        send_byte(index);
+        detect_ack;
+        restart;
+        send_byte({addr, 1'b1});
+        detect_ack;
+        receive_byte(data);
+        gen_ack;
+        stop_bit;
+        $display("I2C Read: Addr=%h, Index=%h, Data=%h", addr, index, data);
+    end
+endtask
+
+always @(posedge rst) begin
+    sda_oe <= 0;
+    scl_oe <= 0;
+end
+
+endmodule

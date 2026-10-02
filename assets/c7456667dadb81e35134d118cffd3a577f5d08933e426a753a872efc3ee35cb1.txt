@@ -1,0 +1,49 @@
+module autovcoder_113125 (
+    input clk,
+    input reset,
+    input SPI_done,
+    output reg SPI_CMD_reading
+);
+
+    // State encoding
+    localparam IDLE = 1'b0;
+    localparam READING = 1'b1;
+
+    reg state, next_state;
+
+    // State register
+    always @(posedge clk) begin
+        if (reset) begin
+            state <= IDLE;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            IDLE: begin
+                if (SPI_done) begin
+                    next_state = READING;
+                end else begin
+                    next_state = IDLE;
+                end
+            end
+            READING: begin
+                if (SPI_done) begin
+                    next_state = IDLE;
+                end else begin
+                    next_state = READING;
+                end
+            end
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Output logic
+    always @(*) begin
+        SPI_CMD_reading = (state == READING);
+    end
+
+endmodule

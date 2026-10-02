@@ -1,0 +1,119 @@
+module origen_002185 (
+    input wire clk50,
+    input wire nRst,
+    input wire rd_clk,
+    input wire rd_en,
+    output reg [15:0] rd_addr,
+    input wire [7:0] rd_dout,
+    inout wire [7:0] mcu_data,
+    input wire mcu_wr_en,
+    input wire mcu_rd_en,
+    input wire mcu_wr_clk,
+    input wire mcu_rd_clk
+);
+
+    // Parameters
+    localparam PIC_TRANSFER = 1'b0;
+    localparam POINT_DETECT = 1'b1;
+    
+    // Internal registers
+    reg work_mode;
+    reg [15:0] rd_addr_pic_tr;
+    reg [15:0] spot_info_addr;
+    reg [7:0] slave_addr;
+    reg [7:0] reg_addr;
+    reg [7:0] reg_data;
+    
+    // State machine states
+    reg [1:0] state;
+    localparam IDLE = 2'b00;
+    localparam SLAVE_ADDR = 2'b01;
+    localparam REG_ADDR = 2'b10;
+    localparam REG_DATA = 2'b11;
+    
+    // Bidirectional data management
+    reg [7:0] mcu_data_out;
+    reg mcu_data_oe;
+    
+    assign mcu_data = mcu_data_oe ? mcu_data_out : 8'bz;
+    
+    // State machine and register updates
+    always @(posedge clk50 or negedge nRst) begin
+        if (!nRst) begin
+            state <= IDLE;
+            work_mode <= PIC_TRANSFER;
+            rd_addr_pic_tr <= 16'h0000;
+            spot_info_addr <= 16'h0000;
+            slave_addr <= 8'h00;
+            reg_addr <= 8'h00;
+            reg_data <= 8'h00;
+        end else begin
+            if (mcu_wr_en) begin
+                case (state)
+                    IDLE: begin
+                        state <= SLAVE_ADDR;
+                        slave_addr <= mcu_data;
+                    end
+                    SLAVE_ADDR: begin
+                        state <= REG_ADDR;
+                        reg_addr <= mcu_data;
+                    end
+                    REG_ADDR: begin
+                        state <= REG_DATA;
+                        reg_data <= mcu_data;
+                    end
+                    REG_DATA: begin
+                        state <= IDLE;
+                        case (reg_addr)
+                            8'h00: work_mode <= reg_data[0];
+                            8'h01: rd_addr_pic_tr[7:0] <= reg_data;
+                            8'h02: rd_addr_pic_tr[15:8] <= reg_data;
+                            8'h03: spot_info_addr[7:0] <= reg_data;
+                            8'h04: spot_info_addr[15:8] <= reg_data;
+                        endcase
+                    end
+                endcase
+            end
+        end
+    end
+    
+    // Read address management
+    always @(posedge rd_clk or negedge nRst) begin
+        if (!nRst) begin
+            rd_addr <= 16'h0000;
+        end else if (rd_en) begin
+            if (work_mode == PIC_TRANSFER) begin
+                rd_addr <= rd_addr_pic_tr;
+            end else begin
+                rd_addr <= spot_info_addr;
+            end
+        end
+    end
+    
+    // MCU read operation
+    always @(negedge mcu_rd_clk or negedge nRst) begin
+        if (!nRst) begin
+            mcu_data_out <= 8'h00;
+            mcu_data_oe <= 1'b0;
+        end else if (mcu_rd_en) begin
+            mcu_data_out <= rd_dout;
+            mcu_data_oe <= 1'b1;
+        end else begin
+            mcu_data_oe <= 1'b0;
+        end
+    end
+    
+    // Address increment on MCU read
+    always @(negedge mcu_rd_clk or negedge nRst) begin
+        if (!nRst) begin
+            // Reset logic
+        end else if (mcu_rd_en) begin
+            if (work_mode == PIC_TRANSFER) begin
+                rd_addr_pic_tr <= rd_addr_pic_tr + 1;
+            end else begin
+                spot_info_addr <= spot_info_addr + 1;
+            end
+        end
+    end
+
+endmodule

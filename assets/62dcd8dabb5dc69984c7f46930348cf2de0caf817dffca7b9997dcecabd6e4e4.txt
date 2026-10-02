@@ -1,0 +1,54 @@
+module origen_205430 #(
+    parameter BITS_DATA = 8,
+    parameter BITS_ENTRY_SELECT = 4,
+    parameter NUM_ENTRIES = (1 << BITS_ENTRY_SELECT)
+)(
+    input [BITS_DATA-1:0] data_in,
+    input init_fill,
+    input clk,
+    input push,
+    input pop,
+    input reset,
+    output [BITS_DATA-1:0] data_out,
+    output empty,
+    output full
+);
+
+    reg [BITS_DATA-1:0] queue [NUM_ENTRIES-1:0];
+    reg [BITS_ENTRY_SELECT-1:0] pt_head, pt_tail;
+    reg [BITS_ENTRY_SELECT-1:0] count;
+    integer e;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            if (init_fill) begin
+                for (e = 0; e < NUM_ENTRIES; e = e + 1)
+                    queue[e] <= e;
+            end else begin
+                for (e = 0; e < NUM_ENTRIES; e = e + 1)
+                    queue[e] <= 0;
+            end
+            pt_head <= 0;
+            pt_tail <= 0;
+            count <= 0;
+        end else begin
+            if (push && pop) begin
+                queue[pt_tail] <= data_in;
+                pt_head <= pt_head + 1;
+                pt_tail <= pt_tail + 1;
+            end else if (push && !pop && count != NUM_ENTRIES) begin
+                queue[pt_tail] <= data_in;
+                pt_tail <= pt_tail + 1;
+                count <= count + 1;
+            end else if (!push && pop && count != 0) begin
+                pt_head <= pt_head + 1;
+                count <= count - 1;
+            end
+        end
+    end
+
+    assign data_out = queue[pt_head];
+    assign empty = (pt_head == pt_tail) && (count == 0);
+    assign full = (count == NUM_ENTRIES);
+
+endmodule

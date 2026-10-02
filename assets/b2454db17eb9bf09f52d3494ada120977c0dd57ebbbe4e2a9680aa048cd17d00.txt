@@ -1,0 +1,24 @@
+The module `SDP_X_X_mul_core_chn_mul_out_rsci_chn_mul_out_wait_ctrl` is a control unit designed to manage the flow of data and synchronization signals in a hardware system. It operates based on clock and reset signals and coordinates the readiness and waiting states of a data channel, specifically for multiplication output.
+
+### Inputs:
+1. **nvdla_core_clk**: This is the clock signal that synchronizes the operations within the module.
+2. **nvdla_core_rstn**: This is an active-low reset signal that initializes or resets the internal state of the module.
+3. **chn_mul_out_rsci_oswt**: This signal indicates the output switch state, controlling when the output data channel is ready to transmit data.
+4. **core_wen**: This is a write enable signal that allows data writing operations to occur when active.
+5. **core_wten**: This is a write disable signal that prevents data writing operations when active.
+6. **chn_mul_out_rsci_iswt0**: This input indicates an initial switch state for the data channel, affecting the readiness of the output.
+7. **chn_mul_out_rsci_ld_core_psct**: This signal indicates the load condition for the core, determining when the core is ready to accept new data.
+8. **chn_mul_out_rsci_vd**: This is a valid data signal, indicating that the data on the channel is valid and can be processed.
+
+### Outputs:
+1. **chn_mul_out_rsci_biwt**: This output indicates the bi-directional wait state, signaling when the channel is ready to receive or send data.
+2. **chn_mul_out_rsci_bdwt**: This output indicates the bidirectional data wait state, controlling when data transmission can occur.
+3. **chn_mul_out_rsci_ld_core_sct**: This output indicates the load core select state, which determines when the core should load new data based on the current conditions.
+
+### Internal Signals:
+- **chn_mul_out_rsci_ogwt**: An internal signal that combines various conditions to determine the overall wait state of the output channel.
+- **chn_mul_out_rsci_pdswt0**: An internal signal that represents a pre-determined switch state, influenced by the write enable and initial switch state signals.
+- **chn_mul_out_rsci_icwt**: A register that maintains the internal control wait state, updated on each clock cycle based on the reset condition and other internal signals.
+
+### Functionality:
+The module primarily manages the readiness and waiting states of a data channel used for multiplication output. It uses a combination of

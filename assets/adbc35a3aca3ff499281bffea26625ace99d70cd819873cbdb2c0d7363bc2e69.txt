@@ -1,0 +1,48 @@
+### Instruction:
+
+Create a Verilog module for a multi-channel countdown timer with three independent counters. The primary function is to manage three counters (`counter0`, `counter1`, and `counter2`), which can be individually updated, decremented, and monitored.
+
+1. **Module Definition and Ports:**
+   - Define the module named `three_channel_countdown_timer` with inputs for different clock signals (`clk`, `clk0`, `clk1`, `clk2`), reset (`rst`), write enable (`counter_we`), counter value (`counter_val`), and channel selection (`counter_ch`).
+   - Output ports should include flags (`counter0_OUT`, `counter1_OUT`, `counter2_OUT`) that indicate if a counter has reached zero, and `counter_out` to output the value of the selected counter.
+
+2. **Primary Function:**
+   - Utilize a main clock (`clk`) and a reset (`rst`) signal to control the operation of the counters.
+   - Allow the counters to be written with a new value (`counter_val`) depending on the selected channel (`counter_ch`).
+   - Independently decrement each counter with sub-clocks (`clk0`, `clk1`, `clk2`), setting their corresponding flags when they reach zero.
+
+3. **Initialization:**
+   - On reset (`rst`), initialize all counters (`counter0`, `counter1`, `counter2`) and flags (`counter0_flag`, `counter1_flag`, `counter2_flag`) to zero or their default state.
+
+4. **Control Flow and Decision Points:**
+   - When `counter_we` is active, update the counter specified by `counter_ch` with the value from `counter_val`.
+   - For each sub-clock (`clk0`, `clk1`, `clk2`), if the corresponding counter is active, decrement it by one. If the counter reaches zero, set the associated flag (`counter0_flag`, `counter1_flag`, `counter2_flag`).
+
+5. **Data Processing and Signal Interactions:**
+   - Use a multiplexer to output the value of the selected counter (`counter_out`) based on `counter_ch`.
+   - Assign the flag signals (`counter0_flag`, `counter1_flag`, `counter2_flag`) to their respective output ports (`counter0_OUT`, `counter1_OUT`, `counter2_OUT`).
+
+---
+
+Below is the detailed Verilog implementation based on the above instruction:
+
+This code effectively implements the description provided and ensures that the countdown logic and flag setting are clearly addressed.
+
+Module Interface:
+module three_channel_countdown_timer (
+  input wire clk,
+  input wire rst,
+  input wire clk0,
+  input wire clk1,
+  input wire clk2,
+  input wire counter_we,
+  input wire [31 : 0] counter_val,
+  input wire [1 : 0] counter_ch,
+  output wire counter0_OUT,
+  output wire counter1_OUT,
+  output wire counter2_OUT,
+  output wire [31 : 0] counter_out
+);
+
+Behavioral Clarifications:
+- All counter logic is in a single always block sensitive to posedge clk or posedge rst (active-high synchronous reset). The sub-clocks clk0, clk1, clk2 are treated as level-sensitive enable signals sampled within this same always block, not as independent clock edges. The counter_out mux defaults to 32'b0 for counter_ch value 2'b11.

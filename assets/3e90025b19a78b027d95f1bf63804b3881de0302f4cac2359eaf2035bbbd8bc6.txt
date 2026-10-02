@@ -1,0 +1,10 @@
+always @(posedge clk) begin
+    if (en) begin
+      dout <= fifo_sync_valid ? fifo_data : {DATA_WIDTH{1'b0}};
+      valid <= fifo_sync_valid & enable;
+      underflow <= ~(fifo_sync_valid & enable);
+    end else begin
+      valid <= 1'b0;
+      underflow <= 1'b0;
+    end
+  end

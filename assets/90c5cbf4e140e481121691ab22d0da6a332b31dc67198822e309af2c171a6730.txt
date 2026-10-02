@@ -1,0 +1,46 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/813",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/808",
+  "repository": "lowRISC/ibex",
+  "pr_number": 813,
+  "issue_number": 808,
+  "verilog_files": [
+    "rtl/ibex_load_store_unit.sv"
+  ],
+  "deletions": 0,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "rtl/ibex_load_store_unit.sv",
+      "patch": "@@ -352,6 +352,7 @@ module ibex_load_store_unit\n     unique case (ls_fsm_cs)\n \n       IDLE: begin\n+        pmp_err_d = 1'b0;\n         if (lsu_req_i) begin\n           data_req_o   = 1'b1;\n           pmp_err_d    = data_pmp_err_i;",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1
+    }
+  ],
+  "pr_info": {
+    "title": "[rtl/lsu] Fix bug in pmp error clearing",
+    "body": "- pmp_err_q needs to clear once the LSU state machine returns to idle,\r\n  otherwise it will remain set indefinely.\r\n- Relates to #808\r\n\r\nSigned-off-by: Tom Roberts <tomroberts@lowrisc.org>",
+    "state": "closed",
+    "created_at": "2020-04-23T15:48:16Z",
+    "updated_at": "2020-04-24T08:06:14Z",
+    "merged_at": "2020-04-24T08:06:06Z",
+    "user": "tomeroberts"
+  },
+  "issue_info": {
+    "title": "SpecialReqAllGivesSpecialReqBranchIfBranchInst assertion failure",
+    "body": "Hi all,\r\nWhen running the `riscv_mmu_stress_test` with PMP regions enabled, I noticed that the `SpecialReqAllGivesSpecialReqBranchIfBranchInst` assertion was failing, shown below:\r\n![Screenshot from 2020-04-22 17-58-58](https://user-images.githubusercontent.com/16736281/80048119-20627000-84c4-11ea-8781-ff35e9498e63.png)\r\nA snippet of the OVPsim log of the relevant instruction execution is shown below:\r\n![Screenshot from 2020-04-22 17-58-47](https://user-images.githubusercontent.com/16736281/80048168-3d973e80-84c4-11ea-8d90-7ed850287d89.png)\r\nA waveform snippet of when the assertion fails is below, the failure occurs one cycle after the yellow marker, where the small red arrow is located:\r\n![Screenshot from 2020-04-22 17-59-14](https://user-images.githubusercontent.com/16736281/80048242-76371800-84c4-11ea-89f7-915839915d95.png)\r\nThe situation is as follows: the `sb` instruction at `PC=0x80005496` (at the green `M1` marker accesses memory at `0xffa839bc` from User-mode and this access correctly causes a PMP store address exception (all 16 regions are enabled and set to `TOR` mode, the address being accessed here is not contained within any of the enabled regions).  The core then jumps to the PC stored in `mtvec`, which is a jump instruction at `PC=0x80001400`.\r\nHowever, one cycle after starting to execute this jump, the previously mentioned assertion fails, as even though `special_req_all` and `jump_set_i` are both high due to the PMP store exception and the resultant branch, the `special_req_branch` signal does not go high at all.",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2020-04-23T01:21:48Z",
+    "updated_at": "2020-04-24T08:19:19Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 164
+  },
+  "task_id": "lowRISC_ibex_813_808",
+  "lec_status": "useful_pass",
+  "base_commit": "dcf18d86c3db4b7a3a5bb1f670ad74400dc77042",
+  "head_commit": "02666bfd73bec58b1f651c173bfce8c592ed591a"
+}

@@ -1,0 +1,174 @@
+"""UART-to-bus: independent serial drivers and transaction scoreboards."""
+import random
+
+HEAD = '''`timescale 1ns/1ps
+module tb;reg clk=0,rst=0;always #5 clk=~clk;
+task tick;begin @(posedge clk);#2;end endtask
+task reset;begin @(negedge clk);rst=1;repeat(3)tick;@(negedge clk);rst=0;end endtask
+initial begin #100000000;$fatal(1,"timeout");end
+'''
+END = '$display("RTL_BENCHLS_PASS");$finish(0);end endmodule\n'
+
+
+def baud_tb():
+    s=HEAD+'''reg [11:0] freq=1;reg [15:0] limit=12;wire ce;
+baud_gen dut(clk,rst,ce,freq,limit);integer count,expected,i;
+initial begin
+'''
+    for f,l in [(144,2981),(23,527),(1,15),(31,80),(4095,60000)]:
+        s+=f'freq={f};limit={l};reset;count=0;\n'
+        s+='for(i=0;i<3000;i=i+1)begin expected=count>=limit;count=expected?count-limit:(count+freq)%65536;tick;if(ce!==expected[0])$fatal(1,"baud enable");end\n'
+    return s+END
+
+
+def serial_tb(transmit):
+    s=HEAD
+    if transmit:
+        s+='''reg [7:0] data=0;reg send=0;wire serial,busy;
+uart_tx dut(clk,rst,1'b1,data,send,serial,busy);
+task byte_test;input [7:0] value;integer j;begin
+@(negedge clk);data=value;send=1;tick;@(negedge clk);send=0;
+wait(serial===0);repeat(8)tick;if(serial!==0)$fatal(1,"start");
+for(j=0;j<8;j=j+1)begin repeat(16)tick;if(serial!==value[j])$fatal(1,"TX bit");end
+repeat(16)tick;if(serial!==1)$fatal(1,"stop");repeat(20)tick;if(busy!==0)$fatal(1,"busy");
+end endtask
+initial begin reset;repeat(4)tick;
+'''
+    else:
+        s+='''reg serial=1;wire [7:0] data;wire valid;integer got=0;reg [7:0] observed;
+uart_rx dut(clk,rst,1'b1,serial,data,valid);
+always @(posedge clk)if(!rst && valid)begin got=got+1;observed=data;end
+task byte_test;input [7:0] value;integer j,previous;begin
+previous=got;@(negedge clk);serial=0;repeat(16)tick;
+for(j=0;j<8;j=j+1)begin @(negedge clk);serial=value[j];repeat(16)tick;end
+@(negedge clk);serial=1;repeat(24)tick;
+if(got!=previous+1 || observed!==value)$fatal(1,"RX byte");end endtask
+initial begin reset;repeat(4)tick;
+'''
+    rng=random.Random(9060621)
+    for value in [0,255,0x55,0xaa]+[rng.randrange(256) for _ in range(32)]:
+        s+=f"byte_test(8'h{value:02x});\n"
+    return s+END
+
+
+def transaction_tb(serial, binary):
+    rng=random.Random(9060622+binary)
+    commands=[];writes=[];reads=[];responses=[]
+    if binary:
+        commands.append(bytes([0,1]));responses.append(0x5a)
+        for addr,inc,values in [(0x12fc,True,[rng.randrange(256) for _ in range(8)]),
+                                (0xfe31,False,[0,255,85,170])]:
+            commands.append(bytes([0,0x21 if inc else 0x23,addr>>8,addr&255,len(values),*values]))
+            writes.extend(((addr+i if inc else addr)&65535,v) for i,v in enumerate(values));responses.append(0x5a)
+        for addr,inc,n in [(0x12fc,True,8),(0xabed,False,3)]:
+            commands.append(bytes([0,0x11 if inc else 0x13,addr>>8,addr&255,n]))
+            addresses=[(addr+i if inc else addr)&65535 for i in range(n)];reads.extend(addresses)
+            responses.extend(((a>>8)^(a&255)^0xa7) for a in addresses);responses.append(0x5a)
+    else:
+        for n in range(6):
+            a=rng.randrange(65536);v=rng.randrange(256)
+            commands.append((f'w {v:02x} {a:04x}\r' if n%2 else f'W\t{v:02X}\t{a:04X}\n').encode());writes.append((a,v))
+            commands.append((f'r {a:04x}\n' if n%2 else f'R\t{a:04X}\r').encode());reads.append(a)
+            responses.extend(f'{(a>>8)^(a&255)^0xa7:02X}\r\n'.encode())
+    s=HEAD+'''wire [15:0] addr;wire [7:0] wrdata;wire wr,rd,req;
+wire [7:0] rddata=addr[15:8]^addr[7:0]^8'ha7;
+reg grant=0;integer grant_wait=0;
+always @(posedge clk)if(rst)begin grant<=0;grant_wait<=0;end
+else if(req)begin grant_wait<=grant_wait+1;grant<=grant_wait>=3;end
+else begin grant<=0;grant_wait<=0;end
+integer nw=0,nr=0,nt=0;reg [15:0] wa[0:511],ra[0:511];reg [7:0] wd[0:511],tx[0:511];
+always @(posedge clk)if(!rst)begin
+if(wr)begin if(addr!==wa[nw] || wrdata!==wd[nw])$fatal(1,"bus write %d %h %h",nw,addr,wrdata);nw=nw+1;end
+if(rd)begin if(addr!==ra[nr])$fatal(1,"bus read %d %h",nr,addr);nr=nr+1;end
+end
+task received;input [7:0] data;begin if(data!==tx[nt])$fatal(1,"response %d %h != %h",nt,data,tx[nt]);nt=nt+1;end endtask
+'''
+    if serial:
+        s+='''reg si=1;wire so;integer bitn;reg [7:0] received_byte;
+uart2bus_top dut(clk,rst,si,so,addr,wrdata,wr,rddata,rd,req,grant);
+task put;input [7:0] data;integer b;begin
+@(negedge clk);si=0;repeat(347)tick;
+for(b=0;b<8;b=b+1)begin @(negedge clk);si=data[b];repeat(347)tick;end
+@(negedge clk);si=1;repeat(400)tick;end endtask
+initial forever begin
+@(negedge so);if(!rst)begin
+repeat(173)tick;if(so!==0)$fatal(1,"response start");
+for(bitn=0;bitn<8;bitn=bitn+1)begin repeat(347)tick;received_byte[bitn]=so;end
+repeat(347)tick;if(so!==1)$fatal(1,"response stop");received(received_byte);
+end end
+'''
+    else:
+        s+='''reg [7:0] rxdata=0;reg newrx=0,busy=0;wire [7:0] txdata;wire newtx;
+integer busy_count=0;
+uart_parser #(16) dut(clk,rst,rxdata,newrx,txdata,newtx,busy,addr,wrdata,wr,rddata,rd,req,grant);
+always @(posedge clk)if(rst)begin busy<=0;busy_count<=0;end
+else if(newtx && !busy)begin received(txdata);busy<=1;busy_count<=20;end
+else if(busy_count>0)busy_count<=busy_count-1;
+else busy<=0;
+task put;input [7:0] data;begin
+@(negedge clk);rxdata=data;newrx=1;tick;@(negedge clk);newrx=0;repeat(24)tick;end endtask
+'''
+    s+='initial begin\n'
+    for i,(a,v) in enumerate(writes):s+=f"wa[{i}]=16'h{a:04x};wd[{i}]=8'h{v:02x};\n"
+    for i,a in enumerate(reads):s+=f"ra[{i}]=16'h{a:04x};\n"
+    for i,v in enumerate(responses):s+=f"tx[{i}]=8'h{v:02x};\n"
+    s+='reset;repeat(50)tick;\n'
+    for cmd in commands:
+        for v in cmd:s+=f"put(8'h{v:02x});"
+        s+=f'repeat({50000 if serial else 1000})tick;\n'
+    s+=f'if(nw!={len(writes)} || nr!={len(reads)} || nt!={len(responses)})$fatal(1,"transaction counts %d %d %d",nw,nr,nt);\n'
+    return s+END
+
+
+INSTRUCTION='''# Implement UART-to-bus
+Implement all six modules and required paths in output_contract.json. Read the
+original project PDF and text. This is an 8N1 UART command bridge, with 16-bit
+address and 8-bit data internal bus. Both text and binary protocols are required.
+Reset is active-high asynchronous. The integration top uses baud_freq=144 and
+baud_limit=2981, matching 115200 baud at a 40 MHz input clock. Other baud values
+are checked through the baud_gen and uart_top interfaces.
+
+Contract clarifications:
+- baud_gen maintains a 16-bit accumulator. Reset clears it and ce_16. At each
+  edge, if the old accumulator is at least baud_limit, subtract baud_limit and
+  assert ce_16; otherwise add baud_freq and clear ce_16. UART bits span 16 enables.
+- UART idle/stop is high, start is low, data is eight bits LSB first. tx_busy
+  covers the frame; accept new_tx_data only when idle, holding data at acceptance.
+  new_rx_data is a one-clock pulse on a received byte. Framing-error recovery
+  and overrun beyond the documented no-buffer flow are outside this case.
+- uart_parser defaults AW=8; the integration top instantiates AW=16. Text accepts
+  upper/lower command and hex characters, space/tab separators and CR/LF endings.
+  Read response is two UPPERCASE hex digits followed by CR LF; text writes have
+  no reply. The first non-hex separator after the address initiates the access;
+  normal commands terminate that address with CR/LF. Illegal-command recovery
+  beyond the PDF's framing rules is not assigned an extra behavior here.
+- Binary: 00 prefix, command, address high/low, length, then write data. Command
+  bits 5:4 choose NOP=00/read=01/write=10; bit 1 DISABLES increment; bit 0 requests
+  0x5A status. Length 0 means 256. NOP consists only of prefix and command. The
+  pinned implementation replies 0x5A to NOP regardless of bit 0 (PDF ambiguity).
+  Reads return raw bytes, then optional status; writes return only optional status.
+- Hold int_req until grant; issue a single-clock int_read/int_write per access.
+  Provide read data by the clock after the active read cycle. Do not send another
+  write byte until grant/access completes; no command FIFO is required. Parser
+  read responses wait for tx_busy to rise and fall before sending the next byte.
+  Address increments after each binary write, or after transmitting each binary
+  read byte except the last. Reset clears pending command/serial/bus state.
+
+Private points check the divider, TX, RX, parser protocols and real serial-to-bus
+transactions in both protocols, including delayed bus grants. Internal encodings
+are free. Public feedback is compilation only; create your own behavioral tests.
+'''
+
+
+def uartbus_spec():
+    return dict(case_id='opencores_uart_to_bus_v1',project='communication_controller_uart_to_bus',
+        top='uart2bus_top',instruction=INSTRUCTION,builder_source=__file__,
+        tests=[('baud','baud_gen',baud_tb()),('tx','uart_tx',serial_tb(True)),('rx','uart_rx',serial_tb(False))]+
+            [(('top_' if serial else 'parser_')+('binary' if binary else 'text'),
+              'uart2bus_top' if serial else 'uart_parser',transaction_tb(serial,binary))
+             for serial in [False,True] for binary in [False,True]],
+        mutations=[('baud_compare','verilog/rtl/baud_gen.v','counter >= baud_limit','counter <= baud_limit'),
+            ('tx_bit','verilog/rtl/uart_tx.v','ser_out <= data_buf[0]','ser_out <= data_buf[1]'),
+            ('rx_shift','verilog/rtl/uart_rx.v','{in_sync[1], data_buf[7:1]}','{data_buf[6:0], in_sync[1]}'),
+            ('status_byte','verilog/rtl/uart_parser.v',"tx_data <= 8'h5a","tx_data <= 8'ha5"),
+            ('address_increment','verilog/rtl/uart_parser.v','int_address <= int_address + 1','int_address <= int_address + 2')])

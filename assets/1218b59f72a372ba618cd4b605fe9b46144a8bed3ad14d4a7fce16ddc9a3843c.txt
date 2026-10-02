@@ -1,0 +1,51 @@
+module origen_083596 (
+    input wire clk, rst, freeze, flush,
+    input wire [1:0] Br_taken_in,
+    input wire MEM_R_En_in, MEM_W_En_in, WB_En_in,
+    input wire [3:0] EXE_CMD_in,
+    input wire isImmediate_in,
+    input wire [4:0] Dest_in, src1_in, src2_in,
+    input wire [31:0] Reg2_in, Val1_in, Val2_in, PC_in,
+    
+    output reg [1:0] Br_taken,
+    output reg MEM_R_En, MEM_W_En, WB_En,
+    output reg [3:0] EXE_CMD,
+    output reg isImmediateOUT,
+    output reg [4:0] Dest, src1_EXEIN, src2_EXEIN,
+    output reg [31:0] Reg2, Val1, Val2, PC_out
+);
+
+    always @(posedge clk or posedge rst) begin
+        if (rst || flush) begin
+            Br_taken <= 2'b0;
+            MEM_R_En <= 1'b0;
+            MEM_W_En <= 1'b0;
+            WB_En <= 1'b0;
+            EXE_CMD <= 4'b0;
+            isImmediateOUT <= 1'b0;
+            Dest <= 5'b0;
+            src1_EXEIN <= 5'b0;
+            src2_EXEIN <= 5'b0;
+            Reg2 <= 32'b0;
+            Val1 <= 32'b0;
+            Val2 <= 32'b0;
+            PC_out <= 32'b0;
+        end
+        else if (~freeze) begin
+            Br_taken <= Br_taken_in;
+            MEM_R_En <= MEM_R_En_in;
+            MEM_W_En <= MEM_W_En_in;
+            WB_En <= WB_En_in;
+            EXE_CMD <= EXE_CMD_in;
+            isImmediateOUT <= isImmediate_in;
+            Dest <= Dest_in;
+            src1_EXEIN <= src1_in;
+            src2_EXEIN <= src2_in;
+            Reg2 <= Reg2_in;
+            Val1 <= Val1_in;
+            Val2 <= Val2_in;
+            PC_out <= PC_in;
+        end
+    end
+
+endmodule

@@ -1,0 +1,130 @@
+module origen_132875 #(
+    parameter N = 8,  // Number of input signals
+    parameter M = 8,  // Number of output signals
+    parameter P = 64, // Number of bits in each data packet
+    parameter Q = 4,  // Number of symbols used to represent each bit
+    parameter R = 16, // Number of bits in the preamble
+    parameter S = 32  // Number of bits in the header
+) (
+    input wire clk,
+    input wire rst,
+    input wire [N-1:0] tx_in [N-1:0],
+    output reg [M-1:0] tx_out [M-1:0],
+    input wire [M-1:0] rx_in [M-1:0],
+    output reg [N-1:0] rx_out [N-1:0]
+);
+
+    // Internal signals
+    reg [P-1:0] data_packet;
+    reg [Q*P-1:0] encoded_data;
+    reg [R+S+Q*P-1:0] full_packet;
+
+    // Transmitter
+    integer i;
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            data_packet <= 0;
+            encoded_data <= 0;
+            full_packet <= 0;
+        end else begin
+            // Collect input data
+            for (i = 0; i < N; i = i + 1) begin
+                data_packet[i*8 +: 8] <= tx_in[i];
+            end
+
+            // Encode data
+            for (i = 0; i < P; i = i + 1) begin
+                encoded_data[i*Q +: Q] <= encode_bit(data_packet[i]);
+            end
+
+            // Add preamble and header
+            full_packet <= {generate_preamble(), generate_header(), encoded_data};
+
+            // Transmit data
+            for (i = 0; i < M; i = i + 1) begin
+                tx_out[i] <= full_packet[i*8 +: 8];
+            end
+        end
+    end
+
+    // Receiver
+    reg [R+S+Q*P-1:0] received_packet;
+    reg [Q*P-1:0] decoded_data;
+    reg [P-1:0] extracted_data;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            received_packet <= 0;
+            decoded_data <= 0;
+            extracted_data <= 0;
+        end else begin
+            // Receive data
+            for (i = 0; i < M; i = i + 1) begin
+                received_packet[i*8 +: 8] <= rx_in[i];
+            end
+
+            // Extract preamble and header
+            if (extract_preamble(received_packet[R+S+Q*P-1:S+Q*P]) &&
+                extract_header(received_packet[S+Q*P-1:Q*P])) begin
+                
+                // Decode data
+                for (i = 0; i < P; i = i + 1) begin
+                    extracted_data[i] <= decode_symbol(received_packet[i*Q +: Q]);
+                end
+
+                // Output decoded data
+                for (i = 0; i < N; i = i + 1) begin
+                    rx_out[i] <= extracted_data[i*8 +: 8];
+                end
+            end
+        end
+    end
+
+    // Helper functions
+    function [Q-1:0] encode_bit;
+        input bit data;
+        begin
+            // Implement your encoding algorithm here
+            encode_bit = {Q{data}};
+        end
+    endfunction
+
+    function bit decode_symbol;
+        input [Q-1:0] symbol;
+        begin
+            // Implement your decoding algorithm here
+            decode_symbol = |symbol;
+        end
+    endfunction
+
+    function [R-1:0] generate_preamble;
+        begin
+            // Implement your preamble generation here
+            generate_preamble = {R{1'b1}};
+        end
+    endfunction
+
+    function [S-1:0] generate_header;
+        begin
+            // Implement your header generation here
+            generate_header = {S{1'b0}};
+        end
+    endfunction
+
+    function bit extract_preamble;
+        input [R-1:0] preamble;
+        begin
+            // Implement your preamble extraction and validation here
+            extract_preamble = (preamble == {R{1'b1}});
+        end
+    endfunction
+
+    function bit extract_header;
+        input [S-1:0] header;
+        begin
+            // Implement your header extraction and validation here
+            extract_header = (header == {S{1'b0}});
+        end
+    endfunction
+
+endmodule

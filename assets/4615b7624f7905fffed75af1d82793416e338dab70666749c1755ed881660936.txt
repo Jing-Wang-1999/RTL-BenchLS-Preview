@@ -1,0 +1,342 @@
+import json,pathlib,re,hashlib
+ROOT=pathlib.Path('/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl')
+OUT=ROOT/'results/complexity_admission_20260913_v3'
+CASES={c['top_module']:c for c in json.loads((OUT/'selection.json').read_text())['selected_cases'] if c['review_group']=='protocol'}
+def save(top,body,decision='pass',findings=None,limitations=None,evidence=None):
+ c=CASES[top];d=OUT/'reviews'/c['candidate_id'];src=(ROOT/'cases/candidates/complexity_expansion_20260913_v1'/c['workspace']/'private/golden_design.v').read_text();clean=re.sub(r'/\*.*?\*/|//[^\n]*','',src,flags=re.S)
+ # Port declarations only, with a module header for ANSI designs. No implementation source is included.
+ head=clean[clean.index('module '):clean.index(';',clean.index('module '))+1]
+ if not re.search(r'\binput\b',head):
+  decl=re.findall(r'^\s*(?:input|output|inout)\b[^;]+;',clean,re.M)
+  interface=head+'\n'+'\n'.join(x.strip() for x in decl)+'\nendmodule'
+ else:interface=head+'\nendmodule'
+ spec=f'# {top}: default-configuration specification\n\nImplement the module interface below. All arithmetic is fixed-width unsigned unless explicitly stated. Sequential updates use pre-edge values and occur on the stated clock edge. Preserve externally observable cycle timing, including outputs outside valid transactions wherever defined. No golden RTL is provided to the implementation model.\n\n## Interface\n\n```verilog\n{interface}\n```\n\n'+body.strip()+'\n'
+ (d/'specification.md').write_text(spec)
+ review=dict(candidate_id=c['candidate_id'],reviewer_identity='/root/screen_protocol_v3',decision=decision,rtl_sha256=hashlib.sha256(src.encode()).hexdigest(),specification_sha256=hashlib.sha256(spec.encode()).hexdigest(),rtl_reasonable=decision=='pass',blocking_findings=findings or [],evidence=evidence or ['Complete immutable module source reviewed against every public output and sequential update.','Original compile-pass provenance and declared defaults inspected.','Architecture differs from previously admitted protocol cases; token aliases within candidate are one parent.'],scope_limitations=limitations or ['Declared default parameters and no optional preprocessor defines.','Specification screening is distinct from formal controls; admission additionally requires independent screening and formal qualification.'])
+ (d/'primary_review.json').write_text(json.dumps(review,indent=2)+'\n')
+ return d
+save('uart_rx',r'''
+## Function and clock/reset
+
+Receive an asynchronous serial character, least-significant bit first. `clk_i` is the sole rising-edge clock; `rstn_i=0` asynchronously resets the receiver. Reset sets the state idle, receive data FF, bit counter zero, parity accumulator zero, input synchronizer 111, baud count and completion flag zero, and sticky error zero. `busy_o` is high in every state except idle. There are no parameters.
+
+`cfg_bits_i` 0,1,2,3 selects 5,6,7,8 data bits; unused high result bits are zeroed on each data sample. `cfg_div_i` is the full-bit terminal count, so ordinary timer periods contain divisor+1 clocks. Half-start terminal count is floor(divisor/2). This is a cycle model; no minimum divisor, framing-error detector or oversampling majority vote is implemented. `cfg_en_i=0` forces state idle and synchronizer 111 on the next clock; it does not independently reset data, bit index or error. Disabling midcharacter can therefore preserve a partial bit index into the next frame. Configuration inputs are live, not latched.
+
+## Receive timing
+
+The synchronizer shifts `{old[1:0],rx_i}` while enabled. A start trigger is old synchronizer bit2 high and bit1 low. Samples use bit2. In idle a detected falling edge enters start and enables the half-bit timer immediately. In start, the parity next value is zero and the timer remains enabled in half-bit mode. A previously registered completion flag advances to data; the start bit is not rechecked for being low.
+
+The timer runs when idle detects a start or in start, data, save, parity or stop. On each enabled edge it compares its old count with the applicable terminal count; equality clears the counter and sets its registered completion flag, otherwise increments modulo 65536 and clears that flag. Disabled timer clears both. State and data logic consume the old completion flag, one clock after the equality is registered.
+
+In data, each completion shifts the synchronized input into the most significant position of the selected character width and increments a 3-bit bit index. When the old index equals 4,5,6,7 for the selected width, reset that index to zero and enter save. The parity accumulator XORs each sampled data bit. Data holds on all nonsampling clocks.
+
+In save, assert combinational `rx_valid_o` continuously and keep `rx_data_o` equal to the stored character until `rx_ready_i`. The timer continues running during this wait. Ready advances to parity if enabled, otherwise stop. There is no receive queue and no automatic physical-line pause; a late ready can miss subsequent serial timing. This ready behavior must be reproduced, without assuming ready is always asserted. The valid character is offered before parity and stop processing.
+
+In parity, wait for the next completion and compare synchronized input with the required parity bit: selector0 is complement of data XOR (odd), selector1 is data XOR (even), selector2 constant0, selector3 constant1. A mismatch sets `err_o`; then enter stop. Stop waits for the next completion and returns idle, regardless of line level. `err_clr_i` has priority over setting the sticky error on the same edge. Parity accumulator updates on every completion in every state using the state's next value; outside start/data it holds. Unknown state recovers to idle.
+
+`rx_data_o` always exposes the stored byte, including before valid; `rx_valid_o` is high only in save. There is no framing-error, overrun flag or buffering of a following frame while stalled.
+''')
+save('uart_apb_reg',r'''
+## Register block and reset
+
+This is a UART register bank and interrupt/status adapter, not a serial transmitter. Rising `sys_clk`, asynchronous active-low `rst_b`. Reset clears divisor bytes, transmit and receive bytes, interrupt-enable nibble, LCR and DLAB, receiver flags and sampled busy. It sets transmitter-holding empty to1 and interrupt identification to1 (no interrupt). All state is reset.
+
+APB access is selected only when `psel && penable`; `pwrite` selects write versus read. Address decoding uses only `paddr[7:2]`; all other address bits and write-data bits31:8 are ignored. Read data is combinational with high24 bits zero; low8 bits are unknown/don't-care outside an active read. There is no ready/error output.
+
+| Word address / byte offset | Read | Write |
+|---|---|---|
+| 0 / 00 | DLL when DLAB, otherwise received byte | DLL when DLAB and sampled busy=0; otherwise THR only when DLAB=0 |
+| 1 / 04 | DLH when DLAB, otherwise low3 IER bits zero extended | DLH when DLAB and sampled busy=0; otherwise low4 IER bits when DLAB=0 |
+| 2 / 08 | Low4 interrupt ID | Ignored |
+| 3 / 0C | `{DLAB,00,LCR[4:0]}` | DLAB=data7, LCR=data4:0, regardless of busy |
+| 5 / 14 | `{0,TEMT,THRE,0,FE,PE,OE,DR}` | Ignored |
+| 31 / 7C | Sampled busy in bit0 | Ignored |
+| Other | Zero | Ignored |
+
+Parameters RBR/THR/DLL=0, DLH/IER=1, IIR=2, LCR=3, LSR=5, USR=31 are used at defaults. `reg_ctrl_dllh_data={DLH,DLL}`, `reg_ctrl_ier_enable=IER[2:0]`, LCR outputs DLS=bits1:0, stop=2, parity enable=3, even parity select=4. `reg_ctrl_lcr_wen` is the combinational LCR write qualification; `reg_ctrl_set_dllh_vld` is either accepted divisor write. `reg_ctrl_threint_en` pulses combinationally on an IER write with incoming bit1 set; it is not a stored enable.
+
+## Data/status priorities
+
+An accepted THR write stores the byte and clears THRE even if `ctrl_reg_thr_read` is simultaneously high. Otherwise that read input sets THRE. `reg_ctrl_thr_vld=!THRE`, and `reg_ctrl_thr_data=THR`. TEMT is live `ctrl_reg_thsr_empty && THRE`.
+
+`ctrl_reg_rbr_write_en` always captures receive data, even when receiver flags prevent marking it valid. DR is set on this write when the *old* PE and FE are clear; otherwise an active non-DLAB RBR read clears DR. A qualifying write has priority over simultaneous read. `reg_ctrl_rbr_vld=DR`. FE, PE and OE are separate sticky flags set by their respective `ctrl_reg_*` inputs, with setting taking priority over LSR-read clear. `ctrl_reg_busy` is sampled into a single busy register each edge; divisor write gating uses its previous value.
+
+## Interrupt priority and acknowledgement
+
+An incoming ID is accepted only if `ctrl_reg_iid_vld` and the priority condition below. Accepted write wins over simultaneous clear. Current ID1 or7 accepts any incoming ID. Current ID2 accepts when incoming bit2=1 and bit0=0. Current ID4 accepts when incoming bits2:0=6. Current ID6 and all other codes reject incoming IDs. Accepted value contains all4 input bits.
+
+Without an accepted ID, clear to1 under these conditions: current2 and either THRE=0 or IIR read; current4 and RBR read outside DLAB; current6 and LSR read; current7 and USR read. Other IDs hold. `uart_vic_int` is high exactly for current IDs2,4,6. The interrupt priority is implemented here; generating the incoming IDs is the upstream controller's responsibility.
+''')
+save('i2c_master_bit_ctrl',r'''
+## Purpose, interface and reset
+
+An open-drain I2C bit controller converts `cmd` into start, stop, read-bit and write-bit waveforms. Commands are NOP=0, START=1, STOP=2, WRITE=4, READ=8; other values act as NOP when idle. `scl_o=sda_o=0` permanently; each corresponding `_oen` is1 to release the line and0 to pull low. Inputs observe the external bus including other masters and slave clock stretching. `din` is the write-bit value; `dout` captures filtered SDA on every filtered SCL rising edge.
+
+Use rising `clk`, asynchronous low `nReset`, and synchronous high `rst`. Both resets clear command state, acknowledge, bus busy and arbitration flag; release SCL/SDA; clear arbitration checking; clear input capture registers; set filter history and filtered/delayed line values to1; clear start/stop detectors, filter counter and remembered stop command. Asynchronous reset sets divider count0 and clock enable1. Synchronous reset reloads divider from `clk_cnt` and sets enable1. The slave-wait latch has only asynchronous reset, so synchronous reset alone does not explicitly clear it. `dout` and the one-cycle delayed SCL release flag have no reset assignment: do not promise initial zeros.
+
+`ena` controls divider/filter operation; it is not a direct command-dispatch gate. In particular disabled `ena` reloads the divider with enable1 every clock; a nonzero command can still advance. Commands are accepted only when idle at a divider-enable edge; a held command can repeat after completion. Hold `din` over a normal write for the usual bus waveform, but dynamic changes are not silently constrained away.
+
+## Input filtering and divider
+
+Each bus input passes through two capture bits on every clock, then into a three-sample history when the old 14-bit filter count is zero. The filter count clears on reset or disabled ena, reloads with `clk_cnt >> 2` when zero, and otherwise decrements. History initializes111. On every nonreset clock compute each synchronized bus value as majority of its old three history bits, and delay it by one clock. Capture stages initialize00. All later detectors consume old filtered values.
+
+A registered start detector is `!SDA && delayed_SDA && SCL`; stop is `SDA && !delayed_SDA && SCL`. Busy's next value is `(start_detector || busy) && !stop_detector`.
+
+Delay the SCL release output one clock. Slave-wait next is `(release_SCL && !delayed_release_SCL && !filtered_SCL) || (slave_wait && !filtered_SCL)`. Clock-sync is delayed_filtered_SCL high, filtered_SCL low and release_SCL high. The 16-bit divider and registered enable update in this priority: asynchronous reset count0/enable1; then synchronous reset, zero count, disabled ena or clock-sync reload `clk_cnt`/enable1; then slave-wait holds count/enable0; otherwise decrement count/enable0. The state machine uses old enable, so count terminal recognition precedes a state advance by one system clock.
+
+## Command phases
+
+Each row below is one divider-enabled action after idle has decoded the command. Outputs hold between enabled actions. The notation H means release1, L pull-low0, keep means previous output. Acknowledgement is set on the final action for one system clock, even when divider enables are separated.
+
+| Command | Ordered actions `(SCL release, SDA release, SDA arbitration-check)` |
+|---|---|
+| START | `(keep,H,0)`, `(H,H,0)`, `(H,L,0)`, `(H,L,0)`, `(L,L,0)` then idle+ack |
+| STOP | `(L,L,0)`, `(H,L,0)`, `(H,L,0)`, `(H,H,0)` then idle+ack |
+| READ | `(L,H,0)`, `(H,H,0)`, `(H,H,0)`, `(L,H,0)` then idle+ack |
+| WRITE | `(L,din,0)`, `(H,din,0)`, `(H,din,1)`, `(L,din,0)` then idle+ack |
+
+Idle dispatch holds SCL/SDA and clears SDA checking. Reset or old arbitration-loss has priority over every command action and returns idle/releases both lines without ack.
+
+Remember whether `cmd==STOP` whenever old enable is1. Arbitration-loss next is `(SDA_check && !filtered_SDA && release_SDA) || (nonidle_state && stop_detector && !remembered_stop)`. This flag is recalculated every clock, not sticky; its old value aborts the state machine next edge. `dout` updates whenever filtered SCL=1 and delayed filtered SCL=0, independent of command, and otherwise holds. Verilog simulation `#1` delays are nonfunctional annotation; qualify sampled cycle behavior, not analog rise times.
+
+Only the declared default state encodings and included command constants are qualified. The module does not implement byte counting, ACK interpretation or an APB/Wishbone register bank.
+''')
+save('wb_lpc_periph',r'''
+## Intended function and recorded limitation
+
+Bridge LPC peripheral-side nibble transfers to a 32-bit Wishbone master. Rising `clk_i`, asynchronous low `nrst_i`; `lframe_i` is active high in this module. The module has no configurable parameters. Reset clears Wishbone outputs, data/address buffers, DMA sidebands and transfer flags; LPC output is F and output-enable0, state idle. Address/data counters are initialized during transaction entry rather than explicitly reset.
+
+The first nibble when idle and frame high identifies ordinary START=0, firmware read=D or write=E. Ordinary cycle type chooses direction from bit1 (inverted for DMA bit3), memory from bit2, DMA from bit3. I/O takes four address nibbles, memory/firmware eight, most significant first. DMA instead takes channel bits2:0 and terminal-count bit3, then a size nibble. Firmware also has a size nibble. Size0/default=1 byte,1=2 bytes,2 or3=4 bytes. Ordinary transfers use1 byte. Host data is received least-significant nibble first into a 32-bit buffer. Wishbone tags are memory0, I/O1, firmware2, DMA3. DMA address is zero.
+
+The bridge starts one Wishbone cycle at host-turnaround phase1 after the final write byte or before the first read byte; address, data, direction and tag are registered. It drives cycle/strobe until a sampled acknowledge, then clears them and latches read data if reading. LPC turnaround has two clock phases; peripheral SYNC drives5 for short wait,0 for ready,9 for ready-more on intermediate DMA bytes, or A for nonfirmware error. Read data is driven low nibble first, two nibbles per byte. Peripheral turnaround drives F then releases LAD. Firmware writes immediately send ready and finish LPC turnaround before Wishbone completion. `wbm_err_i` changes the LPC response but does not independently retire the Wishbone request.
+
+**This candidate is held and must not be admitted.** The implemented byte-enable decoder selects `0001` for transfer-length0, `0011` for2 and `1111` for4, but real byte transactions use length1. Length1 has no assignment and retains the previous byte enables. Thus the first ordinary one-byte I/O read after reset issues a Wishbone request with `wbm_sel_o=0000`. This is a public-interface functional defect, reproduced in `byte_select_probe.v` and its log. Additional concerns include retained upper address bits across memory-to-I/O transitions and no independent error termination; they are not needed to establish the blocker. No corrected golden or restricted length assumption is proposed.
+
+All outputs reflect registered state and otherwise retain prior values as described; DMA channel and terminal-count only update on DMA channel reception. This document records the intended interface and the observed blocker, not an approved generation specification.
+''',decision='hold',findings=['Reproduced one-byte I/O read at 0x1234 after reset asserts Wishbone strobe with byte enable0000 because xfr_len1 is missing from select decoder.'],evidence=['Complete source and wb_lpc_defines.v reviewed.','byte_select_probe.v: stimulus uses public ports only; byte_select_probe.log records REPRODUCED address00001234 sel0000.'])
+save('sirv_qspi_physical',r'''
+## Scope and reset
+
+A micro-operation driven physical SPI shifter supporting single/dual/quad data lanes. It does not own chip-select timing: `io_port_cs_0` is permanently1. All state uses rising `clock` and asynchronous high `reset`. Reset clears divider/polarity/phase/format registers, timing counter, bit counter, serial clock, shift buffer, output nibble, transfer flag, and delay pipelines. Reference-edge polarity starts1; completion starts1. Consequently `io_op_ready=io_rx_valid=1` immediately after reset; receive-valid is a completion *level*, not a pulse.
+
+All inputs are as declared, no parameters. Format protocol0=single,1=dual,2=quad; protocol3 yields zero shift/drive data. Single lane always drives DQ0, reads DQ1 and leaves DQ1..3 disabled. Dual drives DQ0/1 iff latched iodir=1; quad drives all lanes iff iodir=1. Disabled lanes still expose their registered output bits. Endian0 sends high bits first; endian1 bit-reverses the byte on load and reverses the receive buffer at the output. `io_rx_bits` continuously exposes that result.
+
+## Operation acceptance and exact scheduling
+
+The following recurrence specifies system-clock timing; all RHS values are old state. State consists of 8-bit remaining symbol count N, 12-bit timer T, reference half-cycle bit C, transfer-active X, completion D, latched divider V/polarity P/phase H/format, serial output S, shift buffer B and output nibble Q. Let `stop=(N==0)`, `beat=(T==0)`, `inv=H xor P`.
+
+Default scheduled events are:
+
+- If N>0 and beat: invert C; if X, set S to `C xor inv`, produce sample event when C=1 and setup event when C=0. If C=0, decrement N by1. If X=0 the count/reference still progress but no sample/setup or clock change occurs.
+- If N=1 and beat and C=0: force S=P and suppress the default setup event. The acceptance window A is true at this boundary or whenever N=0.
+- Last event is N=1 and beat and C=1 and X. Input ready is A && D. Acceptance of an operation requires ready && `io_op_valid`.
+- Timer reloads old V whenever stop or beat; otherwise decrements modulo4096. Reload uses old divider even on an operation that writes it.
+
+An accepted operation loads N=`io_op_bits_cnt`. It sets X to complement of `io_op_bits_fn`. With `stb=1` it captures format protocol/endian/iodir. Function1 is a delay/configure operation: with stb also latch divider, polarity and phase and set S to incoming polarity; otherwise retain the normal scheduled S. Function0 is a transfer: load B from incoming data, bit-reversed according to the *incoming* endian regardless of stb; set S to old inv; force setup event; set completion to `(incoming count==0)`. Function1 leaves completion on its normal progression. Other accepted fields do not change stored clock controls unless function1/stb. Back-to-back operation-ready timing therefore depends on both remaining count and the delayed completion.
+
+## Shift and sample pipeline
+
+Delay setup by one clock. Delay sample and last events through three registers each. Completion normally becomes old completion OR three-cycle-delayed last; an accepted transfer overrides it with count-is-zero. No receive-ready signal clears completion.
+
+Let k=1/2/4 for the latched protocol. A shift is requested by delayed_setup OR (delayed_sample AND N==0). Every clock compute the next buffer, even idle: its upper8-k bits are old low8-k bits when shifting, otherwise old bits7:k; low k bits are sampled DQ1 / DQ[1:0] / DQ[3:0] on delayed_sample, otherwise old low k bits. This leaves the buffer unchanged in ordinary idle. Invalid protocol3 makes it zero. An accepted transfer overrides this recurrence with the incoming (possibly reversed) byte.
+
+On a setup event update Q from the high nibble of the transfer-load byte when A is true, otherwise from old B[7:4]. Selection protocol is incoming protocol when A, otherwise stored protocol; protocol0 chooses nibble bit3 into Q0 and zeroes Q3:1, protocol1 chooses nibble bits3:2 into Q1:0 and zeroes Q3:2, protocol2 uses all four, protocol3 zeroes Q. Note that this mux uses the scheduling acceptance window A, while loading a new transfer requires ready && valid. Registered DQ output bits are Q0..3. Preserve this distinction and all register timing for arbitrary public inputs; do not replace the interface with a higher-level byte transaction abstraction.
+''')
+save('usbfs_transaction',r'''
+## Scope and clocks
+
+A USB packet-to-endpoint transaction controller. Sole rising `clk`, asynchronous low `rstn`. Default descriptors are all zero, EP00 and EP81..84 packet limits32 bytes, and all isochronous flags0. These defaults leave useful packet routing and custom EP00 responses active; they are not a complete enumerable USB device. This module does not verify CRC, device address, endpoint-descriptor consistency or retry replay. Upstream supplies packet PID/endpoint and `rp_fin/rp_okay`.
+
+Reset clears all public registered outputs, TX count, remembered endpoint, EP00 setup flag/remaining length, all data-toggle bits, and response index. The EP00 response-byte pipeline has no reset: it updates each clock from command/index even during reset. Do not require its initial declaration value after arbitrary reset assertion; externally transmitted bytes become defined through this pipeline.
+
+PIDs use nibble encodings OUT1, IN9, SETUPD, SOF5, DATA03, DATA1B, ACK2, NAKA. `tp_sta` is a one-cycle packet-start pulse; `tp_pid` otherwise holds. `tp_byte_req` requests one response decision: on its rising-clock observation `tp_fin_n` becomes1 and byte updates if data remains and the selected source is valid; otherwise fin_n becomes0 and byte holds. Between requests fin_n and byte hold. `tp_cnt` counts remaining bytes. There is no automatic retry buffer.
+
+## Completed packet actions
+
+Only `rp_fin && rp_okay` triggers packet-level actions. SETUP remembers endpoint; for endpoint0 set setup flag and data toggle1. OUT remembers endpoint; endpoint0 clears setup flag. IN remembers endpoint, emits start and defaults to NAK/count0. For endpoint0 it clears setup flag and emits its selected DATA0/1, taking min(remaining length,32) and deducting that amount immediately. For endpoints1..4, if corresponding input valid is1, emit its selected DATA0/1 and count32; otherwise retain NAK. Other endpoints NAK.
+
+ACK toggles the remembered endpoint's DATA toggle for endpoints0..4. There is no additional test that the ACK follows a particular pending packet. DATA0 or DATA1 completion always emits ACK at defaults. If remembered endpoint0, clear remaining length; when setup flag is1, replace it with setup command wLength if its direction bit7 is1, otherwise zero, and reset response index. Data packet completion does not clear setup flag. Unsupported PIDs have no packet-level effect.
+
+After those packet actions, a simultaneous byte request uses the *old* remembered endpoint, count, source-valid and source-data. Its assignments to count and response-index have priority over earlier assignments on that edge when data is available. Thus simultaneous packet-completion and byte requests are deterministic but do not use the newly selected endpoint.
+
+## Endpoint streams and setup command
+
+Endpoint81..84 input ready is combinational `tp_byte_req && old_count!=0 && remembered_endpoint==1..4`, independent of source valid. A requested valid byte is captured, count decremented, and fin_n set. EP00 is always a valid source; requested bytes increment a 9-bit response index modulo512. A source that becomes invalid early terminates the current byte response (fin_n0) without clearing count.
+
+Every clock, OUT endpoint1..4 data/valid default to0. If `rp_byte_en`, route the byte by remembered endpoint and assert that endpoint's valid for one clock. These byte deliveries are **not gated by PID, packet completion, rp_okay or DATA toggle**; they are speculative streaming bytes and CRC acceptance/deduplication is not performed here. At endpoint0, while setup flag is1, each enabled byte shifts `{rp_byte,old_setup[63:8]}`. After eight little-endian setup bytes the command layout is bmRequestType7:0, bRequest15:8, wValue31:16, wIndex47:32, wLength63:48.
+
+## EP00 response pipeline
+
+On every rising clock compute an 8-bit EP00 byte from old command and old response index. Byte requests consume the previous pipeline value. Thus adjacent requests can repeat the first byte when index just changed; preserve the registered lookup latency. Standard recognized command patterns in low32 bits are:
+
+| Low32 pattern, X is ignored bits | Response at index i |
+|---|---|
+| XXXX0880 | 01 at i=0, otherwise00 |
+| 01XX0680 | Device descriptor byte i, zero when i>=18; all zero by default |
+| 02XX0680 | Configuration descriptor byte i (512-byte array, all zero default) |
+| 03000680 | Bytes04,03,09,04 then00 |
+| 03010680 through03060680 | String1..6 byte i, zero when i>=64; all zero default |
+| Other | `ep00_resp` sampled every clock |
+
+Descriptor arrays are traversed most-significant byte first. Full formal qualification uses binary inputs; casex patterns denote only ignored command fields, not a promise about X propagation.
+
+On valid packet completion, `sof` pulses for PID SOF. `sot` pulses for endpoint0 SETUP, or nonzero-endpoint IN/OUT. They are zero every other cycle. No optional parameter configurations are qualified by this case. Out-of-range endpoint source-array access has no valid-byte guarantee; endpoint controls and NAK behavior above still apply.
+''',limitations=['Default zero descriptors represent a transaction submodule, not full USB enumeration.','OUT data is speculative, no CRC rollback or duplicate suppression; TX has no retry replay storage.','Formal flow must preserve one-cycle EP00 lookup and all defined invalid-cycle outputs.'])
+save('hsci_mdec',r'''
+## HSCI subframe decoder
+
+Rising `hsci_pclk`, asynchronous low `rstn`. A subframe supplies word W=`mdec_sfrm[9:2]`, parity P=bit1 and continuation C=bit0. `mdec_val` qualifies FSM/data consumption, but **parity checking runs every clock regardless of valid**: mismatch between P and XOR of all eight W bits plus C sets sticky `parity_err`, with mismatch winning over clear_errors. This detector does not suppress decoding/writes.
+
+FSM output `dec_fsm` codes are idle0, instruction1, read-index2, read-data3, error4, linkup5, test6, unknown-message7. Reset enters idle and clears all state described below except `rd_tsize`, which has no reset assignment and remains unspecified until sampled in idle with frame-detect. `idle_state=(state==idle && auto_linkup)`.
+
+## State transitions and decoded sidebands
+
+In idle with valid, priority is test mode→test; manual linkup→idle; auto linkup→linkup only when W7=1 and W6:3=5; otherwise normal mode accepts W7=1 with opcode A→read-index, C→error, other→unknown-message, or stays idle if W7=0. Instruction state (not normally reached after reset) performs the same A/C/unknown opcode dispatch on valid start-bit words. Read-index stays until valid C=0, then read-data. Read-data returns idle on valid C=0, independent of `next_frm_start`; otherwise stays. Linkup returns idle on valid C=0. Error and unknown-message return idle on any valid subframe. Test stays until miso_test_mode clears. No valid means hold except idle/test rules above.
+
+`signal_det` latches frame-detect while auto_linkup=1 and clears when auto_linkup=0. In idle, auto-linkup plus ver_b_na captures clock adjustment `{W[1:0],P,C}` and inversion W2 whenever W7/opcode5 match, without mdec_val gating. In auto-linkup with ver_b_na=0 those adjustment outputs clear. Outside auto-linkup, idle+frm_det captures rd_tsize=W1:0. The adjustment outputs otherwise hold.
+
+In linkup, latch `signal_acquired=1` permanently until reset. Each valid subframe sets alink_dval1 and alink_data=W; invalid sets dval0 and leaves data. Idle clears alink_dval and data to0. Other states hold these registers, so there is no independent universal pulse clear outside linkup/idle.
+
+In error on a valid subframe, error_code captures W, with priority over clear_errors; otherwise clear_errors clears it. In unknown-message on valid, set sticky unk_instr_err with priority over clear. Both reset0. Errors are reporting outputs rather than decode aborts.
+
+## Read data and memory writes
+
+Maintain a 32-bit index accumulator and 2-bit saturating index-byte counter. Idle clears accumulator/count. In read-index on valid, store W in successive little-endian byte positions, saturating at position3. The accumulated index is not connected to public memory address in this implementation.
+
+Maintain a 2-bit data-lane counter. Reset clears it; idle clears it only while read_done=1, otherwise retains it across read frames. In read-data on valid, produce a one-cycle internal store flag, place W in the selected byte lane of a zero-filled32-bit word, set one-hot lane mask1/2/4/8, and increment lane modulo4. Read-data without valid clears the store flag and retains mask/data. Idle/instruction clear store and mask; other states hold them.
+
+One clock later, if the old store flag is1, `dec_en=1`, `dec_we=old lane mask`, `dec_data=old zero-filled word`, and address normally holds. Otherwise dec_en/we/data clear; if menc_state=0, address also clears. This is a registered pulse interface with no ready input.
+
+Address is a 15-bit word index starting0. Independently, old `dec_we[3]` increments address modulo32768 and sets a new-address flag, taking priority over ordinary address hold/clear. During a stored byte, old dec_we[0] clears that flag. At read completion's second high cycle, discontinuous xfer_mode1 advances to a new word unless the new-address flag says a lane3 write already did so (then clear flag); contiguous xfer_mode0 clears address and the flag. Apply these later address overrides after the basic memory-output updates.
+
+## Read completion counter
+
+Reset clears 17-bit byte count, read_done and its one-cycle delayed copy. Every edge delay read_done. `read_op` has highest priority: clear byte count/read_done and mark internal pending. Otherwise old store flag increments count. Otherwise if count>`read_byte_num`, clear count/pending and assert read_done. Thus the input is the **zero-based last-byte count**, not the literal number of bytes, and completion comparison happens on a nonstore edge. Otherwise if delayed read_done=1 clear read_done; otherwise hold it. In ordinary use read_done lasts two clocks. Pending is internal and does not gate counting or completion; no hidden read_pending assumption may be added. `next_frm_start` has no effective influence in the declared implementation. The public input `alink_fsm` is unused and has no effect on any output.
+
+The memory data path, protocol errors and link training remain active in the sole default configuration. No speculative correction of ungated parity or unused received index is part of this task.
+''')
+save('pcie_us_axil_master',r'''
+## Default configuration and interfaces
+
+Bridge UltraScale PCIe CQ requests to one 32-bit AXI-Lite access and emit CC completions. Defaults: PCIe data256, keep8 (one bit per DWORD), CQ user85, CC user33, AXI data32/address64/strobes4, parity disabled. Other width/parity parameter values are not qualified. Sole rising `clk`, synchronous high `rst`. AXI address protection outputs are permanently010. CQ keep is ignored; CQ user bits7:0 alone supply byte enables; AXI RRESP/BRESP are ignored, so even an AXI error response does not produce a PCIe error. The module provides no timeout or outstanding-request ID support.
+
+Reset clears FSM to idle, CQ ready, AXI AW/W/AR valids and B/R readies, status pulses, and both CC output-buffer valid flags/internal ready. Request metadata, address/data/strobes and CC buffer payloads have no reset assignment; they can update under their normal enables during reset. Their declaration initializers are not reset promises. All public outputs are continuously driven from their corresponding registers; invalid payloads are not forced zero.
+
+## CQ format and supported requests
+
+Accept CQ only on valid&&registered ready. In idle capture aligned address `{tdata[63:2],00}`, DWORD count74:64, request type78:75, requester ID95:80, tag103:96, traffic class123:121, attributes126:124, first BE user3:0, last BE user7:4, and write word159:128. AWADDR and ARADDR share the captured address register; WSTRB is first BE, WDATA is the captured word. Last BE is retained but has no functional role for the supported one-DWORD operations.
+
+Types0 memory read,1 memory write,2 I/O read,3 I/O write are supported only when count=1 and the first CQ beat is also last. Accepted read raises ARVALID and enters read-response state; accepted write raises AWVALID/WVALID independently and enters write-response state. No new CQ request is accepted while waiting for that response. Each AXI valid remains high until its own ready is observed. AXI slaves are expected to produce their B/R response according to AXI channel ordering; no extra formal traffic assumptions may be inserted to hide arbitrary input behavior.
+
+Malformed reads and I/O writes produce a correctable status pulse and completer-abort completion status4, without AXI access. Malformed memory writes produce an uncorrectable pulse and no completion. Unsupported request types produce status1 (unsupported request); types12..15 are treated as posted messages, causing uncorrectable pulse/no completion, and other unsupported types produce a correctable pulse and completion. Pulses are registered one-clock flags, default0 each cycle. If the rejected first beat is not last, drain CQ until a last-beat handshake before completing or returning idle.
+
+## CC completion format
+
+Every completion fits one256-bit beat, last=1 and user33'b0. Data starts all zero, then fills these fields:
+
+| Bits | Value |
+|---|---|
+| 6:0 | captured address6:2 concatenated with index of lowest set first-BE bit; zero low2 if BE=0 |
+| 9:8 | 0 |
+| 28:16 | byte-count span described below, except explicit error-completion state sets0 |
+| 42:32 | 1 for read data,0 for no-data completion |
+| 45:43 | success0, unsupported1 or abort4 |
+| 63:48 | requester ID |
+| 71:64 | tag |
+| 87:72 | live completer_id at internal completion acceptance |
+| 88 | live completer_id_enable |
+| 91:89 | captured traffic class |
+| 94:92 | captured attributes |
+| 95 | 0 |
+| 127:96 | live AXI RDATA at internal completion acceptance, including when keep masks this word |
+| 255:128 and other unlisted bits | 0 |
+
+Byte count is1 for BE0 or any single set bit;2 for0011,0110,1100;3 for0101,0111,1010,1110;4 for1001,1011,1101,1111. Thus it is enabled-byte span, not population count. Read success has keep0F and count1. I/O write success has keep07 and count0; its byte count is the BE-derived value. Memory write success emits no CC completion. AXI response error codes do not change success status.
+
+Rejected one-beat nonposted requests enter the explicit completion state, which sets byte count0/keep07/DWORD count0. A rejected multi-beat nonposted request first attempts to emit directly on its final drained beat with BE-derived byte count and its stored error status; if internal ready is false it retries through the explicit completion state, which sets byte count0. Preserve this path-dependent byte-count behavior. The upper AXI read-data word remains present but masked when keep07.
+
+## Cycle scheduling and CC skid buffer
+
+Internal CC payload has defined values even without a valid offer: default keep0F, last0, DWORD count1, BE-derived byte count, stored status, request metadata and live RDATA in bits127:96 as in the format table. READ state overrides last1 and success status even without an AXI response. Completion states override these defaults as described above. Invalid internal payloads can therefore be captured by the skid buffer and must not be replaced with zero.
+
+Maintain a CC output register and one temporary register. Let output valid=V, temp valid=U, sink ready=R, and registered internal ready=Q. Early-ready E is `R || (!U && !V)`, registered into Q every nonreset edge. An internal completion offer is accepted only when old Q=1. When Q=1 and (R or !V), transfer the entire internal payload and its valid into output, even if internal valid0. When Q=1 and stalled valid output, transfer payload/valid to temp. When Q=0 and R=1, move temp payload/valid to output and clear temp valid. Otherwise hold both. Reset overrides validity/Q only. This preserves valid output payload under backpressure, while invalid payload registers can change.
+
+Idle schedules next CQ-ready=E. On a valid read handshake it instead sets next CQ-ready0, ARVALID1 and RREADY=E. Read state continuously schedules RREADY=E. An RVALID&&old-RREADY handshake offers the read completion, clears next RREADY and returns idle with next CQ-ready=E. Valid read response data is sampled through the CC buffer that same edge, rather than latched in a separate read-data register.
+
+A valid write handshake sets next CQ-ready0, AWVALID/WVALID1 and BREADY1. Write-response state thereafter schedules BREADY=E. BVALID&&old-BREADY clears BREADY and either returns idle without CC for memory write or offers the I/O completion and returns idle. AW/W/AR valid-clear logic runs independently in every state; no extra clearing is implied by state exit.
+
+The rejected-packet drain state schedules CQ-ready1 continuously. On final handshake, posted types return idle. Nonposted types offer a no-data completion; if Q=1 return idle, otherwise enter explicit completion state. That state offers its error completion every cycle until Q=1. CQ-ready remains0 during explicit completion. Reset can interrupt every transaction.
+
+The width64-specific header and second-completion states and width128 write-payload state are not reachable from reset at declared defaults. Qualify the default behavior above, not the source-line count contributed by those inactive branches.
+''',limitations=['Default256-bit PCIe /32-bit AXI-Lite only; nondefault width branches do not count as active complexity.','AXI response status is ignored by this bridge and explicitly documented; no claim of end-to-end error propagation.','Metadata and payload are unreset; reset-first control qualification must not invent zero data.'])
+save('aux_interface',r'''
+## Purpose and initialization
+
+A DisplayPort AUX Manchester transmitter/receiver with separate31-byte usable FIFOs. Sole rising `clk`; there is **no public reset**. The design relies on FPGA power-up/Verilog initial state: all scalar/vector state and data registers initialize0 except TX state=idle, RX state=waiting, and aux_tri=1. FIFO memories are uninitialized; only written entries can be read. `abort` returns TX and RX FSMs to idle/waiting but does not clear FIFOs, counters, shift registers or actively cancel the remaining serialized waveform. It is not a substitute reset. Formal qualification must explicitly preserve initialization; an arbitrary-state SEC proof cannot establish this initial-state contract.
+
+Ports `tx_data/tx_wr_en/tx_full` enqueue bytes, and `rx_rd_en/rx_empty/rx_data` dequeue received bytes. Pointers are5 bits into32 entries, leaving one empty slot: empty iff read=write, full iff write+1 modulo32=read. Ignore write on full or read on empty, evaluating old pointers; simultaneous operation uses old availability. RX output data updates on successful read, otherwise holds. TX read is an internal registered request consumed the next edge into a byte register. `busy` is0 exactly when TX FIFO empty and TX FSM idle.
+
+## TX timing and packet sequence
+
+An8-bit half-bit counter increments until49 then returns0. Every such tick, drive aux_out=old16-bit data-shift-register bit15 and aux_tri=complement of old busy-shift-register bit15; shift both left and fill0. At ticks with old busy bit14=0, the FSM can load the next segment, overriding those shifted registers. Registered data drive and tri-state retain values between ticks. This describes clock counts, not an assumed external oscillator frequency.
+
+TX states0 idle,1 sync,2 start,3 data,4 stop,5 flush,6 waiting. At a free tick: idle with queued data loads alternating0101... (16 half-bits) and all busy bits1, enters sync. Sync loads another16 alternating bits and enters start. Start loads1111000000000000 with busy1111111100000000, enters data, asserts one-clock RX-reset request and TX-read request. Data loads the buffered byte MSB first as pairs `(bit, !bit)` and all busy bits1. If TX FIFO is empty at that moment, enter stop; otherwise request another byte and stay data. Stop loads the same8-active-half-bit start/stop pattern and enters flush; flush enters waiting. Thus the producer must enqueue a complete packet fast enough if it needs continuous bytes; empty FIFO ends the packet.
+
+During every half-bit tick, set a10-bit receiver-holdoff register to all1 unless old TX state is waiting; while waiting shift it left and fill0. The receiver may recognize traffic when old holdoff bit9=0. A one-clock RX-finished indication while waiting returns TX idle. Timeout count increments only on waiting half-bit ticks; at old count39999 return idle and pulse timeout1 for one system clock, otherwise increment. Outside waiting reset that counter on half-bit ticks. Therefore timeout occurs after40000 waiting half-bit ticks, approximately2,000,000 system clocks, despite an upstream comment claiming400us. Abort overrides state transitions last but does not alter timeout pulse generation on that edge.
+
+`debug_pmod[7:4]` captures TX state code0..6 at half-bit ticks (A for unknown); bits3:1 zero; bit0 is a registered copy of input synchronization stage1.
+
+## RX synchronizer, decoder and FIFO
+
+Input is sampled into rx_meta each clock as1 only when aux_in compares exactly equal to1, otherwise0 (X/Z simulation samples become0). Next stage rx_synced samples rx_meta and delayed rx_last samples rx_synced; debug snoop samples rx_meta. A detected change in old rx_synced versus rx_last sets6-bit sample counter25, overriding increment/terminal reset, centering the next sample. Independently, old counter49 clears the counter, shifts synchronized input into a16-bit buffer, shifts a1 into a16-bit sample-valid mask and raises a one-clock internal sample flag; otherwise it increments and clears that flag. A simultaneous line change overrides only the counter assignment to25; the sample, shifts and sample flag still occur. Decoder consumes that flag on the following edge.
+
+In RX waiting, when a consumed sample sees buffer0101010111110000, clear sample-valid mask; if holdoff bit9=0 enter receiving-data. In receiving-data, when mask bit15=1, clear mask and examine each of eight adjacent bit pairs. If any pair is equal, treat it as stop/error, return waiting and pulse RX-finished if holdoff permits. Otherwise extract bits15,13,...,1 into a byte register and pulse write request. FIFO consumes this write on the next edge if not full, silently dropping data on overflow. An unused RX done state self-loops; other invalid states recover waiting.
+
+The registered RX-reset request emitted during TX start returns RX state waiting and logically empties RX FIFO by setting write pointer to old read pointer. It does not reset memories, decoder buffers or all counters. On this reset edge memory write/read can still occur under old requests/availability, but pointer updates are suppressed except write-pointer emptying. Abort overrides RX state to waiting only. These ordering details also apply when public requests arrive during transmission or abort.
+''',limitations=['No public reset. Formal initialization support is an engineering prerequisite; do not admit using an uninitialized-state shortcut.','FIFO overflow discards receive bytes and abort is not a FIFO flush.','Power-up initial block is part of the specification; AUX timeout is counted in half-bit ticks, not the inaccurate upstream400us comment.'])
+save('usb1_pe',r'''
+## USB endpoint protocol engine
+
+Implement a USB1 full-speed protocol-control submodule. Rising `clk`, active-low asynchronous `rst` (the name is not active high). Inputs are decoded PID flags, selected endpoint/CSR/FIFO state and DMA status; outputs control DMA initiation, handshake packet selection, DATA PID and interrupts. This module does not assemble bytes or compute CRC. Full-speed ACK/data timeout constants from usb1_defines.v are both200 clocks of their internal8-bit counters; commented36-cycle values are inactive. Optional debug macros are disabled. Default handshake selections are ACK0, NACK1, STALL2, NYET3. Default state codes are the declared one-hot values.
+
+Reset clears FSM to idle, eight endpoint DATA PID stores, remembered in/out/setup tokens and sticky forced-stall. Most pipelines, current/next PID registers, handshake outputs and timers have **no reset assignments**; their reset-time behavior is their ordinary recurrence below and must not be replaced with all-zero registers. RX timer obtains a known count after rx_active; ACK timer obtains one through its clear pipeline. Undefined initial outputs/timer phases are not valid transaction guarantees.
+
+CSR bit9 denotes IN endpoint,10 OUT,11 control,12 isochronous,13 bulk; interrupt type is neither bit12 nor bit13. Bits8:0 are unused. Normal legal endpoint type is one of IN/OUT/control; the source also has retained-state behavior for unsupported combinations. Endpoint numbers0..7 have PID storage; selecting8..15 retains the previously sampled endpoint PID. Do not claim16 independent endpoint contexts.
+
+## Front-end pipelines and token memory
+
+Every clock capture `match && fsel` into match_r; capture the four OUT/IN/PING/SETUP PID flags into separate one-cycle registers. No-such-endpoint output is registered `token_valid && (OUT||IN||SETUP) && !match` (not gated by fsel). Capture send_token and token_pid_sel from the FSM's combinational outputs each edge. Their combinational defaults are no token and ACK, so token_pid_sel returns ACK on an otherwise idle edge.
+
+Remember in_token on pid_IN and clear on OUT/SETUP; remember out_token on OUT/SETUP and clear on IN; remember setup_token on SETUP and clear on OUT/IN, with set conditions taking priority. These updates are **not gated by token_valid**. Define in_op=CSR_IN||(CSR_CTRL&&in_token), out_op=CSR_OUT||(CSR_CTRL&&out_token). Forced-stall latches send_stall, with setting winning over clear by old send_token.
+
+Abort is registered `match && fsel && state!=idle`; it marks replacement of an active transaction by a new match, not every timeout/error. The state register unconditionally returns idle whenever raw match=1, overriding the next-state logic, independently of fsel. Otherwise it follows next state. The delayed match launches the newly selected transaction from idle after the raw match pulse clears.
+
+## PID selection and update
+
+Each clock, read the selected endpoint's stored2-bit PID into a current-context pipeline. Independently compute current transmit PID and next stored PID from the *old* context. The effective transfers-per-microframe input is constant0, so multi-transfer branches are inactive.
+
+For PID recurrence only, use the exact pair CSR[13:12]:00 interrupt,01 isochronous,10 bulk. Pair11 for IN/OUT retains both current and next PID; the FSM still independently sees bit12 as isochronous. For IN/OUT interrupt or bulk endpoints, current PID is DATA0 when stored low bit0 and DATA1 when1; next PID toggles between0 and1. For isochronous IN, current/next PID0. Isochronous OUT accepts whichever one-hot incoming DATA0/DATA1/DATA2/MDATA flag is asserted (map to0/1/2/3) and next PID0. The combinational incoming-PID decode retains its old value when the flags are not exactly one-hot.
+
+For control endpoints (CSR10:9=00), setup_token gives current0,next3. Otherwise in_op=1,out_op=0 selects stored bit1 as current DATA0/1 and next3 if bit1=0 else1. out_op=1,in_op=0 selects stored bit0 and next3 if bit0=0 else2. Unmatched combinations retain previous computed current/next PID. `data_pid_sel` is the registered current PID. Every edge register sequence-error as the complement of `(current0&&DATA0)||(current1&&DATA1)||(current2&&DATA2)||(current3&&MDATA)`.
+
+FSM UPDATE generates a combinational context-update enable; register it one clock, then use its old value to write the selected endpoint with the old computed next PID. Endpoint selection/CSR should normally describe the transaction through this pipeline, but no formal constraints may erase arbitrary changes. Stores have asynchronous reset0; pipeline read and compute are unreset.
+
+## FSM behavior
+
+Defaults every state: hold state, no token, ACK selection, no DMA pulses, no context update, ACK-timer-clear request1, sequence-interrupt request0. DMA enables are combinational initiation strobes in idle, not level enables through the whole transaction.
+
+- Idle: if delayed match and not current SOF, prioritize IN endpoint or control+IN. Interrupt IN with empty FIFO emits NACK and enters TOKEN; otherwise pulse tx_dma_en and enter IN. Else OUT endpoint or control+(OUT||SETUP) pulses rx_dma_en and enters OUT.
+- TOKEN: return idle.
+- IN: release ACK timer clear. On idma_done, isochronous enters UPDATE, otherwise IN2.
+- IN2: release ACK timer clear; timeout wins and returns idle; otherwise token_valid&&ACK enters UPDATE.
+- OUT: data timeout, crc16_err or old abort wins and returns idle. Otherwise rx_data_done enters OUT2A for noniso, or UPDATEW for iso; iso also requests sequence-error interrupt when the registered mismatch is1.
+- OUT2A: abort returns idle. Otherwise forced stall emits STALL/idle; else full FIFO emits NACK/idle; else emit ACK and enter UPDATE when sequence matches, otherwise idle without PID update.
+- UPDATEW: one delay then UPDATE. UPDATE: request context update and return idle.
+- OUT2B is an unreachable-from-reset legacy state which self-loops until abort. Other unmatched state codes retain state with default outputs.
+
+## Timer and interrupt timing
+
+ACK-clear register next=`tx_valid || combinational_clear_request`. Its old value clears an8-bit ACK counter; otherwise increment modulo256. Another register compares old counter with200 to create timeout. Clear request is0 only in IN/IN2; count comparisons are not suppressed by a simultaneous clear. Data counter clears on rx_active else increments modulo256; its separate timeout register compares old count with200. `int_to_set` is combinational IN2&&ACK-timeout OR OUT&&data-timeout. `int_crc16_set=rx_data_done&&crc16_err` without endpoint selection gating. Sequence interrupt is a registered copy of the FSM request.
+
+Unsupported-PID interrupt is registered delayed-match && !current-SOF && any of: OUT endpoint without delayed OUT/PING; IN endpoint without delayed IN; control endpoint without delayed IN/OUT/PING/SETUP. This is not independently gated by token_valid. Preserve the distinct current and delayed flag use and the unreset pipeline timing. Simulation #1 annotations do not specify analog delays in the cycle-equivalence task.
+''',limitations=['Eight endpoint contexts only; other endpoint numbers retain prior context.','Unreset timer and PID pipelines require honest reset/init scope in formal qualification.','This is protocol control, not complete USB compliance; inactive high-speed/multitransfer branches do not add default complexity.'])

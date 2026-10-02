@@ -1,0 +1,53 @@
+(* blackbox *)
+module origen_130801 (
+    input C,
+    input D,
+    output reg Q
+);
+    always @(posedge C)
+        Q <= D;
+endmodule
+
+(* blackbox *)
+module SB_DFFR (
+    input C,
+    input R,
+    input D,
+    output reg Q
+);
+    always @(posedge C or negedge R)
+        if (!R)
+            Q <= 1'b0;
+        else
+            Q <= D;
+endmodule
+
+(* DONT_TOUCH = "true" *)
+module d_flip_flop (
+    input C,
+    input D,
+    input R,
+    output Q
+);
+    SB_DFFR dffr_inst (
+        .C(C),
+        .R(R),
+        .D(D),
+        .Q(Q)
+    );
+
+    // Timing specifications for iCE40 HX, LP, and UP5K FPGA families
+    specify
+        // Setup and hold times
+        $setup(D, posedge C, 470);
+        $hold(posedge C, D, 0);
+        $setup(R, posedge C, 470);
+        $hold(posedge C, R, 0);
+
+        // Clock to Q delay
+        (posedge C *> (Q +: D)) = 1000;
+
+        // Asynchronous reset
+        (negedge R *> (Q +: 1'b0)) = 1000;
+    endspecify
+endmodule

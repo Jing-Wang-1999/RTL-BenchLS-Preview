@@ -1,0 +1,17 @@
+# Implement the AXI-stream UART project
+Read specification/project.md (unchanged upstream README). Implement uart, uart_tx and uart_rx at the declared paths. uart instantiates the independent transmitter and receiver, connecting the public streams, serial pins, prescale and status signals.
+
+Reviewed contract and original-document correction:
+- All logic uses rising clk edges and synchronous active-high rst. UART is idle-high, one low start bit, DATA_WIDTH data bits least-significant first, no parity, and one high stop bit. Default DATA_WIDTH=8; the qualification configuration is 8N1, prescale=4. Bit duration is 8*prescale clock cycles. Keep prescale stable during traffic; widths/baud configurations outside the frozen tests are not claimed as independently verified.
+- AXI-stream transfers occur when valid && ready. TX backpressures while sending; RX normally holds the received word/valid until accepted. Reset sets TX line high and both busy outputs low, RX valid and error outputs low. Input ready becomes available after reset release.
+- RX validates the start bit near its center, samples data-bit centers and requires a high stop bit. A false start is abandoned. An invalid stop bit pulses frame_error for one clock, discards that bad frame and preserves a previously unread valid word. Error outputs are pulses, not sticky flags.
+- IMPORTANT correction: README says an overrun discards the incoming word. In this pinned RTL, a valid incoming frame REPLACES the unread RX output word and pulses overrun_error when old m_axis_tvalid was high. This is an overwrite-oldest single-word buffer. The error uses the old valid bit even if ready is simultaneously high at completion. This explicit curator correction takes precedence over the stale README sentence. The correction is tested with two serial frames while the consumer is paused.
+- busy indicates an active frame; allow the receiver/transmitter's normal registered transition delays. Consumers must not assume buffering beyond the one RX output word. Signals/port names and parameter defaults follow interfaces/modules.v. Internal state encodings are unrestricted.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

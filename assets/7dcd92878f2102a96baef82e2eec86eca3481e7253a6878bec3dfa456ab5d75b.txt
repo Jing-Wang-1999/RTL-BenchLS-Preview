@@ -1,0 +1,47 @@
+# Specification for origen_121558 Module
+
+## Overview
+This module implements a line buffer controller for 2D convolution operations, managing the storage and retrieval of image data with support for padding, striding, and sliding window access patterns typical in convolutional neural networks.
+
+## Parameters
+- **KER_SIZE**: Size of the convolution kernel (default 3)
+- **BITWIDTH**: Bit width of data elements (default 8)
+- **STRIDE**: Stride value for convolution operations (default 1)
+- **NFMAPS**: Number of feature maps (default 3)
+- **INPUT_X_DIM**: Width of the input image (default 28)
+- **PAD**: Padding size applied to input borders (default 1)
+- **AW**: Address width for memory access (default 5)
+
+## Inputs
+- **clk**: System clock signal
+- **rstn**: Active-low asynchronous reset signal
+- **valid**: Control signal indicating valid input data is available for processing
+
+## Outputs
+- **addr**: Memory address output (AW bits wide) for accessing line buffer storage
+- **write_en**: Write enable signals (KER_SIZE bits) indicating which line buffer rows should be written
+- **read_en**: Read enable signals (KER_SIZE bits) indicating which line buffer rows should be read
+- **ready**: Status signal indicating the module is ready to accept new data
+- **top_pad_mask**: Mask signal (KER_SIZE bits) indicating which kernel rows correspond to top padding regions
+- **bottom_pad_mask**: Single-bit mask indicating when the bottom padding region is active
+- **row_is_complete**: Pulse signal indicating a complete row of the padded image has been processed
+
+## Functional Behavior
+
+### Initialization
+On reset, all outputs are cleared, ready is set high, top_pad_mask is set to all ones, and internal counters are zeroed.
+
+### Address Generation
+The module generates sequential memory addresses for a padded 2D image with dimensions (INPUT_X_DIM + 2*PAD) × (INPUT_X_DIM + 2*PAD). Addresses are calculated as: (global_row_ptr + row_ptr) × PADDED_DIM + col_ptr.
+
+### Line Buffer Management
+The controller manages KER_SIZE line buffers in a circular fashion:
+- **row_ptr** cycles through 0 to KER_SIZE-1, selecting which line buffer to write
+- **global_row_ptr** tracks the absolute row position in the padded image
+- **col_ptr** tracks the column position within each row
+
+### Write Control
+Write enable signals are asserted one at a time based on row_ptr, cycling through the line buffers as data arrives. After writing to the last line buffer (row_ptr == KER_SIZE-1), row_ptr resets to 0.
+
+### Read Control
+Read enable signals are activated after KER_SIZE-1 initial rows have been written (tracked by init_row_counter), ensuring sufficient data is available for convolution operations. Once activated, all KER_SIZE line buffers are read simultaneously.

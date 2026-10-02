@@ -1,0 +1,13 @@
+# New default-configuration harness. Input paths are staged by the runner.
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/formal113_215dac293c2c10c68a71_negative.v0.v
+check_sec -analyze -imp -sv ./input/rtl/formal113_215dac293c2c10c68a71_negative.negative.v
+check_sec -elaborate -spec -top ct_f_spsram_128x104 -disable_auto_bbox
+check_sec -elaborate -imp -top ct_f_spsram_128x104 -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+check_sec -map -hierarchy -spec {^(.*)$} -imp {ct_f_spsram_128x104_imp.dut.$1} -regexp
+clock CLK
+reset -none
+check_sec -gen
+check_sec -prove -strategy proof

@@ -1,0 +1,14 @@
+# Direct Project-level Design Completion
+
+Implement the missing module(s) sm_control in project/src/sm_cpu.v. All other project RTL and the specification are provided. Read the retained project specification and supporting RTL. Preserve public interfaces and the declared parameters.
+
+Responsibility: Instruction decoding and branch-condition control for the MIPS datapath.
+Context: Retained project specification, public interfaces and supporting implementation establish the component context; the public behavioral clarification pins edge cases used for formal comparison.
+Behavioral clarification: Declare defaults branch=0, condZero=0, regDst=0, regWrite=0, aluSrc=0 and ALU_ADD. Decode the instruction constants in the retained sm_cpu.vh. R-type ADDU/OR/SRL/SLTU/SUBU select their respective ALU operation, rd destination and register write. ADDIU and LUI select the immediate input and enable register write. BEQ/BNE select subtraction and branch; BEQ requires aluZero=1, BNE aluZero=0. pcSrc is branch AND (aluZero equals condZero). Unsupported encodings keep all defaults. Sibling ALU/register-file and the complete CPU wiring remain visible.
+
+Only the named module definitions in src/sm_cpu.v are collected. All other code is restored from fixed context, including sibling modules. No new output files or unrelated edits affect scoring. You may compile, simulate, and write your own local tests. Hidden reference RTL and equivalence results are unavailable during generation.
+
+Formal contract:
+- sm_control: LEC, clock None, reset expression None; default parameter configuration. No additional handshake restrictions.
+
+Follow this completion instruction; PARENT_CONTEXT.md describes the original parent generation task. Save completed RTL at the declared project path.

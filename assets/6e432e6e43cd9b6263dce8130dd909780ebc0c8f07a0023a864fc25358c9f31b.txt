@@ -1,0 +1,10 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+    req_cnt_q <= 8'b0;
+else if (inport_valid_i && inport_write_i && inport_accept_o)
+begin
+    if (req_cnt_q != 8'b0)
+        req_cnt_q <= req_cnt_q - 8'd1;
+    else
+        req_cnt_q <= inport_len_i;
+end

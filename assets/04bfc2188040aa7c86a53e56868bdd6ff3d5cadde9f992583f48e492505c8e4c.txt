@@ -1,0 +1,28 @@
+always @* begin
+    if (!ENABLE_UNALIGNED || zero_offset_reg) begin
+        // passthrough if no overlap
+        shift_axis_tdata = s_axis_write_data_tdata;
+        shift_axis_tkeep = s_axis_write_data_tkeep;
+        shift_axis_tvalid = s_axis_write_data_tvalid;
+        shift_axis_tlast = AXIS_LAST_ENABLE && s_axis_write_data_tlast;
+        shift_axis_input_tready = 1'b1;
+    end else if (!AXIS_LAST_ENABLE) begin
+        shift_axis_tdata = {s_axis_write_data_tdata, save_axis_tdata_reg} >> ((AXIS_KEEP_WIDTH_INT-offset_reg)*AXIS_WORD_SIZE);
+        shift_axis_tkeep = {s_axis_write_data_tkeep, save_axis_tkeep_reg} >> (AXIS_KEEP_WIDTH_INT-offset_reg);
+        shift_axis_tvalid = s_axis_write_data_tvalid;
+        shift_axis_tlast = 1'b0;
+        shift_axis_input_tready = 1'b1;
+    end else if (shift_axis_extra_cycle_reg) begin
+        shift_axis_tdata = {s_axis_write_data_tdata, save_axis_tdata_reg} >> ((AXIS_KEEP_WIDTH_INT-offset_reg)*AXIS_WORD_SIZE);
+        shift_axis_tkeep = {{AXIS_KEEP_WIDTH_INT{1'b0}}, save_axis_tkeep_reg} >> (AXIS_KEEP_WIDTH_INT-offset_reg);
+        shift_axis_tvalid = 1'b1;
+        shift_axis_tlast = save_axis_tlast_reg;
+        shift_axis_input_tready = flush_save;
+    end else begin
+        shift_axis_tdata = {s_axis_write_data_tdata, save_axis_tdata_reg} >> ((AXIS_KEEP_WIDTH_INT-offset_reg)*AXIS_WORD_SIZE);
+        shift_axis_tkeep = {s_axis_write_data_tkeep, save_axis_tkeep_reg} >> (AXIS_KEEP_WIDTH_INT-offset_reg);
+        shift_axis_tvalid = s_axis_write_data_tvalid;
+        shift_axis_tlast = (s_axis_write_data_tlast && ((s_axis_write_data_tkeep & ({AXIS_KEEP_WIDTH_INT{1'b1}} << (AXIS_KEEP_WIDTH_INT-offset_reg))) == 0));
+        shift_axis_input_tready = !(s_axis_write_data_tlast && s_axis_write_data_tready && s_axis_write_data_tvalid);
+    end
+end

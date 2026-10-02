@@ -1,0 +1,108 @@
+module origen_072467(
+    output reg [15:0] out,
+    input [15:0] mem_in,
+    input write,
+    input reset,
+    input clock
+);
+
+    reg [15:0] mem [0:7];
+    reg [33:0] cache_data [0:7];
+    reg [15:0] hit;
+    wire [3:0] replaceline;
+    reg [7:0] used;
+
+    integer i;
+
+    initial begin
+        $readmemh("memory.hex", mem);
+    end
+
+    always @(posedge clock or posedge reset) begin
+        if (reset) begin
+            for (i = 0; i < 8; i = i + 1) begin
+                cache_data[i] <= 34'b0;
+            end
+            hit <= 16'b0;
+            used <= 8'b0;
+        end else begin
+            cache_data[0][33:18] <= mem_in;
+            
+            hit <= 16'b0;
+            for (i = 0; i < 8; i = i + 1) begin
+                if (cache_data[i][33:18] == mem_in) begin
+                    hit[i] <= 1'b1;
+                    used[i] <= 1'b1;
+                end
+            end
+
+            if (hit == 16'b0) begin
+                $display("miss");
+            end
+
+            if (&used) begin
+                used <= 8'b0;
+            end
+
+            if (write) begin
+                for (i = 0; i < 8; i = i + 1) begin
+                    if (hit[i]) begin
+                        if (cache_data[i][0]) begin
+                            // Write-back logic (not implemented)
+                        end
+                        cache_data[i][17:2] <= mem_in;
+                        cache_data[i][0] <= 1'b1; // Set dirty bit
+                    end
+                end
+            end
+        end
+    end
+
+    // LRU replacement logic (not fully implemented)
+    assign replaceline = ~used[3:0] & used[7:4];
+
+endmodule
+
+// Testbench
+module testbench;
+    reg [15:0] mem_in;
+    reg write, reset, clock;
+    wire [15:0] out;
+
+    cache_memory uut (
+        .out(out),
+        .mem_in(mem_in),
+        .write(write),
+        .reset(reset),
+        .clock(clock)
+    );
+
+    initial begin
+        clock = 0;
+        forever #5 clock = ~clock;
+    end
+
+    initial begin
+        reset = 1;
+        write = 0;
+        mem_in = 16'h0000;
+        #10 reset = 0;
+
+        // Test memory accesses
+        #10 mem_in = 16'h0001;
+        #10 mem_in = 16'h0002;
+        #10 mem_in = 16'h0003;
+        #10 mem_in = 16'h0004;
+        #10 mem_in = 16'h0005;
+        #10 mem_in = 16'h0006;
+        #10 mem_in = 16'h0007;
+        #10 mem_in = 16'h0008;
+
+        #10 $finish;
+    end
+
+    initial begin
+        $dumpfile("cache_memory.vcd");
+        $dumpvars(0, testbench);
+    end
+endmodule

@@ -1,0 +1,63 @@
+# Hardware Specification: Unaligned Memory Write Data Handler
+
+## Overview
+This module processes data from a FIFO and prepares it for memory write operations, with optional support for unaligned memory access. It handles data alignment based on the target memory address and manages the flow of data through a barrel shifter mechanism.
+
+## Inputs
+- **clk**: System clock signal
+- **reset**: Asynchronous reset signal
+- **enable**: Control signal to enable data processing
+- **address**: Target memory address (32-bit), used to determine alignment requirements
+- **start**: Signal indicating the beginning of a new transfer sequence
+- **waitrequest**: Signal from memory indicating it is not ready to accept data
+- **stall**: Signal indicating the pipeline should pause
+- **fifo_data**: Input data from FIFO (32-bit)
+- **fifo_empty**: Signal indicating FIFO has no data available
+
+## Outputs
+- **write_data**: Processed data ready for memory write (32-bit)
+- **fifo_readack**: Acknowledgment signal to FIFO indicating data has been consumed
+
+## Functional Behavior
+
+### Address Alignment Calculation
+The module calculates how many bytes remain until the next memory boundary based on the lower address bits. This determines the alignment offset needed for the current data word.
+
+### Data Path Processing
+The module uses a barrel shifter mechanism to handle data alignment:
+- Two shifted versions of the FIFO data are generated: one left-shifted and one right-shifted
+- The shift amount is determined by the bytes-to-boundary calculation
+- These shifted versions are combined using a logical OR operation to create the final aligned output
+
+### State Management
+The module maintains two pipeline registers:
+1. A register storing the shift amount (bytes to boundary minus one) from the previous cycle
+2. A register storing the right-shifted data from the previous cycle
+
+These registers enable proper alignment of data that spans across multiple FIFO words.
+
+### Conditional Behavior Based on Configuration
+
+**When Unaligned Access is Enabled:**
+- The module performs full data alignment and shifting
+- FIFO read acknowledgment occurs only when: FIFO is not empty, pipeline is not stalled, memory is not waiting, module is enabled, and a new transfer has not just started
+- Output data is the combined aligned word from the barrel shifter
+
+**When Unaligned Access is Disabled:**
+- The module operates in pass-through mode
+- FIFO read acknowledgment occurs when: FIFO is not empty, pipeline is not stalled, memory is not waiting, and module is enabled
+- Output data is directly from the FIFO without modification
+
+### Control Flow
+- When a start signal is asserted, the shift amount register resets and the right-shifted data register clears
+- When FIFO data is acknowledged, the right-shifted data is captured for use in the next cycle
+- The module respects memory wait requests and pipeline stalls by gating the FIFO read acknowledgment
+
+## Parameters
+- **DATA_WIDTH**: Width of data path (default 32 bits)
+- **BYTEENABLE_WIDTH_LOG2**: Log2 of byte enable width (default 2, supporting 4-byte words)
+- **ADDRESS_WIDTH**: Width of address bus (default 32 bits)
+- **UNALIGNED_ACCESS_ENABLE**: Configuration flag enabling unaligned access support (default disabled)
+
+## Sub-modules
+This module contains no instantiated sub-modules. It uses only combinational logic and registers.

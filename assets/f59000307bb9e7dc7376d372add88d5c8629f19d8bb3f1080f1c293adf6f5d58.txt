@@ -1,0 +1,66 @@
+# UDP-over-IP receive module
+
+Implement `udp_ip_rx`, a synchronous byte-wide IP-payload receiver that removes an eight-byte UDP header, presents the decoded fields in parallel, and forwards the UDP payload. There are no parameters. All transfers occur on rising `clk` edges when the corresponding `valid` and `ready` are both high. `rst` is synchronous and active high.
+
+## Interface
+
+All signals below are unsigned. Inputs beginning `s_` belong to the incoming frame; outputs beginning `m_` belong to the outgoing frame.
+
+| Ports | Direction | Width |
+|---|---|---:|
+| `clk`, `rst` | input | 1 |
+| `s_ip_hdr_valid`, `m_udp_hdr_ready` | input | 1 |
+| `s_ip_hdr_ready`, `m_udp_hdr_valid` | output | 1 |
+| `s_eth_dest_mac`, `s_eth_src_mac` | input | 48 |
+| `m_eth_dest_mac`, `m_eth_src_mac` | output | 48 |
+| `s_eth_type`; `m_eth_type` | input; output | 16 |
+| `s_ip_version`, `s_ip_ihl`; `m_ip_version`, `m_ip_ihl` | input; output | 4 |
+| `s_ip_dscp`; `m_ip_dscp` | input; output | 6 |
+| `s_ip_ecn`; `m_ip_ecn` | input; output | 2 |
+| `s_ip_length`, `s_ip_identification`, `s_ip_header_checksum`; matching `m_ip_` names | input; output | 16 |
+| `s_ip_flags`; `m_ip_flags` | input; output | 3 |
+| `s_ip_fragment_offset`; `m_ip_fragment_offset` | input; output | 13 |
+| `s_ip_ttl`, `s_ip_protocol`; matching `m_ip_` names | input; output | 8 |
+| `s_ip_source_ip`, `s_ip_dest_ip`; matching `m_ip_` names | input; output | 32 |
+| `m_udp_source_port`, `m_udp_dest_port`, `m_udp_length`, `m_udp_checksum` | output | 16 |
+| `s_ip_payload_axis_tdata` | input | 8 |
+| `s_ip_payload_axis_tvalid`, `s_ip_payload_axis_tlast`, `s_ip_payload_axis_tuser` | input | 1 |
+| `s_ip_payload_axis_tready` | output | 1 |
+| `m_udp_payload_axis_tdata` | output | 8 |
+| `m_udp_payload_axis_tvalid`, `m_udp_payload_axis_tlast`, `m_udp_payload_axis_tuser` | output | 1 |
+| `m_udp_payload_axis_tready` | input | 1 |
+| `busy`, `error_header_early_termination`, `error_payload_early_termination` | output | 1 |
+
+## Header and frame behavior
+
+While idle, offer the input header channel only when the previous output header has been consumed or can be consumed on the current edge. Header ready is registered: after a reset edge it is low, and normally becomes high on the first subsequent idle edge. On an input-header transfer, capture every Ethernet/IP field unchanged, lower input-header ready, raise input-payload ready, and become busy. Do not validate EtherType, version, IHL, protocol, IP length, fragmentation, addresses, or either checksum.
+
+Consume the next eight accepted input-payload bytes as UDP source port, destination port, length, and checksum, two bytes each, most significant byte first. Update the corresponding output field byte when it is received. Header bytes do not produce output-payload transfers. Header reception accepts bytes independently of output-header or output-payload backpressure.
+
+After accepting the eighth header byte without `tlast`, assert `m_udp_hdr_valid` and begin receiving payload. Hold header valid until its handshake. The header and payload channels operate independently: payload need not wait for output-header acceptance. Hold all complete output-header fields until they are replaced by a subsequent input frame. On an aborted partial header, fields already received remain observable even though header valid is low.
+
+If `tlast` accompanies any of the eight header bytes, including byte eight, discard the frame, suppress output-header valid, pulse `error_header_early_termination` for the following clock cycle, return to idle, disable payload ready, and enable header ready. Thus a frame ending immediately after its UDP header is treated as an error even when UDP length is eight. Ignore `tuser` on header bytes.
+
+## Payload length and errors
+
+The declared payload count is `(UDP length - 8)` in unsigned 16-bit arithmetic. On ordinary accepted payload bytes, forward data and `tuser`. The final output byte carries `tlast`.
+
+If input `tlast` arrives exactly on the declared final payload byte, forward that byte with its original `tuser`, complete input processing, and do not assert an early-termination error. If input `tlast` arrives before that position, forward the received final byte with `tlast=1` and `tuser=1`, pulse `error_payload_early_termination`, and complete input processing. The error indication is tied to acceptance of the offending input byte, so downstream backpressure can delay the associated output byte beyond the error pulse.
+
+If the declared final payload byte arrives without input `tlast`, retain that byte and suppress its immediate output. Consume and discard later input bytes until input `tlast` arrives. At that transfer, emit the retained byte as the final output byte, with `tuser` taken from the discarded final input byte. Do not report a length error for excess padding. In particular, an error flag on the retained byte is not retained independently. If the physical frame never ends, this completion can wait indefinitely.
+
+No minimum UDP-length check exists. Lengths below eight wrap the expected count modulo 65536. Length eight starts with count zero and has no special empty-payload handling: after a non-ending header it expects 65536 payload transfers before a matching final position. Preserve this behavior; do not silently replace it with a standards-oriented empty-datagram implementation.
+
+## Timing and backpressure
+
+Input-payload ready is registered. During header reception it stays high; during payload reception and padding discard, its next-cycle value is downstream payload ready OR both output-payload storage locations being empty. The output provides a registered visible beat and one additional overflow beat, maintaining order and stable visible data/last/user whenever visible valid is high and downstream ready is low. With capacity and downstream readiness, payload can transfer one byte per clock. An ordinary accepted input payload byte can appear on the visible output immediately after its acceptance edge; there is no combinational data bypass.
+
+At input frame completion, return to idle and set next-cycle input-header ready according to whether an output header remains pending after the current edge. Completion does not wait for queued output-payload bytes to drain. Do not mix their order with a subsequent frame. While idle, input payload ready is low. Ready and valid are independent signals; sources must keep valid data and sidebands stable until transfer.
+
+`busy` reports whether input-frame processing is active after the most recent edge. It rises on input-header acceptance and falls on an accepted input end-of-frame or aborted header. It may be low while an output header or payload remains pending. Both error outputs are one-cycle pulses, clear by default on the next non-error cycle, and are not sticky.
+
+## Reset and inactive values
+
+On a reset edge, clear input ready signals, output header valid, both payload valid slots, payload acceptance readiness, busy, and both errors, and abandon the input frame. Output Ethernet/IP/UDP field storage and payload data/last/user storage are not reset: they retain or undergo an already-enabled datapath update on that edge. No meaning should be assigned to data or sidebands when their valid signal is low. Register declarations initialize metadata and stored payload values to zero for initialization-aware execution, but warm reset is not a request to zero those outputs.
+
+The intended useful frame domain contains at least one payload byte and UDP length at least nine. The malformed and zero-payload behaviors above remain part of the implementation contract and must be recorded in verification coverage; they are not grounds for silently masking a mismatch.

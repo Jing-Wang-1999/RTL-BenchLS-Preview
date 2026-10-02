@@ -1,0 +1,121 @@
+module origen_187159 (
+    output reg INC_CHAN,
+    output reg INC_CHIP,
+    output reg RDENA,
+    output reg RST_SAMP,
+    input CLK,
+    input JTAG_MODE,
+    input RDY,
+    input RST,
+    input [7:0] CHIP,
+    input [7:0] CHAN,
+    input [15:0] SAMP,
+    input [15:0] SAMP_MAX
+);
+
+    // States
+    localparam IDLE = 4'b0001;
+    localparam INC_CHAN_STATE = 4'b0010;
+    localparam INC_SAMP = 4'b0100;
+    localparam LAST = 4'b1000;
+    localparam RD_ENA = 4'b0011;
+
+    reg [3:0] state;
+    `ifndef SYNTHESIS
+    reg [72:0] statename;
+    `endif
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST) begin
+            state <= IDLE;
+            `ifndef SYNTHESIS
+            statename <= "IDLE";
+            `endif
+        end else begin
+            case (state)
+                IDLE: begin
+                    if (RDY && !JTAG_MODE) begin
+                        state <= RD_ENA;
+                        `ifndef SYNTHESIS
+                        statename <= "RD_ENA";
+                        `endif
+                    end else begin
+                        state <= IDLE;
+                        `ifndef SYNTHESIS
+                        statename <= "IDLE";
+                        `endif
+                    end
+                    INC_CHAN <= 1'b0;
+                    INC_CHIP <= 1'b0;
+                    RDENA <= 1'b0;
+                    RST_SAMP <= 1'b0;
+                end
+                INC_CHAN_STATE: begin
+                    state <= RD_ENA;
+                    `ifndef SYNTHESIS
+                    statename <= "RD_ENA";
+                    `endif
+                    INC_CHAN <= 1'b1;
+                    INC_CHIP <= 1'b0;
+                    RDENA <= 1'b1;
+                    RST_SAMP <= 1'b0;
+                end
+                INC_SAMP: begin
+                    state <= RD_ENA;
+                    `ifndef SYNTHESIS
+                    statename <= "RD_ENA";
+                    `endif
+                    INC_CHAN <= 1'b0;
+                    INC_CHIP <= 1'b0;
+                    RDENA <= 1'b1;
+                    RST_SAMP <= 1'b0;
+                end
+                LAST: begin
+                    if (RDY && !JTAG_MODE) begin
+                        state <= RD_ENA;
+                        `ifndef SYNTHESIS
+                        statename <= "RD_ENA";
+                        `endif
+                    end else begin
+                        state <= IDLE;
+                        `ifndef SYNTHESIS
+                        statename <= "IDLE";
+                        `endif
+                    end
+                    INC_CHAN <= 1'b1;
+                    INC_CHIP <= 1'b0;
+                    RDENA <= 1'b0;
+                    RST_SAMP <= 1'b1;
+                end
+                RD_ENA: begin
+                    if (CHIP == 8'hFF && CHAN == 8'hFF && SAMP == SAMP_MAX - 1) begin
+                        state <= LAST;
+                        `ifndef SYNTHESIS
+                        statename <= "LAST";
+                        `endif
+                    end else if (CHIP == 8'hFF && CHAN == 8'hFF) begin
+                        state <= INC_SAMP;
+                        `ifndef SYNTHESIS
+                        statename <= "INC_SAMP";
+                        `endif
+                    end else if (CHIP == 8'hFF) begin
+                        state <= INC_CHAN_STATE;
+                        `ifndef SYNTHESIS
+                        statename <= "INC_CHAN";
+                        `endif
+                    end else begin
+                        state <= RD_ENA;
+                        `ifndef SYNTHESIS
+                        statename <= "RD_ENA";
+                        `endif
+                    end
+                    INC_CHAN <= 1'b0;
+                    INC_CHIP <= 1'b0;
+                    RDENA <= 1'b1;
+                    RST_SAMP <= 1'b0;
+                end
+            endcase
+        end
+    end
+
+endmodule

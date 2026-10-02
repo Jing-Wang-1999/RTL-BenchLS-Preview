@@ -1,0 +1,88 @@
+module autovcoder_028476 (
+    lpf_exr_reg,
+    scndry_out,
+    ext_reset_in,
+    mb_debug_sys_rst,
+    lpf_exr,
+    p_3_out,
+    slowest_sync_clk
+);
+  output lpf_exr_reg;
+  output scndry_out;
+  input ext_reset_in;
+  input mb_debug_sys_rst;
+  input lpf_exr;
+  input [2:0] p_3_out;
+  input slowest_sync_clk;
+
+  wire D;
+  wire \GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d2_n_0 ;
+  wire \GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d3_n_0 ;
+  wire exr_d1;
+  wire ext_reset_in;
+  wire lpf_exr;
+  wire lpf_exr_reg;
+  wire mb_debug_sys_rst;
+  wire [2:0] p_3_out;
+  wire scndry_out;
+  wire slowest_sync_clk;
+
+  (* ASYNC_REG *) (* BOX_TYPE = "PRIMITIVE" *) (* XILINX_LEGACY_PRIM = "FDR" *)
+  FDRE #(
+      .INIT(1'b0)
+  ) \GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_IN_cdc_to (
+      .C (slowest_sync_clk),
+      .CE(1'b1),
+      .D (exr_d1),
+      .Q (D),
+      .R (1'b0)
+  );
+  LUT2 #(
+      .INIT(4'hE)
+  ) \GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_IN_cdc_to_i_1 (
+      .I0(ext_reset_in),
+      .I1(mb_debug_sys_rst),
+      .O (exr_d1)
+  );
+  (* ASYNC_REG *) (* BOX_TYPE = "PRIMITIVE" *) (* XILINX_LEGACY_PRIM = "FDR" *)
+  FDRE #(
+      .INIT(1'b0)
+  ) \GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d2 (
+      .C (slowest_sync_clk),
+      .CE(1'b1),
+      .D (D),
+      .Q (\GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d2_n_0 ),
+      .R (1'b0)
+  );
+  (* ASYNC_REG *) (* BOX_TYPE = "PRIMITIVE" *) (* XILINX_LEGACY_PRIM = "FDR" *)
+  FDRE #(
+      .INIT(1'b0)
+  ) \GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d3 (
+      .C (slowest_sync_clk),
+      .CE(1'b1),
+      .D (\GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d2_n_0 ),
+      .Q (\GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d3_n_0 ),
+      .R (1'b0)
+  );
+  (* ASYNC_REG *) (* BOX_TYPE = "PRIMITIVE" *) (* XILINX_LEGACY_PRIM = "FDR" *)
+  FDRE #(
+      .INIT(1'b0)
+  ) \GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d4 (
+      .C (slowest_sync_clk),
+      .CE(1'b1),
+      .D (\GENERATE_LEVEL_P_S_CDC.SINGLE_BIT.CROSS_PLEVEL_IN2SCNDRY_s_level_out_d3_n_0 ),
+      .Q (scndry_out),
+      .R (1'b0)
+  );
+  LUT5 #(
+      .INIT(32'hEAAAAAA8)
+  ) lpf_exr_i_1 (
+      .I0(lpf_exr),
+      .I1(p_3_out[0]),
+      .I2(scndry_out),
+      .I3(p_3_out[1]),
+      .I4(p_3_out[2]),
+      .O (lpf_exr_reg)
+  );
+endmodule
+

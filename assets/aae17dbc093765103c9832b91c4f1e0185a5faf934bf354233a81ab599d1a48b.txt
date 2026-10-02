@@ -1,0 +1,59 @@
+{
+  "mode": "SEC",
+  "top_module": "adder",
+  "clocks": [
+    {
+      "name": "clk",
+      "polarity": "posedge",
+      "rtl_lines": [
+        60
+      ]
+    }
+  ],
+  "reset_expression": "rst",
+  "reset": {
+    "name": "rst",
+    "active_level": 1,
+    "synchronous": true,
+    "minimum_asserted_clock_edges": 1,
+    "rtl_lines": [
+      278,
+      283
+    ]
+  },
+  "parameters": {
+    "get_a": 0,
+    "get_b": 1,
+    "unpack": 2,
+    "special_cases": 3,
+    "align": 4,
+    "add_0": 5,
+    "add_1": 6,
+    "normalise_1": 7,
+    "normalise_2": 8,
+    "round": 9,
+    "pack": 10,
+    "put_z": 11
+  },
+  "dependencies": [],
+  "assumptions": [
+    "Initialize via synchronous reset before proving normal operation.",
+    "No hidden latency relaxation; compare registered port values with aligned clocks."
+  ],
+  "pitfalls": [
+    "output_z and internal data registers are not reset; initialization unknowns must not be converted into a vacuous proof.",
+    "Reset only overrides state/valid/ready; it does not globally gate datapath writes.",
+    "Proof may be deeper than 256 cycles for exponent/cancellation paths; timeout/inconclusive is not a pass.",
+    "Do not replace special NaN sign behavior with an ideal IEEE payload policy."
+  ],
+  "suggested_negative_control": "Invert output_z bit 0 at the output connection; leave interface/reset/clock unchanged; require an actual inequivalence result.",
+  "schema_version": 1,
+  "candidate_id": "large_module.4695f376e8c5f10d8377",
+  "rtl_sha256": "0cd444cd873fda6068e2b91a92574679d61303aa75c025971a6d2ecb72c7980f",
+  "specification_sha256": "d914d62fb13bf9313795234a284855b51aff26986dfd7a9997575a491848636a",
+  "formal_qualification_status": "planned_not_executed",
+  "all_output_ports_compared": true,
+  "positive_control": "Exact golden replay through isolated equivalent reference/implementation design namespaces",
+  "negative_control": "Deterministic observable functional mutation, checked with the same clock/reset/setup; must produce inequivalence, not infrastructure error",
+  "do_not_mask_invalid_cycles_without_explicit_contract": true
+}

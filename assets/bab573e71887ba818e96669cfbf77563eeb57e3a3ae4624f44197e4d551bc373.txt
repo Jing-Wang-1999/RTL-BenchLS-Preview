@@ -1,0 +1,57 @@
+module origen_090148 (
+    input wire clock,
+    input wire reset,
+    input wire [15:0] address_bus,
+    inout wire [7:0] data_bus,
+    input wire nread,
+    input wire nwrite,
+    input wire nsel
+);
+
+    reg [23:0] read_locations [0:255];
+    reg [23:0] write_locations [0:255];
+    reg [7:0] read_idx, write_idx;
+    reg [15:0] read_addr, write_addr;
+    reg [7:0] read_data, write_data;
+
+    initial begin
+        $readmemh("read_locations.mem", read_locations);
+        $readmemh("write_locations.mem", write_locations);
+        read_idx = 0;
+        write_idx = 0;
+    end
+
+    always @(*) begin
+        {read_addr, read_data} = read_locations[read_idx];
+        {write_addr, write_data} = write_locations[write_idx];
+    end
+
+    assign data_bus = (!nread && !nsel) ? read_data : 8'bz;
+
+    always @(posedge clock or negedge reset) begin
+        if (!reset) begin
+            read_idx <= 0;
+            write_idx <= 0;
+        end else begin
+            if (!nread && !nsel) begin
+                if (address_bus !== read_addr) begin
+                    $display("Error: Read address mismatch at time %0t", $time);
+                    $display("Expected: %h, Actual: %h", read_addr, address_bus);
+                    $finish;
+                end
+                read_idx <= read_idx + 1;
+            end
+
+            if (!nwrite && !nsel) begin
+                if (address_bus !== write_addr || data_bus !== write_data) begin
+                    $display("Error: Write mismatch at time %0t", $time);
+                    $display("Expected: Address %h, Data %h", write_addr, write_data);
+                    $display("Actual: Address %h, Data %h", address_bus, data_bus);
+                    $finish;
+                end
+                write_idx <= write_idx + 1;
+            end
+        end
+    end
+
+endmodule

@@ -1,0 +1,102 @@
+module rtlpp_01040(
+   input         clk_i,
+   input  [6:0]  saddr_i,
+   input  [31:0] sdata_i,
+   input         s_strobe_i,
+   output        tx_side_o,
+   output        tx_strobe_o,
+   output [13:0] tx_dac_i_o,
+   output [13:0] tx_dac_q_o,
+   output        io_tx_ena_o,
+   input  [15:0] rx_adc_i_i,
+   input  [15:0] rx_adc_q_i,
+   output        rx_strobe_o,
+   output [15:0] rx_ech_i_o,
+   output [15:0] rx_ech_q_o
+);
+
+   wire          reset;
+   wire          tx_side;
+   wire          debug_enabled;
+   wire          tx_enable;
+   wire          rx_enable;
+   wire          tx_ctrl;
+   wire          rx_ctrl;
+   wire [15:0]   pulse_num;
+   wire [15:0]   ampl;
+   wire [31:0]   fstart;
+   wire [31:0]   fincr;
+
+   // Radar Controller module embedded
+   reg           reset_o;
+   reg           tx_side_o;
+   reg           dbg_o;
+   reg           tx_strobe_o;
+   reg           tx_ctrl_o;
+   reg           rx_ctrl_o;
+   reg [15:0]    ampl_o;
+   reg [31:0]    fstart_o;
+   reg [31:0]    fincr_o;
+   reg [15:0]    pulse_num_o;
+   reg           io_tx_ena_o;
+
+   always @(posedge clk_i) begin
+      if (s_strobe_i) begin
+         // example behavior for control signals
+         reset_o <= 1'b0; // reset signal
+         tx_side_o <= 1'b1; // tx side signal
+         dbg_o <= 1'b0; // debug enabled signal
+         tx_ctrl_o <= (saddr_i == 7'h01) ? sdata_i[0] : tx_ctrl_o;
+         rx_ctrl_o <= (saddr_i == 7'h02) ? sdata_i[0] : rx_ctrl_o;
+         ampl_o <= (saddr_i == 7'h03) ? sdata_i[15:0] : ampl_o;
+         fstart_o <= (saddr_i == 7'h04) ? sdata_i : fstart_o;
+         fincr_o <= (saddr_i == 7'h05) ? sdata_i : fincr_o;
+         pulse_num_o <= (saddr_i == 7'h06) ? sdata_i[15:0] : pulse_num_o;
+         io_tx_ena_o <= 1'b1; // tx enable
+      end
+   end
+   
+   assign reset = reset_o;
+   assign debug_enabled = dbg_o;
+   assign tx_strobe_o = tx_side_o;
+   assign tx_ctrl = tx_ctrl_o;
+   assign rx_ctrl = rx_ctrl_o;
+   assign ampl = ampl_o;
+   assign fstart = fstart_o;
+   assign fincr = fincr_o;
+   assign pulse_num = pulse_num_o;
+
+   // Radar TX module embedded
+   reg [13:0] tx_dac_i_o;
+   reg [13:0] tx_dac_q_o;
+
+   always @(posedge clk_i or posedge reset) begin
+      if (reset) begin
+         tx_dac_i_o <= 14'b0;
+         tx_dac_q_o <= 14'b0;
+      end else if (tx_ctrl) begin
+         // example tx_dac_i_o and tx_dac_q_o behavior
+         tx_dac_i_o <= ampl[13:0] + fstart[13:0];
+         tx_dac_q_o <= ampl[13:0] + fincr[13:0];
+      end
+   end
+
+   // Radar RX module embedded
+   reg [15:0] rx_ech_i_o;
+   reg [15:0] rx_ech_q_o;
+   reg        rx_strobe_o;
+
+   always @(posedge clk_i or posedge reset) begin
+      if (reset) begin
+         rx_ech_i_o <= 16'b0;
+         rx_ech_q_o <= 16'b0;
+         rx_strobe_o <= 1'b0;
+      end else if (rx_ctrl) begin
+         // example rx_ech_i_o and rx_ech_q_o behavior
+         rx_ech_i_o <= rx_adc_i_i + pulse_num;
+         rx_ech_q_o <= rx_adc_q_i + pulse_num;
+         rx_strobe_o <= debug_enabled;
+      end
+   end
+   
+endmodule

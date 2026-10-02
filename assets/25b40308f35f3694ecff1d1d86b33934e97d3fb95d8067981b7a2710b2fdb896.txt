@@ -1,0 +1,107 @@
+module rtlpp_04432
+ (
+  input wire                             clk,
+  input wire                             clk90,
+  input wire                             ddr_rasb_cntrl,
+  input wire                             ddr_casb_cntrl,
+  input wire                             ddr_web_cntrl,
+  input wire                             ddr_cke_cntrl,
+  input wire                             ddr_csb_cntrl,
+  input wire [11:0]                      ddr_address_cntrl, // Assuming ROW_ADDRESS is 12
+  input wire [1:0]                       ddr_ba_cntrl,      // Assuming BANK_ADDRESS is 2
+  input wire                             rst_dqs_div_int,
+  input wire                             dqs_reset,
+  input wire                             dqs_enable,
+  inout wire [1:0]                       ddr_dqs,           // Assuming DATA_STROBE_WIDTH is 2
+  inout wire [15:0]                      ddr_dq,            // Assuming DATA_WIDTH is 16
+  input wire [15:0]                      write_data_falling,
+  input wire [15:0]                      write_data_rising,
+  input wire                             write_en_val,
+  input wire [1:0]                       data_mask_f,       // Assuming DATA_MASK_WIDTH is 2
+  input wire [1:0]                       data_mask_r,
+
+  output wire                            ddr_rasb,
+  output wire                            ddr_casb,
+  output wire                            ddr_web,
+  output wire [1:0]                      ddr_ba,
+  output wire [11:0]                     ddr_address,
+  output wire                            ddr_cke,
+  output wire                            ddr_csb,
+  output wire                            rst_dqs_div,
+  input wire                             rst_dqs_div_in,
+  output wire [1:0]                      ddr_dm,
+  output wire [1:0]                      dqs_int_delay_in,
+  output wire                            rst_dqs_div_out,
+  output wire [15:0]                     dq
+  );
+
+// Internal variables for controller module logic
+reg ddr_rasb_reg;
+reg ddr_casb_reg;
+reg ddr_web_reg;
+reg [1:0] ddr_ba_reg;
+reg [11:0] ddr_address_reg;
+reg ddr_cke_reg;
+reg ddr_csb_reg;
+reg rst_dqs_div_reg;
+
+// Controller logic
+always @(posedge clk or posedge rst_dqs_div_int) begin
+  if (rst_dqs_div_int) begin
+    ddr_rasb_reg    <= 1'b1;
+    ddr_casb_reg    <= 1'b1;
+    ddr_web_reg     <= 1'b1;
+    ddr_ba_reg      <= 2'b00;
+    ddr_address_reg <= 12'b000000000000;
+    ddr_cke_reg     <= 1'b0;
+    ddr_csb_reg     <= 1'b1;
+    rst_dqs_div_reg <= 1'b1;
+  end else begin
+    ddr_rasb_reg    <= ddr_rasb_cntrl;
+    ddr_casb_reg    <= ddr_casb_cntrl;
+    ddr_web_reg     <= ddr_web_cntrl;
+    ddr_ba_reg      <= ddr_ba_cntrl;
+    ddr_address_reg <= ddr_address_cntrl;
+    ddr_cke_reg     <= ddr_cke_cntrl;
+    ddr_csb_reg     <= ddr_csb_cntrl;
+    rst_dqs_div_reg <= rst_dqs_div_in;
+  end
+end
+
+assign ddr_rasb    = ddr_rasb_reg;
+assign ddr_casb    = ddr_casb_reg;
+assign ddr_web     = ddr_web_reg;
+assign ddr_ba      = ddr_ba_reg;
+assign ddr_address = ddr_address_reg;
+assign ddr_cke     = ddr_cke_reg;
+assign ddr_csb     = ddr_csb_reg;
+assign rst_dqs_div = rst_dqs_div_reg;
+assign rst_dqs_div_out = rst_dqs_div_reg;
+
+// Internal variables for datapath module logic
+reg [15:0] ddr_dq_reg;
+reg [1:0]  ddr_dm_reg;
+reg [1:0]  dqs_int_delay_in_reg;
+
+// Datapath logic
+always @(posedge clk90 or posedge dqs_reset) begin
+  if (dqs_reset) begin
+    ddr_dq_reg        <= 16'b0;
+    ddr_dm_reg        <= 2'b0;
+    dqs_int_delay_in_reg <= 2'b0;
+  end else if (dqs_enable) begin
+    if (write_en_val) begin
+      ddr_dq_reg <= write_data_rising;
+    end else begin
+      ddr_dq_reg <= write_data_falling;
+    end
+    ddr_dm_reg <= data_mask_f | data_mask_r;
+    dqs_int_delay_in_reg <= {dqs_int_delay_in_reg[0], dqs_int_delay_in_reg[1]}; // Simple shift register for delay
+  end
+end
+
+assign ddr_dm = ddr_dm_reg;
+assign dqs_int_delay_in = dqs_int_delay_in_reg;
+assign dq = ddr_dq_reg;
+
+endmodule

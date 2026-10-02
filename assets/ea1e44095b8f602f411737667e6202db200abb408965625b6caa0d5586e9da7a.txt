@@ -1,0 +1,91 @@
+module rtlpp_04817(clk, 
+               flash, 
+               Hexs, 
+               LES, 
+               point, 
+               rst, 
+               Start, 
+               SW0, 
+               seg_clk, 
+               seg_clrn, 
+               SEG_PEN, 
+               seg_sout);
+
+    input clk;
+    input flash;
+    input [31:0] Hexs;
+    input [7:0] LES;
+    input [7:0] point;
+    input rst;
+    input Start;
+    input SW0;
+    output seg_clk;
+    output seg_clrn;
+    output SEG_PEN;
+    output seg_sout;
+   
+    wire [63:0] XLXN_14;
+    wire [63:0] XLXN_15;
+    wire [63:0] XLXN_16;
+
+    // P2S module embedded
+    reg [63:0] shift_reg;
+    assign seg_sout = shift_reg[63];
+    assign seg_clk = clk;
+    assign seg_clrn = ~rst;
+    always @(posedge clk or posedge rst) begin
+        if (rst)
+            shift_reg <= 64'b0;
+        else if (Start)
+            shift_reg <= XLXN_14;
+        else if (SEG_PEN)
+            shift_reg <= {shift_reg[62:0], 1'b0};
+    end
+
+    // HexTo8SEG8 module embedded
+    function [63:0] hex_to_8seg(input flash, input [31:0] hexs, input [7:0] les, input [7:0] points);
+        reg [7:0] seg;
+        integer i;
+        begin
+            for (i = 0; i < 8; i = i + 1) begin
+                case (hexs[4*i+3 -: 4])
+                    4'h0: seg = 8'b11000000;
+                    4'h1: seg = 8'b11111001;
+                    4'h2: seg = 8'b10100100;
+                    4'h3: seg = 8'b10110000;
+                    4'h4: seg = 8'b10011001;
+                    4'h5: seg = 8'b10010010;
+                    4'h6: seg = 8'b10000010;
+                    4'h7: seg = 8'b11111000;
+                    4'h8: seg = 8'b10000000;
+                    4'h9: seg = 8'b10010000;
+                    4'hA: seg = 8'b10001000;
+                    4'hB: seg = 8'b10000011;
+                    4'hC: seg = 8'b11000110;
+                    4'hD: seg = 8'b10100001;
+                    4'hE: seg = 8'b10000110;
+                    4'hF: seg = 8'b10001110;
+                    default: seg = 8'b11111111;
+                endcase
+                if (points[i] | (flash & les[i]))
+                    seg = seg & 8'b01111111;
+                hex_to_8seg[8*i +: 8] = seg;
+            end
+        end
+    endfunction
+    assign XLXN_16 = hex_to_8seg(flash, Hexs, LES, point);
+
+    // MUX2T1_64 module embedded
+    assign XLXN_14 = (SW0) ? XLXN_16 : XLXN_15;
+
+    // SSeg_map module embedded
+    function [63:0] sseg_map(input [63:0] disp_num);
+        integer i;
+        begin
+            for (i = 0; i < 8; i = i + 1)
+                sseg_map[8*i +: 8] = disp_num[4*i+3 -: 4];
+        end
+    endfunction
+    assign XLXN_15 = sseg_map({Hexs, Hexs});
+
+endmodule

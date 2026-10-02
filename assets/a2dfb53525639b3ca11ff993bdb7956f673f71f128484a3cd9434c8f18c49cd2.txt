@@ -1,0 +1,95 @@
+module autovcoder_024813 #(
+    // parameter declaration and default value assignemnt
+    parameter enable_debug_info = "false",	//Valid values: false|true; this is simulation-only parameter, for debug purpose only
+
+    parameter cdrclk_to_cgb = "cdrclk_2cgb_dis",  //Valid values: cdrclk_2cgb_dis|cdrclk_2cgb_en
+    parameter channel_number = 0,  //Valid values: 0..65
+    parameter diagnostic_loopback = "diag_lpbk_off",  //Valid values: diag_lpbk_on|diag_lpbk_off
+    parameter pdb_sd = "false",  //Valid values: false|true
+    parameter rx_dc_gain = 0,  //Valid values: 0..1
+    parameter sd_off = 1,  //Valid values: 0..29
+    parameter sd_on = 1,  //Valid values: 0..16
+    parameter sd_threshold = 3,  //Valid values: 0..7
+    parameter term_sel = "100 ohms",	//Valid values: int_150ohm|int_120ohm|int_100ohm|int_85ohm|ext_res
+    parameter vcm_current_add = "vcm_current_1",	//Valid values: vcm_current_default|vcm_current_1|vcm_current_2|vcm_current_3
+    parameter vcm_sel = "vtt_0p80v",	//Valid values: vtt_0p80v|vtt_0p75v|vtt_0p70v|vtt_0p65v|vtt_0p60v|vtt_0p55v|vtt_0p50v|vtt_0p35v|vtt_pup_weak|vtt_pdn_weak|tristate1|vtt_pdn_strong|vtt_pup_strong|tristate2|tristate3|tristate4
+    parameter avmm_group_channel_index = 0,  //Valid values: 0..2
+    parameter use_default_base_address = "true",  //Valid values: false|true
+    parameter user_base_address = 0,  //Valid values: 0..2047
+    parameter rx_sel_half_bw = "full_bw",  //Valid values: full_bw|half_bw
+    parameter rx_acgain_a = "aref_volt_0",	//Valid values: aref_volt_0|aref_volt_0p5|aref_volt_0p75|aref_volt_1p0
+    parameter rx_acgain_v = "vref_volt_1p0",	//Valid values: vref_volt_1p0|vref_volt_0p75|vref_volt_0p5|vref_volt_0
+    parameter ct_equalizer_setting = 0,
+    // NOTE: This parameter was added by hand to deal with the recent addition of
+    // this parameter to the atom.  It does not require simulation support but
+    // needs to be here to prevent issues when handling the postfit netlist.
+    parameter reverse_loopback = "reverse_lpbk_cdr"	//Valid values: reverse_lpbk_cdr|reverse_lpbk_rx
+) (
+    //input and output port declaration
+    input  [ 0:0] ck0sigdet,
+    input  [ 0:0] datain,
+    input  [ 0:0] hardoccalen,
+    input  [ 0:0] lpbkp,
+    input  [ 0:0] rstn,
+    input  [ 0:0] slpbk,
+    output [ 0:0] dataout,
+    input  [ 0:0] nonuserfrompmaux,
+    output [ 0:0] rdlpbkp,
+    output [ 0:0] sd,
+    input  [10:0] avmmaddress,
+    input  [ 1:0] avmmbyteen,
+    input  [ 0:0] avmmrstn,
+    input  [ 0:0] avmmclk,
+    input  [ 0:0] avmmread,
+    input  [ 0:0] avmmwrite,
+    input  [15:0] avmmwritedata,
+    output [15:0] avmmreaddata,
+    output [ 0:0] blockselect
+);
+
+  cyclonev_hssi_pma_rx_buf_encrypted #(
+      .enable_debug_info(enable_debug_info),
+
+      .cdrclk_to_cgb(cdrclk_to_cgb),
+      .channel_number(channel_number),
+      .diagnostic_loopback(diagnostic_loopback),
+      .pdb_sd(pdb_sd),
+      .rx_dc_gain(rx_dc_gain),
+      .sd_off(sd_off),
+      .sd_on(sd_on),
+      .sd_threshold(sd_threshold),
+      .term_sel(term_sel),
+      .vcm_current_add(vcm_current_add),
+      .vcm_sel(vcm_sel),
+      .avmm_group_channel_index(avmm_group_channel_index),
+      .use_default_base_address(use_default_base_address),
+      .user_base_address(user_base_address),
+      .rx_sel_half_bw(rx_sel_half_bw),
+      .rx_acgain_a(rx_acgain_a),
+      .rx_acgain_v(rx_acgain_v)
+
+  ) cyclonev_hssi_pma_rx_buf_encrypted_inst (
+      .ck0sigdet(ck0sigdet),
+      .datain(datain),
+      .hardoccalen(hardoccalen),
+      .lpbkp(lpbkp),
+      .rstn(rstn),
+      .slpbk(slpbk),
+      .dataout(dataout),
+      .nonuserfrompmaux(nonuserfrompmaux),
+      .rdlpbkp(rdlpbkp),
+      .sd(sd),
+      .avmmaddress(avmmaddress),
+      .avmmbyteen(avmmbyteen),
+      .avmmrstn(avmmrstn),
+      .avmmclk(avmmclk),
+      .avmmread(avmmread),
+      .avmmwrite(avmmwrite),
+      .avmmwritedata(avmmwritedata),
+      .avmmreaddata(avmmreaddata),
+      .blockselect(blockselect)
+  );
+
+
+endmodule
+

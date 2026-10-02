@@ -1,0 +1,20 @@
+module multiplyAllBits(normalizedWires, A, B);
+
+    input [31:0] A, B;
+    output [2047:0] normalizedWires;
+
+    wire [63:0] wiresMultiplied[31:0];
+
+    genvar i, j;
+    generate
+        for (i = 0; i < 32; i = i + 1)
+            assign wiresMultiplied[i] = ({32{B[i]}} & A) << i;
+    endgenerate
+
+    generate
+        for (i = 0; i < 32; i = i + 1)
+            for (j = 0; j < 64; j = j + 1)
+                assign normalizedWires[i * 64 + j] = wiresMultiplied[i][j];
+    endgenerate
+
+endmodule

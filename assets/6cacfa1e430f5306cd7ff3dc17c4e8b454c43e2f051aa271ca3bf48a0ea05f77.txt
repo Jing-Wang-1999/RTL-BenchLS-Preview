@@ -1,0 +1,95 @@
+module origen_032722 #(
+    parameter D_BIT = 8,
+    parameter S_BIT = 1
+)(
+    input wire rx, clk, baud_sample_tick, reset,
+    output reg [D_BIT-1:0] d_out,
+    output reg rx_done
+);
+
+    // State encoding
+    localparam [1:0] 
+        IDLE  = 2'b00,
+        START = 2'b01,
+        DATA  = 2'b10,
+        STOP  = 2'b11;
+
+    // Registers
+    reg [1:0] state, next_state;
+    reg [4:0] s_count, s_count_next;
+    reg [3:0] n, n_next;
+    reg [D_BIT-1:0] b, b_next;
+
+    // State register
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            state <= IDLE;
+            s_count <= 0;
+            n <= 0;
+            b <= 0;
+        end else begin
+            state <= next_state;
+            s_count <= s_count_next;
+            n <= n_next;
+            b <= b_next;
+        end
+    end
+
+    // Next state logic and output logic
+    always @(*) begin
+        next_state = state;
+        s_count_next = s_count;
+        n_next = n;
+        b_next = b;
+        rx_done = 1'b0;
+
+        case (state)
+            IDLE: begin
+                if (~rx) begin
+                    next_state = START;
+                    s_count_next = 0;
+                end
+            end
+
+            START: begin
+                if (baud_sample_tick) begin
+                    if (s_count == 7) begin
+                        next_state = DATA;
+                        s_count_next = 0;
+                        n_next = 0;
+                    end else begin
+                        s_count_next = s_count + 1;
+                    end
+                end
+            end
+
+            DATA: begin
+                if (baud_sample_tick) begin
+                    if (s_count == 15) begin
+                        s_count_next = 0;
+                        n_next = n + 1;
+                        b_next = {rx, b[D_BIT-1:1]};
+                        if (n == D_BIT-1) begin
+                            next_state = STOP;
+                        end
+                    end else begin
+                        s_count_next = s_count + 1;
+                    end
+                end
+            end
+
+            STOP: begin
+                if (baud_sample_tick) begin
+                    if (s_count == 15 * S_BIT) begin
+                        next_state = IDLE;
+                        rx_done = 1'b1;
+                        d_out = b;
+                    end else begin
+                        s_count_next = s_count + 1;
+                    end
+                end
+            end
+        endcase
+    end
+
+endmodule

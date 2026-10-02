@@ -1,0 +1,294 @@
+always @* begin
+    axi_state_next = AXI_STATE_IDLE;
+
+    m_axi_rready_next = 1'b0;
+
+    stat_rd_op_finish_tag_next = stat_rd_op_finish_tag_reg;
+    stat_rd_op_finish_status_next = stat_rd_op_finish_status_reg;
+    stat_rd_op_finish_valid_next = 1'b0;
+    stat_rd_req_finish_tag_next = stat_rd_req_finish_tag_reg;
+    stat_rd_req_finish_status_next = stat_rd_req_finish_status_reg;
+    stat_rd_req_finish_valid_next = 1'b0;
+
+    ram_sel_next = ram_sel_reg;
+    addr_next = addr_reg;
+    addr_delay_next = addr_delay_reg;
+    op_count_next = op_count_reg;
+    zero_len_next = zero_len_reg;
+    ram_mask_next = ram_mask_reg;
+    ram_mask_0_next = ram_mask_0_reg;
+    ram_mask_1_next = ram_mask_1_reg;
+    ram_wrap_next = ram_wrap_reg;
+    cycle_byte_count_next = cycle_byte_count_reg;
+    start_offset_next = start_offset_reg;
+    end_offset_next = end_offset_reg;
+    offset_next = offset_reg;
+    op_tag_next = op_tag_reg;
+
+    op_table_read_complete_en = 1'b0;
+
+    m_axi_rdata_int_next = m_axi_rdata_int_reg;
+    m_axi_rvalid_int_next = 1'b0;
+
+    status_fifo_mask_next = 1'b1;
+    status_fifo_finish_next = 1'b0;
+    status_fifo_error_next = DMA_ERROR_NONE;
+    status_fifo_we_next = 1'b0;
+
+    out_done_ack = {RAM_SEG_COUNT{1'b0}};
+
+    // Write generation
+    ram_wr_cmd_sel_int = {RAM_SEG_COUNT{ram_sel_reg}};
+    if (!ram_wrap_reg) begin
+        ram_wr_cmd_be_int = ({RAM_SEG_COUNT*RAM_SEG_BE_WIDTH{1'b1}} << start_offset_reg) & ({RAM_SEG_COUNT*RAM_SEG_BE_WIDTH{1'b1}} >> (RAM_SEG_COUNT*RAM_SEG_BE_WIDTH-1-end_offset_reg));
+    end else begin
+        ram_wr_cmd_be_int = ({RAM_SEG_COUNT*RAM_SEG_BE_WIDTH{1'b1}} << start_offset_reg) | ({RAM_SEG_COUNT*RAM_SEG_BE_WIDTH{1'b1}} >> (RAM_SEG_COUNT*RAM_SEG_BE_WIDTH-1-end_offset_reg));
+    end
+    for (i = 0; i < RAM_SEG_COUNT; i = i + 1) begin
+        ram_wr_cmd_addr_int[i*RAM_SEG_ADDR_WIDTH +: RAM_SEG_ADDR_WIDTH] = addr_delay_reg[RAM_ADDR_WIDTH-1:RAM_ADDR_WIDTH-RAM_SEG_ADDR_WIDTH];
+        if (ram_mask_1_reg[i]) begin
+            ram_wr_cmd_addr_int[i*RAM_SEG_ADDR_WIDTH +: RAM_SEG_ADDR_WIDTH] = addr_delay_reg[RAM_ADDR_WIDTH-1:RAM_ADDR_WIDTH-RAM_SEG_ADDR_WIDTH]+1;
+        end
+    end
+    ram_wr_cmd_data_int = {3{m_axi_rdata_int_reg}} >> (AXI_DATA_WIDTH - offset_reg*AXI_WORD_SIZE);
+    ram_wr_cmd_valid_int = {RAM_SEG_COUNT{1'b0}};
+
+    if (m_axi_rvalid_int_reg) begin
+        ram_wr_cmd_valid_int = ram_mask_reg;
+    end
+
+    // AXI read response handling
+    case (axi_state_reg)
+        AXI_STATE_IDLE: begin
+            // idle state, wait for read data
+            m_axi_rready_next = &ram_wr_cmd_ready_int && !status_fifo_half_full_reg;
+
+            if (USE_AXI_ID) begin
+                op_tag_next = m_axi_rid[OP_TAG_WIDTH-1:0];
+            end else begin
+                op_tag_next = op_table_read_complete_ptr_reg;
+            end
+            ram_sel_next = op_table_ram_sel[op_tag_next];
+            addr_next = op_table_ram_addr[op_tag_next];
+            op_count_next = op_table_len[op_tag_next];
+            zero_len_next = op_table_zero_len[op_tag_next];
+            offset_next = op_table_ram_addr[op_tag_next][RAM_OFFSET_WIDTH-1:0]-(op_table_axi_addr[op_tag_next] & OFFSET_MASK);
+
+            if (m_axi_rready && m_axi_rvalid) begin
+                if (op_count_next > AXI_WORD_WIDTH-(op_table_axi_addr[op_tag_next] & OFFSET_MASK)) begin
+                    cycle_byte_count_next = AXI_WORD_WIDTH-(op_table_axi_addr[op_tag_next] & OFFSET_MASK);
+                end else begin
+                    cycle_byte_count_next = op_count_next;
+                end
+                start_offset_next = addr_next;
+                {ram_wrap_next, end_offset_next} = start_offset_next+cycle_byte_count_next-1;
+
+                ram_mask_0_next = {RAM_SEG_COUNT{1'b1}} << (start_offset_next >> $clog2(RAM_SEG_BE_WIDTH));
+                ram_mask_1_next = {RAM_SEG_COUNT{1'b1}} >> (RAM_SEG_COUNT-1-(end_offset_next >> $clog2(RAM_SEG_BE_WIDTH)));
+
+                if (!ram_wrap_next) begin
+                    ram_mask_next = ram_mask_0_next & ram_mask_1_next;
+                    ram_mask_0_next = ram_mask_0_next & ram_mask_1_next;
+                    ram_mask_1_next = 0;
+                end else begin
+                    ram_mask_next = ram_mask_0_next | ram_mask_1_next;
+                end
+
+                addr_delay_next = addr_next;
+                addr_next = addr_next + cycle_byte_count_next;
+                op_count_next = op_count_next - cycle_byte_count_next;
+
+                m_axi_rdata_int_next = m_axi_rdata;
+                m_axi_rvalid_int_next = 1'b1;
+
+                status_fifo_mask_next = 1'b1;
+                status_fifo_finish_next = 1'b0;
+                status_fifo_error_next = DMA_ERROR_NONE;
+                status_fifo_we_next = 1'b1;
+
+                if (zero_len_next) begin
+                    m_axi_rvalid_int_next = 1'b0;
+                    status_fifo_mask_next = 1'b0;
+                end
+
+                if (m_axi_rresp == AXI_RESP_SLVERR) begin
+                    m_axi_rvalid_int_next = 1'b0;
+                    status_fifo_mask_next = 1'b0;
+                    status_fifo_error_next = DMA_ERROR_AXI_RD_SLVERR;
+                end else if (m_axi_rresp == AXI_RESP_DECERR) begin
+                    m_axi_rvalid_int_next = 1'b0;
+                    status_fifo_mask_next = 1'b0;
+                    status_fifo_error_next = DMA_ERROR_AXI_RD_DECERR;
+                end
+
+                stat_rd_req_finish_tag_next = op_tag_next;
+                stat_rd_req_finish_status_next = status_fifo_error_next;
+                stat_rd_req_finish_valid_next = 1'b0;
+
+                if (!USE_AXI_ID) begin
+                    op_table_read_complete_en = 1'b1;
+                end
+
+                if (m_axi_rlast) begin
+                    status_fifo_finish_next = 1'b1;
+                    stat_rd_req_finish_valid_next = 1'b1;
+                    axi_state_next = AXI_STATE_IDLE;
+                end else begin
+                    axi_state_next = AXI_STATE_WRITE;
+                end
+            end else begin
+                axi_state_next = AXI_STATE_IDLE;
+            end
+        end
+        AXI_STATE_WRITE: begin
+            // write state - generate write operations
+            m_axi_rready_next = &ram_wr_cmd_ready_int && !status_fifo_half_full_reg;
+
+            if (m_axi_rready && m_axi_rvalid) begin
+
+                if (op_count_next > AXI_WORD_WIDTH) begin
+                    cycle_byte_count_next = AXI_WORD_WIDTH;
+                end else begin
+                    cycle_byte_count_next = op_count_next;
+                end
+                start_offset_next = addr_next;
+                {ram_wrap_next, end_offset_next} = start_offset_next+cycle_byte_count_next-1;
+
+                ram_mask_0_next = {RAM_SEG_COUNT{1'b1}} << (start_offset_next >> $clog2(RAM_SEG_BE_WIDTH));
+                ram_mask_1_next = {RAM_SEG_COUNT{1'b1}} >> (RAM_SEG_COUNT-1-(end_offset_next >> $clog2(RAM_SEG_BE_WIDTH)));
+
+                if (!ram_wrap_next) begin
+                    ram_mask_next = ram_mask_0_next & ram_mask_1_next;
+                    ram_mask_0_next = ram_mask_0_next & ram_mask_1_next;
+                    ram_mask_1_next = 0;
+                end else begin
+                    ram_mask_next = ram_mask_0_next | ram_mask_1_next;
+                end
+
+                addr_delay_next = addr_next;
+                addr_next = addr_next + cycle_byte_count_next;
+                op_count_next = op_count_next - cycle_byte_count_next;
+
+                m_axi_rdata_int_next = m_axi_rdata;
+                m_axi_rvalid_int_next = 1'b1;
+
+                status_fifo_mask_next = 1'b1;
+                status_fifo_finish_next = 1'b0;
+                status_fifo_error_next = DMA_ERROR_NONE;
+                status_fifo_we_next = 1'b1;
+
+                if (m_axi_rresp == AXI_RESP_SLVERR) begin
+                    m_axi_rvalid_int_next = 1'b0;
+                    status_fifo_mask_next = 1'b0;
+                    status_fifo_error_next = DMA_ERROR_AXI_RD_SLVERR;
+                end else if (m_axi_rresp == AXI_RESP_DECERR) begin
+                    m_axi_rvalid_int_next = 1'b0;
+                    status_fifo_mask_next = 1'b0;
+                    status_fifo_error_next = DMA_ERROR_AXI_RD_DECERR;
+                end
+
+                stat_rd_req_finish_tag_next = op_tag_next;
+                stat_rd_req_finish_status_next = status_fifo_error_next;
+                stat_rd_req_finish_valid_next = 1'b0;
+
+                if (m_axi_rlast) begin
+                    status_fifo_finish_next = 1'b1;
+                    stat_rd_req_finish_valid_next = 1'b1;
+                    axi_state_next = AXI_STATE_IDLE;
+                end else begin
+                    axi_state_next = AXI_STATE_WRITE;
+                end
+            end else begin
+                axi_state_next = AXI_STATE_WRITE;
+            end
+        end
+    endcase
+
+    status_fifo_rd_ptr_next = status_fifo_rd_ptr_reg;
+
+    status_fifo_wr_op_tag = op_tag_reg;
+    status_fifo_wr_mask = status_fifo_mask_reg ? ram_mask_reg : 0;
+    status_fifo_wr_finish = status_fifo_finish_reg;
+    status_fifo_wr_error = status_fifo_error_reg;
+    status_fifo_we = 1'b0;
+
+    if (status_fifo_we_reg) begin
+        status_fifo_wr_op_tag = op_tag_reg;
+        status_fifo_wr_mask = status_fifo_mask_reg ? ram_mask_reg : 0;
+        status_fifo_wr_finish = status_fifo_finish_reg;
+        status_fifo_wr_error = status_fifo_error_reg;
+        status_fifo_we = 1'b1;
+    end
+
+    status_fifo_rd_op_tag_next = status_fifo_rd_op_tag_reg;
+    status_fifo_rd_mask_next = status_fifo_rd_mask_reg;
+    status_fifo_rd_finish_next = status_fifo_rd_finish_reg;
+    status_fifo_rd_valid_next = status_fifo_rd_valid_reg;
+    status_fifo_rd_error_next = status_fifo_rd_error_reg;
+
+    op_table_update_status_ptr = status_fifo_rd_op_tag_reg;
+    op_table_update_status_error = status_fifo_rd_error_reg;
+    op_table_update_status_en = 1'b0;
+
+    op_table_write_complete_ptr = status_fifo_rd_op_tag_reg;
+    op_table_write_complete_en = 1'b0;
+
+    if (status_fifo_rd_valid_reg && (status_fifo_rd_mask_reg & ~out_done) == 0) begin
+        // got write completion, pop and return status
+        status_fifo_rd_valid_next = 1'b0;
+        op_table_update_status_en = 1'b1;
+
+        out_done_ack = status_fifo_rd_mask_reg;
+
+        if (status_fifo_rd_finish_reg) begin
+            // mark done
+            op_table_write_complete_ptr = status_fifo_rd_op_tag_reg;
+            op_table_write_complete_en = 1'b1;
+        end
+    end
+
+    if (!status_fifo_rd_valid_next && status_fifo_rd_ptr_reg != status_fifo_wr_ptr_reg) begin
+        // status FIFO not empty
+        status_fifo_rd_op_tag_next = status_fifo_op_tag[status_fifo_rd_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]];
+        status_fifo_rd_mask_next = status_fifo_mask[status_fifo_rd_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]];
+        status_fifo_rd_finish_next = status_fifo_finish[status_fifo_rd_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]];
+        status_fifo_rd_error_next = status_fifo_error[status_fifo_rd_ptr_reg[STATUS_FIFO_ADDR_WIDTH-1:0]];
+        status_fifo_rd_valid_next = 1'b1;
+        status_fifo_rd_ptr_next = status_fifo_rd_ptr_reg + 1;
+    end
+
+    // commit operations in-order
+    op_table_finish_en = 1'b0;
+    dec_active_op = 1'b0;
+
+    if (m_axis_read_desc_status_valid_reg) begin
+        m_axis_read_desc_status_error_next = DMA_ERROR_NONE;
+    end else begin
+        m_axis_read_desc_status_error_next = m_axis_read_desc_status_error_reg;
+    end
+
+    m_axis_read_desc_status_tag_next = op_table_tag[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]];
+    m_axis_read_desc_status_valid_next = 1'b0;
+
+    stat_rd_op_finish_tag_next = stat_rd_op_finish_tag_reg;
+    stat_rd_op_finish_status_next = m_axis_read_desc_status_error_next;
+    stat_rd_op_finish_valid_next = 1'b0;
+
+    if (op_table_active[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]] && op_table_write_complete[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]] && op_table_finish_ptr_reg != op_table_start_ptr_reg) begin
+        op_table_finish_en = 1'b1;
+        dec_active_op = 1'b1;
+
+        if (op_table_error_a[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]] != op_table_error_b[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]]) begin
+            m_axis_read_desc_status_error_next = op_table_error_code[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]];
+        end
+
+        stat_rd_op_finish_status_next = m_axis_read_desc_status_error_next;
+
+        if (op_table_last[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]]) begin
+            m_axis_read_desc_status_tag_next = op_table_tag[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]];
+            m_axis_read_desc_status_valid_next = 1'b1;
+            stat_rd_op_finish_tag_next = stat_rd_op_finish_tag_reg + 1;
+            stat_rd_op_finish_valid_next = 1'b1;
+        end
+    end
+end

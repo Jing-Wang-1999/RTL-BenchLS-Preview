@@ -1,0 +1,138 @@
+module origen_221140(
+    input clk,
+    input rst,
+    input tbre,
+    input tsre,
+    input data_ready,
+    input [1:0] mode,
+    input [7:0] data_to_send,
+    inout [7:0] ram1_data,
+    output reg rdn,
+    output reg wrn,
+    output reg ram1_oe,
+    output reg ram1_we,
+    output reg ram1_en,
+    output reg [7:0] led,
+    output reg [7:0] leddebug
+);
+
+reg [2:0] state, next_state;
+reg [7:0] recv_val;
+reg bus_written;
+
+parameter WRITE = 2'b00, READ = 2'b01, SYNTHESIS = 2'b10;
+
+always @(posedge clk, negedge rst) begin
+    if (!rst) begin
+        state <= 3'b000;
+    end else begin
+        state <= next_state;
+    end
+end
+
+always @(*) begin
+    case (state)
+        3'b000: begin // IDLE
+            if (mode == WRITE) begin
+                next_state = 3'b001; // WRITE
+            end else if (mode == READ) begin
+                next_state = 3'b010; // READ
+            end else if (mode == SYNTHESIS) begin
+                next_state = 3'b011; // SYNTHESIS
+            end else begin
+                next_state = 3'b000; // IDLE
+            end
+        end
+        3'b001: begin // WRITE
+            if (tbre && tsre) begin
+                next_state = 3'b000; // IDLE
+            end else begin
+                next_state = 3'b001; // WRITE
+            end
+        end
+        3'b010: begin // READ
+            if (data_ready) begin
+                next_state = 3'b000; // IDLE
+            end else begin
+                next_state = 3'b010; // READ
+            end
+        end
+        3'b011: begin // SYNTHESIS
+            if (data_ready) begin
+                next_state = 3'b000; // IDLE
+            end else begin
+                next_state = 3'b011; // SYNTHESIS
+            end
+        end
+        default: begin
+            next_state = 3'b000; // IDLE
+        end
+    endcase
+end
+
+always @(posedge clk, negedge rst) begin
+    if (!rst) begin
+        rdn <= 1'b1;
+        wrn <= 1'b1;
+        ram1_oe <= 1'b0;
+        ram1_we <= 1'b0;
+        ram1_en <= 1'b0;
+        led <= 8'b0;
+        leddebug <= 8'b0;
+        recv_val <= 8'b0;
+        bus_written <= 1'b0;
+    end else begin
+        case (state)
+            3'b000: begin // IDLE
+                rdn <= 1'b1;
+                wrn <= 1'b1;
+                ram1_oe <= 1'b0;
+                ram1_we <= 1'b0;
+                ram1_en <= 1'b0;
+                bus_written <= 1'b0;
+            end
+            3'b001: begin // WRITE
+                rdn <= 1'b1;
+                wrn <= 1'b0;
+                ram1_oe <= 1'b0;
+                ram1_we <= 1'b1;
+                ram1_en <= 1'b1;
+                bus_written <= 1'b1;
+            end
+            3'b010: begin // READ
+                rdn <= 1'b0;
+                wrn <= 1'b1;
+                ram1_oe <= 1'b1;
+                ram1_we <= 1'b0;
+                ram1_en <= 1'b1;
+                recv_val <= ram1_data;
+                led <= recv_val;
+                bus_written <= 1'b1;
+            end
+            3'b011: begin // SYNTHESIS
+                rdn <= 1'b0;
+                wrn <= 1'b0;
+                ram1_oe <= 1'b1;
+                ram1_we <= 1'b1;
+                ram1_en <= 1'b1;
+                recv_val <= ram1_data;
+                led <= recv_val + 1;
+                bus_written <= 1'b1;
+            end
+            default: begin
+                rdn <= 1'b1;
+                wrn <= 1'b1;
+                ram1_oe <= 1'b0;
+                ram1_we <= 1'b0;
+                ram1_en <= 1'b0;
+                bus_written <= 1'b0;
+            end
+        endcase
+
+        leddebug <= {3'b0, state, recv_val[4:0]};
+    end
+end
+
+assign ram1_data = bus_written ? (state == 3'b001 ? data_to_send : (state == 3'b011 ? (recv_val + 1) : 8'bz)) : 8'bz;
+
+endmodule

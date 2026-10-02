@@ -1,0 +1,111 @@
+module autovcoder_019083 (
+    ID_opcode,
+    ID_funct3,
+    ID_rs,
+    ID_rt,
+    ID_is_equal,
+    EX_rd,
+    EX_rd_eff,
+    ID_Imm,
+    ID_PC,
+    ID_PC4,  //modified for branch prediction
+    ID_data1,
+    in_branch_addr,  //modified for branch prediction
+    ID_br_taken,  //
+    out_miss,  //
+    out_miss_addr,  //
+    JumpBranch_addr,
+    JumpBranch_jump,
+    JumpBranch_stall,
+    JumpBranch_flush,
+    JumpBranch_link,
+    JumpBranch_branch,
+    JumpBranch_JALR
+);
+
+  //=====I/O Declaration===============
+
+  input [6:0] ID_opcode;
+  input [2:0] ID_funct3;
+  input [4:0] ID_rs;
+  input [4:0] ID_rt;
+  input ID_is_equal;
+  input [4:0] EX_rd;
+  input EX_rd_eff;
+  input [31:0] ID_Imm;
+  input [31:0] ID_PC, ID_PC4;
+  input [31:0] ID_data1;
+  input [31:0] in_branch_addr;
+  input ID_br_taken;
+  output reg [31:0] out_miss_addr;
+  output out_miss;
+  output reg [31:0] JumpBranch_addr;
+  output JumpBranch_jump;
+  output JumpBranch_stall;
+  output JumpBranch_flush;
+  output JumpBranch_link;
+  output JumpBranch_branch;
+  output JumpBranch_JALR;
+  wire BEQBNE_branch;
+  wire BEQBNE_stall;
+  wire BEQBNE_flush;
+  wire JAL_flush;
+  wire JALR_stall;
+  wire JALR_flush;
+
+  wire [31:0] JALR_Addr_Temp;
+
+  wire ID_br_inv, ID_pred_wrong;
+
+  //=====Combinational Part===========
+  BEQBNE branch (
+      .ID_opcode(ID_opcode),
+      .ID_funct3(ID_funct3),
+      .ID_is_equal(ID_is_equal),
+      .ID_rs(ID_rs),
+      .ID_rt(ID_rt),
+      .EX_rd(EX_rd),
+      .EX_rd_eff(EX_rd_eff),
+      .BEQBNE_flush(BEQBNE_flush),  //do branch
+      .BEQBNE_stall(BEQBNE_stall),
+      .BEQBNE_branch(BEQBNE_branch)  //ins is branch
+  );
+  JAL jump (
+      .ID_opcode(ID_opcode),
+      .JAL_flush(JAL_flush)
+  );
+  JALR jumpreg (
+      .ID_opcode(ID_opcode),
+      .ID_rs(ID_rs),
+      .EX_rd(EX_rd),
+      .EX_rd_eff(EX_rd_eff),
+      .JALR_stall(JALR_stall),
+      .JALR_flush(JALR_flush)  //ins is JALR
+  );
+
+  //assign JumpBranch_flush = BEQBNE_flush | JAL_flush | JALR_flush;
+  assign JumpBranch_flush = out_miss | JAL_flush | JALR_flush;
+  //assign JumpBranch_jump = JumpBranch_flush;
+  assign JumpBranch_jump = JAL_flush | JALR_flush;
+  assign JumpBranch_stall = BEQBNE_stall | JALR_stall;
+  assign JumpBranch_link = JAL_flush | JALR_flush;
+  assign JumpBranch_branch = BEQBNE_branch;
+  assign JumpBranch_JALR = JALR_flush;
+  assign JALR_Addr_Temp = ID_data1 + ID_Imm;
+
+  always @(*) begin
+    if (JALR_flush) JumpBranch_addr = {JALR_Addr_Temp[31:1], 1'b0};
+    else JumpBranch_addr = ID_Imm + ID_PC;
+  end
+
+  //branch prediction
+  assign ID_br_inv     = ID_funct3[0];
+  assign ID_pred_wrong = ^{ID_br_inv, ID_br_taken, ID_is_equal};
+  assign out_miss      = JumpBranch_branch & ID_pred_wrong;
+  always @(*) begin
+    if (BEQBNE_flush) out_miss_addr = in_branch_addr;
+    else out_miss_addr = ID_PC4;
+  end
+
+endmodule
+

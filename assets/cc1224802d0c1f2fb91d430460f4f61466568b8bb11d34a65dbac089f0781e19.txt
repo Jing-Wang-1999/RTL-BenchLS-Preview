@@ -1,0 +1,71 @@
+module rtlpp_02506 (
+  input         clk,
+  input  [3:0]  x_in0, x_in1, x_in2,
+  output [6:0]  y
+);
+
+  reg    [6:0]  y;
+  reg    [3:0]  x0, x1, x2;
+  wire   [2:0]  table_in;
+  wire   [3:0]  table_out;
+  reg [6:0] p;
+
+  assign table_in[0] = x0[0];
+  assign table_in[1] = x1[0];
+  assign table_in[2] = x2[0];
+
+  always @(posedge clk) begin : DA
+    parameter s0 = 0, s1 = 1;
+    integer k;
+    reg [0:0] state;
+    reg [2:0] count;
+    case (state)
+      s0: begin
+        state <= s1;
+        count <= 0;
+        p <= 0;
+        x0 <= x_in0;
+        x1 <= x_in1;
+        x2 <= x_in2;
+      end
+      s1: begin
+        if (count == 4) begin
+          y <= p;
+          state <= s0;
+        end else begin
+          if (count == 3)
+            p <= {p[6], p[6:1]} - (table_out << 3);
+          else
+            p <= {p[6], p[6:1]} + (table_out << 3);
+          for (k = 0; k <= 2; k = k + 1) begin
+            x0[k] <= x0[k + 1];
+            x1[k] <= x1[k + 1];
+            x2[k] <= x2[k + 1];
+          end
+          count <= count + 1;
+          state <= s1;
+        end
+      end
+    endcase
+  end
+
+  function [3:0] case3s;
+    input [2:0] table_in;
+    begin
+      case (table_in)
+        3'b000: case3s = 4'b0000;
+        3'b001: case3s = 4'b0001;
+        3'b010: case3s = 4'b0010;
+        3'b011: case3s = 4'b0011;
+        3'b100: case3s = 4'b0100;
+        3'b101: case3s = 4'b0101;
+        3'b110: case3s = 4'b0110;
+        3'b111: case3s = 4'b0111;
+        default: case3s = 4'b0000;
+      endcase
+    end
+  endfunction
+
+  assign table_out = case3s(table_in);
+
+endmodule

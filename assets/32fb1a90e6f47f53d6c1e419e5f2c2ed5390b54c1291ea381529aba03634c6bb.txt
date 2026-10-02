@@ -1,0 +1,57 @@
+module origen_023430 #(
+    parameter num_inputs = 8,
+    parameter input_width = 32
+) (
+    input  wire [num_inputs*input_width-1:0] INPUT,
+    output wire [input_width-1:0] OUT0,
+    output wire [input_width-1:0] OUT1
+);
+
+    reg [input_width-1:0] input_array [num_inputs-1:0];
+    reg [input_width-1:0] temp_array [(num_inputs+1)/3*2-1:0];
+    integer i, j, k, num_vectors;
+
+    always @(*) begin
+        // Parse input into array
+        for (i = 0; i < num_inputs; i = i + 1) begin
+            input_array[i] = INPUT[i*input_width +: input_width];
+        end
+
+        num_vectors = num_inputs;
+
+        // Reduction loop
+        while (num_vectors > 2) begin
+            k = 0;
+            for (i = 0; i < num_vectors; i = i + 3) begin
+                if (i + 2 < num_vectors) begin
+                    // Combine group of three
+                    temp_array[k] = input_array[i] ^ input_array[i+1] ^ input_array[i+2];
+                    temp_array[k+1] = ((input_array[i] & input_array[i+1]) |
+                                       (input_array[i+1] & input_array[i+2]) |
+                                       (input_array[i] & input_array[i+2])) << 1;
+                    k = k + 2;
+                end else if (i + 1 < num_vectors) begin
+                    // Pass through remaining two
+                    temp_array[k] = input_array[i];
+                    temp_array[k+1] = input_array[i+1];
+                    k = k + 2;
+                end else begin
+                    // Pass through last one
+                    temp_array[k] = input_array[i];
+                    k = k + 1;
+                end
+            end
+
+            // Update num_vectors and copy temp_array to input_array
+            num_vectors = k;
+            for (j = 0; j < num_vectors; j = j + 1) begin
+                input_array[j] = temp_array[j];
+            end
+        end
+    end
+
+    // Assign outputs
+    assign OUT0 = input_array[0];
+    assign OUT1 = (num_inputs > 1) ? input_array[1] : {input_width{1'b0}};
+
+endmodule

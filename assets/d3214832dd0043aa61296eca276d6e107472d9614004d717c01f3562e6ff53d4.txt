@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.685cf68b80c905479a23.9f8fb8b42623",
+  "compile_check": {
+    "case_id": "s1derived.685cf68b80c905479a23.9f8fb8b42623",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "oh_ao31",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_ao31.ddda3d7b4c0c4fa6/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.685cf68b80c905479a23",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "685cf68b80c905479a231470ac7b57e2e55a2b66e3bf55a79603cfaef9664d82",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.685cf68b80c905479a23.9f8fb8b42623",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_ao31.ddda3d7b4c0c4fa6/private/commercial_positive.log",
+    "commercial_log_sha256": "a170d29fe28f5fba9796607f50f6b3095ca267bb272afb5be6ee9c9f1997cac8",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_ao31.ddda3d7b4c0c4fa6/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "oh_ao31"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_20.oh_ao31.ddda3d7b4c0c4fa6",
+    "parent_id": "s1p.685cf68b80c905479a23",
+    "revised_tops": [
+      "oh_ao31"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "oh_ao31",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.685cf68b80c905479a23.9f8fb8b42623",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The repair exactly matches the bitwise AO31 function, DW=1 default, vector interface, and absence of sequential behavior.",
+        "rtl_excerpt": "assign z = (a0 & a1 & a2) | b0;",
+        "spec_excerpt": "z = (a0 & a1 & a2) | b0"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.685cf68b80c905479a23",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "486ffab5f5616a22db91ea8557175ef24c2626e921f8601a0d1cbef1b5bf7820",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "685cf68b80c905479a231470ac7b57e2e55a2b66e3bf55a79603cfaef9664d82",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_ao31.ddda3d7b4c0c4fa6/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_ao31.ddda3d7b4c0c4fa6/private/historical_harness/01_conformal_rtl_oh_ao31.do"
+  ],
+  "parent_id": "s1p.685cf68b80c905479a23",
+  "primary_review": {
+    "case_id": "s1derived.685cf68b80c905479a23.9f8fb8b42623",
+    "checks": {
+      "behavior": "The bitwise AND-OR equation matches.",
+      "boundaries": "Each bit is independent; default array width is one.",
+      "interface": "Four DW-bit inputs and DW-bit output match.",
+      "rtl_reasonableness": "The gate array is reasonable.",
+      "sequential_and_reset": "No clock, reset, or state."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The bitwise AND-OR equation matches. No clock, reset, or state.",
+        "rtl_excerpt": "parameter DW=1; z=(a0 & a1 & a2) | b0",
+        "spec_excerpt": "\u201ceach of configurable width\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The AO31 equation is correct, but the specification omits DW=1.",
+        "rtl_evidence": "parameter DW=1; z=(a0 & a1 & a2) | b0",
+        "spec_evidence": "\u201ceach of configurable width\u201d",
+        "type": "missing_parameter_default"
+      }
+    ],
+    "parent_id": "s1p.685cf68b80c905479a23",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.685cf68b80c905479a23.9f8fb8b42623.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "685cf68b80c905479a231470ac7b57e2e55a2b66e3bf55a79603cfaef9664d82",
+    "source_group": "S1",
+    "specification_sha256": "9f8fb8b4262357f21d71619fdd773f87fc80149b236ac1fcbd5759d1e79370b5",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.685cf68b80c905479a23.9f8fb8b42623.md",
+  "qualified_specification_sha256": "486ffab5f5616a22db91ea8557175ef24c2626e921f8601a0d1cbef1b5bf7820",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_ao31.ddda3d7b4c0c4fa6/private/golden_design.v",
+  "rtl_sha256": "685cf68b80c905479a231470ac7b57e2e55a2b66e3bf55a79603cfaef9664d82",
+  "source_corpus": "SEC-Flow-Star-repos-31.oh",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_ao31.ddda3d7b4c0c4fa6/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "9f8fb8b4262357f21d71619fdd773f87fc80149b236ac1fcbd5759d1e79370b5",
+  "top_module": "oh_ao31"
+}

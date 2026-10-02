@@ -1,0 +1,57 @@
+module mg_05772(clk,rst_n,lm_gain,in_enable,in_data,out_ready,out_data);
+parameter[0 : 0] work_mode = 0; 
+  parameter color_channels = 3; 
+  parameter[3: 0] color_width = 8; 
+  input clk; 
+  input rst_n; 
+  input signed [color_width : 0] lm_gain; 
+  input in_enable; 
+  input [color_channels * color_width - 1 : 0] in_data; 
+  output out_ready; 
+  output[color_channels * color_width - 1 : 0] out_data; 
+  reg[2 : 0] con_enable; 
+  genvar i; 
+  generate 
+  `define h (i + 1) * color_width - 1 
+  `define l i * color_width 
+  for (i = 0; i < color_channels; i = i + 1) begin: channel 
+  wire signed[color_width : 0] in_tmp; 
+  if(work_mode == 0) begin 
+  assign in_tmp = {1'b0, in_data[`h : `l]}; 
+  end else begin 
+  reg signed[color_width : 0] reg_in_tmp; 
+  always @(posedge in_enable) 
+  reg_in_tmp = {1'b0, in_data[`h : `l]}; 
+  assign in_tmp = reg_in_tmp; 
+  end 
+  reg signed [color_width + 1 : 0] add_s; 
+  always @(posedge clk or negedge rst_n or negedge in_enable) begin 
+  if(~rst_n || ~in_enable) 
+  add_s <= 0; 
+  else 
+  add_s <= in_tmp + lm_gain; 
+  end 
+  reg[color_width - 1 : 0] out_buffer; 
+  always @(posedge clk) begin 
+  if(add_s[color_width + 1] == 1) 
+  out_buffer <= 0; 
+  else if(add_s[color_width] == 1) 
+  out_buffer <= {color_width{1'b1}}; 
+  else 
+  out_buffer <= add_s[color_width - 1 : 0]; 
+  end 
+  assign out_data[`h : `l] = out_ready ? out_buffer : 0; 
+  end 
+  `undef h 
+  `undef l 
+  always @(posedge clk or negedge rst_n or negedge in_enable) begin 
+  if(~rst_n || ~in_enable) 
+  con_enable <= 0; 
+  else if(con_enable == 2) 
+  con_enable <= con_enable; 
+  else 
+  con_enable <= con_enable +1; 
+  end 
+  assign out_ready = con_enable == 2 ? 1 : 0; 
+  endgenerate 
+ endmodule

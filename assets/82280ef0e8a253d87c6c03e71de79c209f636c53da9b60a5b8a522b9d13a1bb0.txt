@@ -1,0 +1,41 @@
+always @(*)
+    case( state )
+      STATE_IDLE:       if( tip_addr_ack & i2c_ack_done )
+                          if(i2c_r_w_bit)
+                            next_state = STATE_READ;
+                          else
+                            next_state = STATE_WRITE_WAIT;
+                        else
+                          next_state = STATE_IDLE;
+
+      STATE_WRITE:      if( wb_ack_i )
+                          next_state = STATE_WRITE_WAIT;
+                        else
+                          next_state = STATE_WRITE;
+
+      STATE_WRITE_WAIT: if( tip_addr_ack )
+                          next_state = STATE_IDLE;
+                        else
+                          if( tip_wr_ack & i2c_ack_done )
+                            next_state = STATE_WRITE;
+                          else  
+                            next_state = STATE_WRITE_WAIT;
+
+      STATE_READ:       if( wb_ack_i )
+                          next_state = STATE_READ_WAIT;
+                        else
+                          next_state = STATE_READ;
+
+      STATE_READ_WAIT:  if( tip_addr_ack )
+                          next_state = STATE_IDLE;
+                        else
+                          if( tip_rd_ack & i2c_ack_done )
+                            if(i2c_data)
+                              next_state = STATE_IDLE;
+                            else  
+                              next_state = STATE_READ;
+                          else  
+                            next_state = STATE_READ_WAIT;
+
+      default:          next_state = STATE_IDLE;
+    endcase

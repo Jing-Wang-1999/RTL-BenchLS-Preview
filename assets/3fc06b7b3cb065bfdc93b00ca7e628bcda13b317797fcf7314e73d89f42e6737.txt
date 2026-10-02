@@ -1,0 +1,60 @@
+module cmt_dem (
+	input wire 			clk,
+	input wire 			clk76800,
+	input wire 			cmt_in,
+	output wire [1:0]	clk_dem,
+	output reg			dout,
+	output wire	[3:0]	tp
+	);
+
+	reg [6:0]	cnt;
+	reg 			_cnt;
+	reg			_clk76800;
+	reg			dcmt,_dcmt;
+	reg			_cmt_in;
+	reg			qff;
+	wire			ck1, ck2, rst;
+
+	reg [3:0]	scnt;
+	reg [3:0]	ssum;
+	
+	assign	ck1 = ~clk76800 & _clk76800;	
+	assign	rst = dcmt == ~_dcmt;			
+	assign	ck2 = &cnt[4:3] & ~_cnt;		
+	assign	clk_dem = cnt[3:2];
+	
+	assign	tp[3] = qff;
+	assign	tp[2] = ck1;
+	assign	tp[1] = rst;
+	assign	tp[0] = dcmt;
+	
+	always @( posedge clk) begin
+
+		if( scnt == 4'hF) begin
+			scnt <= 4'h0;
+			ssum <= 4'h0;
+			if ( ssum >= 4'b1110)	dcmt <=  1'b1;
+			else if ( ssum <= 4'b0001)	dcmt <=  1'b0;
+		end
+		else begin
+			ssum <= ssum + { 3'h0, cmt_in};
+			scnt <= scnt + 4'h1;
+		end	
+	
+		
+		if( rst)			cnt <= 7'd0;
+		else if( ck1)	cnt <= cnt + 7'd1;
+
+		
+		if( rst)			qff <= 1'b0;
+		else if( ck2) 	qff <= 1'b1;
+
+		
+		if ( rst)		dout <= ~qff;	
+		
+		_dcmt <= dcmt;
+		_clk76800 <= clk76800;
+		_cnt <= &cnt[4:3];
+	end
+	
+endmodule

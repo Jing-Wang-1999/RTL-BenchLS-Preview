@@ -1,0 +1,89 @@
+always @*
+    begin : round_logic
+      reg [127 : 0] old_block, inv_shiftrows_block, inv_mixcolumns_block;
+      reg [127 : 0] addkey_block;
+
+      inv_shiftrows_block  = 128'h0;
+      inv_mixcolumns_block = 128'h0;
+      addkey_block         = 128'h0;
+      block_new            = 128'h0;
+      tmp_sboxw            = 32'h0;
+      block_w0_we          = 1'b0;
+      block_w1_we          = 1'b0;
+      block_w2_we          = 1'b0;
+      block_w3_we          = 1'b0;
+
+      old_block            = {block_w0_reg, block_w1_reg, block_w2_reg, block_w3_reg};
+
+      // Update based on update type.
+      case (update_type)
+        // InitRound
+        INIT_UPDATE:
+          begin
+            old_block           = block;
+            addkey_block        = addroundkey(old_block, round_key);
+            inv_shiftrows_block = inv_shiftrows(addkey_block);
+            block_new           = inv_shiftrows_block;
+            block_w0_we         = 1'b1;
+            block_w1_we         = 1'b1;
+            block_w2_we         = 1'b1;
+            block_w3_we         = 1'b1;
+          end
+
+        SBOX_UPDATE:
+          begin
+            block_new = {new_sboxw, new_sboxw, new_sboxw, new_sboxw};
+
+            case (sword_ctr_reg)
+              2'h0:
+                begin
+                  tmp_sboxw   = block_w0_reg;
+                  block_w0_we = 1'b1;
+                end
+
+              2'h1:
+                begin
+                  tmp_sboxw   = block_w1_reg;
+                  block_w1_we = 1'b1;
+                end
+
+              2'h2:
+                begin
+                  tmp_sboxw   = block_w2_reg;
+                  block_w2_we = 1'b1;
+                end
+
+              2'h3:
+                begin
+                  tmp_sboxw   = block_w3_reg;
+                  block_w3_we = 1'b1;
+                end
+            endcase // case (sbox_mux_ctrl_reg)
+          end
+
+        MAIN_UPDATE:
+          begin
+            addkey_block         = addroundkey(old_block, round_key);
+            inv_mixcolumns_block = inv_mixcolumns(addkey_block);
+            inv_shiftrows_block  = inv_shiftrows(inv_mixcolumns_block);
+            block_new            = inv_shiftrows_block;
+            block_w0_we          = 1'b1;
+            block_w1_we          = 1'b1;
+            block_w2_we          = 1'b1;
+            block_w3_we          = 1'b1;
+          end
+
+        FINAL_UPDATE:
+          begin
+            block_new    = addroundkey(old_block, round_key);
+            block_w0_we  = 1'b1;
+            block_w1_we  = 1'b1;
+            block_w2_we  = 1'b1;
+            block_w3_we  = 1'b1;
+          end
+
+        default:
+          begin
+          end
+      endcase // case (update_type)
+    end

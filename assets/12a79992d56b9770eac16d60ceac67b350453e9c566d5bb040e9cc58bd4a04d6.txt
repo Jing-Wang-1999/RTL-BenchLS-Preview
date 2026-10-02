@@ -1,0 +1,55 @@
+module rtlpp_06335 (
+    input Clk,
+    input Rst,
+    input B,
+    output reg X
+);
+    reg [1:0] state, next_state;
+    
+    localparam OFF   = 2'b00;
+    localparam ON1   = 2'b01;
+    localparam ON2   = 2'b10;
+    localparam ON3   = 2'b11;
+    
+    always @(posedge Clk or posedge Rst) begin
+        if (Rst) begin
+            state <= OFF;
+        end else begin
+            state <= next_state;
+        end
+    end
+    
+    always @(*) begin
+        case (state)
+            OFF: begin
+                if (B) begin
+                    next_state = ON1;
+                end else begin
+                    next_state = OFF;
+                end
+            end
+            ON1: begin
+                next_state = ON2;
+            end
+            ON2: begin
+                next_state = ON3;
+            end
+            ON3: begin
+                next_state = OFF;
+            end
+            default: begin
+                next_state = OFF;
+            end
+        endcase
+    end
+    
+    always @(*) begin
+        case (state)
+            OFF:   X = 1'b0;
+            ON1:   X = 1'b1;
+            ON2:   X = 1'b1;
+            ON3:   X = 1'b1;
+            default: X = 1'b0;
+        endcase
+    end
+endmodule

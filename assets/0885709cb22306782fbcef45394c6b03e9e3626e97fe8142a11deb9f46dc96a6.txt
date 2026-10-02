@@ -1,0 +1,29 @@
+--- rtl/axil_register_wr.v
++++ rtl/axil_register_wr.v
+@@ -255,7 +255,7 @@
+ 
+ assign s_axil_wready = s_axil_wready_reg;
+ 
+-assign m_axil_wdata  = m_axil_wdata_reg;
++assign m_axil_wdata = ~(m_axil_wdata_reg);
+ assign m_axil_wstrb  = m_axil_wstrb_reg;
+ assign m_axil_wvalid = m_axil_wvalid_reg;
+ 
+@@ -331,7 +331,7 @@
+ 
+ assign s_axil_wready = s_axil_wready_reg;
+ 
+-assign m_axil_wdata  = m_axil_wdata_reg;
++assign m_axil_wdata = ~(m_axil_wdata_reg);
+ assign m_axil_wstrb  = m_axil_wstrb_reg;
+ assign m_axil_wvalid = m_axil_wvalid_reg;
+ 
+@@ -371,7 +371,7 @@
+ end else begin
+ 
+     // bypass W channel
+-    assign m_axil_wdata = s_axil_wdata;
++    assign m_axil_wdata = ~(s_axil_wdata);
+     assign m_axil_wstrb = s_axil_wstrb;
+     assign m_axil_wvalid = s_axil_wvalid;
+     assign s_axil_wready = m_axil_wready;

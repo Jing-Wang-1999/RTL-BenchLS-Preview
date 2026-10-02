@@ -1,0 +1,47 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/14711",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/14700",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 14711,
+  "issue_number": 14700,
+  "verilog_files": [
+    "hw/ip/prim/rtl/prim_clock_meas.sv"
+  ],
+  "deletions": 12,
+  "additions": 20,
+  "patches": [
+    {
+      "filename": "hw/ip/prim/rtl/prim_clock_meas.sv",
+      "patch": "@@ -151,17 +151,25 @@ module prim_clock_meas #(\n     .dst_pulse_o(valid_ref)\n   );\n \n-  logic [RefCntWidth-1:0] cnt_ref;\n-  assign valid = valid_ref & (int'(cnt_ref) == RefCnt - 1);\n-  always_ff @(posedge clk_i or negedge rst_ni) begin\n-    if (!rst_ni) begin\n-      cnt_ref <= '0;\n-    end else if (!cnt_en && |cnt_ref) begin\n-      cnt_ref <= '0;\n-    end else if (cnt_en && valid) begin\n-      cnt_ref <= '0;\n-    end else if (cnt_en && valid_ref) begin\n-      cnt_ref <= cnt_ref + 1'b1;\n+\n+  if (RefCnt == 1) begin : gen_degenerate_case\n+    // if reference count is one, cnt_ref is always 0.\n+    // So there is no need to maintain a counter, and\n+    // valid just becomes valid_ref\n+    assign valid = valid_ref;\n+  end else begin : gen_normal_case\n+    logic [RefCntWidth-1:0] cnt_ref;\n+    assign valid = valid_ref & (int'(cnt_ref) == RefCnt - 1);\n+    always_ff @(posedge clk_i or negedge rst_ni) begin\n+      if (!rst_ni) begin\n+        cnt_ref <= '0;\n+      end else if (!cnt_en && |cnt_ref) begin\n+        cnt_ref <= '0;\n+      end else if (cnt_en && valid) begin\n+        cnt_ref <= '0;\n+      end else if (cnt_en && valid_ref) begin\n+        cnt_ref <= cnt_ref + 1'b1;\n+      end\n     end\n   end\n \n@@ -177,7 +185,7 @@ module prim_clock_meas #(\n     end else if (valid_o) begin\n       cnt <= '0;\n       cnt_ovfl <= '0;\n-    end else if (cnt_en && cnt_ovfl) begin\n+    end else if (cnt_ovfl) begin\n       cnt <= '{default: '1};\n     end else if (cnt_en) begin\n       {cnt_ovfl, cnt} <= cnt + 1'b1;",
+      "additions": 20,
+      "deletions": 12,
+      "changes": 32
+    }
+  ],
+  "pr_info": {
+    "title": "[prim] Patch up design to help with coverage",
+    "body": "fixes #14700\r\n\r\nSigned-off-by: Timothy Chen <timothytim@google.com>",
+    "state": "closed",
+    "created_at": "2022-09-01T19:20:44Z",
+    "updated_at": "2022-09-03T05:58:58Z",
+    "merged_at": "2022-09-03T05:58:56Z",
+    "user": "tjaychen"
+  },
+  "issue_info": {
+    "title": "[dv/prim] Fix prim_clock_meas to improve coverage",
+    "body": "There are a couple conditions that cause low coverage for this module and drags the full clkmgr coverage down.\r\n\r\n- In the code for setting cnt_ref (line156) cnt_ref is always 0. It is possible to specialize the code for RefCnt == 1?\r\n- In the code incrementing cnt (line 170) the term \"cnt_en\" in \"end else if (cnt_en && cnt_ovfl) begin\" is unnecessary.\r\n\r\n",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2022-09-01T05:51:48Z",
+    "updated_at": "2022-09-03T05:58:57Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 1794
+  },
+  "base_commit": "8b517f2b759fb613b136742f887d2de627197f8e",
+  "head_commit": "b78374b2e3e6a4598c3a0973fa3a5f0158efbc89",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_14711_14700",
+  "lec_status": "useful_pass"
+}

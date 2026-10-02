@@ -1,0 +1,35 @@
+module mg_03612 (
+    input clk,
+    input rst,
+    input [7:0] cfg,
+    input [1:0] status,
+    input full_empty,
+    input dma_ack,
+    output reg dma_req
+);
+
+    wire dma_req_d;
+
+    // Combinational request condition
+    assign dma_req_d = cfg[0] & cfg[6] & (
+        (cfg[5:4] == 2'b00) ? (status < 2'b11) :
+        (cfg[5:4] == 2'b01) ? (~status[1]) :
+        (cfg[5:4] == 2'b10) ? (status == 2'b00) :
+        (cfg[5:4] == 2'b11) ? full_empty :
+        1'b0
+    );
+
+    // Registered output
+    always @(posedge clk or negedge rst) begin
+        if (!rst) begin
+            dma_req <= 1'b0;
+        end else begin
+            if (dma_req_d && !dma_ack) begin
+                dma_req <= 1'b1;
+            end else if (dma_ack) begin
+                dma_req <= 1'b0;
+            end
+        end
+    end
+
+endmodule

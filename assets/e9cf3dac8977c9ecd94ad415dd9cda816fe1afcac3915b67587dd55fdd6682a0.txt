@@ -1,0 +1,106 @@
+"""Whole memory-controller closure, fixed two-region 32-bit asynchronous memory configuration."""
+from pathlib import Path
+import random
+SOURCE=Path('/home/jwangjw/project_3rd/ICLR-RTL-BenchLS-backup-jul-29/sources/opencores_git_mirror/system_controller_memory_controller_ip_core')
+HEAD='''`timescale 1ns/1ps
+module tb;
+reg clk=0,mc_clk=0,rst=0,cyc=0,stb=0,we=0;reg[31:0]addr=0,di=0;reg[3:0]sel=15;
+wire[31:0]dout,mdout,poc;wire ack,err,doe,oe_n,we_n;wire[23:0]ma;wire[3:0]dqm;wire[7:0]cs;
+wire[31:0]mdin=(!cs[0] && !oe_n)?mem0[ma[11:0]]:(!cs[1] && !oe_n)?mem1[ma[11:0]]:32'h0;
+reg[31:0]mem0[0:4095],mem1[0:4095];integer i,j,reads=0,writes=0;reg[31:0]last;
+always #5 clk=~clk;always #10 mc_clk=~mc_clk;
+mc_top dut(.clk_i(clk),.rst_i(rst),.wb_data_i(di),.wb_data_o(dout),.wb_addr_i(addr),.wb_sel_i(sel),.wb_we_i(we),.wb_cyc_i(cyc),.wb_stb_i(stb),.wb_ack_o(ack),.wb_err_o(err),
+.susp_req_i(1'b0),.resume_req_i(1'b0),.poc_o(poc),.mc_clk_i(mc_clk),.mc_br_pad_i(1'b0),.mc_ack_pad_i(1'b1),.mc_addr_pad_o(ma),.mc_data_pad_i(mdin),.mc_data_pad_o(mdout),.mc_dp_pad_i(4'b0),.mc_doe_pad_doe_o(doe),.mc_dqm_pad_o(dqm),.mc_oe_pad_o_(oe_n),.mc_we_pad_o_(we_n),.mc_cs_pad_o_(cs),.mc_sts_pad_i(1'b0));
+always @(negedge mc_clk)if(!rst)begin
+if(!cs[0] && !cs[1])$fatal(1,"overlapping chip selects");
+if((!cs[0] || !cs[1]) && !we_n && doe)begin
+writes=writes+1;
+for(j=0;j<4;j=j+1)if(!dqm[j])begin
+if(!cs[0])mem0[ma[11:0]][8*j+:8]=mdout[8*j+:8];
+if(!cs[1])mem1[ma[11:0]][8*j+:8]=mdout[8*j+:8];end end
+if((!cs[0] || !cs[1]) && !oe_n && we_n)reads=reads+1;
+end
+task access;input wr;input[31:0]a,d;input[3:0]mask;input expected_error;integer count;begin
+@(negedge clk);addr=a;di=d;sel=mask;we=wr;cyc=1;stb=1;
+count=0;@(posedge clk);while(ack!==1 && err!==1 && count<2000)begin @(posedge clk);count=count+1;end
+if(count>=2000)$fatal(1,"bus timeout %h",a);
+if(err!==expected_error)$fatal(1,"bus error %h %b expected%0d",a,err,expected_error);
+last=dout;
+@(negedge clk);cyc=0;stb=0;we=0;repeat(8)@(posedge clk);end endtask
+task readcheck;input[31:0]a,expected;begin access(0,a,0,15,0);if(last!==expected)$fatal(1,"read %h %h != %h",a,last,expected);end endtask
+initial begin #10000000;$fatal(1,"timeout");end
+initial begin
+for(i=0;i<4096;i=i+1)begin mem0[i]=32'h5a000000^i;mem1[i]=32'ha5000000^i;end
+#1;rst=1;repeat(12)@(posedge clk);@(negedge clk);rst=0;repeat(320)@(posedge mc_clk);
+access(1,32'h60000008,32'hff,15,0);
+access(1,32'h60000014,32'h222204,15,0);
+access(1,32'h6000001c,32'h222204,15,0);
+access(1,32'h60000010,32'h25,15,0);
+access(1,32'h60000018,32'h800025,15,0);
+'''
+END='$display("RTL_BENCHLS_PASS");$finish(0);end endmodule\n'
+
+def test(mode):
+ s=HEAD;rng=random.Random(9060800+mode)
+ if mode==0:
+  s+='readcheck(32\'h60000008,255);readcheck(32\'h60000010,37);readcheck(32\'h60000018,32\'h800025);\n'
+  for v in [0,0x12345678,0x3fffffff,0x222204]:
+   s+=f"access(1,32'h60000014,32'h{v:x},15,0);readcheck(32'h60000014,32'h{v:x});\n"
+  return s+END
+ for i in range(48):
+  region=i%2 if mode!=1 else 0;a=(0x10000000 if region else 0)+4*rng.randrange(4096);v=rng.getrandbits(32)
+  # Independent expected memory starts with data unavailable to the agent.
+  expected=(0xa5000000 if region else 0x5a000000)^(a//4&4095)
+  if mode==1:s+=f"readcheck(32'h{a:x},32'h{expected:x});\n";continue
+  s+=f"access(1,32'h{a:x},32'h{v:x},15,0);readcheck(32'h{a:x},32'h{v:x});\n"
+  if mode==3:
+   mask=rng.randrange(1,16);d=rng.getrandbits(32);bits=sum(255<<(8*k) for k in range(4) if mask>>k&1);v=(v&~bits)|(d&bits)
+   s+=f"access(1,32'h{a:x},32'h{d:x},{mask},0);readcheck(32'h{a:x},32'h{v:x});\n"
+ if mode==4:
+  s+="access(1,32'h60000010,32'h125,15,0);access(1,0,32'hdeadbeef,15,1);readcheck(0,32'h5a000000);\n"
+ s+='if(reads<1'+(' || writes<1' if mode!=1 else '')+')$fatal(1,"no physical traffic");\n'
+ return s+END
+
+INSTRUCTION='''# Implement the memory controller project
+Implement the complete required source closure and mc_top integration from the
+original Memory Controller IP Core specification. This case fixes the default
+preprocessed configuration (CS0/CS1 implemented; remaining regions disabled),
+with two 32-bit asynchronous chip-select memory devices. Other SDRAM/SSRAM/SCS
+operating modes and narrower devices are outside this configuration's scoring.
+Internal modules and the dummy CS module remain required at their declared paths.
+
+Wishbone is32 bits, byte addressed. clk_i period10ns and mc_clk_i20ns; rst_i is
+active high. Hold cyc/stb,address,we,sel,data until ack or err. The register region
+is address[31:29]=3 and memory region is address[31:29]=0. Registers start at
+0x60000000: CSR+0, read-only POC+4, BA_MASK+8, CSC0+0x10,TMS0+0x14,
+CSC1+0x18,TMS1+0x1c. Use full-word register writes. POC captures mc_data_pad_i
+around reset; the evaluator supplies zero during that interval and gives320
+memory clocks to settle the default power-on delay before configuration.
+
+For the scored configuration set BA_MASK=0xff, CSC0=0x00000025 and
+CSC1=0x00800025 (EN=1,type=2 ACS,BW=2 for32bits,parity disabled).
+Thus chip0 covers byte addresses starting0, chip1 starts0x10000000; each selection
+compares CSC[23:16] against address[28:21], masked by BA_MASK[7:0].
+TMS0/TMS1=0x00222204: read-data-valid counter4, read-to-high-Z2,
+write-pulse-width2, write-disable2, write-high2. Retain timing-register read/write
+behavior. The original TMS timing units and pipeline overhead apply.
+
+Physical ACS address is byte-address bits25:2 for32-bit devices. CS/WE/OE are
+active low. mc_doe_pad_doe_o is active-high output drive. The peripheral supplies
+read data while CS and OE are asserted. Selected writes preserve bytes masked by
+DQM; DQM is the inverse of Wishbone sel for writes (bit0 is bits7:0). Tests also
+read device data initialized privately before any bus write, so implement actual
+external memory reads and writes. Pins mc_br=0,mc_ack=1,mc_sts=0,parity inputs0;
+suspend/resume held0. Distinct regions must not be selected together.
+
+CSCn[8] write-protect produces a Wishbone error and leaves device data unchanged;
+reads remain allowed. Private points cover register programming, external reads,
+both regions, byte masks and write protection. Public checks compile only.
+Headers are resolved; #1 simulation-only assignments and explicitly marked
+simulation diagnostics are removed privately.
+'''
+
+def mc_spec():
+ return dict(case_id='opencores_memory_acs32_v1',project='system_controller_memory_controller_ip_core',top='mc_top',preprocess=True,strip_simulation_regions=True,instruction=INSTRUCTION,builder_source=__file__,
+ tests=[(n,'mc_top',test(i)) for i,n in enumerate(['registers','external_reads','two_regions','byte_masks','write_protect'])],
+ mutations=[('read_data','rtl/verilog/mc_mem_if.v','{mc_dp_i, mc_data_i}','{mc_dp_i, ~mc_data_i}'),('write_data','rtl/verilog/mc_mem_if.v','mc_data_o <=  mc_data_od','mc_data_o <=  ~mc_data_od'),('byte_mask','rtl/verilog/mc_mem_if.v','~mc_dqm_r2','mc_dqm_r2'),('write_protect','rtl/verilog/mc_cs_rf.v','wb_we_i & csc[8]','1\'b0')])

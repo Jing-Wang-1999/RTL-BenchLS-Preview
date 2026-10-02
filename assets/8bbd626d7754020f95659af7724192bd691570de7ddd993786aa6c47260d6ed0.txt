@@ -1,0 +1,5 @@
+# Configurable rollover counter (`origen_099616`)
+
+Parameter `NUM_CNT_BITS` defaults to 4. Inputs are scalar `clk`, active-low asynchronous `n_rst`, synchronous `clr`, `count_enable`, and `rollover_val[NUM_CNT_BITS-1:0]`. Outputs are registered `count_out[NUM_CNT_BITS-1:0]` and scalar `rollover_flag`.
+
+Reset immediately clears count_out, rollover_flag, and internal curr_rollover. At each rising edge, count_out captures the combinational next count, curr_rollover captures next_rollover, and rollover_flag captures the pre-edge curr_rollover. `clr` has priority in next-state logic and selects count zero and next_rollover zero. With clear low and count enabled, equality of the pre-edge count to rollover_val selects next count zero and next_rollover one; otherwise count increments modulo its width and next_rollover becomes zero. With counting disabled, count and next_rollover hold. Because rollover_flag is an extra registered copy, it asserts one clock after the edge that resets count for rollover and normally remains high for one cycle. Clear affects the visible flag through this pipeline rather than clearing it on the same edge.

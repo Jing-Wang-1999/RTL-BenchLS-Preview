@@ -1,0 +1,57 @@
+module origen_031555 #(
+    parameter DATA_WIDTH = 16,
+    parameter MEM_SIZE = 1024
+)(
+    input memRead,
+    input [1:0] memWrite,
+    input [DATA_WIDTH-1:0] writeData1, writeData2,
+    input [DATA_WIDTH-1:0] readAddr,
+    input [DATA_WIDTH-1:0] writeAddr1, writeAddr2,
+    input hlt,
+    output reg [DATA_WIDTH-1:0] readData
+);
+
+    reg [DATA_WIDTH-1:0] memory [0:MEM_SIZE-1];
+
+    initial begin
+        $readmemh("loadMem.dat", memory);
+        $display("First 10 memory locations at initialization:");
+        for (int i = 0; i < 10; i++) begin
+            $display("memory[%0d] = %h", i, memory[i]);
+        end
+    end
+
+    always @(memRead or readAddr) begin
+        if (memRead) begin
+            #1 readData <= memory[readAddr];
+            $display("Read from address %h", readAddr);
+        end
+    end
+
+    always @(memWrite or writeAddr1 or writeAddr2 or writeData1 or writeData2) begin
+        if (memWrite[0]) begin
+            #1 memory[writeAddr1] <= writeData1;
+            $display("Time %0t: Write %h to address %h", $time, writeData1, writeAddr1);
+        end
+        if (memWrite[1]) begin
+            #1 memory[writeAddr2] <= writeData2;
+            $display("Time %0t: Write %h to address %h", $time, writeData2, writeAddr2);
+        end
+    end
+
+    always @(posedge hlt) begin
+        $display("Memory dump of first 90 locations:");
+        for (int i = 0; i < 90; i++) begin
+            $display("memory[%0d] = %h", i, memory[i]);
+        end
+    end
+
+    initial begin
+        #200;
+        $display("First 10 memory locations after 200 time units:");
+        for (int i = 0; i < 10; i++) begin
+            $display("memory[%0d] = %h", i, memory[i]);
+        end
+    end
+
+endmodule

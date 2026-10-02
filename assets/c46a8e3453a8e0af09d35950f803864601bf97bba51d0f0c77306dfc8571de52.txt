@@ -1,0 +1,55 @@
+module origen_040209(
+    input CLK,
+    input PS2_CLK,
+    input PS2_DATA,
+    output reg [7:0] keyOut
+);
+
+    reg [11:0] datapack;
+    reg prev;
+    reg [10:0] scan;
+    reg [3:0] count;
+    reg slowcount;
+    reg move, move2;
+    reg [7:0] countd;
+
+    always @(posedge CLK) begin
+        if (countd == 8'd255) begin
+            countd <= 8'd0;
+            slowcount <= 1'b1;
+        end else begin
+            countd <= countd + 8'd1;
+            slowcount <= 1'b0;
+        end
+    end
+
+    always @(posedge CLK) begin
+        if (slowcount) begin
+            prev <= PS2_CLK;
+            if (prev && !PS2_CLK) begin
+                scan <= {PS2_DATA, scan[10:1]};
+                count <= count + 4'd1;
+                datapack <= 12'd0;
+                move <= 1'b1;
+            end else begin
+                if (datapack >= 12'd4000) begin
+                    count <= 4'd0;
+                    move <= 1'b0;
+                end else begin
+                    datapack <= datapack + 12'd1;
+                end
+            end
+
+            if (count == 4'd11) begin
+                move2 <= 1'b1;
+                count <= 4'd0;
+            end
+
+            if (move2) begin
+                keyOut <= scan[8:1];
+                move2 <= 1'b0;
+            end
+        end
+    end
+
+endmodule

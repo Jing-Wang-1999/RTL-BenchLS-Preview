@@ -1,0 +1,75 @@
+### Instruction for Verilog Code Generation:
+
+1. **Primary Function**: The Verilog module `nios_debug_slave_bridge_a` is designed to interface with a CPU debug slave unit and manage various debugging actions and states.
+
+2. **Control Flow/Decision Points**:
+   - **Reset Logic**: The module controls reset states with `jrst_n` which is asserted based on `reset_n` and negated `resetlatch`.
+   - **Ready State**: The state `st_ready_test_idle` is determined by the `monitor_ready` signal while ensuring `monitor_error` is not set.
+   
+3. **Data Processing/Signal Interactions**:
+   - **Trace Memory Data Handling**: The signal `sr` is formed by concatenating `tracemem_trcdata` and `tracemem_tw`.
+   - **JTAG Output Data**: The `jdo` signal is a combination of `MonDReg` and a portion of `sr`.
+   - **Break Actions**:
+     - `take_action_break_a` is activated when `break_readreg[0]` and `dbrk_hit0_latch` are both set.
+     - `take_action_break_b` is activated when `break_readreg[1]` and `dbrk_hit1_latch` are both set.
+     - `take_action_break_c` is activated when `break_readreg[2]` and `dbrk_hit2_latch` are both set.
+     - `take_action_ocimem_a` is activated when `break_readreg[3]` and `dbrk_hit3_latch` are both set.
+     - `take_action_ocimem_b` is a direct pass-through from `debugack`.
+     - `take_action_tracectrl` is a direct pass-through from `tracemem_on`.
+   - **No Action Signals**:
+     - `take_no_action_break_a`, `take_no_action_break_b`, `take_no_action_break_c`, and `take_no_action_ocimem_a` are logical inversions of their corresponding action signals, ensuring mutual exclusivity between actions and non-actions.
+
+4. **Static Signal Assignments**:
+   - Several signals like `vji_tck`, `vji_tdi`, `vji_sdr`, etc., are statically assigned to zero as they are not utilized in this module's logic.
+
+### Summarized Steps for Code Generation:
+1. Create a module named `nios_debug_slave_bridge_a` with the specified input and output ports.
+2. Implement the reset logic by setting `jrst_n` based on `reset_n` and `resetlatch`.
+3. Form the signal `sr` by concatenating `tracemem_trcdata` and `tracemem_tw`.
+4. Define the signal `st_ready_test_idle` using `monitor_ready` and `monitor_error`.
+5. Generate `jdo` by combining `MonDReg` with a part of `sr`.
+6. Implement the various `take_action` and `take_no_action` signals using logical AND and NOT gates, respectively, based on provided inputs and latches.
+7. Assign static signals (`vji_tck`, `vji_tdi`, etc.) to zero.
+
+By following these instructions, the Verilog code should reflect a coherent and correctly functional module based on the provided control and data dependencies.
+
+Module Interface:
+module nios_debug_slave_bridge_a (
+    MonDReg,
+    break_readreg,
+    clk,
+    dbrk_hit0_latch,
+    dbrk_hit1_latch,
+    dbrk_hit2_latch,
+    dbrk_hit3_latch,
+    debugack,
+    monitor_error,
+    monitor_ready,
+    reset_n,
+    resetlatch,
+    tracemem_on,
+    tracemem_trcdata,
+    tracemem_tw,
+    trc_im_addr,
+    trc_on,
+    trc_wrap,
+    trigbrktype,
+    trigger_state_1,
+    jdo,
+    jrst_n,
+    st_ready_test_idle,
+    take_action_break_a,
+    take_action_break_b,
+    take_action_break_c,
+    take_action_ocimem_a,
+    take_action_ocimem_b,
+    take_action_tracectrl,
+    take_no_action_break_a,
+    take_no_action_break_b,
+    take_no_action_break_c,
+    take_no_action_ocimem_a
+);
+
+Behavioral Clarifications:
+- Parameters are DATA_WIDTH=32, BYTEENABLE_WIDTH_LOG2=2, ADDRESS_WIDTH=32, UNALIGNED_ACCESS_ENABLE=0; BYTES_TO_NEXT_BOUNDARY_WIDTH=BYTEENABLE_WIDTH_LOG2+1=3.
+- When UNALIGNED_ACCESS_ENABLE=0, write_data and fifo_readack are driven combinationally (always @(*)) using fifo_data directly; when =1, they use combined_word and require start==0.

@@ -1,0 +1,56 @@
+{
+  "schema_version": "complexity_primary_review.v1",
+  "candidate_id": "large_module.6533df40f6d00b1254c0",
+  "reviewer": "/root/harder_specs_historical",
+  "review_method": "manual RTL/specification inspection; no model experiment or formal proof executed",
+  "decision": "revise",
+  "original_specification_decision": "revise",
+  "rtl_reasonableness": "pass",
+  "rtl_sha256": "0006c607064a10e0c75314765c602c132d4d9c5a647317a24c4f0f0e0ff6df98",
+  "specification_sha256": "e06624ec819660738c4289662a3caf759c1034d3295beddf48e25e400a23151a",
+  "corrected_specification_sha256": "58f8d637d74ab897e54019f9e26dff904a32612f2aa0849061750fd05010dc91",
+  "corrected_specification_path": "scope1/task1_1_spec_to_rtl/results/complexity_admission_20260913_v1/reviews/large_module.6533df40f6d00b1254c0/specification.md",
+  "evidence": [
+    {
+      "rtl_lines": "1\u201310,167\u2013179",
+      "finding": "Original omits exact interface and synchronous reset contract; RAM/read data/saved word are not reset."
+    },
+    {
+      "rtl_lines": "79\u2013101,135\u2013162",
+      "finding": "Seed priority, default seed 5489, 63-step serial multiply and final unused multiply determine long externally visible busy latency; omitted originally."
+    },
+    {
+      "rtl_lines": "103\u2013128,199\u2013204",
+      "finding": "Exact twist/tempering constants, pointer updates and registered old-memory reads are required for the generated sequence."
+    },
+    {
+      "rtl_lines": "74\u201375,90,124\u2013125,194\u2013197",
+      "finding": "Generation only when ready is high, held pending valid survives reseeding, and busy denotes seed mode only; original busy description was overly broad."
+    },
+    {
+      "rtl_lines": "17\u201343,167\u2013205",
+      "finding": "Several declaration initializers are not reset assignments. Corrected contract excludes pre-reset behavior and establishes initial sequence solely via reset followed by complete seed initialization."
+    }
+  ],
+  "complexity_review": {
+    "classification": "substantive_memory_based_PRNG",
+    "cosmetic_line_inflation": false,
+    "new_architecture_relative_to_frozen_signature_audit": true,
+    "state_memory_bits": 19968,
+    "seed_latency_clocks_after_acceptance": 19968,
+    "recommendation": "Prioritize corrected specification for independent review and SEC; memory proof cost may be high."
+  },
+  "formal_qualification": "pending_parent_replay",
+  "independent_specification_review": "pending",
+  "frozen": false,
+  "local_specification_validation": {
+    "result": "pass",
+    "seed": 5489,
+    "reference": "independent integer MT19937-64 recurrence",
+    "output_samples_checked": 10,
+    "busy_falls_after_seed_acceptance_clocks": 19968,
+    "first_generated_valid_after_seed_acceptance_clocks": 19969,
+    "scope": "local directed simulation only; no formal proof; no stalls or reseed coverage",
+    "evidence_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/complexity_admission_20260913_v1/reviews/large_module.6533df40f6d00b1254c0/local_spec_check/check.json"
+  }
+}

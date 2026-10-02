@@ -1,0 +1,26 @@
+always @(posedge i_clk)
+	if (i_reset)
+	begin
+		state <= RXUL_IDLE;
+	end else if (state == RXUL_IDLE)
+	begin // Idle state, independent of baud counter
+		// {{{
+		// By default, just stay in the IDLE state
+		state <= RXUL_IDLE;
+		if ((!ck_uart)&&(half_baud_time))
+			// UNLESS: We are in the center of a valid
+			// start bit
+			state <= RXUL_BIT_ZERO;
+		// }}}
+	end else if ((state >= RXUL_WAIT)&&(ck_uart))
+		state <= RXUL_IDLE;
+	else if (zero_baud_counter)
+	begin
+		// {{{
+		if (state <= RXUL_STOP)
+			// Data arrives least significant bit first.
+			// By the time this is clocked in, it's what
+			// you'll have.
+			state <= state + 1;
+		// }}}
+	end

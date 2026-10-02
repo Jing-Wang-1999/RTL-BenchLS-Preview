@@ -1,0 +1,25 @@
+This module controls the execution state and pipeline resets for a CPU. It operates on a clock and active-low reset.
+
+**Inputs:**
+- `clk`: Clock signal.
+- `rst_n`: Active-low reset.
+- `cpu_start`: Command to begin CPU execution.
+- `quit_cmd`: Command to stop CPU execution.
+
+**Outputs:**
+- `stall`: Asserted when the CPU is not running (i.e., in idle state).
+- `stall_1shot`: A one-clock-cycle pulse indicating the transition to a stall state.
+- `stall_dly`: A one-clock-cycle delayed version of `stall`.
+- `rst_pipe`: Reset signal for the pipeline, triggered by start or stop commands.
+- `rst_pipe_id`, `rst_pipe_ex`, `rst_pipe_ma`, `rst_pipe_wb`: Pipeline stage-specific reset signals, cascaded from `rst_pipe` with one clock cycle of delay per stage.
+
+**Behavior:**
+The module maintains a `cpu_run_state` register that tracks whether the CPU is running. This state is cleared on system reset or a `quit_cmd`, and set on a `cpu_start` command. The `stall` output is the inverse of this run state.
+
+The `stall_dly` output is a registered copy of `stall`, delayed by one clock cycle. The `stall_1shot` output is a pulse generated when `stall` becomes asserted while `stall_dly` was deasserted, indicating the start of a stall.
+
+A pipeline reset (`rst_pipe`) is generated for one clock cycle when either:
+1. A `cpu_start` command is received while the CPU is not running (`start_reset`).
+2. A `quit_cmd` is received while the CPU is running (`end_reset`).
+
+This `rst_pipe` signal is then propagated through the pipeline

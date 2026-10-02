@@ -1,0 +1,20 @@
+The module is a configurable register file with three 8-bit output ports (opa, opb, opc) and three corresponding 8-bit input ports (ipa, ipb, ipc). It operates synchronously to a system clock (clk_sys) with an asynchronous reset (reset). Internally, it maintains three 8-bit registers (opa_r, opb_r, opc_r) and an 8-bit mode control register.
+
+A write operation is performed when the write-enable signal (we_n) is low. The 2-bit address (addr) selects the target:
+- addr=0 writes the 8-bit input data (idata) to the opa_r register.
+- addr=1 writes idata to the opb_r register.
+- addr=2 writes idata to the opc_r register.
+- addr=3 is a special case: if the most significant bit of idata (bit 7) is high, the entire idata value is written to the mode register, and the three data registers (opa_r, opb_r, opc_r) are simultaneously cleared to zero. If bit 7 of idata is low, then idata[3:1] selects a single bit within the opc_r register (0-7), and idata[0] is written to that specific bit. All other bits of opc_r remain unchanged.
+
+The mode register's bits control the source of the output ports and the read data path. Each output port can be sourced from its internal register or forced to a fixed or external value:
+- opa is driven to all ones (0xFF) if mode bit 4 is high; otherwise, it outputs the value of opa_r.
+- opb is driven to all ones (0xFF) if mode bit 1 is high; otherwise, it outputs opb_r.
+- opc is split into two 4-bit halves. The upper nibble (bits 7:4) is forced to all ones (0xF) if mode bit 3 is high, otherwise sourced from opc_r[7:4]. The lower nibble (bits 3:0) is forced to all ones (0xF) if mode bit 0 is high, otherwise sourced from opc_r[3:0].
+
+A read operation occurs combinatorially based on the address (addr) and outputs the result on odata:
+- addr=0 outputs ipa if mode bit 4 is high; otherwise outputs opa_r.
+- addr=1 outputs ipb if mode bit 1 is high; otherwise outputs opb_r.
+- addr=2 outputs ipc[7:4] if mode bit 3 is high (else opc_r[7:4]) concatenated with ipc[3:0] if mode bit 0 is high (else opc_r[3:0]).
+- addr=3 outputs the value of the mode register.
+
+The reset signal, when high, sets the mode register to all ones (0xFF) and clears the three data registers (opa_r, opb_r, opc_r) to zero.

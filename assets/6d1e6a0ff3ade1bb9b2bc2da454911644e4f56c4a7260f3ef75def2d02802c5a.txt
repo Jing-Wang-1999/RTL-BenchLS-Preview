@@ -1,0 +1,54 @@
+# axis_async_fifo — default configuration specification
+
+Implement a dual-clock AXI-stream byte FIFO. The default configuration is DEPTH4096,DATA_WIDTH8,KEEP_ENABLE0,KEEP_WIDTH1,LAST_ENABLE1,ID_ENABLE0/ID_WIDTH8,DEST_ENABLE0/DEST_WIDTH8,USER_ENABLE1/USER_WIDTH1,RAM_PIPELINE1,OUTPUT_FIFO_ENABLE0,FRAME_FIFO0,USER_BAD_FRAME_VALUE1,USER_BAD_FRAME_MASK1,DROP_OVERSIZE_FRAME0,DROP_BAD_FRAME0,DROP_WHEN_FULL0,MARK_WHEN_FULL0,PAUSE_ENABLE0,FRAME_PAUSE0; derived ADDR_WIDTH12 and OUTPUT_FIFO_ADDR_WIDTH3. Only these defaults are qualified. s_clk and m_clk are independent rising-edge clocks. Never collapse their timing into one clock. Each domain has synchronous local high reset s_rst/m_rst, plus the opposite reset assertion is captured asynchronously in a first register clocked by that opposite domain. That first register clears only on an opposite-domain rising edge after its reset deasserts; it then propagates through two local-clock registers. Deassertion is therefore clocked, not asynchronous. Apply both resets across edges before using the FIFO. RAM/pipeline data words are not reset; no power-up payload guarantees.
+
+Store4096 entries {tuser,tlast,tdata},10bits per entry, with13-bit modulo8192 binary write/read pointers and Gray pointers G(p)=p XOR(p>>1). Write readiness=!full AND !synced_m_reset; full iff write Gray equals twice-synchronized read Gray XOR0x1800 (top two Gray bits inverted). On a normal accepted source beat (s_axis_tvalid AND ready), write memory at write_pointer[11:0], increment write pointer, commit pointer and write Gray. Ignore s_axis_tkeep/tid/tdest; output keep1,tid0,tdest0. Preserve data,last,user. Frames are not withheld until last; frame-drop/mark/pause options are disabled. Both pause acknowledgments0 and requests ignored.
+
+Read pointer Gray crosses to s_clk in two stages; write pointer Gray crosses to m_clk in two stages. Normal empty is equal read Gray and synchronized write Gray. A two-slot read pipeline exposes its second slot. Its downstream ready is m_axis_tready. At each m_clk: ready clears slot1 valid and terminate flag; if ready OR slot1 invalid, move old slot0 data/valid into slot1 and clear slot0 valid; if ready OR either slot invalid, read RAM at the old read address into slot0 and clear its valid, then if not empty, not synchronized source reset and not drop-pending, make slot0 valid and advance read binary/Gray. All decisions use preedge values; later assignments override earlier ones. Pipeline payload may change while invalid. When valid and stalled, final payload/valid remain stable except the explicit source-reset termination behavior below.
+
+Source-side reset clears binary/commit/Gray write pointers, frame tracking/drop/mark/send flags, status pulses and synchronization handshake bookkeeping. Synced sink reset also clears write pointers and commit synchronization state and blocks ready; if a source frame is in progress it sets drop flag. A source frame is considered in progress after any accepted nonlast beat and ends on accepted last. After the sink reset, accepted source beats are discarded while drop flag is set; accepting last clears drop and pulses source overflow. In default mode no ordinary full-FIFO overflow occurs because ready blocks writes. Source good-frame/bad-frame outputs remain0.
+
+Sink-side reset clears read pointers, pipeline valids, output frame/drop/terminate flags and pointer/event synchronizers. Synced source reset clears read pointers and slot0 valid but leaves the final slot available for existing transfer. Sink frame tracking sets when a valid final beat is present without an accepted last (including a stalled final last), clears on accepted last. While synced source reset, if frame is in progress and final slot is absent or not-last, and no drop/terminate already pending, set drop-pending. When drop-pending and (ready OR final slot invalid), assert final-slot valid with terminate flag, clear drop-pending; tlast becomes1 and tuser becomes1, while payload follows the ordinary pipeline movement on that same edge: if ready OR final slot invalid, final data receives old slot0 data. The termination override changes only valid,last,user and does not override that data assignment; it must not be interpreted as always preserving old final-slot data. Thus interruption is explicitly marked instead of pretending to preserve a reset-discarded frame. A ready edge clears terminate flag unless a later termination assignment overrides it. Local reset has final priority.
+
+Depth outputs are13-bit estimates of entries in RAM, excluding prefetched pipeline entries. In s_clk, first convert synchronized read Gray to a registered binary value, then independently register depth=old write pointer-old converted read pointer, and committed depth=old commit pointer-old converted read pointer. In m_clk similarly register converted synchronized write pointer, then depth and committed depth=old converted write pointer-old read pointer. Arithmetic wraps13bits and these registers are not locally reset; they converge as pointers/synchronizers reset. Both source depths coincide in default normal mode. Overflow source pulses default low each source edge and rise for a discarded reset-interrupted frame's accepted last. Event pulses cross by toggling source event state, then three destination stages; sink status is XOR of the last two destination stages. A source reset clears source toggle states; sink reset clears destination stages. Bad/good events remainzero under default behavior. Status synchronization is sampled digital behavior, not a metastability model.
+
+All ordinary FIFO contents retain ordering and backpressure, independent of clock ratio. Reset can discard in-flight data and create the documented terminal beat. Illegal input changes under stall are not constrained away by formal equivalence, and the RTL transition rules still govern them. Parameters enabling frame buffering, dropping full frames, pause or extra output FIFO require a separate qualification. The default active behavior includes dual-clock storage, Gray-pointer synchronization, read pipeline and reset recovery; raw line count includes inactive optional features.
+
+Public interface declarations:
+
+```text
+input  wire                   s_clk
+input  wire                   s_rst
+input  wire [DATA_WIDTH-1:0]  s_axis_tdata
+input  wire [KEEP_WIDTH-1:0]  s_axis_tkeep
+input  wire                   s_axis_tvalid
+output wire                   s_axis_tready
+input  wire                   s_axis_tlast
+input  wire [ID_WIDTH-1:0]    s_axis_tid
+input  wire [DEST_WIDTH-1:0]  s_axis_tdest
+input  wire [USER_WIDTH-1:0]  s_axis_tuser
+input  wire                   m_clk
+input  wire                   m_rst
+output wire [DATA_WIDTH-1:0]  m_axis_tdata
+output wire [KEEP_WIDTH-1:0]  m_axis_tkeep
+output wire                   m_axis_tvalid
+input  wire                   m_axis_tready
+output wire                   m_axis_tlast
+output wire [ID_WIDTH-1:0]    m_axis_tid
+output wire [DEST_WIDTH-1:0]  m_axis_tdest
+output wire [USER_WIDTH-1:0]  m_axis_tuser
+input  wire                   s_pause_req
+output wire                   s_pause_ack
+input  wire                   m_pause_req
+output wire                   m_pause_ack
+output wire [$clog2(DEPTH):0] s_status_depth
+output wire [$clog2(DEPTH):0] s_status_depth_commit
+output wire                   s_status_overflow
+output wire                   s_status_bad_frame
+output wire                   s_status_good_frame
+output wire [$clog2(DEPTH):0] m_status_depth
+output wire [$clog2(DEPTH):0] m_status_depth_commit
+output wire                   m_status_overflow
+output wire                   m_status_bad_frame
+output wire                   m_status_good_frame
+```

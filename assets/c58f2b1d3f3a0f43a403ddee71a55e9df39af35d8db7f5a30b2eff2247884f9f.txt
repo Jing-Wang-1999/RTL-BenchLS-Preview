@@ -1,0 +1,66 @@
+
+
+
+
+
+module uart_top 
+(
+	
+	clock, reset,
+	
+	ser_in, ser_out,
+	
+	rx_data, new_rx_data, 
+	tx_data, new_tx_data, tx_busy, 
+	
+	baud_freq, baud_limit, 
+	baud_clk 
+);
+
+
+input 			clock;			
+input 			reset;			
+input			ser_in;			
+output			ser_out;		
+input	[7:0]	tx_data;		
+input			new_tx_data;	
+output 			tx_busy;		
+output	[7:0]	rx_data;		
+output 			new_rx_data;	
+input	[11:0]	baud_freq;	
+input	[15:0]	baud_limit;
+output			baud_clk;
+
+
+wire ce_16;		
+
+assign baud_clk = ce_16;
+
+
+
+baud_gen baud_gen_1
+(
+	.clock(clock), .reset(reset), 
+	.ce_16(ce_16), .baud_freq(baud_freq), .baud_limit(baud_limit)
+);
+
+
+uart_rx uart_rx_1 
+(
+	.clock(clock), .reset(reset), 
+	.ce_16(ce_16), .ser_in(ser_in), 
+	.rx_data(rx_data), .new_rx_data(new_rx_data) 
+);
+
+
+uart_tx  uart_tx_1
+(
+	.clock(clock), .reset(reset), 
+	.ce_16(ce_16), .tx_data(tx_data), .new_tx_data(new_tx_data), 
+	.ser_out(ser_out), .tx_busy(tx_busy) 
+);
+
+endmodule
+
+
+

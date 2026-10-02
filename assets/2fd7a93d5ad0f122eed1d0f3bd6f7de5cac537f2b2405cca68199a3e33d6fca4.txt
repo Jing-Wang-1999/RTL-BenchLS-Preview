@@ -1,0 +1,10 @@
+always_comb begin
+
+        if (slv_ar_targeted == '0)
+            i_arready = ar_misrouting;
+        else
+            i_arready = '0;
+            for (int i = 0; i < SLV_NB; i++)
+                if (slv_ar_targeted[i])
+                    i_arready = o_arready[i] & !rch_full;
+    end

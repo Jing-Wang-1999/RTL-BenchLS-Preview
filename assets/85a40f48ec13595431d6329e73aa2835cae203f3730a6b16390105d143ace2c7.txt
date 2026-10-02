@@ -1,0 +1,134 @@
+module autovcoder_031528 (
+    input  [15:0] x,
+    input  [15:0] y,
+    output [31:0] p
+);
+
+  // Generate abs values
+  wire [15:0] x_abs;
+  wire [15:0] y_abs;
+
+  // Going for X_abs
+  assign x_abs = x ^ {16{x[15]}};
+
+
+  // Going for Y_abs
+  assign y_abs = y ^ {16{y[15]}};
+
+
+  // LOD x
+  wire [15:0] kx;
+  wire zero_x;
+  wire [3:0] code_x;
+
+
+  LOD16 LODx (
+      .data_i(x_abs),
+      .zero_o(zero_x),
+      .data_o(kx)
+  );
+
+
+  PriorityEncoder_16 PEx (
+      .data_i(kx),
+      .code_o(code_x)
+  );
+
+
+
+
+  // LOD y
+
+  wire [15:0] ky;
+  wire zero_y;
+  wire [3:0] code_y;
+
+  LOD16 LODy (
+      .data_i(y_abs),
+      .zero_o(zero_y),
+      .data_o(ky)
+  );
+
+  PriorityEncoder_16 PEy (
+      .data_i(ky),
+      .code_o(code_y)
+  );
+
+
+  // Barell shift X
+
+  wire [ 3:0] code_x_inv;
+  wire [15:0] barrel_x;
+
+  assign code_x_inv = ~code_x;
+
+  Barrel16L BShiftx (
+      .data_i (x_abs),
+      .shift_i(code_x_inv),
+      .data_o (barrel_x)
+  );
+
+
+  // Barell shift Y
+  wire [ 3:0] code_y_inv;
+  wire [15:0] barrel_y;
+
+  assign code_y_inv = ~code_y;
+
+  Barrel16L BShifty (
+      .data_i (y_abs),
+      .shift_i(code_y_inv),
+      .data_o (barrel_y)
+  );
+
+  // Addition of Op1 and Op2
+  // Here comes the truncation trend [15-1:16-6]
+  wire [7:0] op1;
+  wire [7:0] op2;
+  wire [7:0] L;
+
+  assign op1 = {1'b0, code_x, barrel_x[14:12]};
+  assign op2 = {1'b0, code_y, barrel_y[14:12]};
+
+  assign L[7:1] = op1[7:1] + op2[7:1] + 1'b1;
+
+  assign L[0] = 1'b1;
+
+  // Anti logarithm 
+
+  wire [4:0] k_p;
+  wire [3:0] m_p;
+
+  assign k_p = L[7:3];
+  assign m_p = {1'b1, L[2:0]};
+
+
+  wire [31:0] tmp_out;
+  wire [31:0] tmp1;
+
+  // m_p << k
+  Barrel32L Antilog (
+      .data_i (m_p),
+      .shift_i(k_p),
+      .data_o (tmp1)
+  );
+  // (m_p << k) >> (t-1)
+  assign tmp_out = {3'b0, tmp1[31:3]};
+
+
+
+  // xor 
+  wire prod_sign;
+  wire [31:0] tmp_sign;
+
+  assign prod_sign = x[15] ^ y[15];
+  assign tmp_sign  = {32{prod_sign}} ^ tmp_out;
+
+  // is zero 
+  wire not_zero;
+  assign not_zero = (~zero_x | x[15] | x[0]) & (~zero_y | y[15] | y[0]);
+
+  assign p = not_zero ? tmp_sign : 32'b0;
+
+endmodule
+

@@ -1,0 +1,17 @@
+This module is a synchronous finite state machine with a single-bit input and output. It detects a specific sequence of three consecutive high input values and asserts its output when that pattern is complete.
+
+**Inputs:**
+- `in`: A single-bit data input sampled on the clock edge.
+- `reset`: An asynchronous, active-high reset signal.
+- `clk`: The system clock.
+
+**Output:**
+- `z`: A registered output bit. It becomes high only when the machine is in its final detection state.
+
+**Behavior:**
+The machine has four internal states (S0, S1, S2, S3). It starts in state S0 after a reset. The state transitions are determined by the current state and the `in` signal on each rising clock edge.
+
+The machine advances from S0 to S1, then to S2, only when `in` is high on three successive clock cycles. If `in` is low at any point during this progression, the machine remains in its current state (S0, S1, or S2) until `in` goes high again. Upon reaching state S3 (after three consecutive high inputs), the output `z` is asserted high. From S3, if `in` is high on the next cycle, the machine resets its detection sequence by transitioning back to S1. If `in` is low in S3, the machine stays in S3, keeping `z` high.
+
+**Allowed Sub-modules:**
+Only standard flip-flops

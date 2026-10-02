@@ -1,0 +1,33 @@
+always @(posedge i_clk)
+	if (i_reset)
+	begin
+		zero_baud_counter <= 1'b1;
+		baud_counter <= 0;
+	end else begin
+		zero_baud_counter <= (baud_counter == 1);
+
+		if (state == TXUL_IDLE)
+		begin
+			baud_counter <= 0;
+			zero_baud_counter <= 1'b1;
+			if ((i_wr)&&(!r_busy))
+			begin
+				baud_counter <= CLOCKS_PER_BAUD - 1'b1;
+				zero_baud_counter <= 1'b0;
+			end
+		end else if (!zero_baud_counter)
+			baud_counter <= baud_counter - 1'b1;
+		else if (state > TXUL_STOP)
+		begin
+			baud_counter <= 0;
+			zero_baud_counter <= 1'b1;
+		end else if (state == TXUL_STOP)
+			// Need to complete this state one clock early, so
+			// we can release busy one clock before the stop bit
+			// is complete, so we can start on the next byte
+			// exactly 10*CLOCKS_PER_BAUD clocks after we started
+			// the last one
+			baud_counter <= CLOCKS_PER_BAUD - 2;
+		else // All other states
+			baud_counter <= CLOCKS_PER_BAUD - 1'b1;
+	end

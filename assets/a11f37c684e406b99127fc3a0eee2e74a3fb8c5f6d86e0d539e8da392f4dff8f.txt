@@ -1,0 +1,152 @@
+module origen_143535 (
+    input wire clk,
+    input wire reset,
+    input wire [63:0] key,
+    input wire [7:0] msg_byte,
+    input wire msg_valid,
+    input wire msg_last,
+    output reg [255:0] hmac,
+    output reg hmac_valid,
+    output reg authentic
+);
+
+    // Constants
+    localparam BLOCK_SIZE = 64;
+    localparam HASH_SIZE = 256;
+    
+    // States
+    localparam IDLE = 3'd0;
+    localparam PROCESS_KEY = 3'd1;
+    localparam PROCESS_INNER = 3'd2;
+    localparam PROCESS_OUTER = 3'd3;
+    localparam FINALIZE = 3'd4;
+    
+    // Internal registers
+    reg [2:0] state;
+    reg [63:0] padded_key;
+    reg [511:0] block;
+    reg [63:0] block_count;
+    reg [255:0] inner_hash;
+    reg [255:0] outer_hash;
+    
+    // SHA-256 module instantiation
+    wire [255:0] hash_out;
+    wire hash_valid;
+    reg hash_init;
+    reg [511:0] hash_block;
+    reg hash_next;
+    reg hash_last;
+    
+    sha256 sha256_inst (
+        .clk(clk),
+        .reset(reset),
+        .init(hash_init),
+        .block(hash_block),
+        .next(hash_next),
+        .last(hash_last),
+        .digest(hash_out),
+        .digest_valid(hash_valid)
+    );
+    
+    // HMAC generation and checking logic
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            state <= IDLE;
+            hmac_valid <= 0;
+            authentic <= 0;
+        end else begin
+            case (state)
+                IDLE: begin
+                    if (msg_valid) begin
+                        state <= PROCESS_KEY;
+                        padded_key <= (key[63:56] == 0) ? {key, 56'b0} : key;
+                        block_count <= 0;
+                    end
+                end
+                
+                PROCESS_KEY: begin
+                    state <= PROCESS_INNER;
+                    hash_init <= 1;
+                    hash_block <= {padded_key ^ {64{8'h36}}, 448'b0};
+                    hash_next <= 1;
+                    hash_last <= 0;
+                end
+                
+                PROCESS_INNER: begin
+                    if (msg_valid) begin
+                        block <= {block[503:0], msg_byte};
+                        if (block_count == BLOCK_SIZE - 1) begin
+                            hash_block <= block;
+                            hash_next <= 1;
+                            hash_last <= msg_last;
+                            block_count <= 0;
+                        end else begin
+                            block_count <= block_count + 1;
+                        end
+                    end
+                    
+                    if (hash_valid) begin
+                        inner_hash <= hash_out;
+                        if (msg_last) begin
+                            state <= PROCESS_OUTER;
+                            hash_init <= 1;
+                            hash_block <= {padded_key ^ {64{8'h5c}}, 448'b0};
+                            hash_next <= 1;
+                            hash_last <= 0;
+                        end
+                    end
+                end
+                
+                PROCESS_OUTER: begin
+                    if (hash_valid) begin
+                        state <= FINALIZE;
+                        hash_block <= {inner_hash, 256'b0};
+                        hash_next <= 1;
+                        hash_last <= 1;
+                    end
+                end
+                
+                FINALIZE: begin
+                    if (hash_valid) begin
+                        hmac <= hash_out;
+                        hmac_valid <= 1;
+                        authentic <= (hmac == hash_out);
+                        state <= IDLE;
+                    end
+                end
+            endcase
+        end
+    end
+
+endmodule
+
+// SHA-256 module (simplified for brevity)
+module sha256 (
+    input wire clk,
+    input wire reset,
+    input wire init,
+    input wire [511:0] block,
+    input wire next,
+    input wire last,
+    output reg [255:0] digest,
+    output reg digest_valid
+);
+
+    // SHA-256 implementation goes here
+    // This is a placeholder and should be replaced with a full SHA-256 implementation
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            digest <= 256'b0;
+            digest_valid <= 0;
+        end else if (init) begin
+            digest <= 256'h6a09e667bb67ae853c6ef372a54ff53a510e527f9b05688c1f83d9ab5be0cd19;
+            digest_valid <= 0;
+        end else if (next) begin
+            // Perform SHA-256 compression function here
+            digest <= digest ^ block[255:0]; // This is not the actual SHA-256 algorithm, just a placeholder
+            digest_valid <= last;
+        end
+    end
+
+endmodule

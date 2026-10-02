@@ -1,0 +1,33 @@
+# [dv,rtl] VCS build warning from tlul_rsp_intg_gen.sv
+
+### Description
+
+When building some block-level simulations with VCS (for example, `util/dvsim/dvsim.py hw/ip/hmac/dv/hmac_sim_cfg.hjson -i hmac_smoke --build-only`), the tool spits out a warning:
+```
+Warning-[IDTS] Ignoring dynamic type sensitivity
+/nas/lowrisc/tools/synopsys/vcs/W-2024.09/etc/uvm-1.2/base/uvm_globals.svh, 241
+"cs"
+  Dynamic types used in always_comb, always_latch, always (@*) will be ignored
+  for the inferred sensitivity list. 
+  
+  Declared at: 
+  /nas/lowrisc/tools/synopsys/vcs/W-2024.09/etc/uvm-1.2/base/uvm_globals.svh, 
+  239
+  Originating call: 
+  ../src/lowrisc_tlul_trans_intg_0.1/rtl/tlul_rsp_intg_gen.sv, 83
+```
+
+This turns out to be caused by the following code:
+```systemverilog
+`ifndef SYNTHESIS
+  always_comb begin
+    if (tl_i.d_valid) begin
+      `ASSERT_I(RspZero_A, RspIntgInIsZero -> ~|tl_i.d_user.rsp_intg)
+      `ASSERT_I(UserZero_A, UserInIsZero -> ~|tl_i.d_user)
+    end
+  end
+`endif
+```
+and the guts of `ASSERT_I` do things involving `string`, which is a problem for `always_comb`.
+
+I think the fix is simple: switch to using `always @(tl_i) ...`

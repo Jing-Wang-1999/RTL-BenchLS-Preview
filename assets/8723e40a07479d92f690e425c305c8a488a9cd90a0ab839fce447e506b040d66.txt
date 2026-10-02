@@ -1,0 +1,44 @@
+# Implement the configured GPIO project
+Read the original PDF and the fixed interface declarations. This case uses the
+pinned default 31-pin configuration: gw=31, dw=32, aw=8; one required gpio_top
+module. The original defines header is resolved into numeric ports/parameters;
+implement the configured functionality in the required RTL file without includes.
+This complete peripheral has one RTL module; it is not a missing-module task.
+
+Configuration and timing clarifications:
+- Active-high asynchronous reset clears all registers, output enables and
+  synchronized samples. Inputs and external clock each use two synchronizer
+  flops. All functional state in this configuration uses rising wb_clk_i.
+- Byte addresses: IN=0x00, OUT=0x04, OE=0x08, INTE=0x0C, PTRIG=0x10,
+  AUX=0x14, CTRL=0x18, INTS=0x1C, ECLK=0x20, NEC=0x24. Bit 31 reads zero
+  for 31-bit registers; CTRL is two bits. Other aligned addresses within 0x00..3F
+  read IN. Address bits 7:6 and 1:0 must be zero; invalid addresses return error.
+- Registered read data updates every clock. A valid cyc/stb access gets registered
+  ACK on the next edge; held accesses alternate ACK high/low. Errors are also
+  registered alternating pulses. Register writes occur on valid cyc/stb/we,
+  regardless of old ACK. OUT/OE/INTE/PTRIG/AUX/ECLK/NEC use wb_sel byte masks.
+  CTRL and INTS writes replace all implemented bits regardless of byte mask.
+- OUT bits drive pins when corresponding AUX=0, else aux_i drives them.
+  ext_pad_o is registered; ext_padoe_o directly reflects OE, one=output enabled.
+  IN samples synchronized pad inputs every clock when ECLK=0 for that bit.
+- ECLK=1 selects samples latched at the synchronized external-clock edge:
+  NEC=0 selects rising, NEC=1 falling. Selected external-clock samples hold
+  between edges. Allow synchronization latency; external clock is much slower
+  than the Wishbone clock. IN itself adds a register after that selection.
+- CTRL[0] globally enables interrupts; INTE enables each bit. PTRIG=1 selects
+  a rising input transition, zero a falling transition. With global enable,
+  matching input events set sticky INTS bits; writes replace INTS (zero clears).
+  IRQ is registered (any INTS) AND CTRL[0]. CTRL[1] latches IRQ while enabled;
+  software clears it by writing CTRL. CTRL[1] does not itself drive IRQ.
+
+Private points test byte masks/reset, output/auxiliary selection, synchronized
+input sampling, positive/negative interrupt behavior, external-clock sampling,
+and bus acknowledgement/errors. The original header and implementation are private.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

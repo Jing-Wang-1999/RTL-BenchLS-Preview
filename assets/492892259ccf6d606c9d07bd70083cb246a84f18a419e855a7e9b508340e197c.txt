@@ -1,0 +1,47 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/903",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/902",
+  "repository": "lowRISC/ibex",
+  "pr_number": 903,
+  "issue_number": 902,
+  "verilog_files": [
+    "rtl/ibex_pmp.sv"
+  ],
+  "deletions": 13,
+  "additions": 28,
+  "patches": [
+    {
+      "filename": "rtl/ibex_pmp.sv",
+      "patch": "@@ -32,9 +32,10 @@ module ibex_pmp #(\n   // Access Checking Signals\n   logic [33:0]                                region_start_addr [PMPNumRegions];\n   logic [33:PMPGranularity+2]                 region_addr_mask  [PMPNumRegions];\n-  logic [PMPNumChan-1:0][PMPNumRegions-1:0]   region_match_high;\n-  logic [PMPNumChan-1:0][PMPNumRegions-1:0]   region_match_low;\n-  logic [PMPNumChan-1:0][PMPNumRegions-1:0]   region_match_both;\n+  logic [PMPNumChan-1:0][PMPNumRegions-1:0]   region_match_gt;\n+  logic [PMPNumChan-1:0][PMPNumRegions-1:0]   region_match_lt;\n+  logic [PMPNumChan-1:0][PMPNumRegions-1:0]   region_match_eq;\n+  logic [PMPNumChan-1:0][PMPNumRegions-1:0]   region_match_all;\n   logic [PMPNumChan-1:0][PMPNumRegions-1:0]   region_perm_check;\n   logic [PMPNumChan-1:0]                      access_fault;\n \n@@ -71,16 +72,30 @@ module ibex_pmp #(\n \n   for (genvar c = 0; c < PMPNumChan; c++) begin : g_access_check\n     for (genvar r = 0; r < PMPNumRegions; r++) begin : g_regions\n-      // TOR Region high/low matching is reused for all match types\n       // Comparators are sized according to granularity\n-      assign region_match_low[c][r]     = pmp_req_addr_i[c][33:PMPGranularity+2] >=\n-                                          (region_start_addr[r][33:PMPGranularity+2] &\n-                                           region_addr_mask[r]);\n-      assign region_match_high[c][r]    = (pmp_req_addr_i[c][33:PMPGranularity+2] &\n-                                           region_addr_mask[r]) <\n-                                          csr_pmp_addr_i[r][33:PMPGranularity+2];\n-      assign region_match_both[c][r]    = region_match_low[c][r] & region_match_high[c][r] &\n-                                          (csr_pmp_cfg_i[r].mode != PMP_MODE_OFF);\n+      assign region_match_eq[c][r] = (pmp_req_addr_i[c][33:PMPGranularity+2] &\n+                                      region_addr_mask[r]) ==\n+                                     (region_start_addr[r][33:PMPGranularity+2] &\n+                                      region_addr_mask[r]);\n+      assign region_match_gt[c][r] = pmp_req_addr_i[c][33:PMPGranularity+2] >\n+                                     region_start_addr[r][33:PMPGranularity+2];\n+      assign region_match_lt[c][r] = pmp_req_addr_i[c][33:PMPGranularity+2] <\n+                                     csr_pmp_addr_i[r][33:PMPGranularity+2];\n+\n+      always_comb begin\n+        region_match_all[c][r] = 1'b0;\n+        unique case (csr_pmp_cfg_i[r].mode)\n+          PMP_MODE_OFF   : region_match_all[c][r] = 1'b0;\n+          PMP_MODE_NA4   : region_match_all[c][r] = region_match_eq[c][r];\n+          PMP_MODE_NAPOT : region_match_all[c][r] = region_match_eq[c][r];\n+          PMP_MODE_TOR   : begin\n+            region_match_all[c][r] = (region_match_eq[c][r] | region_match_gt[c][r]) &\n+                                     region_match_lt[c][r];\n+          end\n+          default        : region_match_all[c][r] = 1'b0;\n+        endcase\n+      end\n+\n       // Check specific required permissions\n       assign region_perm_check[c][r] =\n           ((pmp_req_type_i[c] == PMP_ACC_EXEC)  & csr_pmp_cfg_i[r].exec) |\n@@ -96,7 +111,7 @@ module ibex_pmp #(\n       // PMP entries are statically prioritized, from 0 to N-1\n       // The lowest-numbered PMP entry which matches an address determines accessability\n       for (int r = PMPNumRegions-1; r >= 0; r--) begin\n-        if (region_match_both[c][r]) begin\n+        if (region_match_all[c][r]) begin\n           access_fault[c] = (priv_mode_i[c] == PRIV_LVL_M) ?\n               // For M-mode, any region which matches with the L-bit clear, or with sufficient\n               // access permissions will be allowed",
+      "additions": 28,
+      "deletions": 13,
+      "changes": 41
+    }
+  ],
+  "pr_info": {
+    "title": "[rtl] Fix PMP NA4 address matching",
+    "body": "- Apply address masking to the bottom address bit for NA4 as well as\r\n  NAPOT\r\n- Relates to #902\r\n\r\nSigned-off-by: Tom Roberts <tomroberts@lowrisc.org>",
+    "state": "closed",
+    "created_at": "2020-05-27T10:03:14Z",
+    "updated_at": "2020-06-02T12:41:07Z",
+    "merged_at": "2020-06-02T12:41:04Z",
+    "user": "tomeroberts"
+  },
+  "issue_info": {
+    "title": "Incorrect pmp NA4/NAPOT address matching",
+    "body": "#875 seems to have introduced an issue with `NA4/NAPOT` address matching modes - the scenario is as follows.\r\n\r\nIn my test, `csr_pmp_addr[3]` is `0x8000_3f54` with its corresponding configuration bits `csr_pmp_cfg[3]` set to `{0, PMP_MODE_NA4, 0, 1, 1}`, and the core requests an instruction fetch from `pmp_req_addr_i[0] = 0x8000_3f54`. Note that since we are using NA4 mode, `region_start_addr[3] = 0x8000_3f54` and `region_addr_mask[3] = 0xffff_ffff`. We are also using a granularity of 0.\r\n\r\nWith this setup, we should expect that the requested instruction fetch should match `pmpaddr3` but then then fail due to a fetch error since the corresponding access bit is disabled.\r\n\r\nHowever, `region_match_low[0][3]` goes high as expected since\r\n`pmp_req_addr_i[0][33:2] >= region_start_addr[3][33:2]`,\r\nbut `region_match_high[0][3]` stays low since the check\r\n`pmp_req_addr_i[0][33:2] < csr_pmp_addr[3][33:2]` will fail due to lack of equality checking - this causes an altogether mismatch with this PMP region.\r\n\r\nI think we still need to include equality checking to cover NA4 and NAPOT matching (as the error I describe above can also easily occur in NAPOT mode with any granularity), but these equality checks should only be enabled when we are in one of those two modes.",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2020-05-27T01:01:18Z",
+    "updated_at": "2020-06-02T12:42:23Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 140
+  },
+  "base_commit": "4b01580a7bd88d5293aba786bce1724536a823fa",
+  "head_commit": "c9c65e072b72997e64eb18ce639f6c69e021b595",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_903_902",
+  "lec_status": "useful_pass"
+}

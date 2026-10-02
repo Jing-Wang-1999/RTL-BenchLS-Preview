@@ -1,0 +1,119 @@
+module autovcoder_070296 #(
+    parameter ADDR_BITS = 8,
+    parameter DATA_BITS = 24
+) (
+    input in_clk,
+    input in_rst_n,
+    input in_valid,
+    input in_flip_trigger,
+    input [ADDR_BITS-1:0] in_addr,
+
+    input out_clk,
+    input out_en,
+    input [ADDR_BITS-1:0] out_addr,
+    output [DATA_BITS-1:0] out_data
+);
+
+  wire ram0_clk, ram0_wren, ram0_rden;
+  wire [ADDR_BITS-1:0] ram0_wraddr, ram0_rdaddr;
+  wire [DATA_BITS-1:0] ram0_data, ram0_q;
+  simple_dp_ram #(DATA_BITS, ADDR_BITS) ram0 (
+      ram0_clk,
+      ram0_wren,
+      ram0_wraddr,
+      ram0_data,
+      ram0_rden,
+      ram0_rdaddr,
+      ram0_q
+  );
+
+  wire ram1_clk, ram1_wren, ram1_rden;
+  wire [ADDR_BITS-1:0] ram1_wraddr, ram1_rdaddr;
+  wire [DATA_BITS-1:0] ram1_data, ram1_q;
+  simple_dp_ram #(DATA_BITS, ADDR_BITS) ram1 (
+      ram1_clk,
+      ram1_wren,
+      ram1_wraddr,
+      ram1_data,
+      ram1_rden,
+      ram1_rdaddr,
+      ram1_q
+  );
+
+  reg cur_ram;
+  wire cur_clk, cur_wren, cur_rden;
+  wire [ADDR_BITS-1:0] cur_wraddr, cur_rdaddr;
+  wire [DATA_BITS-1:0] cur_data, cur_q;
+  wire bak_clk, bak_wren, bak_rden;
+  wire [ADDR_BITS-1:0] bak_wraddr, bak_rdaddr;
+  wire [DATA_BITS-1:0] bak_data, bak_q;
+  assign ram0_clk = !cur_ram ? cur_clk : bak_clk;
+  assign ram0_wren = !cur_ram ? cur_wren : bak_wren;
+  assign ram0_rden = !cur_ram ? cur_rden : bak_rden;
+  assign ram0_wraddr = !cur_ram ? cur_wraddr : bak_wraddr;
+  assign ram0_rdaddr = !cur_ram ? cur_rdaddr : bak_rdaddr;
+  assign ram0_data = !cur_ram ? cur_data : bak_data;
+  assign ram1_clk = cur_ram ? cur_clk : bak_clk;
+  assign ram1_wren = cur_ram ? cur_wren : bak_wren;
+  assign ram1_rden = cur_ram ? cur_rden : bak_rden;
+  assign ram1_wraddr = cur_ram ? cur_wraddr : bak_wraddr;
+  assign ram1_rdaddr = cur_ram ? cur_rdaddr : bak_rdaddr;
+  assign ram1_data = cur_ram ? cur_data : bak_data;
+  assign cur_q = !cur_ram ? ram0_q : ram1_q;
+  assign bak_q = cur_ram ? ram0_q : ram1_q;
+
+  reg prev_flip_trigger;
+  always @(posedge in_clk or negedge in_rst_n)
+    if (!in_rst_n) prev_flip_trigger <= 0;
+    else prev_flip_trigger <= in_flip_trigger;
+
+  reg cur_clr_done;
+  reg [ADDR_BITS-1:0] cur_clr_addr;
+  always @(posedge in_clk or negedge in_rst_n) begin
+    if (!in_rst_n) begin
+      cur_ram <= 0;
+      cur_clr_done <= 0;
+      cur_clr_addr <= 0;
+    end else if (in_flip_trigger & ~prev_flip_trigger) begin
+      cur_ram <= ~cur_ram;
+      cur_clr_done <= 0;
+      cur_clr_addr <= 0;
+    end else if (!cur_clr_done) begin
+      cur_ram <= cur_ram;
+      cur_clr_addr <= cur_clr_addr + 1'b1;
+      if (cur_clr_addr == {ADDR_BITS{1'b1}}) cur_clr_done <= 1'b1;
+      else cur_clr_done <= cur_clr_done;
+    end else begin
+      cur_ram <= cur_ram;
+      cur_clr_done <= cur_clr_done;
+      cur_clr_addr <= cur_clr_addr;
+    end
+  end
+
+  assign cur_clk = in_clk;
+  assign cur_rden = in_valid;
+  assign cur_rdaddr = in_addr;
+
+  reg cur_rden_r;
+  always @(posedge in_clk) cur_rden_r <= cur_rden;
+  assign cur_wren = !cur_clr_done ? 1'b1 : cur_rden_r;
+
+  reg [ADDR_BITS-1:0] cur_rdaddr_r;
+  always @(posedge in_clk) cur_rdaddr_r <= cur_rdaddr;
+  assign cur_wraddr = !cur_clr_done ? cur_clr_addr : cur_rdaddr_r;
+
+  reg [ADDR_BITS-1:0] cur_wraddr_r;
+  reg [DATA_BITS-1:0] cur_data_r;
+  always @(posedge in_clk) cur_wraddr_r <= cur_wraddr;
+  always @(posedge in_clk) cur_data_r <= cur_data;
+  assign cur_data = !cur_clr_done ? {DATA_BITS{1'b0}} : (cur_wraddr == cur_wraddr_r ? cur_data_r + 1'b1 : cur_q + 1'b1);
+
+  assign bak_clk = out_clk;
+  assign bak_rden = out_en;
+  assign bak_rdaddr = out_addr;
+  assign out_data = bak_q;
+  assign bak_wren = 1'b0;
+  assign bak_wraddr = 0;
+  assign bak_data = 0;
+endmodule
+

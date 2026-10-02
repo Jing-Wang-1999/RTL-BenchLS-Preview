@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""Whole upstream PIO waveform benches, checked against programs/protocols.
+
+Checks inspect top-level pins only. No internal RTL hierarchy or golden waveform
+is used as the functional oracle. meta.json documents each finite observation
+window, partial coverage, and the upstream SPI receive failure excluded from score.
+"""
+import argparse
+import bisect
+from collections import defaultdict
+import json
+import re
+from pathlib import Path
+import shutil
+import subprocess
+
+class Trace:
+    def __init__(self, path):
+        self.events = defaultdict(list)
+        self.end = 0
+        stack, codes, t, definitions = [], {}, 0, True
+        raw = Path(path).read_text()
+        require(bool(re.search(r'\$timescale\s+100ps\s+\$end',raw)), 'expected 100ps VCD timescale')
+        for line in raw.splitlines():
+            s = line.split()
+            if not s:
+                continue
+            if definitions:
+                if s[0] == '$scope':
+                    stack.append(s[2])
+                elif s[0] == '$upscope':
+                    stack.pop()
+                elif s[0] == '$var' and stack == ['tb']:
+                    codes[s[3]] = s[4]
+                elif s[0] == '$enddefinitions':
+                    definitions = False
+            elif s[0].startswith('#'):
+                t = int(s[0][1:]); self.end = t
+            elif s[0][0] in 'b01xz':
+                value, code = (s[0][1:], s[1]) if s[0][0] == 'b' else (s[0][0], s[0][1:])
+                if code in codes:
+                    self.events[codes[code]].append((t, int(value, 2) if not set(value)-{'0','1'} else None))
+        self.times = {k: [t for t, v in events] for k, events in self.events.items()}
+
+    def at(self, name, t):
+        i = bisect.bisect_right(self.times.get(name, []), t)-1
+        return self.events[name][i][1] if i >= 0 else None
+
+    def bit(self, name, t, bit=0):
+        v = self.at(name, t)
+        return None if v is None else (v >> bit) & 1
+
+    def edges(self, name='gpio_out', bit=0):
+        out, last = [], None
+        for t, v in self.events[name]:
+            v = None if v is None else (v >> bit) & 1
+            if v != last:
+                out.append((t, v)); last = v
+        return out
+
+    def actions(self, a):
+        return [(t, self.at('din', t)) for t, v in self.events['action'] if v == a]
+
+def require(condition, reason):
+    if not condition:
+        raise ValueError(reason)
+
+def judge(name, t):
+    # All shipped benches use 100ps ticks and 25MHz host clock: 400 ticks/cycle.
+    edges = t.edges()
+    pulses = [(a, b-a) for (a,v),(b,w) in zip(edges,edges[1:]) if v==1 and w==0]
+    details = {}
+    if name in ('square', 'tb'):
+        delay = 1 if name == 'tb' else 0
+        start = t.actions(6)[0][0]
+        require(t.bit('gpio_out', start) is not None and
+                all(v is not None for x, v in t.events['gpio_out'] if start <= x <= t.end),
+                'unknown GPIO output in post-enable square observation window')
+        active = [(x,v) for x,v in edges if x >= start]
+        # 100 host clocks / (2.5 divider * (1 + delay)) per SET instruction.
+        require(len(active) == 100//(2.5*(delay+1)), 'SET transition count')
+        require([v for x,v in active] == [1,0]*(len(active)//2), 'SET pin sequence')
+        lengths = [b[0]-a[0] for a,b in zip(active,active[1:])]
+        require(all(x in ({800,1200} if delay==0 else {2000}) for x in lengths), 'fractional divider phase duration')
+        require(all(active[i+2][0]-active[i][0] == 2000*(delay+1) for i in range(len(active)-2)), 'square full period')
+        details['transitions'] = len(active)
+    elif name == 'exec':
+        start = t.actions(9)[0][0]
+        require(not t.actions(6), 'immediate bench must remain disabled')
+        active = [(x,v) for x,v in edges if x > start]
+        require(len(active)==1 and active[0][1]==1 and active[0][0]-start<=4*400, 'immediate SET did not set and hold pin while disabled')
+    elif name == 'copybit':
+        pushes = t.actions(4)
+        require([v for x,v in pushes]==[i%2 for i in range(10)], 'bench input stream')
+        active = [(x,v) for x,v in edges if x > pushes[0][0]]
+        # Pipeline output for the final PUSH lies beyond the upstream $finish.
+        require(len(active)==8 and [v for x,v in active]==[1,0]*4, 'first nine observable alternating bits')
+        require(t.bit('gpio_out', pushes[1][0])==0, 'first copied bit')
+        for (x,v),(start,word) in zip(active,pushes[1:9]):
+            require(v==word and 0 < x-start <=5*400, 'FIFO-to-pin bounded delivery/order')
+        details['checked_input_words'] = 9
+        details['not_observed'] = 'Final queued word: upstream bench ends before its pipeline output.'
+    elif name == 'stepper':
+        active = [(x,v) for x,v in t.events['gpio_out'] if x>t.actions(6)[0][0]]
+        expected = [(0x8c462319 >> i) & 15 for i in range(28,-1,-4)]*2
+        require([v for x,v in active]==expected, 'stepper packed nibble sequence')
+        require(all(b[0]-a[0]==3*400 for a,b in zip(active,active[1:])), 'OUT delay plus loop timing')
+        details['phases_checked'] = len(expected)
+    elif name == 'uart_rx':
+        pulls = t.actions(3)
+        require(len(pulls)==1, 'one received byte read')
+        x=pulls[0][0]
+        require(t.bit('rx_empty',x)==0, 'RX FIFO empty before read')
+        require(t.at('dout',x+200)==255, '8 high serial input bits must decode FF')
+        require(t.bit('rx_empty',x+3*400)==1, 'RX FIFO did not empty after read')
+        details['received_byte']=255
+    elif name == 'uart_tx':
+        pushes=t.actions(4); decoded=[]; period=16*400
+        require(len(pushes)==10, 'ten UART characters')
+        for i,(x,word) in enumerate(pushes):
+            end=pushes[i+1][0] if i+1<len(pushes) else t.end
+            falls=[a for a,v in edges if x<a<end and v==0]
+            require(bool(falls), 'missing UART start bit')
+            a=falls[0]
+            require(a+9.5*period<=end, 'truncated UART frame')
+            bits=[t.bit('gpio_out',a+(k+.5)*period) for k in range(10)]
+            require(bits[0]==0 and bits[-1]==1 and all(v in (0,1) for v in bits), 'UART 8N1 framing')
+            value=sum(v<<j for j,v in enumerate(bits[1:9]))
+            require(value==word, 'UART character does not match PUSH')
+            decoded.append(value)
+        details['decoded_bytes']=decoded
+    elif name == 'ws2812':
+        word=t.actions(4)[0][1]>>8
+        bits=[(word>>i)&1 for i in range(23,-1,-1)]
+        require(len(pulses)==24, '24 WS2812 pulses required')
+        # .side_set: one bit high for 4 PIO cycles, zero for 2; 6-cycle symbol.
+        for (x,width),bit in zip(pulses,bits):
+            ideal=(4 if bit else 2)*(5+53/256)
+            require(width//400 in {int(ideal),int(ideal)+1} and width%400==0, 'WS2812 encoded pulse width')
+        require(all((b[0]-a[0]) in (31*400,32*400) for a,b in zip(pulses,pulses[1:])), 'WS2812 symbol period')
+        details['decoded_word']=hex(word)
+    elif name == 'pwm':
+        pushes=t.actions(4); period=pushes[0][1]
+        require([v for x,v in pushes]==[10,2,4], 'PWM period/duty stimulus')
+        # Loop: 3*(period+1)+3 instructions. Queued duty is applied at PULL
+        # on next period; two complete duty=2 pulses and one duty=4 are visible.
+        require(len(pulses)==3, 'three complete PWM pulses in bench window')
+        require([w for x,w in pulses]==[(3*d+2)*2.5*400 for d in (2,2,4)], 'PWM high width from programmed duty')
+        falls=[x+w for x,w in pulses]
+        require(all(b-a==(3*(period+1)+3)*2.5*400 for a,b in zip(falls,falls[1:])), 'PWM period')
+        details['high_width_host_clocks']=[w//400 for x,w in pulses]
+    elif name == 'i2s':
+        rises=[x for x,v in t.edges(bit=1) if v==1]
+        require(len(rises)>=150, 'I2S clock stream incomplete')
+        require(all(b-a==8*400 for a,b in zip(rises,rises[1:])), 'I2S bit clock period')
+        # WS switches one serial bit before the next 16-bit channel. The first
+        # noblock PULL precedes stimulus, so one zero frame is expected. Later
+        # PULL noblock reuses X=FFFF0000 for left/right channel data.
+        ws=[t.bit('gpio_out',x,2) for x in rises]
+        changes=[i for i in range(1,len(ws)) if ws[i]!=ws[i-1]]
+        require(len(changes)>=8 and all(b-a==16 for a,b in zip(changes,changes[1:])), 'I2S 16-bit word select')
+        checked=[]
+        for i in changes:
+            if i+17>len(rises):
+                continue
+            bits=[t.bit('gpio_out',rises[j]) for j in range(i+1,i+17)]
+            require(all(v in (0,1) for v in bits), 'unknown I2S data')
+            word=sum(v<<(15-j) for j,v in enumerate(bits))
+            # First transition goes to zero right channel; subsequent high WS
+            # begins left=FFFF, low WS begins right=0000.
+            expected=65535 if ws[i]==1 else 0
+            require(word==expected, 'I2S serial channel word')
+            checked.append(word)
+        require(len(checked)>=7, 'I2S decoded channels incomplete')
+        details['decoded_channels']=checked
+    else:
+        raise ValueError('Unqualified bench: '+name)
+    return details
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument('--payload',type=Path,required=True);p.add_argument('--candidate-dir',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+    payload=a.payload.resolve();candidate=a.candidate_dir.resolve();out=a.output.resolve()
+    m=json.loads((payload/'meta.json').read_text());out.mkdir(parents=True,exist_ok=False)
+    source=out/'source';shutil.copytree(payload/'source',source)
+    for f in m['rtl_files']:
+        shutil.copyfile(candidate/f,source/f)
+    rows=[]
+    for point in m['testpoints']:
+        name=Path(point['id']).stem;d=out/name;d.mkdir()
+        for f in (source/'sim').glob('*.mem'):
+            shutil.copyfile(f,d/f.name)
+        command=[m['iverilog'],'-g2005','-s','tb','-o',str(d/'sim.vvp'),str(source/point['id'])]+[str(source/f) for f in m['rtl_files']]
+        r=dict(id=point['id'],compile_pass=False,passed=False,timeout=False,compile_command=command)
+        try:
+            c=subprocess.run(command,cwd=d,capture_output=True,text=True,timeout=30);(d/'compile.log').write_text(c.stdout+c.stderr);r['compile_pass']=c.returncode==0
+            if r['compile_pass']:
+                v=subprocess.run([m['vvp'],'-n',str(d/'sim.vvp')],cwd=d,capture_output=True,text=True,timeout=30);(d/'run.log').write_text(v.stdout+v.stderr)
+                require(v.returncode==0, 'simulation exit failure')
+                require(not re.search(r'ERROR|FATAL|Unable to open',v.stdout+v.stderr), 'upstream simulation error')
+                t=Trace(d/'waves.vcd')
+                require(t.end==point['completion_tick'], 'upstream finite bench did not reach its recorded finish time')
+                r['observations']=judge(name,t);r['passed']=True
+        except subprocess.TimeoutExpired:
+            r['timeout']=True;r['reason']='compile/simulation timeout'
+        except (ValueError,KeyError,IndexError,OSError) as e:
+            r['reason']=str(e)
+        rows.append(r);print(name,r['passed'],r.get('reason',''),flush=True)
+    result=dict(passed_testpoints=sum(r['passed'] for r in rows),total_testpoints=len(rows),compile_pass=all(r['compile_pass'] for r in rows),results=rows)
+    result['score']=result['passed_testpoints']/result['total_testpoints'];(out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+if __name__=='__main__':
+    main()

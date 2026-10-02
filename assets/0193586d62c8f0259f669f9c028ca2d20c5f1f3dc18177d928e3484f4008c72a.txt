@@ -1,0 +1,28 @@
+always @(posedge i_clk)
+	if ((rx_uart_reset)||(rx_break))
+	begin
+		// Clear the error
+		r_rx_perr <= 1'b0;
+		r_rx_ferr <= 1'b0;
+	end else if ((i_wb_stb)
+			&&(i_wb_addr[1:0]== UART_RXREG)&&(i_wb_we))
+	begin
+		// Reset the error lines if a '1' is ever written to
+		// them, otherwise leave them alone.
+		//
+		if (i_wb_sel[1])
+		begin
+			r_rx_perr <= (r_rx_perr)&&(~i_wb_data[9]);
+			r_rx_ferr <= (r_rx_ferr)&&(~i_wb_data[10]);
+		end
+	end else if (rx_stb)
+	begin
+		// On an rx_stb, capture any parity or framing error
+		// indications.  These aren't kept with the data rcvd,
+		// but rather kept external to the FIFO.  As a result,
+		// if you get a parity or framing error, you will never
+		// know which data byte it was associated with.
+		// For now ... that'll work.
+		r_rx_perr <= (r_rx_perr)||(rx_perr);
+		r_rx_ferr <= (r_rx_ferr)||(rx_ferr);
+	end

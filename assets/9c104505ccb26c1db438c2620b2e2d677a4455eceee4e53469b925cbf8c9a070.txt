@@ -1,0 +1,48 @@
+module autovcoder_005896 (
+    out,
+    ovf,
+    a,
+    b
+);
+  output [3:0] out;
+  input [3:0] a;
+  input [3:0] b;
+  output ovf;
+
+  wire [3:0] cout;
+
+  Bit_Adder_24 ad3 (
+      .cout(cout[0]),
+      .s(out[0]),
+      .a(a[0]),
+      .b(b[0]),
+      .cin(1'b0)
+  );
+  Bit_Adder_31 ad2 (
+      .cout(cout[1]),
+      .s(out[1]),
+      .a(a[1]),
+      .b(b[1]),
+      .cin(cout[0])
+  );
+  Bit_Adder_30 ad1 (
+      .cout(cout[2]),
+      .s(out[2]),
+      .a(a[2]),
+      .b(b[2]),
+      .cin(cout[1])
+  );
+  Bit_Adder_29 ad0 (
+      .cout(cout[3]),
+      .s(out[3]),
+      .a(a[3]),
+      .b(b[3]),
+      .cin(cout[2])
+  );
+  XOR2X1 U2 (
+      .A(cout[3]),
+      .B(cout[2]),
+      .Y(ovf)
+  );
+endmodule
+

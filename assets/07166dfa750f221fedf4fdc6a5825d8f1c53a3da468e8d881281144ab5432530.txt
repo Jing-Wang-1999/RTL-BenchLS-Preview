@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.31fee5434dc396aeb5de.0aecb89d5f33",
+  "compile_check": {
+    "case_id": "s1derived.31fee5434dc396aeb5de.0aecb89d5f33",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_087979",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_087979.6921d6ff3af139b6/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.31fee5434dc396aeb5de",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "31fee5434dc396aeb5de4450cb278c672da1b785e1a90ed9c30b80911fcd47ab",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.31fee5434dc396aeb5de.0aecb89d5f33",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_087979.6921d6ff3af139b6/private/commercial_positive.log",
+    "commercial_log_sha256": "16a7f7b46eb4bd7bf30db82277ba649aef825771085ab5b9ebd5b2b2281548e8",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_087979.6921d6ff3af139b6/private/historical_harness/00_sec_origen_087979.tcl",
+    "executed_script_sha256": "ee3088aaf8d87c0803b87ffc7bdcfb01665b506db91287cd739e5ccb1fc8b863",
+    "golden_tops": [
+      "origen_087979"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.origen_087979.6921d6ff3af139b6",
+    "parent_id": "s1p.31fee5434dc396aeb5de",
+    "revised_tops": [
+      "origen_087979"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_087979",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.31fee5434dc396aeb5de.0aecb89d5f33",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The intended top is a scalar DFF with low-active asynchronous presetbeforeclear, thenposedgecapture. The other two standalone modules implement the described T and JK updates with identical resetpriority. The prose covers their exact semantics without substituting them for the intended top.",
+        "rtl_excerpt": "if (!preset)\n            Q <= 1'b1;",
+        "specification_excerpt": "If preset and reset are asserted together, preset has priority."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.31fee5434dc396aeb5de",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "7bf3eb1037547ff0a7c7c55c170d94cdeb360db906b147629f0eaba027305f02",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "31fee5434dc396aeb5de4450cb278c672da1b785e1a90ed9c30b80911fcd47ab",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_087979.6921d6ff3af139b6/private/historical_harness/00_sec_origen_087979.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_087979.6921d6ff3af139b6/private/historical_harness/01_sec_origen_087979.tcl"
+  ],
+  "parent_id": "s1p.31fee5434dc396aeb5de",
+  "primary_review": {
+    "case_id": "s1derived.31fee5434dc396aeb5de.0aecb89d5f33",
+    "checks": {
+      "behavior": "The visible DFF behavior agrees, but the complete multi-module contract is missing.",
+      "boundaries": "checked widths, selector/state ranges, arithmetic overflow and same-cycle behavior",
+      "interface": "checked complete RTL ports against prose",
+      "rtl_reasonableness": "reasonable hardware",
+      "sequential_and_reset": "checked reset edge, initialization, hold, priority and pipeline alignment"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The visible DFF behavior agrees, but the complete multi-module contract is missing.",
+        "rtl_excerpt": "all sensitivity lists include negedge preset/reset with preset priority; T toggles and JK uses standard equation",
+        "spec_excerpt": "Three flip-flop modules have active-low preset/reset."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification truncates before completing TFF and JKFF behavior and does not clearly state asynchronous preset/reset priority.",
+        "rtl_evidence": "all sensitivity lists include negedge preset/reset with preset priority; T toggles and JK uses standard equation",
+        "spec_evidence": "Three flip-flop modules have active-low preset/reset.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.31fee5434dc396aeb5de",
+    "proposed_specification_path": "proposed_repairs_3_sol_04/s1derived.31fee5434dc396aeb5de.0aecb89d5f33.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "31fee5434dc396aeb5de4450cb278c672da1b785e1a90ed9c30b80911fcd47ab",
+    "source_group": "S2",
+    "specification_sha256": "0aecb89d5f33e85b80320281a59d067530b929cd647a09bca8e2df3689fbb2e6",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_04/s1derived.31fee5434dc396aeb5de.0aecb89d5f33.md",
+  "qualified_specification_sha256": "7bf3eb1037547ff0a7c7c55c170d94cdeb360db906b147629f0eaba027305f02",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_087979.6921d6ff3af139b6/private/golden_design.v",
+  "rtl_sha256": "31fee5434dc396aeb5de4450cb278c672da1b785e1a90ed9c30b80911fcd47ab",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_087979.6921d6ff3af139b6/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "0aecb89d5f33e85b80320281a59d067530b929cd647a09bca8e2df3689fbb2e6",
+  "top_module": "origen_087979"
+}

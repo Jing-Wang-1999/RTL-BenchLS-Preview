@@ -1,0 +1,19 @@
+# VGA timing generator
+
+Implement `vga_sync_generator` with inputs clk and reset, one-bit outputs hsync,
+vsync, video_on and p_tick, and unsigned 10-bit outputs pixel_x and pixel_y.
+The clock is divided by two for pixel advancement, not doubled.
+
+Initialize the pixel phase, both coordinates, and both sync outputs to zero.
+Reset is asynchronous active-high and clears those same states. On each rising
+clock edge outside reset, toggle the phase. p_tick is the current phase. Advance
+horizontal position only when the phase BEFORE the edge is one: increment through
+0..799 and wrap to zero. Advance vertical position only on such a horizontal wrap,
+incrementing through 0..524 and wrapping to zero. Otherwise retain coordinates.
+
+pixel_x and pixel_y continuously expose the coordinates. video_on is high exactly
+when pixel_x < 640 and pixel_y < 480. hsync and vsync are registered on EVERY
+input-clock rising edge, independently of pixel advancement. Their next values
+use the coordinates BEFORE that edge: hsync is high for x in 656..751 inclusive;
+vsync is high for y in 513..514 inclusive. Thus sync outputs lag their coordinate
+predicates by one input-clock edge. Reset overrides these updates.

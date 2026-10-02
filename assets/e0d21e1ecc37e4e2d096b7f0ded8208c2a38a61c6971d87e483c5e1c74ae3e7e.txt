@@ -1,0 +1,33 @@
+The Verilog module `streaming_to_mm_adapter_c` serves to interface a FIFO-based streaming data source with a memory-mapped system, handling potential data misalignment during transfers. The module operates with these functionalities:
+
+1. **Data Alignment Handling**: By utilizing barrel shifters, the module aligns data read from the FIFO to the appropriate memory address boundaries. When unaligned access is enabled, it combines parts of two sequential FIFO words to ensure the data is correctly realigned.
+
+2. **Control Flow**:
+    - **Reset**: When the `reset` signal is high, it resets internal state variables including `bytes_to_next_boundary_minus_one_d1` and `barrelshifter_B_d1`.
+    - **Start**: On the `start` signal, the module begins the alignment process, setting the `bytes_to_next_boundary_minus_one_d1`.
+    - **FIFO Read Acknowledgment**: The `fifo_readack` signal is generated when there is data available in FIFO, no memory stalls, no wait requests, the module is enabled, and not in the starting state.
+
+3. **Data Processing**:
+    - **FIFO Data to Barrel Shifter Inputs**: It computes shifted versions of the `fifo_data` to create inputs for the barrel shifters `barrelshifter_input_A` and `barrelshifter_input_B`.
+    - **Barrel Shifting**: The barrel shifters produce `barrelshifter_A` and `barrelshifter_B` using these pre-shifted inputs indexed by the byte alignment computations.
+    - **Data Combination**: The module combines the results of barrel shifts (`barrelshifter_A` and `barrelshifter_B_d1`) to form `combined_word`, which is utilized when unaligned accesses are enabled.
+    - **Write Data Output**: Depending on whether unaligned accesses are enabled, it assigns `write_data` either directly from `fifo_data` or from the combined word.
+
+This module ensures that data read from FIFO is correctly aligned when written to the memory-mapped interface, addressing both aligned and unaligned data operations conditioned by the configuration parameter `UNALIGNED_ACCESS_ENABLE`.
+
+Module Interface:
+module streaming_to_mm_adapter_c (
+  clk,
+  reset,
+
+  enable,
+  address,
+  start,
+  waitrequest,
+  stall,
+  write_data,
+  
+  fifo_data,
+  fifo_empty,
+  fifo_readack
+);

@@ -1,0 +1,92 @@
+always @(posedge clk) begin
+    dst_phase_reg <= dst_phase_next;
+    dst_phase_inc_reg <= dst_phase_inc_next;
+    dst_update_reg <= dst_update_next;
+
+    sample_acc_sync_valid_reg <= 1'b0;
+    if (sample_update_sync2_reg ^ sample_update_sync3_reg) begin
+        // latch in synchronized counts from phase detector
+        sample_acc_sync_reg <= sample_acc_out_reg;
+        sample_acc_sync_valid_reg <= 1'b1;
+    end
+
+    if (dst_update_reg) begin
+        // capture local TS
+        dst_ns_capt_reg <= {ts_rel_ns_reg, ts_fns_reg} >> (FNS_W-CMP_FNS_W);
+
+        dst_sync_reg <= !dst_sync_reg;
+        ts_capt_valid_reg <= 1'b1;
+
+        if (dst_sync_reg) begin
+            dst_load_cnt_reg <= dst_load_cnt_reg + 1;
+        end
+    end
+
+    if (src_sync_sync2_reg ^ src_sync_sync3_reg) begin
+        // store captured source TS
+        src_ns_sync_reg <= src_ns_reg >> (SRC_FNS_W-CMP_FNS_W);
+
+        ts_sync_valid_reg <= 1'b1;
+    end
+
+    if (src_marker_sync2_reg ^ src_marker_sync3_reg) begin
+        dst_load_cnt_reg <= 0;
+    end
+
+    phase_err_out_valid_reg <= 1'b0;
+    if (ts_sync_valid_reg && ts_capt_valid_reg) begin
+        // coarse phase locking
+
+        ts_sync_valid_reg <= 1'b0;
+        ts_capt_valid_reg <= 1'b0;
+
+        // phase and frequency detector
+        phase_last_src_reg <= src_ns_sync_reg[8+CMP_FNS_W];
+        phase_last_dst_reg <= dst_ns_capt_reg[8+CMP_FNS_W];
+        if (dst_ns_capt_reg[8+CMP_FNS_W] && !phase_last_dst_reg) begin
+            if (src_ns_sync_reg[8+CMP_FNS_W] && !phase_last_src_reg) begin
+                phase_edge_1_reg <= 1'b0;
+                phase_edge_2_reg <= 1'b0;
+            end else begin
+                phase_edge_1_reg <= !phase_edge_2_reg;
+                phase_edge_2_reg <= 1'b0;
+            end
+        end else if (src_ns_sync_reg[8+CMP_FNS_W] && !phase_last_src_reg) begin
+            phase_edge_1_reg <= 1'b0;
+            phase_edge_2_reg <= !phase_edge_1_reg;
+        end
+
+        // accumulator
+        phase_err_acc_reg <= $signed(phase_err_acc_reg) + $signed({1'b0, phase_edge_2_reg}) - $signed({1'b0, phase_edge_1_reg});
+
+        phase_err_cnt_reg <= phase_err_cnt_reg + 1;
+
+        if (phase_err_cnt_reg == 0) begin
+            phase_err_acc_reg <= $signed({1'b0, phase_edge_2_reg}) - $signed({1'b0, phase_edge_1_reg});
+            phase_err_out_reg <= phase_err_acc_reg;
+            phase_err_out_valid_reg <= 1'b1;
+        end
+    end
+
+    dst_err_int_reg <= dst_err_int_next;
+
+    dst_sync_lock_count_reg <= dst_sync_lock_count_next;
+    dst_sync_locked_reg <= dst_sync_locked_next;
+
+    dst_gain_sel_reg <= dst_gain_sel_next;
+
+    if (rst) begin
+        dst_phase_reg <= {PHASE_ACC_W{1'b0}};
+        dst_phase_inc_reg <= {PHASE_ACC_W{1'b0}};
+        dst_sync_reg <= 1'b0;
+        dst_update_reg <= 1'b0;
+
+        dst_err_int_reg <= 0;
+
+        dst_sync_lock_count_reg <= 0;
+        dst_sync_locked_reg <= 1'b0;
+
+        ts_sync_valid_reg <= 1'b0;
+        ts_capt_valid_reg <= 1'b0;
+    end
+end

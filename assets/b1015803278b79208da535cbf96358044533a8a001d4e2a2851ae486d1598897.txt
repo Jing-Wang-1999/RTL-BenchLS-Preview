@@ -1,0 +1,25 @@
+The module "origen_034521" is a finite state machine (FSM) designed to operate based on a clock signal and a reset signal. It has two inputs, `x` and `y`, and produces two outputs, `f` and `g`. The module transitions through a series of predefined states, each encoded as a 4-bit value. The states are IDLE, F0, F1, X0, X1, X2, Y0, Y1, Y00, and Y01.
+
+### Inputs:
+- **clk**: A clock signal that drives the state transitions.
+- **resetn**: An active-low reset signal that initializes the state to IDLE.
+- **x**: A binary input that influences state transitions.
+- **y**: A binary input that influences state transitions.
+
+### Outputs:
+- **f**: A binary output that is set to true when the FSM is in state F0.
+- **g**: A binary output that is true when the FSM is in states X2, Y1, Y0, or Y01.
+
+### Behavior:
+- **State Transition**: The FSM transitions between states based on the current state and the inputs `x` and `y`. 
+  - The initial state is IDLE, which transitions to F0.
+  - From F0, it moves to F1.
+  - In F1, if `x` is true, it transitions to X0; otherwise, it remains in F1.
+  - In X0, if `x` is true, it stays in X0; otherwise, it moves to X1.
+  - In X1, if `x` is true, it transitions to X2; otherwise, it returns to F1.
+  - In X2, if `y` is true, it transitions to Y1; otherwise, it moves to Y0.
+  - In Y0, if `y` is true, it transitions to Y01; otherwise, it moves to Y00.
+  - States Y1, Y00, and Y01 are terminal states where the FSM remains until reset.
+
+### Output Logic:
+- **f**: The

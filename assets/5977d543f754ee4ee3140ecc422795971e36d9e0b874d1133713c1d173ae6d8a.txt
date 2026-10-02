@@ -1,0 +1,73 @@
+module axi_crossbar_transaction_router(
+  input wire aclk,
+  input wire aresetn,
+  input wire [31:0]s_axi_awaddr,
+  input wire [2:0]s_axi_awprot,
+  input wire [0:0]s_axi_awvalid,
+  output wire [0:0]s_axi_awready,
+  input wire [31:0]s_axi_wdata,
+  input wire [3:0]s_axi_wstrb,
+  input wire [0:0]s_axi_wvalid,
+  output wire [0:0]s_axi_wready,
+  output wire [1:0]s_axi_bresp,
+  output wire [0:0]s_axi_bvalid,
+  input wire [0:0]s_axi_bready,
+  input wire [31:0]s_axi_araddr,
+  input wire [2:0]s_axi_arprot,
+  input wire [0:0]s_axi_arvalid,
+  output wire [0:0]s_axi_arready,
+  output wire [31:0]s_axi_rdata,
+  output wire [1:0]s_axi_rresp,
+  output wire [0:0]s_axi_rvalid,
+  input wire [0:0]s_axi_rready,
+  output wire [255:0]m_axi_awaddr,
+  output wire [23:0]m_axi_awprot,
+  output wire [7:0]m_axi_awvalid,
+  input wire [7:0]m_axi_awready,
+  output wire [255:0]m_axi_wdata,
+  output wire [31:0]m_axi_wstrb,
+  output wire [7:0]m_axi_wvalid,
+  input wire [7:0]m_axi_wready,
+  input wire [15:0]m_axi_bresp,
+  input wire [7:0]m_axi_bvalid,
+  output wire [7:0]m_axi_bready,
+  output wire [255:0]m_axi_araddr,
+  output wire [23:0]m_axi_arprot,
+  output wire [7:0]m_axi_arvalid,
+  input wire [7:0]m_axi_arready,
+  input wire [255:0]m_axi_rdata,
+  input wire [15:0]m_axi_rresp,
+  input wire [7:0]m_axi_rvalid,
+  output wire [7:0]m_axi_rready
+); 
+  // Dummy logic to replace what would likely be external IP core 
+  // The actual logic would be specific to the AXI crossbar functionality, 
+  // which typically involves routing inputs to outputs based on address decoders, 
+  // buffers and control logic.
+
+  assign s_axi_awready = s_axi_awvalid; // Ready when valid is asserted
+  assign s_axi_wready = s_axi_wvalid;   // Ready when valid is asserted
+  assign s_axi_bresp = 2'b00;         // OKAY response
+  assign s_axi_bvalid = s_axi_wvalid; // Valid when write is valid
+  
+  assign s_axi_arready = s_axi_arvalid; // Ready when valid is asserted
+  assign s_axi_rdata = s_axi_araddr;   // Dummy data for read
+  assign s_axi_rresp = 2'b00;         // OKAY response
+  assign s_axi_rvalid = s_axi_arvalid; // Valid when read is valid
+  
+  assign m_axi_awaddr = {8{s_axi_awaddr}}; // Repeat address to match output size
+  assign m_axi_awprot = {8{s_axi_awprot}}; // Repeat protection to match output size
+  assign m_axi_awvalid = {8{s_axi_awvalid}}; // Repeat valid signal to match output size
+
+  assign m_axi_wdata = {8{s_axi_wdata}};   // Repeat data to match output size
+  assign m_axi_wstrb = {8{s_axi_wstrb}};   // Repeat strobe to match output size
+  assign m_axi_wvalid = {8{s_axi_wvalid}}; // Repeat valid signal to match output size
+
+  assign m_axi_bready = {8{s_axi_bready}}; // Repeat ready signal to match output size
+
+  assign m_axi_araddr = {8{s_axi_araddr}}; // Repeat address to match output size
+  assign m_axi_arprot = {8{s_axi_arprot}}; // Repeat protection to match output size
+  assign m_axi_arvalid = {8{s_axi_arvalid}}; // Repeat valid signal to match output size
+
+  assign m_axi_rready = {8{s_axi_rready}}; // Repeat ready signal to match output size
+endmodule

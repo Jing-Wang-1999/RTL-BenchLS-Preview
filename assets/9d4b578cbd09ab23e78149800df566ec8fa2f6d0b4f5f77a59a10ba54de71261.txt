@@ -1,0 +1,113 @@
+module rtlpp_10544(clk, 
+               flash, 
+               Hexs, 
+               LES, 
+               point, 
+               rst, 
+               Start, 
+               SW0, 
+               seg_clk, 
+               seg_clrn, 
+               SEG_PEN, 
+               seg_sout);
+
+    input clk;
+    input flash;
+    input [31:0] Hexs;
+    input [7:0] LES;
+    input [7:0] point;
+    input rst;
+    input Start;
+    input SW0;
+    output seg_clk;
+    output seg_clrn;
+    output SEG_PEN;
+    output seg_sout;
+
+    wire [63:0] XLXN_14;
+    wire [63:0] XLXN_15;
+    wire [63:0] XLXN_16;
+    
+    // Logic for P2S
+    reg [63:0] shift_reg;
+    reg [5:0] counter;
+    wire shift_clk;
+
+    assign seg_clk = clk;
+    assign seg_clrn = ~rst;
+    assign shift_clk = (Start & SEG_PEN) ? clk : 1'b0;
+    
+    always @(posedge shift_clk or posedge rst) begin
+        if (rst) begin
+            shift_reg <= 64'b0;
+            counter <= 6'b0;
+        end else begin
+            if (counter < 64) begin
+                shift_reg <= {shift_reg[62:0], 1'b0};
+                counter <= counter + 1;
+            end else begin
+                shift_reg <= XLXN_14;
+                counter <= 6'b0;
+            end
+        end
+    end
+    
+    assign seg_sout = shift_reg[63];
+    
+    // Logic for HexTo8SEG8
+    integer i, j;
+    reg [7:0] SEG_ARRAY [7:0]; // 8 bytes for 8 segments
+    
+    always @* begin
+        for (i = 0; i < 8; i = i + 1) begin
+            case (Hexs[i*4+3 -: 4])
+                4'd0: SEG_ARRAY[i] = 8'b11000000;
+                4'd1: SEG_ARRAY[i] = 8'b11111001;
+                4'd2: SEG_ARRAY[i] = 8'b10100100;
+                4'd3: SEG_ARRAY[i] = 8'b10110000;
+                4'd4: SEG_ARRAY[i] = 8'b10011001;
+                4'd5: SEG_ARRAY[i] = 8'b10010010;
+                4'd6: SEG_ARRAY[i] = 8'b10000010;
+                4'd7: SEG_ARRAY[i] = 8'b11111000;
+                4'd8: SEG_ARRAY[i] = 8'b10000000;
+                4'd9: SEG_ARRAY[i] = 8'b10010000;
+                4'd10: SEG_ARRAY[i] = 8'b10001000;
+                4'd11: SEG_ARRAY[i] = 8'b10000011;
+                4'd12: SEG_ARRAY[i] = 8'b11000110;
+                4'd13: SEG_ARRAY[i] = 8'b10100001;
+                4'd14: SEG_ARRAY[i] = 8'b10000110;
+                4'd15: SEG_ARRAY[i] = 8'b10001110;
+                default: SEG_ARRAY[i] = 8'b11111111;
+            endcase
+        end
+        
+        // Applying flash, points, and LES
+        for (j = 0; j < 8; j = j + 1) begin
+            if (flash)
+                SEG_ARRAY[j] = 8'b11111111;
+            
+            if (point[j])
+                SEG_ARRAY[j] = SEG_ARRAY[j] & 8'b01111111; // Turn on point
+            
+            if (LES[j])
+                SEG_ARRAY[j] = SEG_ARRAY[j] & 8'b11101111; // Turn on LES
+        end
+    end
+    
+    assign XLXN_16 = {SEG_ARRAY[7], SEG_ARRAY[6], SEG_ARRAY[5], SEG_ARRAY[4], SEG_ARRAY[3], SEG_ARRAY[2], SEG_ARRAY[1], SEG_ARRAY[0]};
+
+    // Logic for MUX2T1_64
+    assign XLXN_14 = SW0 ? XLXN_16 : XLXN_15;
+   
+    // Logic for SSeg_map
+    reg [7:0] Seg_map [7:0]; // 8 segments
+    
+    always @* begin
+        for (i = 0; i < 8; i = i + 1) begin
+            Seg_map[i] = Hexs[i*4+3 -: 4] + 8'h30; // Add 0x30 to convert to ASCII
+        end
+    end
+    
+    assign XLXN_15 = {Seg_map[7], Seg_map[6], Seg_map[5], Seg_map[4], Seg_map[3], Seg_map[2], Seg_map[1], Seg_map[0]};
+    
+endmodule

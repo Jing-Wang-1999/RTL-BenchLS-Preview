@@ -1,0 +1,93 @@
+module origen_184658 #(
+    parameter REPLY_WIDTH = 8,
+    parameter COMM_WIDTH = 8,
+    parameter ADR_WIDTH = 4
+) (
+    input rst,
+    input sdi,
+    input sck,
+    input sel,
+    input [REPLY_WIDTH-1:0] replyData,
+    input [3:0] patientBttns,
+    output reg replyEn,
+    output sdo,
+    output reg [COMM_WIDTH-1:0] commData,
+    output reg [ADR_WIDTH-1:0] commAdr,
+    output reg commReady
+);
+
+    reg [3:0] state;
+    reg txEn;
+    reg [COMM_WIDTH-1:0] commDatReg;
+    reg [ADR_WIDTH-1:0] commAdrReg;
+
+    always @(posedge sck or negedge sel) begin
+        if (!sel) begin
+            case (state)
+                4'd0: begin
+                    txEn <= sdi;
+                    replyEn <= !sdi;
+                    state <= 4'd1;
+                end
+                4'd1: begin
+                    commAdrReg[0] <= sdi;
+                    state <= 4'd2;
+                end
+                4'd2: begin
+                    commAdrReg[1] <= sdi;
+                    state <= 4'd3;
+                end
+                4'd3: begin
+                    commAdrReg[2] <= sdi;
+                    state <= 4'd4;
+                end
+                4'd4: begin
+                    commAdrReg[3] <= sdi;
+                    state <= 4'd5;
+                end
+                4'd5: begin
+                    commDatReg[0] <= sdi;
+                    state <= 4'd6;
+                end
+                4'd6: begin
+                    commDatReg[1] <= sdi;
+                    state <= 4'd7;
+                end
+                4'd7: begin
+                    commDatReg[2] <= sdi;
+                    state <= 4'd8;
+                end
+                4'd8: begin
+                    commDatReg[3] <= sdi;
+                    state <= 4'd9;
+                end
+                4'd9: begin
+                    commDatReg[4] <= sdi;
+                    state <= 4'd10;
+                end
+                4'd10: begin
+                    commDatReg[5] <= sdi;
+                    state <= 4'd11;
+                end
+                4'd11: begin
+                    commDatReg[6] <= sdi;
+                    state <= 4'd12;
+                end
+                4'd12: begin
+                    commDatReg[7] <= sdi;
+                    commData <= commDatReg;
+                    commAdr <= commAdrReg;
+                    commReady <= 1'b1;
+                    state <= 4'd0;
+                end
+                default: state <= 4'd0;
+            endcase
+        end else begin
+            state <= 4'd0;
+            commReady <= 1'b0;
+        end
+    end
+
+    assign sdo = txEn ? replyData[0] : patientBttns[0];
+
+endmodule

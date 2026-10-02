@@ -1,0 +1,49 @@
+`timescale 1ns/1ps
+module tb;
+reg clk=0,reset_n=1; always #5 clk=~clk;
+task tick; begin @(posedge clk); #1; end endtask
+task reset; begin @(negedge clk); reset_n=0; repeat(4) tick; @(negedge clk); reset_n=1; end endtask
+initial begin #10000000; $fatal(1,"timeout"); end
+reg en=1,avail=1,si=1;wire [1:0] err;wire wr;wire [7:0] data;integer count=0,j;reg [7:0] received;
+uart_rxfsm dut(reset_n,clk,en,1'b0,2'b00,err,avail,wr,data,si);
+always @(negedge clk) if(reset_n && wr) begin count=count+1;received=data;end
+ task bitval; input x; begin @(negedge clk);si=x;repeat(16) tick;end endtask
+ task frame;input [7:0] value;integer before_count;begin before_count=count;
+ bitval(0);for(j=0;j<8;j=j+1)bitval(value[j]);bitval(1);repeat(24)tick;
+ if(count!==before_count+1 || received!==value || err!==0) $fatal(1,"RX value/count");end endtask
+ initial begin reset;repeat(32)tick;
+frame(8'h00);
+frame(8'hff);
+frame(8'h55);
+frame(8'haa);
+frame(8'hc5);
+frame(8'hd2);
+frame(8'hcf);
+frame(8'hbb);
+frame(8'h76);
+frame(8'h31);
+frame(8'h83);
+frame(8'h35);
+frame(8'hd3);
+frame(8'h0d);
+frame(8'hb6);
+frame(8'h94);
+frame(8'h13);
+frame(8'h6c);
+frame(8'h41);
+frame(8'h92);
+frame(8'he3);
+frame(8'hf0);
+frame(8'h8d);
+frame(8'hcd);
+frame(8'h45);
+frame(8'h9c);
+frame(8'h70);
+frame(8'h37);
+frame(8'h48);
+frame(8'h00);
+frame(8'hfc);
+frame(8'h6c);
+
+$display("RTL_BENCHLS_PASS"); $finish(0); end
+endmodule

@@ -1,0 +1,89 @@
+// Required path: RTL/uart2axi4.v
+module uart2axi4 #(
+    
+    parameter  CLK_FREQ   = 50000000,     
+    
+    parameter  BAUD_RATE  = 115200,       
+    parameter  PARITY     = "NONE",       
+    
+    parameter  BYTE_WIDTH = 2,            
+    parameter  A_WIDTH    = 32            
+) (
+    input  wire                    rstn,
+    input  wire                    clk,
+    
+    input  wire                    awready,  
+    output wire                    awvalid,
+    output wire      [A_WIDTH-1:0] awaddr,
+    output wire             [ 7:0] awlen,
+    input  wire                    wready,   
+    output wire                    wvalid,
+    output wire                    wlast,
+    output wire [8*BYTE_WIDTH-1:0] wdata,
+    output wire                    bready,   
+    input  wire                    bvalid,
+    input  wire                    arready,  
+    output wire                    arvalid,
+    output wire      [A_WIDTH-1:0] araddr,
+    output wire             [ 7:0] arlen,
+    output wire                    rready,   
+    input  wire                    rvalid,
+    input  wire                    rlast,
+    input  wire [8*BYTE_WIDTH-1:0] rdata,
+    
+    input  wire                    i_uart_rx,
+    output wire                    o_uart_tx
+);
+endmodule
+
+// Required path: RTL/uart_rx.v
+module uart_rx #(
+    
+    parameter  CLK_FREQ  = 50000000,     
+    
+    parameter  BAUD_RATE = 115200,       
+    parameter  PARITY    = "NONE",       
+    
+    parameter  FIFO_EA   = 0             
+) (
+    input  wire        rstn,
+    input  wire        clk,
+    
+    input  wire        i_uart_rx,
+    
+    input  wire        o_tready,
+    output reg         o_tvalid,
+    output reg  [ 7:0] o_tdata,
+    
+    output reg         o_overflow
+);
+endmodule
+
+// Required path: RTL/uart_tx.v
+module uart_tx #(
+    
+    parameter  CLK_FREQ                  = 50000000,     
+    
+    parameter  BAUD_RATE                 = 115200,       
+    parameter  PARITY                    = "NONE",       
+    parameter  STOP_BITS                 = 2,            
+    
+    parameter  BYTE_WIDTH                = 1,            
+    
+    parameter  FIFO_EA                   = 0,            
+    
+    parameter  EXTRA_BYTE_AFTER_TRANSFER = "",           
+    parameter  EXTRA_BYTE_AFTER_PACKET   = ""            
+) (
+    input  wire                    rstn,
+    input  wire                    clk,
+    
+    output wire                    i_tready,
+    input  wire                    i_tvalid,
+    input  wire [8*BYTE_WIDTH-1:0] i_tdata,
+    input  wire [  BYTE_WIDTH-1:0] i_tkeep,
+    input  wire                    i_tlast,
+    
+    output reg                     o_uart_tx
+);
+endmodule

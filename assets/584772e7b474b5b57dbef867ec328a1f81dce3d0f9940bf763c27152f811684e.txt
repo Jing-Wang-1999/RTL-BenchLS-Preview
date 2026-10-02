@@ -1,0 +1,60 @@
+// SR Flip-Flop module
+module origen_106816 (
+    input wire s, r, clk, rst,
+    output reg q,
+    output wire qb
+);
+
+    always @(posedge clk or posedge rst) begin
+        if (rst)
+            q <= 1'b0;
+        else if (s && !r)
+            q <= 1'b1;
+        else if (!s && r)
+            q <= 1'b0;
+    end
+
+    assign qb = ~q;
+
+endmodule
+
+// Testbench
+module srfftb;
+    reg s, r, clk, rst;
+    wire q, qb;
+
+    // Instantiate the SR flip-flop
+    srff uut (
+        .s(s),
+        .r(r),
+        .clk(clk),
+        .rst(rst),
+        .q(q),
+        .qb(qb)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
+
+    // Stimulus
+    initial begin
+        s = 0; r = 0; rst = 1;
+        #100 rst = 0;
+        
+        repeat (10) begin
+            #40 s = ~s;
+            #60 r = ~r;
+        end
+
+        #500 $finish;
+    end
+
+    // Monitor
+    initial begin
+        $monitor("Time=%0t s=%b r=%b rst=%b q=%b qb=%b", $time, s, r, rst, q, qb);
+    end
+
+endmodule

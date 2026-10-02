@@ -1,0 +1,37 @@
+**Module Name:** autovcoder_031602
+
+**Overview:**  
+This module generates a VGA video signal to draw two rectangular boxes on a screen when an advanced mode switch is enabled. The boxes represent scaled regions for displaying waveforms. The module outputs 4-bit color channels for red, green, and blue.
+
+**Inputs:**
+- **advanced_sw:** A single-bit control signal. When set to 1, the boxes are drawn; when 0, the screen remains black.
+- **VGA_HORZ_COORD:** A 12-bit horizontal pixel coordinate (0 to 1279 for a 1280-pixel width).
+- **VGA_VERT_COORD:** A 12-bit vertical pixel coordinate (0 to 1023 for a 1024-pixel height).
+
+**Outputs:**
+- **VGA_Red_Grid, VGA_Green_Grid, VGA_Blue_Grid:** Each is a 4-bit color intensity (0 to 15). These outputs define the pixel color at the given coordinates.
+
+**Behavior:**
+1. **Default State:**  
+   All color outputs are set to zero (black) for every pixel unless specific conditions are met.
+
+2. **Box Drawing (when advanced_sw = 1):**  
+   Two white rectangular boxes are drawn on the screen. Each box is outlined by drawing its four edges.  
+   - **Box 1 (Scaled Wave):**  
+     - **Horizontal Position:** Starts at xadjust (30 pixels from left) and extends to xadjust + (1280/scale), where scale = 6.  
+     - **Vertical Position:** Starts at 1024 - yadjust (750 pixels from top) and extends upward by 1024/scale pixels.  
+     - **Edges Drawn:** Left, right, top, and bottom borders of this rectangle.  
+   - **Box 2 (Envelope Wave):**  
+     - **Horizontal Position:** Starts at xadjust2 (calculated as 1280 - 30 - (1280/scale2), with scale2 = 6) and extends to xadjust2 + (1280/scale2).  
+     - **Vertical Position:** Starts at 1024 - yadjust2 (750 pixels from top) and extends upward by 1024/scale2 pixels.  
+     - **Edges Drawn:** Left, right, top, and bottom borders of this rectangle.  
+
+3. **Color Output:**  
+   Pixels lying on the edges of either box are set to white (maximum intensity: 15 for red, green, and blue). All other pixels remain black.
+
+**Parameters (Fixed Values):**  
+- **scale, scale2:** Both set to 6, determining the size of each box relative to the full screen dimensions (1280x1024).  
+- **xadjust, yadjust:** Define the position of the first box (30, 750).  
+- **xadjust2, yadjust2:** Define the position of the second box (calculated to be near the right edge, 750).
+
+**Allowed Sub-modules:**

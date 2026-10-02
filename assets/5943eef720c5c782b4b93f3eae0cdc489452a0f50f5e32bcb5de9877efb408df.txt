@@ -1,0 +1,17 @@
+always @*
+begin
+ 
+w0 =  kld ? key[127:096] :w4_reg^subword2^{rcon[31:24],24'b0};
+w1 =  kld ? key[095:064] :w5_reg^w4_reg^subword2^{rcon[31:24],24'b0};
+w2 =  kld ? key[063:032] :w6_reg^w5_reg^w4_reg^subword2^{rcon[31:24],24'b0};
+w3 =  kld ? key[031:000] :w7_reg^w6_reg^w5_reg^w4_reg^subword2^{rcon[31:24],24'b0};
+
+w4 =  (1'b0)? key[127:096]^subword^{8'h01,24'b0} : w0^subword^{rcon2[31:24],24'b0};
+w5 =  (1'b0)? key[095:064]^key[127:096]^subword^{8'h01,24'b0} :w1^w0^subword^{rcon2[31:24],24'b0};
+w6 =  (1'b0)? key[063:032]^key[095:064]^key[127:096]^subword^{8'h01,24'b0} : w2^w1^w0^subword^{rcon2[31:24],24'b0}; 
+w7 =  (1'b0)? key[127:096]^key[095:064]^key[063:032]^key[031:000]^subword^{8'h01,24'b0} : w3^w2^w1^w0^subword^{rcon2[31:24],24'b0};
+
+/*$display($time,": rcon is %d, rcon2 is %d\n",rcon[31:24],rcon2[31:24]);*/
+/*$display($time,": round_key is %h\n",{w0,w1,w2,w3}); 	
+$display($time,": next_round_key is %h\n",{w4,w5,w6,w7});*/
+end

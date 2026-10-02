@@ -1,0 +1,37 @@
+The `ultrasonic_pulse_counter_fsm` Verilog module implements a state machine designed for a pulse-counting application, managing multiple control signals based on specific conditions with respect to pulse detection and tick signals.
+
+1. **Primary Function**: The module sequentially progresses through a series of states to manage and control the counting and resetting of pulses and ticks, and indicate when the counting process is complete (`pronto`).
+
+2. **Key Control Flow**:
+    - The state machine starts at the `inicial` state.
+    - Moves to the `preparacao` state on the next clock cycle.
+    - During `preparacao`, it resets the tick and BCD counters.
+    - Progresses to the `espera_echo` state, awaiting a `pulso` signal.
+    - Upon receiving a `pulso`, it transitions to the `espera_tick` state awaiting a `tick`.
+    - If `tick` is received while `pulso` is present, it moves to the `conta_cm` state to continue counting; if `pulso` is absent, transitions back or proceeds to the `fim`.
+    - In the `conta_cm` state, if `pulso` continues, it goes back to `espera_tick`, else it finalizes to `fim`.
+    - Finally, at `fim`, it asserts the `pronto` signal and resets to `inicial`.
+
+3. **Important Data Processing and Signal Interactions**:
+    - In `preparacao` state, `zera_tick` and `zera_bcd` are asserted to reset respective counters.
+    - When in `espera_tick` or `conta_cm`, `conta_tick` is enabled; `conta_bcd` is only asserted in `conta_cm`.
+    - The `pronto` signal is set high in the `fim` state indicating the completion of the counting process.
+
+This detailed state transition and control signal management ensures the module effectively manages pulse and tick counting and appropriate signaling throughout its operation cycle.
+
+Module Interface:
+module ultrasonic_pulse_counter_fsm (
+    input wire clock,
+    input wire reset,
+    input wire pulso,
+    input wire tick,
+    output reg zera_tick,
+    output reg conta_tick,
+    output reg zera_bcd,
+    output reg conta_bcd,
+    output reg pronto
+);
+
+Behavioral Clarifications:
+- The FSM uses a 3-bit state register with 6 states encoded as: inicial=3'b000, preparacao=3'b001, espera_echo=3'b010, espera_tick=3'b011, conta_cm=3'b100, fim=3'b101. Reset is active-high synchronous.
+- Three always blocks are used: one sequential (posedge clock or posedge reset) for state update, one combinational (always @(Eatual or pulso or tick)) for next-state logic, and one combinational (always @(Eatual)) for output assignments.

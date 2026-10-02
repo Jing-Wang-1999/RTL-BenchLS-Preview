@@ -1,0 +1,16 @@
+The servile_arbiter module is a Wishbone bus multiplexer that arbitrates between a CPU's data bus and instruction bus, forwarding a single memory request. It prioritizes instruction fetch over data operations.
+
+**Inputs:**
+- CPU Data Bus: 32-bit address (i_wb_cpu_dbus_adr), write data (i_wb_cpu_dbus_dat), 4-bit byte select (i_wb_cpu_dbus_sel), write enable (i_wb_cpu_dbus_we), and request strobe (i_wb_cpu_dbus_stb).
+- CPU Instruction Bus: 32-bit address (i_wb_cpu_ibus_adr) and request strobe (i_wb_cpu_ibus_stb).
+- Memory Response Bus: 32-bit read data (i_wb_mem_rdt) and acknowledge signal (i_wb_mem_ack).
+
+**Outputs:**
+- CPU Data Bus Response: 32-bit read data (o_wb_cpu_dbus_rdt) and acknowledge (o_wb_cpu_dbus_ack).
+- CPU Instruction Bus Response: 32-bit read data (o_wb_cpu_ibus_rdt) and acknowledge (o_wb_cpu_ibus_ack).
+- Memory Request Bus: 32-bit address (o_wb_mem_adr), write data (o_wb_mem_dat), 4-bit byte select (o_wb_mem_sel), write enable (o_wb_mem_we), and request strobe (o_wb_mem_stb).
+
+**Behavior:**
+The module forwards all read data from memory directly to both CPU buses. Arbitration is simple: if an instruction fetch is requested (ibus_stb is high), it is granted immediate priority. The memory address is selected from the instruction bus during an instruction fetch; otherwise, the data bus address is used. Write data, byte select, and write enable are taken exclusively from the data bus, but writes are suppressed (we is forced low) during an instruction fetch to prevent corruption. The memory request strobe is active if either CPU bus is making a request.
+
+Acknowledge signals to the CPU are generated based on the memory acknowledge and which bus is active. The instruction bus receives the ack only when it initiated the request. The data bus

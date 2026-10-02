@@ -1,0 +1,55 @@
+module autovcoder_070416 (
+    a,
+    b,
+    sum
+);
+  //
+  //
+  //
+  input [31:0] a;
+  input [31:0] b;
+  output [31:0] sum;
+
+  wire [31:0] g;
+  wire [31:0] p;
+  wire [31:0] x;
+  wire [31:0] R1;
+  wire [31:0] R2;
+  wire [31:0] R3;
+  wire [31:0] Q1;
+  wire [31:0] Q2;
+  wire [31:0] D;
+
+
+  J32D_stage_1 CUT1 (
+      a,
+      b,
+      g,
+      p,
+      x,
+      R1,
+      Q1
+  );
+  J32_stage_2 CUT2 (
+      R1,
+      Q1,
+      R2,
+      Q2
+  );
+  J32D_stage_3 CUT3 (
+      R2,
+      Q2,
+      R3
+  );
+  J32_Drecursion CUT4 (
+      p,
+      g,
+      R2,
+      Q2,
+      D
+  );
+
+  assign sum[31:0] = ~{R3[30:0],R3[31]} & (x[31:0]) | {R3[30:0],R3[31]} & ( x[31:0] ^ {D[30:0],D[31]} ) ;
+
+endmodule
+

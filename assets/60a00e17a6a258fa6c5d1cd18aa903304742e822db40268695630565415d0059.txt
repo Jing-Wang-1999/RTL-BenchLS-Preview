@@ -1,0 +1,58 @@
+### Module Specification: Instruction Decoder (origen_202046)
+
+**Overview**  
+This module is a combinational instruction decoder for a MIPS-like processor. It takes a 6-bit instruction opcode as input and generates control signals that govern the datapath’s behavior during instruction execution.
+
+**Inputs**  
+- `instr_op_i` (6 bits): The opcode field of the instruction.
+
+**Outputs**  
+All outputs are single-bit unless noted:  
+- `RegWrite_o`: Enables writing to the register file.  
+- `ALUOp_o` (3 bits): Specifies the ALU operation mode.  
+- `ALUSrc_o`: Selects the second ALU operand (0 = register, 1 = immediate).  
+- `RegDst_o`: Selects the destination register (0 = rt, 1 = rd).  
+- `Branch_o`: Indicates a branch instruction is being executed.  
+- `BranchType_o`: Distinguishes between branch types (0 = BEQ, 1 = BNE).  
+- `Jump_o`: Indicates a jump instruction.  
+- `MemRead_o`: Enables reading from data memory.  
+- `MemWrite_o`: Enables writing to data memory.  
+- `MemtoReg_o`: Selects the source for register write-back (0 = ALU result, 1 = memory data).
+
+**Behavior**  
+The decoder maps each opcode to a predefined set of control signals, corresponding to standard MIPS instruction types:  
+
+1. **R-type instructions** (opcode 000000):  
+   - Register write enabled, ALU operation set to R-type mode, ALU source from registers, destination register is rd, no branch/jump/memory access, write-back from ALU result.
+
+2. **Load word (LW)** (opcode 100011):  
+   - Register write enabled, ALU performs addition, ALU source from immediate, destination register is rt, no branch/jump, memory read enabled, write-back from memory.
+
+3. **Store word (SW)** (opcode 101011):  
+   - Register write disabled, ALU performs addition, ALU source from immediate, no branch/jump, memory write enabled, no write-back.
+
+4. **Branch equal (BEQ)** (opcode 000100):  
+   - Register write disabled, ALU performs subtraction for comparison, ALU source from registers, branch enabled with type 0 (BEQ), no jump/memory access.
+
+5. **Branch not equal (BNE)** (opcode 000101):  
+   - Similar to BEQ, but branch type is 1 (BNE).
+
+6. **Jump (J)** (opcode 000010):  
+   - Register write disabled, ALU operation unused, jump enabled, no branch/memory access.
+
+7. **Jump and link (JAL)** (opcode 000011):  
+   - Register write enabled (for link address), ALU operation unused, jump enabled, no branch/memory access, write-back from ALU (though typically PC+4 is stored).
+
+8. **Default (unrecognized opcode):**  
+   - All control signals set to inactive/zero states.
+
+**Allowed Sub-modules**  
+None. This is a purely combinational logic block implemented as a lookup table.
+
+**Timing**  
+The outputs update combinatorially whenever the input opcode changes. No clock or reset is used.
+
+**Notes**  
+- The ALUOp encoding is specific to the associated ALU control unit (e.g., 010 for R-type, 000 for add/load/store, 001 for subtract/branch).  
+- BranchType_o is only meaningful when Branch_o is active.  
+- For JAL, the typical implementation would store the return address; this decoder only sets RegWrite_o and Jump_o, leaving further details to the datapath.

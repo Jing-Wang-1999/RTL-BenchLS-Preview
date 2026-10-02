@@ -1,0 +1,7 @@
+module tb;
+reg clk=0,rst,seed_start,ready;reg[63:0] seed_val;wire[63:0] data;wire valid,busy;
+rtlpp_02379 dut(clk,rst,data,valid,ready,busy,seed_val,seed_start);
+integer f,n,k;initial begin f=$fopen("stimulus.txt","r");n=0;while(!$feof(f)) begin
+k=$fscanf(f,"%d %d %h %d\n",rst,seed_start,seed_val,ready);
+#5;clk=1;#1;$display("%d %h %b %b",n,data,valid,busy);#4;clk=0;n=n+1;
+end $finish;end endmodule

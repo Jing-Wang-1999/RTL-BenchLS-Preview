@@ -1,0 +1,49 @@
+module vmw_NV_NVDLA_SDP_WDMA_DAT_IN_dfifo_flopram_rwsa_3x128 (
+   Wa0, we0, Di0,
+   Ra0, Do0
+   );
+
+input  [1:0] Wa0;
+input            we0;
+input  [127:0] Di0;
+input  [1:0] Ra0;
+output [127:0] Do0;
+
+// Only visible during Spyglass to avoid blackboxes.
+`ifdef SPYGLASS_FLOPRAM
+
+assign Do0 = 128'd0;
+wire dummy = 1'b0 | (|Wa0) | (|we0) | (|Di0) | (|Ra0);
+
+`endif
+
+// synopsys translate_off
+`ifndef SYNTH_LEVEL1_COMPILE
+`ifndef SYNTHESIS
+reg [127:0] mem[2:0];
+
+// expand mem for debug ease
+`ifdef EMU_EXPAND_FLOPRAM_MEM
+wire [127:0] Q0 = mem[0];
+wire [127:0] Q1 = mem[1];
+wire [127:0] Q2 = mem[2];
+`endif
+
+// asynchronous ram writes
+always @(*) begin
+  if ( we0 == 1'b1 ) begin
+    #0.1;
+    mem[Wa0] = Di0;
+  end
+end
+
+assign Do0 = mem[Ra0];
+`endif
+`endif
+// synopsys translate_on
+
+// synopsys dc_script_begin
+// synopsys dc_script_end
+
+// g2c if { [find / -null_ok -subdesign vmw_NV_NVDLA_SDP_WDMA_DAT_IN_dfifo_flopram_rwsa_3x128] != {} } { set_attr preserve 1 [find / -subdesign vmw_NV_NVDLA_SDP_WDMA_DAT_IN_dfifo_flopram_rwsa_3x128] }
+endmodule

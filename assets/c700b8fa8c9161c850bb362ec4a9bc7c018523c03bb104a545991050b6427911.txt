@@ -1,0 +1,21 @@
+The module implements a finite state machine that controls a counting operation based on pulse inputs. It has five states: initial, prepare, count, count_cm, and final.
+
+Inputs:
+- clock: system clock.
+- reset: asynchronous reset, returns to initial state.
+- pulso: pulse input controlling state transitions.
+- tick: indicates when counting is allowed.
+
+Outputs:
+- zera_tick: resets the tick counter.
+- conta_tick: enables counting of tick pulses.
+- zera_bcd: resets the BCD counter.
+- conta_bcd: enables counting of BCD values.
+- pronto: signals completion of operation.
+
+Behavior:
+After reset, the system waits in initial state until pulso is asserted, then moves to prepare. In prepare, both tick and BCD counters are cleared. If pulso remains high, the next state is count; otherwise it jumps to final.
+
+In count state, tick counting is enabled. If pulso is low, the system goes to final; if high and tick is high, it transitions to count_cm. In count_cm, both tick and BCD counting are enabled. From there, if pulso stays high, it returns to count; if low, it goes to final. Final state signals completion and returns to initial.
+
+Sub-modules allowed: basic combinational and sequential logic only; no other FSM controllers.

@@ -1,0 +1,130 @@
+"""PID project scored against signed integer arithmetic and bus transactions."""
+import random
+from case_specs_uartbus import HEAD, END
+
+
+def signed16(n):
+    n&=65535
+    return n-65536 if n&32768 else n
+
+
+def adder():
+    s=HEAD+'''reg [31:0] a,b;reg c;wire [31:0] q;wire carry;
+adder_32bit dut(a,b,c,q,carry);initial begin
+''';rng=random.Random(9060629)
+    for a,b,c in [(0,0,0),(0xffffffff,0,1),(0xffffffff,0xffffffff,1)]+[(rng.getrandbits(32),rng.getrandbits(32),rng.randrange(2)) for _ in range(500)]:
+        s+=f"a=32'h{a:x};b=32'h{b:x};c={c};#2;if({{carry,q}}!==33'h{a+b+c:x})$fatal(1,\"adder\");\n"
+    return s+END
+
+
+def booth():
+    s=HEAD+'reg [2:0] code;wire z,d,n;booth_radix4 dut(code,z,d,n);initial begin\n'
+    for code,value in enumerate([0,1,1,2,-2,-1,-1,0]):
+        s+=f"code={code};#2;if({{z,d,n}}!==3'b{int(value==0)}{int(abs(value)==2)}{int(value<0)})$fatal(1,\"booth\");\n"
+    return s+END
+
+
+def multiply():
+    s=HEAD+'''reg start=0;reg [15:0] a=0,b=0;wire [31:0] p;wire valid;
+multiplier_16x16bit_pipelined dut(clk,~rst,start,a,b,p,valid);
+initial begin reset;
+''';rng=random.Random(9060630);previous=None
+    for i in range(400):
+        a=rng.randrange(-32768,32768);b=rng.randrange(-32768,32768);accept=rng.randrange(4)!=0
+        s+=f"@(negedge clk);start={int(accept)};a=16'h{a&65535:x};b=16'h{b&65535:x};tick;"
+        s+=f"if(valid!==1'b{int(previous is not None)})$fatal(1,\"multiply valid\");"
+        if previous is not None:s+=f"if(p!==32'h{previous&0xffffffff:x})$fatal(1,\"signed product\");"
+        s+='\n';previous=a*b if accept else None
+    s+='reset;tick;if(valid!==0)$fatal(1,"reset valid");\n'
+    return s+END
+
+
+BUS=HEAD+'''reg cyc=0,stb=0,we=0;reg [15:0] adr=0;reg [31:0] di=0;wire ack,valid;wire [31:0] data,u;
+PID dut(clk,rst,cyc,stb,we,adr,di,ack,data,u,valid);
+task wr;input [15:0] a;input [31:0] d;integer n;begin
+@(negedge clk);cyc=1;stb=1;we=1;adr=a;di=d;n=0;tick;
+while(!ack && n<100)begin tick;n=n+1;end
+if(ack!==1)$fatal(1,"write timeout");@(negedge clk);cyc=0;stb=0;we=0;repeat(3)tick;end endtask
+task rd;input [15:0] a;input [31:0] expected;integer n;begin
+@(negedge clk);cyc=1;stb=1;we=0;adr=a;n=0;tick;
+while(!ack && n<100)begin tick;n=n+1;end
+if(ack!==1 || data!==expected)$fatal(1,"read %d %h != %h",a,data,expected);
+@(negedge clk);cyc=0;stb=0;repeat(2)tick;end endtask
+'''
+
+
+def pid_sequence(reset_sequence=False):
+    s=BUS+'initial begin reset;\n';rng=random.Random(9060631)
+    for seq in range(8):
+        kp,ki,kd=[rng.randrange(-100,100) for _ in range(3)];sp=rng.randrange(-2000,2000)
+        s+=f"reset;wr(0,32'h{kp&65535:x});wr(4,32'h{ki&65535:x});wr(8,32'h{kd&65535:x});wr(12,32'h{sp&65535:x});rd(20,32'h{(kp+kd)&0xffffffff:x});\n"
+        sigma=0;old=0
+        for i in range(40):
+            pv=rng.randrange(-3000,3000);e=signed16(sp-pv);negold=signed16(-old);sigma=(sigma+ki*e)&0xffffffff
+            u=((kp+kd)*e+sigma+kd*negold)&0xffffffff
+            s+=f"wr(16,32'h{pv&65535:x});rd(32,32'h{u:x});rd(36,32'h{sigma:x});rd(24,32'h{e&0xffffffff:x});rd(28,32'h{negold&0xffffffff:x});"
+            s+=f"if(valid!==1 || u!==32'h{u:x})$fatal(1,\"PID output\");\n";old=e
+            if reset_sequence and i%9==8:
+                s+='wr(44,0);repeat(12)tick;rd(24,0);rd(32,0);rd(36,0);rd(40,0);\n';sigma=0;old=0
+    return s+END
+
+
+INSTRUCTION='''# Implement the signed fixed-width PID controller project
+Read the original project manual and implement every declared module in its
+required file. The fixed configuration uses a 32-bit Wishbone data port, 16-bit
+byte address, signed 16-bit coefficients and inputs, and wrapping 32-bit results.
+The pinned defines header is expanded privately; no includes are required.
+
+Behavior and timing clarifications:
+- PID reset is active-high asynchronous. The multiplier's i_rst is active-low
+  asynchronous. PID uses a 32-bit adder and a pipelined signed 16x16 multiplier.
+- Registers at byte addresses 0,4,8,12,16 are Kp,Ki,Kd,SP,PV, written from low
+  16 bits and sign-extended on reads. Writing Kp or Kd updates Kpd=Kp+Kd (wrap
+  16 bits). Writing PV starts an update. Read-only Kpd,error,negative previous
+  error,u,sigma,overflow are at 20,24,28,32,36,40. Address 44 accepts zero to
+  clear error,u,sigma and overflow, preserving gains/SP/PV. Hardware reset clears all.
+- e=wrap16(SP-PV); previous term=wrap16(-old_e). Then sigma=wrap32(sigma+Ki*e),
+  u=wrap32(Kpd*e+sigma+Kd*previous_term). Coefficients/errors multiply as signed
+  integers. Arithmetic wraps, without saturation or implicit fixed-point shifts.
+- Wishbone requests hold address/data/control until ACK. Writes acknowledge
+  after request registration; write ACK stays high until STB drops. Reads ACK
+  combinationally when the requested register is unlocked. Gain writes/reads
+  and state reads can wait while arithmetic locks are active. No exact internal
+  FSM encoding is required; complete an update within 20 input clocks after PV
+  acceptance. o_valid=1 means output/state are not busy (including reset/idle),
+  not a one-cycle completion pulse. Results hold between updates.
+- Overflow flags are Kpd[0], current error[1], previous error's flag[2], u[3],
+  sigma[4]. Kpd/current error flags update on the corresponding calculations;
+  sigma accumulation overflow is sticky, and u includes that sticky flag plus
+  overflow from its two subsequent additions. Reset/RS clears flags.
+- multiplier_16x16bit_pipelined accepts operands whenever i_start=1. Product and
+  o_ready correspond to the previous clock's accepted operands: two register
+  stages, one new product each clock under sustained start. Ready carries bubbles.
+  adder_32bit computes the 33-bit unsigned sum including carry-in.
+- booth_radix4 maps triplets 000..111 to digits 0,+1,+1,+2,-2,-1,-1,0 via
+  zero, double(abs digit=2), negation(digit<0). booth_array applies this to eight
+  overlapping radix-4 slices, appending zero below the multiplier's LSB.
+  half/full adders and compressor42 preserve the binary weighted sum (S weight1,
+  carry/cout weight2). Prefix operators A produce bit propagate/generate,
+  B combines two groups, C combines a group with a preceding generate.
+  partial_product_gen emits a 17-bit Booth partial with inverted sign bit, no
+  negation correction bit: complement md when negating, zero when zero-select,
+  sign-extend to 17 bits with inverted sign, and shift once for double, inserting
+  the negation bit at the low end. These utility interfaces remain required.
+
+Private points check Booth encoding, carry arithmetic, streamed signed products,
+PID sequences and software reset. Finite tests sample behavior; no universal
+equivalence or exhaustive overflow coverage is claimed. Public checks compile only.
+'''
+
+
+def pid_spec():
+    return dict(case_id='opencores_pid32_v1',project='dsp_core_pid_controller',top='PID',
+        preprocess=True,instruction=INSTRUCTION,builder_source=__file__,
+        tests=[('adder','adder_32bit',adder()),('booth','booth_radix4',booth()),
+            ('multiply','multiplier_16x16bit_pipelined',multiply()),
+            ('pid_sequence','PID',pid_sequence()),('pid_reset','PID',pid_sequence(True))],
+        mutations=[('booth_sign','RTL/booth.v','negation=A&nBanC','negation=nA&nBanC'),
+            ('carry_input','RTL/CLA_fixed.v','o_s[0]=P0[0]^i_c','o_s[0]=P0[0]'),
+            ('integral_gain','RTL/PID.v','mr_index==2?kd:ki','mr_index==2?kd:kp'),
+            ('derivative_gain','RTL/PID.v','mr_index==2?kd:ki','mr_index==2?ki:ki')])

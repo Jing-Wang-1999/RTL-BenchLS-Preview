@@ -1,0 +1,52 @@
+module autovcoder_094439 (
+    input          aclr,
+    input  [127:0] data,
+    input          rdclk,
+    input          rdreq,
+    input          wrclk,
+    input          wrreq,
+    output [127:0] q,
+    output         rdempty,
+    output [  3:0] rdusedw,
+    output         wrfull,
+    output [  3:0] wrusedw
+);
+
+`ifdef USE_ALTERA_IP
+  dcfifo_128b_16 dcfifo (
+      .aclr(aclr),
+
+      .wrclk(wrclk),
+      .wrreq(wrreq),
+      .data(data),
+      .wrfull(wrfull),
+      .wrusedw(wrusedw),
+
+      .rdclk(rdclk),
+      .rdreq(rdreq),
+      .q(q),
+      .rdempty(rdempty),
+      .rdusedw(rdusedw)
+  );
+`endif
+
+`ifdef USE_XILINX_IP
+  dcfifo_128b_16 dcfifo (
+      .rst(aclr),
+
+      .wr_clk(wrclk),
+      .wr_en(wrreq),
+      .din(data),
+      .full(wrfull),
+      .wr_data_count(wrusedw),
+
+      .rd_clk(rdclk),
+      .rd_en(rdreq),
+      .dout(q),
+      .empty(rdempty),
+      .rd_data_count(rdusedw)
+  );
+`endif
+
+endmodule
+

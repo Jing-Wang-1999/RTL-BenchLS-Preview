@@ -1,0 +1,61 @@
+// Verilated -*- SystemC -*-
+// DESCRIPTION: Verilator output: Symbol table implementation internals
+
+#include "Vriscv_tcm_top__Syms.h"
+#include "Vriscv_tcm_top.h"
+#include "Vriscv_tcm_top_riscv_tcm_top.h"
+#include "Vriscv_tcm_top_riscv_core__M0_MBffffffff.h"
+#include "Vriscv_tcm_top_tcm_mem.h"
+#include "Vriscv_tcm_top_riscv_csr__SB0.h"
+#include "Vriscv_tcm_top_riscv_issue.h"
+#include "Vriscv_tcm_top_tcm_mem_ram.h"
+#include "Vriscv_tcm_top_riscv_csr_regfile.h"
+#include "Vriscv_tcm_top_riscv_regfile.h"
+
+
+
+// FUNCTIONS
+Vriscv_tcm_top__Syms::Vriscv_tcm_top__Syms(Vriscv_tcm_top* topp, const char* namep)
+    // Setup locals
+    : __Vm_namep(namep)
+    , __Vm_activity(false)
+    , __Vm_baseCode(0)
+    , __Vm_didInit(false)
+    // Setup submodule names
+    , TOP__v(Verilated::catName(topp->name(), "v"))
+    , TOP__v__u_core(Verilated::catName(topp->name(), "v.u_core"))
+    , TOP__v__u_core__u_csr(Verilated::catName(topp->name(), "v.u_core.u_csr"))
+    , TOP__v__u_core__u_csr__u_csrfile(Verilated::catName(topp->name(), "v.u_core.u_csr.u_csrfile"))
+    , TOP__v__u_core__u_issue(Verilated::catName(topp->name(), "v.u_core.u_issue"))
+    , TOP__v__u_core__u_issue__u_regfile(Verilated::catName(topp->name(), "v.u_core.u_issue.u_regfile"))
+    , TOP__v__u_tcm(Verilated::catName(topp->name(), "v.u_tcm"))
+    , TOP__v__u_tcm__u_ram(Verilated::catName(topp->name(), "v.u_tcm.u_ram"))
+{
+    // Pointer to top level
+    TOPp = topp;
+    // Setup each module's pointers to their submodules
+    TOPp->v = &TOP__v;
+    TOPp->v->u_core = &TOP__v__u_core;
+    TOPp->v->u_core->u_csr = &TOP__v__u_core__u_csr;
+    TOPp->v->u_core->u_csr->u_csrfile = &TOP__v__u_core__u_csr__u_csrfile;
+    TOPp->v->u_core->u_issue = &TOP__v__u_core__u_issue;
+    TOPp->v->u_core->u_issue->u_regfile = &TOP__v__u_core__u_issue__u_regfile;
+    TOPp->v->u_tcm = &TOP__v__u_tcm;
+    TOPp->v->u_tcm->u_ram = &TOP__v__u_tcm__u_ram;
+    // Setup each module's pointer back to symbol table (for public functions)
+    TOPp->__Vconfigure(this, true);
+    TOP__v.__Vconfigure(this, true);
+    TOP__v__u_core.__Vconfigure(this, true);
+    TOP__v__u_core__u_csr.__Vconfigure(this, true);
+    TOP__v__u_core__u_csr__u_csrfile.__Vconfigure(this, true);
+    TOP__v__u_core__u_issue.__Vconfigure(this, true);
+    TOP__v__u_core__u_issue__u_regfile.__Vconfigure(this, true);
+    TOP__v__u_tcm.__Vconfigure(this, true);
+    TOP__v__u_tcm__u_ram.__Vconfigure(this, true);
+    // Setup scopes
+    __Vscope_v__u_tcm__u_ram.configure(this, name(), "v.u_tcm.u_ram", "u_ram", 0, VerilatedScope::SCOPE_OTHER);
+    // Setup export functions
+    for (int __Vfinal=0; __Vfinal<2; __Vfinal++) {
+        __Vscope_v__u_tcm__u_ram.varInsert(__Vfinal,"ram", &(TOP__v__u_tcm__u_ram.ram), false, VLVT_UINT32,VLVD_NODIR|VLVF_PUB_RW,2 ,31,0 ,16383,0);
+    }
+}

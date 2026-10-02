@@ -1,0 +1,42 @@
+**Module Specification: HLS_fp32_sub_core_chn_a_rsci_chn_a_wait_dp**
+
+**Overview**
+This module functions as a wait-state controller and data path manager for Channel A within a floating-point subtraction core. It manages handshaking signals to control data flow latency and maintains data integrity during wait cycles.
+
+**Interface**
+*   **Clock:** Core clock signal driving synchronous logic.
+*   **Reset:** Active-low asynchronous reset signal.
+*   **Control Inputs:**
+    *   Output Switch Control: Indicates output switching status.
+    *   Input Wait: External wait signal from upstream components.
+    *   Data Wait: External signal used to clear internal wait states.
+*   **Data Input:** 32-bit floating-point data payload.
+*   **Control Outputs:**
+    *   Back Pressure Wait: Combined wait signal propagated upstream.
+    *   Write Enable Complete: Signal indicating write operation completion status.
+*   **Data Output:** 32-bit floating-point data, potentially delayed by one cycle.
+
+**Behavioral Description**
+**Reset Behavior**
+When the active-low reset is asserted, all internal state registers are cleared. The internal wait flag and the data buffer register are reset to zero.
+
+**Wait Signal Logic**
+The module generates a back pressure wait output by logically OR-ing the external input wait signal with an internal wait state flag. This ensures upstream components stall if either external or internal conditions require it.
+
+The write enable completion signal is asserted if the output switch control is inactive or if the back pressure wait signal is active.
+
+**Internal State Machine**
+An internal wait flag maintains state across clock cycles. During normal operation, this flag is updated based on the current internal state, the external input wait, and the data wait signal. Specifically, the internal wait flag remains set or becomes set if either the current internal flag or the external input wait is active, provided the data wait signal is not active. If the data wait signal is active, the internal wait flag is cleared.
+
+**Data Path**
+The 32-bit data output is selected via a multiplexer. The selection depends on the internal wait flag.
+*   If the internal wait flag is low, the current input data is passed directly to the output.
+*   If the internal wait flag is high, the previously stored data from the internal buffer is passed to the output.
+
+The internal data buffer register captures the current multiplexer output on every rising clock edge. This creates a hold mechanism allowing data to be retained during wait cycles.
+
+**Sub-modules**
+The design utilizes a standard 2-to-1 multiplexer for 32-bit data selection. This component selects between the primary data input and the buffered data based on the internal wait control signal.
+
+**Timing**
+All state updates and data buffering occur on the rising edge of the core clock. Reset is asynchronous and

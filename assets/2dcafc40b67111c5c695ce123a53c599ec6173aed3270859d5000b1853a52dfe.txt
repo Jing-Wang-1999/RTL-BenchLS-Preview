@@ -1,0 +1,60 @@
+always @(/*AS*/bba or bc or cc or ccr or cpha or cpol or spi_seq)
+     begin
+	sck = cpol;
+	cc_next = BAUD_DIV ? (BAUD_DIV / 2 - 1) : ccr;
+	bc_next = bc;
+	ld = 1'b0;
+	sf = 1'b0;
+
+	case (spi_seq)
+	  IDLE:
+	    begin
+	       if (bba)
+		 begin
+		    bc_next = 7;
+		    ld = 1'b1;
+		    spi_seq_next = PHASE2;
+		 end
+	       else
+		 spi_seq_next = IDLE;
+	    end
+	  PHASE2:
+	    begin
+	       sck = (cpol ^ cpha);
+	       if (cc == 0)
+		 spi_seq_next = PHASE1;
+	       else
+		 begin
+		    cc_next = cc - 1;
+		    spi_seq_next = PHASE2;
+		 end
+	    end
+	  PHASE1:
+	    begin
+	       sck = ~(cpol ^ cpha);
+	       if (cc == 0)
+		 begin
+		    bc_next = bc -1;
+		    sf = 1'b1;
+		    if (bc == 0)
+		      begin
+			 if (bba)
+			   begin
+			      bc_next = 7;
+			      ld = 1'b1;
+			      spi_seq_next = PHASE2;
+			   end
+			 else
+			   spi_seq_next = IDLE;
+		      end
+		    else
+		      spi_seq_next = PHASE2;
+		 end
+	       else
+		 begin
+		    cc_next = cc - 1;
+		    spi_seq_next = PHASE1;
+		 end
+	    end
+	endcase
+     end

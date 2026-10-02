@@ -1,0 +1,137 @@
+// Required path: RTL/16x16bit_multiplier_pipelined.v
+module booth_array(
+input	[15:0]multiplier,
+output	[7:0]zero,
+output	[7:0]double,
+output	[7:0]negation
+);
+endmodule
+
+module partial_product_gen(
+input	[15:0]md,		
+input	zero,
+input	double,
+input	negation,
+output	[16:0]pp 
+);
+endmodule
+
+module	half_adder(
+input	A,
+input	B,
+output	S,
+output	carry
+);
+endmodule
+
+module full_adder(
+input	A,
+input	B,
+input	cin,
+output	S,
+output	cout
+);
+endmodule
+
+module	compressor42(
+input	A,
+input	B,
+input	C,
+input	D,
+input	cin,
+output	S,
+output	carry,
+output	cout
+);
+endmodule
+
+module	multiplier_16x16bit_pipelined(
+input	i_clk,
+input	i_rst,
+input	i_start,
+input	[15:0]i_md,
+input	[15:0]i_mr,
+output	[31:0]o_product,
+output	o_ready
+);
+endmodule
+
+// Required path: RTL/CLA_fixed.v
+module	operator_A(
+input	A,
+input	B,
+output	P,
+output	G
+);
+endmodule
+
+module	operator_B(
+input	P,G,P1,G1,
+output	Po,Go
+);
+endmodule
+
+module	operator_C(
+input	P,G,G1,
+output	Go
+);
+endmodule
+
+module	adder_32bit(
+input	[31:0]i_a,i_b,
+input	i_c,
+output	[31:0]o_s,
+output	o_c
+);
+endmodule
+
+// Required path: RTL/PID.v
+module	PID #(
+
+
+
+
+parameter	wb_nb=32,
+
+
+
+
+		adr_wb_nb=16,
+		kp_adr		=	0,
+		ki_adr		=	1,
+		kd_adr		=	2,
+		sp_adr		=	3,
+		pv_adr		=	4,
+		kpd_adr		=	5,
+		err_0_adr		=	6,
+		err_1_adr		=	7,
+		un_adr		=	8,
+		sigma_adr	=	9,
+		of_adr		=	10,
+		RS_adr		=	11
+)(
+input	i_clk,
+input	i_rst,	
+
+input	i_wb_cyc,
+input	i_wb_stb,
+input	i_wb_we,
+input	[adr_wb_nb-1:0]i_wb_adr,
+input	[wb_nb-1:0]i_wb_data,
+output	o_wb_ack,
+output	[wb_nb-1:0]o_wb_data,
+
+
+output	[31:0]o_un,
+output	o_valid
+);
+endmodule
+
+// Required path: RTL/booth.v
+module booth_radix4(
+input	[2:0]codes,
+output	zero,
+output	double,
+output	negation
+);
+endmodule

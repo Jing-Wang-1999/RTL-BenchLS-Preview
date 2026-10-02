@@ -1,0 +1,50 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/905",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/904",
+  "repository": "lowRISC/ibex",
+  "pr_number": 905,
+  "issue_number": 904,
+  "verilog_files": [
+    "rtl/ibex_icache.sv"
+  ],
+  "deletions": 4,
+  "additions": 6,
+  "patches": [
+    {
+      "filename": "rtl/ibex_icache.sv",
+      "patch": "@@ -301,8 +301,9 @@ module ibex_icache #(\n   for (genvar way = 0; way < NumWays; way++) begin : gen_rams\n     // Tag RAM instantiation\n     prim_ram_1p #(\n-      .Width    (TAG_SIZE_ECC),\n-      .Depth    (NUM_LINES)\n+      .Width           (TAG_SIZE_ECC),\n+      .Depth           (NUM_LINES),\n+      .DataBitsPerMask (TAG_SIZE_ECC)\n     ) tag_bank (\n       .clk_i    (clk_i),\n       .req_i    (tag_req_ic0 & tag_banks_ic0[way]),\n@@ -314,8 +315,9 @@ module ibex_icache #(\n     );\n     // Data RAM instantiation\n     prim_ram_1p #(\n-      .Width    (LINE_SIZE_ECC),\n-      .Depth    (NUM_LINES)\n+      .Width           (LINE_SIZE_ECC),\n+      .Depth           (NUM_LINES),\n+      .DataBitsPerMask (LINE_SIZE_ECC)\n     ) data_bank (\n       .clk_i    (clk_i),\n       .req_i    (data_req_ic0 & data_banks_ic0[way]),",
+      "additions": 6,
+      "deletions": 4,
+      "changes": 10
+    }
+  ],
+  "pr_info": {
+    "title": "Optimize use of RAM primitive in icache",
+    "body": "The RAM primitive provides a way to specify the granularity of the write\nmask (wmask) signal, which can be used to select an appropriate\nimplementation (e.g. a SRAM with only byte selects, or no subselects at\nall).\n\n---\nEven though this change should be safe, I've seen X asserts fire on this one previously in icache UVM DV. I cannot test right now until #904 is fixed.",
+    "state": "closed",
+    "created_at": "2020-05-27T10:12:29Z",
+    "updated_at": "2020-05-27T10:38:36Z",
+    "merged_at": "2020-05-27T10:38:34Z",
+    "user": "imphil"
+  },
+  "issue_info": {
+    "title": "Failing UVM sanity with commit \"[rtl] Add speculative branch signal\"",
+    "body": "Commit 12b39476c0c6bb16dc0d43057730f263836dac95 (`[rtl] Add speculative branch signal`) broke the UVM sanity tests.\r\n\r\nRunning `./vendor/lowrisc_ip/dvsim/dvsim.py dv/uvm/icache/dv/ibex_icache_sim_cfg.hjson -t vcs --waves` I get:\r\n\r\n## List of Failures\r\n\r\n**TEST:** ibex_icache_sanity, **SEED:** 3278749286<br>\r\n**LOG:** $scratch_path/0.ibex_icache_sanity/out/run.log<br>\r\n```\r\nUVM_FATAL @    189350 ps: (ibex_icache_mem_resp_seq.sv:113) uvm_test_top.env.mem_agent.sequencer [uvm_test_top.env.virtual_sequencer.ibex_icache_sanity_vseq.mem_seq] Check failed (i < N) No pending grant for address 0xxxxxxxxX (1 items in queue). \r\nUVM_INFO @    189350 ps: (uvm_report_server.svh:894) [UVM/REPORT/SERVER] \r\n--- UVM Report Summary ---\r\n\r\nQuit count :     0 of     1\r\n```\r\n\r\n**TEST:** ibex_icache_passthru, **SEED:** 1046335328<br>\r\n**LOG:** $scratch_path/0.ibex_icache_passthru/out/run.log<br>\r\n```\r\nUVM_FATAL @    688601 ps: (ibex_icache_mem_resp_seq.sv:113) uvm_test_top.env.mem_agent.sequencer [uvm_test_top.env.virtual_sequencer.ibex_icache_passthru_vseq.mem_seq] Check failed (i < N) No pending grant for address 0xxxxxxxxX (1 items in queue). \r\nUVM_INFO @    688601 ps: (uvm_report_server.svh:894) [UVM/REPORT/SERVER] \r\n--- UVM Report Summary ---\r\n\r\nQuit count :     0 of     1\r\n```\r\n\r\n@tomroberts-lowrisc @rswarbrick  ",
+    "labels": [
+      "Type:Bug",
+      "Component:DV"
+    ],
+    "state": "closed",
+    "created_at": "2020-05-27T10:08:13Z",
+    "updated_at": "2020-05-27T10:31:03Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 142
+  },
+  "base_commit": "8b42024cd5ce5f76a0589a6143917d19fe9dd3d2",
+  "head_commit": "5028fd06e1149ca3273db669afafd2393f606aef",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_905_904",
+  "lec_status": "useful_pass"
+}

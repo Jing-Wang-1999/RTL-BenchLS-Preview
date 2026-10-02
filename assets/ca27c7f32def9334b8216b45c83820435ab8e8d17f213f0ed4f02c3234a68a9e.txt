@@ -1,0 +1,122 @@
+always @ (posedge hsci_pclk or negedge rstn) begin
+    if (~rstn) begin
+      rd_index <= 32'h0;
+      rd_data <= 32'h0;
+
+      rd_index_cnt <= 2'b00;
+      rd_data_cnt <= 2'b00;
+      store_data <= 1'b0;
+      store_we <= 4'h0;
+
+      alink_dval <= 1'b0;
+      alink_data <= 8'h00;
+      signal_acquired <= 1'b0;
+
+      tx_clk_adj_rcvd <= 4'h0;
+      tx_clk_inv_rcvd <= 1'b0;
+    end else begin
+      case(dec_state)
+        D_IDLE: begin
+          rd_index <= 32'h0;
+          rd_data <= 32'h0;
+
+          rd_index_cnt <= 2'b00;
+          rd_data_cnt <= (read_done == 1'b1) ? 2'b00: rd_data_cnt;
+          store_data <= 1'b0;
+          store_we <= 4'h0;
+
+          if (auto_linkup == 1'b1) begin
+            if (ver_b_na == 1'b1) begin
+              if ((mdec_word[7] == 1'b1) & (mdec_word[6:3] == ALINK)) begin
+                tx_clk_adj_rcvd <= {mdec_word[1:0], mdec_par, mdec_cont};
+                tx_clk_inv_rcvd <=  mdec_word[2];
+              end
+            end else begin
+              tx_clk_adj_rcvd <= 4'h0;
+              tx_clk_inv_rcvd <= 1'b0;
+            end // else: !if(ver_b_na == 1'b1)
+          end else begin // if (auto_linkup == 1'b1)
+            if (frm_det == 1'b1)
+              rd_tsize <= mdec_word[1:0];
+          end // else: !if(auto_linkup == 1'b1)
+
+          alink_dval <= 1'b0;
+          alink_data <= 8'h00;
+        end // case: D_IDLE
+
+        D_INSTR: begin
+          rd_index_cnt <= 2'b00;
+          // rd_data_cnt <= 2'b00;
+          store_data <= 1'b0;
+          store_we <= 4'h0;
+        end
+
+        D_RINDEX: begin
+          if (mdec_val == 1'b1) begin
+            case (rd_index_cnt)
+              2'b00: rd_index <= {rd_index[31:8], mdec_word[7:0]};
+              2'b01: rd_index <= {rd_index[31:16], mdec_word[7:0], rd_index[7:0]};
+              2'b10: rd_index <= {rd_index[31:24], mdec_word[7:0], rd_index[15:0]};
+              2'b11: rd_index <= {mdec_word[7:0], rd_index[23:0]};
+            endcase // case (rd_index_cnt)
+            rd_index_cnt <= (rd_index_cnt == 2'b11) ? rd_index_cnt: rd_index_cnt + 2'b01;
+          end
+        end // case: D_RINDEX
+
+        D_RDATA: begin
+          if (mdec_val == 1'b1) begin
+            rd_index_cnt <= 2'b00;
+
+            case(rd_data_cnt)
+              2'b00: begin
+                rd_data <= {24'h0, mdec_word[7:0]};
+                store_data <= 1'b1;
+                store_we <= 4'h1;
+              end
+
+              2'b01: begin
+                rd_data <= {16'h0, mdec_word[7:0], 8'h0};
+                store_data <= 1'b1;
+                store_we <= 4'h2;
+              end
+
+              2'b10: begin
+                rd_data <= {8'h0, mdec_word[7:0], 16'h0};
+                store_data <= 1'b1;
+                store_we <= 4'h4;
+              end
+
+              2'b11: begin
+                rd_data <= {mdec_word[7:0], 24'h0};
+                store_data <= 1'b1;
+                store_we <= 4'h8;
+              end
+            endcase // case (rd_data_cnt)
+            rd_data_cnt <= rd_data_cnt + 2'b01;
+          end else begin // if (mdec_val == 1'b1)
+            store_data <= 1'b0;
+            rd_data_cnt <= rd_data_cnt;
+            rd_data <= rd_data;
+          end // else: !if(mdec_val == 1'b1)
+        end // case: D_RDATA
+
+        D_LINKUP: begin
+          signal_acquired <= 1'b1;
+          if (mdec_val == 1'b1) begin
+            alink_dval <= 1'b1;
+            alink_data <= mdec_word[7:0];
+          end else
+            alink_dval <= 1'b0;
+        end
+
+        D_ERROR: begin
+        end
+
+        D_MERR: begin
+        end
+
+        default: begin
+        end
+      endcase // unique case (dec_state)
+    end // else: !if(~rstn)
+  end

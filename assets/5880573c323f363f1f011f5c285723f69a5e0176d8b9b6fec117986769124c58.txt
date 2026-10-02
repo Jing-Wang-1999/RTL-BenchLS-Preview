@@ -1,0 +1,83 @@
+always @*
+    begin : round_logic
+      reg [127 : 0] old_block, shiftrows_block, mixcolumns_block;
+      reg [127 : 0] addkey_init_block, addkey_main_block, addkey_final_block;
+
+      block_new   = 128'h0;
+      muxed_sboxw = 32'h0;
+      block_w0_we = 1'b0;
+      block_w1_we = 1'b0;
+      block_w2_we = 1'b0;
+      block_w3_we = 1'b0;
+
+      old_block          = {block_w0_reg, block_w1_reg, block_w2_reg, block_w3_reg};
+      shiftrows_block    = shiftrows(old_block);
+      mixcolumns_block   = mixcolumns(shiftrows_block);
+      addkey_init_block  = addroundkey(block, round_key);
+      addkey_main_block  = addroundkey(mixcolumns_block, round_key);
+      addkey_final_block = addroundkey(shiftrows_block, round_key);
+
+      case (update_type)
+        INIT_UPDATE:
+          begin
+            block_new    = addkey_init_block;
+            block_w0_we  = 1'b1;
+            block_w1_we  = 1'b1;
+            block_w2_we  = 1'b1;
+            block_w3_we  = 1'b1;
+          end
+
+        SBOX_UPDATE:
+          begin
+            block_new = {new_sboxw, new_sboxw, new_sboxw, new_sboxw};
+
+            case (sword_ctr_reg)
+              2'h0:
+                begin
+                  muxed_sboxw = block_w0_reg;
+                  block_w0_we = 1'b1;
+                end
+
+              2'h1:
+                begin
+                  muxed_sboxw = block_w1_reg;
+                  block_w1_we = 1'b1;
+                end
+
+              2'h2:
+                begin
+                  muxed_sboxw = block_w2_reg;
+                  block_w2_we = 1'b1;
+                end
+
+              2'h3:
+                begin
+                  muxed_sboxw = block_w3_reg;
+                  block_w3_we = 1'b1;
+                end
+            endcase // case (sbox_mux_ctrl_reg)
+          end
+
+        MAIN_UPDATE:
+          begin
+            block_new    = addkey_main_block;
+            block_w0_we  = 1'b1;
+            block_w1_we  = 1'b1;
+            block_w2_we  = 1'b1;
+            block_w3_we  = 1'b1;
+          end
+
+        FINAL_UPDATE:
+          begin
+            block_new    = addkey_final_block;
+            block_w0_we  = 1'b1;
+            block_w1_we  = 1'b1;
+            block_w2_we  = 1'b1;
+            block_w3_we  = 1'b1;
+          end
+
+        default:
+          begin
+          end
+      endcase // case (update_type)
+    end

@@ -1,0 +1,26 @@
+module __formal113_core_6aec1c1b5db38a0f8c19 (clk,aclr,ena,val);
+
+parameter WIDTH = 16;
+input clk,ena,aclr;
+output [WIDTH-1:0] val;
+
+reg [WIDTH-1:0] val /* synthesis preserve */;
+
+always @(posedge clk or posedge aclr) begin
+	if (aclr) val <= 0;
+	else begin
+		val <= val + (ena ? 43 : 0);
+	end
+end
+
+endmodule
+module test_pattern(
+  input wire  clk,
+  input wire  aclr,
+  input wire  ena,
+  output wire [15:0] val
+);
+wire [15:0] __negative_output;
+__formal113_core_6aec1c1b5db38a0f8c19 dut(.clk(clk), .aclr(aclr), .ena(ena), .val(__negative_output));
+assign val = __negative_output ^ 16'd1;
+endmodule

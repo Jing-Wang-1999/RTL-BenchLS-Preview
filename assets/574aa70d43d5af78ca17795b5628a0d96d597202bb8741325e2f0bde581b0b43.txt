@@ -1,0 +1,5 @@
+# HLS_cdp_icvt_core_chn_data_in_rsci_chn_data_in_wait_ctrl
+
+Scalar inputs are `nvdla_core_clk`, active-low asynchronous `nvdla_core_rstn`, `chn_data_in_rsci_oswt`, `core_wen`, `chn_data_in_rsci_iswt0`, `chn_data_in_rsci_ld_core_psct`, `core_wten`, and `chn_data_in_rsci_vd`. Scalar outputs are `chn_data_in_rsci_biwt`, `chn_data_in_rsci_bdwt`, and `chn_data_in_rsci_ld_core_sct`.
+
+Let p=`(~core_wten)&chn_data_in_rsci_iswt0`, g=`p|icwt`, and b=`g&chn_data_in_rsci_vd`. Outputs are biwt=b, bdwt=`chn_data_in_rsci_oswt&core_wen`, and ld_core_sct=`chn_data_in_rsci_ld_core_psct&g`. Reset asynchronously clears icwt. On each rising edge otherwise, icwt becomes `~((~(icwt|p))|b)`, equivalently `(icwt|p)&~b`; it remains set while waiting and clears when a valid transfer indication occurs. No submodule exists.

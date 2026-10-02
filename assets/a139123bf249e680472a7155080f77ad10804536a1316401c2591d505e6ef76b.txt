@@ -1,0 +1,53 @@
+module autovcoder_035024 (
+    A,
+    B,
+    Cout,
+    Output
+);
+  input [15:0] A;
+  input [15:0] B;
+  //Outputs
+  output [15:0] Output;
+  output Cout;
+
+  //Intermediate Wires
+  wire Carries1;
+  wire Carries2;
+  wire Csub = 1'b1;
+  wire Cadd = 1'b0;
+  wire [15:0] AB;
+  wire [15:0] AABB;
+  wire flag;
+  wire CARRY1NOT;
+
+
+  //four-bit-adder
+  sixteen_bit_full_adder_subtractor first (
+      .A(A[15:0]),
+      .B(B[15:0]),
+      .Cin(Csub),
+      .Cout(Carries1),
+      .Output(AB[15:0]),
+      .flag(flag)
+  );
+  not_gate NOT1 (
+      Carries1,
+      CARRY1NOT
+  );
+  sixteen_bit_full_adder second (
+      .A(AB[15:0]),
+      .B(AB[15:0]),
+      .Cin(CARRY1NOT),
+      .Cout(Carries2),
+      .S(AABB[15:0])
+  );
+  sixteen_bit_full_adder third (
+      .A(A[15:0]),
+      .B(AABB[15:0]),
+      .Cin(Carries2),
+      .Cout(Cout),
+      .S(Output[15:0])
+  );
+
+endmodule
+

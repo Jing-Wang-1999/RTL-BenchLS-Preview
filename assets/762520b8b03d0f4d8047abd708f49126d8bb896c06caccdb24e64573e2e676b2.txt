@@ -1,0 +1,57 @@
+module origen_222695 (
+    input wire [15:0] w_data,
+    input wire [3:0] w_addr,
+    input wire commit,
+    input wire clk12p5,
+    output wire sclk,
+    output wire sdata,
+    output wire scs,
+    output wire busy
+);
+
+reg [15:0] data_reg;
+reg [3:0] addr_reg;
+reg commit_reg;
+reg sclk_reg;
+reg sdata_reg;
+reg scs_reg;
+reg busy_reg;
+
+reg [4:0] sclk_counter;
+reg [3:0] data_counter;
+
+always @(posedge clk12p5) begin
+    data_reg <= w_data;
+    addr_reg <= w_addr;
+    commit_reg <= commit;
+end
+
+always @(posedge clk12p5) begin
+    if (commit_reg) begin
+        busy_reg <= 1'b1;
+        scs_reg <= 1'b0;
+        sclk_counter <= 5'd0;
+        data_counter <= 4'd0;
+    end else if (data_counter == 4'd10) begin
+        busy_reg <= 1'b0;
+        scs_reg <= 1'b1;
+    end else begin
+        sclk_counter <= sclk_counter + 5'd1;
+        if (sclk_counter == 5'd15) begin
+            sclk_counter <= 5'd0;
+            data_counter <= data_counter + 4'd1;
+            sdata_reg <= data_reg[15 - data_counter];
+        end
+    end
+end
+
+assign sclk = sclk_reg;
+assign sdata = sdata_reg;
+assign scs = scs_reg;
+assign busy = busy_reg;
+
+always @(posedge clk12p5) begin
+    sclk_reg <= sclk_counter < 5'd8;
+end
+
+endmodule

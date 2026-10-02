@@ -1,0 +1,114 @@
+always @* begin
+    state_next = STATE_IDLE;
+    count_next = count_reg;
+    suppress_zero_next = suppress_zero_reg;
+    temp_tdata_next = temp_tdata_reg;
+    temp_tvalid_next = temp_tvalid_reg;
+    m_axis_tdata_int = 8'd0;
+    m_axis_tvalid_int = 1'b0;
+    m_axis_tlast_int = 1'b0;
+    m_axis_tuser_int = 1'b0;
+    s_axis_tready_next = 1'b0;
+
+    case (state_reg)
+        STATE_IDLE: begin
+            s_axis_tready_next = m_axis_tready_int_early || !temp_tvalid_reg;
+            m_axis_tdata_int = temp_tdata_reg;
+            m_axis_tvalid_int = temp_tvalid_reg;
+            m_axis_tlast_int = temp_tvalid_reg;
+            temp_tvalid_next = temp_tvalid_reg && !m_axis_tready_int_reg;
+
+            if (s_axis_tready && s_axis_tvalid) begin
+                if (s_axis_tdata != 8'd0) begin
+                    count_next = s_axis_tdata-1;
+                    suppress_zero_next = (s_axis_tdata == 8'd255);
+                    s_axis_tready_next = m_axis_tready_int_early;
+                    if (s_axis_tdata == 8'd1) begin
+                        state_next = STATE_NEXT_SEGMENT;
+                    end else begin
+                        state_next = STATE_SEGMENT;
+                    end
+                end else begin
+                    state_next = STATE_IDLE;
+                end
+            end else begin
+                state_next = STATE_IDLE;
+            end
+        end
+        STATE_SEGMENT: begin
+            s_axis_tready_next = m_axis_tready_int_early;
+
+            if (s_axis_tready && s_axis_tvalid) begin
+                temp_tdata_next = s_axis_tdata;
+                temp_tvalid_next = 1'b1;
+                m_axis_tdata_int = temp_tdata_reg;
+                m_axis_tvalid_int = temp_tvalid_reg;
+                count_next = count_reg - 1;
+                if (s_axis_tdata == 8'd0) begin
+                    temp_tvalid_next = 1'b0;
+                    m_axis_tvalid_int = 1'b1;
+                    m_axis_tuser_int = 1'b1;
+                    m_axis_tlast_int = 1'b1;
+                    s_axis_tready_next = 1'b1;
+                    state_next = STATE_IDLE;
+                end else if (s_axis_tlast) begin
+                    if (count_reg == 8'd1 && !s_axis_tuser) begin
+                        state_next = STATE_IDLE;
+                    end else begin
+                        temp_tvalid_next = 1'b0;
+                        m_axis_tvalid_int = 1'b1;
+                        m_axis_tuser_int = 1'b1;
+                        m_axis_tlast_int = 1'b1;
+                        s_axis_tready_next = 1'b1;
+                        state_next = STATE_IDLE;
+                    end
+                end else if (count_reg == 8'd1) begin
+                    state_next = STATE_NEXT_SEGMENT;
+                end else begin
+                    state_next = STATE_SEGMENT;
+                end
+            end else begin
+                state_next = STATE_SEGMENT;
+            end
+        end
+        STATE_NEXT_SEGMENT: begin
+            s_axis_tready_next = m_axis_tready_int_early;
+
+            if (s_axis_tready && s_axis_tvalid) begin
+                temp_tdata_next = 8'd0;
+                temp_tvalid_next = !suppress_zero_reg;
+                m_axis_tdata_int = temp_tdata_reg;
+                m_axis_tvalid_int = temp_tvalid_reg;
+                if (s_axis_tdata == 8'd0) begin
+                    temp_tvalid_next = 1'b0;
+                    m_axis_tuser_int = s_axis_tuser;
+                    m_axis_tlast_int = 1'b1;
+                    s_axis_tready_next = 1'b1;
+                    state_next = STATE_IDLE;
+                end else if (s_axis_tlast) begin
+                    if (s_axis_tdata == 8'd1 && !s_axis_tuser) begin
+                        state_next = STATE_IDLE;
+                    end else begin
+                        temp_tvalid_next = 1'b0;
+                        m_axis_tvalid_int = 1'b1;
+                        m_axis_tuser_int = 1'b1;
+                        m_axis_tlast_int = 1'b1;
+                        s_axis_tready_next = 1'b1;
+                        state_next = STATE_IDLE;
+                    end
+                end else begin
+                    count_next = s_axis_tdata-1;
+                    suppress_zero_next = (s_axis_tdata == 8'd255);
+                    s_axis_tready_next = m_axis_tready_int_early;
+                    if (s_axis_tdata == 8'd1) begin
+                        state_next = STATE_NEXT_SEGMENT;
+                    end else begin
+                        state_next = STATE_SEGMENT;
+                    end
+                end
+            end else begin
+                state_next = STATE_NEXT_SEGMENT;
+            end
+        end
+    endcase
+end

@@ -1,0 +1,15 @@
+The SDP_X_X_alu_core_staller module is designed to manage the stalling mechanism for an arithmetic logic unit (ALU) within a system. It operates based on clock and reset signals, and controls the enable signals for the ALU's input, operation, and output channels.
+
+**Inputs:**
+1. `nvdla_core_clk`: The clock signal for synchronization.
+2. `nvdla_core_rstn`: The reset signal, active low, used to initialize the module.
+3. `chn_alu_in_rsci_wen_comp`: A signal indicating whether the ALU input channel is ready.
+4. `chn_alu_op_rsci_wen_comp`: A signal indicating whether the ALU operation channel is ready.
+5. `chn_alu_out_rsci_wen_comp`: A signal indicating whether the ALU output channel is ready.
+
+**Outputs:**
+1. `core_wen`: A signal that enables the core operation when all input, operation, and output channels are ready.
+2. `core_wten`: A signal that indicates whether the core should be stalled. It is the inverse of `core_wen`.
+
+**Behavior:**
+- The module combines the readiness signals from the input, operation, and output channels using a logical AND operation to generate the `core_wen

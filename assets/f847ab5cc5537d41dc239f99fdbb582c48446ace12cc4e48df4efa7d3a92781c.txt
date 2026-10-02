@@ -1,0 +1,108 @@
+module origen_107617 (
+    input wire i_clk_50,
+    input wire i_Start,
+    input wire [7:0] i_HitVelocity,
+    input wire i_ZDC,
+    input wire i_ZStep,
+    output reg o_Dir,
+    output reg o_Step,
+    output reg o_Zdone
+);
+
+// Parameters
+parameter Steps = 1000;
+parameter HitSteps = 800;
+parameter Acceleration = 100;
+parameter ReturnVelocity = 50;
+
+// State definitions
+localparam s_Idle = 2'd0;
+localparam s_Hit = 2'd1;
+localparam s_Return = 2'd2;
+
+// Internal signals
+reg [1:0] state;
+reg [15:0] step_count;
+reg [31:0] IntRate, IntCount, IntReset;
+reg [31:0] t1, t2, t3;
+reg homing_done;
+
+// Clock divider
+reg [5:0] clk_div;
+wire clk_1MHz = (clk_div == 49);
+
+always @(posedge i_clk_50) begin
+    if (clk_div == 49)
+        clk_div <= 0;
+    else
+        clk_div <= clk_div + 1;
+end
+
+// Main state machine
+always @(posedge clk_1MHz) begin
+    if (!homing_done) begin
+        // Homing sequence
+        o_Dir <= 1'b1; // Move in positive direction
+        if (i_ZDC) begin
+            if (i_ZStep) begin
+                homing_done <= 1'b1;
+                o_Zdone <= 1'b1;
+                state <= s_Idle;
+            end
+        end
+        o_Step <= ~o_Step;
+    end else begin
+        case (state)
+            s_Idle: begin
+                if (i_Start) begin
+                    state <= s_Hit;
+                    step_count <= 0;
+                    o_Dir <= 1'b1; // Set direction for hit
+                    // Calculate profile times
+                    t1 <= i_HitVelocity / Acceleration;
+                    t2 <= (HitSteps - (i_HitVelocity * i_HitVelocity) / (2 * Acceleration)) / i_HitVelocity;
+                    t3 <= t1 + t2 + i_HitVelocity / Acceleration;
+                    IntRate <= 0;
+                end
+            end
+
+            s_Hit: begin
+                if (step_count < HitSteps) begin
+                    // Update IntRate based on profile phase
+                    if (step_count < t1)
+                        IntRate <= IntRate + Acceleration;
+                    else if (step_count >= t2 && step_count < t3)
+                        IntRate <= IntRate - Acceleration;
+                    
+                    // Generate step pulse
+                    IntReset <= 1000000 / IntRate;
+                    if (IntCount >= (IntReset >> 1)) begin
+                        o_Step <= ~o_Step;
+                        IntCount <= 0;
+                        step_count <= step_count + 1;
+                    end else
+                        IntCount <= IntCount + 1;
+                end else
+                    state <= s_Return;
+            end
+
+            s_Return: begin
+                o_Dir <= 1'b0; // Set direction for return
+                IntRate <= ReturnVelocity;
+                IntReset <= 1000000 / ReturnVelocity;
+                
+                if (step_count > 0) begin
+                    if (IntCount >= (IntReset >> 1)) begin
+                        o_Step <= ~o_Step;
+                        IntCount <= 0;
+                        step_count <= step_count - 1;
+                    end else
+                        IntCount <= IntCount + 1;
+                end else
+                    state <= s_Idle;
+            end
+        endcase
+    end
+end
+
+endmodule

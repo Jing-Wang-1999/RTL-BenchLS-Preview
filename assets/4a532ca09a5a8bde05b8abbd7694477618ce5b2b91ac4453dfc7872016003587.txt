@@ -1,0 +1,71 @@
+module rtlpp_10536(
+    input clk,
+    input flash,
+    input [31:0] Hexs,
+    input [7:0] LES,
+    input [7:0] point,
+    input rst,
+    input Start,
+    input SW0,
+    output seg_clk,
+    output seg_clrn,
+    output SEG_PEN,
+    output seg_sout
+);
+    
+    wire [63:0] XLXN_14;
+    wire [63:0] XLXN_15;
+    wire [63:0] XLXN_16;
+
+    // Embedded logic from P2S
+    reg [63:0] shift_reg;
+    reg seg_clk_reg;
+    reg seg_clrn_reg;
+    assign seg_clk = seg_clk_reg;
+    assign seg_clrn = seg_clrn_reg;
+    assign seg_sout = shift_reg[63];
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            shift_reg <= 64'b0;
+            seg_clk_reg <= 1'b0;
+            seg_clrn_reg <= 1'b0;
+        end else if (Start) begin
+            shift_reg <= XLXN_14;
+            seg_clk_reg <= ~seg_clk_reg;
+            seg_clrn_reg <= 1'b1;
+        end else begin
+            shift_reg <= {shift_reg[62:0], 1'b0};
+            seg_clk_reg <= ~seg_clk_reg;
+        end
+    end
+
+    // Embedded logic from HexTo8SEG8
+    reg [63:0] SEG_TXT;
+    always @(*) begin
+        integer i;
+        for (i = 0; i < 8; i = i + 1) begin
+            if (flash)
+                SEG_TXT[(i*8)+7 -: 8] = {LES[i], Hexs[(i*4)+3 -: 4], point[i]};
+            else
+                SEG_TXT[(i*8)+7 -: 8] = {1'b0, Hexs[(i*4)+3 -: 4], point[i]};
+        end
+    end
+
+    assign XLXN_16 = SEG_TXT;
+
+    // Embedded logic from MUX2T1_64
+    assign XLXN_14 = SW0 ? XLXN_16 : XLXN_15;
+
+    // Embedded logic from SSeg_map
+    reg [63:0] Seg_map;
+    always @(*) begin
+        integer j;
+        for (j = 0; j < 8; j = j + 1) begin
+            Seg_map[(j*8)+7 -: 8] = Hexs[j*4 +: 4] << 4 | Hexs[j*4 +: 4];
+        end
+    end
+
+    assign XLXN_15 = Seg_map;
+
+endmodule

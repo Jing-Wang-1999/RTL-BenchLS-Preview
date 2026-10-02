@@ -1,0 +1,44 @@
+This module is a state machine controller for a data handling system with five operational states. It synchronizes operations based on external control signals and generates corresponding output commands and status indicators.
+
+**Inputs:**
+-   `clk`: System clock for synchronous operation.
+-   `rst`: Active-high reset signal that returns the controller to an idle state.
+-   `Enable`: A control signal that prompts transitions from the idle and reading states.
+-   `Ready`: A control signal that prompts transitions from idle and user states.
+-   `Iniciar`: A signal indicating the completion of an initialization action.
+-   `Esc_Fin`: A signal indicating the completion of a write action.
+
+**Outputs:**
+-   `Escribir`: Command to initiate a write operation (active high).
+-   `Leer`: Command to initiate a read operation (active high).
+-   `Estado_Lectura`: Status flag indicating the system is in a reading phase.
+-   `Estado_Escritura`: Status flag indicating the system is in a writing phase.
+-   `Estado_Iniciar`: Status flag indicating the system is in an initialization phase.
+-   `state_reg`: The current 3-bit state code for monitoring.
+-   `state_next`: The computed next 3-bit state code for monitoring.
+
+**State Definitions and Behavior:**
+The controller progresses sequentially through a defined cycle but can remain in states until specific conditions are met.
+
+1.  **NULL State (Idle):** The default state after reset. The controller waits here until either the `Enable` or `Ready` signal becomes active, then proceeds to the Initialize state.
+
+2.  **INITIALIZE State:** In this state, the `Escribir` and `Estado_Iniciar` outputs are asserted. The controller waits for the `Iniciar` signal to go low, then transitions to the Reading state.
+
+3.  **READING State:** In this state, the `Leer` and `Estado_Lectura` outputs are asserted. The controller waits for the `Enable` signal to become active, then transitions to the User state.
+
+4.  **USER State:** All command outputs (`Escribir`, `Leer`) are deasserted, and status flags for reading, writing, and initialization are low. The controller waits for the `Ready` signal to become active, then transitions to the Writing state.
+
+5.  **WRITING State:** In this state, the `Escribir` and `Estado_Escritura` outputs are asserted. The controller waits for the `Esc_Fin` (Write Finish) signal to become active, at which point it returns to the Reading state.
+
+**State Transition Summary:**
+Idle -> Initialize (when Enable or Ready is high).
+Initialize -> Reading (when Iniciar is low).
+Reading -> User (when Enable is high).
+User -> Writing (when Ready is high).
+Writing -> Reading (when Esc_Fin is high).
+
+**Output Generation:**
+Output signals are registered (updated synchronously on the clock edge) and are determined solely by the current state. The `state_next` output is a combinational function of the current state and inputs, representing the state that will be entered on the next clock cycle.
+
+**Reset Operation:**
+When the `rst` signal is active, the controller immediately enters the NULL state, and all command and status outputs are driven low.

@@ -1,0 +1,106 @@
+module origen_120742 (
+    input clk,
+    input reset,
+    input run,
+    input clearA_loadB,
+    input M,
+    output reg clr_A,
+    output reg clr_X,
+    output reg ld_A,
+    output reg ld_B,
+    output reg shift,
+    output reg ld_X,
+    output reg fn
+);
+
+    // State encoding
+    localparam START = 0;
+    localparam A0    = 1;
+    localparam S0    = 2;
+    localparam A1    = 3;
+    localparam S1    = 4;
+    localparam A2    = 5;
+    localparam S2    = 6;
+    localparam A3    = 7;
+    localparam S3    = 8;
+    localparam A4    = 9;
+    localparam S4    = 10;
+    localparam A5    = 11;
+    localparam S5    = 12;
+    localparam A6    = 13;
+    localparam S6    = 14;
+    localparam SUB7  = 15;
+    localparam S7    = 16;
+    localparam FINISH = 17;
+
+    reg [4:0] state, next_state;
+
+    // Synchronous state register with asynchronous reset
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            state <= START;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            START:  next_state = run ? A0 : START;
+            A0:     next_state = S0;
+            S0:     next_state = A1;
+            A1:     next_state = S1;
+            S1:     next_state = A2;
+            A2:     next_state = S2;
+            S2:     next_state = A3;
+            A3:     next_state = S3;
+            S3:     next_state = A4;
+            A4:     next_state = S4;
+            S4:     next_state = A5;
+            A5:     next_state = S5;
+            S5:     next_state = A6;
+            A6:     next_state = S6;
+            S6:     next_state = SUB7;
+            SUB7:   next_state = S7;
+            S7:     next_state = FINISH;
+            FINISH: next_state = run ? FINISH : START;
+            default: next_state = START;
+        endcase
+    end
+
+    // Output logic (combinational)
+    always @(*) begin
+        // Default outputs to 0
+        clr_A = 0;
+        clr_X = 0;
+        ld_A = 0;
+        ld_B = 0;
+        shift = 0;
+        ld_X = 0;
+        fn = 0;
+
+        case (state)
+            START: begin
+                clr_A = 1;
+                clr_X = 1;
+                ld_B = clearA_loadB;
+            end
+            A0, A1, A2, A3, A4, A5, A6: begin
+                ld_A = M;
+                ld_X = M;
+            end
+            SUB7: begin
+                ld_A = M;
+                ld_X = M;
+                fn = 1;
+            end
+            S0, S1, S2, S3, S4, S5, S6, S7: begin
+                shift = 1;
+            end
+            FINISH: begin
+                clr_X = 1;
+            end
+        endcase
+    end
+
+endmodule

@@ -1,0 +1,25 @@
+This module is a configurable edge-triggered register with asynchronous reset, preset, and output enable.
+
+**Inputs:**
+- Clock: The main clock signal.
+- ClockEnable: When high, allows updates on active clock edges.
+- D: Data input bus, width configurable via NrOfBits.
+- Reset: Asynchronous reset signal; when high, clears the register.
+- Tick: Update enable; when high with ClockEnable, new data is stored.
+- cs: Chip select (active low for output); when high, the output is high-impedance (Z).
+- pre: Asynchronous preset signal; when high, sets all register bits to 1.
+
+**Output:**
+- Q: Data output bus, same width as D. Output is high-impedance when cs is high.
+
+**Parameters:**
+- ActiveLevel: Determines which clock edge triggers the output. If set to 1, the output reflects the positive-edge register; if 0, it reflects the negative-edge register.
+- NrOfBits: Width of the data bus (D and Q).
+
+**Behavior:**
+The module maintains two internal registers: one updates on the positive clock edge, the other on the negative clock edge. The output Q is driven by one of these registers based on the ActiveLevel parameter, but only when cs is low. If cs is high, Q is high-impedance.
+
+The registers update synchronously only when ClockEnable and Tick are both high. Asynchronously, a high Reset clears the register to all zeros, and a high pre sets it to all ones, overriding any synchronous update.
+
+**Allowed Sub-modules:**
+None; this is a fundamental storage element.

@@ -1,0 +1,21 @@
+The module generates a DMA request signal based on configuration, status, and buffer fullness inputs. It operates synchronously with a clock and asynchronous reset.
+
+**Inputs:**
+- **clk:** System clock.
+- **rst:** Active-low reset; clears the DMA request output.
+- **cfg[7:0]:** Configuration byte. Bits [5:4] select the request mode. Bits [6] and [0] are enable flags.
+- **status[1:0]:** 2-bit status indicator.
+- **full_empty:** Buffer fullness flag (high indicates full or empty, depending on context).
+- **dma_ack:** DMA acknowledge input; when high, it clears the request output.
+
+**Output:**
+- **dma_req:** DMA request output. Active high.
+
+**Behavior:**
+The combinational request condition (dma_req_d) is determined by cfg[0] and cfg[6] being high, combined with either the full_empty flag or a status check, as selected by cfg[5:4]:
+- **Mode 0 (cfg[5:4]=00):** Request if status is less than 3.
+- **Mode 1 (cfg[5:4]=01):** Request if status[1] is low.
+- **Mode 2 (cfg[5:4]=10):** Request if status equals 0.
+- **Mode 3 (cfg[5:4]=11):** Request only if full_empty is high.
+
+The request output is registered. On a clock edge, if the combinational condition is true and no acknowledge is present,

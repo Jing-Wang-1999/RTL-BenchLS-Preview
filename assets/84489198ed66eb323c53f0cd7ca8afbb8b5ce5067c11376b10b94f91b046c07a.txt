@@ -1,0 +1,52 @@
+always @(posedge oclk) begin
+		if (!oresetn) begin
+			p2_valid <= 0;
+			p2_found_end <= 1;
+			p2_last_req_remline <= 1;
+			request_remove_line_oclk <= 0;
+		end else
+		if (pipeline_en) begin
+			p2_start_of_frame <= p1_start_of_frame;
+			p2_start_of_line <= p1_start_of_line;
+			p2_valid <= p1_valid;
+
+			if (mem_portB_addr == mem_stop_B)
+				p2_found_end <= 1;
+
+			if (p1_start_of_frame) begin
+				if (!p2_found_end && !p2_last_req_remline) begin
+					request_remove_line_oclk <= ~request_remove_line_oclk;
+					p2_last_req_remline <= 1;
+				end else
+					p2_last_req_remline <= 0;
+
+				mem_stop_B <= mem_stop_B3;
+				mem_start_B <= mem_start_B3;
+				mem_portB_addr <= mem_start_B3;
+				p2_line_start_addr <= mem_start_B3;
+				p2_found_end <= 0;
+				p2_x <= 0;
+				p2_y <= 0;
+			end else
+			if (p1_start_of_line) begin
+				if (p2_y == 7) begin
+					if (mem_portB_addr != mem_stop_B) begin
+						mem_portB_addr <= next_mem_portB_addr;
+						p2_line_start_addr <= next_mem_portB_addr;
+					end else begin
+						p2_line_start_addr <= mem_stop_B;
+					end
+				end else begin
+					mem_portB_addr <= p2_line_start_addr;
+				end
+				p2_x <= 0;
+				p2_y <= p2_y + 1;
+			end else begin
+				if (p2_x == 7) begin
+					if (mem_portB_addr != mem_stop_B && mem_portB_rdata != "\n")
+						mem_portB_addr <= next_mem_portB_addr;
+				end
+				p2_x <= p2_x + 1;
+			end
+		end
+	end

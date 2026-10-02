@@ -1,0 +1,110 @@
+`timescale 1ns / 1ns
+
+module origen_094172 #(parameter W = 8, A = 5) (
+    inout [W-1:0] data,
+    input [A-1:0] addr,
+    input read,
+    input write
+);
+    reg [W-1:0] mem [0:(2**A)-1];
+    
+    assign data = (read) ? mem[addr] : {W{1'bz}};
+    
+    always @(posedge write) begin
+        mem[addr] <= data;
+    end
+endmodule
+
+module testbench;
+    parameter W = 8;
+    parameter A = 5;
+    
+    wire [W-1:0] data;
+    reg [A-1:0] addr;
+    reg read, write;
+    reg [W-1:0] data_reg;
+    
+    memory #(W, A) dut (
+        .data(data),
+        .addr(addr),
+        .read(read),
+        .write(write)
+    );
+    
+    assign data = write ? data_reg : {W{1'bz}};
+    
+    task write_mem;
+        input [A-1:0] waddr;
+        input [W-1:0] wdata;
+        input debug;
+        begin
+            addr = waddr;
+            data_reg = wdata;
+            write = 1;
+            #1 write = 0;
+            if (debug) $display("Write: Addr = %h, Data = %h", waddr, wdata);
+        end
+    endtask
+    
+    task read_mem;
+        input [A-1:0] raddr;
+        output [W-1:0] rdata;
+        input debug;
+        begin
+            addr = raddr;
+            read = 1;
+            #1 rdata = data;
+            read = 0;
+            if (debug) $display("Read: Addr = %h, Data = %h", raddr, rdata);
+        end
+    endtask
+    
+    function print_status;
+        input success;
+        begin
+            if (success)
+                $display("Test passed successfully!");
+            else
+                $display("Test failed!");
+        end
+    endfunction
+    
+    integer i;
+    reg [W-1:0] read_data;
+    reg test_pass;
+    
+    initial begin
+        test_pass = 1;
+        
+        // Clear memory
+        for (i = 0; i < 2**A; i = i + 1) begin
+            write_mem(i, 0, 0);
+        end
+        
+        // Verify memory is cleared
+        for (i = 0; i < 2**A; i = i + 1) begin
+            read_mem(i, read_data, 0);
+            if (read_data !== 0) begin
+                $display("Error: Addr %h not cleared, contains %h", i, read_data);
+                test_pass = 0;
+            end
+        end
+        
+        // Write each address with its own value
+        for (i = 0; i < 2**A; i = i + 1) begin
+            write_mem(i, i[W-1:0], 0);
+        end
+        
+        // Read back and verify
+        for (i = 0; i < 2**A; i = i + 1) begin
+            read_mem(i, read_data, 0);
+            if (read_data !== i[W-1:0]) begin
+                $display("Error: Addr %h contains %h, expected %h", i, read_data, i[W-1:0]);
+                test_pass = 0;
+            end
+        end
+        
+        print_status(test_pass);
+        $finish;
+    end
+endmodule

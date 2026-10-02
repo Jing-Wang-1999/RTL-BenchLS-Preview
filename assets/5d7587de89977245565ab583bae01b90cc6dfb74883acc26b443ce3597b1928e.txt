@@ -1,0 +1,37 @@
+The Verilog module `hpi_data_port_register` acts as an interface for data transfer in an OTG HPI system. It features addressable read and write operations controlled by input signals and clock cycles.
+
+**Primary Function:**
+The primary function of this module is to facilitate read and write operations to an output data port. It accomplishes this by responding to control signals and a system clock, managing input and output data efficiently.
+
+**Control Flow and Decision Points:**
+1. **Reset Conditions:** When `reset_n` is low, both `readdata` and `data_out` are reset to 0.
+2. **Clock Edge Handling:** On a positive clock edge (`posedge clk`), if `reset_n` is not asserted and `clk_en` is high, `readdata` is updated with the value from `read_mux_out`.
+3. **Write Operation:** If `chipselect` is high and `write_n` is low, and the address is 0, `data_out` is updated with the lower 16 bits of `writedata`.
+
+**Data Processing and Signal Interactions:**
+1. **Data Routing and Muxing:**
+   - `read_mux_out` assigns `data_in` to its value when the address is 0, otherwise it assigns 0.
+   - `data_in` lines are directly taken from `in_port`.
+2. **Data Storage and Outputs:**
+   - `out_port` directly maps to `data_out` for external access.
+   - `readdata` concatenates 16 zeros with the value from `read_mux_out` for reading operations.
+3. **Control Enabling:**
+   - `clk_en` is constantly enabled (set to 1), ensuring the effective clock-driven operations.
+
+These operations orchestrate reading from and writing to the `out_port` in synchronization with control signals and the system clock, creating an effective data interface module.
+
+Module Interface:
+module hpi_data_port_register (
+  address,
+  chipselect,
+  clk,
+  in_port,
+  reset_n,
+  write_n,
+  writedata,
+  out_port,
+  readdata
+);
+
+Behavioral Clarifications:
+- Port widths: address is 2-bit input, in_port and out_port are 16-bit, writedata is 32-bit input, readdata is 32-bit register. The module contains two separate sequential always blocks both sensitive to posedge clk or negedge reset_n. The wire clk_en is hardwired to 1. Only address value 0 is a valid mapped register for both read and write.

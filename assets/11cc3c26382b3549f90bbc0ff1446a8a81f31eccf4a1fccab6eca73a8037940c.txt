@@ -1,0 +1,43 @@
+module LUT2 (
+    output O,
+    input I0,
+    input I1
+);
+    parameter [3:0] INIT = 4'h0;
+    
+    reg O_reg;
+    assign O = O_reg;
+    
+    always @(*) begin
+        // Constant optimization: all bits equal
+        if (INIT[0] === INIT[1] && INIT[1] === INIT[2] && INIT[2] === INIT[3]) begin
+            O_reg = INIT[0];
+        end
+        // I1=0 optimization: both bits equal
+        else if (I1 === 1'b0 && INIT[0] === INIT[1]) begin
+            O_reg = INIT[0];
+        end
+        // I1=1 optimization: both bits equal
+        else if (I1 === 1'b1 && INIT[2] === INIT[3]) begin
+            O_reg = INIT[2];
+        end
+        // I0=0 optimization: both bits equal
+        else if (I0 === 1'b0 && INIT[0] === INIT[2]) begin
+            O_reg = INIT[0];
+        end
+        // I0=1 optimization: both bits equal
+        else if (I0 === 1'b1 && INIT[1] === INIT[3]) begin
+            O_reg = INIT[1];
+        end
+        // Default case: direct lookup
+        else begin
+            case ({I1, I0})
+                2'b00: O_reg = INIT[0];
+                2'b01: O_reg = INIT[1];
+                2'b10: O_reg = INIT[2];
+                2'b11: O_reg = INIT[3];
+                default: O_reg = 1'bx;
+            endcase
+        end
+    end
+endmodule

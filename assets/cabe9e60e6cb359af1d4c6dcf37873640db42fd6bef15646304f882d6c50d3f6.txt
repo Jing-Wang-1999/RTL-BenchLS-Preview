@@ -1,0 +1,21 @@
+always @(posedge clk_i)
+  begin
+    if (rst_i)
+    begin
+      pls_s[0] <= 1'b0;
+      cnt_o <= 16'hffff;
+    end
+    else
+    begin
+      // update output with next counter computed value
+      cnt_o <= cnt_z ? lch_i : cnt_n[15:0];
+
+      // fast mode detection: if we underflowed in both previous and current phi2 cycle,
+      // shorten the pulse by syncing pls_s[0] (happens after counter reload above)
+      // in case of 'force load 0' prb pulse remains short.
+      if (fste_i & (fst_r | (pls_o & unfl_o)))
+      begin
+        pls_s[0] <= pls_s[1];
+      end
+    end
+  end

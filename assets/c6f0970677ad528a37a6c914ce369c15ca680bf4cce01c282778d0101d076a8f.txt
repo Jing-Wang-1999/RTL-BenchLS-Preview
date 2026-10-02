@@ -1,0 +1,48 @@
+module autovcoder_025063 (
+    X1,
+    X2,
+    X3,
+    X4,
+    Cin,
+    Cout,
+    Sum,
+    Carry
+);
+  input X1, X2, X3, X4, Cin;
+  output Cout, Sum, Carry;
+  wire N7, n2, n3, n4;
+  assign Carry = N7;
+
+  XOR2_X1 U1 (
+      .A1(X1),
+      .A2(X2),
+      .Z (n3)
+  );
+  AOI22_X1 U2 (
+      .A1(X1),
+      .A2(X2),
+      .B1(n3),
+      .B2(X3),
+      .ZN(n2)
+  );
+  INV_X1 U3 (
+      .I (n2),
+      .ZN(Cout)
+  );
+  XOR2_X1 U4 (
+      .A1(X3),
+      .A2(n3),
+      .Z (n4)
+  );
+  AND2_X1 U5 (
+      .A1(n4),
+      .A2(Cin),
+      .Z (N7)
+  );
+  XOR2_X1 U6 (
+      .A1(n4),
+      .A2(Cin),
+      .Z (Sum)
+  );
+endmodule
+

@@ -1,0 +1,48 @@
+{
+  "pr_url": "https://github.com/openrisc/mor1kx/pull/110",
+  "issue_url": "https://github.com/openrisc/mor1kx/issues/102",
+  "repository": "openrisc/mor1kx",
+  "pr_number": 110,
+  "issue_number": 102,
+  "verilog_files": [
+    "rtl/verilog/mor1kx_decode.v"
+  ],
+  "deletions": 0,
+  "additions": 2,
+  "patches": [
+    {
+      "filename": "rtl/verilog/mor1kx_decode.v",
+      "patch": "@@ -259,7 +259,9 @@ module mor1kx_decode\n \t\t\t      opc_alu == `OR1K_ALU_OPC_SHRT ||\n \t\t\t      opc_insn == `OR1K_OPCODE_SHRTI;\n \n+   /* check bit 9 to verify valid l.fl1/l.ff1 instruction */\n    assign decode_op_ffl1_o = opc_insn == `OR1K_OPCODE_ALU &&\n+                             (decode_insn_i[9:8] == 2'b00 || decode_insn_i[9:8] == 2'b01) &&\n \t\t\t     opc_alu == `OR1K_ALU_OPC_FFL1;\n \n    assign decode_op_movhi_o = opc_insn == `OR1K_OPCODE_MOVHI;",
+      "additions": 2,
+      "deletions": 0,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "Fix mor1kx_decode to accept valid l.fl1 (l.ff1) instructions",
+    "body": "This resolves #102 ",
+    "state": "closed",
+    "created_at": "2019-12-19T09:44:41Z",
+    "updated_at": "2019-12-22T16:23:21Z",
+    "merged_at": "2019-12-22T16:23:21Z",
+    "user": "JaewonHur"
+  },
+  "issue_info": {
+    "title": "[Bug] l.fl1 instruction not decoded",
+    "body": "@lifeasageek\r\n\r\nl.fl1 instruction is not decoded correctly.\r\nAny l.fl1 instruction can reproduce the error.\r\n\r\nWe can solve this with following change in mor1kx_decode.v\r\n\r\n```verilog\r\n  assign decode_op_ffl1_o = opc_insn == `OR1K_OPCODE_ALU &&\r\n                        (decode_insn_i[9:8] == 2'b00 || decode_insn_i[9:8] == 2'b01) &&\r\n                        opc_alu == `OR1K_ALU_OPC_FFL1;\r\n```\r\n",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2019-12-09T09:35:16Z",
+    "updated_at": "2019-12-22T16:23:21Z"
+  },
+  "source_info": {
+    "source_file": "10.txt",
+    "line_number": 6,
+    "verified": "yes"
+  },
+  "base_commit": "22a1a853bed54f6292ec3e0734bd7562c4131f26",
+  "head_commit": "b7442313abba7c80043bd6609dbfc445545ebd2d",
+  "base_ref": "master",
+  "task_id": "openrisc_mor1kx_110_102",
+  "lec_status": "useful_pass"
+}

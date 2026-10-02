@@ -1,0 +1,33 @@
+always @(posedge sample_clk) begin
+    // phase and frequency detector
+    if (dst_sync_sample_sync2_reg && !dst_sync_sample_sync3_reg) begin
+        if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
+            edge_1_reg <= 1'b0;
+            edge_2_reg <= 1'b0;
+        end else begin
+            edge_1_reg <= !edge_2_reg;
+            edge_2_reg <= 1'b0;
+        end
+    end else if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
+        edge_1_reg <= 1'b0;
+        edge_2_reg <= !edge_1_reg;
+    end
+
+    // accumulator
+    sample_acc_reg <= $signed(sample_acc_reg) + $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
+
+    sample_cnt_reg <= sample_cnt_reg + 1;
+
+    if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
+        active_reg[0] <= 1'b1;
+    end
+
+    if (sample_cnt_reg == 0) begin
+        active_reg <= {active_reg, src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg};
+        sample_acc_reg <= $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
+        sample_acc_out_reg <= sample_acc_reg;
+        if (active_reg != 0) begin
+            sample_update_reg <= !sample_update_reg;
+        end
+    end
+end

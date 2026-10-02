@@ -1,0 +1,307 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module vga_curproc (clk, rst_i, Thgate, Tvgate, idat, idat_wreq, 
+	cursor_xy, cursor_en, cursor_res, 
+	cursor_wadr, cursor_wdat, cursor_we,
+	cc_adr_o, cc_dat_i,
+	rgb_fifo_wreq, rgb);
+
+	
+	
+	
+
+	
+	input         clk;           
+	input         rst_i;         
+
+	
+	input [15:0] Thgate, Tvgate; 
+	
+	input [23:0] idat;           
+	input        idat_wreq;      
+
+	
+	input [31:0] cursor_xy;      
+	input        cursor_en;      
+	input        cursor_res;     
+	input [ 8:0] cursor_wadr;    
+	input [31:0] cursor_wdat;    
+	input        cursor_we;      
+
+	
+	output [ 3:0] cc_adr_o;      
+	reg  [ 3:0] cc_adr_o;    
+	input  [15:0] cc_dat_i;      
+
+	
+	output        rgb_fifo_wreq; 
+	reg        rgb_fifo_wreq;
+	output [23:0] rgb;           
+	reg [23:0] rgb;
+
+	
+	
+	
+	reg         dcursor_en, ddcursor_en, dddcursor_en;
+	reg  [15:0] xcnt, ycnt;
+	wire        xdone, ydone;
+	wire [15:0] cursor_x, cursor_y;
+	wire        cursor_isalpha;
+	reg  [15:0] cdat, dcdat;
+	wire [ 7:0] cursor_r, cursor_g, cursor_b, cursor_alpha;
+	reg         inbox_x, inbox_y;
+	wire        inbox;
+	reg         dinbox, ddinbox, dddinbox;
+
+	reg  [23:0] didat, ddidat, dddidat;
+	reg         didat_wreq, ddidat_wreq;
+	wire [31:0] cbuf_q;
+	reg  [11:0] cbuf_ra;
+	reg  [ 2:0] dcbuf_ra;
+	wire [ 8:0] cbuf_a;
+
+	reg         store1, store2;
+
+	
+	
+	
+
+	
+	
+	always@(posedge clk)
+		if(rst_i || xdone)
+			xcnt <=  16'h0;
+		else if (idat_wreq)
+			xcnt <=  xcnt + 16'h1;
+
+	assign xdone = (xcnt == Thgate) && idat_wreq;
+
+	always@(posedge clk)
+		if(rst_i || ydone)
+			ycnt <=  16'h0;
+		else if (xdone)
+			ycnt <=  ycnt + 16'h1;
+
+	assign ydone = (ycnt == Tvgate) && xdone;
+
+
+	
+	assign cursor_x = cursor_xy[15: 0];
+	assign cursor_y = cursor_xy[31:16];
+
+	
+	
+	always@(posedge clk)
+		begin
+			inbox_x <=  (xcnt >= cursor_x) && (xcnt < (cursor_x + (cursor_res ? 16'h7f : 16'h1f) ));
+			inbox_y <=  (ycnt >= cursor_y) && (ycnt < (cursor_y + (cursor_res ? 16'h7f : 16'h1f) ));
+		end
+
+	assign inbox = inbox_x && inbox_y;
+
+	always@(posedge clk)
+		dinbox <=  inbox;
+
+	always@(posedge clk)
+		if (didat_wreq)
+			ddinbox <=  dinbox;
+
+	always@(posedge clk)
+		dddinbox <=  ddinbox;
+
+	
+	
+	always@(posedge clk)
+		if (!cursor_en || ydone)
+			cbuf_ra <=  12'h0;
+		else if (inbox && idat_wreq)
+			cbuf_ra <=  cbuf_ra +12'h1;
+
+	always@(posedge clk)
+		dcbuf_ra <=  cbuf_ra[2:0];
+
+	assign cbuf_a = cursor_we ? cursor_wadr : cursor_res ? cbuf_ra[11:3] : cbuf_ra[9:1];
+
+	
+	
+	generic_spram #(9, 32) cbuf(
+		.clk(clk),
+		.rst(1'b0),       
+		.ce(1'b1),        
+		.we(cursor_we),
+		.oe(1'b1),        
+		.addr(cbuf_a),
+		.di(cursor_wdat),
+		.\do (cbuf_q)
+	);
+
+	
+	
+	always@(posedge clk)
+		if (didat_wreq)
+			cdat <=  dcbuf_ra[0] ? cbuf_q[31:16] : cbuf_q[15:0];
+
+	always@(posedge clk)
+		dcdat <=  cdat;
+
+	
+	
+
+	
+	always@(posedge clk)
+		if (didat_wreq)
+			case (dcbuf_ra)
+				3'b000: cc_adr_o <= cbuf_q[ 3: 0];
+				3'b001: cc_adr_o <= cbuf_q[ 7: 4];
+				3'b010: cc_adr_o <= cbuf_q[11: 8];
+				3'b011: cc_adr_o <= cbuf_q[15:12];
+				3'b100: cc_adr_o <= cbuf_q[19:16];
+				3'b101: cc_adr_o <= cbuf_q[23:20];
+				3'b110: cc_adr_o <= cbuf_q[27:24];
+				3'b111: cc_adr_o <= cbuf_q[31:28];
+			endcase
+
+	
+	
+	assign cursor_isalpha =  cursor_res ? cc_dat_i[15]    : dcdat[15];
+	assign cursor_alpha   =  cursor_res ? cc_dat_i[7:0]   : dcdat[7:0];
+	assign cursor_r       = {cursor_res ? cc_dat_i[14:10] : dcdat[14:10], 3'h0};
+	assign cursor_g       = {cursor_res ? cc_dat_i[ 9: 5] : dcdat[ 9: 5], 3'h0};
+	assign cursor_b       = {cursor_res ? cc_dat_i[ 4: 0] : dcdat[ 4: 0], 3'h0};
+
+	
+	
+	always@(posedge clk)
+		didat <=  idat;
+
+	always@(posedge clk)
+		if (didat_wreq)
+			ddidat <=  didat;
+
+	always@(posedge clk)
+		dddidat <=  ddidat;
+
+	always@(posedge clk)
+		begin
+			didat_wreq  <=  idat_wreq;
+			ddidat_wreq <=  didat_wreq;
+		end
+
+	
+	
+	always@(posedge clk)
+		dcursor_en <=  cursor_en;
+
+	always@(posedge clk)
+		if (didat_wreq)
+			ddcursor_en <=  dcursor_en;
+
+	always@(posedge clk)
+		dddcursor_en <=  ddcursor_en;
+
+	
+	
+	
+	
+	
+	
+	always@(posedge clk)
+		if (ddidat_wreq)
+			if (!dddcursor_en || !dddinbox)
+				rgb <=  dddidat;
+			else if (cursor_isalpha)
+				
+
+
+					rgb <=  dddidat;
+				
+			else
+				rgb <=  {cursor_r, cursor_g, cursor_b};
+
+	
+	
+	always@(posedge clk)
+		if (rst_i)
+		begin
+			store1 <=  1'b0;
+			store2 <=  1'b0;
+		end
+		else
+		begin
+			store1 <=   didat_wreq           | store1;
+			store2 <=  (didat_wreq & store1) | store2;
+		end
+
+	
+	always@(posedge clk)
+		rgb_fifo_wreq <=  ddidat_wreq & store2;
+
+endmodule

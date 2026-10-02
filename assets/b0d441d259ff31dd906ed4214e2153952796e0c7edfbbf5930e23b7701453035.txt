@@ -1,0 +1,17 @@
+always @*
+    begin : round_ctr
+      round_ctr_new = 4'h0;
+      round_ctr_we  = 1'b0;
+
+      if (round_ctr_rst)
+        begin
+          round_ctr_new = 4'h0;
+          round_ctr_we  = 1'b1;
+        end
+
+      else if (round_ctr_inc)
+        begin
+          round_ctr_new = round_ctr_reg + 1'b1;
+          round_ctr_we  = 1'b1;
+        end
+    end

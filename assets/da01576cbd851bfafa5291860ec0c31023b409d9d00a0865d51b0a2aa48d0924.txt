@@ -1,0 +1,14 @@
+always @(posedge clk_i or negedge rst_i)
+    if (~rst_i)
+      begin
+          spcr <=  8'h10;  // set master bit
+          sper <=  8'h00;
+      end
+    else if (wb_wr)
+      begin
+        if (adr_i == 2'b00)
+          spcr <=  dat_i | 8'h10; // always set master bit
+
+        if (adr_i == 2'b11)
+          sper <=  dat_i;
+      end

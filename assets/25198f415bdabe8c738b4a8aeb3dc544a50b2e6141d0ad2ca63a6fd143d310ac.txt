@@ -1,0 +1,128 @@
+module rtlpp_06599 (
+    input wire clk,
+    input wire rst,
+    input wire RegWrite,
+    input wire [4:0] Rs1_addr,
+    input wire [4:0] Rs2_addr,
+    input wire [4:0] Wt_addr,
+    input wire [31:0] Wt_data,
+    output reg [31:0] Rs1_data,
+    output reg [31:0] Rs2_data,
+    output reg [31:0] x0,
+    output reg [31:0] ra,
+    output reg [31:0] sp,
+    output reg [31:0] gp,
+    output reg [31:0] tp,
+    output reg [31:0] t0,
+    output reg [31:0] t1,
+    output reg [31:0] t2,
+    output reg [31:0] s0,
+    output reg [31:0] s1,
+    output reg [31:0] a0,
+    output reg [31:0] a1,
+    output reg [31:0] a2,
+    output reg [31:0] a3,
+    output reg [31:0] a4,
+    output reg [31:0] a5,
+    output reg [31:0] a6,
+    output reg [31:0] a7,
+    output reg [31:0] s2,
+    output reg [31:0] s3,
+    output reg [31:0] s4,
+    output reg [31:0] s5,
+    output reg [31:0] s6,
+    output reg [31:0] s7,
+    output reg [31:0] s8,
+    output reg [31:0] s9,
+    output reg [31:0] s10,
+    output reg [31:0] s11,
+    output reg [31:0] t3,
+    output reg [31:0] t4,
+    output reg [31:0] t5,
+    output reg [31:0] t6
+);
+
+reg [31:0] regs[0:31];
+
+// Define the names of the registers
+assign x0 = regs[0];
+assign ra = regs[1];
+assign sp = regs[2];
+assign gp = regs[3];
+assign tp = regs[4];
+assign t0 = regs[5];
+assign t1 = regs[6];
+assign t2 = regs[7];
+assign s0 = regs[8];
+assign s1 = regs[9];
+assign a0 = regs[10];
+assign a1 = regs[11];
+assign a2 = regs[12];
+assign a3 = regs[13];
+assign a4 = regs[14];
+assign a5 = regs[15];
+assign a6 = regs[16];
+assign a7 = regs[17];
+assign s2 = regs[18];
+assign s3 = regs[19];
+assign s4 = regs[20];
+assign s5 = regs[21];
+assign s6 = regs[22];
+assign s7 = regs[23];
+assign s8 = regs[24];
+assign s9 = regs[25];
+assign s10 = regs[26];
+assign s11 = regs[27];
+assign t3 = regs[28];
+assign t4 = regs[29];
+assign t5 = regs[30];
+assign t6 = regs[31];
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        regs[0] <= 32'b0;
+        regs[1] <= 32'b0;
+        regs[2] <= 32'b0;
+        regs[3] <= 32'b0;
+        regs[4] <= 32'b0;
+        regs[5] <= 32'b0;
+        regs[6] <= 32'b0;
+        regs[7] <= 32'b0;
+        regs[8] <= 32'b0;
+        regs[9] <= 32'b0;
+        regs[10] <= 32'b0;
+        regs[11] <= 32'b0;
+        regs[12] <= 32'b0;
+        regs[13] <= 32'b0;
+        regs[14] <= 32'b0;
+        regs[15] <= 32'b0;
+        regs[16] <= 32'b0;
+        regs[17] <= 32'b0;
+        regs[18] <= 32'b0;
+        regs[19] <= 32'b0;
+        regs[20] <= 32'b0;
+        regs[21] <= 32'b0;
+        regs[22] <= 32'b0;
+        regs[23] <= 32'b0;
+        regs[24] <= 32'b0;
+        regs[25] <= 32'b0;
+        regs[26] <= 32'b0;
+        regs[27] <= 32'b0;
+        regs[28] <= 32'b0;
+        regs[29] <= 32'b0;
+        regs[30] <= 32'b0;
+        regs[31] <= 32'b0;
+    end else if (RegWrite && (Wt_addr != 5'b0)) begin
+        regs[Wt_addr] <= Wt_data;
+    end
+end
+
+always @(Rs1_addr, regs) begin
+    Rs1_data = regs[Rs1_addr];
+end
+
+always @(Rs2_addr, regs) begin
+    Rs2_data = regs[Rs2_addr];
+end
+
+endmodule

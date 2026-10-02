@@ -1,0 +1,47 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/1179",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/1178",
+  "repository": "lowRISC/ibex",
+  "pr_number": 1179,
+  "issue_number": 1178,
+  "verilog_files": [
+    "rtl/ibex_pmp.sv"
+  ],
+  "deletions": 3,
+  "additions": 3,
+  "patches": [
+    {
+      "filename": "rtl/ibex_pmp.sv",
+      "patch": "@@ -55,8 +55,8 @@ module ibex_pmp #(\n     end\n     // Address mask for NA matching\n     for (genvar b = PMPGranularity+2; b < 34; b++) begin : g_bitmask\n-      if (b == PMPGranularity+2) begin : g_bit0\n-        // Always mask bit (G+2) for NAPOT\n+      if (b == 2) begin : g_bit0\n+        // Always mask bit 2 for NAPOT\n         assign region_addr_mask[r][b] = (csr_pmp_cfg_i[r].mode != PMP_MODE_NAPOT);\n       end else begin : g_others\n         // We will mask this bit if it is within the programmed granule\n@@ -65,7 +65,7 @@ module ibex_pmp #(\n         //                  | This bit pos is the top of the mask, all lower bits set\n         // thus mask = 1111 0000\n         assign region_addr_mask[r][b] = (csr_pmp_cfg_i[r].mode != PMP_MODE_NAPOT) |\n-                                        ~&csr_pmp_addr_i[r][b-1:PMPGranularity+2];\n+                                        ~&csr_pmp_addr_i[r][b-1:PMPGranularity+1];\n       end\n     end\n   end",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6
+    }
+  ],
+  "pr_info": {
+    "title": "[rtl] Fix NAPOT address matching (#1178)",
+    "body": "Generate correct masks for NAPOT range addresses covering the entire granule. When PMPGranularity > 0, then a NAPOT range can span the whole granule, which requires the next-lowest bit (i.e. highest bit that is not part of the granule) to be 0. Fixes #1178 ",
+    "state": "closed",
+    "created_at": "2020-11-06T15:39:24Z",
+    "updated_at": "2021-01-11T16:59:44Z",
+    "merged_at": "2020-11-06T17:47:27Z",
+    "user": "michael-platzer"
+  },
+  "issue_info": {
+    "title": "PMP NAPOT masks are incorrect when the region address spans the entire granule",
+    "body": "The address masking logic in [`ibex_pmp.sv`](https://github.com/lowRISC/ibex/blob/master/rtl/ibex_pmp.sv) always considers the lowest bit of the granule of the PMP address configuration register (i.e. `csr_pmp_addr_i[r][PMPGranularity+2]`) not to be part of the range address in NAPOT mode. This is correct when `PMPGranularity == 0`, since then NA4 mode must be selected if the range address uses all bits, but it is incorrect when `PMPGranularity > 0`, since then it is legal in NAPOT mode to have a range address span the entire granule, with the next-lowest bit (i.e. `csr_pmp_addr_i[r][PMPGranularity+1]`) cleared to indicate that all higher bits are part of the range address.\r\n\r\nFor instance with `PMPGranularity == 28`, the granule covers bits `csr_pmp_addr_i[r][33:30]`, yet bit `csr_pmp_addr_i[r][29]` must also be considered to check whether a range address spans all 4 bits of the granule. A range address of `csr_pmp_addr_i[r] == 34'b00_0101_1111_1111_1111_1111_1111_1111_1111` could be used to specify a range from 1 GiB to 2 GiB for example and in that case the region address mask should be `region_addr_mask [r] == 4'b1111` (i.e. the entire granule). However, since only bits `csr_pmp_addr_i[r][33:30]` are currently considered when generating the mask, it is incorrectly set to `region_addr_mask [r] == 4'b1100`.\r\n\r\nThe specification states that bits `G-2:0` (i.e. bits `csr_pmp_addr_i[r][PMPGranularity:0]`) are implicitly set to all ones and hence do not need to be considered, but that implies that bit `G-1` (i.e. `csr_pmp_addr_i[r][PMPGranularity+1]`) is still used to specify the range:\r\n\r\n> When G\u22651, the NA4 mode is not selectable.  When G\u22652 and pmpcfg<sub>i</sub>.A[1] is set, i.e. the mode is NAPOT, then bits pmpaddr<sub>i</sub>[G-2:0] read as all ones.\r\n> -- <cite>[Volume II: RISC-V Privileged Architectures V20190608-Priv-MSU-Ratified, Sect. 3.6.1](https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMFDQC-and-Priv-v1.11/riscv-privileged-20190608.pdf)</cite>",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2020-11-06T15:37:14Z",
+    "updated_at": "2020-11-06T17:47:27Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 92
+  },
+  "base_commit": "1f3b462b9477531a9bf8627a05f92cadfd3c54bb",
+  "head_commit": "98364eba16b24b0c051193d32a3c29e9d61a94d9",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_1179_1178",
+  "lec_status": "useful_pass"
+}

@@ -1,0 +1,38 @@
+### Instruction for Verilog Module Generation:
+
+Create a Verilog module named `vga_sync_generator` that generates synchronization signals and pixel coordinates for a VGA display. The module should perform the following functions:
+
+1. **Primary Function:**
+   - Generate horizontal and vertical synchronization signals (`hsync` and `vsync`).
+   - Provide pixel coordinates (`pixel_x` and `pixel_y`) to locate pixels on the screen.
+   - Produce control signals (`video_on`, `p_tick`) to indicate active video area and pixel clock.
+
+2. **Key Control Flow:**
+   - The module uses clock (`clk`) and reset (`reset`) inputs.
+   - Use internal counters for horizontal (`h_count_reg`) and vertical (`v_count_reg`) timing.
+   - Ensure that counters reset at the end of each line and frame.
+   - Handle doubling of the pixel clock rate using a toggling `mod2_reg` register.
+
+3. **Important Data Processing and Signal Interactions:**
+   - Drive `mod2_reg` with a toggled value to create a `pixel_tick` indicating pixel signal updates.
+   - Increment `h_count_reg` and `v_count_reg` based on `pixel_tick`, ensuring counters reset at predefined end values (`h_end` and `v_end`).
+   - Generate synchronized `h_sync_next` and `v_sync_next` signals based on current counter states, ensuring proper synchronization pulses during blanking intervals.
+   - Determine `video_on` signal by checking if horizontal and vertical counters are within the active display area.
+
+4. **Registers and Wire Initializations:**
+   - Initialize all registers at reset to avoid undefined behavior.
+   - Utilize both blocking and non-blocking assignments appropriately in always blocks to model sequential and combinatorial logic accurately.
+
+The implementation must ensure precise timing and synchronization per VGA standard horizontal and vertical drive parameters. Carefully check the conditions for synchronization pulse generation and frame refresh, ensuring pixel coordinates are accurate. The outputs `hsync`, `vsync`, `pixel_x`, `pixel_y`, `video_on`, and `p_tick` should reflect real-time values driven by the internal state of horizontal and vertical counters.
+
+Module Interface:
+module vga_sync_generator
+   (
+    input wire clk, reset,
+    output wire hsync, vsync, video_on, p_tick,
+    output wire [9:0] pixel_x, pixel_y
+   );
+
+Behavioral Clarifications:
+- VGA timing constants are HD=640, HF=48, HB=16, HR=96, VD=480, VF=10, VB=33, VR=2; horizontal total is 800 pixels, vertical total is 525 lines.
+- Sync pulses are active high: hsync asserts when h_count is in range [HD+HB, HD+HB+HR-1] and vsync when v_count is in range [VD+VB, VD+VB+VR-1].

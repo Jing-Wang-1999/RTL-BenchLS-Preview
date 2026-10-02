@@ -1,0 +1,244 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module bit_register (
+		 
+		 we,		 
+		 clk,
+		 reset_n,
+		 data_in,
+		 
+		 
+		 data_out
+		 );
+
+
+
+
+parameter  RESET_DEFAULT = 1'h0;
+
+  input	 we;
+  input	 clk;
+  input	 reset_n;
+  input	 data_in;
+  output data_out;
+  
+  reg	 data_out;
+  
+  
+  always @(posedge clk or negedge reset_n)
+    begin
+      if (!reset_n)
+	data_out <= RESET_DEFAULT;
+      else if (we)
+	data_out <= data_in;
+    end 
+endmodule 
+
+
+
+module req_register (
+		 
+		 clk,
+		 reset_n,
+		 cpu_we,		 
+		 cpu_req,
+		 hware_ack,
+		 
+		 
+		 data_out
+		 );
+
+
+
+
+parameter  RESET_DEFAULT = 1'h0;
+
+  input	 clk      ;
+  input	 reset_n  ;
+  input	 cpu_we   ; 
+  input	 cpu_req  ; 
+  input	 hware_ack; 
+  output data_out ;
+  
+  reg	 data_out;
+  
+  
+  always @(posedge clk or negedge reset_n)
+    begin
+      if (!reset_n)
+	data_out <= RESET_DEFAULT;
+      else if (cpu_we & cpu_req) 
+	 data_out <= 1'b1;
+      else if (hware_ack)  
+	 data_out <= 1'b0;
+    end 
+endmodule 
+
+
+
+module stat_register (
+		 
+		 clk,
+		 reset_n,
+		 cpu_we,		 
+		 cpu_ack,
+		 hware_req,
+		 
+		 
+		 data_out
+		 );
+
+
+
+
+parameter  RESET_DEFAULT = 1'h0;
+
+  input	 clk      ;
+  input	 reset_n  ;
+  input	 cpu_we   ; 
+  input	 cpu_ack  ; 
+  input	 hware_req; 
+  output data_out ;
+  
+  reg	 data_out;
+  
+  
+  always @(posedge clk or negedge reset_n)
+    begin
+      if (!reset_n)
+	data_out <= RESET_DEFAULT;
+      else if (hware_req)  
+	 data_out <= 1'b1;
+      else if (cpu_we & cpu_ack) 
+	 data_out <= 1'b0;
+    end 
+endmodule 
+
+
+
+
+
+
+module  generic_register	(
+	      
+	      we,		 
+	      data_in,
+	      reset_n,
+	      clk,
+	      
+	      
+	      data_out
+	      );
+
+  parameter   WD               = 1;  
+  parameter   RESET_DEFAULT    = 0;  
+  input [WD-1:0]     we;	
+  input [WD-1:0]     data_in;	
+  input              reset_n;
+  input		     clk;
+  output [WD-1:0]    data_out;
+
+
+generate
+  genvar i;
+  for (i = 0; i < WD; i = i + 1) begin : gen_bit_reg
+    bit_register #(RESET_DEFAULT[i]) u_bit_reg (   
+                .we         (we[i]),
+                .clk        (clk),
+                .reset_n    (reset_n),
+                .data_in    (data_in[i]),
+                .data_out   (data_out[i])
+            );
+  end
+endgenerate
+
+
+endmodule
+
+
+
+module  generic_intr_stat_reg	(
+		 
+		 clk,
+		 reset_n,
+		 reg_we,		 
+		 reg_din,
+		 hware_req,
+		 
+		 
+		 data_out
+	      );
+
+  parameter   WD               = 1;  
+  parameter   RESET_DEFAULT    = 0;  
+  input [WD-1:0]     reg_we;	
+  input [WD-1:0]     reg_din;	
+  input [WD-1:0]     hware_req;	
+  input              reset_n;
+  input		     clk;
+  output [WD-1:0]    data_out;
+
+
+generate
+  genvar i;
+  for (i = 0; i < WD; i = i + 1) begin : gen_bit_reg
+    stat_register #(RESET_DEFAULT[i]) u_bit_reg (
+		 
+		 . clk        (clk           ),
+		 . reset_n    (reset_n       ),
+		 . cpu_we     (reg_we[i]     ),		 
+		 . cpu_ack    (reg_din[i]    ),
+		 . hware_req  (hware_req[i]  ),
+		 
+		 
+		 . data_out  (data_out[i]    )
+		 );
+
+  end
+endgenerate
+
+
+endmodule

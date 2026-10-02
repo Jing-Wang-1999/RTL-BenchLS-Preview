@@ -1,0 +1,50 @@
+module autovcoder_073905 (
+    r_clk,
+    w_clk,
+    n_rst,
+    r_enable,
+    w_enable,
+    w_data,
+    r_data,
+    empty,
+    full
+);
+  input [7:0] w_data;
+  output [7:0] r_data;
+  input r_clk, w_clk, n_rst, r_enable, w_enable;
+  output empty, full;
+  wire wenable_fifo;
+  wire [2:0] waddr;
+  wire [2:0] raddr;
+  wire [3:0] rptr;
+  wire [3:0] wptr;
+
+  fiforam UFIFORAM (
+      .wclk(w_clk),
+      .wenable(wenable_fifo),
+      .waddr(waddr),
+      .raddr(raddr),
+      .wdata(w_data),
+      .rdata(r_data)
+  );
+  write_fifo_ctrl UWFC (
+      .wclk(w_clk),
+      .rst_n(n_rst),
+      .wenable(w_enable),
+      .rptr(rptr),
+      .wenable_fifo(wenable_fifo),
+      .wptr(wptr),
+      .waddr(waddr),
+      .full_flag(full)
+  );
+  read_fifo_ctrl URFC (
+      .rclk(r_clk),
+      .rst_n(n_rst),
+      .renable(r_enable),
+      .wptr(wptr),
+      .rptr(rptr),
+      .raddr(raddr),
+      .empty_flag(empty)
+  );
+endmodule
+

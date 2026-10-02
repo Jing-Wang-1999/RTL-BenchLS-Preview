@@ -1,0 +1,46 @@
+`timescale 1ns/1ps
+module tb;
+reg clk=0,rst=1; always #5 clk=~clk;
+task tick; begin @(posedge clk); #2; end endtask
+task reset; begin @(negedge clk);rst=0;repeat(4)tick;@(negedge clk);rst=1;end endtask
+initial begin #20000000;$fatal(1,"timeout");end
+reg cyc=0,stb=0,we=0;reg [1:0] adr=0;reg [7:0] di=0;wire [7:0] dout;
+wire ack,irq,sck,mosi;wire miso=~mosi;
+simple_spi_top dut(clk,rst,cyc,stb,adr,we,di,dout,ack,irq,sck,mosi,miso);
+task wr;input [1:0] a;input [7:0] d;begin
+@(negedge clk);cyc=1;stb=1;we=1;adr=a;di=d;tick;if(ack!==1)$fatal(1,"ack");
+tick;if(ack!==0)$fatal(1,"alternating ack");@(negedge clk);cyc=0;stb=0;we=0;tick;end endtask
+task rd;input [1:0] a;input [7:0] expected;begin
+@(negedge clk);cyc=1;stb=1;we=0;adr=a;tick;
+if(ack!==1 || dout!==expected)$fatal(1,"read %d %h != %h",a,dout,expected);
+tick;@(negedge clk);cyc=0;stb=0;tick;end endtask
+integer bits=0,period=0,last_edge=0,cycles=0;reg [7:0] sent=0;reg monitor=0;
+always @(posedge clk)cycles=cycles+1;
+always @(negedge sck) if(monitor)begin bits=bits+1;sent={sent[6:0],mosi};if(last_edge && cycles-last_edge!=period)$fatal(1,"SCK divider");last_edge=cycles;end
+initial begin reset;wr(3,0);wr(0,8'hd8);repeat(8)tick;period=2;
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h00);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h00)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'hff);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'hff);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'hff)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h00);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h81);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h81)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h7e);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h42);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h42)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'hbd);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h1b);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h1b)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'he4);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h53);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h53)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'hac);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'hc4);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'hc4)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h3b);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h63);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h63)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h9c);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'hb4);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'hb4)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h4b);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h6a);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h6a)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h95);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h8c);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h8c)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h73);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h51);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h51)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'hae);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h27);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h27)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'hd8);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'hd7);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'hd7)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h28);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'hbf);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'hbf)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h40);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h7e);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h7e)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h81);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h99);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h99)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h66);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h1a);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h1a)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'he5);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'hf1);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'hf1)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h0e);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'he1);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'he1)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'h1e);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h5b);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h5b)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'ha4);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h0e);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h0e)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'hf1);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h3c);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h3c)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'hc3);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h49);repeat(120)tick;monitor=0;if(bits!=8 || sent!==8'h49)$fatal(1,"serial transmit %d %h",bits,sent);rd(2,8'hb6);if(irq!==1)$fatal(1,"irq");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,"irq clear");
+$display("RTL_BENCHLS_PASS");$finish(0);end
+endmodule

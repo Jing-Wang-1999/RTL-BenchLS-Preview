@@ -1,0 +1,1636 @@
+// Path: rtl/axicb_crossbar_top.sv
+module axicb_crossbar_top
+
+    #(
+        
+        
+        
+
+        
+        parameter AXI_ADDR_W = 8,
+        
+        parameter AXI_ID_W = 8,
+        
+        parameter AXI_DATA_W = 8,
+
+        
+        parameter MST_NB = 4,
+        
+        parameter SLV_NB = 4,
+
+        
+        parameter OR_NUM_W = 8,
+
+        
+        parameter MST_PIPELINE = 0,
+        parameter SLV_PIPELINE = 0,
+
+        
+        
+        
+        parameter AXI_SIGNALING = 1,
+
+        
+        parameter USER_SUPPORT = 0,
+        
+        parameter AXI_AUSER_W = 1,
+        parameter AXI_WUSER_W = 1,
+        parameter AXI_BUSER_W = 1,
+        parameter AXI_RUSER_W = 1,
+
+        
+        parameter TIMEOUT_VALUE = 10000,
+        
+        parameter TIMEOUT_ENABLE = 1,
+
+        
+        parameter NUM_PRIORITY_LVL = 4,
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+        
+        
+        
+
+        parameter MST0_CDC = 0,
+        parameter MST0_OSTDREQ_NUM = 4,
+        parameter MST0_OSTDREQ_SIZE = 1,
+        parameter MST0_PRIORITY = 0,
+        parameter [SLV_NB-1:0] MST0_ROUTES = 4'b1_1_1_1,
+        parameter [AXI_ID_W-1:0] MST0_ID_MASK = 'h10,
+        parameter MST0_RW = 0,  
+
+        
+        
+        
+
+        parameter MST1_CDC = 0,
+        parameter MST1_OSTDREQ_NUM = 4,
+        parameter MST1_OSTDREQ_SIZE = 1,
+        parameter MST1_PRIORITY = 0,
+        parameter [SLV_NB-1:0] MST1_ROUTES = 4'b1_1_1_1,
+        parameter [AXI_ID_W-1:0] MST1_ID_MASK = 'h20,
+        parameter MST1_RW = 0,  
+
+        
+        
+        
+
+        parameter MST2_CDC = 0,
+        parameter MST2_OSTDREQ_NUM = 4,
+        parameter MST2_OSTDREQ_SIZE = 1,
+        parameter MST2_PRIORITY = 0,
+        parameter [SLV_NB-1:0] MST2_ROUTES = 4'b1_1_1_1,
+        parameter [AXI_ID_W-1:0] MST2_ID_MASK = 'h30,
+        parameter MST2_RW = 0,  
+
+        
+        
+        
+
+        parameter MST3_CDC = 0,
+        parameter MST3_OSTDREQ_NUM = 4,
+        parameter MST3_OSTDREQ_SIZE = 1,
+        parameter MST3_PRIORITY = 0,
+        parameter [SLV_NB-1:0] MST3_ROUTES = 4'b1_1_1_1,
+        parameter [AXI_ID_W-1:0] MST3_ID_MASK = 'h40,
+        parameter MST3_RW = 0,  
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+        
+        
+        
+
+        parameter SLV0_CDC = 0,
+        parameter SLV0_START_ADDR = 0,
+        parameter SLV0_END_ADDR = 4095,
+        parameter SLV0_OSTDREQ_NUM = 4,
+        parameter SLV0_OSTDREQ_SIZE = 1,
+        parameter SLV0_KEEP_BASE_ADDR = 0,
+
+        
+        
+        
+
+        parameter SLV1_CDC = 0,
+        parameter SLV1_START_ADDR = 4096,
+        parameter SLV1_END_ADDR = 8191,
+        parameter SLV1_OSTDREQ_NUM = 4,
+        parameter SLV1_OSTDREQ_SIZE = 1,
+        parameter SLV1_KEEP_BASE_ADDR = 0,
+
+        
+        
+        
+
+        parameter SLV2_CDC = 0,
+        parameter SLV2_START_ADDR = 8192,
+        parameter SLV2_END_ADDR = 12287,
+        parameter SLV2_OSTDREQ_NUM = 4,
+        parameter SLV2_OSTDREQ_SIZE = 1,
+        parameter SLV2_KEEP_BASE_ADDR = 0,
+
+        
+        
+        
+
+        parameter SLV3_CDC = 0,
+        parameter SLV3_START_ADDR = 12288,
+        parameter SLV3_END_ADDR = 16383,
+        parameter SLV3_OSTDREQ_NUM = 4,
+        parameter SLV3_OSTDREQ_SIZE = 1,
+        parameter SLV3_KEEP_BASE_ADDR = 0
+    )(
+        
+        
+        
+
+        input  wire                       aclk,
+        input  wire                       aresetn,
+        input  wire                       srst,
+
+        
+        
+        
+
+        input  wire                       slv0_aclk,
+        input  wire                       slv0_aresetn,
+        input  wire                       slv0_srst,
+        input  wire                       slv0_awvalid,
+        output logic                      slv0_awready,
+        input  wire  [AXI_ADDR_W    -1:0] slv0_awaddr,
+        input  wire  [8             -1:0] slv0_awlen,
+        input  wire  [3             -1:0] slv0_awsize,
+        input  wire  [2             -1:0] slv0_awburst,
+        input  wire                       slv0_awlock,
+        input  wire  [4             -1:0] slv0_awcache,
+        input  wire  [3             -1:0] slv0_awprot,
+        input  wire  [4             -1:0] slv0_awqos,
+        input  wire  [4             -1:0] slv0_awregion,
+        input  wire  [AXI_ID_W      -1:0] slv0_awid,
+        input  wire  [AXI_AUSER_W   -1:0] slv0_awuser,
+        input  wire                       slv0_wvalid,
+        output logic                      slv0_wready,
+        input  wire                       slv0_wlast,
+        input  wire  [AXI_DATA_W    -1:0] slv0_wdata,
+        input  wire  [AXI_DATA_W/8  -1:0] slv0_wstrb,
+        input  wire  [AXI_WUSER_W   -1:0] slv0_wuser,
+        output logic                      slv0_bvalid,
+        input  wire                       slv0_bready,
+        output logic [AXI_ID_W      -1:0] slv0_bid,
+        output logic [2             -1:0] slv0_bresp,
+        output logic [AXI_BUSER_W   -1:0] slv0_buser,
+        input  wire                       slv0_arvalid,
+        output logic                      slv0_arready,
+        input  wire  [AXI_ADDR_W    -1:0] slv0_araddr,
+        input  wire  [8             -1:0] slv0_arlen,
+        input  wire  [3             -1:0] slv0_arsize,
+        input  wire  [2             -1:0] slv0_arburst,
+        input  wire                       slv0_arlock,
+        input  wire  [4             -1:0] slv0_arcache,
+        input  wire  [3             -1:0] slv0_arprot,
+        input  wire  [4             -1:0] slv0_arqos,
+        input  wire  [4             -1:0] slv0_arregion,
+        input  wire  [AXI_ID_W      -1:0] slv0_arid,
+        input  wire  [AXI_AUSER_W   -1:0] slv0_aruser,
+        output logic                      slv0_rvalid,
+        input  wire                       slv0_rready,
+        output logic [AXI_ID_W      -1:0] slv0_rid,
+        output logic [2             -1:0] slv0_rresp,
+        output logic [AXI_DATA_W    -1:0] slv0_rdata,
+        output logic                      slv0_rlast,
+        output logic [AXI_RUSER_W   -1:0] slv0_ruser,
+
+        
+        
+        
+
+        input  wire                       slv1_aclk,
+        input  wire                       slv1_aresetn,
+        input  wire                       slv1_srst,
+        input  wire                       slv1_awvalid,
+        output logic                      slv1_awready,
+        input  wire  [AXI_ADDR_W    -1:0] slv1_awaddr,
+        input  wire  [8             -1:0] slv1_awlen,
+        input  wire  [3             -1:0] slv1_awsize,
+        input  wire  [2             -1:0] slv1_awburst,
+        input  wire                       slv1_awlock,
+        input  wire  [4             -1:0] slv1_awcache,
+        input  wire  [3             -1:0] slv1_awprot,
+        input  wire  [4             -1:0] slv1_awqos,
+        input  wire  [4             -1:0] slv1_awregion,
+        input  wire  [AXI_ID_W      -1:0] slv1_awid,
+        input  wire  [AXI_AUSER_W   -1:0] slv1_awuser,
+        input  wire                       slv1_wvalid,
+        output logic                      slv1_wready,
+        input  wire                       slv1_wlast,
+        input  wire  [AXI_DATA_W    -1:0] slv1_wdata,
+        input  wire  [AXI_DATA_W/8  -1:0] slv1_wstrb,
+        input  wire  [AXI_WUSER_W   -1:0] slv1_wuser,
+        output logic                      slv1_bvalid,
+        input  wire                       slv1_bready,
+        output logic [AXI_ID_W      -1:0] slv1_bid,
+        output logic [2             -1:0] slv1_bresp,
+        output logic [AXI_BUSER_W   -1:0] slv1_buser,
+        input  wire                       slv1_arvalid,
+        output logic                      slv1_arready,
+        input  wire  [AXI_ADDR_W    -1:0] slv1_araddr,
+        input  wire  [8             -1:0] slv1_arlen,
+        input  wire  [3             -1:0] slv1_arsize,
+        input  wire  [2             -1:0] slv1_arburst,
+        input  wire                       slv1_arlock,
+        input  wire  [4             -1:0] slv1_arcache,
+        input  wire  [3             -1:0] slv1_arprot,
+        input  wire  [4             -1:0] slv1_arqos,
+        input  wire  [4             -1:0] slv1_arregion,
+        input  wire  [AXI_ID_W      -1:0] slv1_arid,
+        input  wire  [AXI_AUSER_W   -1:0] slv1_aruser,
+        output logic                      slv1_rvalid,
+        input  wire                       slv1_rready,
+        output logic [AXI_ID_W      -1:0] slv1_rid,
+        output logic [2             -1:0] slv1_rresp,
+        output logic [AXI_DATA_W    -1:0] slv1_rdata,
+        output logic                      slv1_rlast,
+        output logic [AXI_RUSER_W   -1:0] slv1_ruser,
+
+        
+        
+        
+
+        input  wire                       slv2_aclk,
+        input  wire                       slv2_aresetn,
+        input  wire                       slv2_srst,
+        input  wire                       slv2_awvalid,
+        output logic                      slv2_awready,
+        input  wire  [AXI_ADDR_W    -1:0] slv2_awaddr,
+        input  wire  [8             -1:0] slv2_awlen,
+        input  wire  [3             -1:0] slv2_awsize,
+        input  wire  [2             -1:0] slv2_awburst,
+        input  wire                       slv2_awlock,
+        input  wire  [4             -1:0] slv2_awcache,
+        input  wire  [3             -1:0] slv2_awprot,
+        input  wire  [4             -1:0] slv2_awqos,
+        input  wire  [4             -1:0] slv2_awregion,
+        input  wire  [AXI_ID_W      -1:0] slv2_awid,
+        input  wire  [AXI_AUSER_W   -1:0] slv2_awuser,
+        input  wire                       slv2_wvalid,
+        output logic                      slv2_wready,
+        input  wire                       slv2_wlast,
+        input  wire  [AXI_DATA_W    -1:0] slv2_wdata,
+        input  wire  [AXI_DATA_W/8  -1:0] slv2_wstrb,
+        input  wire  [AXI_WUSER_W   -1:0] slv2_wuser,
+        output logic                      slv2_bvalid,
+        input  wire                       slv2_bready,
+        output logic [AXI_ID_W      -1:0] slv2_bid,
+        output logic [2             -1:0] slv2_bresp,
+        output logic [AXI_BUSER_W   -1:0] slv2_buser,
+        input  wire                       slv2_arvalid,
+        output logic                      slv2_arready,
+        input  wire  [AXI_ADDR_W    -1:0] slv2_araddr,
+        input  wire  [8             -1:0] slv2_arlen,
+        input  wire  [3             -1:0] slv2_arsize,
+        input  wire  [2             -1:0] slv2_arburst,
+        input  wire                       slv2_arlock,
+        input  wire  [4             -1:0] slv2_arcache,
+        input  wire  [3             -1:0] slv2_arprot,
+        input  wire  [4             -1:0] slv2_arqos,
+        input  wire  [4             -1:0] slv2_arregion,
+        input  wire  [AXI_ID_W      -1:0] slv2_arid,
+        input  wire  [AXI_AUSER_W   -1:0] slv2_aruser,
+        output logic                      slv2_rvalid,
+        input  wire                       slv2_rready,
+        output logic [AXI_ID_W      -1:0] slv2_rid,
+        output logic [2             -1:0] slv2_rresp,
+        output logic [AXI_DATA_W    -1:0] slv2_rdata,
+        output logic                      slv2_rlast,
+        output logic [AXI_RUSER_W   -1:0] slv2_ruser,
+
+        
+        
+        
+
+        input  wire                       slv3_aclk,
+        input  wire                       slv3_aresetn,
+        input  wire                       slv3_srst,
+        input  wire                       slv3_awvalid,
+        output logic                      slv3_awready,
+        input  wire  [AXI_ADDR_W    -1:0] slv3_awaddr,
+        input  wire  [8             -1:0] slv3_awlen,
+        input  wire  [3             -1:0] slv3_awsize,
+        input  wire  [2             -1:0] slv3_awburst,
+        input  wire                       slv3_awlock,
+        input  wire  [4             -1:0] slv3_awcache,
+        input  wire  [3             -1:0] slv3_awprot,
+        input  wire  [4             -1:0] slv3_awqos,
+        input  wire  [4             -1:0] slv3_awregion,
+        input  wire  [AXI_ID_W      -1:0] slv3_awid,
+        input  wire  [AXI_AUSER_W   -1:0] slv3_awuser,
+        input  wire                       slv3_wvalid,
+        output logic                      slv3_wready,
+        input  wire                       slv3_wlast,
+        input  wire  [AXI_DATA_W    -1:0] slv3_wdata,
+        input  wire  [AXI_DATA_W/8  -1:0] slv3_wstrb,
+        input  wire  [AXI_WUSER_W   -1:0] slv3_wuser,
+        output logic                      slv3_bvalid,
+        input  wire                       slv3_bready,
+        output logic [AXI_ID_W      -1:0] slv3_bid,
+        output logic [2             -1:0] slv3_bresp,
+        output logic [AXI_BUSER_W   -1:0] slv3_buser,
+        input  wire                       slv3_arvalid,
+        output logic                      slv3_arready,
+        input  wire  [AXI_ADDR_W    -1:0] slv3_araddr,
+        input  wire  [8             -1:0] slv3_arlen,
+        input  wire  [3             -1:0] slv3_arsize,
+        input  wire  [2             -1:0] slv3_arburst,
+        input  wire                       slv3_arlock,
+        input  wire  [4             -1:0] slv3_arcache,
+        input  wire  [3             -1:0] slv3_arprot,
+        input  wire  [4             -1:0] slv3_arqos,
+        input  wire  [4             -1:0] slv3_arregion,
+        input  wire  [AXI_ID_W      -1:0] slv3_arid,
+        input  wire  [AXI_AUSER_W   -1:0] slv3_aruser,
+        output logic                      slv3_rvalid,
+        input  wire                       slv3_rready,
+        output logic [AXI_ID_W      -1:0] slv3_rid,
+        output logic [2             -1:0] slv3_rresp,
+        output logic [AXI_DATA_W    -1:0] slv3_rdata,
+        output logic                      slv3_rlast,
+        output logic [AXI_RUSER_W   -1:0] slv3_ruser,
+
+        
+        
+        
+
+        input  wire                       mst0_aclk,
+        input  wire                       mst0_aresetn,
+        input  wire                       mst0_srst,
+        output logic                      mst0_awvalid,
+        input  wire                       mst0_awready,
+        output logic [AXI_ADDR_W    -1:0] mst0_awaddr,
+        output logic [8             -1:0] mst0_awlen,
+        output logic [3             -1:0] mst0_awsize,
+        output logic [2             -1:0] mst0_awburst,
+        output logic                      mst0_awlock,
+        output logic [4             -1:0] mst0_awcache,
+        output logic [3             -1:0] mst0_awprot,
+        output logic [4             -1:0] mst0_awqos,
+        output logic [4             -1:0] mst0_awregion,
+        output logic [AXI_ID_W      -1:0] mst0_awid,
+        output logic [AXI_AUSER_W   -1:0] mst0_awuser,
+        output logic                      mst0_wvalid,
+        input  wire                       mst0_wready,
+        output logic                      mst0_wlast,
+        output logic [AXI_DATA_W    -1:0] mst0_wdata,
+        output logic [AXI_DATA_W/8  -1:0] mst0_wstrb,
+        output logic [AXI_WUSER_W   -1:0] mst0_wuser,
+        input  wire                       mst0_bvalid,
+        output logic                      mst0_bready,
+        input  wire  [AXI_ID_W      -1:0] mst0_bid,
+        input  wire  [2             -1:0] mst0_bresp,
+        input  wire  [AXI_BUSER_W   -1:0] mst0_buser,
+        output logic                      mst0_arvalid,
+        input  wire                       mst0_arready,
+        output logic [AXI_ADDR_W    -1:0] mst0_araddr,
+        output logic [8             -1:0] mst0_arlen,
+        output logic [3             -1:0] mst0_arsize,
+        output logic [2             -1:0] mst0_arburst,
+        output logic                      mst0_arlock,
+        output logic [4             -1:0] mst0_arcache,
+        output logic [3             -1:0] mst0_arprot,
+        output logic [4             -1:0] mst0_arqos,
+        output logic [4             -1:0] mst0_arregion,
+        output logic [AXI_ID_W      -1:0] mst0_arid,
+        output logic [AXI_AUSER_W   -1:0] mst0_aruser,
+        input  wire                       mst0_rvalid,
+        output logic                      mst0_rready,
+        input  wire  [AXI_ID_W      -1:0] mst0_rid,
+        input  wire  [2             -1:0] mst0_rresp,
+        input  wire  [AXI_DATA_W    -1:0] mst0_rdata,
+        input  wire                       mst0_rlast,
+        input  wire  [AXI_RUSER_W   -1:0] mst0_ruser,
+
+        
+        
+        
+
+        input  wire                       mst1_aclk,
+        input  wire                       mst1_aresetn,
+        input  wire                       mst1_srst,
+        output logic                      mst1_awvalid,
+        input  wire                       mst1_awready,
+        output logic [AXI_ADDR_W    -1:0] mst1_awaddr,
+        output logic [8             -1:0] mst1_awlen,
+        output logic [3             -1:0] mst1_awsize,
+        output logic [2             -1:0] mst1_awburst,
+        output logic                      mst1_awlock,
+        output logic [4             -1:0] mst1_awcache,
+        output logic [3             -1:0] mst1_awprot,
+        output logic [4             -1:0] mst1_awqos,
+        output logic [4             -1:0] mst1_awregion,
+        output logic [AXI_ID_W      -1:0] mst1_awid,
+        output logic [AXI_AUSER_W   -1:0] mst1_awuser,
+        output logic                      mst1_wvalid,
+        input  wire                       mst1_wready,
+        output logic                      mst1_wlast,
+        output logic [AXI_DATA_W    -1:0] mst1_wdata,
+        output logic [AXI_DATA_W/8  -1:0] mst1_wstrb,
+        output logic [AXI_WUSER_W   -1:0] mst1_wuser,
+        input  wire                       mst1_bvalid,
+        output logic                      mst1_bready,
+        input  wire  [AXI_ID_W      -1:0] mst1_bid,
+        input  wire  [2             -1:0] mst1_bresp,
+        input  wire  [AXI_BUSER_W   -1:0] mst1_buser,
+        output logic                      mst1_arvalid,
+        input  wire                       mst1_arready,
+        output logic [AXI_ADDR_W    -1:0] mst1_araddr,
+        output logic [8             -1:0] mst1_arlen,
+        output logic [3             -1:0] mst1_arsize,
+        output logic [2             -1:0] mst1_arburst,
+        output logic                      mst1_arlock,
+        output logic [4             -1:0] mst1_arcache,
+        output logic [3             -1:0] mst1_arprot,
+        output logic [4             -1:0] mst1_arqos,
+        output logic [4             -1:0] mst1_arregion,
+        output logic [AXI_ID_W      -1:0] mst1_arid,
+        output logic [AXI_AUSER_W   -1:0] mst1_aruser,
+        input  wire                       mst1_rvalid,
+        output logic                      mst1_rready,
+        input  wire  [AXI_ID_W      -1:0] mst1_rid,
+        input  wire  [2             -1:0] mst1_rresp,
+        input  wire  [AXI_DATA_W    -1:0] mst1_rdata,
+        input  wire                       mst1_rlast,
+        input  wire  [AXI_RUSER_W   -1:0] mst1_ruser,
+
+        
+        
+        
+
+        input  wire                       mst2_aclk,
+        input  wire                       mst2_aresetn,
+        input  wire                       mst2_srst,
+        output logic                      mst2_awvalid,
+        input  wire                       mst2_awready,
+        output logic [AXI_ADDR_W    -1:0] mst2_awaddr,
+        output logic [8             -1:0] mst2_awlen,
+        output logic [3             -1:0] mst2_awsize,
+        output logic [2             -1:0] mst2_awburst,
+        output logic                      mst2_awlock,
+        output logic [4             -1:0] mst2_awcache,
+        output logic [3             -1:0] mst2_awprot,
+        output logic [4             -1:0] mst2_awqos,
+        output logic [4             -1:0] mst2_awregion,
+        output logic [AXI_ID_W      -1:0] mst2_awid,
+        output logic [AXI_AUSER_W   -1:0] mst2_awuser,
+        output logic                      mst2_wvalid,
+        input  wire                       mst2_wready,
+        output logic                      mst2_wlast,
+        output logic [AXI_DATA_W    -1:0] mst2_wdata,
+        output logic [AXI_DATA_W/8  -1:0] mst2_wstrb,
+        output logic [AXI_WUSER_W   -1:0] mst2_wuser,
+        input  wire                       mst2_bvalid,
+        output logic                      mst2_bready,
+        input  wire  [AXI_ID_W      -1:0] mst2_bid,
+        input  wire  [2             -1:0] mst2_bresp,
+        input  wire  [AXI_BUSER_W   -1:0] mst2_buser,
+        output logic                      mst2_arvalid,
+        input  wire                       mst2_arready,
+        output logic [AXI_ADDR_W    -1:0] mst2_araddr,
+        output logic [8             -1:0] mst2_arlen,
+        output logic [3             -1:0] mst2_arsize,
+        output logic [2             -1:0] mst2_arburst,
+        output logic                      mst2_arlock,
+        output logic [4             -1:0] mst2_arcache,
+        output logic [3             -1:0] mst2_arprot,
+        output logic [4             -1:0] mst2_arqos,
+        output logic [4             -1:0] mst2_arregion,
+        output logic [AXI_ID_W      -1:0] mst2_arid,
+        output logic [AXI_AUSER_W   -1:0] mst2_aruser,
+        input  wire                       mst2_rvalid,
+        output logic                      mst2_rready,
+        input  wire  [AXI_ID_W      -1:0] mst2_rid,
+        input  wire  [2             -1:0] mst2_rresp,
+        input  wire  [AXI_DATA_W    -1:0] mst2_rdata,
+        input  wire                       mst2_rlast,
+        input  wire  [AXI_RUSER_W   -1:0] mst2_ruser,
+
+        
+        
+        
+
+        input  wire                       mst3_aclk,
+        input  wire                       mst3_aresetn,
+        input  wire                       mst3_srst,
+        output logic                      mst3_awvalid,
+        input  wire                       mst3_awready,
+        output logic [AXI_ADDR_W    -1:0] mst3_awaddr,
+        output logic [8             -1:0] mst3_awlen,
+        output logic [3             -1:0] mst3_awsize,
+        output logic [2             -1:0] mst3_awburst,
+        output logic                      mst3_awlock,
+        output logic [4             -1:0] mst3_awcache,
+        output logic [3             -1:0] mst3_awprot,
+        output logic [4             -1:0] mst3_awqos,
+        output logic [4             -1:0] mst3_awregion,
+        output logic [AXI_ID_W      -1:0] mst3_awid,
+        output logic [AXI_AUSER_W   -1:0] mst3_awuser,
+        output logic                      mst3_wvalid,
+        input  wire                       mst3_wready,
+        output logic                      mst3_wlast,
+        output logic [AXI_DATA_W    -1:0] mst3_wdata,
+        output logic [AXI_DATA_W/8  -1:0] mst3_wstrb,
+        output logic [AXI_WUSER_W   -1:0] mst3_wuser,
+        input  wire                       mst3_bvalid,
+        output logic                      mst3_bready,
+        input  wire  [AXI_ID_W      -1:0] mst3_bid,
+        input  wire  [2             -1:0] mst3_bresp,
+        input  wire  [AXI_BUSER_W   -1:0] mst3_buser,
+        output logic                      mst3_arvalid,
+        input  wire                       mst3_arready,
+        output logic [AXI_ADDR_W    -1:0] mst3_araddr,
+        output logic [8             -1:0] mst3_arlen,
+        output logic [3             -1:0] mst3_arsize,
+        output logic [2             -1:0] mst3_arburst,
+        output logic                      mst3_arlock,
+        output logic [4             -1:0] mst3_arcache,
+        output logic [3             -1:0] mst3_arprot,
+        output logic [4             -1:0] mst3_arqos,
+        output logic [4             -1:0] mst3_arregion,
+        output logic [AXI_ID_W      -1:0] mst3_arid,
+        output logic [AXI_AUSER_W   -1:0] mst3_aruser,
+        input  wire                       mst3_rvalid,
+        output logic                      mst3_rready,
+        input  wire  [AXI_ID_W      -1:0] mst3_rid,
+        input  wire  [2             -1:0] mst3_rresp,
+        input  wire  [AXI_DATA_W    -1:0] mst3_rdata,
+        input  wire                       mst3_rlast,
+        input  wire  [AXI_RUSER_W   -1:0] mst3_ruser
+    );
+endmodule
+
+// Path: rtl/axicb_mst_if.sv
+module axicb_mst_if
+
+    #(
+        
+        parameter AXI_ADDR_W = 8,
+        
+        parameter AXI_ID_W = 8,
+        
+        parameter AXI_DATA_W = 8,
+
+        
+        
+        
+        parameter AXI_SIGNALING = 0,
+
+        
+        parameter KEEP_BASE_ADDR = 0,
+        
+        parameter BASE_ADDR = 0,
+
+        
+        parameter SLV_CDC = 0,
+        
+        parameter SLV_OSTDREQ_NUM = 4,
+        
+        parameter SLV_OSTDREQ_SIZE = 1,
+
+        
+        parameter USER_SUPPORT = 0,
+        
+        parameter AXI_AUSER_W = 0,
+        parameter AXI_WUSER_W = 0,
+        parameter AXI_BUSER_W = 0,
+        parameter AXI_RUSER_W = 0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 8,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    )(
+        
+        input  wire                       i_aclk,
+        input  wire                       i_aresetn,
+        input  wire                       i_srst,
+        input  wire                       i_awvalid,
+        output logic                      i_awready,
+        input  wire  [AWCH_W        -1:0] i_awch,
+        input  wire                       i_wvalid,
+        output logic                      i_wready,
+        input  wire                       i_wlast,
+        input  wire  [WCH_W         -1:0] i_wch,
+        output logic                      i_bvalid,
+        input  wire                       i_bready,
+        output logic [BCH_W         -1:0] i_bch,
+        input  wire                       i_arvalid,
+        output logic                      i_arready,
+        input  wire  [ARCH_W        -1:0] i_arch,
+        output logic                      i_rvalid,
+        input  wire                       i_rready,
+        output logic                      i_rlast,
+        output logic [RCH_W         -1:0] i_rch,
+        
+        input  wire                       o_aclk,
+        input  wire                       o_aresetn,
+        input  wire                       o_srst,
+        output logic                      o_awvalid,
+        input  wire                       o_awready,
+        output logic [AXI_ADDR_W    -1:0] o_awaddr,
+        output logic [8             -1:0] o_awlen,
+        output logic [3             -1:0] o_awsize,
+        output logic [2             -1:0] o_awburst,
+        output logic                      o_awlock,
+        output logic [4             -1:0] o_awcache,
+        output logic [3             -1:0] o_awprot,
+        output logic [4             -1:0] o_awqos,
+        output logic [4             -1:0] o_awregion,
+        output logic [AXI_ID_W      -1:0] o_awid,
+        output logic [AXI_AUSER_W   -1:0] o_awuser,
+        output logic                      o_wvalid,
+        input  wire                       o_wready,
+        output logic                      o_wlast,
+        output logic [AXI_DATA_W    -1:0] o_wdata,
+        output logic [AXI_DATA_W/8  -1:0] o_wstrb,
+        output logic [AXI_WUSER_W   -1:0] o_wuser,
+        input  wire                       o_bvalid,
+        output logic                      o_bready,
+        input  wire  [AXI_ID_W      -1:0] o_bid,
+        input  wire  [2             -1:0] o_bresp,
+        input  wire  [AXI_BUSER_W   -1:0] o_buser,
+        output logic                      o_arvalid,
+        input  wire                       o_arready,
+        output logic [AXI_ADDR_W    -1:0] o_araddr,
+        output logic [8             -1:0] o_arlen,
+        output logic [3             -1:0] o_arsize,
+        output logic [2             -1:0] o_arburst,
+        output logic                      o_arlock,
+        output logic [4             -1:0] o_arcache,
+        output logic [3             -1:0] o_arprot,
+        output logic [4             -1:0] o_arqos,
+        output logic [4             -1:0] o_arregion,
+        output logic [AXI_ID_W      -1:0] o_arid,
+        output logic [AXI_AUSER_W   -1:0] o_aruser,
+        input  wire                       o_rvalid,
+        output logic                      o_rready,
+        input  wire  [AXI_ID_W      -1:0] o_rid,
+        input  wire  [2             -1:0] o_rresp,
+        input  wire  [AXI_DATA_W    -1:0] o_rdata,
+        input  wire                       o_rlast,
+        input  wire  [AXI_RUSER_W   -1:0] o_ruser
+    );
+endmodule
+
+// Path: rtl/axicb_mst_switch.sv
+module axicb_mst_switch
+
+    #(
+        
+        parameter AXI_ID_W = 8,
+        
+        parameter AXI_DATA_W = 8,
+
+        
+        parameter MST_NB = 4,
+
+        
+        parameter TIMEOUT_ENABLE = 1,
+
+        
+        parameter NUM_PRIORITY_LVL = 4,
+
+        
+        parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
+
+        
+        parameter PRIORITY_W = 2,
+        parameter [2*MST_NB-1:0] MST_PRIORITY = 0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 8,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    )(
+        
+        input  wire                           aclk,
+        input  wire                           aresetn,
+        input  wire                           srst,
+        
+        input  wire  [MST_NB            -1:0] i_awvalid,
+        output logic [MST_NB            -1:0] i_awready,
+        input  wire  [MST_NB*AWCH_W     -1:0] i_awch,
+        input  wire  [MST_NB            -1:0] i_wvalid,
+        output logic [MST_NB            -1:0] i_wready,
+        input  wire  [MST_NB            -1:0] i_wlast,
+        input  wire  [MST_NB*WCH_W      -1:0] i_wch,
+        output logic [MST_NB            -1:0] i_bvalid,
+        input  wire  [MST_NB            -1:0] i_bready,
+        output logic [BCH_W             -1:0] i_bch,
+        input  wire  [MST_NB            -1:0] i_arvalid,
+        output logic [MST_NB            -1:0] i_arready,
+        input  wire  [MST_NB*ARCH_W     -1:0] i_arch,
+        output logic [MST_NB            -1:0] i_rvalid,
+        input  wire  [MST_NB            -1:0] i_rready,
+        output logic [MST_NB            -1:0] i_rlast,
+        output logic [RCH_W             -1:0] i_rch,
+        
+        output logic                          o_awvalid,
+        input  wire                           o_awready,
+        output logic [AWCH_W            -1:0] o_awch,
+        output logic                          o_wvalid,
+        input  wire                           o_wready,
+        output logic                          o_wlast,
+        output logic [WCH_W             -1:0] o_wch,
+        input  wire                           o_bvalid,
+        output logic                          o_bready,
+        input  wire  [BCH_W             -1:0] o_bch,
+        output logic                          o_arvalid,
+        input  wire                           o_arready,
+        output logic [ARCH_W            -1:0] o_arch,
+        input  wire                           o_rvalid,
+        output logic                          o_rready,
+        input  wire                           o_rlast,
+        input  wire  [RCH_W             -1:0] o_rch
+    );
+endmodule
+
+// Path: rtl/axicb_mst_switch_rd.sv
+module axicb_mst_switch_rd
+
+    #(
+        
+        parameter AXI_ID_W = 8,
+        
+        parameter AXI_DATA_W = 8,
+
+        
+        parameter MST_NB = 4,
+
+        
+        parameter TIMEOUT_ENABLE = 1,
+
+        
+        parameter NUM_PRIORITY_LVL = 4,
+
+        
+        parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
+
+        
+        parameter PRIORITY_W = 2,
+        parameter [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = 0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 8,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    )(
+        
+        input  wire                           aclk,
+        input  wire                           aresetn,
+        input  wire                           srst,
+        
+        input  wire  [MST_NB            -1:0] i_arvalid,
+        output logic [MST_NB            -1:0] i_arready,
+        input  wire  [MST_NB*ARCH_W     -1:0] i_arch,
+        output logic [MST_NB            -1:0] i_rvalid,
+        input  wire  [MST_NB            -1:0] i_rready,
+        output logic [MST_NB            -1:0] i_rlast,
+        output logic [RCH_W             -1:0] i_rch,
+        
+        output logic                          o_arvalid,
+        input  wire                           o_arready,
+        output logic [ARCH_W            -1:0] o_arch,
+        input  wire                           o_rvalid,
+        output logic                          o_rready,
+        input  wire                           o_rlast,
+        input  wire  [RCH_W             -1:0] o_rch
+    );
+endmodule
+
+// Path: rtl/axicb_mst_switch_wr.sv
+module axicb_mst_switch_wr
+
+    #(
+        
+        parameter AXI_ID_W = 8,
+        
+        parameter AXI_DATA_W = 8,
+
+        
+        parameter MST_NB = 4,
+
+        
+        parameter NUM_PRIORITY_LVL = 4,
+
+        
+        parameter TIMEOUT_ENABLE = 1,
+
+        
+        parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
+
+        
+        parameter PRIORITY_W = 2,
+        parameter [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = 0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 8,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    )(
+        
+        input  wire                           aclk,
+        input  wire                           aresetn,
+        input  wire                           srst,
+        
+        input  wire  [MST_NB            -1:0] i_awvalid,
+        output logic [MST_NB            -1:0] i_awready,
+        input  wire  [MST_NB*AWCH_W     -1:0] i_awch,
+        input  wire  [MST_NB            -1:0] i_wvalid,
+        output logic [MST_NB            -1:0] i_wready,
+        input  wire  [MST_NB            -1:0] i_wlast,
+        input  wire  [MST_NB*WCH_W      -1:0] i_wch,
+        output logic [MST_NB            -1:0] i_bvalid,
+        input  wire  [MST_NB            -1:0] i_bready,
+        output logic [BCH_W             -1:0] i_bch,
+        
+        output logic                          o_awvalid,
+        input  wire                           o_awready,
+        output logic [AWCH_W            -1:0] o_awch,
+        output logic                          o_wvalid,
+        input  wire                           o_wready,
+        output logic                          o_wlast,
+        output logic [WCH_W             -1:0] o_wch,
+        input  wire                           o_bvalid,
+        output logic                          o_bready,
+        input  wire  [BCH_W             -1:0] o_bch
+    );
+endmodule
+
+// Path: rtl/axicb_pipeline.sv
+module axicb_pipeline
+
+    #(
+        
+        parameter DATA_BUS_W = 8,
+        
+        parameter NB_PIPELINE = 1
+    )(
+        input  wire                       aclk,
+        input  wire                       aresetn,
+        input  wire                       srst,
+        input  wire                       i_valid,
+        output logic                      i_ready,
+        input  wire  [DATA_BUS_W    -1:0] i_data,
+        output logic                      o_valid,
+        input  wire                       o_ready,
+        output logic [DATA_BUS_W    -1:0] o_data
+    );
+endmodule
+
+// Path: rtl/axicb_round_robin.sv
+module axicb_round_robin
+
+    #(
+        
+        parameter REQ_NB = 4,
+        
+        parameter PRIORITY_W = 2,
+        parameter NUM_PRIORITY_LVL = 4,
+        parameter [PRIORITY_W*REQ_NB-1:0] PRIORITY = 0
+    )(
+        input  wire                   aclk,
+        input  wire                   aresetn,
+        input  wire                   srst,
+        input  wire                   en,
+        input  wire  [REQ_NB    -1:0] req,
+        output logic [REQ_NB    -1:0] grant
+    );
+endmodule
+
+// Path: rtl/axicb_round_robin_core.sv
+module axicb_round_robin_core
+
+    #(
+        
+        parameter REQ_NB = 4
+    )(
+        input  wire                   aclk,
+        input  wire                   aresetn,
+        input  wire                   srst,
+        input  wire                   en,
+        input  wire  [REQ_NB    -1:0] req,
+        output logic [REQ_NB    -1:0] grant
+    );
+endmodule
+
+// Path: rtl/axicb_scfifo.sv
+module axicb_scfifo
+
+    #(
+        
+        parameter BLOCK = "RAM",
+        
+        parameter PASS_THRU = 0,
+        
+        parameter ADDR_WIDTH = 8,
+        
+        parameter DATA_WIDTH = 8
+    )(
+        input  wire                   aclk,
+        input  wire                   aresetn,
+        input  wire                   srst,
+        input  wire                   flush,
+        input  wire  [DATA_WIDTH-1:0] data_in,
+        input  wire                   push,
+        output logic                  full,
+        output logic [DATA_WIDTH-1:0] data_out,
+        input  wire                   pull,
+        output logic                  empty
+    );
+endmodule
+
+// Path: rtl/axicb_scfifo_ram.sv
+module axicb_scfifo_ram
+
+    #(
+        parameter ADDR_WIDTH = 8,
+        parameter DATA_WIDTH = 8,
+        parameter FFD_EN = 0
+    )(
+        input  wire                   aclk,
+        input  wire                   wr_en,
+        input  wire  [ADDR_WIDTH-1:0] addr_in,
+        input  wire  [DATA_WIDTH-1:0] data_in,
+        input  wire  [ADDR_WIDTH-1:0] addr_out,
+        output logic [DATA_WIDTH-1:0] data_out
+    );
+endmodule
+
+// Path: rtl/axicb_scfifo_regfile.sv
+module axicb_scfifo_regfile
+
+    #(
+        parameter ADDR_WIDTH = 8,
+        parameter DATA_WIDTH = 8,
+        parameter FFD_EN = 0
+    )(
+        input  wire                   aclk,
+        input  wire                   aresetn,
+        input  wire                   srst,
+        input  wire                   wr_en,
+        input  wire  [ADDR_WIDTH-1:0] addr_in,
+        input  wire  [DATA_WIDTH-1:0] data_in,
+        input  wire  [ADDR_WIDTH-1:0] addr_out,
+        output logic [DATA_WIDTH-1:0] data_out
+    );
+endmodule
+
+// Path: rtl/axicb_slv_if.sv
+module axicb_slv_if
+
+    #(
+        
+        parameter AXI_ADDR_W = 8,
+        
+        parameter AXI_ID_W = 8,
+        
+        parameter AXI_DATA_W = 8,
+
+        
+        parameter SLV_NB = 4,
+
+        
+        
+        
+        parameter AXI_SIGNALING = 0,
+
+        
+        parameter MST_CDC = 0,
+        
+        parameter MST_OSTDREQ_NUM = 4,
+        
+        parameter MST_OSTDREQ_SIZE = 1,
+
+        
+        parameter USER_SUPPORT = 0,
+        
+        parameter AXI_AUSER_W = 0,
+        parameter AXI_WUSER_W = 0,
+        parameter AXI_BUSER_W = 0,
+        parameter AXI_RUSER_W = 0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 8,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    )(
+        
+        input  wire                       i_aclk,
+        input  wire                       i_aresetn,
+        input  wire                       i_srst,
+        input  wire                       i_awvalid,
+        output logic                      i_awready,
+        input  wire  [AXI_ADDR_W    -1:0] i_awaddr,
+        input  wire  [8             -1:0] i_awlen,
+        input  wire  [3             -1:0] i_awsize,
+        input  wire  [2             -1:0] i_awburst,
+        input  wire                       i_awlock,
+        input  wire  [4             -1:0] i_awcache,
+        input  wire  [3             -1:0] i_awprot,
+        input  wire  [4             -1:0] i_awqos,
+        input  wire  [4             -1:0] i_awregion,
+        input  wire  [AXI_ID_W      -1:0] i_awid,
+        input  wire  [AXI_AUSER_W   -1:0] i_awuser,
+        input  wire                       i_wvalid,
+        output logic                      i_wready,
+        input  wire                       i_wlast,
+        input  wire  [AXI_DATA_W    -1:0] i_wdata,
+        input  wire  [AXI_DATA_W/8  -1:0] i_wstrb,
+        input  wire  [AXI_WUSER_W   -1:0] i_wuser,
+        output logic                      i_bvalid,
+        input  wire                       i_bready,
+        output logic [AXI_ID_W      -1:0] i_bid,
+        output logic [2             -1:0] i_bresp,
+        output logic [AXI_BUSER_W   -1:0] i_buser,
+        input  wire                       i_arvalid,
+        output logic                      i_arready,
+        input  wire  [AXI_ADDR_W    -1:0] i_araddr,
+        input  wire  [8             -1:0] i_arlen,
+        input  wire  [3             -1:0] i_arsize,
+        input  wire  [2             -1:0] i_arburst,
+        input  wire                       i_arlock,
+        input  wire  [4             -1:0] i_arcache,
+        input  wire  [3             -1:0] i_arprot,
+        input  wire  [4             -1:0] i_arqos,
+        input  wire  [4             -1:0] i_arregion,
+        input  wire  [AXI_ID_W      -1:0] i_arid,
+        input  wire  [AXI_AUSER_W   -1:0] i_aruser,
+        output logic                      i_rvalid,
+        input  wire                       i_rready,
+        output logic [AXI_ID_W      -1:0] i_rid,
+        output logic [2             -1:0] i_rresp,
+        output logic [AXI_DATA_W    -1:0] i_rdata,
+        output logic                      i_rlast,
+        output logic [AXI_RUSER_W   -1:0] i_ruser,
+        
+        input  wire                       o_aclk,
+        input  wire                       o_aresetn,
+        input  wire                       o_srst,
+        output logic                      o_awvalid,
+        input  wire                       o_awready,
+        output logic [AWCH_W        -1:0] o_awch,
+        output logic                      o_wvalid,
+        input  wire                       o_wready,
+        output logic                      o_wlast,
+        output logic [WCH_W         -1:0] o_wch,
+        input  wire                       o_bvalid,
+        output logic                      o_bready,
+        input  wire  [BCH_W         -1:0] o_bch,
+        output logic                      o_arvalid,
+        input  wire                       o_arready,
+        output logic [ARCH_W        -1:0] o_arch,
+        input  wire                       o_rvalid,
+        output logic                      o_rready,
+        input  wire                       o_rlast,
+        input  wire  [RCH_W         -1:0] o_rch
+    );
+endmodule
+
+// Path: rtl/axicb_slv_ooo.sv
+module axicb_slv_ooo
+
+    #(
+        
+        parameter RD_PATH = 0,
+        
+        parameter AXI_ID_W = 8,
+        
+        parameter SLV_NB = 4,
+        
+        parameter MST_OSTDREQ_NUM = 4,
+        
+        parameter [AXI_ID_W-1:0] MST_ID_MASK = 'h00,
+        
+        parameter CCH_W = 8
+    )(
+        
+        input  wire                           aclk,
+        input  wire                           aresetn,
+        input  wire                           srst,
+        
+        
+        
+        
+        
+        
+        input  wire                           a_valid,
+        input  wire                           a_ready,
+        output logic                          a_full,
+        input  wire  [8                 -1:0] a_len,
+        input  wire  [AXI_ID_W          -1:0] a_id,
+        input  wire  [SLV_NB            -1:0] a_ix,
+        input  wire                           a_mr,
+        
+        
+        
+        
+        
+        
+        input  wire                           c_en,
+        output logic [SLV_NB            -1:0] c_grant,
+        output logic                          c_mr,
+        output logic [8                 -1:0] c_len,
+        output logic [AXI_ID_W          -1:0] c_id,
+        
+        
+        
+        
+        
+        input  wire  [SLV_NB            -1:0] c_valid,
+        input  wire                           c_ready,
+        input  wire  [CCH_W*SLV_NB      -1:0] c_ch,
+        input  wire                           c_end
+    );
+endmodule
+
+// Path: rtl/axicb_slv_switch.sv
+module axicb_slv_switch
+
+    #(
+        
+        parameter AXI_ADDR_W = 8,
+        
+        parameter AXI_ID_W = 8,
+
+        
+        
+        
+        parameter AXI_SIGNALING = 0,
+
+        
+        parameter SLV_NB = 4,
+
+        
+        parameter TIMEOUT_ENABLE = 1,
+
+        
+        parameter MST_ROUTES = 4'b1_1_1_1,
+
+        
+        parameter MST_OSTDREQ_NUM = 4,
+
+        
+        parameter [AXI_ID_W-1:0] MST_ID_MASK = 'h00,
+
+        
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = '0,
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_END_ADDR = '0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 8,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    )(
+        
+        input  wire                           aclk,
+        input  wire                           aresetn,
+        input  wire                           srst,
+        
+        input  wire                           i_awvalid,
+        output logic                          i_awready,
+        input  wire  [AWCH_W            -1:0] i_awch,
+        input  wire                           i_wvalid,
+        output logic                          i_wready,
+        input  wire                           i_wlast,
+        input  wire  [WCH_W             -1:0] i_wch,
+        output logic                          i_bvalid,
+        input  wire                           i_bready,
+        output logic [BCH_W             -1:0] i_bch,
+        input  wire                           i_arvalid,
+        output logic                          i_arready,
+        input  wire  [ARCH_W            -1:0] i_arch,
+        output logic                          i_rvalid,
+        input  wire                           i_rready,
+        output logic                          i_rlast,
+        output logic [RCH_W             -1:0] i_rch,
+        
+        output logic [SLV_NB            -1:0] o_awvalid,
+        input  wire  [SLV_NB            -1:0] o_awready,
+        output logic [AWCH_W            -1:0] o_awch,
+        output logic [SLV_NB            -1:0] o_wvalid,
+        input  wire  [SLV_NB            -1:0] o_wready,
+        output logic [SLV_NB            -1:0] o_wlast,
+        output logic [WCH_W             -1:0] o_wch,
+        input  wire  [SLV_NB            -1:0] o_bvalid,
+        output logic [SLV_NB            -1:0] o_bready,
+        input  wire  [SLV_NB*BCH_W      -1:0] o_bch,
+        output logic [SLV_NB            -1:0] o_arvalid,
+        input  wire  [SLV_NB            -1:0] o_arready,
+        output logic [ARCH_W            -1:0] o_arch,
+        input  wire  [SLV_NB            -1:0] o_rvalid,
+        output logic [SLV_NB            -1:0] o_rready,
+        input  wire  [SLV_NB            -1:0] o_rlast,
+        input  wire  [SLV_NB*RCH_W      -1:0] o_rch
+    );
+endmodule
+
+// Path: rtl/axicb_slv_switch_rd.sv
+module axicb_slv_switch_rd
+
+    #(
+        
+        parameter AXI_ADDR_W = 8,
+        
+        parameter AXI_ID_W = 8,
+
+        
+        
+        
+        parameter AXI_SIGNALING = 0,
+
+        
+        parameter SLV_NB = 4,
+
+        
+        parameter TIMEOUT_ENABLE = 1,
+
+        
+        parameter MST_ROUTES = 4'b1_1_1_1,
+
+        
+        parameter MST_OSTDREQ_NUM = 4,
+
+        
+        parameter [AXI_ID_W-1:0] MST_ID_MASK = 'h00,
+
+        
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = '0,
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_END_ADDR = '0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 8,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    )(
+        
+        input  wire                           aclk,
+        input  wire                           aresetn,
+        input  wire                           srst,
+        
+        input  wire                           i_arvalid,
+        output logic                          i_arready,
+        input  wire  [ARCH_W            -1:0] i_arch,
+        output logic                          i_rvalid,
+        input  wire                           i_rready,
+        output logic                          i_rlast,
+        output logic [RCH_W             -1:0] i_rch,
+        
+        output logic [SLV_NB            -1:0] o_arvalid,
+        input  wire  [SLV_NB            -1:0] o_arready,
+        output logic [ARCH_W            -1:0] o_arch,
+        input  wire  [SLV_NB            -1:0] o_rvalid,
+        output logic [SLV_NB            -1:0] o_rready,
+        input  wire  [SLV_NB            -1:0] o_rlast,
+        input  wire  [SLV_NB*RCH_W      -1:0] o_rch
+    );
+endmodule
+
+// Path: rtl/axicb_slv_switch_wr.sv
+module axicb_slv_switch_wr
+
+    #(
+        
+        parameter AXI_ADDR_W = 8,
+        
+        parameter AXI_ID_W = 8,
+
+        
+        
+        
+        parameter AXI_SIGNALING = 0,
+
+        
+        parameter SLV_NB = 4,
+
+        
+        parameter TIMEOUT_ENABLE = 1,
+
+        
+        parameter MST_ROUTES = 4'b1_1_1_1,
+
+        
+        parameter MST_OSTDREQ_NUM = 4,
+
+        
+        parameter [AXI_ID_W-1:0] MST_ID_MASK = 'h00,
+
+        
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = '0,
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_END_ADDR = '0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 10,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    )(
+        
+        input  wire                           aclk,
+        input  wire                           aresetn,
+        input  wire                           srst,
+        
+        input  wire                           i_awvalid,
+        output logic                          i_awready,
+        input  wire  [AWCH_W            -1:0] i_awch,
+        input  wire                           i_wvalid,
+        output logic                          i_wready,
+        input  wire                           i_wlast,
+        input  wire  [WCH_W             -1:0] i_wch,
+        output logic                          i_bvalid,
+        input  wire                           i_bready,
+        output logic [BCH_W             -1:0] i_bch,
+        
+        output logic [SLV_NB            -1:0] o_awvalid,
+        input  wire  [SLV_NB            -1:0] o_awready,
+        output logic [AWCH_W            -1:0] o_awch,
+        output logic [SLV_NB            -1:0] o_wvalid,
+        input  wire  [SLV_NB            -1:0] o_wready,
+        output logic [SLV_NB            -1:0] o_wlast,
+        output logic [WCH_W             -1:0] o_wch,
+        input  wire  [SLV_NB            -1:0] o_bvalid,
+        output logic [SLV_NB            -1:0] o_bready,
+        input  wire  [SLV_NB*BCH_W      -1:0] o_bch
+    );
+endmodule
+
+// Path: rtl/axicb_switch_top.sv
+module axicb_switch_top
+
+    #(
+        
+        parameter AXI_ADDR_W = 8,
+        
+        parameter AXI_ID_W = 8,
+        
+        parameter AXI_DATA_W = 8,
+
+        
+        
+        
+        parameter AXI_SIGNALING = 0,
+
+        
+        parameter MST_NB = 4,
+        
+        parameter SLV_NB = 4,
+        
+        parameter MST_PIPELINE = 0,
+        parameter SLV_PIPELINE = 0,
+
+        
+        parameter TIMEOUT_ENABLE = 0,
+
+        
+        parameter NUM_PRIORITY_LVL = 4,
+
+        
+        parameter [MST_NB*SLV_NB -1:0] MST_ROUTES = 16'hFFFF,
+
+        
+        parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
+
+        
+        parameter PRIORITY_W = 2,
+        parameter [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = 0,
+
+        
+        parameter OR_NUM_W = 8,
+        parameter [MST_NB*OR_NUM_W-1:0] MST_OSTDREQ_NUM = 'h4_4_4_4,
+
+        
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_START_ADDR = '0,
+        parameter [AXI_ADDR_W * SLV_NB - 1:0] SLV_END_ADDR = '0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 8,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    ) (
+        
+        input  wire                           aclk,
+        input  wire                           aresetn,
+        input  wire                           srst,
+        
+        input  wire  [MST_NB            -1:0] i_awvalid,
+        output logic [MST_NB            -1:0] i_awready,
+        input  wire  [MST_NB*AWCH_W     -1:0] i_awch,
+        input  wire  [MST_NB            -1:0] i_wvalid,
+        output logic [MST_NB            -1:0] i_wready,
+        input  wire  [MST_NB            -1:0] i_wlast,
+        input  wire  [MST_NB*WCH_W      -1:0] i_wch,
+        output logic [MST_NB            -1:0] i_bvalid,
+        input  wire  [MST_NB            -1:0] i_bready,
+        output logic [MST_NB*BCH_W      -1:0] i_bch,
+        input  wire  [MST_NB            -1:0] i_arvalid,
+        output logic [MST_NB            -1:0] i_arready,
+        input  wire  [MST_NB*ARCH_W     -1:0] i_arch,
+        output logic [MST_NB            -1:0] i_rvalid,
+        input  wire  [MST_NB            -1:0] i_rready,
+        output logic [MST_NB            -1:0] i_rlast,
+        output logic [MST_NB*RCH_W      -1:0] i_rch,
+        
+        output logic [SLV_NB            -1:0] o_awvalid,
+        input  wire  [SLV_NB            -1:0] o_awready,
+        output logic [SLV_NB*AWCH_W     -1:0] o_awch,
+        output logic [SLV_NB            -1:0] o_wvalid,
+        input  wire  [SLV_NB            -1:0] o_wready,
+        output logic [SLV_NB            -1:0] o_wlast,
+        output logic [SLV_NB*WCH_W      -1:0] o_wch,
+        input  wire  [SLV_NB            -1:0] o_bvalid,
+        output logic [SLV_NB            -1:0] o_bready,
+        input  wire  [SLV_NB*BCH_W      -1:0] o_bch,
+        output logic [SLV_NB            -1:0] o_arvalid,
+        input  wire  [SLV_NB            -1:0] o_arready,
+        output logic [SLV_NB*ARCH_W     -1:0] o_arch,
+        input  wire  [SLV_NB            -1:0] o_rvalid,
+        output logic [SLV_NB            -1:0] o_rready,
+        input  wire  [SLV_NB            -1:0] o_rlast,
+        input  wire  [SLV_NB*RCH_W      -1:0] o_rch
+    );
+endmodule
+
+// Path: deps/dcfifo/src/vlog/async_fifo.v
+module async_fifo
+
+    #(
+    parameter DSIZE = 8,
+    parameter ASIZE = 4,
+    parameter FALLTHROUGH = "TRUE" 
+    )(
+    input  wire             wclk,
+    input  wire             wrst_n,
+    input  wire             winc,
+    input  wire [DSIZE-1:0] wdata,
+    output wire             wfull,
+    output wire             awfull,
+    input  wire             rclk,
+    input  wire             rrst_n,
+    input  wire             rinc,
+    output wire [DSIZE-1:0] rdata,
+    output wire             rempty,
+    output wire             arempty
+    );
+endmodule
+
+// Path: deps/dcfifo/src/vlog/fifo_2mem.v
+module fifomem
+
+    #(
+        parameter  DATASIZE = 8,    
+        parameter  ADDRSIZE = 4,    
+        parameter  FALLTHROUGH = "TRUE" 
+    ) (
+        input  wire                wclk,
+        input  wire                wclken,
+        input  wire [ADDRSIZE-1:0] waddr,
+        input  wire [DATASIZE-1:0] wdata,
+        input  wire                wfull,
+        input  wire                rclk,
+        input  wire                rclken,
+        input  wire [ADDRSIZE-1:0] raddr,
+        output wire [DATASIZE-1:0] rdata
+    );
+endmodule
+
+// Path: deps/dcfifo/src/vlog/rptr_empty.v
+module rptr_empty 
+    
+    #(
+    parameter ADDRSIZE = 4
+    )(
+    input  wire                rclk,
+    input  wire                rrst_n,
+    input  wire                rinc,
+    input  wire [ADDRSIZE  :0] rq2_wptr,
+    output reg                 rempty,
+    output reg                 arempty,
+    output wire [ADDRSIZE-1:0] raddr,
+    output reg  [ADDRSIZE  :0] rptr
+    );
+endmodule
+
+// Path: deps/dcfifo/src/vlog/sync_r2w.v
+module sync_r2w
+
+    #(
+    parameter ASIZE = 4
+    )(
+    input  wire              wclk,
+    input  wire              wrst_n,
+    input  wire [ASIZE:0] rptr,
+    output reg  [ASIZE:0] wq2_rptr
+    );
+endmodule
+
+// Path: deps/dcfifo/src/vlog/sync_w2r.v
+module sync_w2r 
+    
+    #(
+    parameter ASIZE = 4
+    )(
+    input  wire              rclk,
+    input  wire              rrst_n,
+    output reg  [ASIZE:0] rq2_wptr,
+    input  wire [ASIZE:0] wptr
+    );
+endmodule
+
+// Path: deps/dcfifo/src/vlog/wptr_full.v
+module wptr_full
+
+    #(
+    parameter ADDRSIZE = 4
+    )(
+    input  wire                wclk,
+    input  wire                wrst_n,
+    input  wire                winc,
+    input  wire [ADDRSIZE  :0] wq2_rptr,
+    output reg                 wfull,
+    output reg                 awfull,
+    output wire [ADDRSIZE-1:0] waddr,
+    output reg  [ADDRSIZE  :0] wptr
+    );
+endmodule

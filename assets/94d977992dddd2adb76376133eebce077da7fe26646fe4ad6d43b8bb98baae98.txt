@@ -1,0 +1,113 @@
+{
+  "case_id": "s1derived.036355970490949fbe7f.5c12f72f4efa",
+  "compile_check": {
+    "case_id": "s1derived.036355970490949fbe7f.5c12f72f4efa",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_03579",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_03579.b7785c3fb263c257/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.036355970490949fbe7f",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "036355970490949fbe7fd0e0c8e7ce6ab8cc45806fe4cd979c83398eec3bd4fc",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.036355970490949fbe7f.5c12f72f4efa",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_03579.b7785c3fb263c257/private/commercial_positive.log",
+    "commercial_log_sha256": "27dd933a8e0062fdf95d4d8e0da1f832b0a5c1630549dde62421c497c04651e4",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_03579.b7785c3fb263c257/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mg_03579"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.mg_03579.b7785c3fb263c257",
+    "parent_id": "s1p.036355970490949fbe7f",
+    "revised_tops": [
+      "mg_03579"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_03579",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.036355970490949fbe7f.5c12f72f4efa",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All eight opcodes match: equality, inequality, unsigned>, unsigned>=, signed>, signed>=, carry input, constanttrue. Both32-bit operands,3-bitselector and scalarcarry/output are identified. The complete binary control decoder is sensible and stateless.",
+        "rtl_excerpt": "4: O_doBranch = ($signed(I_dataA) > $signed(I_dataB));",
+        "specification_excerpt": "4 signed greater-than, 5 signed greater-than-or-equal"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.036355970490949fbe7f",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "e3a7e160d37f2efad84edc844d64ea790b33fea3eea010d108a7c209ccfca12b",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "036355970490949fbe7fd0e0c8e7ce6ab8cc45806fe4cd979c83398eec3bd4fc",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_03579.b7785c3fb263c257/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_03579.b7785c3fb263c257/private/historical_harness/01_conformal_rtl_mg_03579.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_03579.b7785c3fb263c257/private/historical_harness/02_fm_rtl_mg_03579.tcl"
+  ],
+  "parent_id": "s1p.036355970490949fbe7f",
+  "primary_review": {
+    "case_id": "s1derived.036355970490949fbe7f.5c12f72f4efa",
+    "checks": {
+      "behavior": "All operations agree, but their externally required opcode mapping is missing.",
+      "boundaries": "checked parameter defaults, widths, truth/arithmetic boundaries and priority",
+      "interface": "checked complete RTL interface against prose",
+      "rtl_reasonableness": "reasonable hardware for the stated function",
+      "sequential_and_reset": "checked state, clock, reset and hold behavior; combinational where stated"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "All operations agree, but their externally required opcode mapping is missing.",
+        "rtl_excerpt": "case 0:eq, 1:ne, 2:unsigned >, 3:unsigned >=, 4:signed >, 5:signed >=, 6:I_Cin, 7:1",
+        "spec_excerpt": "The selector chooses equality, inequality, unsigned and signed comparisons, carry pass-through, or unconditional true."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose lists eight operations but does not map I_branchOp encodings 0 through 7 to them.",
+        "rtl_evidence": "case 0:eq, 1:ne, 2:unsigned >, 3:unsigned >=, 4:signed >, 5:signed >=, 6:I_Cin, 7:1",
+        "spec_evidence": "The selector chooses equality, inequality, unsigned and signed comparisons, carry pass-through, or unconditional true.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.036355970490949fbe7f",
+    "proposed_specification_path": "proposed_repairs_3_sol_02/s1derived.036355970490949fbe7f.5c12f72f4efa.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "036355970490949fbe7fd0e0c8e7ce6ab8cc45806fe4cd979c83398eec3bd4fc",
+    "source_group": "S5",
+    "specification_sha256": "5c12f72f4efa430ae9bc5e1b45b5bd3d7a16c7212d27ef3f030446c63f86617f",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_02/s1derived.036355970490949fbe7f.5c12f72f4efa.md",
+  "qualified_specification_sha256": "e3a7e160d37f2efad84edc844d64ea790b33fea3eea010d108a7c209ccfca12b",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_03579.b7785c3fb263c257/private/golden_design.v",
+  "rtl_sha256": "036355970490949fbe7fd0e0c8e7ce6ab8cc45806fe4cd979c83398eec3bd4fc",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_03579.b7785c3fb263c257/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "5c12f72f4efa430ae9bc5e1b45b5bd3d7a16c7212d27ef3f030446c63f86617f",
+  "top_module": "mg_03579"
+}

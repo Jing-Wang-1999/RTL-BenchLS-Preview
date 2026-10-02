@@ -1,0 +1,117 @@
+module origen_037004 (
+    input wire i_clk,
+    input wire i_rst_n,
+    inout wire io_data,
+    output reg [15:0] o_temp,
+    output reg [15:0] o_humi
+);
+
+// Parameters
+localparam IDLE = 2'b00;
+localparam INIT = 2'b01;
+localparam ANS = 2'b10;
+localparam RD_DATA = 2'b11;
+
+// Internal signals
+reg [1:0] state, next_state;
+reg [19:0] cnt_1s;
+reg [5:0] cnt_40us;
+reg [5:0] data_num;
+reg [39:0] get_data;
+reg data_en;
+reg data_out;
+reg [1:0] data_buf;
+wire data_pluse;
+
+// Double-flop synchronization
+always @(posedge i_clk or negedge i_rst_n) begin
+    if (!i_rst_n)
+        data_buf <= 2'b11;
+    else
+        data_buf <= {data_buf[0], io_data};
+end
+
+// Rising edge detector
+assign data_pluse = ~data_buf[1] & data_buf[0];
+
+// 1-second counter
+always @(posedge i_clk or negedge i_rst_n) begin
+    if (!i_rst_n)
+        cnt_1s <= 20'd0;
+    else if (cnt_1s == 20'd999_999)
+        cnt_1s <= 20'd0;
+    else
+        cnt_1s <= cnt_1s + 1'b1;
+end
+
+// 40μs counter
+always @(posedge i_clk or negedge i_rst_n) begin
+    if (!i_rst_n)
+        cnt_40us <= 6'd0;
+    else if (state == RD_DATA)
+        cnt_40us <= (cnt_40us == 6'd39) ? 6'd0 : cnt_40us + 1'b1;
+    else
+        cnt_40us <= 6'd0;
+end
+
+// State machine
+always @(posedge i_clk or negedge i_rst_n) begin
+    if (!i_rst_n)
+        state <= IDLE;
+    else
+        state <= next_state;
+end
+
+always @(*) begin
+    case (state)
+        IDLE: next_state = (cnt_1s == 20'd999_999) ? INIT : IDLE;
+        INIT: next_state = (cnt_1s == 20'd1_000) ? ANS : INIT;
+        ANS: next_state = data_pluse ? RD_DATA : ANS;
+        RD_DATA: next_state = (data_num == 6'd40) ? IDLE : RD_DATA;
+        default: next_state = IDLE;
+    endcase
+end
+
+// Data reading
+always @(posedge i_clk or negedge i_rst_n) begin
+    if (!i_rst_n) begin
+        data_num <= 6'd0;
+        get_data <= 40'd0;
+    end else if (state == RD_DATA) begin
+        if (cnt_40us == 6'd39) begin
+            data_num <= data_num + 1'b1;
+            get_data <= {get_data[38:0], (cnt_40us > 6'd22) ? 1'b1 : 1'b0};
+        end
+    end else begin
+        data_num <= 6'd0;
+    end
+end
+
+// Output data
+always @(posedge i_clk or negedge i_rst_n) begin
+    if (!i_rst_n) begin
+        o_humi <= 16'd0;
+        o_temp <= 16'd0;
+    end else if (state == IDLE && next_state == INIT) begin
+        o_humi <= {get_data[39:32], get_data[31:24]};
+        o_temp <= {get_data[23:16], get_data[15:8]};
+    end
+end
+
+// Bidirectional data line control
+always @(posedge i_clk or negedge i_rst_n) begin
+    if (!i_rst_n) begin
+        data_en <= 1'b0;
+        data_out <= 1'b1;
+    end else if (state == INIT) begin
+        data_en <= 1'b1;
+        data_out <= 1'b0;
+    end else begin
+        data_en <= 1'b0;
+        data_out <= 1'b1;
+    end
+end
+
+assign io_data = data_en ? data_out : 1'bz;
+
+endmodule

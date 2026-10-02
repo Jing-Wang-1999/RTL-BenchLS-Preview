@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa",
+  "compile_check": {
+    "case_id": "s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "HLS_cdp_icvt_core_chn_data_in_rsci_chn_data_in_wait_ctrl",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "479b8527fa1dac8e3caa03559f2b78a5f2e24c8909574e3f773570b4efca555a",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.479b8527fa1dac8e3caa",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "HLS_cdp_icvt_core_chn_data_in_rsci_chn_data_in_wait_ctrl"
+  },
+  "independent_review": {
+    "case_id": "s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The pendingtransferstate setsfromp unless effectivevalidb clearsit; g combinesnewrequestandoldpending. All three combinationaloutputequations, active-lowasyncreset andscalarportdirections match. Thisis a sensibleone-bit HLSwaitcontroller.",
+        "rtl_excerpt": "chn_data_in_rsci_icwt <= ~((~(chn_data_in_rsci_icwt | chn_data_in_rsci_pdswt0))",
+        "specification_excerpt": "icwt becomes `~((~(icwt|p))|b)`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.479b8527fa1dac8e3caa",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "574aa70d43d5af78ca17795b5628a0d96d597202bb8741325e2f0bde581b0b43",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "479b8527fa1dac8e3caa03559f2b78a5f2e24c8909574e3f773570b4efca555a",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.479b8527fa1dac8e3caa",
+  "primary_review": {
+    "case_id": "s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa",
+    "checks": {
+      "behavior": "Compared full equations, lookup transforms, state transitions, handshakes, and dataflow.",
+      "boundaries": "Checked default/disabled cases, simultaneous controls, saturation, arithmetic widths, invalid addresses, and startup state.",
+      "interface": "Compared complete ports, widths, parameters, and defaults.",
+      "rtl_reasonableness": "The preserved repository RTL implements a coherent hardware function.",
+      "sequential_and_reset": "Checked reset polarity/timing, priority, enables, holds, initialization, and latency."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file semantic comparison supports revise.",
+        "rtl_excerpt": "RTL defines p=(~core_wten)&iswt0, gate=p|icwt, biwt=gate&vd, and icwt_next=(icwt|p)&~biwt with async clear.",
+        "spec_excerpt": "The prose truncates before the wait-state recurrence and exact output equations."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose truncates before the wait-state recurrence and exact output equations.",
+        "rtl_evidence": "RTL defines p=(~core_wten)&iswt0, gate=p|icwt, biwt=gate&vd, and icwt_next=(icwt|p)&~biwt with async clear.",
+        "spec_evidence": "The prose truncates before the wait-state recurrence and exact output equations.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.479b8527fa1dac8e3caa",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "479b8527fa1dac8e3caa03559f2b78a5f2e24c8909574e3f773570b4efca555a",
+    "source_group": "S1",
+    "specification_sha256": "67bab9ee5aaa40e11998c8365782515592a791f5c10abcefdaf07d7f1b2aa581",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa.md",
+  "qualified_specification_sha256": "574aa70d43d5af78ca17795b5628a0d96d597202bb8741325e2f0bde581b0b43",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa/private/golden_design.v",
+  "rtl_sha256": "479b8527fa1dac8e3caa03559f2b78a5f2e24c8909574e3f773570b4efca555a",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.479b8527fa1dac8e3caa.67bab9ee5aaa/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "67bab9ee5aaa40e11998c8365782515592a791f5c10abcefdaf07d7f1b2aa581",
+  "top_module": "HLS_cdp_icvt_core_chn_data_in_rsci_chn_data_in_wait_ctrl"
+}

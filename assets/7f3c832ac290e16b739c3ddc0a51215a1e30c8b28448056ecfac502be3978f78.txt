@@ -1,0 +1,80 @@
+module origen_152018 (
+    input clk,
+    input reset,
+    input sw,
+    output reg db
+);
+    reg [2:0] state, next_state;
+    reg m_tick;
+    reg [31:0] counter;
+    localparam N = 100000;
+
+    // State encoding
+    localparam S000 = 3'b000;
+    localparam S001 = 3'b001;
+    localparam S010 = 3'b010;
+    localparam S011 = 3'b011;
+    localparam S100 = 3'b100;
+    localparam S101 = 3'b101;
+    localparam S110 = 3'b110;
+    localparam S111 = 3'b111;
+
+    // Sequential logic for state and counter
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            state <= S000;
+            counter <= 0;
+        end else begin
+            state <= next_state;
+
+            if (m_tick) begin
+                if (counter == N - 1) begin
+                    counter <= 0;
+                end else begin
+                    counter <= counter + 1;
+                end
+            end
+        end
+    end
+
+    // Combinational logic for next state and outputs
+    always @(*) begin
+        next_state = state;
+        m_tick = 1'b0;
+        db = 1'b0;
+
+        case (state)
+            S000: begin
+                if (sw) next_state = S001;
+            end
+            S001: begin
+                if (sw) next_state = S010;
+                else next_state = S000;
+            end
+            S010: begin
+                if (sw) next_state = S011;
+                else next_state = S000;
+            end
+            S011: begin
+                next_state = S100;
+                m_tick = 1'b1;
+            end
+            S100: begin
+                next_state = S101;
+                db = 1'b1;
+            end
+            S101: begin
+                if (!sw) next_state = S110;
+            end
+            S110: begin
+                if (sw) next_state = S111;
+                else next_state = S000;
+            end
+            S111: begin
+                next_state = S000;
+                m_tick = 1'b1;
+            end
+        endcase
+    end
+
+endmodule

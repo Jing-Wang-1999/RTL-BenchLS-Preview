@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/198",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/160",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 198,
+  "issue_number": 160,
+  "verilog_files": [
+    "rtl/riscv_controller.sv"
+  ],
+  "deletions": 8,
+  "additions": 23,
+  "patches": [
+    {
+      "filename": "rtl/riscv_controller.sv",
+      "patch": "@@ -189,7 +189,7 @@ module riscv_controller\n   // FSM state encoding\n   enum  logic [4:0] { RESET, BOOT_SET, SLEEP, WAIT_SLEEP, FIRST_FETCH,\n                       DECODE,\n-                      IRQ_TAKEN_ID, IRQ_TAKEN_IF, IRQ_FLUSH, ELW_EXE,\n+                      IRQ_TAKEN_ID, IRQ_TAKEN_IF, IRQ_FLUSH, IRQ_FLUSH_ELW, ELW_EXE,\n                       FLUSH_EX, FLUSH_WB, XRET_JUMP,\n                       DBG_TAKEN_ID, DBG_TAKEN_IF, DBG_FLUSH, DBG_WAIT_BRANCH } ctrl_fsm_cs, ctrl_fsm_ns;\n \n@@ -628,8 +628,6 @@ module riscv_controller\n         halt_if_o   = 1'b1;\n         halt_id_o   = 1'b1;\n \n-        perf_pipeline_stall_o = data_load_event_i;\n-\n         if (data_err_i)\n         begin //data error\n             // the current LW or SW have been blocked by the PMP\n@@ -646,13 +644,30 @@ module riscv_controller\n             ctrl_fsm_ns = IRQ_TAKEN_ID;\n           end else begin\n             // we can go back to decode in case the IRQ is not taken (no ELW REPLAY)\n-            exc_kill_o   = 1'b1;\n-            instr_valid_irq_flush_n =1'b1;\n-            ctrl_fsm_ns  = DECODE;\n+            exc_kill_o              = 1'b1;\n+            instr_valid_irq_flush_n = 1'b1;\n+            ctrl_fsm_ns             = DECODE;\n           end\n         end\n       end\n \n+      IRQ_FLUSH_ELW:\n+      begin\n+        is_decoding_o = 1'b0;\n+\n+        halt_if_o   = 1'b1;\n+        halt_id_o   = 1'b1;\n+\n+        perf_pipeline_stall_o = data_load_event_i;\n+\n+        if(irq_i & irq_enable_int) begin\n+            ctrl_fsm_ns = IRQ_TAKEN_ID;\n+        end else begin\n+          // we can go back to decode in case the IRQ is not taken (no ELW REPLAY)\n+          exc_kill_o              = 1'b1;\n+          ctrl_fsm_ns             = DECODE;\n+        end\n+      end\n \n       ELW_EXE:\n       begin\n@@ -668,8 +683,8 @@ module riscv_controller\n         //If an interrupt occurs, we replay the ELW\n         //No needs to check irq_int_req_i since in the EX stage there is only the elw, no CSR pendings\n         if(id_ready_i)\n-          ctrl_fsm_ns = (debug_req_i & ~debug_mode_q) ? DBG_FLUSH : IRQ_FLUSH;\n-          // if from the ELW EXE we go to IRQ_FLUSH, it is assumed that if there was an IRQ req together with the grant and IE was valid, then\n+          ctrl_fsm_ns = (debug_req_i & ~debug_mode_q) ? DBG_FLUSH : IRQ_FLUSH_ELW;\n+          // if from the ELW EXE we go to IRQ_FLUSH_ELW, it is assumed that if there was an IRQ req together with the grant and IE was valid, then\n           // there must be no hazard due to xIE\n         else\n           ctrl_fsm_ns = ELW_EXE;",
+      "additions": 23,
+      "deletions": 8,
+      "changes": 31
+    }
+  ],
+  "pr_info": {
+    "title": ":bug: Fixed ELW replay mechanism.",
+    "body": "To fix issue #160, the IRQ_FLUSH state when reached by the DECODE stage, was making the instruction valid for the next cycle.\r\nThis state was reachable also by the ELW_EXE, that was using it to proceed with the next instruction once the event has completed (clock enabled).\r\nThe DECODE state was considering the instruction valid due to #160, and so was reexecuting the ELW rather than the next instruction.\r\nNow a new state reachable only by the ELW_EXE state has been added to differentiate the meaning of the 2 situations.",
+    "state": "closed",
+    "created_at": "2019-11-18T10:01:44Z",
+    "updated_at": "2019-11-28T14:42:02Z",
+    "merged_at": "2019-11-18T11:48:46Z",
+    "user": "davideschiavone"
+  },
+  "issue_info": {
+    "title": "Killed controller-interrupt requests do not assert decoded instructions ",
+    "body": "This bug can happen when the registered interrupt line in the controller (**irq_req_ctrl_i**) is high when the controller is in the **DECODE** state and then the external interrupt line (**irq_i**) goes to 0 when the controller is in **IRQ_FLUSH** state.\r\nThe registered interrupt request is killed via **exc_kill_o** but if the instruction that was about to be interrupted is one of those instructions affected by the **deassert_we_o** signal, the EX stage is not updated properly (as **is_decoding_o** is 0).\r\nSuch instructions are BRANCHES or LD/ST instructions for instance, whereas instructions like ADD or SHIFT etc are not affected as insensitive to the **is_decoding_o** signal.\r\n",
+    "labels": [
+      "Type:Bug"
+    ],
+    "state": "closed",
+    "created_at": "2019-09-18T13:05:25Z",
+    "updated_at": "2019-09-18T13:15:26Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 164
+  },
+  "base_commit": "ab9d13a4ecf289bbe488ce3f5dc7e4c65220b6bc",
+  "head_commit": "a2e0793ce3b000ca7b57e59015079a669c3e0592",
+  "base_ref": "master",
+  "task_id": "openhwgroup_cv32e40p_198_160",
+  "lec_status": "useful_pass"
+}

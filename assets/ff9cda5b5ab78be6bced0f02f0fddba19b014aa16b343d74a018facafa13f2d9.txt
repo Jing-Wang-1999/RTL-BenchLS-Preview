@@ -1,0 +1,66 @@
+always @(posedge CLK or negedge RST_N) begin
+        if (!RST_N) begin
+            internal_state <= IDLE;
+            STATE <= STOPPED_STATE;
+            frame_count <= 2'b00;
+            FETCH_EN <= 1'b0;
+            LCD_ENABLE <= 1'b0;
+            SYNC_ENABLE <= 1'b0;
+            BL_ENABLE <= 1'b0;
+            STARTED <= 1'b0;
+            STOPPED <= 1'b0;
+        end else begin
+            internal_state <= next_internal_state;
+            
+            case (internal_state)
+                IDLE: begin
+                    STATE <= STOPPED_STATE;
+                    FETCH_EN <= 1'b0;
+                    LCD_ENABLE <= 1'b0;
+                    SYNC_ENABLE <= 1'b0;
+                    BL_ENABLE <= 1'b0;
+                    STARTED <= 1'b0;
+                    STOPPED <= 1'b0;
+                end
+                
+                LCD_POWERUP1: begin
+                    STATE <= STARTING_STATE;
+                    FETCH_EN <= 1'b1;
+                    LCD_ENABLE <= 1'b1;
+                    SYNC_ENABLE <= 1'b1;
+                    if (FRAME) frame_count <= frame_count + 1'b1;
+                end
+                
+                LCD_POWERUP2: begin
+                    STATE <= STARTING_STATE;
+                    if (FRAME) begin
+                        frame_count <= 2'b00;
+                        BL_ENABLE <= 1'b1;
+                    end
+                end
+                
+                RUNNING: begin
+                    STATE <= STARTED_STATE;
+                    STARTED <= 1'b1;
+                end
+                
+                LCD_POWERDOWN1: begin
+                    STATE <= STOPPING_STATE;
+                    BL_ENABLE <= 1'b0;
+                    if (FRAME) frame_count <= frame_count + 1'b1;
+                end
+                
+                LCD_POWERDOWN2: begin
+                    STATE <= STOPPING_STATE;
+                    if (FRAME) frame_count <= 2'b00;
+                end
+                
+                FIFO_RUNDOWN: begin
+                    STATE <= STOPPING_STATE;
+                    FETCH_EN <= 1'b0;
+                    LCD_ENABLE <= 1'b0;
+                    SYNC_ENABLE <= 1'b0;
+                end
+            endcase
+        end
+    end

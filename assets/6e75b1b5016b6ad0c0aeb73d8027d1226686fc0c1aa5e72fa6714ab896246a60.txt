@@ -1,0 +1,62 @@
+### Hardware Module Specification
+
+**Module Name**: LUT Output Channel Wait Controller
+
+**Overview**: This module manages handshaking and wait-state generation for a channel LUT (Look-Up Table) output within the SDP (Scalable Data Processor) core. It coordinates data transfers between the core pipeline and external components, ensuring proper synchronization when the LUT output channel is accessed.
+
+**Primary Function**: The controller generates internal and external wait signals to regulate when the LUT output channel can be read and when the core can proceed, preventing data hazards and ensuring valid data transfers.
+
+---
+
+**Interface Signals:**
+
+*Clock and Reset:*
+- **nvdla_core_clk**: Primary system clock.
+- **nvdla_core_rstn**: Active-low synchronous reset.
+
+*Input Control Signals:*
+- **chn_lut_out_rsci_oswt**: External LUT output channel operation start/trigger signal.
+- **core_wen**: Core write enable. Indicates the core pipeline is ready to accept data.
+- **core_wten**: Core wait enable. Indicates the core pipeline is stalled.
+- **chn_lut_out_rsci_iswt0**: Internal LUT channel wait request (stage 0).
+- **chn_lut_out_rsci_ld_core_psct**: Load core pipeline control signal (pre-gated).
+- **chn_lut_out_rsci_vd**: External LUT channel data valid indicator.
+
+*Output Control Signals:*
+- **chn_lut_out_rsci_biwt**: Internal wait signal to the LUT channel logic. Indicates a pending internal operation.
+- **chn_lut_out_rsci_bdwt**: External wait signal driven by this module. Indicates the channel is busy.
+- **chn_lut_out_rsci_ld_core_sct**: Gated load core pipeline control signal. Activates the core's data load operation.
+
+---
+
+**Internal Logic Description:**
+
+**1. Wait State Generation:**
+The module maintains an internal wait state (`icwt`). This state is set under two conditions:
+*   When an internal wait is requested (`iswt0`) while the core is not stalled (`core_wten` is low).
+*   Via its own feedback to sustain the wait condition until acknowledged.
+
+The state is cleared when the internal wait is acknowledged (`biwt`), which depends on the external data being valid (`vd`). The reset initializes this state to inactive.
+
+**2. Output Signal Logic:**
+- **Internal Wait (`biwt`)**: Activated only when both the internal wait state is active (`ogwt`) *and* the external channel data is valid (`vd`).
+- **External Wait (`bdwt`)**: Activated when an external operation is requested (`oswt`) *and* the core pipeline is ready (`core_wen`). This informs upstream components.
+- **Gated Load Signal (`ld_core_sct`)**: The pre-gated load control signal (`ld_core_psct`) is passed to the core only when the internal wait state is active (`ogwt`). This synchronizes the core's data load with channel availability.
+
+**3. Core Stall Handling:**
+The internal wait request (`iswt0`) is qualified with the inverse of the core wait enable (`core_wten`), ensuring new wait states are not entered when the core pipeline itself is stalled.
+
+---
+
+**Key Operational Behavior:**
+
+The controller acts as a bridge:
+1. It receives a request to use the LUT output channel (`oswt`, `iswt0`).
+2. It raises an external wait (`bdwt`) if the core is ready, signaling busy status.
+3. Internally, it enters a wait state, preventing further actions until valid data is present (`vd`).
+4. Once valid data is confirmed, it:
+    *   Asserts the internal wait (`biwt`) to the channel logic.
+    *   Enables the core load signal (`ld_core_sct`) for exactly one cycle to latch the data.
+5. The wait state is then cleared, allowing the next operation.
+
+**Allowed Sub-modules**: This module is a purely combinational and sequential state machine. It does not instantiate any sub-modules.

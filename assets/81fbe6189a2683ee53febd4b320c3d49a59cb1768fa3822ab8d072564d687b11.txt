@@ -1,0 +1,35 @@
+# Synchronous sampled SPI command interface
+
+Implement `spiifc` with parameters AddrBits=12 and RegAddrBits=4 (defaults qualified). All state updates on rising SysClk; Reset is active high. SPI_CLK, SPI_SS and SPI_MOSI are sampled as data, not clocks. SPI_SS is active low. Interfaces:
+
+| Direction | Ports | Width |
+|---|---|---:|
+| Input | Reset, SysClk, SPI_CLK, SPI_MOSI, SPI_SS | 1 each |
+| Input | txMemData | 8 |
+| Input | regReadData | 32 |
+| Output | SPI_MISO, rcMemWE, regWriteEn | 1 each |
+| Output | txMemAddr, rcMemAddr | AddrBits |
+| Output | rcMemData, debug_out | 8 |
+| Output | regAddr | RegAddrBits |
+| Output | regWriteData | 32 |
+
+The core receives MSB-first bytes. A command is the first byte after sampled chip-select assertion. Commands1 and2 route subsequent MOSI bytes into receive memory. Commands3 and4 send memory data on MISO. Command3 resets the transmit memory address; command4 continues it. Any command with bit7 set accesses a register selected by its low six bits, truncated to RegAddrBits. Bit6=1 receives a four-byte big-endian register write; bit6=0 transmits a four-byte big-endian register read. Command5 is unimplemented and does not initiate an interrupt. Unknown commands leave command reception active. Receive memory address is reset for *every* command byte, including command2. There is no memory backpressure or transaction-length field.
+
+The following recurrence specifies the sampled timing, address lookahead, all reset behavior and incomplete transactions. All right-hand sides refer to pre-edge values. State names are GET=0, RECEIVE=1, TRANSMIT=2, UNUSED_INTERRUPT=3, BUILD=4, SEND=5. Variables not assigned hold. Width arithmetic wraps to the declared width. Reset is not an asynchronous reset of every register.
+
+Every SysClk edge samples SPI_CLK, SPI_SS, SPI_MOSI into C,S,M; previous-C and previous-S each capture the old C,S. These five registers have no reset. Define bit_event=C && !previous_C && !S, start=previous_S && !S. Effective state Q is GET if Reset or start, otherwise stored state QS. Effective receive-bit index K is7 if Reset or start, otherwise stored KR. When bit_event, receive-byte register RB[K]'=M and KR'=(K==0 ?7:K-1); otherwise KR'=K. Receive byte V={RB[7:1],M}; byte_event=bit_event && K==0. RB is not reset. debug_out is a register capturing V on every byte_event, including command bytes; it has no reset.
+
+rcMemData=V. rcMemWE=(Q==RECEIVE && byte_event). The receive address register becomes0 on Reset or (Q==GET && byte_event), else increments on rcMemWE. rcMemAddr exposes it directly. Thus receive address points at the current write until its sampling edge.
+
+For outgoing data, define effective transmit bit index T and lookahead address A as follows. If Reset or (Q==GET && byte_event && (V==3 or V[7:6]==3)), T=7 and A=0. Otherwise T=stored TR; A=stored AR+1 if Q is TRANSMIT or SEND and bit_event && T==0, else A=stored AR. txMemAddr=A. Each SysClk edge AR'=A; TR'=(T==0 ?7:T-1) when bit_event and Q is TRANSMIT or SEND, else TR'=T. The memory address changes combinationally during the synchronized final-bit event, after the external rising SPI edge. regReadData is not latched; the selected byte is bits31:24,23:16,15:8,7:0 for byte selector J=0,1,2,3. SPI_MISO selects that byte[T] when Q==SEND, otherwise txMemData[T], including idle and deselected times. It is not tristated.
+
+State update priority:
+
+- When Q==GET && byte_event: commands1/2 set QS'=RECEIVE; commands3/4 set QS'=TRANSMIT; else bit7=1 sets J'=0 and QS'=(bit6 ?BUILD:SEND); command5 and other commands make no stored-state assignment. This last detail also applies if start or Reset coincides with a byte event.
+- Otherwise, Q==BUILD && byte_event stores V into the selected byte of a 32-bit assembly register W. At J=0,1,2 update W[31:24],W[23:16],W[15:8], respectively, and advance J. At J=3 update W[7:0] and set QS'=GET; J remains3.
+- Otherwise, Q==SEND && byte_event increments J modulo4 and sets QS'=GET if old J==3, else SEND.
+- Otherwise QS'=Q.
+
+Register address output is the low RegAddrBits of V & 0x3f during Q==GET && byte_event && V[7], otherwise the stored register-address register. That register samples regAddr every SysClk edge and has no explicit reset. regWriteEn=(Q==BUILD && byte_event && J==3). regWriteData={W[31:8],V}, so the last byte bypasses the assembly register to accompany the write-enable pulse. W and J are not reset; J is initialized only by a register command. Registers are written once at the fourth data byte and command parsing resumes immediately while SPI_SS may stay low. No automatic return to GET occurs at SPI_SS deassertion; the next *falling* select event supplies start. Reset forces the effective state and indexes above and clears receive address on edges; it does not clear all byte/register data or input synchronizers.
+
+Normal SPI operation must leave sufficient SysClk sampling opportunities between external SPI transitions and supply combinational memory/register read data. The specified sampled recurrence still defines arbitrary input histories without adding hidden formal assumptions. Do not add buffering, interrupt command implementation, receive-address continuation for command2, reset initialization, chip-select gating of SPI_MISO, or extra output latency.

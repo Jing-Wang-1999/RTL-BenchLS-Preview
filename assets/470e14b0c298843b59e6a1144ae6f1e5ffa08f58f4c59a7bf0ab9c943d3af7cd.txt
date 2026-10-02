@@ -1,0 +1,54 @@
+`ifndef ASYNC_RESET
+  `define ASYNC_RESET 0
+`endif
+
+module origen_213118 #(
+    parameter BITS = 8
+) (
+    input  wire                  clk,
+    input  wire                  rst,
+    input  wire                  bit_in,
+    input  wire [BITS-1:0]       DATA_IN,
+    input  wire [1:0]            mode,
+    output reg  [BITS-1:0]       DATA,
+    output reg                   bit_out
+);
+
+  localparam SR_MODE_WAIT      = 2'b00;
+  localparam SR_MODE_SHIFT_LEFT = 2'b01;
+  localparam SR_MODE_SHIFT_RIGHT = 2'b10;
+  localparam SR_MODE_PARALLEL = 2'b11;
+
+  reg [BITS-1:0] DATA_r;
+
+  always @(posedge clk, posedge rst) begin
+    if (`ASYNC_RESET && rst) begin
+      DATA_r <= {BITS{1'b0}};
+    end
+    else begin
+      case (mode)
+        SR_MODE_WAIT: begin
+          DATA_r <= DATA_r;
+        end
+        SR_MODE_SHIFT_LEFT: begin
+          DATA_r <= {DATA_r[BITS-2:0], bit_in};
+        end
+        SR_MODE_SHIFT_RIGHT: begin
+          DATA_r <= {bit_in, DATA_r[BITS-1:1]};
+        end
+        SR_MODE_PARALLEL: begin
+          DATA_r <= DATA_IN;
+        end
+        default: begin
+          DATA_r <= {BITS{1'b0}};
+        end
+      endcase
+    end
+  end
+
+  always @* begin
+    DATA = DATA_r;
+    bit_out = DATA_r[BITS-1];
+  end
+
+endmodule

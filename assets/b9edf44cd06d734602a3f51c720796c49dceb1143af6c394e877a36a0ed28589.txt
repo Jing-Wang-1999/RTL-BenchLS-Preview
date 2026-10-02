@@ -1,0 +1,27 @@
+This module is a multi-bit clock domain crossing synchronizer that transfers a binary count value from an input clock domain to an output clock domain. It uses Gray encoding to prevent metastability issues during the transfer.
+
+**Inputs:**
+- `i_iclk`: The input clock signal.
+- `i_icount`: A `W`-bit wide binary count value sampled in the input clock domain.
+- `i_oclk`: The output clock signal.
+
+**Outputs:**
+- `o_ocount`: A `W`-bit wide binary count value synchronized to the output clock domain.
+
+**Parameters:**
+- `W`: The bit width of the count value. Default is 32.
+- `NFF`: The number of flip-flop stages in the output clock domain's synchronization chain. Default is 2.
+- `INIT_VAL`: The initial value for internal registers. Default is all zeros.
+
+**Behavior:**
+1.  On every rising edge of the input clock (`i_iclk`), the module converts the incoming binary count (`i_icount`) into its Gray code equivalent.
+2.  This Gray-encoded value is then transferred across the clock boundary.
+3.  On the output clock domain (`i_oclk`), the Gray-encoded value passes through a chain of `NFF` synchronizing flip-flops to mitigate metastability.
+4.  After the final flip-flop stage, the synchronized Gray code value is converted back to a standard binary number.
+5.  This final binary value is registered and presented as the output `o_ocount` on the output clock.
+
+**Key Characteristics:**
+- The module ensures safe multi-bit data transfer by using Gray code, where only one bit changes between consecutive values, preventing corrupt intermediate states.
+- The `NFF` parameter allows configuration of the synchronization depth for the required mean time between failures (MTBF).
+- The internal synchronization registers are marked with the `ASYNC_REG` attribute to guide synthesis tools for optimal metastability handling.
+- The conversion functions are purely combinational logic internal

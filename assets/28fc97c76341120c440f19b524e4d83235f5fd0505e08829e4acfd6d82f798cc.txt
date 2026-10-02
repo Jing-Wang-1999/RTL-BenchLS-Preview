@@ -1,0 +1,84 @@
+always @* begin
+    state_next = STATE_IDLE;
+
+    reset_crc = 1'b0;
+    update_crc = 1'b0;
+    shift_in = 1'b0;
+    shift_reset = 1'b0;
+
+    input_axis_tready_next = 1'b0;
+
+    output_axis_tdata_int = 8'd0;
+    output_axis_tvalid_int = 1'b0;
+    output_axis_tlast_int = 1'b0;
+    output_axis_tuser_int = 1'b0;
+
+    error_bad_fcs_next = 1'b0;
+
+    case (state_reg)
+        STATE_IDLE: begin
+            input_axis_tready_next = output_axis_tready_int_early;
+            reset_crc = 1'b1;
+
+            output_axis_tdata_int = input_axis_tdata_d3;
+            output_axis_tvalid_int = input_axis_tvalid_d3 & input_axis_tvalid;
+            output_axis_tlast_int = 1'b0;
+            output_axis_tuser_int = 1'b0;
+
+            if (input_axis_tready & input_axis_tvalid) begin
+                shift_in = 1'b1;
+                if (input_axis_tvalid_d3) begin
+                    reset_crc = 1'b0;
+                    update_crc = 1'b1;
+                    if (input_axis_tlast) begin
+                        shift_reset = 1'b1;
+                        reset_crc = 1'b1;
+                        output_axis_tlast_int = 1'b1;
+                        output_axis_tuser_int = input_axis_tuser;
+                        if ({input_axis_tdata, input_axis_tdata_d0, input_axis_tdata_d1, input_axis_tdata_d2} != ~crc_next) begin
+                            output_axis_tuser_int = 1'b1;
+                            error_bad_fcs_next = 1'b1;
+                        end
+                        input_axis_tready_next = output_axis_tready_int_early;
+                        state_next = STATE_IDLE;
+                    end else begin
+                        state_next = STATE_PAYLOAD;
+                    end
+                end else begin
+                    state_next = STATE_IDLE;
+                end
+            end else begin
+                state_next = STATE_IDLE;
+            end
+        end
+        STATE_PAYLOAD: begin
+            input_axis_tready_next = output_axis_tready_int_early;
+
+            output_axis_tdata_int = input_axis_tdata_d3;
+            output_axis_tvalid_int = input_axis_tvalid_d3 & input_axis_tvalid;
+            output_axis_tlast_int = 1'b0;
+            output_axis_tuser_int = 1'b0;
+
+            if (input_axis_tready & input_axis_tvalid) begin
+                shift_in = 1'b1;
+                update_crc = 1'b1;
+                if (input_axis_tlast) begin
+                    shift_reset = 1'b1;
+                    reset_crc = 1'b1;
+                    output_axis_tlast_int = 1'b1;
+                    output_axis_tuser_int = input_axis_tuser;
+                    if ({input_axis_tdata, input_axis_tdata_d0, input_axis_tdata_d1, input_axis_tdata_d2} != ~crc_next) begin
+                        output_axis_tuser_int = 1'b1;
+                        error_bad_fcs_next = 1'b1;
+                    end
+                    input_axis_tready_next = output_axis_tready_int_early;
+                    state_next = STATE_IDLE;
+                end else begin
+                    state_next = STATE_PAYLOAD;
+                end
+            end else begin
+                state_next = STATE_PAYLOAD;
+            end
+        end
+    endcase
+end

@@ -1,0 +1,64 @@
+module __formal113_core_f1329fb511b7 (
+    input wire clock,
+    input wire reset,
+    input wire pulso,
+    input wire tick,
+    output reg zera_tick,
+    output reg conta_tick,
+    output reg zera_bcd,
+    output reg conta_bcd,
+    output reg pronto
+);
+
+    reg [2:0] Eatual, Eprox; 
+
+    parameter inicial     = 3'b000;
+    parameter preparacao  = 3'b001;
+    parameter espera_echo = 3'b010;
+    parameter espera_tick = 3'b011;
+    parameter conta_cm    = 3'b100;
+    parameter fim         = 3'b101;
+
+    always @(posedge clock or posedge reset) begin
+        if (reset)
+            Eatual <= inicial;
+        else
+            Eatual <= Eprox; 
+    end
+
+    always @(Eatual or pulso or tick) begin
+        case (Eatual)
+            inicial:     Eprox = preparacao;
+            preparacao:  Eprox = espera_echo;
+            espera_echo: Eprox = pulso ? espera_tick : espera_echo;
+            espera_tick: Eprox = pulso ? (tick ? conta_cm : espera_tick) : fim;
+            conta_cm:    Eprox = pulso ? espera_tick : fim;
+            fim:         Eprox = inicial;
+            default:     Eprox = inicial; // Added default case for completeness
+        endcase
+    end
+
+    always @(Eatual) begin
+        zera_tick  = (Eatual == preparacao) ? 1'b1 : 1'b0;
+        zera_bcd   = (Eatual == preparacao) ? 1'b1 : 1'b0;
+        conta_tick = (Eatual == espera_tick || Eatual == conta_cm) ? 1'b1 : 1'b0;
+        conta_bcd  = (Eatual == conta_cm) ? 1'b1 : 1'b0;
+        pronto     = (Eatual == fim) ? 1'b1 : 1'b0;  
+    end
+
+endmodule
+module ultrasonic_pulse_counter_fsm(
+  input wire [0:0] clock,
+  input wire [0:0] reset,
+  input wire [0:0] pulso,
+  input wire [0:0] tick,
+  output wire [0:0] zera_tick,
+  output wire [0:0] conta_tick,
+  output wire [0:0] zera_bcd,
+  output wire [0:0] conta_bcd,
+  output wire [0:0] pronto
+);
+wire [0:0] __negative_output;
+__formal113_core_f1329fb511b7 dut(.clock(clock), .reset(reset), .pulso(pulso), .tick(tick), .zera_tick(__negative_output), .conta_tick(conta_tick), .zera_bcd(zera_bcd), .conta_bcd(conta_bcd), .pronto(pronto));
+assign zera_tick = __negative_output ^ 1'd1;
+endmodule

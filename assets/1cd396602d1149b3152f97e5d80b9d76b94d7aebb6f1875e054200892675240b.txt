@@ -1,0 +1,51 @@
+module origen_082813 (
+    input wire clk,
+    input wire reset,
+    input wire FlushE,
+    input wire [4:0] rsD, rtD, rdD,
+    input wire [31:0] RD1, RD2,
+    input wire [31:0] IR_D,
+    input wire [31:0] im32_D,
+    input wire [31:0] pc_8in,
+    output reg [4:0] rsE, rtE, rdE,
+    output reg [31:0] RD1_E, RD2_E,
+    output reg [31:0] IR_E,
+    output reg [31:0] im32_E,
+    output reg [31:0] pc_8out
+);
+
+    always @(posedge clk or posedge reset) begin
+        if (reset || FlushE) begin
+            rsE <= 5'b0;
+            rtE <= 5'b0;
+            rdE <= 5'b0;
+            RD1_E <= 32'b0;
+            RD2_E <= 32'b0;
+            IR_E <= 32'b0;
+            im32_E <= 32'b0;
+            pc_8out <= 32'b0;
+        end
+        else begin
+            rsE <= rsD;
+            rtE <= rtD;
+            rdE <= rdD;
+            RD1_E <= RD1;
+            RD2_E <= RD2;
+            IR_E <= IR_D;
+            im32_E <= im32_D;
+            pc_8out <= pc_8in;
+        end
+    end
+
+    initial begin
+        rsE = 5'b0;
+        rtE = 5'b0;
+        rdE = 5'b0;
+        RD1_E = 32'b0;
+        RD2_E = 32'b0;
+        IR_E = 32'b0;
+        im32_E = 32'b0;
+        pc_8out = 32'b0;
+    end
+
+endmodule

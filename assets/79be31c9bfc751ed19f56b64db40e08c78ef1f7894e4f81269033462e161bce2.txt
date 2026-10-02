@@ -1,0 +1,26 @@
+always @ *
+begin
+    tag1_write_m_r = 1'b0;
+
+    // Cache flush (reset)
+    if (state_q == STATE_RESET)
+        tag1_write_m_r = 1'b1;
+    // Cache flush
+    else if (state_q == STATE_FLUSH)
+        tag1_write_m_r = !tag_dirty_any_m_w;
+    // Write - hit, mark as dirty
+    else if (state_q == STATE_LOOKUP && (|mem_wr_m_q))
+        tag1_write_m_r = tag1_hit_m_w;
+    // Write - write after refill
+    else if (state_q == STATE_WRITE)
+        tag1_write_m_r = (replace_way_q == 1);
+    // Write - mark entry as dirty
+    else if (state_q == STATE_EVICT_WAIT && pmem_ack_w)
+        tag1_write_m_r = (replace_way_q == 1);
+    // Line refill
+    else if (state_q == STATE_REFILL)
+        tag1_write_m_r = pmem_ack_w && pmem_last_w && (replace_way_q == 1);
+    // Invalidate - line matches address - invalidate
+    else if (state_q == STATE_INVALIDATE)
+        tag1_write_m_r = tag1_hit_m_w;
+end

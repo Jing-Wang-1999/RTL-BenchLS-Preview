@@ -1,0 +1,20 @@
+always @(posedge clk or posedge rst)
+	if(rst)				sp_tms <=  32'hffff_ffff;
+	else
+	if((cs_le_d | rf_we) & wb_cyc_i & wb_stb_i)
+	   begin
+		if(spec_req_cs[0])	sp_tms <=  tms0;
+		else
+		if(spec_req_cs[1])	sp_tms <=  tms1;
+		else
+		if(spec_req_cs[2])	sp_tms <=  tms2;
+		else
+		if(spec_req_cs[3])	sp_tms <=  tms3;
+		else
+		if(spec_req_cs[4])	sp_tms <=  tms4;
+		else
+		if(spec_req_cs[5])	sp_tms <=  tms5;
+		else
+		if(spec_req_cs[6])	sp_tms <=  tms6;
+		else			sp_tms <=  tms7;
+	   end

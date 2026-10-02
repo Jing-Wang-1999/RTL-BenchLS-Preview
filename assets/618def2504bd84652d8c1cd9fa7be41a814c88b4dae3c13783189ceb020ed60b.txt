@@ -1,0 +1,28 @@
+The primary function of this Verilog module is to compute a 32-bit cyclic redundancy check (CRC) based on an 8-bit data input stream. The computation process involves the following steps and key elements:
+
+1. **Input and Register Initialization:**
+   - Input signals include an 8-bit data stream (`DATA_IN`), clock (`CLK`), reset (`RESET`), start (`START`), load (`LOAD`), and a 32-bit initial CRC value (`CRC_IN`).
+   - Internal registers `start_int` and `data_int` store intermediate values of `START` and `DATA_IN` respectively.
+
+2. **Key Control Flow:**
+   - On each positive clock edge (`CLK`), the module updates `start_int` and `data_int` with the values of `START` and `DATA_IN`.
+   - The primary CRC computation or register value update takes place in a separate always block triggered by either a positive clock edge or a positive reset signal:
+     - If `RESET` is asserted, `CRC_OUT` is reset to 0.
+     - If `start_int` is high, `CRC_OUT` is updated by computing the next CRC value using the `nextCRC32_D8` function with `data_int` and the current `CRC_OUT` as parameters.
+     - If `LOAD` is high, `CRC_OUT` is loaded with the value of `CRC_IN`.
+
+3. **Data Processing:**
+   - The `nextCRC32_D8` function performs the CRC computation:
+     - Takes an 8-bit `Data` input and the current 32-bit `CRC` value.
+     - Computes the next CRC value based on a polynomial transformation that involves bitwise XOR operations on the input data and the current CRC value for each bit position of the new CRC.
+
+4. **Signal Interactions and Dependencies:**
+   - `DATA_IN` directly influences `data_int` and subsequently the CRC calculation.
+   - `START` signal triggers the computation of the next CRC value if set high.
+   - The computation of the next CRC value heavily relies on a feedback loop involving the current `CRC_OUT` value, ensuring continuous CRC updates based on the data stream.
+   - The `LOAD` signal, when high, allows for an initial CRC value to be loaded into `CRC_OUT`.
+
+This design ensures that the CRC value is continuously updated based on incoming data while providing control over initialization and reset states, making it suitable for error-detection purposes in data communication and storage systems.
+
+Module Interface:
+module byte_parallel_crc32(DATA_IN, CLK, RESET, START, LOAD, CRC_IN, CRC_OUT);

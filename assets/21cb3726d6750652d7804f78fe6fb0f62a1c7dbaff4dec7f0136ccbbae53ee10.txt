@@ -1,0 +1,114 @@
+always @* begin
+    s_axis_req_ready_next = 1'b0;
+
+    m_axis_req_status_tag_next = m_axis_req_status_tag_reg;
+    m_axis_req_status_full_next = m_axis_req_status_full_reg;
+    m_axis_req_status_error_next = m_axis_req_status_error_reg;
+    m_axis_req_status_valid_next = 1'b0;
+
+    m_axis_cpl_enqueue_req_queue_next = m_axis_cpl_enqueue_req_queue_reg;
+    m_axis_cpl_enqueue_req_tag_next = m_axis_cpl_enqueue_req_tag_reg;
+    m_axis_cpl_enqueue_req_valid_next = m_axis_cpl_enqueue_req_valid_reg & ~m_axis_cpl_enqueue_req_ready;
+
+    s_axis_cpl_enqueue_resp_ready_next = 1'b0;
+
+    m_axis_cpl_enqueue_commit_op_tag_next = m_axis_cpl_enqueue_commit_op_tag_reg;
+    m_axis_cpl_enqueue_commit_valid_next = m_axis_cpl_enqueue_commit_valid_reg & ~m_axis_cpl_enqueue_commit_ready;
+
+    m_axis_dma_write_desc_dma_addr_next = m_axis_dma_write_desc_dma_addr_reg;
+    m_axis_dma_write_desc_ram_addr_next = m_axis_dma_write_desc_ram_addr_reg;
+    m_axis_dma_write_desc_len_next = m_axis_dma_write_desc_len_reg;
+    m_axis_dma_write_desc_tag_next = m_axis_dma_write_desc_tag_reg;
+    m_axis_dma_write_desc_valid_next = m_axis_dma_write_desc_valid_reg && !m_axis_dma_write_desc_ready;
+
+    desc_table_start_sel = s_axis_req_sel;
+    desc_table_start_tag = s_axis_req_tag;
+    desc_table_start_data = s_axis_req_data;
+    desc_table_start_en = 1'b0;
+    desc_table_enqueue_ptr = s_axis_cpl_enqueue_resp_tag[enqueue_resp_enc*QUEUE_REQ_TAG_WIDTH +: QUEUE_REQ_TAG_WIDTH] & DESC_PTR_MASK;
+    desc_table_enqueue_phase = s_axis_cpl_enqueue_resp_phase[enqueue_resp_enc];
+    desc_table_enqueue_queue_op_tag = s_axis_cpl_enqueue_resp_op_tag[enqueue_resp_enc*QUEUE_OP_TAG_WIDTH +: QUEUE_OP_TAG_WIDTH];
+    desc_table_enqueue_invalid = 1'b0;
+    desc_table_enqueue_en = 1'b0;
+    desc_table_cpl_write_done_ptr = s_axis_dma_write_desc_status_tag & DESC_PTR_MASK;
+    desc_table_cpl_write_done_en = 1'b0;
+    desc_table_finish_en = 1'b0;
+
+    // queue query
+    // wait for descriptor request
+    s_axis_req_ready_next = enable && !desc_table_active[desc_table_start_ptr_reg & DESC_PTR_MASK] && ($unsigned(desc_table_start_ptr_reg - desc_table_finish_ptr_reg) < DESC_TABLE_SIZE) && (!m_axis_cpl_enqueue_req_valid || (m_axis_cpl_enqueue_req_valid & m_axis_cpl_enqueue_req_ready));
+    if (s_axis_req_ready && s_axis_req_valid) begin
+        s_axis_req_ready_next = 1'b0;
+
+        // store in descriptor table
+        desc_table_start_sel = s_axis_req_sel;
+        desc_table_start_tag = s_axis_req_tag;
+        desc_table_start_data = s_axis_req_data;
+        desc_table_start_en = 1'b1;
+
+        // initiate queue query
+        m_axis_cpl_enqueue_req_queue_next = s_axis_req_queue;
+        m_axis_cpl_enqueue_req_tag_next = desc_table_start_ptr_reg & DESC_PTR_MASK;
+        m_axis_cpl_enqueue_req_valid_next = 1 << s_axis_req_sel;
+    end
+
+    // start completion write
+    // wait for queue query response
+    if (enqueue_resp_enc_valid && !m_axis_dma_write_desc_valid_reg) begin
+        s_axis_cpl_enqueue_resp_ready_next = 1 << enqueue_resp_enc;
+
+        // update entry in descriptor table
+        desc_table_enqueue_ptr = s_axis_cpl_enqueue_resp_tag[enqueue_resp_enc*QUEUE_REQ_TAG_WIDTH +: QUEUE_REQ_TAG_WIDTH] & DESC_PTR_MASK;
+        desc_table_enqueue_phase = s_axis_cpl_enqueue_resp_phase[enqueue_resp_enc];
+        desc_table_enqueue_queue_op_tag = s_axis_cpl_enqueue_resp_op_tag[enqueue_resp_enc*QUEUE_OP_TAG_WIDTH +: QUEUE_OP_TAG_WIDTH];
+        desc_table_enqueue_invalid = 1'b0;
+        desc_table_enqueue_en = 1'b1;
+
+        // return descriptor request completion
+        m_axis_req_status_tag_next = desc_table_tag[s_axis_cpl_enqueue_resp_tag[enqueue_resp_enc*QUEUE_REQ_TAG_WIDTH +: QUEUE_REQ_TAG_WIDTH] & DESC_PTR_MASK];
+        m_axis_req_status_full_next = s_axis_cpl_enqueue_resp_full[enqueue_resp_enc*1 +: 1];
+        m_axis_req_status_error_next = s_axis_cpl_enqueue_resp_error[enqueue_resp_enc*1 +: 1];
+        m_axis_req_status_valid_next = 1'b1;
+
+        // initiate completion write
+        m_axis_dma_write_desc_dma_addr_next = s_axis_cpl_enqueue_resp_addr[enqueue_resp_enc*DMA_ADDR_WIDTH +: DMA_ADDR_WIDTH];
+        m_axis_dma_write_desc_ram_addr_next = (s_axis_cpl_enqueue_resp_tag[enqueue_resp_enc*QUEUE_REQ_TAG_WIDTH +: QUEUE_REQ_TAG_WIDTH] & DESC_PTR_MASK) << $clog2(SEG_COUNT*SEG_BE_WIDTH);
+        m_axis_dma_write_desc_len_next = CPL_SIZE;
+        m_axis_dma_write_desc_tag_next = (s_axis_cpl_enqueue_resp_tag[enqueue_resp_enc*QUEUE_REQ_TAG_WIDTH +: QUEUE_REQ_TAG_WIDTH] & DESC_PTR_MASK);
+
+        if (s_axis_cpl_enqueue_resp_error[enqueue_resp_enc*1 +: 1] || s_axis_cpl_enqueue_resp_full[enqueue_resp_enc*1 +: 1]) begin
+            // queue empty or not active
+
+            // invalidate entry
+            desc_table_enqueue_invalid = 1'b1;
+        end else begin
+            // descriptor available to enqueue
+
+            // initiate completion write
+            m_axis_dma_write_desc_valid_next = 1'b1;
+        end
+    end
+
+    // finish completion write
+    if (s_axis_dma_write_desc_status_valid) begin
+        // update entry in descriptor table
+        desc_table_cpl_write_done_ptr = s_axis_dma_write_desc_status_tag & DESC_PTR_MASK;
+        desc_table_cpl_write_done_en = 1'b1;
+    end
+
+    // operation complete
+    if (desc_table_active[desc_table_finish_ptr_reg & DESC_PTR_MASK] && desc_table_finish_ptr_reg != desc_table_start_ptr_reg) begin
+        if (desc_table_invalid[desc_table_finish_ptr_reg & DESC_PTR_MASK]) begin
+            // invalidate entry in descriptor table
+            desc_table_finish_en = 1'b1;
+
+        end else if (desc_table_cpl_write_done[desc_table_finish_ptr_reg & DESC_PTR_MASK] && !m_axis_cpl_enqueue_commit_valid) begin
+            // invalidate entry in descriptor table
+            desc_table_finish_en = 1'b1;
+
+            // commit enqueue operation
+            m_axis_cpl_enqueue_commit_op_tag_next = desc_table_queue_op_tag[desc_table_finish_ptr_reg & DESC_PTR_MASK];
+            m_axis_cpl_enqueue_commit_valid_next = 1 << desc_table_sel[desc_table_finish_ptr_reg & DESC_PTR_MASK];
+        end
+    end
+end

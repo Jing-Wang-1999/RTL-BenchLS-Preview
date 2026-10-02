@@ -1,0 +1,34 @@
+always @(posedge i_clk)
+	if (i_reset)
+	begin
+		// Give ourselves 16 bauds before being ready
+		baud_counter <= { INITIAL_SETUP[23:0], 4'h0 };
+		zero_baud_counter <= 1'b0;
+	end else if (i_break)
+	begin
+		// Give ourselves 16 bauds before being ready
+		baud_counter <= break_condition;
+		zero_baud_counter <= 1'b0;
+	end else begin
+		zero_baud_counter <= (baud_counter == 28'h01);
+
+		if (!zero_baud_counter)
+			baud_counter <= baud_counter - 28'h01;
+		else if (state == TXU_BREAK)
+		begin
+			baud_counter <= 0;
+			zero_baud_counter <= 1'b1;
+		end else if (state == TXU_IDLE)
+		begin
+			baud_counter <= 28'h0;
+			zero_baud_counter <= 1'b1;
+			if ((i_wr)&&(!r_busy))
+			begin
+				baud_counter <= { 4'h0, i_setup[23:0]} - 28'h01;
+				zero_baud_counter <= 1'b0;
+			end
+		end else if (last_state)
+			baud_counter <= clocks_per_baud - 28'h02;
+		else
+			baud_counter <= clocks_per_baud - 28'h01;
+	end

@@ -1,0 +1,63 @@
+always @ (posedge clk)
+begin
+	if (rst) begin
+		expon_term  <= 0;
+ 		expon_uf_1 <= 0;
+        expon_uf_term_1 <= 0;
+        expon_final_1 <= 0;
+        expon_final_2 <= 0;
+        expon_shift_a <= 0;
+        expon_shift_b <= 0;
+ 		expon_uf_2 <= 0;
+        expon_uf_term_2 <= 0;
+        expon_uf_term_3 <= 0;
+ 		expon_uf_gt_maxshift <= 0;
+        expon_uf_term_4 <= 0;
+        expon_final_3 <= 0;
+        expon_final_4 <= 0;
+ 		expon_final_4_et0 <= 0;
+ 		expon_final_4_term <= 0;
+        expon_final_5 <= 0;
+        mantissa_a <= 0;
+		mantissa_b <= 0;
+		dividend_a <= 0;
+		divisor_b <= 0;
+		dividend_shift_2 <= 0;
+		divisor_shift_2 <= 0;
+		remainder_shift_term <= 0;
+		remainder_b <= 0;
+		dividend_a_shifted <= 0;
+		divisor_b_shifted <=  0;
+		mantissa_1 <= 0;
+		end
+	else if (enable_reg_2) begin
+		expon_term  <= exponent_a + 1023;
+ 		expon_uf_1 <= exponent_b > expon_term;
+        expon_uf_term_1 <= expon_uf_1 ? (exponent_b - expon_term) : 0;
+        expon_final_1 <= expon_term - exponent_b;
+        expon_final_2 <= expon_uf_1 ? 0 : expon_final_1;
+        expon_shift_a <= a_is_norm ? 0 : dividend_shift_2;
+        expon_shift_b <= b_is_norm ? 0 : divisor_shift_2;
+ 		expon_uf_2 <= expon_shift_a > expon_final_2;
+        expon_uf_term_2 <= expon_uf_2 ? (expon_shift_a - expon_final_2) : 0;
+        expon_uf_term_3 <= expon_uf_term_2 + expon_uf_term_1;
+ 		expon_uf_gt_maxshift <= (expon_uf_term_3 > 51);
+        expon_uf_term_4 <= expon_uf_gt_maxshift ? 52 : expon_uf_term_3;
+        expon_final_3 <= expon_uf_2 ? 0 : (expon_final_2 - expon_shift_a);
+        expon_final_4 <= expon_final_3 + expon_shift_b;
+ 		expon_final_4_et0 <= (expon_final_4 == 0);
+ 		expon_final_4_term <= expon_final_4_et0 ? 0 : 1;
+        expon_final_5 <= quotient_msb ? expon_final_4 : expon_final_4 - expon_final_4_term;
+		mantissa_a <= opa[51:0];
+		mantissa_b <= opb[51:0];
+		dividend_a <= mantissa_a;
+		divisor_b <= mantissa_b;
+		dividend_shift_2 <= dividend_shift;
+		divisor_shift_2 <= divisor_shift;
+		remainder_shift_term <= 52 - expon_uf_term_4;
+		remainder_b <= remainder_a << remainder_shift_term;
+		dividend_a_shifted <= dividend_a << dividend_shift_2;
+		divisor_b_shifted <= divisor_b << divisor_shift_2;
+		mantissa_1 <= quotient_out[53:2] >> expon_uf_term_4;
+		end
+end

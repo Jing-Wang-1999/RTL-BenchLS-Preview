@@ -1,0 +1,19 @@
+The module "origen_112223" is an arithmetic unit designed to perform addition or subtraction on two 8-bit inputs, A and B, based on a control signal 'op'. The module outputs an 8-bit result 'S' and a signal 'sinal' indicating the sign of the result.
+
+Inputs:
+- A: An 8-bit input representing one operand.
+- B: An 8-bit input representing the second operand.
+- op: A control signal determining the operation type; '0' for addition and '1' for subtraction.
+
+Outputs:
+- S: An 8-bit output representing the result of the operation.
+- sinal: A signal indicating the sign of the result, derived from the most significant bit of 'S'.
+
+Internal Signals:
+- mux_out: An 8-bit wire used to select between B and its bitwise negation based on 'op'.
+- carry: A 9-bit wire used to propagate carry bits through the addition/subtraction process.
+
+Behavior:
+- The module uses a series of sub-modules to perform the operations. For each bit position from 0 to 7, a multiplexer (mux2) selects between B[i] and ~B[i] based on the 'op' signal, producing 'mux_out[i]'.
+- A full adder (fadder) then computes the sum of A[i], mux_out[i], and the carry-in from the previous bit position. It outputs the sum bit 'S[i]' and the carry-out to the next bit position.
+- The

@@ -1,0 +1,144 @@
+module __formal113_core_7f2b372c1f99(dix,diy,iv,dox,doy,ov,cin,w0,w1,w2,cout,clk,rst);
+    input [19:0] dix,diy;	
+    input iv;
+    output [15:0] dox,doy;	
+    output ov;
+    input [15:0] cin;		
+    input w0,w1,w2;			
+    output [15:0] cout;		
+    input clk;					
+    input rst;					
+
+reg [3:0] dng, upg;			
+reg [7:0] level, hlev;		
+reg [7:0] htime, maxg;		
+wire [7:0] mag;				
+wire mov, aiv;					
+wire [8:0] dif;				
+wire ds;							
+reg [23:0] error;				
+wire [3:0] lg;					
+wire [23:0] gain;				
+wire hld;						
+reg [15:0] hctr;				
+wire hz;							
+
+always @ (posedge clk)
+begin
+    if (rst) level <= 32;	
+    else if (w0) level <= cin[7:0];
+    if (rst) upg <= 5;		
+    else if (w0) upg <= cin[11:8];
+    if (rst) dng <= 10;		
+    else if (w0) dng <= cin[15:12];
+    if (rst) hlev <= 8;		
+    else if (w1) hlev <= cin[7:0];
+    if (rst) htime <= 64;	
+    else if (w1) htime <= cin[15:8];
+    if (rst) maxg <= 223;	
+    else if (w2) maxg <= cin[7:0];
+end
+
+// Instance of logmul20s16a integrated within the module
+// The functionality has been manually embedded, assuming logmul20s16a does a simple multiplication
+
+reg [39:0] product;
+reg valid_mul;
+always @ (posedge clk)
+begin
+    if (rst)
+        product <= 0;
+    else if (iv) begin
+        product <= dix * diy;
+        valid_mul <= 1;
+    end
+    else begin
+        product <= 0;
+        valid_mul <= 0;
+    end
+end
+
+assign dox = product[39:24];				
+assign doy = product[23:8];
+assign ov = valid_mul;
+
+// Instance of mag8 manually embedded
+// Assuming mag8 computes the absolute value of the inputs and does a max operation
+
+assign mag = (dox[15:8] > doy[15:8]) ? dox[15:8] : doy[15:8];
+assign mov = ov;
+
+assign hld = (mag > hlev);
+always @ (posedge clk)
+begin
+    if (rst) hctr <= 0;
+    else if (hld) hctr <= {htime,8'h00};			
+    else if (iv & ~hz) hctr <= hctr - 16'h0001;	
+end
+assign hz = ~|hctr;	
+
+assign dif = {1'b0,level} - {1'b0,mag};
+assign ds = dif[8];
+always @ (posedge clk)
+begin
+    error <= mov
+        ? {ds,ds,ds,ds,ds,ds,ds,ds,ds,ds,ds,ds,ds,ds,ds,dif}	
+        : {error[22:0],1'b0};											
+end
+
+assign lg = ds ? dng : (hld ? upg : (hz ? dng : 4'h0));
+
+// Simple SRL16E functionality embedded
+// Assuming it's a 16-bit shift register with parallel-load capability
+
+reg [15:0] shift_reg;
+always @ (posedge clk)
+begin
+    if (1'b1) // CE is 1'b1
+        shift_reg <= {shift_reg[14:0], mov};
+end
+
+assign aiv = shift_reg[lg];
+
+
+// Instance of accsat24v manually embedded
+// Assuming accsat24v is an accumulator with saturation at maxg
+
+reg [23:0] acc;
+always @ (posedge clk)
+begin
+    if (rst)
+        acc <= 0;
+    else if (aiv) begin
+        if (error > 0 && acc + error > maxg)
+            acc <= maxg;
+        else if (error < 0 && acc + error < 0)
+            acc <= 0;
+        else
+            acc <= acc + error;
+    end
+end
+
+assign gain = acc;
+
+assign cout = gain[23:8];
+endmodule
+module automatic_gain_controller(
+  input wire [19:0] dix,
+  input wire [19:0] diy,
+  input wire [0:0] iv,
+  output wire [15:0] dox,
+  output wire [15:0] doy,
+  output wire [0:0] ov,
+  input wire [15:0] cin,
+  input wire [0:0] w0,
+  input wire [0:0] w1,
+  input wire [0:0] w2,
+  output wire [15:0] cout,
+  input wire [0:0] clk,
+  input wire [0:0] rst
+);
+wire [15:0] __negative_output;
+__formal113_core_7f2b372c1f99 dut(.dix(dix), .diy(diy), .iv(iv), .dox(__negative_output), .doy(doy), .ov(ov), .cin(cin), .w0(w0), .w1(w1), .w2(w2), .cout(cout), .clk(clk), .rst(rst));
+assign dox = __negative_output ^ 16'd1;
+endmodule

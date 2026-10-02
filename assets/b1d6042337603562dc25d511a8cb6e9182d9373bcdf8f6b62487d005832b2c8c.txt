@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.c11bdb4e186f141907f5.62fbe13e65af",
+  "compile_check": {
+    "case_id": "s1derived.c11bdb4e186f141907f5.62fbe13e65af",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_128283",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_128283.1d3905c68997f082/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.c11bdb4e186f141907f5",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "c11bdb4e186f141907f5628b642470220f1321adb03df090cd6b3f2d19dac411",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.c11bdb4e186f141907f5.62fbe13e65af",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_128283.1d3905c68997f082/private/commercial_positive.log",
+    "commercial_log_sha256": "a192b8e47bcfb1b1b0bad9bfbf3e09c9d1c331c2c7bbd16373a04f64f073a7df",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_128283.1d3905c68997f082/private/historical_harness/00_sec_autovcoder_128283.tcl",
+    "executed_script_sha256": "72d5dd63cef0bbcd8ccf49c762c03e31609991c5e8128a528a37c18a215dba0d",
+    "golden_tops": [
+      "autovcoder_128283"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.autovcoder_128283.1d3905c68997f082",
+    "parent_id": "s1p.c11bdb4e186f141907f5",
+    "revised_tops": [
+      "autovcoder_128283"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_128283",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.c11bdb4e186f141907f5.62fbe13e65af",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All three live unsigned duration comparisons, reset state, modulo-free terminal transition and illegal-state hold agree, including N=0 and15.",
+        "rtl_excerpt": "if (counter < red_time)",
+        "specification_excerpt": "N+1 rising edges"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.c11bdb4e186f141907f5",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "a3b957e83319190a8119cc35d2300c78337c0a9706791f161e53621e17934af1",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "c11bdb4e186f141907f5628b642470220f1321adb03df090cd6b3f2d19dac411",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_128283.1d3905c68997f082/private/historical_harness/00_sec_autovcoder_128283.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_128283.1d3905c68997f082/private/historical_harness/01_sec_autovcoder_128283.tcl"
+  ],
+  "parent_id": "s1p.c11bdb4e186f141907f5",
+  "primary_review": {
+    "case_id": "s1derived.c11bdb4e186f141907f5.62fbe13e65af",
+    "checks": {
+      "behavior": "The duration wording does not disclose that stable duration N occupies N+1 clock edges, including one edge for zero.",
+      "boundaries": "The repair covers observable truncation, wrap, initialization, and boundary behavior.",
+      "interface": "The repair states the complete actual interface and defaults.",
+      "rtl_reasonableness": "The circuit is coherent hardware for its stated role.",
+      "sequential_and_reset": "The repair states actual clock, reset, priority, and hold behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The duration wording does not disclose that stable duration N occupies N+1 clock edges, including one edge for zero.",
+        "rtl_excerpt": "The counter increments while counter < time and transitions only on a later edge when counter >= time.",
+        "spec_excerpt": "It says transition occurs when the programmed duration is met."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The duration wording does not disclose that stable duration N occupies N+1 clock edges, including one edge for zero.",
+        "rtl_evidence": "The counter increments while counter < time and transitions only on a later edge when counter >= time.",
+        "spec_evidence": "It says transition occurs when the programmed duration is met.",
+        "type": "boundary_ambiguity"
+      }
+    ],
+    "parent_id": "s1p.c11bdb4e186f141907f5",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_06/s1derived.c11bdb4e186f141907f5.62fbe13e65af.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "c11bdb4e186f141907f5628b642470220f1321adb03df090cd6b3f2d19dac411",
+    "source_group": "S3",
+    "specification_sha256": "62fbe13e65af0fac60880fb59b604060fb885b89653cd189e0cd7979bbfd6711",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_06/s1derived.c11bdb4e186f141907f5.62fbe13e65af.md",
+  "qualified_specification_sha256": "a3b957e83319190a8119cc35d2300c78337c0a9706791f161e53621e17934af1",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_128283.1d3905c68997f082/private/golden_design.v",
+  "rtl_sha256": "c11bdb4e186f141907f5628b642470220f1321adb03df090cd6b3f2d19dac411",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.autovcoder_128283.1d3905c68997f082/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "62fbe13e65af0fac60880fb59b604060fb885b89653cd189e0cd7979bbfd6711",
+  "top_module": "autovcoder_128283"
+}

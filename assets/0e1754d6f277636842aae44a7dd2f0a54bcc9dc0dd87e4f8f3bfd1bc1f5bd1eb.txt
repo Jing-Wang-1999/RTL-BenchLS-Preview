@@ -1,0 +1,138 @@
+module autovcoder_086473 (
+    input RESET,
+    input VCLKx4,
+    input VCLK,
+
+    input [8:0] PH,
+    input [8:0] PV,
+
+    output [8:0] PALAD,  // Pixel Output (Palet Index)
+
+    output [ 9:0] FGVAD,  // FG
+    input  [15:0] FGVDT,
+
+    output [ 9:0] BGVAD,  // BG
+    input  [15:0] BGVDT,
+    input  [ 7:0] BGSCX,
+    input  [ 7:0] BGSCY,
+
+    output [10:0] SPAAD,  // Sprite
+    input  [ 7:0] SPADT,
+
+    output VBLK,
+    input  DBGPD, // Palet Display (for Debug)
+
+    input        ROMCL,
+    input [16:0] ROMAD,
+    input [ 7:0] ROMDT,
+    input        ROMEN
+);
+
+  assign VBLK = (PV >= 193);
+
+  // ROMs
+  wire SPCFT = 1'b1;
+  wire [12:0] SPCAD;
+  wire [31:0] SPCDT;
+
+  wire [12:0] FGCAD;
+  wire [31:0] FGCDT;
+
+  wire [12:0] BGCAD;
+  wire [31:0] BGCDT;
+
+  NJFGROM sprom (
+      ~VCLKx4,
+      SPCAD,
+      SPCDT,
+      ROMCL,
+      ROMAD,
+      ROMDT,
+      ROMEN
+  );
+  NJFGROM fgrom (
+      ~VCLK,
+      FGCAD,
+      FGCDT,
+      ROMCL,
+      ROMAD,
+      ROMDT,
+      ROMEN
+  );
+  NJBGROM bgrom (
+      ~VCLK,
+      BGCAD,
+      BGCDT,
+      ROMCL,
+      ROMAD,
+      ROMDT,
+      ROMEN
+  );
+
+
+  // Fore-Ground Scanline Generator
+  wire    FGPRI;
+  wire [8:0] FGOUT;
+  NINJAKUN_FG fg (
+      VCLK,
+      PH,
+      PV,
+      FGVAD,
+      FGVDT,
+      FGCAD,
+      FGCDT,
+      {FGPRI, FGOUT}
+  );
+  wire FGOPQ = (FGOUT[3:0] != 0);
+  wire FGPPQ = FGOPQ & (~FGPRI);
+
+  // Back-Ground Scanline Generator
+  wire [8:0] BGOUT;
+  NINJAKUN_BG bg (
+      VCLK,
+      PH,
+      PV,
+      BGSCX,
+      BGSCY,
+      BGVAD,
+      BGVDT,
+      BGCAD,
+      BGCDT,
+      BGOUT
+  );
+
+  // Sprite Scanline Generator
+  wire [8:0] SPOUT;
+  NINJAKUN_SP sp (
+      VCLKx4,
+      VCLK,
+      PH,
+      PV,
+      SPAAD,
+      SPADT,
+      SPCAD,
+      SPCDT,
+      SPCFT,
+      SPOUT
+  );
+  wire SPOPQ = (SPOUT[3:0] != 0);
+
+  // Palet Display (for Debug)
+  wire [8:0] PDOUT = (PV[7] | PV[8]) ? 0 : {PV[6:2], PH[7:4]};
+
+  // Color Mixer
+  DSEL4_9B cmix (
+      PALAD,
+      DBGPD,
+      PDOUT,
+      FGPPQ,
+      FGOUT,
+      SPOPQ,
+      SPOUT,
+      FGOPQ,
+      FGOUT,
+      BGOUT
+  );
+
+endmodule
+

@@ -1,0 +1,87 @@
+## Specification: Display Controller State Machine
+
+### Overview
+The module is a finite state machine that manages the startup and shutdown sequence for a display subsystem with an integrated FIFO buffer. It coordinates multiple control signals to ensure proper power sequencing and synchronization during operation.
+
+### Interface Signals
+
+#### Inputs
+- **CLK**: System clock (positive edge triggered)
+- **RST_N**: Active-low asynchronous reset (resets all internal logic)
+- **START**: Command to begin the display startup sequence
+- **STOP**: Command to begin the display shutdown sequence  
+- **FRAME**: Frame synchronization pulse (indicates display frame boundaries)
+
+#### Outputs
+- **STARTED**: Asserted when the display is fully operational
+- **STOPPED**: Asserted when the display is fully shut down
+- **STATE[1:0]**: Current operational state encoding:
+  - 00: Stopped
+  - 01: Starting
+  - 10: Started
+  - 11: Stopping
+- **FETCH_EN**: Enables data fetching from upstream sources
+- **LCD_ENABLE**: Powers the LCD panel
+- **SYNC_ENABLE**: Enables synchronization logic
+- **BL_ENABLE**: Enables the backlight
+
+### Functional Description
+
+#### State Transitions
+The controller progresses through seven internal states in the following sequence:
+
+**Startup Sequence (initiated by START signal):**
+1. **IDLE → LCD_POWERUP1**: Immediately when START is asserted
+2. **LCD_POWERUP1 → LCD_POWERUP2**: After one FRAME pulse is detected
+3. **LCD_POWERUP2 → RUNNING**: After the next FRAME pulse completes backlight activation
+
+**Normal Operation:**
+4. **RUNNING**: Stable operating state until STOP command received
+
+**Shutdown Sequence (initiated by STOP signal):**
+5. **RUNNING → LCD_POWERDOWN1**: Immediately when STOP is asserted
+6. **LCD_POWERDOWN1 → LCD_POWERDOWN2**: After one FRAME pulse is detected
+7. **LCD_POWERDOWN2 → FIFO_RUNDOWN**: After the next FRAME pulse
+8. **FIFO_RUNDOWN → IDLE**: Automatically returns to idle
+
+#### Control Signal Behavior
+
+**During Startup:**
+- In LCD_POWERUP1: FETCH_EN, LCD_ENABLE, and SYNC_ENABLE are immediately asserted
+- In LCD_POWERUP2: BL_ENABLE is asserted on the next FRAME pulse
+- In RUNNING: STARTED is asserted
+
+**During Operation:**
+- All enable signals (FETCH_EN, LCD_ENABLE, SYNC_ENABLE, BL_ENABLE) remain active
+- STATE indicates "Started" (10)
+
+**During Shutdown:**
+- In LCD_POWERDOWN1: BL_ENABLE is immediately deasserted
+- In LCD_POWERDOWN2: Frame counter is cleared on FRAME pulse
+- In FIFO_RUNDOWN: All remaining enable signals are deasserted to drain FIFO
+- Upon returning to IDLE: STOPPED is asserted
+
+#### Timing Requirements
+- Power-up sequence requires two FRAME pulses to complete
+- Power-down sequence requires two FRAME pulses to complete
+- The FRAME signal must be synchronized to CLK
+- START and STOP commands are level-sensitive and evaluated each clock cycle
+
+#### Reset Behavior
+When RST_N is low, the controller returns to IDLE state with all outputs deasserted and counters cleared.
+
+### Performance Characteristics
+- All state transitions occur synchronously with CLK
+- Outputs are registered and change only on clock edges
+- The controller is fully synchronous except for the asynchronous reset
+
+### Allowed Sub-modules
+The implementation may only use:
+- Standard register elements for state storage
+- Basic combinational logic for next-state decoding
+- Synchronous counters (2-bit) for frame counting
+
+### Error Handling
+- START is ignored when not in IDLE state
+- STOP is ignored when not in RUNNING state
+- Simultaneous START and STOP commands result in undefined behavior

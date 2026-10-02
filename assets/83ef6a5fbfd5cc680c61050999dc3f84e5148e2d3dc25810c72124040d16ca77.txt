@@ -1,0 +1,85 @@
+{
+  "aggregation": "equal-weight points; project macro-average across frozen projects",
+  "gate_failure_score": 0,
+  "known_vectors": [
+    {
+      "ciphertext": "5579c1387b228445",
+      "key": "00000000000000000000",
+      "plaintext": "0000000000000000"
+    },
+    {
+      "ciphertext": "e72c46c0f5945049",
+      "key": "ffffffffffffffffffff",
+      "plaintext": "0000000000000000"
+    },
+    {
+      "ciphertext": "a112ffc72f68417b",
+      "key": "00000000000000000000",
+      "plaintext": "ffffffffffffffff"
+    },
+    {
+      "ciphertext": "3333dcd3213210d2",
+      "key": "ffffffffffffffffffff",
+      "plaintext": "ffffffffffffffff"
+    }
+  ],
+  "limits": "simulation samples, not an exhaustive proof of 80/64-bit inputs or arbitrary sequences",
+  "oracle": "independent Python PRESENT equations and precomputed cycle expectations",
+  "points": [
+    {
+      "command": [
+        "iverilog",
+        "-g2012",
+        "-s",
+        "tb",
+        "<required_files>",
+        "top_known_vectors.v",
+        "then",
+        "vvp"
+      ],
+      "id": "top_known_vectors",
+      "pass_criterion": "exit 0 and exactly RTL_BENCHLS_PASS; all comparisons use case inequality",
+      "target": "present_encryptor_top",
+      "testbench": "top_known_vectors.v",
+      "timeout_seconds": 20,
+      "weight": 1
+    },
+    {
+      "command": [
+        "iverilog",
+        "-g2012",
+        "-s",
+        "tb",
+        "<required_files>",
+        "top_random_sequences.v",
+        "then",
+        "vvp"
+      ],
+      "id": "top_random_sequences",
+      "pass_criterion": "exit 0 and exactly RTL_BENCHLS_PASS; all comparisons use case inequality",
+      "target": "present_encryptor_top",
+      "testbench": "top_random_sequences.v",
+      "timeout_seconds": 20,
+      "weight": 1
+    },
+    {
+      "command": [
+        "iverilog",
+        "-g2012",
+        "-s",
+        "tb",
+        "<required_files>",
+        "top_load_restart_wrap.v",
+        "then",
+        "vvp"
+      ],
+      "id": "top_load_restart_wrap",
+      "pass_criterion": "exit 0 and exactly RTL_BENCHLS_PASS; all comparisons use case inequality",
+      "target": "present_encryptor_top",
+      "testbench": "top_load_restart_wrap.v",
+      "timeout_seconds": 20,
+      "weight": 1
+    }
+  ],
+  "seed": 210905
+}

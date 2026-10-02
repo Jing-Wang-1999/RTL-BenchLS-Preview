@@ -1,0 +1,21 @@
+This module is a configurable pattern matching unit that compares a fixed template against streaming input data. It operates on square windows of data, with the window size defined by the parameter `window_width`. The module has two selectable work modes.
+
+**Inputs:**
+- Clock (`clk`) and active-low reset (`rst_n`).
+- A `template` input, which is a fixed pattern of size window_width × window_width bits.
+- An `in_enable` signal that validates the input.
+- An `in_data` input, which is a streaming window of size window_width × window_width bits to be compared against the template.
+
+**Outputs:**
+- An `out_ready` flag indicating the output is valid.
+- An `out_data` signal that is the result of the comparison.
+
+**Function:**
+The core function is a bitwise equality check between `in_data` and `template`. The result is a single bit: logic 1 for a perfect match, logic 0 otherwise.
+
+**Operation Modes:**
+- **Mode 0 (work_mode=0):** Synchronous operation. The comparison is performed and registered on every positive clock edge when enabled.
+- **Mode 1 (work_mode=1):** Asynchronous/event-driven operation. The comparison is performed and registered on the rising edge of the `in_enable` signal.
+
+**Control Flow:**
+The `out_ready` signal is asserted

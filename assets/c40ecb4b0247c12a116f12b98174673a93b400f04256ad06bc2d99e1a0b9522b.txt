@@ -1,0 +1,56 @@
+module origen_050954 #(
+    parameter N = 4
+) (
+    input [N-1:0] a, b,
+    input ci,
+    output [N-1:0] s,
+    output co
+);
+
+    wire [N-1:0] p, g;
+    wire [N:0] c;
+
+    // Generate and propagate signals
+    genvar i;
+    generate
+        for (i = 0; i < N; i = i + 1) begin : gen_pg
+            and(g[i], a[i], b[i]);
+            xor(p[i], a[i], b[i]);
+        end
+    endgenerate
+
+    // Carry input
+    buf(c[0], ci);
+
+    // Carry look-ahead logic
+    generate
+        if (N == 1) begin : gen_1bit
+            or(c[1], g[0], (p[0] & c[0]));
+        end
+        else begin : gen_nbit
+            wire [N-1:0] pc [N-1:0];
+            genvar j, k;
+            for (j = 0; j < N; j = j + 1) begin : gen_carry
+                for (k = 0; k <= j; k = k + 1) begin : gen_term
+                    if (k == 0)
+                        and(pc[j][k], p[j], c[0]);
+                    else if (k == j)
+                        or(c[j+1], g[j], pc[j][j-1]);
+                    else
+                        and(pc[j][k], p[j], pc[j-1][k-1]);
+                end
+            end
+        end
+    endgenerate
+
+    // Sum calculation
+    generate
+        for (i = 0; i < N; i = i + 1) begin : gen_sum
+            xor(s[i], p[i], c[i]);
+        end
+    endgenerate
+
+    // Carry output
+    buf(co, c[N]);
+
+endmodule

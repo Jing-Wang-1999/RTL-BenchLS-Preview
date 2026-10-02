@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.e056ea2c5a34756dbddd.e600f1c68a3b",
+  "compile_check": {
+    "case_id": "s1derived.e056ea2c5a34756dbddd.e600f1c68a3b",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_108528",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_108528.ca83cca2598247db/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.e056ea2c5a34756dbddd",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "e056ea2c5a34756dbddd13506121fc868d4f307bf3e43d5ef55d408bc5c7e4e5",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.e056ea2c5a34756dbddd.e600f1c68a3b",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_108528.ca83cca2598247db/private/commercial_positive.log",
+    "commercial_log_sha256": "73cebae18598fad575db29e9ad9bbf2332a540b2b36fefb825d7676fd8731e4f",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_108528.ca83cca2598247db/private/historical_harness/00_sec_autovcoder_108528.tcl",
+    "executed_script_sha256": "890833e00d7b5a59626bbbf79f49c90f5cc146d658a71dc0bf4e36ec8fa9e1c5",
+    "golden_tops": [
+      "autovcoder_108528"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.autovcoder_108528.ca83cca2598247db",
+    "parent_id": "s1p.e056ea2c5a34756dbddd",
+    "revised_tops": [
+      "autovcoder_108528"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_108528",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.e056ea2c5a34756dbddd.e600f1c68a3b",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "For binary sampled input, both legal states implement the stated transition and combinational output; reset selects S0 and illegal-state recovery is correctly stated.",
+        "rtl_excerpt": "next_state = a ? S1 : S0;",
+        "specification_excerpt": "input zero selects S0 and input one selects S1"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.e056ea2c5a34756dbddd",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "59cd0b4b70e946ed8aa612b082eb48f4d0bfc66cd05d7e050496f190c4089529",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e056ea2c5a34756dbddd13506121fc868d4f307bf3e43d5ef55d408bc5c7e4e5",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_108528.ca83cca2598247db/private/historical_harness/00_sec_autovcoder_108528.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_108528.ca83cca2598247db/private/historical_harness/01_sec_autovcoder_108528.tcl"
+  ],
+  "parent_id": "s1p.e056ea2c5a34756dbddd",
+  "primary_review": {
+    "case_id": "s1derived.e056ea2c5a34756dbddd.e600f1c68a3b",
+    "checks": {
+      "behavior": "The S1 transition and illegal-state output are missing after truncation.",
+      "boundaries": "The repair states the omitted truncation, startup, default, and parameter boundaries.",
+      "interface": "The repair supplies the complete actual interface and parameter defaults.",
+      "rtl_reasonableness": "The RTL is coherent and reasonable hardware for the repaired or original contract.",
+      "sequential_and_reset": "The repair gives actual clock, reset, priority, hold, and CDC timing."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The S1 transition and illegal-state output are missing after truncation.",
+        "rtl_excerpt": "S1 selects S1/S0 by a; illegal state outputs x and recovers to S0.",
+        "spec_excerpt": "The file ends in the S1 transition list."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The S1 transition and illegal-state output are missing after truncation.",
+        "rtl_evidence": "S1 selects S1/S0 by a; illegal state outputs x and recovers to S0.",
+        "spec_evidence": "The file ends in the S1 transition list.",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.e056ea2c5a34756dbddd",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_07/s1derived.e056ea2c5a34756dbddd.e600f1c68a3b.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e056ea2c5a34756dbddd13506121fc868d4f307bf3e43d5ef55d408bc5c7e4e5",
+    "source_group": "S3",
+    "specification_sha256": "e600f1c68a3b42b4a13aacb2cbdb450280dcaebe66a2dede4cdd229b3edb6956",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_07/s1derived.e056ea2c5a34756dbddd.e600f1c68a3b.md",
+  "qualified_specification_sha256": "59cd0b4b70e946ed8aa612b082eb48f4d0bfc66cd05d7e050496f190c4089529",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_108528.ca83cca2598247db/private/golden_design.v",
+  "rtl_sha256": "e056ea2c5a34756dbddd13506121fc868d4f307bf3e43d5ef55d408bc5c7e4e5",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_108528.ca83cca2598247db/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "e600f1c68a3b42b4a13aacb2cbdb450280dcaebe66a2dede4cdd229b3edb6956",
+  "top_module": "autovcoder_108528"
+}

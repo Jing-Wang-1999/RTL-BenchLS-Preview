@@ -1,0 +1,221 @@
+// Verilated -*- SystemC -*-
+// DESCRIPTION: Verilator output: Design implementation internals
+// See Vriscv_tcm_top.h for the primary calling header
+
+#include "Vriscv_tcm_top_tcm_mem.h"
+#include "Vriscv_tcm_top__Syms.h"
+
+#include "verilated_dpi.h"
+
+//==========
+
+VL_CTOR_IMP(Vriscv_tcm_top_tcm_mem) {
+    VL_CELL(u_ram, Vriscv_tcm_top_tcm_mem_ram);
+    // Reset internal values
+    // Reset structure values
+    _ctor_var_reset();
+}
+
+void Vriscv_tcm_top_tcm_mem::__Vconfigure(Vriscv_tcm_top__Syms* vlSymsp, bool first) {
+    if (false && first) {}  // Prevent unused
+    this->__VlSymsp = vlSymsp;
+    if (false && this->__VlSymsp) {}  // Prevent unused
+}
+
+Vriscv_tcm_top_tcm_mem::~Vriscv_tcm_top_tcm_mem() {
+}
+
+void Vriscv_tcm_top_tcm_mem::_settle__TOP__v__u_tcm__1(Vriscv_tcm_top__Syms* __restrict vlSymsp) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+        Vriscv_tcm_top_tcm_mem::_settle__TOP__v__u_tcm__1\n"); );
+    Vriscv_tcm_top* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
+    // Body
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_fifo_accept_w 
+        = (4U != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__count));
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_out_valid_w 
+        = (0U != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__count));
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_response__DOT__accept_o 
+        = (4U != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_response__DOT__count));
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__resp_valid_w 
+        = (0U != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_response__DOT__count));
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_out_w 
+        = vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__ram
+        [vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__rd_ptr];
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__write_active_w 
+        = (((((IData)(vlTOPp->__Vcellinp__v__axi_t_awvalid_i) 
+              | (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_wr_q)) 
+             & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_rd_q))) 
+            & (4U != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__count))) 
+           & (((((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_prio_q) 
+                 & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_hold_rd_q))) 
+                | (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_hold_wr_q)) 
+               | (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_wr_q)) 
+              | (~ (IData)(vlTOPp->__Vcellinp__v__axi_t_arvalid_i))));
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__read_active_w 
+        = (((((IData)(vlTOPp->__Vcellinp__v__axi_t_arvalid_i) 
+              | (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_rd_q)) 
+             & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_wr_q))) 
+            & (4U != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__count))) 
+           & (((((~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_prio_q)) 
+                 & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_hold_wr_q))) 
+                | (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_hold_rd_q)) 
+               | (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_rd_q)) 
+              | (~ (IData)(vlTOPp->__Vcellinp__v__axi_t_awvalid_i))));
+    vlSymsp->TOP__v__u_tcm.__PVT__axi_rvalid_o = ((0U 
+                                                   != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_response__DOT__count)) 
+                                                  & ((0U 
+                                                      != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__count)) 
+                                                     & ((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_out_w) 
+                                                        >> 5U)));
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__resp_is_write_w 
+        = ((0U != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__count)) 
+           & (~ ((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_out_w) 
+                 >> 5U)));
+    vlSymsp->TOP__v__u_tcm.__PVT__ext_wr_w = (((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__write_active_w) 
+                                               & (IData)(vlTOPp->__Vcellinp__v__axi_t_wvalid_i))
+                                               ? (IData)(vlTOPp->__Vcellinp__v__axi_t_wstrb_i)
+                                               : 0U);
+    vlSymsp->TOP__v__u_tcm.__PVT__muxed_addr_w = (0x3fffU 
+                                                  & ((IData)(vlSymsp->TOP__v__u_tcm.__PVT__mem_d_accept_q)
+                                                      ? 
+                                                     (vlSymsp->TOP__v__u_core.__PVT__u_lsu__DOT__mem_addr_q 
+                                                      >> 2U)
+                                                      : 
+                                                     ((((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_wr_q) 
+                                                        | (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_rd_q))
+                                                        ? vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_addr_q
+                                                        : 
+                                                       ((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__write_active_w)
+                                                         ? vlTOPp->__Vcellinp__v__axi_t_awaddr_i
+                                                         : vlTOPp->__Vcellinp__v__axi_t_araddr_i)) 
+                                                      >> 2U)));
+    vlSymsp->TOP__v__u_tcm.__PVT__axi_wready_o = (((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__write_active_w) 
+                                                   & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__mem_d_accept_q))) 
+                                                  & (4U 
+                                                     != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__count)));
+    vlSymsp->TOP__v__u_tcm.__PVT__axi_awready_o = (
+                                                   (((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__write_active_w) 
+                                                     & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_wr_q))) 
+                                                    & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__mem_d_accept_q))) 
+                                                   & (4U 
+                                                      != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__count)));
+    vlSymsp->TOP__v__u_tcm.__PVT__axi_arready_o = (
+                                                   (((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__read_active_w) 
+                                                     & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_rd_q))) 
+                                                    & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__mem_d_accept_q))) 
+                                                   & (4U 
+                                                      != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_requests__DOT__count)));
+    vlSymsp->TOP__v__u_tcm.__PVT__axi_bvalid_o = ((
+                                                   (0U 
+                                                    != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_response__DOT__count)) 
+                                                   & (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__resp_is_write_w)) 
+                                                  & ((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_out_w) 
+                                                     >> 4U));
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_push_w 
+        = (((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__read_active_w) 
+            | (0U != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__ext_wr_w))) 
+           & (~ (IData)(vlSymsp->TOP__v__u_tcm.__PVT__mem_d_accept_q)));
+    vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__resp_accept_w 
+        = ((((IData)(vlSymsp->TOP__v__u_tcm.__PVT__axi_rvalid_o) 
+             & (IData)(vlTOPp->__Vcellinp__v__axi_t_rready_i)) 
+            | ((IData)(vlSymsp->TOP__v__u_tcm.__PVT__axi_bvalid_o) 
+               & (IData)(vlTOPp->__Vcellinp__v__axi_t_bready_i))) 
+           | (((0U != (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__u_response__DOT__count)) 
+               & (IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__resp_is_write_w)) 
+              & (~ ((IData)(vlSymsp->TOP__v__u_tcm.__PVT__u_conv__DOT__req_out_w) 
+                    >> 4U))));
+}
+
+void Vriscv_tcm_top_tcm_mem::_ctor_var_reset() {
+    VL_DEBUG_IF(VL_DBG_MSGF("+        Vriscv_tcm_top_tcm_mem::_ctor_var_reset\n"); );
+    // Body
+    __PVT__clk_i = VL_RAND_RESET_I(1);
+    __PVT__rst_i = VL_RAND_RESET_I(1);
+    __PVT__mem_i_rd_i = VL_RAND_RESET_I(1);
+    __PVT__mem_i_flush_i = VL_RAND_RESET_I(1);
+    __PVT__mem_i_invalidate_i = VL_RAND_RESET_I(1);
+    __PVT__mem_i_pc_i = VL_RAND_RESET_I(32);
+    __PVT__mem_d_addr_i = VL_RAND_RESET_I(32);
+    __PVT__mem_d_data_wr_i = VL_RAND_RESET_I(32);
+    __PVT__mem_d_rd_i = VL_RAND_RESET_I(1);
+    __PVT__mem_d_wr_i = VL_RAND_RESET_I(4);
+    __PVT__mem_d_cacheable_i = VL_RAND_RESET_I(1);
+    __PVT__mem_d_req_tag_i = VL_RAND_RESET_I(11);
+    __PVT__mem_d_invalidate_i = VL_RAND_RESET_I(1);
+    __PVT__mem_d_writeback_i = VL_RAND_RESET_I(1);
+    __PVT__mem_d_flush_i = VL_RAND_RESET_I(1);
+    __PVT__axi_awvalid_i = VL_RAND_RESET_I(1);
+    __PVT__axi_awaddr_i = VL_RAND_RESET_I(32);
+    __PVT__axi_awid_i = VL_RAND_RESET_I(4);
+    __PVT__axi_awlen_i = VL_RAND_RESET_I(8);
+    __PVT__axi_awburst_i = VL_RAND_RESET_I(2);
+    __PVT__axi_wvalid_i = VL_RAND_RESET_I(1);
+    __PVT__axi_wdata_i = VL_RAND_RESET_I(32);
+    __PVT__axi_wstrb_i = VL_RAND_RESET_I(4);
+    __PVT__axi_wlast_i = VL_RAND_RESET_I(1);
+    __PVT__axi_bready_i = VL_RAND_RESET_I(1);
+    __PVT__axi_arvalid_i = VL_RAND_RESET_I(1);
+    __PVT__axi_araddr_i = VL_RAND_RESET_I(32);
+    __PVT__axi_arid_i = VL_RAND_RESET_I(4);
+    __PVT__axi_arlen_i = VL_RAND_RESET_I(8);
+    __PVT__axi_arburst_i = VL_RAND_RESET_I(2);
+    __PVT__axi_rready_i = VL_RAND_RESET_I(1);
+    __PVT__mem_i_accept_o = VL_RAND_RESET_I(1);
+    __PVT__mem_i_valid_o = VL_RAND_RESET_I(1);
+    __PVT__mem_i_error_o = VL_RAND_RESET_I(1);
+    __PVT__mem_i_inst_o = VL_RAND_RESET_I(32);
+    __PVT__mem_d_data_rd_o = VL_RAND_RESET_I(32);
+    __PVT__mem_d_accept_o = VL_RAND_RESET_I(1);
+    __PVT__mem_d_ack_o = VL_RAND_RESET_I(1);
+    __PVT__mem_d_error_o = VL_RAND_RESET_I(1);
+    __PVT__mem_d_resp_tag_o = VL_RAND_RESET_I(11);
+    __PVT__axi_awready_o = VL_RAND_RESET_I(1);
+    __PVT__axi_wready_o = VL_RAND_RESET_I(1);
+    __PVT__axi_bvalid_o = VL_RAND_RESET_I(1);
+    __PVT__axi_bresp_o = VL_RAND_RESET_I(2);
+    __PVT__axi_bid_o = VL_RAND_RESET_I(4);
+    __PVT__axi_arready_o = VL_RAND_RESET_I(1);
+    __PVT__axi_rvalid_o = VL_RAND_RESET_I(1);
+    __PVT__axi_rdata_o = VL_RAND_RESET_I(32);
+    __PVT__axi_rresp_o = VL_RAND_RESET_I(2);
+    __PVT__axi_rid_o = VL_RAND_RESET_I(4);
+    __PVT__axi_rlast_o = VL_RAND_RESET_I(1);
+    __PVT__ext_wr_w = VL_RAND_RESET_I(4);
+    __PVT__muxed_addr_w = VL_RAND_RESET_I(14);
+    __PVT__mem_i_valid_q = VL_RAND_RESET_I(1);
+    __PVT__mem_d_accept_q = VL_RAND_RESET_I(1);
+    __PVT__mem_d_tag_q = VL_RAND_RESET_I(11);
+    __PVT__mem_d_ack_q = VL_RAND_RESET_I(1);
+    __PVT__ext_ack_q = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__req_len_q = VL_RAND_RESET_I(8);
+    __PVT__u_conv__DOT__req_addr_q = VL_RAND_RESET_I(32);
+    __PVT__u_conv__DOT__req_rd_q = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__req_wr_q = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__req_id_q = VL_RAND_RESET_I(4);
+    __PVT__u_conv__DOT__req_axburst_q = VL_RAND_RESET_I(2);
+    __PVT__u_conv__DOT__req_axlen_q = VL_RAND_RESET_I(8);
+    __PVT__u_conv__DOT__req_prio_q = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__req_hold_rd_q = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__req_hold_wr_q = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__req_fifo_accept_w = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__req_push_w = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__req_out_valid_w = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__req_out_w = VL_RAND_RESET_I(6);
+    __PVT__u_conv__DOT__resp_accept_w = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__resp_is_write_w = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__resp_valid_w = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__write_active_w = VL_RAND_RESET_I(1);
+    __PVT__u_conv__DOT__read_active_w = VL_RAND_RESET_I(1);
+    { int __Vi0=0; for (; __Vi0<4; ++__Vi0) {
+            __PVT__u_conv__DOT__u_requests__DOT__ram[__Vi0] = VL_RAND_RESET_I(6);
+    }}
+    __PVT__u_conv__DOT__u_requests__DOT__rd_ptr = VL_RAND_RESET_I(2);
+    __PVT__u_conv__DOT__u_requests__DOT__wr_ptr = VL_RAND_RESET_I(2);
+    __PVT__u_conv__DOT__u_requests__DOT__count = VL_RAND_RESET_I(3);
+    __PVT__u_conv__DOT__u_response__DOT__accept_o = VL_RAND_RESET_I(1);
+    { int __Vi0=0; for (; __Vi0<4; ++__Vi0) {
+            __PVT__u_conv__DOT__u_response__DOT__ram[__Vi0] = VL_RAND_RESET_I(32);
+    }}
+    __PVT__u_conv__DOT__u_response__DOT__rd_ptr = VL_RAND_RESET_I(2);
+    __PVT__u_conv__DOT__u_response__DOT__wr_ptr = VL_RAND_RESET_I(2);
+    __PVT__u_conv__DOT__u_response__DOT__count = VL_RAND_RESET_I(3);
+}

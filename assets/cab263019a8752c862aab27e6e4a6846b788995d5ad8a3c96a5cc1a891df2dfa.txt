@@ -1,0 +1,71 @@
+# Implement the Evensgn RISC-V CPU project
+
+Read the unchanged upstream README, doc/project-report.pdf and
+doc/inst-supported.md under specification/original; project-report.txt is a
+text extraction of the original report. The bundled RISC-V 2.2 manual provides
+ISA definitions, while inst-supported.md fixes this project's supported subset.
+Implement all 20 required RTL files (21 modules), headed by cpu. They include
+the CPU pipeline, I/D caches, serial memory protocol, and UART queues.
+
+Curator configuration and interface clarifications from the pinned RTL:
+- This is the RV32I subset explicitly enumerated in inst-supported.md: ordinary
+  integer arithmetic, shifts, comparisons, branches/jumps, loads and stores.
+  It has 32 registers (x0 reads zero), 32-bit word data/address, and little-endian
+  byte memory. No M extension, compressed instructions, CSR/privileged execution,
+  exceptions or interrupts are required by this case. The five-stage pipeline
+  must preserve dependencies through forwarding and stalls; loads may require
+  a stall, and control-flow transfers discard wrong-path instruction work.
+- cpu has board ports EXCLK, active-low button, rst_led, serial Tx and Rx.
+  button assertion raises internal reset asynchronously; release takes two
+  internal clock edges. rst_led reflects reset. The clock primitive clk_wiz_0
+  is fixed environment support, not a generated module. It supplies the pinned
+  ideal 108MHz simulation clock corresponding to the source's 100-to-108MHz
+  PLL template. The original report explicitly records FPGA bring-up problems;
+  this admission claims simulation qualification only, not FPGA correctness.
+- The reset PC output starts at zero and normal sequential instruction addresses
+  advance by four. The core has separate I/D cache request ports with rw flags
+  0=idle,1=read,2=write, 32-bit byte addresses/data, four byte enables, busy and
+  one-cycle done. Pipeline progress must wait for required memory completions.
+  Each cache instance selects INDEX_BIT=4,NASSOC=2 and default eight words/line.
+  Preserve read-miss refill, recent-use replacement, byte-masked write-through,
+  and disabled/explicit flush behavior; cache internals need not use source names.
+- CPU memory accesses travel over channel 0 of a two-channel multichan_trans.
+  mem_ctrl arbitrates its two request ports in increasing port priority, queues
+  pending requests while busy, and returns read data only on a received reply.
+  Read requests carry a 32-bit address in a five-byte message with read flag 0.
+  Write requests carry low32 data, next32 address, four byte-mask bits and write
+  flag 1 in a nine-byte message. Writes complete when the request is queued;
+  reads wait for the returned low32 data. The simulated host maps byte writes
+  to 0x104 to console output. Message integer fields are transmitted LSB first.
+- The multichannel packet format at PACKET_SIZE=8 is: start 100xxxxx with a
+  five-bit packet ID, channel 101xxxxx, byte length 110xxxxx, payload bytes
+  each containing a zero MSB plus the next seven low-to-high message bits,
+  then end 111xxxxx with matching ID. IDs increment modulo32. Per-channel
+  queues, readable/writable flags, and fair priority aging regulate flow;
+  accept complete matching packets and preserve their message lengths/data.
+- uart_trans sends an idle-high line, low start bit, eight LSB-first data bits,
+  even parity (XOR of data bits), then a high stop bit. Its declared default
+  CLOCKRATE=40000000 and BAUDRATE=2304000 yield integer bit interval17 clocks;
+  the bench preserves this ratio even though its actual internal clock is108MHz.
+  Do not substitute 8N1 or reinterpret the nominal parameter as physical baud.
+  RX samples bit centers, rejects bad parity/full receive queues, and presents
+  buffered data through recv_flag/receivable. TX uses send_flag/sendable queues.
+- reg_pc and the four pipeline-register stages propagate values or stall/bubble
+  them under ctrl. stage_id decodes and forwards operands; stage_ex computes
+  integer/branch results; stage_mem handles load extension/store byte masks.
+  regfile supplies register operands and writeback. riscv_cpu integrates these
+  with both caches. simple_ram is candidate-owned cache storage; it is included
+  once by cache.v, not supplied as a golden implementation. fifo, simo_fifo and
+  miso_fifo implement the queues used by UART and channel transport.
+
+Fixed public support headers defines.v and utility.v contain ISA/constants and
+width arithmetic, with no RTL module implementation. The private bench uses the
+same candidate UART/queue module types at its host endpoint; the original shared
+topology is retained. Two optional cache diagnostic displays are omitted from
+the synthesizable reference and preserved in original_reference. No functional
+assignment is changed. Use synthesizable RTL, no simulator output/file calls.
+
+Scoring uses the entire original sim_cpu bench and shipped program as one point,
+requiring its complete console output and normal finite termination. The old
+test_bench wrapper has disconnected memory and is preserved as unavailable.
+This finite program is not an exhaustive ISA/cache validation suite.

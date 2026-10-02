@@ -1,0 +1,7 @@
+# NV_NVDLA_RT_SDP2NOCIF_pipe_p8
+
+This module is a one-entry registered valid/ready pipeline for a 514-bit payload. `nvdla_core_clk` is the clock and `nvdla_core_rstn` is an active-low asynchronous reset for the valid bit. The upstream interface is payload `cvif2sdp_rd_rsp_src_pd_d0`, valid `cvif2sdp_rd_rsp_src_valid_d0`, and ready output `cvif2sdp_rd_rsp_src_ready_d0`. The downstream interface is payload output `cvif2sdp_rd_rsp_src_pd_d1`, valid output `cvif2sdp_rd_rsp_src_valid_d1`, and ready input `cvif2sdp_rd_rsp_src_ready_d1`.
+
+Combinationally, upstream ready is `downstream_ready | ~stored_valid`; downstream valid is `stored_valid`; and downstream payload is the stored payload. On an active reset edge, the valid bit clears. On each rising clock edge outside reset, when upstream ready is high, the valid bit becomes upstream valid; when upstream ready is low, it remains set. The payload register captures upstream payload only when upstream ready and upstream valid are both high, otherwise it holds its value. The payload register is not reset, so its value is unspecified while downstream valid is low.
+
+An empty stage can accept one item even while downstream is stalled. Every accepted payload first enters the register and becomes visible with registered latency; there is no combinational payload bypass. A full stage accepts a replacement in the same cycle that downstream accepts its current item. Optional simulation assertions may check handshake controls. No functional submodule is instantiated.

@@ -1,0 +1,28 @@
+# CRC byte-stream control unit
+
+Implement `crc_control_unit`, with no parameters. All state changes on rising `clk`; synchronous active-low `rst_n` resets the three abstract state machines below. All other outputs are combinational functions of current state and current inputs. Widths: inputs `size_in[1:0]`, `write`, `reset_chain`, `clk`, `rst_n`; outputs `byte_sel[1:0]`, `bypass_byte0`, `buffer_full`, `read_wait`, `bypass_size`, `set_crc_init_sel`, `clear_crc_init_sel`, `crc_out_en`, `byte_en`, `reset_pending`.
+
+This block controls an external two-entry input buffer and CRC datapath; it contains neither payload storage nor a CRC polynomial. `size_in` is the size of the word currently being drained: BYTE=0, HALF_WORD=1, WORD=2. The external datapath updates/stores size as directed by bypass_size. Its response is not modeled inside this module. Writes during buffer_full are not silently suppressed: preserve the transition rules below. Size3 is reserved, but its state transitions are explicitly defined by the same rules (last=false).
+
+Let occupancy F be EMPTY, ONE, TWO, BYPASS, reset EMPTY. Byte phase B is IDLE, B0, B1, B2, B3, reset IDLE. Let last mean (size0 and B0) or (size1 and B1) or (size2 and B3); has means F is TWO or BYPASS. `buffer_full = has and not last`; `read_wait = crc_out_en = B != IDLE`; `bypass_byte0 = F != BYPASS`. Outputs during reset follow the reset states; they are not separately input-gated.
+
+| F | Next occupancy |
+|---|---|
+| EMPTY | ONE if write, otherwise EMPTY |
+| ONE | If last: EMPTY when !write, otherwise ONE. If !last: TWO when write, otherwise ONE. |
+| TWO | If last: BYPASS when write, otherwise ONE; otherwise TWO. |
+| BYPASS | ONE if last and !write, otherwise BYPASS. |
+
+| B | Next byte phase |
+|---|---|
+| IDLE | B0 if write, otherwise IDLE |
+| B0 | If size0: IDLE if !write and !has, otherwise B0; otherwise B1 |
+| B1 | If size1: B0 if has or (write and !buffer_full), otherwise IDLE; otherwise B2 |
+| B2 | B3 |
+| B3 | B0 if has or (write and !buffer_full), otherwise IDLE |
+
+`byte_sel` is the byte number0..3 in B0..B3, otherwise0. `bypass_size = (F != BYPASS and B == B0)`. `byte_en = (B == B0 and size in {1,2} and F != BYPASS) or (last and has)`.
+
+Reset sequencing state Q has NONE, RESET, WAIT, WRITE, RESET2, reset NONE. Unspecified transitions hold Q. In NONE, reset_chain with !has, active B and !last, or with has and last, enters RESET; reset_chain with has and !last enters WAIT. RESET goes NONE on last, else WRITE on write. WAIT goes WRITE on last and write, RESET on last and !write. WRITE with reset_chain goes RESET on last else RESET2; WRITE without reset_chain goes NONE on last. RESET2 on last goes WRITE if write else RESET. `reset_pending = Q != NONE`.
+
+`set_crc_init_sel = B == B0`. `clear_crc_init_sel` is true if (Q==NONE and last and reset_chain), or (B==IDLE and reset_chain), or (Q in {RESET,WRITE,RESET2} and last). set and clear may both be true; the downstream datapath resolves their intended priority. No state initialization before a reset edge is promised. No input assumptions or masking may replace these equations.

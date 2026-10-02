@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   clocked_output_pattern_counter.v0, clocked_output_pattern_counter.v1, clocked_output_pattern_counter, clk, resetn
+set DESIGN_NAME_GOLDEN "clocked_output_pattern_counter.v0"
+set DESIGN_NAME "clocked_output_pattern_counter.v1"
+set TOP_NAME "clocked_output_pattern_counter"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_afbde6361f2d131b.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_afbde6361f2d131b.negative.v
+check_sec -elaborate -spec -top clocked_output_pattern_counter -disable_auto_bbox
+check_sec -elaborate -imp -top clocked_output_pattern_counter -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clk 
+reset resetn
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

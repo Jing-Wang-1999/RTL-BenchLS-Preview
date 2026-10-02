@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.1b4d901883b36576b5f9.2d14fb4be43b",
+  "compile_check": {
+    "case_id": "s1derived.1b4d901883b36576b5f9.2d14fb4be43b",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_08931",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_08931.7a84be3b22bd926b/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.1b4d901883b36576b5f9",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "1b4d901883b36576b5f97f5e5236dc34fc36daedfe7688c643590f5cb981c3a0",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.1b4d901883b36576b5f9.2d14fb4be43b",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_08931.7a84be3b22bd926b/private/commercial_positive.log",
+    "commercial_log_sha256": "3b09cfa81d9c670097cb23b48f56628f5376590c68ffc3f0b4edefc6cf065fdb",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_08931.7a84be3b22bd926b/private/historical_harness/00_sec_rtlpp_08931.tcl",
+    "executed_script_sha256": "d80d5613441ce19c62aaa268c8b35add3ee23ed70e5b6fde1f776615621d2d7b",
+    "golden_tops": [
+      "rtlpp_08931"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.rtlpp_08931.7a84be3b22bd926b",
+    "parent_id": "s1p.1b4d901883b36576b5f9",
+    "revised_tops": [
+      "rtlpp_08931"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_08931",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.1b4d901883b36576b5f9.2d14fb4be43b",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The seven-bit default counters, next-state-dependent enables and outstanding update rules match; reStart clears counters only and decrement-at-zero wrap is explicit.",
+        "rtl_excerpt": "case (nextState)",
+        "specification_excerpt": "registered enables are computed from the next state"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.1b4d901883b36576b5f9",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "cb8f8d43e93e7088de9b96120ca8590f6d33661a99000fc87a395ced0b01f7ab",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "1b4d901883b36576b5f97f5e5236dc34fc36daedfe7688c643590f5cb981c3a0",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_08931.7a84be3b22bd926b/private/historical_harness/00_sec_rtlpp_08931.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_08931.7a84be3b22bd926b/private/historical_harness/01_sec_rtlpp_08931.tcl"
+  ],
+  "parent_id": "s1p.1b4d901883b36576b5f9",
+  "primary_review": {
+    "case_id": "s1derived.1b4d901883b36576b5f9.2d14fb4be43b",
+    "checks": {
+      "behavior": "State, enables, and two distinct outstanding calculations need the exact RTL priority and next-state dependence.",
+      "boundaries": "Counter decrement wraps at zero; equal token values hold outstanding_c; Filter decrements outstanding_r for any end_token.",
+      "interface": "All six scalar inputs and two scalar outputs match; default COUNTER_Width=6 is stated.",
+      "rtl_reasonableness": "Although unusual, the bounded token-control FSM is implementable and internally driven.",
+      "sequential_and_reset": "Active-low asynchronous reset clears counters/enables and sets currentState to Idle; reStart clears only counters synchronously."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "State, enables, and two distinct outstanding calculations need the exact RTL priority and next-state dependence. Active-low asynchronous reset clears counters/enables and sets currentState to Idle; reStart clears only counters synchronously.",
+        "rtl_excerpt": "Filter with trigger=0 selects Reset; counters are [COUNTER_Width:0]; enable registers case on nextState",
+        "spec_excerpt": "\u201cIf the trigger is active and no operations are outstanding, it transitions to Bypass; otherwise, it remains in Filter.\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The overview omits that counters are COUNTER_Width+1 bits, misstates Filter behavior when trigger is low, and does not explain that enables are registered from nextState.",
+        "rtl_evidence": "Filter with trigger=0 selects Reset; counters are [COUNTER_Width:0]; enable registers case on nextState",
+        "spec_evidence": "\u201cIf the trigger is active and no operations are outstanding, it transitions to Bypass; otherwise, it remains in Filter.\u201d",
+        "type": "state_and_counter_semantics"
+      }
+    ],
+    "parent_id": "s1p.1b4d901883b36576b5f9",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.1b4d901883b36576b5f9.2d14fb4be43b.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "1b4d901883b36576b5f97f5e5236dc34fc36daedfe7688c643590f5cb981c3a0",
+    "source_group": "S4",
+    "specification_sha256": "2d14fb4be43b69b0ad6854782df9f5e3f2efb195c573f8306359bb6dffc4f03c",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.1b4d901883b36576b5f9.2d14fb4be43b.md",
+  "qualified_specification_sha256": "cb8f8d43e93e7088de9b96120ca8590f6d33661a99000fc87a395ced0b01f7ab",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_08931.7a84be3b22bd926b/private/golden_design.v",
+  "rtl_sha256": "1b4d901883b36576b5f97f5e5236dc34fc36daedfe7688c643590f5cb981c3a0",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_08931.7a84be3b22bd926b/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "2d14fb4be43b69b0ad6854782df9f5e3f2efb195c573f8306359bb6dffc4f03c",
+  "top_module": "rtlpp_08931"
+}

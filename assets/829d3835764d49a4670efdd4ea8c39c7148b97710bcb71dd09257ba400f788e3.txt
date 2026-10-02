@@ -1,0 +1,33 @@
+module rtlpp_11110 (
+  input [ 9: 0] address,
+  input [ 3: 0] byteenable,
+  input chipselect,
+  input clk,
+  input clken,
+  input write,
+  input [ 31: 0] writedata,
+  output [ 31: 0] readdata
+);
+
+  reg [31:0] memory [0:1023];  // Define a memory array
+  reg [31:0] readdata_reg;
+  wire wren;
+  integer i;
+
+  assign wren = chipselect & write;
+  assign readdata = readdata_reg;
+
+  always @(posedge clk) begin
+    if (clken) begin
+      if (wren) begin
+        for (i = 0; i < 4; i = i + 1) begin
+          if (byteenable[i]) begin
+            memory[address][i*8 +: 8] <= writedata[i*8 +: 8];
+          end
+        end
+      end
+      readdata_reg <= memory[address];
+    end
+  end
+
+endmodule

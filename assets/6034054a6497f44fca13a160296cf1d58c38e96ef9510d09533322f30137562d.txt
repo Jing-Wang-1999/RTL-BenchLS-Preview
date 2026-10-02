@@ -1,0 +1,95 @@
+module origen_076247 (
+    input wire nRESET,
+    input wire CLK,
+    inout wire STEREO_SDA,
+    inout wire STEREO_SCL,
+    input wire MODE_CAMERA,
+    input wire [31:0] GAIN_IN,
+    input wire [31:0] INTEGRATION_TIME_IN,
+    input wire [31:0] ZOOM_IN,
+    output reg [31:0] GAIN_OUT,
+    output reg [31:0] INTEGRATION_TIME_OUT,
+    output reg [31:0] ZOOM_OUT
+);
+
+parameter [6:0] control_start_word = 7'b1010101;
+
+// States
+localparam PAUSE = 2'b00;
+localparam TX = 2'b01;
+localparam RX = 2'b10;
+
+reg [1:0] state;
+reg [71:0] data_packet;
+reg [6:0] bit_counter;
+reg [5:0] pause_counter;
+
+// I/O control
+reg sda_out, scl_out;
+reg sda_oe, scl_oe;
+
+assign STEREO_SDA = sda_oe ? sda_out : 1'bz;
+assign STEREO_SCL = scl_oe ? scl_out : 1'bz;
+
+always @(posedge CLK or negedge nRESET) begin
+    if (!nRESET) begin
+        state <= PAUSE;
+        bit_counter <= 0;
+        pause_counter <= 0;
+        sda_out <= 1'b1;
+        scl_out <= 1'b1;
+        sda_oe <= 1'b0;
+        scl_oe <= 1'b0;
+        GAIN_OUT <= 32'b0;
+        INTEGRATION_TIME_OUT <= 32'b0;
+        ZOOM_OUT <= 32'b0;
+    end else begin
+        case (state)
+            PAUSE: begin
+                if (pause_counter == 49) begin
+                    pause_counter <= 0;
+                    state <= MODE_CAMERA ? RX : TX;
+                    if (!MODE_CAMERA) begin
+                        data_packet <= {ZOOM_IN, INTEGRATION_TIME_IN, GAIN_IN[0], control_start_word, 1'b0};
+                        sda_oe <= 1'b1;
+                        scl_oe <= 1'b1;
+                    end
+                end else begin
+                    pause_counter <= pause_counter + 1;
+                end
+            end
+
+            TX: begin
+                if (bit_counter == 71) begin
+                    bit_counter <= 0;
+                    state <= PAUSE;
+                    sda_out <= 1'b1;
+                    scl_out <= 1'b1;
+                end else begin
+                    sda_out <= data_packet[71 - bit_counter];
+                    scl_out <= ~scl_out;
+                    if (scl_out) bit_counter <= bit_counter + 1;
+                end
+            end
+
+            RX: begin
+                if (bit_counter == 71) begin
+                    bit_counter <= 0;
+                    state <= PAUSE;
+                    if (data_packet[70:64] == control_start_word) begin
+                        GAIN_OUT <= {31'b0, data_packet[63]};
+                        INTEGRATION_TIME_OUT <= data_packet[62:31];
+                        ZOOM_OUT <= data_packet[30:0];
+                    end
+                end else begin
+                    if (!STEREO_SCL) begin
+                        data_packet <= {data_packet[70:0], STEREO_SDA};
+                        bit_counter <= bit_counter + 1;
+                    end
+                end
+            end
+        endcase
+    end
+end
+
+endmodule

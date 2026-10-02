@@ -1,0 +1,45 @@
+# Implement the memory controller project
+Implement the complete required source closure and mc_top integration from the
+original Memory Controller IP Core specification. This case fixes the default
+preprocessed configuration (CS0/CS1 implemented; remaining regions disabled),
+with two 32-bit asynchronous chip-select memory devices. Other SDRAM/SSRAM/SCS
+operating modes and narrower devices are outside this configuration's scoring.
+Internal modules and the dummy CS module remain required at their declared paths.
+
+Wishbone is32 bits, byte addressed. clk_i period10ns and mc_clk_i20ns; rst_i is
+active high. Hold cyc/stb,address,we,sel,data until ack or err. The register region
+is address[31:29]=3 and memory region is address[31:29]=0. Registers start at
+0x60000000: CSR+0, read-only POC+4, BA_MASK+8, CSC0+0x10,TMS0+0x14,
+CSC1+0x18,TMS1+0x1c. Use full-word register writes. POC captures mc_data_pad_i
+around reset; the evaluator supplies zero during that interval and gives320
+memory clocks to settle the default power-on delay before configuration.
+
+For the scored configuration set BA_MASK=0xff, CSC0=0x00000025 and
+CSC1=0x00800025 (EN=1,type=2 ACS,BW=2 for32bits,parity disabled).
+Thus chip0 covers byte addresses starting0, chip1 starts0x10000000; each selection
+compares CSC[23:16] against address[28:21], masked by BA_MASK[7:0].
+TMS0/TMS1=0x00222204: read-data-valid counter4, read-to-high-Z2,
+write-pulse-width2, write-disable2, write-high2. Retain timing-register read/write
+behavior. The original TMS timing units and pipeline overhead apply.
+
+Physical ACS address is byte-address bits25:2 for32-bit devices. CS/WE/OE are
+active low. mc_doe_pad_doe_o is active-high output drive. The peripheral supplies
+read data while CS and OE are asserted. Selected writes preserve bytes masked by
+DQM; DQM is the inverse of Wishbone sel for writes (bit0 is bits7:0). Tests also
+read device data initialized privately before any bus write, so implement actual
+external memory reads and writes. Pins mc_br=0,mc_ack=1,mc_sts=0,parity inputs0;
+suspend/resume held0. Distinct regions must not be selected together.
+
+CSCn[8] write-protect produces a Wishbone error and leaves device data unchanged;
+reads remain allowed. Private points cover register programming, external reads,
+both regions, byte masks and write protection. Public checks compile only.
+Headers are resolved; #1 simulation-only assignments and explicitly marked
+simulation diagnostics are removed privately.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

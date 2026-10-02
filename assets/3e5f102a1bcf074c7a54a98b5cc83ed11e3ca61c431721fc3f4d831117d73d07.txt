@@ -1,0 +1,93 @@
+module origen_214406(
+    input clock,
+    input start_button, input stop_button, input reset_button, input best_time_button,
+    input compare,
+    output reg enable,
+    output reg reset_time, output reg reset_best_time,
+    output reg display_time, output reg display_best_time,
+    output reg update_best_time
+);
+
+    // States
+    localparam RESET_BEST_TIME = 3'b000;
+    localparam RESET_TIME = 3'b001;
+    localparam COUNTING = 3'b010;
+    localparam HOLD = 3'b011;
+    localparam NEW_BEST_TIME = 3'b100;
+    localparam DISPLAY_BEST_TIME = 3'b101;
+
+    reg [2:0] current_state, next_state;
+
+    // State Transition Logic
+    always @(posedge clock) begin
+        current_state <= next_state;
+    end
+
+    always @(*) begin
+        next_state = current_state;
+        case (current_state)
+            RESET_BEST_TIME: next_state = RESET_TIME;
+            RESET_TIME: begin
+                if (start_button) next_state = COUNTING;
+                else next_state = RESET_TIME;
+            end
+            COUNTING: begin
+                if (stop_button) next_state = HOLD;
+                else if (reset_button) next_state = RESET_BEST_TIME;
+                else next_state = COUNTING;
+            end
+            HOLD: begin
+                if (reset_button) next_state = RESET_BEST_TIME;
+                else if (best_time_button) begin
+                    if (compare) next_state = NEW_BEST_TIME;
+                    else next_state = DISPLAY_BEST_TIME;
+                end
+                else if (start_button) next_state = RESET_TIME;
+                else next_state = HOLD;
+            end
+            NEW_BEST_TIME: next_state = DISPLAY_BEST_TIME;
+            DISPLAY_BEST_TIME: begin
+                if (reset_button) next_state = RESET_BEST_TIME;
+                else if (start_button) next_state = RESET_TIME;
+                else next_state = DISPLAY_BEST_TIME;
+            end
+        endcase
+    end
+
+    // Output Logic
+    always @(*) begin
+        // Default outputs
+        enable = 1'b0;
+        reset_time = 1'b0;
+        reset_best_time = 1'b0;
+        display_time = 1'b0;
+        display_best_time = 1'b0;
+        update_best_time = 1'b0;
+
+        case (current_state)
+            RESET_BEST_TIME: begin
+                reset_best_time = 1'b1;
+                display_best_time = 1'b1;
+            end
+            RESET_TIME: begin
+                reset_time = 1'b1;
+                display_best_time = 1'b1;
+            end
+            COUNTING: begin
+                enable = 1'b1;
+                display_time = 1'b1;
+            end
+            HOLD: begin
+                display_time = 1'b1;
+            end
+            NEW_BEST_TIME: begin
+                update_best_time = 1'b1;
+                display_best_time = 1'b1;
+            end
+            DISPLAY_BEST_TIME: begin
+                display_best_time = 1'b1;
+            end
+        endcase
+    end
+
+endmodule

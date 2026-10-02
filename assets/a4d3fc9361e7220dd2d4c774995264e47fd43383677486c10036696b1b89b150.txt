@@ -1,0 +1,94 @@
+module autovcoder_073679 (
+    SW,
+    KEY,
+    HEX0,
+    HEX1
+);
+  input [1:0] SW;  // SW[1] for enable, SW[0] for clearN
+  input [0:0] KEY;  // clk input
+
+  output [6:0] HEX0;
+  output [6:0] HEX1;
+
+  wire [7:0] number;  // 0-3 for HEX0, 4-7 for HEX1
+  wire [7:0] next;
+
+  // enclosed part for part2
+  //////////////////////////////////////////////////
+  count_you_cunt fuck (
+      ~KEY[0],
+      number,
+      SW[0]
+  );
+  // now implement 7seg decoder
+  //////////////////////////////////////////////////
+
+
+  t_flip_flop_with_AND obj0 (
+      SW[1],
+      ~KEY[0],
+      SW[0],
+      number[0],
+      next[0]
+  );
+  t_flip_flop_with_AND obj1 (
+      next[0],
+      ~KEY[0],
+      SW[0],
+      number[1],
+      next[1]
+  );
+  t_flip_flop_with_AND obj2 (
+      next[1],
+      ~KEY[0],
+      SW[0],
+      number[2],
+      next[2]
+  );
+  t_flip_flop_with_AND obj3 (
+      next[2],
+      ~KEY[0],
+      SW[0],
+      number[3],
+      next[3]
+  );
+  t_flip_flop_with_AND obj4 (
+      next[3],
+      ~KEY[0],
+      SW[0],
+      number[4],
+      next[4]
+  );
+  t_flip_flop_with_AND obj5 (
+      next[4],
+      ~KEY[0],
+      SW[0],
+      number[5],
+      next[5]
+  );
+  t_flip_flop_with_AND obj6 (
+      next[5],
+      ~KEY[0],
+      SW[0],
+      number[6],
+      next[6]
+  );
+  t_flip_flop_with_AND obj7 (
+      next[6],
+      ~KEY[0],
+      SW[0],
+      number[7],
+      next[7]
+  );
+
+  // 7 segment decoders
+  binary_to_hex_7segDecoder num0 (
+      number[3:0],
+      HEX0
+  );
+  binary_to_hex_7segDecoder num1 (
+      number[7:4],
+      HEX1
+  );
+endmodule
+

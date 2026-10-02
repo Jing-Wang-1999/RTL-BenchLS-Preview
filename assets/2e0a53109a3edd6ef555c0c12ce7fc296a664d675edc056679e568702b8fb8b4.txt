@@ -1,0 +1,53 @@
+module autovcoder_116764 (
+    s,
+    r,
+    q,
+    qn
+);
+  input s;
+  input r;
+  output q;
+  output qn;
+
+  // Internal wires
+  wire N10;
+  wire N12;
+  wire n1;
+  wire n2;
+  wire n3;
+
+  HS65_LS_LDHQX9 q_internal_reg (
+      .Q(q),
+      .G(N10),
+      .D(n1)
+  );
+  HS65_LS_LDHQX9 qn_internal_reg (
+      .Q(qn),
+      .G(N10),
+      .D(N12)
+  );
+  HS65_LS_NAND2X7 U8 (
+      .Z(N10),
+      .B(n2),
+      .A(n3)
+  );
+  HS65_LS_IVX9 U9 (
+      .Z(n2),
+      .A(r)
+  );
+  HS65_LS_NOR2X6 U10 (
+      .Z(n1),
+      .B(n3),
+      .A(r)
+  );
+  HS65_LS_NOR2X6 U11 (
+      .Z(N12),
+      .B(n2),
+      .A(s)
+  );
+  HS65_LS_IVX9 U12 (
+      .Z(n3),
+      .A(s)
+  );
+endmodule
+

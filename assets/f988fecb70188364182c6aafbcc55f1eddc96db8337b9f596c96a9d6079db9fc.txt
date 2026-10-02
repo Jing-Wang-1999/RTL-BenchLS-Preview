@@ -1,0 +1,55 @@
+module origen_222726(
+  input wire clk,
+  input wire sw_in,
+  input wire timer_ena,
+  output wire sw_out
+);
+
+  parameter WAIT_TIME = 100; // Adjust this value to set the debounce time
+
+  reg [7:0] count;
+  reg [1:0] state;
+  reg debounced_out;
+
+  localparam IDLE = 2'b00;
+  localparam WAIT_1 = 2'b01;
+  localparam PULSE = 2'b10;
+  localparam WAIT_0 = 2'b11;
+
+  always @(posedge clk) begin
+    if (timer_ena) begin
+      case (state)
+        IDLE: begin
+          if (sw_in) begin
+            state <= WAIT_1;
+            count <= 0;
+          end
+          debounced_out <= 0;
+        end
+        WAIT_1: begin
+          if (count == WAIT_TIME) begin
+            state <= PULSE;
+          end else begin
+            count <= count + 1;
+          end
+          debounced_out <= 0;
+        end
+        PULSE: begin
+          state <= WAIT_0;
+          debounced_out <= 1;
+        end
+        WAIT_0: begin
+          if (count == WAIT_TIME) begin
+            state <= IDLE;
+          end else begin
+            count <= count + 1;
+          end
+          debounced_out <= 0;
+        end
+      endcase
+    end
+  end
+
+  assign sw_out = debounced_out;
+
+endmodule

@@ -1,0 +1,55 @@
+module origen_001905 (
+    input wire CLK,
+    input wire PCLK_EN,
+    output reg [8:0] HPOS,
+    output reg [8:0] VPOS,
+    output reg HBLK,
+    output reg VBLK,
+    output reg HSYN,
+    output reg VSYN
+);
+
+    reg [8:0] hcnt;
+    reg [8:0] vcnt;
+
+    // Horizontal counter
+    always @(posedge CLK) begin
+        if (PCLK_EN) begin
+            if (hcnt == 9'd383) begin
+                hcnt <= 9'd0;
+            end else begin
+                hcnt <= hcnt + 1'b1;
+            end
+        end
+    end
+
+    // Vertical counter
+    always @(posedge CLK) begin
+        if (PCLK_EN && hcnt == 9'd383) begin
+            if (vcnt == 9'd242) begin
+                vcnt <= 9'd0;
+            end else begin
+                vcnt <= vcnt + 1'b1;
+            end
+        end
+    end
+
+    // Horizontal timing
+    always @(posedge CLK) begin
+        if (PCLK_EN) begin
+            HPOS <= hcnt;
+            HBLK <= (hcnt >= 9'd291) || (hcnt < 9'd1);
+            HSYN <= ~((hcnt >= 9'd300) && (hcnt < 9'd324));
+        end
+    end
+
+    // Vertical timing
+    always @(posedge CLK) begin
+        if (PCLK_EN && hcnt == 9'd383) begin
+            VPOS <= vcnt;
+            VBLK <= (vcnt >= 9'd223) && (vcnt < 9'd242);
+            VSYN <= ~((vcnt >= 9'd228) && (vcnt < 9'd235));
+        end
+    end
+
+endmodule

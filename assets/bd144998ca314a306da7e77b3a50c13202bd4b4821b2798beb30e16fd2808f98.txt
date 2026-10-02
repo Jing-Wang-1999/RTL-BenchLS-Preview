@@ -1,0 +1,41 @@
+### Module Specification: autovcoder_017920
+
+**Overview**  
+This module is a combinatorial logic circuit with six inputs and one output. It computes a specific boolean function and includes precise timing characteristics for signal propagation.
+
+**Interface**  
+- **Inputs:** IN1, IN2, IN3, IN4, IN5, IN6 (each 1-bit digital signals).  
+- **Output:** OUT (1-bit digital signal).  
+All signals operate at standard logic levels (0 or 1).
+
+**Functionality**  
+The output is the logical inversion of a three-term AND operation. The three terms are derived as follows:  
+1. Term A: Logical OR of IN5 and IN6.  
+2. Term B: Logical OR of IN3 and IN4.  
+3. Term C: Logical OR of IN1 and IN2.  
+The output is asserted low (0) only when all three terms (A, B, C) are high (1). Otherwise, the output is high (1).  
+In summary: OUT = NOT ( (IN5 OR IN6) AND (IN3 OR IN4) AND (IN1 OR IN2) ).
+
+**Timing Requirements**  
+The module specifies propagation delays from each input to the output:  
+- **Rising edge delay (low-to-high transition at OUT):**  
+  - IN1: 0.26 time units  
+  - IN2: 0.30  
+  - IN3: 0.33  
+  - IN4: 0.29  
+  - IN5: 0.30  
+  - IN6: 0.34  
+- **Falling edge delay (high-to-low transition at OUT):**  
+  - IN1: 0.27  
+  - IN2: 0.28  
+  - IN3: 0.37  
+  - IN4: 0.37  
+  - IN5: 0.41  
+  - IN6: 0.41  
+Delays are fixed (min:typ:max values are identical). Timing must be considered for critical path analysis.
+
+**Allowed Implementation**  
+The design must use only basic logic gates: OR gates (2-input), AND gates (3-input), and an inverter (NOT). No sequential elements (flip-flops, latches) or other sub-modules are permitted.
+
+**Notes**  
+This is a purely combinatorial block with no internal state. Output depends solely on current input values. Timing specifications are essential for integration into larger systems with delay constraints.

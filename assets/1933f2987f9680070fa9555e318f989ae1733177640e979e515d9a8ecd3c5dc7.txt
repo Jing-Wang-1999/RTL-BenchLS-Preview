@@ -1,0 +1,102 @@
+// Required path: fpu_double.v
+module fpu( clk, rst, enable, rmode, fpu_op, opa, opb, out, ready, underflow,
+overflow, inexact, exception, invalid);
+input		clk;
+input		rst;
+input		enable;
+input	[1:0]	rmode;
+input	[2:0]	fpu_op;
+input	[63:0]	opa, opb;
+output	[63:0]	out;
+output		ready;
+output		underflow;
+output		overflow;
+output		inexact;
+output		exception;
+output		invalid;
+endmodule
+
+// Required path: fpu_add.v
+module fpu_add( clk, rst, enable, opa, opb, sign, sum_2, exponent_2);
+input		clk;
+input		rst;
+input		enable;
+input	[63:0]	opa, opb;
+output		sign;
+output  [55:0]	sum_2;
+output	[10:0]	exponent_2;
+endmodule
+
+// Required path: fpu_sub.v
+module fpu_sub( clk, rst, enable, opa, opb, fpu_op, sign, diff_2, exponent_2);
+input		clk;
+input		rst;
+input		enable;
+input	[63:0]	opa, opb;
+input	[2:0]	fpu_op;
+output		sign;
+output	[55:0]	diff_2;
+output	[10:0]	exponent_2;
+endmodule
+
+// Required path: fpu_mul.v
+module fpu_mul( clk, rst, enable, opa, opb, sign, product_7, exponent_5);
+input		clk;
+input		rst;
+input		enable;
+input	[63:0]	opa, opb;
+output		sign;
+output  [55:0] product_7;
+output  [11:0] exponent_5;
+endmodule
+
+// Required path: fpu_div.v
+module fpu_div( clk, rst, enable, opa, opb, sign, mantissa_7,
+exponent_out);
+parameter	preset  = 53;
+input		clk;
+input		rst;
+input		enable;
+input	[63:0]	opa;
+input	[63:0]	opb;
+output		sign;
+output	[55:0] mantissa_7;
+output  [11:0] exponent_out;
+endmodule
+
+// Required path: fpu_round.v
+module fpu_round( clk, rst, enable, round_mode, sign_term, 
+mantissa_term, exponent_term, round_out, exponent_final);
+input		clk;
+input		rst;
+input		enable;
+input	[1:0]	round_mode;
+input		sign_term;
+input	[55:0]	mantissa_term;
+input	[11:0]	exponent_term;
+output	[63:0]	round_out;
+output	[11:0]	exponent_final;
+endmodule
+
+// Required path: fpu_exceptions.v
+module fpu_exceptions( clk, rst, enable, rmode, opa, opb, in_except,
+exponent_in, mantissa_in, fpu_op, out, ex_enable, underflow, overflow, 
+inexact, exception, invalid);
+input		clk;
+input		rst;
+input		enable;
+input	[1:0]	rmode;
+input	[63:0]	opa;
+input	[63:0]	opb;
+input	[63:0]	in_except;
+input	[11:0]	exponent_in;
+input	[1:0]	mantissa_in;
+input	[2:0]	fpu_op;
+output	[63:0]	out;
+output		ex_enable;
+output		underflow;
+output		overflow;
+output		inexact;
+output		exception;
+output		invalid;
+endmodule

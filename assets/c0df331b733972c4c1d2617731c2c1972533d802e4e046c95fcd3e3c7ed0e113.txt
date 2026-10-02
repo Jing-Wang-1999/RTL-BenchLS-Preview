@@ -1,0 +1,152 @@
+always @* begin
+    state_next = STATE_IDLE;
+
+    count_next = count_reg;
+
+    data_in_next = 8'd0;
+    data_in_valid_next = 1'b0;
+
+    data_out_ready_next = 1'b0;
+
+    addr_next = addr_reg;
+    data_next = data_reg;
+
+    m_axil_awvalid_next = m_axil_awvalid_reg && !m_axil_awready;
+    m_axil_wstrb_next = m_axil_wstrb_reg;
+    m_axil_wvalid_next = m_axil_wvalid_reg && !m_axil_wready;
+    m_axil_bready_next = 1'b0;
+    m_axil_arvalid_next = m_axil_arvalid_reg && !m_axil_arready;
+    m_axil_rready_next = 1'b0;
+
+    case (state_reg)
+        STATE_IDLE: begin
+            // idle, wait for I2C interface
+
+            if (data_out_valid) begin
+                // store address and write
+                count_next = ADDR_WORD_WIDTH-1;
+                state_next = STATE_ADDRESS;
+            end else if (data_in_ready && !data_in_valid_reg) begin
+                // read
+                m_axil_arvalid_next = 1'b1;
+                m_axil_rready_next = 1'b1;
+                state_next = STATE_READ_1;
+            end
+        end
+        STATE_ADDRESS: begin
+            // store address
+            data_out_ready_next = 1'b1;
+
+            if (data_out_ready_reg && data_out_valid) begin
+                // store pointers
+                addr_next[8*count_reg +: 8] = data_out;
+                count_next = count_reg - 1;
+                if (count_reg == 0) begin
+                    // end of header
+                    // set initial word offset
+                    if (ADDR_WIDTH == VALID_ADDR_WIDTH && WORD_PART_ADDR_WIDTH == 0) begin
+                        count_next = 0;
+                    end else begin
+                        count_next = addr_next[ADDR_WIDTH_ADJ-VALID_ADDR_WIDTH-1:0];
+                    end
+                    m_axil_wstrb_next = {STRB_WIDTH{1'b0}};
+                    data_next = {DATA_WIDTH{1'b0}};
+                    if (data_out_last) begin
+                        // end of transaction
+                        state_next = STATE_IDLE;
+                    end else begin
+                        // start writing
+                        state_next = STATE_WRITE_1;
+                    end
+                end else begin
+                    if (data_out_last) begin
+                        // end of transaction
+                        state_next = STATE_IDLE;
+                    end else begin
+                        state_next = STATE_ADDRESS;
+                    end
+                end
+            end else begin
+                state_next = STATE_ADDRESS;
+            end
+        end
+        STATE_READ_1: begin
+            // wait for data
+            m_axil_rready_next = 1'b1;
+
+            if (m_axil_rready && m_axil_rvalid) begin
+                // read cycle complete, store result
+                m_axil_rready_next = 1'b0;
+                data_next = m_axil_rdata;
+                addr_next = addr_reg + (1 << (ADDR_WIDTH-VALID_ADDR_WIDTH+WORD_PART_ADDR_WIDTH));
+                state_next = STATE_READ_2;
+            end else begin
+                state_next = STATE_READ_1;
+            end
+        end
+        STATE_READ_2: begin
+            // send data
+            if (data_out_valid || !bus_addressed) begin
+                // no longer addressed or now addressed for write, return to idle
+                state_next = STATE_IDLE;
+            end else if (data_in_ready && !data_in_valid_reg) begin
+                // transfer word and update pointers
+                data_in_next = data_reg[8*count_reg +: 8];
+                data_in_valid_next = 1'b1;
+                count_next = count_reg + 1;
+                if (count_reg == (STRB_WIDTH*WORD_SIZE/8)-1) begin
+                    // end of stored data word; return to idle
+                    count_next = 0;
+                    state_next = STATE_IDLE;
+                end else begin
+                    state_next = STATE_READ_2;
+                end
+            end else begin
+                state_next = STATE_READ_2;
+            end
+        end
+        STATE_WRITE_1: begin
+            // write data
+            data_out_ready_next = 1'b1;
+
+            if (data_out_ready_reg && data_out_valid) begin
+                // store word
+                data_next[8*count_reg +: 8] = data_out;
+                count_next = count_reg + 1;
+                m_axil_wstrb_next[count_reg >> ((WORD_SIZE/8)-1)] = 1'b1;
+                if (count_reg == (STRB_WIDTH*WORD_SIZE/8)-1 || data_out_last) begin
+                    // have full word or at end of block, start write operation
+                    count_next = 0;
+                    m_axil_awvalid_next = 1'b1;
+                    m_axil_wvalid_next = 1'b1;
+                    m_axil_bready_next = 1'b1;
+                    state_next = STATE_WRITE_2;
+                end else begin
+                    state_next = STATE_WRITE_1;
+                end
+            end else begin
+                state_next = STATE_WRITE_1;
+            end
+        end
+        STATE_WRITE_2: begin
+            // wait for write completion
+            m_axil_bready_next = 1'b1;
+
+            if (m_axil_bready && m_axil_bvalid) begin
+                // end of write operation
+                data_next = {DATA_WIDTH{1'b0}};
+                addr_next = addr_reg + (1 << (ADDR_WIDTH-VALID_ADDR_WIDTH+WORD_PART_ADDR_WIDTH));
+                m_axil_bready_next = 1'b0;
+                m_axil_wstrb_next = {STRB_WIDTH{1'b0}};
+                if (last_cycle_reg) begin
+                    // end of transaction
+                    state_next = STATE_IDLE;
+                end else begin
+                    state_next = STATE_WRITE_1;
+                end
+            end else begin
+                state_next = STATE_WRITE_2;
+            end
+        end
+    endcase
+end

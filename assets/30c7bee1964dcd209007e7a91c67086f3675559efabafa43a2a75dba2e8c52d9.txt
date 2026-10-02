@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.436c72c05c317a8214cd.f67d693140b2",
+  "compile_check": {
+    "case_id": "s1derived.436c72c05c317a8214cd.f67d693140b2",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_148613",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_148613.f5dbb2fa71dbb87e/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.436c72c05c317a8214cd",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "436c72c05c317a8214cda27713c4e0df0890dd169a0500e36f4b184368459232",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.436c72c05c317a8214cd.f67d693140b2",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_148613.f5dbb2fa71dbb87e/private/commercial_positive.log",
+    "commercial_log_sha256": "a46c9abdea190c213bc56af7db9204d34ea20630d26fe595ad09ac7811ab17f6",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_148613.f5dbb2fa71dbb87e/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "origen_148613"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.origen_148613.f5dbb2fa71dbb87e",
+    "parent_id": "s1p.436c72c05c317a8214cd",
+    "revised_tops": [
+      "origen_148613"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_148613",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.436c72c05c317a8214cd.f67d693140b2",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Re-read corrected complete six-field input/output interface. Direct default, one/two-stage alternatives and asynchronous reset-one only for tx_reset match.",
+        "rtl_excerpt": "pipe_tx_reset_r1 <= 1'b1;",
+        "specification_excerpt": "`pipe_tx_margin_i[2:0]`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.436c72c05c317a8214cd",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "f75234d260a5cb942db548dfd78bd2352968af2d32c261ed6a9701c848dc89ba",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "436c72c05c317a8214cda27713c4e0df0890dd169a0500e36f4b184368459232",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_148613.f5dbb2fa71dbb87e/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_148613.f5dbb2fa71dbb87e/private/historical_harness/01_conformal_rtl_origen_148613.do"
+  ],
+  "parent_id": "s1p.436c72c05c317a8214cd",
+  "primary_review": {
+    "case_id": "s1derived.436c72c05c317a8214cd.f67d693140b2",
+    "checks": {
+      "behavior": "Checked direct, one-stage, two-stage, and default selection.",
+      "boundaries": "Checked exact reset values and parameter values outside 0..2.",
+      "interface": "Complete signal bundle and parameter match.",
+      "rtl_reasonableness": "Reasonable configurable pipeline.",
+      "sequential_and_reset": "Both register stages use active-low asynchronous reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Concrete reset values are required for a complete specification.",
+        "rtl_excerpt": "pipe_tx_reset_r1 <= 1'b1; ... pipe_tx_margin_r1 <= 3'b000",
+        "spec_excerpt": "all internal registers are set to predefined states"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "Reset values and out-of-range parameter behavior are described only vaguely, not as a complete contract.",
+        "rtl_evidence": "pipe_tx_reset_r1 <= 1'b1; ... default: outputs = inputs",
+        "spec_evidence": "set to predefined states",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.436c72c05c317a8214cd",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.436c72c05c317a8214cd.f67d693140b2.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "436c72c05c317a8214cda27713c4e0df0890dd169a0500e36f4b184368459232",
+    "source_group": "S2",
+    "specification_sha256": "f67d693140b2830ab6a63d8377d49584c1f7ce6b0b39507d2168e814bfcc91d5",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.436c72c05c317a8214cd.f67d693140b2.md",
+  "qualified_specification_sha256": "f75234d260a5cb942db548dfd78bd2352968af2d32c261ed6a9701c848dc89ba",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_148613.f5dbb2fa71dbb87e/private/golden_design.v",
+  "rtl_sha256": "436c72c05c317a8214cda27713c4e0df0890dd169a0500e36f4b184368459232",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_148613.f5dbb2fa71dbb87e/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "f67d693140b2830ab6a63d8377d49584c1f7ce6b0b39507d2168e814bfcc91d5",
+  "top_module": "origen_148613"
+}

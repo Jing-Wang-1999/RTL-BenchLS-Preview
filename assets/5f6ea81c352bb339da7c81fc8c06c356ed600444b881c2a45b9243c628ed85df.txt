@@ -1,0 +1,59 @@
+**Module Name:** NV_NVDLA_RT_SDP2NOCIF_pipe_p8  
+
+**Overview**  
+This module is a single-stage pipeline register with bubble-collapse capability, designed to transfer a 514-bit data payload from a source interface to a destination interface. It acts as a flow-controlled buffer that ensures data is only transferred when the downstream receiver is ready, while preventing invalid data from being held when the upstream sender is not valid.
+
+**Primary Function**  
+The module decouples timing between two handshake interfaces by inserting one register stage. It uses a "valid-ready" handshake protocol with bubble-collapse logic, meaning the internal storage element can be bypassed (collapsed) when it does not contain valid data, reducing latency.
+
+**Interfaces and Signals**
+
+*Clock and Reset*  
+- **nvdla_core_clk**: System clock input.  
+- **nvdla_core_rstn**: Active-low synchronous reset.
+
+*Upstream Interface (Input Side)*  
+- **cvif2sdp_rd_rsp_src_valid_d0**: Indicates the upstream sender has valid data.  
+- **cvif2sdp_rd_rsp_src_pd_d0**: 514-bit data payload from upstream.  
+- **cvif2sdp_rd_rsp_src_ready_d0**: Output signal telling upstream that this module can accept data.
+
+*Downstream Interface (Output Side)*  
+- **cvif2sdp_rd_rsp_src_valid_d1**: Indicates this module has valid data for downstream.  
+- **cvif2sdp_rd_rsp_src_pd_d1**: 514-bit data payload to downstream.  
+- **cvif2sdp_rd_rsp_src_ready_d1**: Input signal from downstream indicating it can accept data.
+
+**Internal Storage and Control**  
+- A 514-bit register (`p8_pipe_data`) holds the data when the pipeline is full.  
+- A valid flag (`p8_pipe_valid`) indicates whether the stored data is valid.  
+- A ready signal (`p8_pipe_ready`) reflects the downstream readiness.  
+- A bubble-collapse ready signal (`p8_pipe_ready_bc`) is computed as: ready if either the downstream is ready OR the internal register is invalid (i.e., empty). This allows immediate forwarding of data when the pipeline stage is idle.
+
+**Operational Behavior**
+
+1. **Reset State**: On reset deassertion, the internal valid flag is cleared, indicating an empty pipeline.
+
+2. **Data Transfer (Upstream to Internal Register)**  
+   - When `p8_pipe_ready_bc` is high and the upstream valid signal is high, the upstream data is sampled into the internal register on the clock edge, and the internal valid flag is set.  
+   - If `p8_pipe_ready_bc` is low (downstream not ready and internal register already valid), the register retains its current data and valid flag remains set.
+
+3. **Bubble-Collapse Logic**  
+   - The upstream ready signal (`cvif2sdp_rd_rsp_src_ready_d0`) is directly driven by `p8_pipe_ready_bc`.  
+   - If the internal register is invalid (empty), `p8_pipe_ready_bc` becomes true regardless of downstream readiness, allowing the upstream to send data immediately. This collapses the bubble (empty stage) and reduces latency.
+
+4. **Output Driving**  
+   - The downstream valid signal (`cvif2sdp_rd_rsp_src_valid_d1`) is driven directly from the internal valid flag.  
+   - The downstream data output (`cvif2sdp_rd_rsp_src_pd_d1`) is driven from the internal data register.  
+   - The internal ready signal (`p8_pipe_ready`) is driven from the downstream ready input.
+
+**Key Properties**  
+- The module ensures that once valid data is placed in the internal register, it remains valid until the downstream accepts it (no data loss).  
+- The upstream ready signal may be asserted even if downstream is not ready, provided the internal register is empty (bubble-collapse).  
+- All control and data signals are synchronous to the clock and respect reset.  
+- The design includes assertion checks (when enabled) to verify no illegal states (e.g., X values on control signals) and to ensure valid signals are not removed before ready is asserted.
+
+**Allowed Sub-modules**  
+None. The module is implemented purely with registers and combinational logic; no instantiated sub-modules are required or permitted.
+
+**Performance Notes**  
+- Latency: One clock cycle when the pipeline is full; zero cycles (bypass) when the pipeline is empty and downstream is ready.  
+- Throughput: One transaction per cycle when both upstream and downstream are ready consecutively.

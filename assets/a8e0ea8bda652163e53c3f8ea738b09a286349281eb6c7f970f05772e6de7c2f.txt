@@ -1,0 +1,50 @@
+module autovcoder_063852 #(
+    parameter G_WIDTH = 8
+) (
+    input wire clk,
+    input wire rst,
+    
+    input wire [G_WIDTH-1:0] din,
+    input wire din_last,
+    input wire din_valid,
+    output reg din_ready,
+    
+    output reg [G_WIDTH-1:0] dout,
+    output reg dout_last,
+    output reg dout_valid,
+    input wire dout_ready
+);
+
+    reg [G_WIDTH-1:0] buffer_data;
+    reg buffer_last;
+    reg buffer_valid;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            buffer_valid <= 1'b0;
+            buffer_data <= {G_WIDTH{1'b0}};
+            buffer_last <= 1'b0;
+        end else begin
+            if (din_valid && din_ready) begin
+                buffer_data <= din;
+                buffer_last <= din_last;
+                buffer_valid <= 1'b1;
+            end else if (dout_valid && dout_ready) begin
+                buffer_valid <= 1'b0;
+            end
+        end
+    end
+
+    always @(*) begin
+        dout_valid = buffer_valid;
+        dout = buffer_data;
+        dout_last = buffer_last;
+        
+        if (buffer_valid) begin
+            din_ready = dout_ready;
+        end else begin
+            din_ready = 1'b1;
+        end
+    end
+
+endmodule

@@ -1,0 +1,82 @@
+always @(posedge clk) begin
+    reg_wr_ack_reg <= 1'b0;
+    reg_rd_data_reg <= 0;
+    reg_rd_ack_reg <= 1'b0;
+
+    set_ptp_perout_start_valid_reg <= 1'b0;
+    set_ptp_perout_period_valid_reg <= 1'b0;
+    set_ptp_perout_width_valid_reg <= 1'b0;
+
+    if (reg_wr_en && !reg_wr_ack_reg) begin
+        // write operation
+        reg_wr_ack_reg <= 1'b1;
+        case ({reg_wr_addr >> 2, 2'b00})
+            RBB+6'h0C: begin
+                // PTP perout control and status
+                ptp_perout_enable_reg <= reg_wr_data[0];
+            end
+            RBB+6'h10: set_ptp_perout_start_reg[15:0] <= reg_wr_data;  // PTP perout start fns
+            RBB+6'h14: set_ptp_perout_start_reg[45:16] <= reg_wr_data; // PTP perout start ns
+            RBB+6'h18: set_ptp_perout_start_reg[79:48] <= reg_wr_data; // PTP perout start sec l
+            RBB+6'h1C: begin
+                // PTP perout start sec h
+                set_ptp_perout_start_reg[95:80] <= reg_wr_data;
+                set_ptp_perout_start_valid_reg <= 1'b1;
+            end
+            RBB+6'h20: set_ptp_perout_period_reg[15:0] <= reg_wr_data;  // PTP perout period fns
+            RBB+6'h24: set_ptp_perout_period_reg[45:16] <= reg_wr_data; // PTP perout period ns
+            RBB+6'h28: set_ptp_perout_period_reg[79:48] <= reg_wr_data; // PTP perout period sec l
+            RBB+6'h2C: begin
+                // PTP perout period sec h
+                set_ptp_perout_period_reg[95:80] <= reg_wr_data;
+                set_ptp_perout_period_valid_reg <= 1'b1;
+            end
+            RBB+6'h30: set_ptp_perout_width_reg[15:0] <= reg_wr_data;  // PTP perout width fns
+            RBB+6'h34: set_ptp_perout_width_reg[45:16] <= reg_wr_data; // PTP perout width ns
+            RBB+6'h38: set_ptp_perout_width_reg[79:48] <= reg_wr_data; // PTP perout width sec l
+            RBB+6'h3C: begin
+                // PTP perout width sec h
+                set_ptp_perout_width_reg[95:80] <= reg_wr_data;
+                set_ptp_perout_width_valid_reg <= 1'b1;
+            end
+            default: reg_wr_ack_reg <= 1'b0;
+        endcase
+    end
+
+    if (reg_rd_en && !reg_rd_ack_reg) begin
+        // read operation
+        reg_rd_ack_reg <= 1'b1;
+        case ({reg_rd_addr >> 2, 2'b00})
+            RBB+6'h00: reg_rd_data_reg <= 32'h0000C081;  // PHC: Type
+            RBB+6'h04: reg_rd_data_reg <= 32'h00000100;  // PHC: Version
+            RBB+6'h08: reg_rd_data_reg <= RB_NEXT_PTR;   // PHC: Next header
+            RBB+6'h0C: begin
+                // PTP perout control and status
+                reg_rd_data_reg[0] <= ptp_perout_enable_reg;
+                reg_rd_data_reg[8] <= ptp_perout_pulse;
+                reg_rd_data_reg[16] <= ptp_perout_locked;
+                reg_rd_data_reg[24] <= ptp_perout_error;
+            end
+            RBB+6'h10: reg_rd_data_reg <= set_ptp_perout_start_reg[15:0];  // PTP perout start fns
+            RBB+6'h14: reg_rd_data_reg <= set_ptp_perout_start_reg[45:16]; // PTP perout start ns
+            RBB+6'h18: reg_rd_data_reg <= set_ptp_perout_start_reg[79:48]; // PTP perout start sec l
+            RBB+6'h1C: reg_rd_data_reg <= set_ptp_perout_start_reg[95:80]; // PTP perout start sec h
+            RBB+6'h20: reg_rd_data_reg <= set_ptp_perout_period_reg[15:0];  // PTP perout period fns
+            RBB+6'h24: reg_rd_data_reg <= set_ptp_perout_period_reg[45:16]; // PTP perout period ns
+            RBB+6'h28: reg_rd_data_reg <= set_ptp_perout_period_reg[79:48]; // PTP perout period sec l
+            RBB+6'h2C: reg_rd_data_reg <= set_ptp_perout_period_reg[95:80]; // PTP perout period sec h
+            RBB+6'h30: reg_rd_data_reg <= set_ptp_perout_width_reg[15:0];  // PTP perout width fns
+            RBB+6'h34: reg_rd_data_reg <= set_ptp_perout_width_reg[45:16]; // PTP perout width ns
+            RBB+6'h38: reg_rd_data_reg <= set_ptp_perout_width_reg[79:48]; // PTP perout width sec l
+            RBB+6'h3C: reg_rd_data_reg <= set_ptp_perout_width_reg[95:80]; // PTP perout width sec h
+            default: reg_rd_ack_reg <= 1'b0;
+        endcase
+    end
+
+    if (rst) begin
+        reg_wr_ack_reg <= 1'b0;
+        reg_rd_ack_reg <= 1'b0;
+
+        ptp_perout_enable_reg <= 1'b0;
+    end
+end

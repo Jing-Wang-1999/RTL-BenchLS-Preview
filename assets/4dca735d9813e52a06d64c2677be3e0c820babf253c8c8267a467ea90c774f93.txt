@@ -1,0 +1,53 @@
+module origen_182426(
+    input [7:0] Ain,
+    input [7:0] Bin,
+    input [1:0] Fn,
+    input CI,
+    output reg [7:0] Result,
+    output reg CO,
+    output reg OV
+);
+
+    reg [8:0] im_Result;
+
+    specify
+        (Ain, Bin, Fn, CI => Result) = (5, 5, 2, 1);
+        (Ain, Bin, Fn, CI => CO) = (5, 5, 2, 1);
+        (Ain, Bin, Fn, CI => OV) = (5, 5, 2, 1);
+    endspecify
+
+    always @(Ain, Bin, Fn) begin
+        im_Result = 9'b0;
+
+        case (Fn)
+            2'b00: begin // Addition
+                im_Result = {1'b0, Ain} + {1'b0, Bin} + CI;
+                Result = im_Result[7:0];
+                CO = im_Result[8];
+                OV = (Ain[7] == Bin[7]) && (Ain[7] != Result[7]);
+            end
+            2'b01: begin // Addition with Bin shifted right by 1 bit
+                im_Result = {1'b0, Ain} + {1'b0, Bin[7:1]} + CI;
+                Result = im_Result[7:0];
+                CO = im_Result[8];
+                OV = (Ain[7] == Bin[7]) && (Ain[7] != Result[7]);
+            end
+            2'b10: begin // Bitwise AND
+                Result = Ain & Bin;
+                CO = 1'b0;
+                OV = 1'b0;
+            end
+            2'b11: begin // Bitwise NOT
+                Result = ~Ain;
+                CO = 1'b0;
+                OV = 1'b0;
+            end
+            default: begin
+                Result = 8'bX;
+                CO = 1'bX;
+                OV = 1'bX;
+            end
+        endcase
+    end
+
+endmodule

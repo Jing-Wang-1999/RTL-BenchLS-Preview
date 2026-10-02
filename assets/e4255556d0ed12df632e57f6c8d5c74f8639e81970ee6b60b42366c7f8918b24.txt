@@ -1,0 +1,9 @@
+always @(posedge req_clk) begin
+    if (req_resetn == 1'b0) begin
+      completion_req_last_found <= 1'b0;
+    end else if (completion_req) begin
+      completion_req_last_found <= completion_req_last;
+    end else if (state ==STATE_ZERO_COMPL && ~(|to_complete_count)) begin
+      completion_req_last_found <= 1'b0;
+    end
+  end

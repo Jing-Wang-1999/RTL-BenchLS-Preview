@@ -1,0 +1,17 @@
+always @ (posedge clk or negedge rstn)
+    if (~rstn) begin
+        f_tvalid <= 1'b0;
+        f_tdata  <= 8'h0;
+    end else begin
+        f_tvalid <= 1'b0;
+        f_tdata  <= 8'h0;
+        if (state == S_STOP_BIT) begin
+            if ( cycle < THREE_QUARTER_BAUD_CYCLES) begin
+            end else begin
+                if ((count1 >= HALF_BAUD_CYCLES) && parity_correct) begin  // stop bit have enough '1', and parity correct
+                    f_tvalid <= 1'b1;
+                    f_tdata  <= rbyte;                                     // received a correct byte, output it
+                end
+            end
+        end
+    end

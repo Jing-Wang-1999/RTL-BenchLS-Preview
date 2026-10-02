@@ -1,0 +1,69 @@
+module rtlpp_05531 (
+    input wire clk_in,
+    input wire data_in,
+    input wire scan_select_in,
+    input wire latch_enable_in,
+    output wire clk_out,
+    output wire data_out,
+    output wire scan_select_out,
+    output wire latch_enable_out
+    );
+
+    wire clk;
+    wire data_out_i;
+
+    // Internal buffer functionality
+    assign clk = clk_in;
+    assign clk_out = clk;
+    assign data_out = data_out_i;
+    assign scan_select_out = scan_select_in;
+    assign latch_enable_out = latch_enable_in;
+    
+    parameter NUM_IOS = 8;
+
+    wire [NUM_IOS-1:0] scan_data_out;   
+    wire [NUM_IOS-1:0] scan_data_in;    
+    wire [NUM_IOS-1:0] module_data_in;  
+    wire [NUM_IOS-1:0] module_data_out; 
+
+    assign scan_data_in = {scan_data_out[NUM_IOS-2:0], data_in};
+
+    // D flip-flop with asynchronous reset, negative edge clock
+    reg reset_b = 1'b1;
+    reg data_out_r;
+    always @(negedge clk or negedge reset_b) begin
+        if (!reset_b)
+            data_out_r <= 0;
+        else
+            data_out_r <= scan_data_out[NUM_IOS-1];
+    end
+    assign data_out_i = data_out_r;
+
+`ifndef FORMAL
+`ifndef FORMAL_COMPAT
+    // Scan Flip-flops
+    reg [NUM_IOS-1:0] scan_data_out_r;
+    always @(posedge clk) begin
+        if (scan_select_in) 
+            scan_data_out_r <= module_data_out;
+        else
+            scan_data_out_r <= scan_data_in;
+    end
+    assign scan_data_out = scan_data_out_r;
+
+    // Latches
+    reg [NUM_IOS-1:0] module_data_in_r;
+    always @* begin
+        if (latch_enable_in)
+            module_data_in_r = scan_data_out;
+    end
+    assign module_data_in = module_data_in_r;
+`endif
+`endif
+
+    // User module logic (embedded directly for self-contained functionality)
+    // Assuming the user module implements some logic that can be directly written here
+    // Here's a placeholder logic example for user_module
+    assign module_data_out = module_data_in + 1'b1;  // Example logic for simplicity
+
+endmodule

@@ -1,0 +1,93 @@
+{
+  "case_id": "s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4",
+  "compile_check": {
+    "case_id": "s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "SDP_X_X_trt_core_staller",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "c3fd5af9904cd23a914f78d24fbbc478c3f0e78a8444f58a4c0978d4deb00e46",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.c3fd5af9904cd23a914f",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "SDP_X_X_trt_core_staller"
+  },
+  "independent_review": {
+    "case_id": "s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Combinational readiness and registered inverse with asynchronous reset match.",
+        "rtl_excerpt": "`assign core_wen=...in... & ...out...; core_wten<=~core_wen;`",
+        "spec_excerpt": "\u201ccore_wen = ...in_wen_comp & ...out_wen_comp\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.c3fd5af9904cd23a914f",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "15115f2baab4d77b02231c18bd8998aa98129513878163f636573a54503d3324",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "c3fd5af9904cd23a914f78d24fbbc478c3f0e78a8444f58a4c0978d4deb00e46",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.c3fd5af9904cd23a914f",
+  "primary_review": {
+    "case_id": "s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4",
+    "checks": {
+      "behavior": "core_wen is the stated AND; core_wten remains undefined.",
+      "boundaries": "Readiness changes between edges do not immediately change core_wten.",
+      "interface": "The declared top-level interface matches the RTL.",
+      "rtl_reasonableness": "RTL compiles and is coherent as a registered stall indicator.",
+      "sequential_and_reset": "core_wten asynchronously resets low and captures ~core_wen on rising edges."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The missing sentence hides latency.",
+        "rtl_excerpt": "core_wten <= ~ core_wen",
+        "specification_excerpt": "core_wten: This output signal is a"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification truncates before defining core_wten's registered, one-cycle sampled behavior.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.c3fd5af9904cd23a914f",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_02/s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "c3fd5af9904cd23a914f78d24fbbc478c3f0e78a8444f58a4c0978d4deb00e46",
+    "source_group": "S1",
+    "specification_sha256": "d05fdd6d5fc4e02f93943f3f406c05243a949ff0822f2a0efbb375661ad34b98",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_02/s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4.md",
+  "qualified_specification_sha256": "15115f2baab4d77b02231c18bd8998aa98129513878163f636573a54503d3324",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4/private/golden_design.v",
+  "rtl_sha256": "c3fd5af9904cd23a914f78d24fbbc478c3f0e78a8444f58a4c0978d4deb00e46",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.c3fd5af9904cd23a914f.d05fdd6d5fc4/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "d05fdd6d5fc4e02f93943f3f406c05243a949ff0822f2a0efbb375661ad34b98",
+  "top_module": "SDP_X_X_trt_core_staller"
+}

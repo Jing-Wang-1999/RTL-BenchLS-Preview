@@ -1,0 +1,40 @@
+Here's a clear and concise instruction summarizing the Verilog module's functionality and operation. This instruction integrates insights from both the control flow and data flow analyses:
+
+---
+
+### Instruction for Generating the Verilog Code
+
+The primary function of this Verilog module is to compute a 32-bit Cyclic Redundancy Check (CRC-32) for an 8-bit data input. The module operates in the following manner:
+
+1. **Initialization and Reset**: Upon receiving a low signal on the `rst_n` (reset) input, the CRC register (`crc32_byte_stream`) is initialized to `32'hFFFFFFFF`. This reset condition is checked at every positive edge of the clock (`clk`).
+
+2. **CRC Calculation Enable**: When the `crc_en` signal is high, the 32-bit CRC is recalculated by processing the 8-bit `data` input. This process involves computing the next CRC state using the `crc32_byte` function.
+
+3. **Data Processing**:
+   - **Bitwise CRC Calculation**:
+     - The `crc32_byte` function iterates through each bit of the `data` input (from MSB to LSB) and updates the CRC state using the `crc32_bit` function.
+     - The `crc32_bit` function performs bitwise operations to update the CRC value based on the current state of the CRC and the current bit of the data.
+   - During each iteration, the `crc32_bit` function shifts the CRC register left by one position, and specific bits are updated based on the XOR results of certain CRC bits and the current data bit, effectively computing the new CRC state.
+
+4. **Key Decisions**:
+   - If the `rst_n` signal is low, the CRC register is assigned an initial value (`32'hFFFFFFFF`).
+   - If the `crc_en` signal is high, the module processes the data input to update the CRC value; otherwise, it retains the current CRC state.
+
+This Verilog module incorporates a clock-driven process with conditional checks (reset and enable signals) and sequential data processing integrated through nested functions for bit and byte-level CRC computation.
+
+---
+
+This instruction details the module's purpose, critical decision points, and data processing steps, providing a comprehensive guide for code generation.
+
+Module Interface:
+module crc32_byte_stream
+(
+ input             clk,
+ input             rst_n,
+ input [7:0]       data,
+ input             crc_en,
+ output reg [31:0] crc32
+);
+
+Behavioral Clarifications:
+- The module uses one sequential always block triggered on posedge clk or negedge rst_n. The CRC polynomial is CRC-32/MPEG-2: the crc32_bit function shifts CRC left by one and XORs specific bits (0,1,2,4,5,7,8,10,11,12,16,22,23,26) with (crc[31] XOR data_bit). The crc32_byte function applies crc32_bit eight times, processing data bits from MSB (bit 7) to LSB (bit 0).

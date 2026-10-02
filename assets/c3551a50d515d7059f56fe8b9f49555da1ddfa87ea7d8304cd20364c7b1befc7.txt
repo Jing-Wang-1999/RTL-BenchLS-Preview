@@ -1,0 +1,5 @@
+# mg_10069
+
+This synchronous two-request arbiter has one-bit inputs `clock`, active-high synchronous `reset`, `req_0`, and `req_1`, and one-bit combinational outputs `gnt_0` and `gnt_1`. Parameters are `SIZE=3`, `IDLE=3'b001`, `GNT0=3'b010`, and `GNT1=3'b100`.
+
+Reset selects IDLE on a rising edge. In IDLE, `req_0` has priority: request 0 selects GNT0; otherwise request 1 selects GNT1; otherwise state holds. GNT0 remains while `req_0=1` and returns to IDLE when it clears. GNT1 similarly follows `req_1`. Invalid states transition to IDLE. IDLE and invalid states deassert both grants; GNT0 asserts only `gnt_0`; GNT1 asserts only `gnt_1`. There are no submodules.

@@ -1,0 +1,66 @@
+module rtlpp_07504 (
+    input rst,
+    input clk,
+    input sample_clk_en,
+    input [7:0] fnum,
+    input [3:0] mult,
+    input [2:0] block,
+    input vib,
+    input dvb,
+    output reg signed [15:0] phase_inc
+);
+
+    // Internal signals
+    wire [15:0] pre_mult;
+    reg signed [15:0] post_mult;
+    reg [7:0] vib_val;
+    wire signed [3:0] pre_mult_adj;
+    
+    // Pre-scaling: left shift fnum by block value
+    assign pre_mult = fnum << block;
+    
+    // Multiplier adjustment lookup table
+    assign pre_mult_adj = 
+        (mult == 4'h0 || mult == 4'h1) ? 4'sd1 :
+        (mult == 4'h2) ? 4'sd2 :
+        (mult == 4'h3) ? 4'sd3 :
+        (mult == 4'h4) ? 4'sd4 :
+        (mult == 4'h5) ? 4'sd5 :
+        (mult == 4'h6) ? 4'sd6 :
+        (mult == 4'h7) ? 4'sd7 :
+        (mult == 4'h8) ? 4'sd8 :
+        (mult == 4'h9) ? 4'sd9 :
+        (mult == 4'hA || mult == 4'hB) ? 4'sd10 :
+        (mult == 4'hC || mult == 4'hD) ? 4'sd12 :
+        /* mult == 4'hE || mult == 4'hF */ 4'sd15;
+    
+    // Synchronous processing for post_mult
+    always @(posedge clk) begin
+        if (rst) begin
+            post_mult <= 16'sd0;
+            vib_val <= 8'd0;
+        end else begin
+            // Multiplier adjustment logic
+            if (mult == 4'h0) begin
+                // Right shift by 1 when mult is 0
+                post_mult <= $signed(pre_mult) >>> 1;
+            end else begin
+                // Multiply by adjustment factor for other mult values
+                post_mult <= $signed(pre_mult) * pre_mult_adj;
+            end
+            
+            // Vibrato value update (maintains current value as per spec)
+            vib_val <= vib_val;
+        end
+    end
+    
+    // Combinational phase increment output with vibrato addition
+    always @* begin
+        if (vib) begin
+            phase_inc = post_mult + $signed(vib_val);
+        end else begin
+            phase_inc = post_mult;
+        end
+    end
+
+endmodule

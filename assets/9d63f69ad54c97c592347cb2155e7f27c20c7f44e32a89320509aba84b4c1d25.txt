@@ -1,0 +1,24 @@
+### Instruction for Creating the Verilog Module:
+
+1. **Primary Function Summary:**
+   The Verilog module implements a 32-bit CRC (Cyclic Redundancy Check) generator with both parallel and serial output capabilities. It includes functionality for CRC calculation, updating, shifting, and resetting.
+
+2. **Control Flow Explanation:**
+   - The module operates on a clock signal (clk), and resets the CRC value to its initial state (32'hffffffff) when the reset signal (rst) is high.
+   - If the clear signal (clr) is asserted, the CRC value is also reset to 32'hffffffff.
+   - When the enable signal is high, the CRC value is updated based on the current data inputs and the previous CRC value.
+   - If the shift signal is active, the CRC value shifts to the right by one bit, with the highest bit set to 0.
+
+3. **Data Processing and Signal Interaction:**
+   - The `data_wire` ensures that if the input data is unknown (i.e., 'x'), it defaults to 0, avoiding indeterminate states.
+   - A new CRC value (`new_crc`) is calculated from the current CRC based on specific polynomial operations involving the input data and current CRC bits.
+   - When the enable signal is active, the new CRC value replaces the old CRC value.
+   - The final CRC value is available through the `crc_out` output, and the least significant bit of the CRC is available through the `serial_out` output.
+
+Use these details to generate the Verilog code for a 32-bit CRC generator module that incorporates clocked reset, clear, enable, and shift logic, as detailed above.
+
+Module Interface:
+module parallel_serial_crc32_engine (clk, data, enable, shift, clr, rst, crc_out, serial_out);
+
+Behavioral Clarifications:
+- All ports are 1-bit except crc_out which is 32-bit. The data_wire assign uses a conditional to replace 1'bx with 1'b0. The new_crc combinational logic is identical to the CRC-32 polynomial (same as serial_crc32_generator): new_crc[n] = crc[n+1] for most bits, with XOR of (data_wire XOR crc[0]) at positions 5,8,9,15,19,20,21,23,24,26,27,29,30,31. Reset is asynchronous on posedge rst.

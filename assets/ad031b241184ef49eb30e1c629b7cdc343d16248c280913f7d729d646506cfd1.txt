@@ -1,0 +1,59 @@
+module autovcoder_093427 (
+    is_mem_zero,
+    is_wb_zero,
+    rr1_ex,
+    rr2_ex,
+    wr_mem,
+    wr_wb,
+    regW_mem,
+    regW_wb,
+    forwardA,
+    forwardB
+);
+  input [4:0] rr1_ex, rr2_ex, wr_mem, wr_wb;
+  input regW_mem, regW_wb;
+  input is_mem_zero, is_wb_zero;
+  output [1:0] forwardA, forwardB;
+
+  wire caseA2, caseB2, caseA1, caseB1;
+
+  wire wr_mem_equals_rr1_ex;
+  equals_4bit eq0 (
+      wr_mem,
+      rr1_ex,
+      wr_mem_equals_rr1_ex
+  );
+  assign caseA2 = regW_mem & wr_mem_equals_rr1_ex;
+
+  wire wr_mem_equals_rr2_ex;
+  equals_4bit eq1 (
+      wr_mem,
+      rr2_ex,
+      wr_mem_equals_rr2_ex
+  );
+  assign caseB2 = regW_mem & wr_mem_equals_rr2_ex;
+
+  wire wr_wb_equals_rr1_ex;
+  equals_4bit eq2 (
+      wr_wb,
+      rr1_ex,
+      wr_wb_equals_rr1_ex
+  );
+  assign caseA1 = regW_wb & wr_wb_equals_rr1_ex & (~wr_mem_equals_rr1_ex | ~regW_mem);
+
+  wire wr_wb_equals_rr2_ex;
+  equals_4bit eq3 (
+      wr_wb,
+      rr2_ex,
+      wr_wb_equals_rr2_ex
+  );
+  assign caseB1 = regW_wb & wr_wb_equals_rr2_ex & (~wr_mem_equals_rr2_ex | ~regW_mem);
+
+  assign forwardA[1] = caseA2 & ~is_mem_zero;
+  assign forwardB[1] = caseB2 & ~is_mem_zero;
+
+  assign forwardA[0] = caseA1 & ~is_wb_zero;
+  assign forwardB[0] = caseB1 & ~is_wb_zero;
+
+endmodule
+

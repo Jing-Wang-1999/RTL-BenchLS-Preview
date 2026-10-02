@@ -1,0 +1,51 @@
+module vmw_NV_NVDLA_MCIF_WRITE_IG_SPT_dfifo_flopram_rwsa_5x514 (
+   Wa0, we0, Di0,
+   Ra0, Do0
+   );
+
+input  [2:0] Wa0;
+input            we0;
+input  [513:0] Di0;
+input  [2:0] Ra0;
+output [513:0] Do0;
+
+// Only visible during Spyglass to avoid blackboxes.
+`ifdef SPYGLASS_FLOPRAM
+
+assign Do0 = 514'd0;
+wire dummy = 1'b0 | (|Wa0) | (|we0) | (|Di0) | (|Ra0);
+
+`endif
+
+// synopsys translate_off
+`ifndef SYNTH_LEVEL1_COMPILE
+`ifndef SYNTHESIS
+reg [513:0] mem[4:0];
+
+// expand mem for debug ease
+`ifdef EMU_EXPAND_FLOPRAM_MEM
+wire [513:0] Q0 = mem[0];
+wire [513:0] Q1 = mem[1];
+wire [513:0] Q2 = mem[2];
+wire [513:0] Q3 = mem[3];
+wire [513:0] Q4 = mem[4];
+`endif
+
+// asynchronous ram writes
+always @(*) begin
+  if ( we0 == 1'b1 ) begin
+    #0.1;
+    mem[Wa0] = Di0;
+  end
+end
+
+assign Do0 = mem[Ra0];
+`endif
+`endif
+// synopsys translate_on
+
+// synopsys dc_script_begin
+// synopsys dc_script_end
+
+// g2c if { [find / -null_ok -subdesign vmw_NV_NVDLA_MCIF_WRITE_IG_SPT_dfifo_flopram_rwsa_5x514] != {} } { set_attr preserve 1 [find / -subdesign vmw_NV_NVDLA_MCIF_WRITE_IG_SPT_dfifo_flopram_rwsa_5x514] }
+endmodule

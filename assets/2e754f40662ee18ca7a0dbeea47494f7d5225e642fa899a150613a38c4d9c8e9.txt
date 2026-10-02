@@ -1,0 +1,35 @@
+module origen_180410 (
+    input  wire       RESET,
+    input  wire       CLK,
+    input  wire       PAUSE,
+    output reg        CARRY6,
+    output reg        CARRY10
+);
+
+    reg [5:0] counter6;
+    reg [9:0] counter10;
+
+    always @(posedge CLK) begin
+        if (RESET) begin
+            counter6  <= 6'd0;
+            counter10 <= 10'd0;
+            CARRY6    <= 1'b0;
+            CARRY10   <= 1'b0;
+        end else if (PAUSE) begin
+            // Hold everything
+            counter6  <= counter6;
+            counter10 <= counter10;
+            CARRY6    <= CARRY6;
+            CARRY10   <= CARRY10;
+        end else begin
+            // Increment counters
+            counter6  <= (counter6 == 6'd40) ? 6'd0 : counter6 + 6'd1;
+            counter10 <= (counter10 == 10'd576) ? 10'd0 : counter10 + 10'd1;
+
+            // Generate carry pulses
+            CARRY6  <= (counter6 == 6'd40);
+            CARRY10 <= (counter10 == 10'd576);
+        end
+    end
+
+endmodule

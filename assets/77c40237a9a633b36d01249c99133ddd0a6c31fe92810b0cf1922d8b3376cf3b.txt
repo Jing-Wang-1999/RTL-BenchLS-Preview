@@ -1,0 +1,118 @@
+module autovcoder_024807 #(
+    // parameter declaration and default value assignemnt
+    parameter enable_debug_info = "false",	//Valid values: false|true; this is simulation-only parameter, for debug purpose only
+
+    parameter is_8g_0ppm = "false",  //Valid values: false|true
+    parameter pld_side_data_source = "pld",  //Valid values: hip|pld
+    parameter avmm_group_channel_index = 0,  //Valid values: 0..2
+    parameter use_default_base_address = "true",  //Valid values: false|true
+    parameter user_base_address = 0  //Valid values: 0..2047
+) (
+    //input and output port declaration
+    input  [  0:0] emsipenablediocsrrdydly,
+    input  [103:0] emsiptxin,
+    input  [ 12:0] emsiptxspecialin,
+    input  [  0:0] pcs8gemptytx,
+    input  [  0:0] pcs8gfulltx,
+    input  [  0:0] clockinfrom8gpcs,
+    input  [  0:0] pld8gphfifoursttxn,
+    input  [  0:0] pld8gpldtxclk,
+    input  [  0:0] pld8gpolinvtx,
+    input  [  0:0] pld8grddisabletx,
+    input  [  0:0] pld8grevloopbk,
+    input  [  4:0] pld8gtxboundarysel,
+    input  [  3:0] pld8gtxdatavalid,
+    input  [  0:0] pld8gtxurstpcsn,
+    input  [  0:0] pld8gwrenabletx,
+    input  [ 43:0] datainfrompld,
+    input  [  0:0] pmatxcmuplllock,
+    input  [  0:0] rstsel,
+    input  [  0:0] usrrstsel,
+    output [  2:0] emsippcstxclkout,
+    output [ 15:0] emsiptxspecialout,
+    output [  0:0] pcs8gphfifoursttx,
+    output [  0:0] pcs8gpldtxclk,
+    output [  0:0] pcs8gpolinvtx,
+    output [  0:0] pcs8grddisabletx,
+    output [  0:0] pcs8grevloopbk,
+    output [  4:0] pcs8gtxboundarysel,
+    output [  3:0] pcs8gtxdatavalid,
+    output [ 43:0] dataoutto8gpcs,
+    output [  0:0] pcs8gtxurstpcs,
+    output [  0:0] pcs8gwrenabletx,
+    output [  0:0] pld8gemptytx,
+    output [  0:0] pld8gfulltx,
+    output [  0:0] pld8gtxclkout,
+    output [  0:0] asynchdatain,
+    output [  0:0] reset,
+    input  [ 10:0] avmmaddress,
+    input  [  1:0] avmmbyteen,
+    input  [  0:0] avmmrstn,
+    input  [  0:0] avmmclk,
+    input  [  0:0] avmmread,
+    input  [  0:0] avmmwrite,
+    input  [ 15:0] avmmwritedata,
+    output [ 15:0] avmmreaddata,
+    output [  0:0] blockselect
+);
+
+  cyclonev_hssi_tx_pld_pcs_interface_encrypted #(
+      .enable_debug_info(enable_debug_info),
+
+      .is_8g_0ppm(is_8g_0ppm),
+      .pld_side_data_source(pld_side_data_source),
+      .avmm_group_channel_index(avmm_group_channel_index),
+      .use_default_base_address(use_default_base_address),
+      .user_base_address(user_base_address)
+
+  ) cyclonev_hssi_tx_pld_pcs_interface_encrypted_inst (
+      .emsipenablediocsrrdydly(emsipenablediocsrrdydly),
+      .emsiptxin(emsiptxin),
+      .emsiptxspecialin(emsiptxspecialin),
+      .pcs8gemptytx(pcs8gemptytx),
+      .pcs8gfulltx(pcs8gfulltx),
+      .clockinfrom8gpcs(clockinfrom8gpcs),
+      .pld8gphfifoursttxn(pld8gphfifoursttxn),
+      .pld8gpldtxclk(pld8gpldtxclk),
+      .pld8gpolinvtx(pld8gpolinvtx),
+      .pld8grddisabletx(pld8grddisabletx),
+      .pld8grevloopbk(pld8grevloopbk),
+      .pld8gtxboundarysel(pld8gtxboundarysel),
+      .pld8gtxdatavalid(pld8gtxdatavalid),
+      .pld8gtxurstpcsn(pld8gtxurstpcsn),
+      .pld8gwrenabletx(pld8gwrenabletx),
+      .datainfrompld(datainfrompld),
+      .pmatxcmuplllock(pmatxcmuplllock),
+      .rstsel(rstsel),
+      .usrrstsel(usrrstsel),
+      .emsippcstxclkout(emsippcstxclkout),
+      .emsiptxspecialout(emsiptxspecialout),
+      .pcs8gphfifoursttx(pcs8gphfifoursttx),
+      .pcs8gpldtxclk(pcs8gpldtxclk),
+      .pcs8gpolinvtx(pcs8gpolinvtx),
+      .pcs8grddisabletx(pcs8grddisabletx),
+      .pcs8grevloopbk(pcs8grevloopbk),
+      .pcs8gtxboundarysel(pcs8gtxboundarysel),
+      .pcs8gtxdatavalid(pcs8gtxdatavalid),
+      .dataoutto8gpcs(dataoutto8gpcs),
+      .pcs8gtxurstpcs(pcs8gtxurstpcs),
+      .pcs8gwrenabletx(pcs8gwrenabletx),
+      .pld8gemptytx(pld8gemptytx),
+      .pld8gfulltx(pld8gfulltx),
+      .pld8gtxclkout(pld8gtxclkout),
+      .asynchdatain(asynchdatain),
+      .reset(reset),
+      .avmmaddress(avmmaddress),
+      .avmmbyteen(avmmbyteen),
+      .avmmrstn(avmmrstn),
+      .avmmclk(avmmclk),
+      .avmmread(avmmread),
+      .avmmwrite(avmmwrite),
+      .avmmwritedata(avmmwritedata),
+      .avmmreaddata(avmmreaddata),
+      .blockselect(blockselect)
+  );
+
+
+endmodule
+

@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.0983cfa073f52e09a225.d301294e54b5",
+  "compile_check": {
+    "case_id": "s1derived.0983cfa073f52e09a225.d301294e54b5",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_07248",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_07248.b0dde1de53879e29/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.0983cfa073f52e09a225",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "0983cfa073f52e09a225f19d97ff5fa108208c978948c9226cd93827aeaca25a",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0983cfa073f52e09a225.d301294e54b5",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_07248.b0dde1de53879e29/private/commercial_positive.log",
+    "commercial_log_sha256": "ac62316e8e9832f231ad90cdcbd1888b94b6da23b4e4e51008a0ac7b177ed032",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_07248.b0dde1de53879e29/private/historical_harness/00_sec_mg_07248.tcl",
+    "executed_script_sha256": "fc2f8b43d6bc3e9eb3ef4a2a8ecb3ae02d6e32960812ffa7ae218afc89e52062",
+    "golden_tops": [
+      "mg_07248"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.mg_07248.b0dde1de53879e29",
+    "parent_id": "s1p.0983cfa073f52e09a225",
+    "revised_tops": [
+      "mg_07248"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_07248",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0983cfa073f52e09a225.d301294e54b5",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The64-bit enabled register has no reset and holds withoutload. The optional RANDOM_INIT system task is conditionally compiled and not falsely treated as normal initialization. The repaired contract matches default compilation.",
+        "rtl_excerpt": "if (ld) \n  q <= d;",
+        "specification_excerpt": "On each rising edge of `clk`, `q` captures `d` when `ld` is high"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0983cfa073f52e09a225",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "c39d38ed74e19f601ef00fcdd32cd0117d5b77d09dabb14eaba9c25482bf1032",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0983cfa073f52e09a225f19d97ff5fa108208c978948c9226cd93827aeaca25a",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_07248.b0dde1de53879e29/private/historical_harness/00_sec_mg_07248.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_07248.b0dde1de53879e29/private/historical_harness/01_sec_mg_07248.tcl"
+  ],
+  "parent_id": "s1p.0983cfa073f52e09a225",
+  "primary_review": {
+    "case_id": "s1derived.0983cfa073f52e09a225.d301294e54b5",
+    "checks": {
+      "behavior": "Update and hold behavior agree, but initial-state behavior is externally observable and unstated.",
+      "boundaries": "checked parameter defaults, widths, truth/arithmetic boundaries and priority",
+      "interface": "checked complete RTL interface against prose",
+      "rtl_reasonableness": "reasonable hardware for the stated function",
+      "sequential_and_reset": "checked state, clock, reset and hold behavior; combinational where stated"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Update and hold behavior agree, but initial-state behavior is externally observable and unstated.",
+        "rtl_excerpt": "always @(posedge clk) if(ld) q<=d; no reset; optional RANDOM_INIT initial block",
+        "spec_excerpt": "On rising clk, q captures d when ld is high and otherwise holds."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose omits the lack of reset/default initialization and optional RANDOM_INIT simulation behavior.",
+        "rtl_evidence": "always @(posedge clk) if(ld) q<=d; no reset; optional RANDOM_INIT initial block",
+        "spec_evidence": "On rising clk, q captures d when ld is high and otherwise holds.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.0983cfa073f52e09a225",
+    "proposed_specification_path": "proposed_repairs_3_sol_02/s1derived.0983cfa073f52e09a225.d301294e54b5.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0983cfa073f52e09a225f19d97ff5fa108208c978948c9226cd93827aeaca25a",
+    "source_group": "S5",
+    "specification_sha256": "d301294e54b5fee329e7c61c50cbc44328e01dd554217c3687ec9af00f475405",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_02/s1derived.0983cfa073f52e09a225.d301294e54b5.md",
+  "qualified_specification_sha256": "c39d38ed74e19f601ef00fcdd32cd0117d5b77d09dabb14eaba9c25482bf1032",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_07248.b0dde1de53879e29/private/golden_design.v",
+  "rtl_sha256": "0983cfa073f52e09a225f19d97ff5fa108208c978948c9226cd93827aeaca25a",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_07248.b0dde1de53879e29/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "d301294e54b5fee329e7c61c50cbc44328e01dd554217c3687ec9af00f475405",
+  "top_module": "mg_07248"
+}

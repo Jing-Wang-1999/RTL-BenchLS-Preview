@@ -1,0 +1,9 @@
+always @ *
+begin
+    pending_r = pending_q;
+
+    if ((request_w && mem_accept_o) && !mem_ack_o)
+        pending_r = pending_r + 5'd1;
+    else if (!(request_w && mem_accept_o) && mem_ack_o)
+        pending_r = pending_r - 5'd1;
+end

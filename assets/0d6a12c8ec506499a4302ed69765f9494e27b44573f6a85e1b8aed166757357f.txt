@@ -1,0 +1,54 @@
+The purpose of the `dip_switch_pio_b` Verilog module is to manage the inputs from a 4-bit DIP switch and generate an interrupt request (IRQ) based on edge detection of the switch inputs, while also providing read and write access to internal registers via a bus interface.
+
+### Primary Function
+This module serves as an input peripheral that captures the state changes of a 4-bit switch and allows the status to be read by an external system. It can generate interrupts when changes are detected and manage these interrupts based on a programmable mask.
+
+### Key Control Flow and Decision Points
+1. **Reset and Clock Management:**
+   - The module resets all internal registers (`readdata`, `irq_mask`, `edge_capture`, `d1_data_in`, `d2_data_in`) when `reset_n` is deasserted.
+   - Operations are synchronized with the positive edge of the `clk` signal.
+
+2. **Address Decoding and Read Multiplexing:**
+   - The read data is selected based on the `address` input:
+     - `address == 0`: reads the current DIP switch state (`data_in`).
+     - `address == 2`: reads the `irq_mask`.
+     - `address == 3`: reads the `edge_capture`.
+
+3. **Write Operations:**
+   - When `chipselect` is active and `write_n` is low, write operations are performed based on the `address`:
+     - `address == 2`: updates the `irq_mask` with the lower 4 bits of `writedata`.
+     - `address == 3`: updates the `edge_capture` to clear specific bits based on `writedata`.
+
+4. **Edge Detection:**
+   - The module detects edges on the switch inputs by comparing the current and previous values (`d1_data_in` and `d2_data_in`) of the `data_in`.
+   - When an edge is detected on any bit, it sets the corresponding bit in the `edge_capture` register.
+
+5. **Interrupt Generation:**
+   - The `irq` output is asserted when any bit set in `edge_capture` coincides with the corresponding bit in `irq_mask`.
+
+### Important Data Processing and Signal Interactions
+- **`data_in`:** Directly connects to the 4-bit `in_port`, storing the current state of the DIP switches.
+- **`d1_data_in` & `d2_data_in`:** Registers used to detect changes (edges) in the DIP switch state by comparison.
+- **`edge_detect`:** Resultant signal from XOR of `d1_data_in` and `d2_data_in`, indicating a change in the switch input.
+- **`edge_capture`:** Stores which bits have detected edges and can be cleared via writes.
+- **`irq_mask`:** Register that determines which captured edges can trigger an interrupt.
+- **`read_mux_out` and `readdata`:** Multiplexed result of readable register values based on `address`, padded to 32 bits in `readdata`.
+
+This clear and concise instruction encapsulates the primary function, control logic, and significant data interactions, enabling a language model to generate the Verilog code accordingly.
+
+Module Interface:
+module dip_switch_pio_b (
+    address,
+    chipselect,
+    clk,
+    in_port,
+    reset_n,
+    write_n,
+    writedata,
+    irq,
+    readdata
+);
+
+Behavioral Clarifications:
+- reset_n is active-low asynchronous reset. address is 2 bits; in_port, irq_mask, and edge_capture are each 4 bits; readdata is 32 bits (upper 28 bits zero-padded). clk_en is hardwired to 1.
+- When an edge is detected, the corresponding edge_capture bit is set to 1. Individual bits are cleared by a write strobe at address 3 with the matching writedata bit set. Edge detection uses a 2-stage pipeline (d1_data_in, d2_data_in).

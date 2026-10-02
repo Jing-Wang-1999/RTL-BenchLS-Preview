@@ -1,0 +1,82 @@
+always @(posedge ptp_clk) begin
+    if (set_ptp_ts_tod_ack_reg) begin
+        set_ptp_ts_tod_ack_reg <= set_ptp_ts_tod_req_sync2_reg;
+    end else begin
+        if (set_ptp_ts_tod_valid_reg && set_ptp_ts_tod_ready) begin
+            set_ptp_ts_tod_valid_reg <= 1'b0;
+            set_ptp_ts_tod_ack_reg <= 1'b1;
+        end else begin
+            set_ptp_ts_tod_valid_reg <= set_ptp_ts_tod_req_sync2_reg;
+        end
+    end
+
+    if (offset_ptp_ts_tod_ack_reg) begin
+        offset_ptp_ts_tod_ack_reg <= offset_ptp_ts_tod_req_sync2_reg;
+    end else begin
+        if (offset_ptp_ts_tod_valid_reg && offset_ptp_ts_tod_ready) begin
+            offset_ptp_ts_tod_valid_reg <= 1'b0;
+            offset_ptp_ts_tod_ack_reg <= 1'b1;
+        end else begin
+            offset_ptp_ts_tod_valid_reg <= offset_ptp_ts_tod_req_sync2_reg;
+        end
+    end
+
+    if (set_ptp_ts_rel_ack_reg) begin
+        set_ptp_ts_rel_ack_reg <= set_ptp_ts_rel_req_sync2_reg;
+    end else begin
+        if (set_ptp_ts_rel_valid_reg && set_ptp_ts_rel_ready) begin
+            set_ptp_ts_rel_valid_reg <= 1'b0;
+            set_ptp_ts_rel_ack_reg <= 1'b1;
+        end else begin
+            set_ptp_ts_rel_valid_reg <= set_ptp_ts_rel_req_sync2_reg;
+        end
+    end
+
+    if (offset_ptp_ts_rel_ack_reg) begin
+        offset_ptp_ts_rel_ack_reg <= offset_ptp_ts_rel_req_sync2_reg;
+    end else begin
+        if (offset_ptp_ts_rel_valid_reg && offset_ptp_ts_rel_ready) begin
+            offset_ptp_ts_rel_valid_reg <= 1'b0;
+            offset_ptp_ts_rel_ack_reg <= 1'b1;
+        end else begin
+            offset_ptp_ts_rel_valid_reg <= offset_ptp_ts_rel_req_sync2_reg;
+        end
+    end
+
+    if (set_ptp_period_ack_reg) begin
+        set_ptp_period_ack_reg <= set_ptp_period_req_sync2_reg;
+    end else begin
+        if (set_ptp_period_valid_reg && set_ptp_period_ready) begin
+            set_ptp_period_valid_reg <= 1'b0;
+            set_ptp_period_ack_reg <= 1'b1;
+        end else begin
+            set_ptp_period_valid_reg <= set_ptp_period_req_sync2_reg;
+        end
+    end
+
+    if (offset_ptp_ts_ack_reg) begin
+        offset_ptp_ts_ack_reg <= offset_ptp_ts_req_sync2_reg;
+    end else begin
+        if (offset_ptp_ts_valid_reg && offset_ptp_ts_ready) begin
+            offset_ptp_ts_valid_reg <= 1'b0;
+            offset_ptp_ts_ack_reg <= 1'b1;
+        end else begin
+            offset_ptp_ts_valid_reg <= offset_ptp_ts_req_sync2_reg;
+        end
+    end
+
+    if (ptp_rst) begin
+        set_ptp_ts_tod_ack_reg <= 1'b0;
+        set_ptp_ts_tod_valid_reg <= 1'b0;
+        offset_ptp_ts_tod_ack_reg <= 1'b0;
+        offset_ptp_ts_tod_valid_reg <= 1'b0;
+        set_ptp_ts_rel_ack_reg <= 1'b0;
+        set_ptp_ts_rel_valid_reg <= 1'b0;
+        offset_ptp_ts_rel_ack_reg <= 1'b0;
+        offset_ptp_ts_rel_valid_reg <= 1'b0;
+        set_ptp_period_ack_reg <= 1'b0;
+        set_ptp_period_valid_reg <= 1'b0;
+        offset_ptp_ts_ack_reg <= 1'b0;
+        offset_ptp_ts_valid_reg <= 1'b0;
+    end
+end

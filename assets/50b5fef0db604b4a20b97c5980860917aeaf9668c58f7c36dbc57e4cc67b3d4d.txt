@@ -1,0 +1,62 @@
+# Implement the Ultraembedded RISC-V TCM project
+
+Read specification/original/README.md and the bundled original ISA and privilege
+manuals. Implement the complete riscv_tcm_top project at the declared RTL paths,
+including the pipelined CPU, instruction/data path, dual-port TCM and AXI bridges.
+The separate cache-based riscv_top system is not an additional case here.
+
+Curator configuration clarification from the pinned RTL:
+- Select the README's 64KB TCM system with BOOT_VECTOR=0x00002000, CORE_ID=0,
+  TCM_MEM_BASE=0. The core defaults enable multiply/divide and load/multiply
+  bypass, disable supervisor/user, MMU, extra decode stage and Xilinx register
+  file. Preserve declared parameter interfaces, but optional Linux/MMU/cached
+  configurations are outside this case. ISA scope is RV32IM plus implemented
+  machine CSR operations, with little-endian data and hardwired-zero x0.
+- Normal operation uses rising clk_i. rst_cpu_i resets core control separately
+  from rst_i for memory-interface/AXI control, both active high asynchronous
+  control reset. Register and RAM data arrays need not become zero on reset;
+  the firmware initializes RAM and only architecturally initialized registers
+  may be consumed. Keep core reset asserted while loading a new program.
+- TCM covers0x00000000..0x0000ffff, providing instruction and data access to the
+  same64KB storage. The AXI4 slave axi_t_* permits external byte-enabled loading
+  and burst accesses. The AXI4-Lite master axi_i_* carries CPU peripheral accesses
+  in0x80000000..0xffffffff. Respect channel ready/valid, write strobes, responses,
+  transaction IDs/last for the AXI slave; do not assume zero memory latency.
+  The physical top interrupt bus is32bits but this revision uses only intr_i[0].
+- CPU fetching/decoding/issue, forwarding, arithmetic/branch execution, load/store
+  sequencing, CSR exception/trap control and writeback must implement their
+  declared interfaces. Loads sign/zero extend as specified, stores use lane masks,
+  branches/jumps redirect fetching and squash wrong-path work. Data request tags
+  associate accepted responses with outstanding loads/stores. Multiplication and
+  division follow the RV32M signed/unsigned and divide-by-zero/overflow rules.
+- The top integrates riscv_core, dport_mux, dport_axi and tcm_mem. The latter
+  arbitrates instruction/data accesses and the external AXI slave through
+  tcm_mem_pmem and dual-port byte-write-enabled tcm_mem_ram. Required non-top
+  modules remain part of the generated design; no golden datapath is provided.
+  The fixed riscv_defs.v header supplies constants; riscv_trace_sim is an unscored
+  diagnostic observer without output ports and is fixed environment support.
+
+Native simulation ABI required by the original benchmark:
+- The riscv_tcm_top instance of tcm_mem MUST be named u_tcm; tcm_mem's instance
+  of tcm_mem_ram MUST be named u_ram. The latter must expose its actual64KB
+  storage as reg[31:0] ram[16383:0] with the Verilator-public annotation shown in
+  support/simulation_abi.md. This enables original byte-addressed ELF loading.
+  It is an interface/hierarchy compatibility restriction, so this benchmark is
+  not unrestricted architecture generation.
+- The evaluator appends trusted byte-read/write loading helpers to tcm_mem and
+  a simulation CSR observer to riscv_csr_regfile. Do not implement these helpers
+  or any simulator output/exit calls in generated RTL. They do not implement
+  arithmetic, registers, memory transfers or CSR decoding: the submitted CPU
+  must deliver the correct decoded CSR-write inputs and actual RAM behavior.
+- The observer uses the original simulation-control CSR/DSCRATCH command encoding
+  from riscv_defs.v: upper byte selects output-character or exit, low byte is
+  data. It observes rising clocks when reset is low and no exception is raised.
+  Its declared CSR-input ports must be retained; emitting a fixed transcript is
+  not a valid implementation. All other internal instance names are unrestricted.
+
+The original SystemC/Verilator bench runs the shipped basic.elf firmware as one
+Boolean point. Its ten printed sections and normal exit must all occur without
+assertion/exception output. This is finite program qualification; despite section
+names Multiply/Divide, this shipped executable uses software routines and does
+not establish hardware M-extension coverage. No Linux or alternate program result
+is claimed. Score is whole passed benches divided by whole runnable benches.

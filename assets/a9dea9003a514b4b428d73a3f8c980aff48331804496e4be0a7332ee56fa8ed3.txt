@@ -1,0 +1,212 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module vga_fifo_dc (rclk, wclk, rclr, wclr, wreq, d, rreq, q, empty, full);
+
+	
+	parameter AWIDTH = 7;  
+	parameter DWIDTH = 16; 
+
+	
+	input rclk;             
+	input wclk;             
+	input rclr;             
+	input wclr;             
+	input wreq;             
+	input [DWIDTH -1:0] d;  
+	input rreq;             
+	output [DWIDTH -1:0] q; 
+
+	output empty;           
+	reg empty;
+	output full;            
+	reg full;
+
+	
+	reg rrst, wrst, srclr, ssrclr, swclr, sswclr;
+	reg [AWIDTH -1:0] rptr, wptr, rptr_gray, wptr_gray;
+
+	
+	
+	
+
+
+	function [AWIDTH:1] bin2gray;
+		input [AWIDTH:1] bin;
+		integer n;
+	begin
+		for (n=1; n<AWIDTH; n=n+1)
+			bin2gray[n] = bin[n+1] ^ bin[n];
+
+		bin2gray[AWIDTH] = bin[AWIDTH];
+	end
+	endfunction
+
+	function [AWIDTH:1] gray2bin;
+		input [AWIDTH:1] gray;
+	begin
+		
+		gray2bin = bin2gray(gray);
+	end
+	endfunction
+
+	
+	
+	
+
+	
+	always @(posedge rclk)
+	begin
+	    swclr  <=  wclr;
+	    sswclr <=  swclr;
+	    rrst   <=  rclr | sswclr;
+	end
+
+	always @(posedge wclk)
+	begin
+	    srclr  <=  rclr;
+	    ssrclr <=  srclr;
+	    wrst   <=  wclr | ssrclr;
+	end
+
+
+	
+	always @(posedge rclk)
+	  if (rrst) begin
+	      rptr      <=  0;
+	      rptr_gray <=  0;
+	  end else if (rreq) begin
+	      rptr      <=  rptr +1'h1;
+	      rptr_gray <=  bin2gray(rptr +1'h1);
+	  end
+
+	
+	always @(posedge wclk)
+	  if (wrst) begin
+	      wptr      <=  0;
+	      wptr_gray <=  0;
+	  end else if (wreq) begin
+	      wptr      <=  wptr +1'h1;
+	      wptr_gray <=  bin2gray(wptr +1'h1);
+	  end
+
+	
+	
+	
+	reg [AWIDTH-1:0] srptr_gray, ssrptr_gray;
+	reg [AWIDTH-1:0] swptr_gray, sswptr_gray;
+
+	
+	always @(posedge rclk)
+	begin
+	    swptr_gray  <=  wptr_gray;
+	    sswptr_gray <=  swptr_gray;
+	end
+
+	always @(posedge wclk)
+	begin
+	    srptr_gray  <=  rptr_gray;
+	    ssrptr_gray <=  srptr_gray;
+	end
+
+	
+	
+	always @(posedge rclk)
+	  if (rrst)
+	    empty <=  1'b1;
+	  else if (rreq)
+	    empty <=  bin2gray(rptr +1'h1) == sswptr_gray;
+	  else
+	    empty <=  empty & (rptr_gray == sswptr_gray);
+
+
+	
+	
+	always @(posedge wclk)
+	  if (wrst)
+	    full <=  1'b0;
+	  else if (wreq)
+	    full <=  bin2gray(wptr +2'h2) == ssrptr_gray;
+	  else
+	    full <=  full & (bin2gray(wptr + 2'h1) == ssrptr_gray);
+
+
+	
+	generic_dpram #(AWIDTH, DWIDTH) fifo_dc_mem(
+		.rclk(rclk),
+		.rrst(1'b0),
+		.rce(1'b1),
+		.oe(1'b1),
+		.raddr(rptr),
+		.\do (q),
+		.wclk(wclk),
+		.wrst(1'b0),
+		.wce(1'b1),
+		.we(wreq),
+		.waddr(wptr),
+		.di(d)
+	);
+
+endmodule

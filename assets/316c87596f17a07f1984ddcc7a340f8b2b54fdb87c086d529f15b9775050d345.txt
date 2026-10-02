@@ -1,0 +1,11 @@
+module mg_10625 (
+    input [35:0] dataa,
+    input [35:0] datab,
+    input add_sub,
+    output [35:0] result
+);
+    wire [35:0] inverted_datab = ~datab;
+    wire [35:0] operand_b = add_sub ? datab : inverted_datab;
+    wire [35:0] sum = dataa + operand_b + (add_sub ? 1'b0 : 1'b1);
+    assign result = sum;
+endmodule

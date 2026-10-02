@@ -1,0 +1,55 @@
+module origen_018002 #(parameter BIT_SZ = 14)
+(
+    input sysclk,
+    input trigger,
+    input [BIT_SZ-1:0] N,
+    output reg [14:0] N_out,
+    output [4:0] ledr,
+    output time_out,
+    output reg [1:0] state
+);
+
+    localparam IDLE = 2'b00;
+    localparam COUNTING = 2'b01;
+    localparam TIME_OUT = 2'b10;
+    localparam WAIT_LOW = 2'b11;
+
+    reg [BIT_SZ-1:0] count;
+    reg count_on;
+    reg [13:0] random_delay;
+
+    assign time_out = (state == TIME_OUT);
+
+    always @(posedge sysclk) begin
+        case (state)
+            IDLE: begin
+                if (trigger) begin
+                    state <= COUNTING;
+                    count <= N - 1;
+                end
+            end
+            COUNTING: begin
+                if (count == 0) begin
+                    state <= TIME_OUT;
+                    N_out <= count;
+                end else begin
+                    count <= count - 1;
+                end
+            end
+            TIME_OUT: begin
+                if (!trigger) begin
+                    state <= IDLE;
+                end else begin
+                    state <= WAIT_LOW;
+                end
+            end
+            WAIT_LOW: begin
+                if (!trigger) begin
+                    state <= IDLE;
+                end
+            end
+            default: state <= IDLE;
+        endcase
+    end
+
+endmodule

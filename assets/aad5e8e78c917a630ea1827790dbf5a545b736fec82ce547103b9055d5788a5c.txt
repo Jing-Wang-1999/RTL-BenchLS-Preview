@@ -1,0 +1,53 @@
+The given design consists of two main modules: `fpga_ram` and `ct_f_spsram_128x104`. Each module serves a specific purpose in managing memory operations within an FPGA environment.
+
+### Module: `fpga_ram`
+
+**Purpose**:  
+The `fpga_ram` module is a parameterized memory block designed to perform read and write operations on a small memory array. It is intended for use within FPGA designs where simple RAM functionality is required.
+
+**Parameters**:  
+- `DATAWIDTH`: Defines the width of the data bus, i.e., the number of bits in each data word.
+- `ADDRWIDTH`: Defines the width of the address bus, determining the number of addressable locations in the memory.
+- `MEMDEPTH`: Calculated as 2 raised to the power of `ADDRWIDTH`, it represents the total number of memory locations available.
+
+**Inputs**:  
+- `PortAClk`: A clock signal that synchronizes the read and write operations.
+- `PortAAddr`: An address input that specifies the memory location for read or write operations.
+- `PortADataIn`: The data input bus used to provide data to be written into the memory.
+- `PortAWriteEnable`: A control signal that enables writing to the memory when asserted.
+
+**Outputs**:  
+- `PortADataOut`: The data output bus that provides the data read from the specified memory location.
+
+**Behavior**:  
+- On the rising edge of the `PortAClk`, if `PortAWriteEnable` is asserted, the data from `PortADataIn` is written to the memory location specified by `PortAAddr`, and `PortADataOut` is updated with the same data.
+- If `PortAWriteEnable` is not asserted, the data from the memory location specified by `PortAAddr` is read and output through `PortADataOut`.
+
+### Module: `ct_f_spsram_128x104`
+
+**Purpose**:  
+The `ct_f_spsram_128x104` module is a specialized SRAM controller designed to manage a 128x104-bit memory array. It interfaces with multiple `fpga_ram` instances to handle segmented memory operations.
+
+**Inputs**:  
+- `A`: A 7-bit address input used to specify the memory location for operations.
+- `CEN`: A chip enable signal that activates the memory operations when low.
+- `CLK`: A clock signal that synchronizes the module's operations.
+- `D`: A 104-bit data input bus used for writing data into the memory.
+- `GWEN`: A global write enable signal that controls write operations across all memory segments.
+- `WEN`: A 104-bit write enable bus that provides individual write control for each bit of the data input.
+
+**Outputs**:  
+- `Q`: A 104-bit data output bus that provides the data read from the memory.
+
+**Behavior**:  
+- The module divides the 104-bit data input and output into four segments, each 26 bits wide, corresponding to four separate `fpga_ram` instances.
+- The `addr_holding` register retains the last valid address when `CEN` is high, ensuring stable address referencing.
+- Write operations are controlled by the `GWEN` and `WEN` signals. Each segment has its own write enable logic (`ram_wen0` to `ram_wen3`) that is activated when `CEN` is low, the corresponding bit in `WEN` is low, and `GWEN` is low.
+- The data input (`D`) is split into four segments (`ram_din0` to `ram_din3`), each directed to a separate `fpga_ram` instance.
+- The data output (`Q`) is assembled from the outputs of the four `fpga_ram` instances (`ram_dout0` to `ram_dout3`).
+
+**Sub-modules**:  
+- The module instantiates four `fpga_ram` sub-modules, each configured with a data width of 26 bits and an address width of 7 bits. These sub-modules handle the segmented memory operations, allowing for parallel read and write processes across the memory array.
+
+**Overall Functionality**:  
+The `ct_f_spsram_128x104` module provides a structured approach to managing a large memory array by segmenting it into smaller, manageable blocks. It leverages the `fpga_ram` sub-modules to perform efficient read and write operations, controlled by comprehensive enable signals that ensure precise data handling. This design is suitable for applications requiring high-speed memory access and manipulation within FPGA systems.

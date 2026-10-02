@@ -1,0 +1,116 @@
+{
+  "already_frozen": false,
+  "always_blocks": 2,
+  "array_declarations": 1,
+  "balanced_slice": "slice_02",
+  "branch_keywords": 12,
+  "candidate_id": "large_module.6533df40f6d00b1254c0",
+  "clock_edge_mentions": 1,
+  "code_lines": 176,
+  "compile_command": [
+    "iverilog",
+    "-g2012",
+    "-tnull",
+    "-s",
+    "rtlpp_02379",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/candidates/complexity_expansion_20260913_v1/payloads/large_module.6533df40f6d00b1254c0/private/golden_design.v"
+  ],
+  "compile_is_not_synthesis_or_formal_qualification": true,
+  "compile_status": "standalone_compile_pass",
+  "formal_gate": "pending",
+  "formal_route_hint": "SEC_review",
+  "formal_script_retained": true,
+  "golden_sha256": "0006c607064a10e0c75314765c602c132d4d9c5a647317a24c4f0f0e0ff6df98",
+  "inventory_state": "candidate_not_frozen",
+  "module_names": [
+    "rtlpp_02379"
+  ],
+  "normalized_rtl_sha256": "6533df40f6d00b1254c081e0c555b057769cd876b2f2c113a135ed9b097c167b",
+  "operator_tokens": 27,
+  "paired_specification": true,
+  "parent_id": "s1p.0006c607064a10e0c753",
+  "parent_provenance": {
+    "manifest": "scope1/task1_3_round_trip_generation/cases/imports/legacy_slices_20/slice_09.jsonl",
+    "row_index": 378,
+    "rtl_key": "rtlpp_02379_combined.v"
+  },
+  "project_id": "RTL-Dataset-RTLPP",
+  "review_flags": {
+    "initial_blocks": 0,
+    "semantic_clone_review": "pending; token-distinct versions across repositories may share an implementation",
+    "simulation_time_types": false,
+    "specify_timing_blocks": false,
+    "system_tasks": []
+  },
+  "rtl_sha256": "0006c607064a10e0c75314765c602c132d4d9c5a647317a24c4f0f0e0ff6df98",
+  "rtl_tokens": 931,
+  "size_tier": "150\u2013399",
+  "source_group": "S4",
+  "specification_gate": "pending",
+  "specification_provenance": {
+    "candidate_id": "s1spec.0006c607064a10e0c753.e06624ec8196",
+    "design_type": "sequential",
+    "deterministic_gate": {
+      "checks": {
+        "minimum_length": true,
+        "no_exact_160_char_rtl_overlap": true,
+        "no_fenced_rtl": true,
+        "no_rtl_statement_block": true,
+        "public_interface_coverage": false
+      },
+      "named_public_ports": [
+        "output_axis_tdata",
+        "output_axis_tvalid",
+        "output_axis_tready",
+        "busy",
+        "seed_val",
+        "seed_start"
+      ],
+      "passed": false,
+      "public_interface_coverage": 0.75,
+      "public_ports": [
+        "clk",
+        "rst",
+        "output_axis_tdata",
+        "output_axis_tvalid",
+        "output_axis_tready",
+        "busy",
+        "seed_val",
+        "seed_start"
+      ],
+      "rtl_statement_hits": 0,
+      "spec_chars": 2665
+    },
+    "failed_checks": [
+      "public_interface_coverage"
+    ],
+    "loc": 208,
+    "normalization_transforms": [
+      "rename_top:axis_mt19937_64->rtlpp_02379"
+    ],
+    "normalized_specification_sha256": "e06624ec819660738c4289662a3caf759c1034d3295beddf48e25e400a23151a",
+    "pair_integrity_pass": true,
+    "parent_id": "s1p.0006c607064a10e0c753",
+    "parent_sha256": "0006c607064a10e0c75314765c602c132d4d9c5a647317a24c4f0f0e0ff6df98",
+    "prefilter_pass": false,
+    "primary_script_key": "sec_rtlpp_02379.tcl",
+    "raw_code_sha256": "77fc8d1a566c3d26541421d02e0b711b2b5509feceb8feb6d7ea15d7176dd6e5",
+    "raw_specification_sha256": "292a85f042544cdc3eeaa674c703fa37916fc490bafc7cafe40db9ebcf394941",
+    "repair_status": "requires_specification_repair",
+    "schema_version": "1.0",
+    "slice": "slice_09",
+    "slice_row_index": 378,
+    "source_corpus": "RTL-Dataset-RTLPP",
+    "source_path": "/home/jwangjw/project_3rd/Comprehensive-RTL-Bench/Universal-Datasets/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP/RTLPP.jsonl",
+    "source_row": 2379,
+    "source_subset": "RTLPP",
+    "specification": "The provided Verilog module, `rtlpp_02379`, implements a 64-bit Mersenne Twister pseudorandom number generator. Below is a concise instruction reflecting the detailed functionality and data interactions based on its control and data flow.\n\n**Instruction:**\nDevelop a Verilog module named `rtlpp_02379` that functions as a 64-bit Mersenne Twister pseudorandom number generator (PRNG) which is compliant with AXI-Stream protocol. \n\n1. **Primary Function:** The module should generate 64-bit pseudorandom numbers using the Mersenne Twister algorithm and output them via AXI-Stream interface.\n   \n2. **Key Control Flow and Decision Points:**\n   - The module operates in two main states: `STATE_IDLE` and `STATE_SEED`.\n   - In `STATE_IDLE`, if seeding is initiated (signaled by `seed_start`), it begins initializing the internal state array `mt` using a provided seed (`seed_val`).\n   - If the output is ready (`output_axis_tready`), the module generates pseudorandom numbers by iterating through the Mersenne Twister transformation and updating the state array.\n   - In `STATE_SEED`, the module handles multiplication operations required to populate the state array during initialization.\n\n3. **Data Processing and Signal Interactions:**\n   - Internal state, including the `mt` array, keeps track of the PRNG state across iterations.\n   - Key registers include `mt_save_reg`, `product_reg`, `factor1_reg`, and `factor2_reg` used during seed initialization.\n   - The Mersenne Twister transformation process reads values from the `mt` array, performs bitwise and arithmetic operations, and updates both the state array and output data (`output_axis_tdata`).\n   - The pseudorandom number is output via `output_axis_tdata` when `output_axis_tvalid` is asserted, indicating valid data availability.\n   - Signal `busy` indicates when the module is actively processing or seeding, keeping external systems informed of the module's state.\n\nWrite critical signals including seed initialization process, transformations for number generation, synchronization mechanisms using clock and reset, and appropriate valid-ready handshakes for AXI-Stream interface.\n\nEnsure proper conditional checks and state transitions:\n- Transition from `STATE_IDLE` to `STATE_SEED` on `seed_start` signal.\n- Generate new random numbers and manage state transitions from `STATE_SEED` to `STATE_IDLE` based on multiplication counters and AXI-Stream readiness.\n- Handle reseed and output-ready conditions efficiently.\n\nUse the provided register, and wire assignments along with the detailed combinational and sequential logic to realize the Mersenne Twister PRNG functionality as per the specification.\n",
+    "split_group": "parent:0006c607064a10e0c75314765c602c132d4d9c5a647317a24c4f0f0e0ff6df98",
+    "top_module": "rtlpp_02379",
+    "verification_tool": "jaspergold",
+    "verification_type": "SEC"
+  },
+  "specification_sha256": "e06624ec819660738c4289662a3caf759c1034d3295beddf48e25e400a23151a",
+  "top_module": "rtlpp_02379",
+  "workspace": "payloads/large_module.6533df40f6d00b1254c0"
+}

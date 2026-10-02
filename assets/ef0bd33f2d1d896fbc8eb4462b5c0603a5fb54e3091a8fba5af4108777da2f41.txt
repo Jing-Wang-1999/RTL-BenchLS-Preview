@@ -1,0 +1,105 @@
+module autovcoder_086463 (
+    iClk,
+    iRst_n,
+    // iRece_en,
+    iRx,
+    oRece_data,
+    oRece_done
+);
+  input wire iClk;
+  input wire iRst_n;
+  // input wire iRece_en;
+  input wire iRx;
+  output reg [63:0] oRece_data;
+  output reg oRece_done;
+
+  localparam S0 = 2'd0;
+  localparam S1 = 2'd1;
+  localparam S2 = 2'd2;
+  localparam S3 = 2'd3;
+
+  reg nrx_sync_0, nrx_sync_1;
+  reg nrece_cell_done_pre_state;
+  reg [1:0] nstate;
+  reg [63:0] nrece_temp_data;
+  wire [15:0] nrece_cell_data;
+  wire nrece_cell_done;
+
+  always @(posedge iClk or negedge iRst_n) begin
+    if (!iRst_n) begin
+      nrx_sync_0 <= 1'b0;
+      nrx_sync_1 <= 1'b0;
+    end else begin
+      nrx_sync_0 <= iRx;
+      nrx_sync_1 <= nrx_sync_0;
+    end
+  end
+
+  always @(posedge iClk or negedge iRst_n) begin
+    if (!iRst_n) begin
+      nrece_cell_done_pre_state <= 1'b0;
+    end else begin
+      nrece_cell_done_pre_state <= nrece_cell_done;
+    end
+  end
+
+  always @(posedge iClk or negedge iRst_n) begin
+    if (!iRst_n) begin
+      nstate <= S0;
+      nrece_temp_data <= 64'd0;
+      oRece_data <= 64'd0;
+      oRece_done <= 1'b0;
+    end else begin
+      case (nstate)
+        S0: begin
+          if ((!nrece_cell_done_pre_state) & nrece_cell_done) begin
+            nstate <= S1;
+            nrece_temp_data <= nrece_cell_data;
+          end else begin
+            nstate <= nstate;
+            nrece_temp_data <= 64'd0;
+            oRece_done <= 1'b0;
+          end
+        end
+        S1: begin
+          if ((!nrece_cell_done_pre_state) & nrece_cell_done) begin
+            nstate <= S2;
+            nrece_temp_data <= (nrece_temp_data << 16) | nrece_cell_data;
+          end else begin
+            nstate <= nstate;
+            nrece_temp_data <= nrece_temp_data;
+          end
+        end
+        S2: begin
+          if ((!nrece_cell_done_pre_state) & nrece_cell_done) begin
+            nstate <= S3;
+            nrece_temp_data <= (nrece_temp_data << 16) | nrece_cell_data;
+          end else begin
+            nstate <= nstate;
+            nrece_temp_data <= nrece_temp_data;
+          end
+        end
+        S3: begin
+          if ((!nrece_cell_done_pre_state) & nrece_cell_done) begin
+            nstate <= S0;
+            oRece_data <= (nrece_temp_data << 16) | nrece_cell_data;
+            oRece_done <= 1'b1;
+          end else begin
+            nstate <= nstate;
+            nrece_temp_data <= nrece_temp_data;
+          end
+        end
+        default: nstate <= S0;
+      endcase
+    end
+  end
+
+  NIKON_DATA_RECE_CELL nikon_data_rece_cell (
+      .iClk(iClk),
+      .iRst_n(iRst_n),
+      .iRx(nrx_sync_1),
+      .oRece_cell_data(nrece_cell_data),
+      .oRece_cell_done(nrece_cell_done)
+  );
+endmodule
+

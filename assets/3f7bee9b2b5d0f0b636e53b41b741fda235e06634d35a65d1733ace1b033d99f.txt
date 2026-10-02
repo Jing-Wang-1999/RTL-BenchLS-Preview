@@ -1,0 +1,16 @@
+module rom_1 (
+    input clk,
+    input [2:0] address,
+    output reg [2:0] q
+);
+
+    reg [2:0] memory [0:7];
+
+    initial begin
+        $readmemb("darom3.mif", memory);
+    end
+
+    always @(posedge clk) begin
+        q <= memory[address];
+    end
+endmodule

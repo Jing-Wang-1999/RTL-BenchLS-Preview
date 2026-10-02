@@ -1,0 +1,7 @@
+# `autovcoder_097060`
+
+This module contains positive-edge and negative-edge enabled registers and selects one for a tri-state output. Parameter `NrOfBits` sets the widths of input `D` and output `Q` and defaults to 1. Parameter `ActiveLevel` defaults to 1; a nonzero value selects the positive-edge register for output, while zero selects the negative-edge register.
+
+Inputs `Clock`, `ClockEnable`, `Reset`, `Tick`, `cs`, and `pre` are scalar. Each register asynchronously responds to active-high `Reset` and `pre`. `Reset` has priority and clears all bits to zero; otherwise `pre` sets all bits to one. On its respective clock edge, the register captures `D` only when both `ClockEnable` and `Tick` are high and otherwise holds. The positive-edge register alone has an initial assignment to zero. The negative-edge register has no power-up initialization and remains unspecified until reset, preset, or an enabled falling edge.
+
+When `cs` is high, every bit of `Q` is high impedance. When `cs` is low, `Q` combinationally reflects the register selected by `ActiveLevel`. There are no submodules.

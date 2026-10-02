@@ -1,0 +1,53 @@
+module autovcoder_010120 (
+    input wire [255:0] bits,
+    input wire target,
+    input wire direction,
+    output wire hit,
+    output wire [7:0] index
+);
+
+  wire [3:0] hit_inner;
+  wire [5:0] index_inner [3:0];
+  wire [1:0] index_upper;
+
+  bit_searcher_64
+      BS0 (
+          .bits(bits[63:0]),
+          .target(target),
+          .direction(direction),
+          .hit(hit_inner[0]),
+          .index(index_inner[0])
+      ),
+      BS1 (
+          .bits(bits[127:64]),
+          .target(target),
+          .direction(direction),
+          .hit(hit_inner[1]),
+          .index(index_inner[1])
+      ),
+      BS2 (
+          .bits(bits[191:128]),
+          .target(target),
+          .direction(direction),
+          .hit(hit_inner[2]),
+          .index(index_inner[2])
+      ),
+      BS3 (
+          .bits(bits[255:192]),
+          .target(target),
+          .direction(direction),
+          .hit(hit_inner[3]),
+          .index(index_inner[3])
+      );
+  bit_searcher_4 BS4 (
+      .bits(hit_inner[3:0]),
+      .target(1'b1),
+      .direction(direction),
+      .hit(hit),
+      .index(index_upper)
+  );
+
+  assign index = {index_upper, index_inner[index_upper]};
+
+endmodule
+

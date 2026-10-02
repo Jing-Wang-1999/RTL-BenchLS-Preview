@@ -1,0 +1,5 @@
+# synchronizer
+
+Parameters are `WIDTH=16` and `STAGES=3`, with supported `STAGES>=2`. Inputs are `clk_in`, active-high asynchronous `arst_in`, `clk_out`, active-high asynchronous `arst_out`, and `dat_in[WIDTH-1:0]`; output is `dat_out[WIDTH-1:0]`.
+
+The launch register captures dat_in on each rising clk_in and clears on arst_in. The destination shift register contains STAGES words, clears independently on arst_out, and on every rising clk_out shifts toward its most-significant stage while inserting the current launch-register value into the lowest stage. dat_out continuously exposes the highest stage. Thus a launched value reaches output after STAGES destination-clock captures. Resets are independent and asynchronous. There are no submodules.

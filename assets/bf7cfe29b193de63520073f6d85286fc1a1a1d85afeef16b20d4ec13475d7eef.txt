@@ -1,0 +1,27 @@
+This module provides a configurable pass-through or blocking interface for GMII (Gigabit Media Independent Interface) signals between a network PHY and a TSN (Time-Sensitive Networking) chip. It operates on two independent clock domains: one for receive (RX) and one for transmit (TX).
+
+**Inputs:**
+- **gmii_rxclk:** Clock for the receive data path.
+- **gmii_txclk:** Clock for the transmit data path.
+- **rst_n:** Active-low asynchronous reset.
+- **port_type:** Configuration signal. When high, the RX path is enabled; when low, the RX path is forced idle.
+- **RX side from PHY:** `gmii_rx_dv` (data valid), `gmii_rx_er` (error), and `gmii_rxd[7:0]` (data).
+- **TX side from TSN Chip:** `gmii_tx_en_tsnchip2adp` (enable), `gmii_tx_er_tsnchip2adp` (error), and `gmii_txd_tsnchip2adp[7:0]` (data).
+
+**Outputs:**
+- **RX side to TSN Chip:** `gmii_rx_dv_adp2tsnchip`, `gmii_rx_er_adp2tsnchip`, and `gmii_rxd_adp2tsnchip[7:0]`.
+- **TX side to PHY:** `gmii_tx_en`, `gmii_tx_er`, and `gmii_txd[7:0]`.
+
+**Behavior:**
+The module contains two main synchronous processes, one for each clock domain.
+
+1.  **Receive Path (RX):** Synchronized to `gmii_rxclk`.
+    - On reset, all outputs to the TSN chip are driven to idle (logic '0').
+    - When `port_type` is high (enabled), the RX signals from the PHY are registered and forwarded directly to the TSN chip outputs.
+    - When `port_type` is low (disabled), the module blocks the receive path by forcing the outputs to the TSN chip to idle, regardless of the PHY input.
+
+2.  **Transmit Path (TX):** Synchronized to `gmii_txclk`.
+    - On reset, all outputs to the PHY are driven to idle.
+    - Otherwise, the TX signals from the TSN chip are registered and forwarded directly to the PHY outputs. This path is always active and is not gated by the `port_type` signal.
+
+**Allowed Sub-modules:** None. The implementation uses only basic registers and combinational logic.

@@ -1,0 +1,48 @@
+module loadable_eight_bit_counter (q,
+                         q_n,
+                         ones_all,
+                         ones_5lsb,
+                         clk,
+                         rst_n,
+                         ld_n,
+                         data_in,
+                         cnt_en
+                         );
+
+parameter width = 8;
+
+input clk;
+input rst_n;
+input ld_n;
+input [(width-1):0] data_in;
+input cnt_en;
+output [(width-1):0] q;
+output [(width-1):0] q_n;
+output ones_all;
+output ones_5lsb;
+
+reg [(width-1):0] current_state;
+
+wire [(width-1):0] next_state;
+wire [(width-1):0] max_count;
+
+// Assigning the outputs
+assign q = current_state;
+assign q_n = ~current_state;
+assign max_count = (1 << width) - 1;
+assign ones_all = (current_state == max_count && cnt_en == 1) ? 1 : 0;
+assign ones_5lsb = (width < 5) ? 0 :
+                   ((current_state[4:0] == 5'h1f && cnt_en == 1) ? 1 : 0);
+
+// Calculating the next state
+assign next_state = (ld_n == 0) ? data_in :
+                    ((cnt_en == 0) ? current_state : current_state + 1);
+
+// State transition
+always @(posedge clk or negedge rst_n)
+    if (!rst_n)
+        current_state <= 0;
+    else
+        current_state <= next_state;
+
+endmodule

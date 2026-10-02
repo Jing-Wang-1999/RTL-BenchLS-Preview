@@ -1,0 +1,52 @@
+module origen_207228(
+    output reg [7:0] keycode,
+    output reg is_pressed,
+    input PS2_DATA,
+    input PS2_CLOCK,
+    input clk
+);
+
+    reg [3:0] state;
+    parameter READY = 4'b0000, GRAB = 4'b0001, PARITY = 4'b0010, DONE = 4'b0011;
+    reg [7:0] data_buffer;
+    reg parity;
+
+    always @(posedge clk) begin
+        case (state)
+            READY: begin
+                is_pressed <= 0;
+                if (!PS2_DATA) begin
+                    state <= GRAB;
+                    data_buffer <= 0;
+                    parity <= 0;
+                end
+            end
+            GRAB: begin
+                if (~PS2_CLOCK) begin
+                    data_buffer <= {data_buffer[6:0], PS2_DATA};
+                    parity <= parity ^ PS2_DATA;
+                    if (state == GRAB && data_buffer[7:0] == 8'b11110000) begin
+                        state <= PARITY;
+                    end
+                end
+            end
+            PARITY: begin
+                if (~PS2_CLOCK) begin
+                    if (parity == PS2_DATA) begin
+                        state <= DONE;
+                        keycode <= data_buffer[7:0];
+                        is_pressed <= 1;
+                    end else begin
+                        state <= READY;
+                    end
+                end
+            end
+            DONE: begin
+                state <= READY;
+                is_pressed <= 0;
+            end
+            default: state <= READY;
+        endcase
+    end
+
+endmodule

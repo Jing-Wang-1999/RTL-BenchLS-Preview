@@ -1,0 +1,8 @@
+always @(posedge mc_clk or posedge rst)
+	if(rst)		mc_cs_[2] <=  1'b1;
+	else
+	   mc_cs_[2] <=  ~(cs_en & (
+				(rfr_ack | susp_sel) ? cs_need_rfr[2] :
+				lmr_sel ? spec_req_cs[2] :
+				cs[2]
+			));

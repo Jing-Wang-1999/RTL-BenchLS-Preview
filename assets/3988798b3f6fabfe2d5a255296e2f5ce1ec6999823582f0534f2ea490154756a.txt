@@ -1,0 +1,43 @@
+# Module Specification: rtlpp_07029
+
+## Overview
+This module implements a three-state finite state machine (FSM) with glitch-free output generation. The FSM responds to a single input signal and produces a registered output based on the current state and input conditions.
+
+## Inputs
+- **x**: Single-bit input signal that controls state transitions
+- **clk**: Clock signal for synchronous operation
+- **rst**: Asynchronous reset signal (active high) that initializes the FSM
+
+## Output
+- **y**: Single-bit registered output signal that reflects the FSM's output behavior
+
+## Behavior
+
+### State Machine
+The module contains three states:
+- **State A** (initial/reset state)
+- **State B**
+- **State C**
+
+### State Transitions
+The FSM transitions between states based on the current state and input x:
+
+**From State A:**
+- If x is high: transition to State B
+- If x is low: remain in State A
+
+**From State B:**
+- If x is high: transition to State C
+- If x is low: transition to State A
+
+**From State C:**
+- If x is low: transition to State A
+- If x is high: remain in State C
+
+### Output Generation
+The output y is determined by the current state:
+- **State A**: output is low (0)
+- **State B**: output is high (1)
+- **State C**: output is low (0)
+
+### Reset

@@ -1,0 +1,4 @@
+# `HLS_fp17_add_core_chn_o_rsci_chn_o_wait_ctrl`
+All ports are scalar. Inputs are `nvdla_core_clk`, active-low asynchronous reset `nvdla_core_rstn`, `chn_o_rsci_oswt`, `core_wen`, `core_wten`, `chn_o_rsci_iswt0`, `chn_o_rsci_ld_core_psct`, and `chn_o_rsci_vd`. Outputs are `chn_o_rsci_biwt`, `chn_o_rsci_bdwt`, and `chn_o_rsci_ld_core_sct`.
+
+Define `pdswt0=(~core_wten)&chn_o_rsci_iswt0`, state `icwt`, and `ogwt=pdswt0|icwt`. Outputs are `biwt=ogwt&chn_o_rsci_vd`, `bdwt=chn_o_rsci_oswt&core_wen`, and `ld_core_sct=chn_o_rsci_ld_core_psct&ogwt`. A falling reset edge clears `icwt=0`. On each rising clock edge with reset high, `icwt <= (icwt|pdswt0)&~biwt`; hence a valid wait clears the stored wait condition, while an unconsumed `pdswt0` sets or retains it. No submodule is required.

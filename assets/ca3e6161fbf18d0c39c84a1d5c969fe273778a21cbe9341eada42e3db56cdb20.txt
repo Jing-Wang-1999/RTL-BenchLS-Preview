@@ -1,0 +1,54 @@
+module autovcoder_111513 (
+    Q,
+    D,
+    SCD,
+    SCE,
+    GATE
+);
+
+  // Module ports
+  output Q;
+  input D;
+  input SCD;
+  input SCE;
+  input GATE;
+
+  // Module supplies
+  supply1 VPWR;
+  supply0 VGND;
+  supply1 VPB;
+  supply0 VNB;
+
+  // Local signals
+  wire    buf_Q;
+  wire    GATE_delayed;
+  wire    D_delayed;
+  wire    SCD_delayed;
+  wire    SCE_delayed;
+  wire    cond0;
+  wire    cond1;
+  wire    cond2;
+  reg     notifier;
+  wire    mux_out;
+
+  //                                     Name       Output   Other arguments
+  assign cond0 = (SCE_delayed === 1'b0);
+  assign cond1 = (SCE_delayed === 1'b1);
+  sky130_fd_sc_hvl__udp_mux_2to1 mux_2to10 (
+      mux_out,
+      D_delayed,
+      SCD_delayed,
+      SCE_delayed
+  );
+  sky130_fd_sc_hvl__udp_dlatch$P_pp$PG$N dlatch0 (
+      buf_Q,
+      mux_out,
+      GATE_delayed,
+      notifier,
+      VPWR,
+      VGND
+  );
+  buf buf0 (Q, buf_Q);
+
+endmodule
+

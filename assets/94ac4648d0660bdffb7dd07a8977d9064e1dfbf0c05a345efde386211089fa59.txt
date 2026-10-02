@@ -1,0 +1,116 @@
+module origen_123911 #(
+    parameter C_RAM_WIDTH = 8,
+    parameter C_REAL_DEPTH = 256,
+    parameter C_DEPTH_BITS = $clog2(C_REAL_DEPTH)
+) (
+    input wire WR_CLK,
+    input wire RD_CLK,
+    input wire WR_RST,
+    input wire RD_RST,
+    input wire WR_EN,
+    input wire RD_EN,
+    input wire [C_RAM_WIDTH-1:0] WR_DATA,
+    output reg [C_RAM_WIDTH-1:0] RD_DATA,
+    output wire FULL,
+    output wire EMPTY
+);
+
+    reg [C_DEPTH_BITS-1:0] wr_ptr, rd_ptr;
+    reg [C_DEPTH_BITS:0] wr_bin, rd_bin;
+    wire [C_DEPTH_BITS:0] wr_gray, rd_gray;
+    reg [C_DEPTH_BITS:0] wr_gray_sync, rd_gray_sync;
+
+    // Dual-port RAM
+    reg [C_RAM_WIDTH-1:0] mem [0:C_REAL_DEPTH-1];
+
+    // Write logic
+    always @(posedge WR_CLK or posedge WR_RST) begin
+        if (WR_RST) begin
+            wr_ptr <= 0;
+            wr_bin <= 0;
+        end else if (WR_EN && !FULL) begin
+            mem[wr_ptr] <= WR_DATA;
+            wr_ptr <= wr_ptr + 1;
+            wr_bin <= wr_bin + 1;
+        end
+    end
+
+    // Read logic
+    always @(posedge RD_CLK or posedge RD_RST) begin
+        if (RD_RST) begin
+            rd_ptr <= 0;
+            rd_bin <= 0;
+            RD_DATA <= 0;
+        end else if (RD_EN && !EMPTY) begin
+            RD_DATA <= mem[rd_ptr];
+            rd_ptr <= rd_ptr + 1;
+            rd_bin <= rd_bin + 1;
+        end
+    end
+
+    // Gray code conversion
+    assign wr_gray = wr_bin ^ (wr_bin >> 1);
+    assign rd_gray = rd_bin ^ (rd_bin >> 1);
+
+    // Synchronization
+    always @(posedge RD_CLK or posedge RD_RST) begin
+        if (RD_RST)
+            wr_gray_sync <= 0;
+        else
+            wr_gray_sync <= wr_gray;
+    end
+
+    always @(posedge WR_CLK or posedge WR_RST) begin
+        if (WR_RST)
+            rd_gray_sync <= 0;
+        else
+            rd_gray_sync <= rd_gray;
+    end
+
+    // Pointer comparison module
+    wire full_cmp, empty_cmp;
+    pointer_compare #(.C_DEPTH_BITS(C_DEPTH_BITS)) pc_inst (
+        .wr_gray(wr_gray),
+        .rd_gray(rd_gray_sync),
+        .full(full_cmp),
+        .empty(empty_cmp)
+    );
+
+    // Full/Empty calculation module
+    full_empty_calc #(.C_DEPTH_BITS(C_DEPTH_BITS)) fe_calc_inst (
+        .wr_gray(wr_gray),
+        .rd_gray(rd_gray_sync),
+        .full_cmp(full_cmp),
+        .empty_cmp(empty_cmp),
+        .full(FULL),
+        .empty(EMPTY)
+    );
+
+endmodule
+
+module pointer_compare #(
+    parameter C_DEPTH_BITS = 8
+) (
+    input wire [C_DEPTH_BITS:0] wr_gray,
+    input wire [C_DEPTH_BITS:0] rd_gray,
+    output wire full,
+    output wire empty
+);
+    assign full = (wr_gray[C_DEPTH_BITS:C_DEPTH_BITS-1] != rd_gray[C_DEPTH_BITS:C_DEPTH_BITS-1]) &&
+                  (wr_gray[C_DEPTH_BITS-2:0] == rd_gray[C_DEPTH_BITS-2:0]);
+    assign empty = (wr_gray == rd_gray);
+endmodule
+
+module full_empty_calc #(
+    parameter C_DEPTH_BITS = 8
+) (
+    input wire [C_DEPTH_BITS:0] wr_gray,
+    input wire [C_DEPTH_BITS:0] rd_gray,
+    input wire full_cmp,
+    input wire empty_cmp,
+    output wire full,
+    output wire empty
+);
+    assign full = full_cmp;
+    assign empty = empty_cmp;
+endmodule

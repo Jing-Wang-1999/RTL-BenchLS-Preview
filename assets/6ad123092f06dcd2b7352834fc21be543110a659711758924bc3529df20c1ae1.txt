@@ -1,0 +1,119 @@
+{
+  "case_id": "s1derived.0b56a5b121430e0eee3c.dac247e516d2",
+  "compile_check": {
+    "case_id": "s1derived.0b56a5b121430e0eee3c.dac247e516d2",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_024618",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_024618.006b37b1b1525774/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.0b56a5b121430e0eee3c",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "0b56a5b121430e0eee3c4d0144c932c5dde929b8fcae395d1e89d86798df7f92",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0b56a5b121430e0eee3c.dac247e516d2",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_024618.006b37b1b1525774/private/commercial_positive.log",
+    "commercial_log_sha256": "dc23faf47bed32070fb200aeda83dd7e7b022bdb99ad42267a08d3594712e59d",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_024618.006b37b1b1525774/private/historical_harness/00_sec_autovcoder_024618.tcl",
+    "executed_script_sha256": "0eca816aa951f0aef9448d77cc87e3d3f1467cc6c8721bcf4ccb5072794c0399",
+    "golden_tops": [
+      "autovcoder_024618"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.autovcoder_024618.006b37b1b1525774",
+    "parent_id": "s1p.0b56a5b121430e0eee3c",
+    "revised_tops": [
+      "autovcoder_024618"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_024618",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0b56a5b121430e0eee3c.dac247e516d2",
+    "checks": {
+      "behavior": "Bypass and checker behavior match.",
+      "boundaries": "Corruption persists through first clean clock and clears after second.",
+      "interface": "Interface/default match.",
+      "rtl_reasonableness": "RTL is reasonable as a simulation CDC checker.",
+      "sequential_and_reset": "No reset; event/clock pipeline is stated."
+    },
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Bypass and checker behavior match. No reset; event/clock pipeline is stated. Corruption persists through first clean clock and clears after second.",
+        "rtl_excerpt": "conditional RTL uses change event to set p1/p2 and p2 ? Z : d; default branch q=d",
+        "spec_excerpt": "The repair distinguishes ARM_CDC_CHECK branches and the two-clock corruption clearing sequence."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0b56a5b121430e0eee3c",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "d04085a6928d47722e44f79209bd561411d038fe730d0e51bf173bb95c2c4126",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0b56a5b121430e0eee3c4d0144c932c5dde929b8fcae395d1e89d86798df7f92",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_024618.006b37b1b1525774/private/historical_harness/00_sec_autovcoder_024618.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_024618.006b37b1b1525774/private/historical_harness/01_sec_autovcoder_024618.tcl"
+  ],
+  "parent_id": "s1p.0b56a5b121430e0eee3c",
+  "primary_review": {
+    "case_id": "s1derived.0b56a5b121430e0eee3c.dac247e516d2",
+    "checks": {
+      "behavior": "Compared observable equations/state transitions. RTL is q=d without ARM_CDC_CHECK; with it, sync bypasses and p2 drives Z until two clean clk edges follow a d change.",
+      "boundaries": "Checked unsupported selector/opcode/state cases, simultaneous controls, arithmetic flags, zero values, and compile completeness as applicable.",
+      "interface": "Compared exact ports, widths, parameters, and defaults. The specification truncates its non-ARM configuration and omits WIDTH=1 and exact corruption duration.",
+      "rtl_reasonableness": "RTL describes a coherent hardware or deliberate simulation-checker function under the stated contract.",
+      "sequential_and_reset": "Compared edge sensitivity, reset polarity and synchrony, enables, holds, update ordering, and latency where sequential state exists; otherwise confirmed combinational behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file comparison supports decision=revise; the excerpts identify the decisive semantic agreement or discrepancy.",
+        "rtl_excerpt": "RTL is q=d without ARM_CDC_CHECK; with it, sync bypasses and p2 drives Z until two clean clk edges follow a d change.",
+        "spec_excerpt": "The specification truncates its non-ARM configuration and omits WIDTH=1 and exact corruption duration."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification truncates its non-ARM configuration and omits WIDTH=1 and exact corruption duration.",
+        "rtl_evidence": "RTL is q=d without ARM_CDC_CHECK; with it, sync bypasses and p2 drives Z until two clean clk edges follow a d change.",
+        "spec_evidence": "The specification truncates its non-ARM configuration and omits WIDTH=1 and exact corruption duration.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.0b56a5b121430e0eee3c",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.0b56a5b121430e0eee3c.dac247e516d2.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0b56a5b121430e0eee3c4d0144c932c5dde929b8fcae395d1e89d86798df7f92",
+    "source_group": "S3",
+    "specification_sha256": "dac247e516d25e91a744db203541ffae11ade9342805314ac29353eb353d0d33",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.0b56a5b121430e0eee3c.dac247e516d2.md",
+  "qualified_specification_sha256": "d04085a6928d47722e44f79209bd561411d038fe730d0e51bf173bb95c2c4126",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_024618.006b37b1b1525774/private/golden_design.v",
+  "rtl_sha256": "0b56a5b121430e0eee3c4d0144c932c5dde929b8fcae395d1e89d86798df7f92",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_024618.006b37b1b1525774/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "dac247e516d25e91a744db203541ffae11ade9342805314ac29353eb353d0d33",
+  "top_module": "autovcoder_024618"
+}

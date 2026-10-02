@@ -1,0 +1,84 @@
+module autovcoder_040611 (
+    c0,
+    i_a,
+    i_b,
+    o_s,
+    o_carry
+);
+  input [15:0] i_a;
+  input [15:0] i_b;
+  output [15:0] o_s;
+  input c0;
+  output o_carry;
+  wire c1, c2, c3, c4, c6, o_p_addn;
+  wire [15:0] p1;
+  wire [15:0] g1;
+  wire [14:0] p2;
+  wire [15:0] g2;
+  wire [15:0] ps1;
+  wire [12:0] p3;
+  wire [15:0] g3;
+  wire [15:0] ps2;
+  wire [ 8:0] p4;
+  wire [15:0] g4;
+  wire [15:0] ps3;
+  wire [15:0] p6;
+  wire [15:0] g6;
+
+  ks_1_16b_195 s1 (
+      .i_c0(c0),
+      .i_a(i_a),
+      .i_b(i_b),
+      .o_pk_1(p1),
+      .o_gk_1(g1),
+      .o_c0_1(c1)
+  );
+  ks_2_16b_195 s2 (
+      .i_c0(c1),
+      .i_pk(p1),
+      .i_gk(g1),
+      .o_c0(c2),
+      .o_pk(p2),
+      .o_gk(g2),
+      .o_p_save(ps1)
+  );
+  ks_3_16b_195 s3 (
+      .i_c0(c2),
+      .i_pk(p2),
+      .i_gk(g2),
+      .i_p_save(ps1),
+      .o_c0(c3),
+      .o_pk(p3),
+      .o_gk(g3),
+      .o_p_save(ps2)
+  );
+  ks_4_16b_195 s4 (
+      .i_c0(c3),
+      .i_pk(p3),
+      .i_gk(g3),
+      .i_p_save(ps2),
+      .o_c0(c4),
+      .o_pk(p4),
+      .o_gk(g4),
+      .o_p_save(ps3)
+  );
+  ks_5_16b_195 s5 (
+      .i_c0(c4),
+      .i_pk(p4),
+      .i_gk(g4),
+      .i_p_save(ps3),
+      .o_c0(c6),
+      .o_pk(p6),
+      .o_gk(g6),
+      .o_p_addn(o_p_addn)
+  );
+  ks_7_16b_195 s7 (
+      .i_c0(c6),
+      .i_pk(p6),
+      .i_gk(g6),
+      .i_p_addn(o_p_addn),
+      .o_s(o_s),
+      .o_carry(o_carry)
+  );
+endmodule
+

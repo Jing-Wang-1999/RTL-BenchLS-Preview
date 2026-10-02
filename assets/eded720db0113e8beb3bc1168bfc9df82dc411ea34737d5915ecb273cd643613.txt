@@ -1,0 +1,52 @@
+module autovcoder_005154 (
+    input  wire [63:0] datain,    // Data on which ECC is required 
+    input  wire [ 7:0] syndrome,  // Syndrome uses 8'h00 while generating 
+    output wire [ 7:0] result     // Result 
+);
+
+  //-----------------------------------------------------------------------------
+  // Instantiate Result Compute block for 8 bits  
+  //-----------------------------------------------------------------------------
+  cycloneiv_pciehip_compute_bit cb_0 (
+      .datain(datain),
+      .s     (syndrome[0]),
+      .r     (result[0])
+  );
+  cycloneiv_pciehip_compute_bit cb_1 (
+      .datain({datain[7:0], datain[63:8]}),
+      .s(syndrome[1]),
+      .r(result[1])
+  );
+  cycloneiv_pciehip_compute_bit cb_2 (
+      .datain({datain[15:0], datain[63:16]}),
+      .s(syndrome[2]),
+      .r(result[2])
+  );
+  cycloneiv_pciehip_compute_bit cb_3 (
+      .datain({datain[23:0], datain[63:24]}),
+      .s(syndrome[3]),
+      .r(result[3])
+  );
+  cycloneiv_pciehip_compute_bit cb_4 (
+      .datain({datain[31:0], datain[63:32]}),
+      .s(syndrome[4]),
+      .r(result[4])
+  );
+  cycloneiv_pciehip_compute_bit cb_5 (
+      .datain({datain[39:0], datain[63:40]}),
+      .s(syndrome[5]),
+      .r(result[5])
+  );
+  cycloneiv_pciehip_compute_bit cb_6 (
+      .datain({datain[47:0], datain[63:48]}),
+      .s(syndrome[6]),
+      .r(result[6])
+  );
+  cycloneiv_pciehip_compute_bit cb_7 (
+      .datain({datain[55:0], datain[63:56]}),
+      .s(syndrome[7]),
+      .r(result[7])
+  );
+
+endmodule
+

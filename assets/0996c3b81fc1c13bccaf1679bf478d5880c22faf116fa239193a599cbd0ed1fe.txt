@@ -1,0 +1,63 @@
+module rtlpp_02658(
+	clk, rst,
+`ifdef OR1200_BIST
+	mbist_si_i, mbist_so_o, mbist_ctrl_i,
+`endif
+	addr, en, we, datain, tag_v, tag
+);
+
+parameter dw = 32;  // Define these specific values or use a default for OR1200_DCTAG_W and OR1200_DCTAG
+parameter aw = 32;
+
+input				clk;
+input				rst;
+input	[aw-1:0]		addr;
+input				en;
+input				we;
+input	[dw-1:0]		datain;
+output				tag_v;
+output	[dw-2:0]		tag;
+
+`ifdef OR1200_BIST
+input mbist_si_i;
+input [3:0] mbist_ctrl_i;  // Assuming a default value for MBIST_CTRL_WIDTH
+output mbist_so_o;
+`endif
+
+`ifdef OR1200_NO_DC
+assign tag = {dw-2{1'b0}};
+assign tag_v = 1'b0;
+`ifdef OR1200_BIST
+assign mbist_so_o = mbist_si_i;
+`endif
+`else
+
+reg [dw-2:0] mem_tag [0:255];  // Example depth for a 256x21 memory for OR1200_DC_1W_4KB
+reg mem_tag_v [0:255];
+
+integer i;
+
+always @(posedge clk or posedge rst) begin
+	if (rst) begin
+		for (i = 0; i < 256; i = i + 1) begin
+			mem_tag[i] <= 0;
+			mem_tag_v[i] <= 1'b0;
+		end
+	end else if (en) begin
+		if (we) begin
+			mem_tag[addr] <= datain[dw-2:0];
+			mem_tag_v[addr] <= datain[dw-1];
+		end
+	end
+end
+
+assign tag = mem_tag[addr];
+assign tag_v = mem_tag_v[addr];
+
+`ifdef OR1200_BIST
+assign mbist_so_o = mbist_si_i;  // Placeholder for MBIST logic
+`endif
+
+`endif
+
+endmodule

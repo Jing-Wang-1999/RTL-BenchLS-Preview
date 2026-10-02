@@ -1,0 +1,35 @@
+The Verilog module `lcd_command_controller` interfaces with an LCD display, managing command read and write operations. The primary function of the module is to handle write and read requests, process command data, and ensure the correct operation mode based on input signals.
+
+Upon receiving a clock (`clk`) or asynchronous reset (`rst`) signal, the module transitions between states (`IDLE`, `READ_WAIT`, `FINISHED`). During the `IDLE` state:
+- If a write strobe (`i_cmd_write_stb`) is active, it enables data output, sets the output data to the input command data (`i_cmd_data`), and transitions to the `FINISHED` state.
+- If a read strobe (`i_cmd_read_stb`) is active, it enables reading and transitions to the `READ_WAIT` state.
+In the `READ_WAIT` state, it proceeds to the `FINISHED` state directly. In the `FINISHED` state:
+- It disables both write and read operations.
+- If data output is not enabled, it captures incoming data (`i_data_in`) into the output command data (`o_cmd_data`).
+- Sets the command finished signal (`o_cmd_finished`) and returns to `IDLE`.
+
+The output command mode (`o_cmd_mode`) directly reflects the input command parameter (`i_cmd_parameter`), and various control signals (`o_write`, `o_read`, `o_data_out_en`) are manipulated based on the current state to handle data interactions properly. This ensures that the module efficiently manages the flow of command operations for the LCD display.
+
+Module Interface:
+module lcd_command_controller (
+  input               rst,
+  input               clk,
+  output      [31:0]  debug,
+  input               i_cmd_write_stb,
+  input               i_cmd_read_stb,
+  input       [7:0]   i_cmd_data,
+  output  reg [7:0]   o_cmd_data,
+  input               i_enable,
+  input               i_cmd_parameter,
+  output  reg         o_cmd_finished,
+  output              o_cmd_mode,
+  output  reg         o_write,
+  output  reg         o_read,
+  output  reg [7:0]   o_data_out,
+  input       [7:0]   i_data_in,
+  output  reg         o_data_out_en
+);
+
+Behavioral Clarifications:
+- State encoding: IDLE=4'h0, READ_WAIT=4'h1, FINISHED=4'h2; state register is 4 bits wide, implemented using `define macros (not localparams).
+- The single always block triggers on `posedge clk or posedge rst` (asynchronous active-high reset). `o_cmd_finished` is cleared to 0 at the start of each non-reset clock cycle before case evaluation. `o_cmd_mode` is a continuous assign equal to `i_cmd_parameter`. The `debug` output port is unconnected (no assign).

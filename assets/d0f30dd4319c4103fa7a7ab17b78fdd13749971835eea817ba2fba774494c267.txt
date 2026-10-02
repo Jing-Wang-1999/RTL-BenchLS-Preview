@@ -1,0 +1,77 @@
+**Module Specification: origen_160680**
+
+**Overview**  
+This module is a combinational instruction decoder and control signal generator for a RISC-style processor. It takes a 7-bit instruction opcode as input and produces control signals that govern datapath operations, including register writes, memory access, ALU behavior, and immediate value handling.
+
+**Inputs**  
+- **opcode** (7 bits): The primary opcode field of the instruction, used to determine the instruction type and corresponding control signals.
+
+**Outputs**  
+All outputs are single-bit unless noted:  
+- **RegWrite**: Enables writing to the destination register.  
+- **ImmType**: Selects the immediate value format (1 for I-type immediate, 0 otherwise).  
+- **PCToRegSrc**: When set, the program counter (PC) is used as the data to write to the destination register.  
+- **RDSrc**: Selects the destination register source (1 for R-type, 0 for others).  
+- **MemRead**: Enables reading from memory.  
+- **MemWrite**: Enables writing to memory.  
+- **MemToReg**: Selects memory data as the source for register write-back.  
+- **ALUSrc**: Selects the ALU’s second operand source (1 for immediate, 0 for register).  
+- **ALUOp** (3 bits): Encodes the ALU operation to perform.
+
+**Behavior**  
+The module decodes the opcode into one of seven instruction types, each with a predefined set of control signals. For any opcode not explicitly listed, all outputs default to inactive (0), except ALUOp which defaults to 000.
+
+The instruction types and their control signal patterns are:
+
+1. **R-type (opcode 0110011)**:  
+   - Register write enabled.  
+   - No immediate format used.  
+   - Destination register from R-type field.  
+   - No memory access.  
+   - ALU uses register operands, with ALUOp = 110.
+
+2. **I-type load (opcode 0000011)**:  
+   - Register write enabled.  
+   - Immediate format used.  
+   - Destination register from I-type field.  
+   - Memory read enabled, with memory data selected for write-back.  
+   - ALU uses immediate operand, with ALUOp = 000.
+
+3. **S-type store (opcode 0100011)**:  
+   - No register write.  
+   - Immediate format used.  
+   - No memory read; memory write enabled.  
+   - ALU uses immediate operand, with ALUOp = 000.
+
+4. **B-type branch (opcode 1100011)**:  
+   - No register write.  
+   - Immediate format used.  
+   - No memory access.  
+   - ALU uses immediate operand, with ALUOp = 001.
+
+5. **I-type immediate arithmetic (opcode 0010011)**:  
+   - Register write enabled.  
+   - Immediate format used.  
+   - Destination register from I-type field.  
+   - No memory access.  
+   - ALU uses immediate operand, with ALUOp = 010.
+
+6. **U-type LUI (opcode 0110111)**:  
+   - Register write enabled.  
+   - Immediate format used.  
+   - Destination register from R-type field.  
+   - No memory access.  
+   - ALU uses immediate operand, with ALUOp = 011.
+
+7. **J-type JAL (opcode 1101111)**:  
+   - Register write enabled.  
+   - Immediate format used.  
+   - Program counter selected as write-back data.  
+   - No memory access.  
+   - ALU uses immediate operand, with ALUOp = 100.
+
+**Allowed Sub-modules**  
+None. This is a purely combinational logic block with no internal state or clocked elements.
+
+**Timing and Operation**  
+The outputs update combinatorially based on the opcode input. No setup or hold times are specified; propagation delay depends on implementation.

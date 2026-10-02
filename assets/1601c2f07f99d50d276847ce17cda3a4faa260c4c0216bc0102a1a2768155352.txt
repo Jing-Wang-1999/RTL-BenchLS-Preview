@@ -1,0 +1,49 @@
+always @(posedge clk) begin
+    overflow_reg <= 1'b0;
+    bad_frame_reg <= 1'b0;
+    good_frame_reg <= 1'b0;
+
+    if (s_axis_tready && s_axis_tvalid) begin
+        // transfer in
+        if (!FRAME_FIFO) begin
+            // normal FIFO mode
+            mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+            wr_ptr_reg <= wr_ptr_reg + 1;
+        end else if (full_cur || full_wr || drop_frame_reg) begin
+            // full, packet overflow, or currently dropping frame
+            // drop frame
+            drop_frame_reg <= 1'b1;
+            if (s_axis_tlast) begin
+                // end of frame, reset write pointer
+                wr_ptr_cur_reg <= wr_ptr_reg;
+                drop_frame_reg <= 1'b0;
+                overflow_reg <= 1'b1;
+            end
+        end else begin
+            mem[wr_ptr_cur_reg[ADDR_WIDTH-1:0]] <= s_axis;
+            wr_ptr_cur_reg <= wr_ptr_cur_reg + 1;
+            if (s_axis_tlast) begin
+                // end of frame
+                if (DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
+                    // bad packet, reset write pointer
+                    wr_ptr_cur_reg <= wr_ptr_reg;
+                    bad_frame_reg <= 1'b1;
+                end else begin
+                    // good packet, update write pointer
+                    wr_ptr_reg <= wr_ptr_cur_reg + 1;
+                    good_frame_reg <= 1'b1;
+                end
+            end
+        end
+    end
+
+    if (rst) begin
+        wr_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
+        wr_ptr_cur_reg <= {ADDR_WIDTH+1{1'b0}};
+
+        drop_frame_reg <= 1'b0;
+        overflow_reg <= 1'b0;
+        bad_frame_reg <= 1'b0;
+        good_frame_reg <= 1'b0;
+    end
+end

@@ -1,0 +1,53 @@
+module origen_018400 #(
+    parameter WIDTH = 640,
+    parameter HEIGHT = 480
+) (
+    input wire capture_rst,
+    input wire pclk,
+    input wire vsync,
+    input wire href,
+    input wire [7:0] d,
+    output reg [15:0] tdata,
+    output reg tvalid,
+    output reg tlast,
+    output reg tuser,
+    input wire tready
+);
+
+    reg [15:0] d_latch;
+    reg [1:0] wr_hold;
+    reg [18:0] address;
+    reg [9:0] pixel;
+    
+    wire [18:0] address_next = (address == WIDTH * HEIGHT - 1) ? 0 : address + 1;
+    wire [9:0] pixel_next = (pixel == WIDTH - 1) ? 0 : pixel + 1;
+
+    always @(posedge pclk) begin
+        if (capture_rst || vsync) begin
+            address <= 0;
+            pixel <= 0;
+            wr_hold <= 2'b00;
+            d_latch <= 16'h0000;
+            tvalid <= 1'b0;
+            tlast <= 1'b0;
+            tuser <= 1'b0;
+        end else begin
+            d_latch <= {d_latch[7:0], d};
+            wr_hold <= {wr_hold[0], (href && !wr_hold[0])};
+            
+            if (wr_hold[1] && tready) begin
+                address <= address_next;
+                pixel <= pixel_next;
+                tdata <= {d_latch[15:11], d_latch[10:5], d_latch[4:0]};
+                tvalid <= 1'b1;
+                tlast <= (pixel_next == WIDTH - 1);
+                tuser <= (address_next == 1);
+            end else begin
+                tvalid <= 1'b0;
+                tlast <= 1'b0;
+                tuser <= 1'b0;
+            end
+        end
+    end
+
+endmodule

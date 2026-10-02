@@ -1,0 +1,18 @@
+This module contains two independent 6-bit and 10-bit counters that operate on a common clock and control signals.
+
+**Inputs:**
+- RESET: Active-high reset. When asserted, both counters are cleared to zero and their CARRY outputs are deasserted.
+- CLK: Positive-edge clock signal.
+- PAUSE: Active-high pause. When asserted, both counters hold their current values and CARRY outputs remain unchanged.
+
+**Outputs:**
+- CARRY6: Asserted for one clock cycle when the 6-bit counter reaches decimal 40 (binary 101000). Otherwise deasserted.
+- CARRY10: Asserted for one clock cycle when the 10-bit counter reaches decimal 576 (binary 1001000000). Otherwise deasserted.
+
+**Behavior:**
+On each rising clock edge when RESET is not active:
+- If PAUSE is not active, each counter increments by one.
+- When a counter reaches its terminal value, it wraps to zero on the next increment and its corresponding CARRY output is pulsed high for that clock cycle.
+- If PAUSE is active, both counters freeze at their current values and CARRY outputs remain stable.
+
+**Allowed Sub-modules:** None. The implementation must use only basic sequential logic elements (registers, adders, comparators).

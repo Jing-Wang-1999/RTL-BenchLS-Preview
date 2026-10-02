@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   streaming_to_mm_adapter_b.v0, streaming_to_mm_adapter_b.v1, streaming_to_mm_adapter_b, clk, reset
+set DESIGN_NAME_GOLDEN "streaming_to_mm_adapter_b.v0"
+set DESIGN_NAME "streaming_to_mm_adapter_b.v1"
+set TOP_NAME "streaming_to_mm_adapter_b"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_7114a2d6e47c1c80.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_7114a2d6e47c1c80.negative.v
+check_sec -elaborate -spec -top streaming_to_mm_adapter_b -disable_auto_bbox
+check_sec -elaborate -imp -top streaming_to_mm_adapter_b -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clk 
+reset reset
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

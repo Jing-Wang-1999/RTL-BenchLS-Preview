@@ -1,0 +1,121 @@
+module origen_064913 (
+    input wire mclk,
+    input wire epp_astb,
+    input wire epp_dstb,
+    input wire epp_wr,
+    output reg epp_wait,
+    inout wire [7:0] epp_data,
+    input wire [1:0] status,
+    output reg [31:0] address,
+    output reg [31:0] dout,
+    input wire [31:0] din,
+    output reg complete,
+    input wire complete_clr
+);
+
+    // State definitions
+    localparam IDLE = 3'd0;
+    localparam ADDRESS_READ = 3'd1;
+    localparam ADDRESS_WRITE = 3'd2;
+    localparam DATA_READ = 3'd3;
+    localparam DATA_WRITE = 3'd4;
+
+    reg [2:0] state, next_state;
+    reg [1:0] epp_address;
+    reg [7:0] address_array [3:0];
+    reg [7:0] din_array [3:0];
+    reg [7:0] dout_array [3:0];
+    reg [1:0] index;
+    reg [7:0] data_out;
+    reg data_out_en;
+
+    // State machine
+    always @(posedge mclk) begin
+        if (!epp_astb || !epp_dstb)
+            state <= next_state;
+        else
+            state <= IDLE;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            IDLE:
+                if (!epp_astb)
+                    next_state = epp_wr ? ADDRESS_WRITE : ADDRESS_READ;
+                else if (!epp_dstb)
+                    next_state = epp_wr ? DATA_WRITE : DATA_READ;
+                else
+                    next_state = IDLE;
+            ADDRESS_READ, ADDRESS_WRITE, DATA_READ, DATA_WRITE:
+                next_state = IDLE;
+            default:
+                next_state = IDLE;
+        endcase
+    end
+
+    // EPP handshaking
+    always @(posedge mclk) begin
+        if (state == IDLE)
+            epp_wait <= 1'b1;
+        else
+            epp_wait <= 1'b0;
+    end
+
+    // Address and data handling
+    always @(posedge mclk) begin
+        if (state == ADDRESS_WRITE) begin
+            epp_address <= epp_data[1:0];
+        end else if (state == DATA_WRITE) begin
+            case (epp_address)
+                2'b01: address_array[index] <= epp_data;
+                2'b10: din_array[index] <= epp_data;
+            endcase
+            if (index == 2'b11) begin
+                case (epp_address)
+                    2'b01: address <= {address_array[3], address_array[2], address_array[1], address_array[0]};
+                    2'b10: dout <= {din_array[3], din_array[2], din_array[1], din_array[0]};
+                endcase
+                complete <= 1'b1;
+            end
+            index <= index + 1;
+        end
+    end
+
+    // Data output logic
+    always @(*) begin
+        case (state)
+            ADDRESS_READ: data_out = {6'b0, epp_address};
+            DATA_READ:
+                case (epp_address)
+                    2'b00: data_out = {status, 6'b0};
+                    2'b01: data_out = address_array[index];
+                    2'b10: data_out = dout_array[index];
+                    default: data_out = 8'b0;
+                endcase
+            default: data_out = 8'b0;
+        endcase
+    end
+
+    // Data output enable
+    always @(*) begin
+        data_out_en = (state == ADDRESS_READ) || (state == DATA_READ);
+    end
+
+    // EPP data bus management
+    assign epp_data = data_out_en ? data_out : 8'bz;
+
+    // Complete signal management
+    always @(posedge mclk) begin
+        if (complete_clr)
+            complete <= 1'b0;
+    end
+
+    // Input data handling
+    always @(posedge mclk) begin
+        if (state == IDLE) begin
+            {dout_array[3], dout_array[2], dout_array[1], dout_array[0]} <= din;
+        end
+    end
+
+endmodule

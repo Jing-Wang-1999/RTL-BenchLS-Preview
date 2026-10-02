@@ -1,0 +1,286 @@
+`timescale 1ns/1ps
+module tb;reg clk=0,reset=0;always #5 clk=~clk;
+reg [63:0] in=0;reg ready=0,last=0;reg [2:0] nbyte=0;wire full,valid;wire [511:0] out;
+keccak dut(clk,reset,in,ready,last,nbyte,full,out,valid);
+task tick;begin @(posedge clk);#2;end endtask
+task put;input [63:0] d;input l;input [2:0] n;integer waitcycles;begin
+@(negedge clk);ready=0;last=0;waitcycles=0;
+while(full && waitcycles<100)begin tick;waitcycles=waitcycles+1;end
+if(full)$fatal(1,"input backpressure timeout");
+@(negedge clk);in=d;ready=1;last=l;nbyte=n;tick;
+@(negedge clk);ready=0;last=0;end endtask
+integer timeout;
+initial begin #2000000;$fatal(1,"timeout");end
+initial begin
+#1;in=1;nbyte=1;#1;in=0;nbyte=0;
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h0000000000000000,1,0);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h0eab42de4c3ceb9235fc91acffe746b29c29a8c366b7c60e4e67c466f36a4304c00fa9caf9d87976ba469bcbe06713b435f091ef2769fb160cdab33d3670680e)$fatal(1,"Keccak length 0: %h",out);repeat(4)begin tick;if(!valid || out!==512'h0eab42de4c3ceb9235fc91acffe746b29c29a8c366b7c60e4e67c466f36a4304c00fa9caf9d87976ba469bcbe06713b435f091ef2769fb160cdab33d3670680e)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h3a00000000000000,1,1);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h3b7300caed2e51095207dd12085f7f90f96ff59285ee2a8dbf08fe51c729b84f5b9cfb4002d90dacf8682ee2c63bd1ae064a6506f78e7a8b4081f920492ae1f5)$fatal(1,"Keccak length 1: %h",out);repeat(4)begin tick;if(!valid || out!==512'h3b7300caed2e51095207dd12085f7f90f96ff59285ee2a8dbf08fe51c729b84f5b9cfb4002d90dacf8682ee2c63bd1ae064a6506f78e7a8b4081f920492ae1f5)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h3f3c000000000000,1,2);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hc90ef6a199b74cb339399f89a9af5bdd2e3df6fa9f2e392b8d0dc2c8e4e33dbe943cf24aa8c06e375d55994e10a47ada2cffb343282151efd6361563599e9cc0)$fatal(1,"Keccak length 2: %h",out);repeat(4)begin tick;if(!valid || out!==512'hc90ef6a199b74cb339399f89a9af5bdd2e3df6fa9f2e392b8d0dc2c8e4e33dbe943cf24aa8c06e375d55994e10a47ada2cffb343282151efd6361563599e9cc0)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h634c420000000000,1,3);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h79ae3274441330dd6aefeeee099521397a53d8c8f852b6b4e51bb39fce52b6c7bad47fb1f7fd746dad2036f7bcf9f90522515ce684a063d08b7850f9016bc532)$fatal(1,"Keccak length 3: %h",out);repeat(4)begin tick;if(!valid || out!==512'h79ae3274441330dd6aefeeee099521397a53d8c8f852b6b4e51bb39fce52b6c7bad47fb1f7fd746dad2036f7bcf9f90522515ce684a063d08b7850f9016bc532)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h2b129e2600000000,1,4);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h640960195731ee3af62b3d9e2525b2c54b8510bd50dbbd9b9222a68ae7a6b41350658f192913d4449e28560c117957a129ceb3675f5f17670325dada547fe6bf)$fatal(1,"Keccak length 4: %h",out);repeat(4)begin tick;if(!valid || out!==512'h640960195731ee3af62b3d9e2525b2c54b8510bd50dbbd9b9222a68ae7a6b41350658f192913d4449e28560c117957a129ceb3675f5f17670325dada547fe6bf)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h8b5c48fafd000000,1,5);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hd0939519cc56bb787aa9bf07f20115a47e92e75ebd507ffbc8f9ae501a7079049816a466d02054d108d1f093d532688e49debdc4417df94f0d0669f71da6fe27)$fatal(1,"Keccak length 5: %h",out);repeat(4)begin tick;if(!valid || out!==512'hd0939519cc56bb787aa9bf07f20115a47e92e75ebd507ffbc8f9ae501a7079049816a466d02054d108d1f093d532688e49debdc4417df94f0d0669f71da6fe27)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h0dcabf2bc1730000,1,6);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hd4011c80f68266dd65985c2cec67db77c3f75225f1ff646028922463d518557b47a324442154896b9865c98f8e848f7eec7a51e2da91761f77a20603f9527aa5)$fatal(1,"Keccak length 6: %h",out);repeat(4)begin tick;if(!valid || out!==512'hd4011c80f68266dd65985c2cec67db77c3f75225f1ff646028922463d518557b47a324442154896b9865c98f8e848f7eec7a51e2da91761f77a20603f9527aa5)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h25b20d7ba9944900,1,7);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h1a6a9caaa7355b74f180feb30029e8a0380c0668ba8b3f80cb3925f0895f19d8c811758ae659bb12a1d0649ff46ae14a3d4062f7b200171e78e23c346c362b7b)$fatal(1,"Keccak length 7: %h",out);repeat(4)begin tick;if(!valid || out!==512'h1a6a9caaa7355b74f180feb30029e8a0380c0668ba8b3f80cb3925f0895f19d8c811758ae659bb12a1d0649ff46ae14a3d4062f7b200171e78e23c346c362b7b)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h1f821dcb735f4aba,0,0);
+put(64'h0000000000000000,1,0);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h8cba0ed796847b9917b172e4948863761b9bcbb14e2e26edbe86ea80dd2415b2c9045c3b03843b21715aed64f8d1b2a2868f5974f7aed3a4337141142bac7a74)$fatal(1,"Keccak length 8: %h",out);repeat(4)begin tick;if(!valid || out!==512'h8cba0ed796847b9917b172e4948863761b9bcbb14e2e26edbe86ea80dd2415b2c9045c3b03843b21715aed64f8d1b2a2868f5974f7aed3a4337141142bac7a74)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'hfd0ce061c2d68fc3,0,0);
+put(64'hfc00000000000000,1,1);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h59d883b20d4a281cbcac129ccb538f1bccefe7a910e0e59f57158ad06dc7c20bdc5abc9019cc57a06e3ad4d0fc596b2533fb57923edc6c6d65a4e11b34023f4a)$fatal(1,"Keccak length 9: %h",out);repeat(4)begin tick;if(!valid || out!==512'h59d883b20d4a281cbcac129ccb538f1bccefe7a910e0e59f57158ad06dc7c20bdc5abc9019cc57a06e3ad4d0fc596b2533fb57923edc6c6d65a4e11b34023f4a)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'hb3361a71adfd0aba,0,0);
+put(64'h33f7df6dad57ea00,1,7);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h72b419d1cd8fc1a7b0eaefb7a4b7a4bd66fb5fe6d9f76bafc0ffb6259d7f7938442dc255c254a19358294d304af54ead2d474fc398a10513deed72a653183d99)$fatal(1,"Keccak length 15: %h",out);repeat(4)begin tick;if(!valid || out!==512'h72b419d1cd8fc1a7b0eaefb7a4b7a4bd66fb5fe6d9f76bafc0ffb6259d7f7938442dc255c254a19358294d304af54ead2d474fc398a10513deed72a653183d99)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h88963fa773eeb614,0,0);
+put(64'h98048402dc11547b,0,0);
+put(64'he73c75db55b97f5b,0,0);
+put(64'h4e6ba2d535be5500,0,0);
+put(64'he6d75fd356caf3ba,0,0);
+put(64'h58f212eb6ce7de0b,0,0);
+put(64'hfa2a6b8b50d444b1,0,0);
+put(64'h1c1bf1da55651000,1,7);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h1ec2496da9e3a48365219fc0486cd601454c300dffc9460e90060938c6b1a52b678ea6c40704d02000782659e8c86c3da28636ed5bbb081f4407b90a7dfe108f)$fatal(1,"Keccak length 63: %h",out);repeat(4)begin tick;if(!valid || out!==512'h1ec2496da9e3a48365219fc0486cd601454c300dffc9460e90060938c6b1a52b678ea6c40704d02000782659e8c86c3da28636ed5bbb081f4407b90a7dfe108f)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h542da48b09d1ce27,0,0);
+put(64'hbde969ac9474aaaf,0,0);
+put(64'h655a79c28712fc80,0,0);
+put(64'hcca580f9fb3c18d3,0,0);
+put(64'h86376e7aa17d1bde,0,0);
+put(64'he908d956d22a6385,0,0);
+put(64'he07ca26de0e21995,0,0);
+put(64'hed991576b84878cc,0,0);
+put(64'h0000000000000000,1,0);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hfa01ea65d2d5775d29d8c1cb7bb2eb0d5c3cac196ec8f03292953c1324c734d552b0b0a6d0cf66f5a4e7d96dc02f038587a2067e3c159448b7b5feae1cd84eca)$fatal(1,"Keccak length 64: %h",out);repeat(4)begin tick;if(!valid || out!==512'hfa01ea65d2d5775d29d8c1cb7bb2eb0d5c3cac196ec8f03292953c1324c734d552b0b0a6d0cf66f5a4e7d96dc02f038587a2067e3c159448b7b5feae1cd84eca)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'hd66a3a9814ca6d1c,0,0);
+put(64'had551aed7f086d8b,0,0);
+put(64'h0cc36b8442b4c693,0,0);
+put(64'h6ef828c4c575de0b,0,0);
+put(64'h3bed7d781e2a1dd0,0,0);
+put(64'hc9af27a311baffc1,0,0);
+put(64'hb4dd7bedfe27f401,0,0);
+put(64'h5c170d0535e74990,0,0);
+put(64'hba00000000000000,1,1);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hd753ec36ce72f412092357b96fb0874f20f22a38514b7571110ad217b964e4129b410b4a3567a24ef1a97afa3599ef238737782064482c32d46490cdae2105c8)$fatal(1,"Keccak length 65: %h",out);repeat(4)begin tick;if(!valid || out!==512'hd753ec36ce72f412092357b96fb0874f20f22a38514b7571110ad217b964e4129b410b4a3567a24ef1a97afa3599ef238737782064482c32d46490cdae2105c8)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h4e9fffb36bfa9c6c,0,0);
+put(64'h7e4741b9f9a4066b,0,0);
+put(64'h46cdbdd8a85f876a,0,0);
+put(64'h8d2cbbfca8a37823,0,0);
+put(64'h67a8cc33e1c8336d,0,0);
+put(64'h4332ab661ebed473,0,0);
+put(64'h16c83059057ac45f,0,0);
+put(64'h92f0d2a49ef66ba1,0,0);
+put(64'h0278f532ce8b0000,1,6);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hf12766dddc9911ea11eba58c320eb3b705d87d5988d287279a9e30739f5e307e78dd66b086161fa4eeafaacf42393006b3a85fe782365b8a59f3d6ce3105e776)$fatal(1,"Keccak length 70: %h",out);repeat(4)begin tick;if(!valid || out!==512'hf12766dddc9911ea11eba58c320eb3b705d87d5988d287279a9e30739f5e307e78dd66b086161fa4eeafaacf42393006b3a85fe782365b8a59f3d6ce3105e776)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h3ad7dbbaf267fbdc,0,0);
+put(64'h581bfec6b0b13220,0,0);
+put(64'hc6228924ffd3de2d,0,0);
+put(64'h2a95eb053fbec281,0,0);
+put(64'h61958acb266d619f,0,0);
+put(64'h043d0e8fc340ffeb,0,0);
+put(64'h556f394218946337,0,0);
+put(64'hc983af937d837d70,0,0);
+put(64'ha93a12a90f433500,1,7);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hf99bda1640a515d4ff6025c74ab71e3b17684fb06f79d0bf9ee8de348a641aa106e5dd5649a29a02183090ff7102c2e876127b9f12545798afd9c3915d048a20)$fatal(1,"Keccak length 71: %h",out);repeat(4)begin tick;if(!valid || out!==512'hf99bda1640a515d4ff6025c74ab71e3b17684fb06f79d0bf9ee8de348a641aa106e5dd5649a29a02183090ff7102c2e876127b9f12545798afd9c3915d048a20)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h8adbed2730b65538,0,0);
+put(64'hb481b9868457be8a,0,0);
+put(64'ha6a4460985b89241,0,0);
+put(64'hde5c60fc966efe1f,0,0);
+put(64'h68bf81523a551634,0,0);
+put(64'h83f5964eb99611cf,0,0);
+put(64'he546c5b28aa3e857,0,0);
+put(64'hb2a153756d64781f,0,0);
+put(64'ha0c9cb2e4c741ecc,0,0);
+put(64'h0000000000000000,1,0);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h92e5b24480c57fd70fb821d236a3fede70acbc5aa370340e9aa8936f1a72c7bd6a222e8c91092ea0da5452cfc1a85807e47ebd842235b7d8168d3d2b899e7fc8)$fatal(1,"Keccak length 72: %h",out);repeat(4)begin tick;if(!valid || out!==512'h92e5b24480c57fd70fb821d236a3fede70acbc5aa370340e9aa8936f1a72c7bd6a222e8c91092ea0da5452cfc1a85807e47ebd842235b7d8168d3d2b899e7fc8)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'hf929154caeecb84f,0,0);
+put(64'he1e5ad4b2de61176,0,0);
+put(64'h2f80ffeb261e29ee,0,0);
+put(64'h71ef1a877904f3a0,0,0);
+put(64'h31809c96819e85fd,0,0);
+put(64'h45e6830ae5db27e2,0,0);
+put(64'h7239ecfa03b0c892,0,0);
+put(64'h7c92c1807f0581fd,0,0);
+put(64'h411c9f7b3a34162a,0,0);
+put(64'h8c00000000000000,1,1);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hfc80dac287a4d156ce8604c14f86c5dab52698106a683fc7b5bb18e29ae0dd6e6398860bcf33c94fd1d9440af14d179e86ff805af1ad20f11fd5b85a8edae8fc)$fatal(1,"Keccak length 73: %h",out);repeat(4)begin tick;if(!valid || out!==512'hfc80dac287a4d156ce8604c14f86c5dab52698106a683fc7b5bb18e29ae0dd6e6398860bcf33c94fd1d9440af14d179e86ff805af1ad20f11fd5b85a8edae8fc)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h13f575bd0761ab58,0,0);
+put(64'h6271e89f501279ee,0,0);
+put(64'ha8af531a7d53c1d6,0,0);
+put(64'h8d18981dd6dcd004,0,0);
+put(64'hbb861eea2b42807c,0,0);
+put(64'h1e8ffb0a15d5c5ca,0,0);
+put(64'hdeccb42e53513a9b,0,0);
+put(64'hb1baabce4fc9868c,0,0);
+put(64'h0a6572a5a7bed9fa,0,0);
+put(64'h44eae5d8dce0100f,0,0);
+put(64'h0000000000000000,1,0);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h6d1c5a622e8642a54a8cbfe6476fa588d0be4a05b4652a0578e1c1a323a824dbcc86bcee0c87e4a874075dc2451e63934d85b0ab41f483ad82682c781c1c4401)$fatal(1,"Keccak length 80: %h",out);repeat(4)begin tick;if(!valid || out!==512'h6d1c5a622e8642a54a8cbfe6476fa588d0be4a05b4652a0578e1c1a323a824dbcc86bcee0c87e4a874075dc2451e63934d85b0ab41f483ad82682c781c1c4401)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h9bb6fac3d949fceb,0,0);
+put(64'h5d5270f876b865b4,0,0);
+put(64'hdb9b2878209548bf,0,0);
+put(64'hc229121e1c681557,0,0);
+put(64'hbef5514a8025944e,0,0);
+put(64'hb546da2b7b856406,0,0);
+put(64'h7ba3dda50f58768c,0,0);
+put(64'h3b97db8e1e0b0cc0,0,0);
+put(64'h1783779e8f015cc9,0,0);
+put(64'hf8eca87f1a696e70,0,0);
+put(64'hd2405fc8a7811676,0,0);
+put(64'hed6c39265facd39e,0,0);
+put(64'h6a238228535abca0,0,0);
+put(64'h307e9cc34361527d,0,0);
+put(64'he9139843f2c322b5,0,0);
+put(64'ha3106da1889ad5fb,0,0);
+put(64'h00b88f783bc7f300,1,7);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h400233c7bae9fe25af25a114d23f4bc867e60a961d5be968669e88dfc997cdc7cbf47fb9410c5e3b7631f8af4c28bd6a3b08c40e67270b2e0aa66b699d383967)$fatal(1,"Keccak length 135: %h",out);repeat(4)begin tick;if(!valid || out!==512'h400233c7bae9fe25af25a114d23f4bc867e60a961d5be968669e88dfc997cdc7cbf47fb9410c5e3b7631f8af4c28bd6a3b08c40e67270b2e0aa66b699d383967)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h15685f277b18694f,0,0);
+put(64'h1ea4fd3eb3231319,0,0);
+put(64'he68b0009a44652d2,0,0);
+put(64'hff326b8a2e1fbca5,0,0);
+put(64'hc38d04778b637116,0,0);
+put(64'h3c5f6e96f3033f81,0,0);
+put(64'hc17738aafadba4ed,0,0);
+put(64'h5dac0fef565ddf1c,0,0);
+put(64'h46970673d7c720a5,0,0);
+put(64'h7a52b83996096a79,0,0);
+put(64'h9a0855c37d6adeac,0,0);
+put(64'hc5b6b0d8665507b8,0,0);
+put(64'h3323c24171346440,0,0);
+put(64'hdec3095fd1600d1a,0,0);
+put(64'h64b3e36be6105e53,0,0);
+put(64'h0406a33ea465fa61,0,0);
+put(64'hf761bbbf726872c1,0,0);
+put(64'h384459c15bac1200,1,7);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'h420875b2034dec5b76cfefbf47d239a9f2c155f94d89168e927ad231e164a533724e637488bc86832a52536aff4c2b78d0ac8ccb664aa5cd3f587d0ea20482bc)$fatal(1,"Keccak length 143: %h",out);repeat(4)begin tick;if(!valid || out!==512'h420875b2034dec5b76cfefbf47d239a9f2c155f94d89168e927ad231e164a533724e637488bc86832a52536aff4c2b78d0ac8ccb664aa5cd3f587d0ea20482bc)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'hc2aeb3e8b02b7cf9,0,0);
+put(64'he645475cf3a728ec,0,0);
+put(64'h56f6b122d46c0bcb,0,0);
+put(64'h3805b442d44027d0,0,0);
+put(64'h5521cb9ea868e820,0,0);
+put(64'hcaeaf0202adaa29d,0,0);
+put(64'h272c83a62c390324,0,0);
+put(64'h6d08a1098a559b95,0,0);
+put(64'h3e4070633532519d,0,0);
+put(64'hbf7adb748a35556e,0,0);
+put(64'hb8020072c7b21345,0,0);
+put(64'h4ba7376d4ed54e2d,0,0);
+put(64'h3bea96bb47ae3599,0,0);
+put(64'hff7664a2542cd355,0,0);
+put(64'h978318f19f049d67,0,0);
+put(64'h4c9f320ff1ee7bb2,0,0);
+put(64'hf50c1913666cc5dd,0,0);
+put(64'hf908a8c34578d257,0,0);
+put(64'h0000000000000000,1,0);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hd9f6047f3bf1bfb10949e9529e1d30bef74a4e26ed8a08051941a29fec331831e7301643ee5c4d8bc661868bd5eccf15111c37f3bdff574d355ffa9ac618dd86)$fatal(1,"Keccak length 144: %h",out);repeat(4)begin tick;if(!valid || out!==512'hd9f6047f3bf1bfb10949e9529e1d30bef74a4e26ed8a08051941a29fec331831e7301643ee5c4d8bc661868bd5eccf15111c37f3bdff574d355ffa9ac618dd86)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h25041357fc590580,0,0);
+put(64'h0a24ccf88aeccd01,0,0);
+put(64'hce37bd5a321393c8,0,0);
+put(64'h1fefc02c3db43d70,0,0);
+put(64'h508e77e7fa104ddf,0,0);
+put(64'had2fbd0eb76371df,0,0);
+put(64'h76455819f2027a0e,0,0);
+put(64'h81cdeb7d65770476,0,0);
+put(64'hb5849c4498b4a2ad,0,0);
+put(64'hf5cf3d5d592fd1ec,0,0);
+put(64'h23777b7e5e5226eb,0,0);
+put(64'h593020badc1a0307,0,0);
+put(64'h80bb36c8cfde4577,0,0);
+put(64'h40c8499703a87cac,0,0);
+put(64'h95432e3c36f3127a,0,0);
+put(64'he077488802877ed6,0,0);
+put(64'h23eb4520e8e47f53,0,0);
+put(64'h823ba3248acb2952,0,0);
+put(64'h7500000000000000,1,1);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hc1a1f8c68e0cf3329d1d702041027231c2a79e9241b26e605623bbe3d9287c8d13e5801a36742b149d9ac2efec2af08518af7e30f417b2417aa2ea48ba0a5220)$fatal(1,"Keccak length 145: %h",out);repeat(4)begin tick;if(!valid || out!==512'hc1a1f8c68e0cf3329d1d702041027231c2a79e9241b26e605623bbe3d9287c8d13e5801a36742b149d9ac2efec2af08518af7e30f417b2417aa2ea48ba0a5220)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h6e62bc84fea8e798,0,0);
+put(64'hf54c52729170406b,0,0);
+put(64'h0d3eb49517db1818,0,0);
+put(64'h5fc2dc14f2551ffe,0,0);
+put(64'h31da9da9f1754644,0,0);
+put(64'he8e6617cc6cf3638,0,0);
+put(64'h81f1e45afae88e76,0,0);
+put(64'hda0efbf89b89892a,0,0);
+put(64'h8130b048a4f4fcaa,0,0);
+put(64'h9509a0ba7e647532,0,0);
+put(64'h96921238b8c553a9,0,0);
+put(64'h67c3777668b572ec,0,0);
+put(64'h14e73139c7f4b258,0,0);
+put(64'h427a536558464c95,0,0);
+put(64'h5c35311f9465325f,0,0);
+put(64'hd9a2d9d0820fdbb9,0,0);
+put(64'h0826a7d916d64671,0,0);
+put(64'h62c695e0123e4afe,0,0);
+put(64'h3e9caf1c38ae5b8a,0,0);
+put(64'h746c8e1ec0226176,0,0);
+put(64'h629710d4083da9b0,0,0);
+put(64'h256c6f476ae9661b,0,0);
+put(64'hf9e096328a809423,0,0);
+put(64'hbb3819df9fafea9f,0,0);
+put(64'h7cfef20bc32ec01b,0,0);
+put(64'h0000000000000000,1,0);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hd3871080b5391b88ae07715536d571f02d3e7bfcd5773a94d44d018c0320d26b8a0627e4e626cd21629054d2fe4f5640e556b2ad26740f534bd39d4713f79a07)$fatal(1,"Keccak length 200: %h",out);repeat(4)begin tick;if(!valid || out!==512'hd3871080b5391b88ae07715536d571f02d3e7bfcd5773a94d44d018c0320d26b8a0627e4e626cd21629054d2fe4f5640e556b2ad26740f534bd39d4713f79a07)$fatal(1,"digest hold");end
+@(negedge clk);reset=1;ready=0;last=0;repeat(3)tick;@(negedge clk);reset=0;
+put(64'h73545e470c16be89,0,0);
+put(64'hb211466bf153436a,0,0);
+put(64'h2fcdb07338d79a15,0,0);
+put(64'hf00e9f18fa67c080,0,0);
+put(64'ha7df01dcccc023ac,0,0);
+put(64'h8d1d9eeceb385346,0,0);
+put(64'h82d016ef14f52156,0,0);
+put(64'h5968600b983746f2,0,0);
+put(64'h775955a767d665c8,0,0);
+put(64'hf65039cfa3ea1df4,0,0);
+put(64'h7d0a8d51a8e002ca,0,0);
+put(64'hdd97056816d4a96d,0,0);
+put(64'hdf4563a9de94dd9a,0,0);
+put(64'h8098ff21b1248869,0,0);
+put(64'h55b99888c9f443e7,0,0);
+put(64'h12df3e29bd485899,0,0);
+put(64'h1c661cd5c340f515,0,0);
+put(64'h41dac04a93f5d85c,0,0);
+put(64'hd4b69a50c57e8f62,0,0);
+put(64'h081c1bf7b81eb342,0,0);
+put(64'h9fc99d4f84d3515a,0,0);
+put(64'h8d160470bfd6dec5,0,0);
+put(64'h2e46a434037249cc,0,0);
+put(64'ha32ba0da1b198621,0,0);
+put(64'hbea1e013a96152a1,0,0);
+put(64'h6ebdf9af66ecb06d,0,0);
+put(64'h8613ab7535f7a9e7,0,0);
+put(64'h70b5a021b87595d2,0,0);
+put(64'hce5b00f8441d70a2,0,0);
+put(64'h9be821d3380d281b,0,0);
+put(64'h4d2e737a539121d2,0,0);
+put(64'h61523ac9fdf77300,1,7);timeout=0;while(!valid && timeout<200)begin tick;timeout=timeout+1;end
+if(!valid || out!==512'hc0f9ac38195ea37b842432fd39631e8b3cdd755d1340ae730c4e0e21b917fe5b34b07e25a713e3279b26876c6fc40b627ffc5847a5bf95befbc9ff8de3929ca8)$fatal(1,"Keccak length 255: %h",out);repeat(4)begin tick;if(!valid || out!==512'hc0f9ac38195ea37b842432fd39631e8b3cdd755d1340ae730c4e0e21b917fe5b34b07e25a713e3279b26876c6fc40b627ffc5847a5bf95befbc9ff8de3929ca8)$fatal(1,"digest hold");end
+$display("RTL_BENCHLS_PASS");$finish(0);end endmodule

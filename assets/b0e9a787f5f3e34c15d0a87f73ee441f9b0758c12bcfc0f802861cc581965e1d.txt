@@ -1,0 +1,14 @@
+always @ *
+begin
+    mem_ack_r = 1'b0;
+
+    if (state_q == STATE_LOOKUP)
+    begin
+        // Normal hit - read or write
+        if ((mem_rd_m_q || (mem_wr_m_q != 4'b0)) && tag_hit_any_m_w)
+            mem_ack_r = 1'b1;
+        // Flush, invalidate or writeback
+        else if (mem_flush_m_q || mem_inval_m_q || mem_writeback_m_q)
+            mem_ack_r = 1'b1;
+    end
+end

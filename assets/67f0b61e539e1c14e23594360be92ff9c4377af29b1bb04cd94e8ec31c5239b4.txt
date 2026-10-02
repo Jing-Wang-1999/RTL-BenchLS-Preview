@@ -1,0 +1,140 @@
+module origen_100812 #(
+    parameter VMEM_FILE = "init.hex",
+    parameter VMEM_DEPTH = 1024,
+    parameter VMEM_WIDTH = 32
+) (
+    input wire clk,
+    input wire rstn,
+    
+    // Write interface
+    input wire [31:0] s_axi_awaddr,
+    output reg s_axi_awready,
+    input wire s_axi_awvalid,
+    input wire s_axi_bready,
+    output reg [1:0] s_axi_bresp,
+    output reg s_axi_bvalid,
+    input wire [VMEM_WIDTH-1:0] s_axi_wdata,
+    output reg s_axi_wready,
+    input wire s_axi_wvalid,
+    input wire [2:0] s_axi_awprot,
+    input wire [(VMEM_WIDTH/8)-1:0] s_axi_wstrb,
+    
+    // Read interface
+    input wire s_axi_arvalid,
+    output reg s_axi_arready,
+    input wire [31:0] s_axi_araddr,
+    input wire [2:0] s_axi_arprot,
+    output reg [1:0] s_axi_rresp,
+    output reg [VMEM_WIDTH-1:0] s_axi_rdata,
+    output reg s_axi_rvalid,
+    input wire s_axi_rready
+);
+
+    // Memory declaration
+    reg [VMEM_WIDTH-1:0] mem [0:VMEM_DEPTH-1];
+
+    // Read FSM states
+    localparam IDLE_R = 2'd0, WAIT_ARVALID = 2'd1, SEND_DATA = 2'd2;
+    reg [1:0] read_state, read_next_state;
+
+    // Write FSM states
+    localparam IDLE_W = 2'd0, WAIT_AWVALID = 2'd1, WAIT_VALID_DATA = 2'd2, WAIT_WRESP_READY = 2'd3;
+    reg [1:0] write_state, write_next_state;
+
+    reg [31:0] read_addr, write_addr;
+
+    // Memory initialization
+    initial begin
+        $readmemh(VMEM_FILE, mem);
+    end
+
+    // Read FSM
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
+            read_state <= IDLE_R;
+        end else begin
+            read_state <= read_next_state;
+        end
+    end
+
+    always @(*) begin
+        read_next_state = read_state;
+        s_axi_arready = 1'b0;
+        s_axi_rvalid = 1'b0;
+        s_axi_rresp = 2'b00;
+
+        case (read_state)
+            IDLE_R: begin
+                s_axi_arready = 1'b1;
+                if (s_axi_arvalid) begin
+                    read_next_state = WAIT_ARVALID;
+                end
+            end
+            WAIT_ARVALID: begin
+                read_addr = s_axi_araddr >> 2;
+                s_axi_rdata = mem[read_addr];
+                s_axi_rvalid = 1'b1;
+                if (s_axi_rready) begin
+                    read_next_state = IDLE_R;
+                end else begin
+                    read_next_state = SEND_DATA;
+                end
+            end
+            SEND_DATA: begin
+                s_axi_rvalid = 1'b1;
+                if (s_axi_rready) begin
+                    read_next_state = IDLE_R;
+                end
+            end
+        endcase
+    end
+
+    // Write FSM
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
+            write_state <= IDLE_W;
+        end else begin
+            write_state <= write_next_state;
+        end
+    end
+
+    always @(*) begin
+        write_next_state = write_state;
+        s_axi_awready = 1'b0;
+        s_axi_wready = 1'b0;
+        s_axi_bvalid = 1'b0;
+        s_axi_bresp = 2'b00;
+
+        case (write_state)
+            IDLE_W: begin
+                s_axi_awready = 1'b1;
+                if (s_axi_awvalid) begin
+                    write_next_state = WAIT_AWVALID;
+                end
+            end
+            WAIT_AWVALID: begin
+                write_addr = s_axi_awaddr >> 2;
+                s_axi_wready = 1'b1;
+                if (s_axi_wvalid) begin
+                    write_next_state = WAIT_VALID_DATA;
+                end
+            end
+            WAIT_VALID_DATA: begin
+                mem[write_addr] = s_axi_wdata;
+                s_axi_bvalid = 1'b1;
+                if (s_axi_bready) begin
+                    write_next_state = IDLE_W;
+                end else begin
+                    write_next_state = WAIT_WRESP_READY;
+                end
+            end
+            WAIT_WRESP_READY: begin
+                s_axi_bvalid = 1'b1;
+                if (s_axi_bready) begin
+                    write_next_state = IDLE_W;
+                end
+            end
+        endcase
+    end
+
+endmodule

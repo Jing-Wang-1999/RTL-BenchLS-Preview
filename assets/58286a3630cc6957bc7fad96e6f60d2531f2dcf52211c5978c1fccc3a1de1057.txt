@@ -1,0 +1,46 @@
+module rtlpp_10697 (
+                                   address,
+                                   byteenable,
+                                   chipselect,
+                                   clk,
+                                   clken,
+                                   freeze,
+                                   reset,
+                                   reset_req,
+                                   write,
+                                   writedata,
+                                   readdata
+                                );
+
+  output reg [ 31: 0] readdata;
+  input      [  9: 0] address;
+  input      [  3: 0] byteenable;
+  input               chipselect;
+  input               clk;
+  input               clken;
+  input               freeze;
+  input               reset;
+  input               reset_req;
+  input               write;
+  input      [ 31: 0] writedata;
+
+  wire                clocken0;
+  wire                wren;
+  reg  [ 31: 0]       mem [0:1023]; // memory array
+  
+  assign wren = chipselect & write;
+  assign clocken0 = clken & ~reset_req;
+
+  always @(posedge clk) begin
+    if (clocken0) begin
+      if (wren) begin
+        if (byteenable[0]) mem[address][ 7: 0] <= writedata[ 7: 0];
+        if (byteenable[1]) mem[address][15: 8] <= writedata[15: 8];
+        if (byteenable[2]) mem[address][23:16] <= writedata[23:16];
+        if (byteenable[3]) mem[address][31:24] <= writedata[31:24];
+      end
+      readdata <= mem[address];
+    end
+  end
+
+endmodule

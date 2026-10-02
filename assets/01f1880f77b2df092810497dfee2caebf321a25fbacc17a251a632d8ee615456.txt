@@ -1,0 +1,139 @@
+module autovcoder_018026 (
+    input R_CPU,  // Reset
+    input C_CPU,
+    input [7:0] DI_CPU,  // Data Input
+    input nIRQ_CPU,  // Interrupt Request
+    input nNMI_CPU,  // Non-Maskable Interrupt
+    input nABT_CPU,  // Abort
+    input nSOB_CPU,  // Set Overflow Bit
+    input nRDY_CPU,  // Ready
+    input BE_CPU,  // Bus Enable
+    output [7:0] DO_CPU,  // Data Output
+    output [15:0] AO_CPU,  // Address Output
+    output RnW_CPU,  // Read/Write
+    output nMLB_CPU,  // Memory Lock Bit
+    output VDA_CPU,  // Valid Data Address
+    output VPA_CPU,  // Valid Program Address
+    output VBA_CPU,  // Valid Base Page Address
+    output VSA_CPU,  // Valid Stack Address
+    output VVA_CPU  // Valid Vector Address
+
+);
+  wire C;
+  wire nC;
+  wire RDY;
+  wire s0;
+  wire s1;
+  wire s2;
+  wire s3;
+  wire s4;
+  wire VSA_CPU_temp;
+  wire [7:0] s5;
+  wire [6:0] s6;
+  wire [2:0] s7;
+  wire [2:0] s8;
+  wire s9;
+  wire s10;
+  wire [7:0] s11;
+  wire [15:0] s12;
+  wire [9:0] s13;
+  wire [15:0] s14;
+  wire BY;
+  wire [7:0] s15;
+  wire [1:0] s16;
+  wire [31:0] s17;
+  wire [2:0] s18;
+  wire [3:0] s19;
+  wire s20;
+  wire s21;
+  wire s22;
+  wire s23;
+  assign s0 = (BE_CPU & ~nSOB_CPU);
+  assign s1 = (BE_CPU & ~nABT_CPU);
+  assign s2 = (BE_CPU & ~nNMI_CPU);
+  assign s3 = (BE_CPU & ~nIRQ_CPU);
+  assign s4 = ~nRDY_CPU;
+  CE_LFSR CE_LFSR_i0 (
+      .CLK(C_CPU),
+      .OUT(s15)
+  );
+  DIG_D_FF_1bit #(
+      .Default(0)
+  ) DIG_D_FF_1bit_i1 (
+      .D(s4),
+      .C(C_CPU),
+      .Q(RDY)
+  );
+  Mux_2x1 Mux_2x1_i2 (
+      .sel (RDY),
+      .in_0(C_CPU),
+      .in_1(1'b1),
+      .out (C)
+  );
+  assign nC = ~C;
+  assign RnW_CPU = (BE_CPU & s7[0]);
+  CE_M_ALU CE_M_ALU_i3 (
+      .ALA_A(s11),
+      .ALB_A(s12),
+      .A_CTRL_A(s13),
+      .SOB_A(s0),
+      .CIB_A(s9),
+      .R_A(R_CPU),
+      .nC_A(nC),
+      .C_A(C),
+      .ALO_A(s14),
+      .FLO_A(s6),
+      .BY_A(BY)
+  );
+  CE_M_REGS CE_M_REGS_i4 (
+      .R_R(R_CPU),
+      .nC_R(nC),
+      .DI_R(DI_CPU),
+      .ALUI_R(s14),
+      .RNDI_R(s15),
+      .FLI_R(s5),
+      .ANRI_R(s16),
+      .R_CTRL_R(s17),
+      .PCO_R(s18),
+      .SPO_R(s19),
+      .ALA_R(s11),
+      .ALB_R(s12),
+      .DO_R(DO_CPU),
+      .VPA_R(s20),
+      .VBA_R(VBA_CPU),
+      .VSA_R(VSA_CPU_temp),
+      .VVA_R(s10),
+      .AO_R(AO_CPU)
+  );
+  CE_M_CU CE_M_CU_i5 (
+      .R_U(R_CPU),
+      .C_U(C),
+      .nC_U(nC),
+      .DI_U(DI_CPU),
+      .FLI_U(s6),
+      .IRQ_U(s3),
+      .NMI_U(s2),
+      .ABT_U(s1),
+      .BY_U(BY),
+      .ANRI_U(s16),
+      .INT_U(s9),
+      .LDIR_U(s21),
+      .\A-CTRL_U (s13),
+      .\R-CTRL_U (s17),
+      .SPO_U(s19),
+      .\M-CTRL_U (s8),
+      .PCO_U(s18),
+      .WAI_U(s22)
+  );
+  assign s7 = ~s8;
+  assign VVA_CPU = (s10 | (VSA_CPU_temp & s9));
+  assign s23 = (BY | s22);
+  assign s5[2:0] = s6[2:0];
+  assign s5[3] = s7[2];
+  assign s5[7:4] = s6[6:3];
+  assign VDA_CPU = (~s21 & ~s23);
+  assign VPA_CPU = (s20 & ~s23);
+  assign nMLB_CPU = s7[1];
+  assign VSA_CPU = VSA_CPU_temp;
+endmodule
+

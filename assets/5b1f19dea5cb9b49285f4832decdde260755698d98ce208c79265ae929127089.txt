@@ -1,0 +1,81 @@
+module autovcoder_074891 #(
+    parameter W       = 32,
+    parameter NFF     = 2,
+    parameter INIT_VAL = {W{1'b0}}
+) (
+    input  wire        i_iclk,
+    input  wire [W-1:0] i_icount,
+    input  wire        i_oclk,
+    output wire [W-1:0] o_ocount
+);
+
+    // Internal signals
+    reg  [W-1:0] gray_reg;
+    wire [W-1:0] gray_val;
+    wire [W-1:0] gray_sync;
+    reg  [W-1:0] sync_chain [0:NFF-1];
+    wire [W-1:0] bin_out;
+    reg  [W-1:0] ocount_reg;
+
+    // Gray encoding function
+    function [W-1:0] bin2gray;
+        input [W-1:0] bin;
+        begin
+            bin2gray = bin ^ (bin >> 1);
+        end
+    endfunction
+
+    // Gray decoding function
+    function [W-1:0] gray2bin;
+        input [W-1:0] gray;
+        integer i;
+        reg [W-1:0] bin;
+        begin
+            bin[W-1] = gray[W-1];
+            for (i = W-2; i >= 0; i = i - 1)
+                bin[i] = bin[i+1] ^ gray[i];
+            gray2bin = bin;
+        end
+    endfunction
+
+    // Generate initial value for synchronization chain
+    genvar i;
+
+    // Gray encoding in input clock domain
+    always @(posedge i_iclk) begin
+        gray_reg <= bin2gray(i_icount);
+    end
+
+    // Cross-domain transfer: gray_reg -> gray_val
+    assign gray_val = gray_reg;
+
+    // Synchronization chain in output clock domain
+    always @(posedge i_oclk) begin
+        sync_chain[0] <= gray_val;
+    end
+
+    generate
+        for (i = 1; i < NFF; i = i + 1) begin : sync_stages
+            (* ASYNC_REG = "TRUE" *) reg [W-1:0] stage_reg;
+            
+            always @(posedge i_oclk) begin
+                if (i == 1)
+                    sync_chain[1] <= sync_chain[0];
+                else
+                    sync_chain[i] <= sync_chain[i-1];
+            end
+        end
+    endgenerate
+
+    // Final synchronized value
+    assign gray_sync = sync_chain[NFF-1];
+
+    // Gray to binary conversion and output registration
+    always @(posedge i_oclk) begin
+        ocount_reg <= gray2bin(gray_sync);
+    end
+
+    // Output assignment
+    assign o_ocount = ocount_reg;
+
+endmodule

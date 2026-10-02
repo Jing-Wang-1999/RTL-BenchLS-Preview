@@ -1,0 +1,35 @@
+always @(posedge clk) begin
+    last_read_reg <= last_read_next;
+
+    s_axil_awready_reg <= s_axil_awready_next;
+    s_axil_wready_reg <= s_axil_wready_next;
+    s_axil_bvalid_reg <= s_axil_bvalid_next;
+
+    s_axil_arready_reg <= s_axil_arready_next;
+    s_axil_rvalid_reg <= s_axil_rvalid_next;
+
+    if (mem_rd_en) begin
+        s_axil_rdata_reg <= indir_tbl_mem[s_axil_araddr_valid];
+    end else begin
+        if (mem_wr_en) begin
+            indir_tbl_mem[s_axil_awaddr_valid] <= s_axil_wdata;
+        end
+    end
+
+    if (!s_axil_rvalid_pipe_reg || s_axil_rready) begin
+        s_axil_rdata_pipe_reg <= s_axil_rdata_reg;
+        s_axil_rvalid_pipe_reg <= s_axil_rvalid_reg;
+    end
+
+    if (rst) begin
+        last_read_reg <= 1'b0;
+
+        s_axil_awready_reg <= 1'b0;
+        s_axil_wready_reg <= 1'b0;
+        s_axil_bvalid_reg <= 1'b0;
+
+        s_axil_arready_reg <= 1'b0;
+        s_axil_rvalid_reg <= 1'b0;
+        s_axil_rvalid_pipe_reg <= 1'b0;
+    end
+end

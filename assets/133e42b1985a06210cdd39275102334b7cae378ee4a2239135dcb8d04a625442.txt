@@ -1,0 +1,181 @@
+module autovcoder_087999 (
+    input  wire [  4:0] okUH,
+    output wire [  2:0] okHU,
+    inout  wire [ 31:0] okUHU,
+    inout  wire         okAA,
+    output wire         okClk,
+    output wire [112:0] okHE,
+    input  wire [ 64:0] okEH
+);
+
+  wire [38:0] okHC;
+  wire [37:0] okCH;
+
+  wire        okUH0_ibufg;
+  wire        dcm0_clk0;
+  wire        dcm0_locked;
+
+  wire [31:0] iobf0_o;
+  wire [31:0] regout0_q;
+  wire [31:0] regvalid_q;
+
+  wire [ 3:0] okUHx;
+
+  assign okClk    =  okHC[0];
+  assign okHC[38] = ~dcm0_locked;
+
+  IBUFG hi_clk_bufg (
+      .I(okUH[0]),
+      .O(okUH0_ibufg)
+  );
+
+  DCM_SP #(
+      .CLKIN_PERIOD(9.92),  // Input clock period specified in nS
+      .CLKOUT_PHASE_SHIFT("FIXED"),  // Output phase shift (NONE, FIXED, VARIABLE)
+      .PHASE_SHIFT("-32"),                  // Fixed negative phase shift centers clock in "ctrl_in" data valid window.~1ns (-255 to 255)
+      .CLK_FEEDBACK("1X"),  // Feedback source (NONE, 1X, 2X)
+      .DESKEW_ADJUST("SOURCE_SYNCHRONOUS"),  // SYSTEM_SYNCHRNOUS or SOURCE_SYNCHRONOUS
+      .STARTUP_WAIT("FALSE")  // Delay config DONE until DCM_SP LOCKED (TRUE/FALSE)
+  ) dcm0 (
+      .CLK0  (dcm0_clk0),    // Negative phase shifted to clock in CTRL
+      .LOCKED(dcm0_locked),  // 1-bit output: DCM_SP Lock Output
+      .CLKFB (okHC[0]),      // 1-bit input: Clock feedback input
+      .CLKIN (okUH0_ibufg),  // 1-bit input: Clock input
+      .RST   (1'b0),         // 1-bit input: Active high reset input
+      .PSEN  (1'b0)
+  );
+
+  BUFG dcm0_bufg (
+      .I(dcm0_clk0),
+      .O(okHC[0])
+  );
+
+
+  //------------------------------------------------------------------------
+  // Bidirectional IOB registers
+  //------------------------------------------------------------------------
+
+  genvar i;
+  generate
+    for (i = 0; i < 32; i = i + 1) begin : iob_regs
+      IOBUF iobf0 (
+          .IO(okUHU[i]),
+          .I (regout0_q[i]),
+          .O (iobf0_o[i]),
+          .T (regvalid_q[i])
+      );
+
+      //Input Registering
+      (* IOB = "true" *)
+      FDRE regin0 (
+          .D (iobf0_o[i]),
+          .Q (okHC[i+5]),
+          .C (okHC[0]),
+          .CE(1'b1),
+          .R (1'b0)
+      );
+
+      // Output Registering
+      (* IOB = "true" *)
+      FDRE regout0 (
+          .D (okCH[i+3]),
+          .Q (regout0_q[i]),
+          .C (okHC[0]),
+          .CE(1'b1),
+          .R (1'b0)
+      );
+
+      // Tristate Drive
+      (* IOB = "true" *)
+      FDRE regvalid (
+          .D (~okCH[36]),
+          .Q (regvalid_q[i]),
+          .C (okHC[0]),
+          .CE(1'b1),
+          .R (1'b0)
+      );
+    end
+  endgenerate
+
+  IOBUF tbuf (
+      .I (okCH[35]),
+      .O (okHC[37]),
+      .T (okCH[37]),
+      .IO(okAA)
+  );
+
+  //------------------------------------------------------------------------
+  // Output IOB registers
+  //------------------------------------------------------------------------
+  (* IOB = "true" *)
+  FDRE regctrlout0 (
+      .D (okCH[2]),
+      .C (okHC[0]),
+      .CE(1'b1),
+      .R (1'b0),
+      .Q (okHU[2])
+  );
+  (* IOB = "true" *)
+  FDRE regctrlout1 (
+      .D (okCH[0]),
+      .C (okHC[0]),
+      .CE(1'b1),
+      .R (1'b0),
+      .Q (okHU[0])
+  );
+  (* IOB = "true" *)
+  FDRE regctrlout2 (
+      .D (okCH[1]),
+      .C (okHC[0]),
+      .CE(1'b1),
+      .R (1'b0),
+      .Q (okHU[1])
+  );
+
+  //------------------------------------------------------------------------
+  // Input IOB registers
+  //  - First registered on DCM0 (positive edge)
+  //  - Then registered on DCM0 (negative edge)
+  //------------------------------------------------------------------------
+  (* IOB = "true" *)
+  FDRE regctrlin0a (
+      .C (okHC[0]),
+      .D (okUH[1]),
+      .Q (okHC[1]),
+      .CE(1'b1),
+      .R (1'b0)
+  );
+  (* IOB = "true" *)
+  FDRE regctrlin1a (
+      .C (okHC[0]),
+      .D (okUH[2]),
+      .Q (okHC[2]),
+      .CE(1'b1),
+      .R (1'b0)
+  );
+  (* IOB = "true" *)
+  FDRE regctrlin2a (
+      .C (okHC[0]),
+      .D (okUH[3]),
+      .Q (okHC[3]),
+      .CE(1'b1),
+      .R (1'b0)
+  );
+  (* IOB = "true" *)
+  FDRE regctrlin3a (
+      .C (okHC[0]),
+      .D (okUH[4]),
+      .Q (okHC[4]),
+      .CE(1'b1),
+      .R (1'b0)
+  );
+
+
+  okCoreHarness core0 (
+      .okHC(okHC),
+      .okCH(okCH),
+      .okHE(okHE),
+      .okEH(okEH)
+  );
+endmodule
+

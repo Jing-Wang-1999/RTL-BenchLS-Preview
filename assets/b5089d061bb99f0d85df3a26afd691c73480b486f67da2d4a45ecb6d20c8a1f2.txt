@@ -1,0 +1,45 @@
+module origen_160680 (
+    input [6:0] opcode,
+    output RegWrite,
+    output ImmType,
+    output PCToRegSrc,
+    output RDSrc,
+    output MemRead,
+    output MemWrite,
+    output MemToReg,
+    output ALUSrc,
+    output [2:0] ALUOp
+);
+
+    // Internal signals for each instruction type
+    wire is_rtype, is_iload, is_stype, is_btype, is_iimm, is_lui, is_jal;
+    
+    // Instruction type detection
+    assign is_rtype = (opcode == 7'b0110011);
+    assign is_iload = (opcode == 7'b0000011);
+    assign is_stype = (opcode == 7'b0100011);
+    assign is_btype = (opcode == 7'b1100011);
+    assign is_iimm  = (opcode == 7'b0010011);
+    assign is_lui   = (opcode == 7'b0110111);
+    assign is_jal   = (opcode == 7'b1101111);
+    
+    // Control signal generation
+    assign RegWrite = is_rtype | is_iload | is_iimm | is_lui | is_jal;
+    assign ImmType = is_iload | is_stype | is_btype | is_iimm | is_lui | is_jal;
+    assign PCToRegSrc = is_jal;
+    assign RDSrc = is_rtype | is_lui;
+    assign MemRead = is_iload;
+    assign MemWrite = is_stype;
+    assign MemToReg = is_iload;
+    assign ALUSrc = is_iload | is_stype | is_btype | is_iimm | is_lui | is_jal;
+    
+    // ALUOp encoding
+    assign ALUOp[2:0] = ({3{is_rtype}} & 3'b110) |
+                        ({3{is_iload}} & 3'b000) |
+                        ({3{is_stype}} & 3'b000) |
+                        ({3{is_btype}} & 3'b001) |
+                        ({3{is_iimm}}  & 3'b010) |
+                        ({3{is_lui}}   & 3'b011) |
+                        ({3{is_jal}}   & 3'b100);
+
+endmodule

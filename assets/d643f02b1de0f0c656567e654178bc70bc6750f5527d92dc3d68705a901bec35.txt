@@ -1,0 +1,107 @@
+module origen_097786 (
+    input wire clk,
+    input wire reset,
+    input wire [7:0] ASCII [31:0],
+    output reg E,
+    output reg RS,
+    output wire RW,
+    output reg [7:0] DB
+);
+
+    // State encoding
+    localparam [2:0] 
+        sSetup_start = 3'b000,
+        sSetup_end   = 3'b001,
+        sCursor_start = 3'b010,
+        sCursor_end   = 3'b011,
+        sChar        = 3'b100,
+        sChar_end    = 3'b101;
+
+    reg [2:0] state, next_state;
+
+    reg [4:0] char;
+    reg [2:0] setup;
+
+    assign RW = 1'b0; // Always write mode
+
+    // Sequential logic
+    always @(posedge clk or negedge reset) begin
+        if (!reset) begin
+            state <= sSetup_start;
+            char <= 5'd0;
+            setup <= 3'd0;
+        end else begin
+            state <= next_state;
+            if (state == sChar_end) begin
+                if (char == 5'd31)
+                    char <= 5'd0;
+                else
+                    char <= char + 1'b1;
+            end
+            if (state == sSetup_end) begin
+                if (setup == 3'd3)
+                    setup <= 3'd0;
+                else
+                    setup <= setup + 1'b1;
+            end
+        end
+    end
+
+    // Combinational logic
+    always @(*) begin
+        // Default values
+        next_state = state;
+        E = 1'b0;
+        RS = 1'b0;
+        DB = 8'h00;
+
+        case (state)
+            sSetup_start: begin
+                case (setup)
+                    3'd0: DB = 8'h38; // Function set
+                    3'd1: DB = 8'h0C; // Display on, cursor on
+                    3'd2: DB = 8'h06; // Entry mode set
+                    3'd3: DB = 8'h01; // Clear display
+                endcase
+                next_state = sSetup_end;
+            end
+
+            sSetup_end: begin
+                E = 1'b1;
+                if (setup == 3'd3)
+                    next_state = sCursor_start;
+                else
+                    next_state = sSetup_start;
+            end
+
+            sCursor_start: begin
+                RS = 1'b0;
+                DB = (char < 5'd16) ? {3'b100, char[4:0]} : {3'b110, char[4:0] - 5'd16};
+                next_state = sCursor_end;
+            end
+
+            sCursor_end: begin
+                E = 1'b1;
+                next_state = sChar;
+            end
+
+            sChar: begin
+                RS = 1'b1;
+                DB = ASCII[char];
+                next_state = sChar_end;
+            end
+
+            sChar_end: begin
+                E = 1'b1;
+                RS = 1'b1;
+                if (char == 5'd31)
+                    next_state = sSetup_start;
+                else
+                    next_state = sCursor_start;
+            end
+
+            default: next_state = sSetup_start;
+        endcase
+    end
+
+endmodule

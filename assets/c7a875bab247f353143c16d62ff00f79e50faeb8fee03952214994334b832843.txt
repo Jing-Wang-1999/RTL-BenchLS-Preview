@@ -1,0 +1,16 @@
+# Systolic-array SRAM write formatter
+
+Implement `write_out` with default ARRAY_SIZE=8 and OUTPUT_DATA_WIDTH=16. Only this configuration is qualified. Inputs: `clk`, synchronous active-low `srstn`, active-high `sram_write_enable`, `data_set[1:0]`, `matrix_index[5:0]`, and signed packed `quantized_data[127:0]`. For each bank suffix a,b,c provide `sram_write_enable_a0/b0/c0` (active-low), `sram_wdata_a/b/c[127:0]`, and `sram_waddr_a/b/c[5:0]`. Outputs are registered at every rising edge, giving one sampling-edge latency. Reset makes all bank enables1 and addresses/data0. No backpressure or retained pending request exists.
+
+Define input lane q[j]=quantized_data[16*j +:16], j0..7, and output lane i as bits [16*(7-i)+:16]. Lane reordering treats all16 bits opaquely despite signed input declaration. At each nonreset edge begin with all three banks disabled, zero data and zero address; then apply the table when sram_write_enable=1, using k=matrix_index. Every unlisted lane remains zero. An enabled bank has enable0 even if its data is all zero.
+
+| data_set | Condition | Bank | Address | Output lane i, i=0..7 |
+|---|---|---|---|---|
+| 0 | k<8 | a | k | q[i] if i<=k |
+| 0 | k>=8 | a | k | q[i+k-7] if i<15-k |
+| 0 | k>=8 | b | k-8 | q[i] if i<=k-8 |
+| 1 | k<8 | b | k+8 | q[i+k+1] if i<7-k |
+| 1 | k<8 | c | k | q[i] if i<=k |
+| 1 | k>=8 | c | k | q[i+k-7] if i<15-k |
+
+With enable0 input (no request), or data_set2/3, all banks are disabled and cleared on the next edge. Typical diagonal indices are0..14; at k15 bank a/c writes zero and bank b in set0 writes all eight q lanes. The RTL uses unsigned Verilog32-bit comparison arithmetic for `15-k`; for k>15 subtraction wraps to 2^32+15-k, so selected a/c lanes reference positions beyond q[7] and are unknown, while set0 bank b still receives all q lanes at address k-8. Such out-of-range diagonal data has no defined meaningful payload, and must not be specified as zero. Do not constrain it away in equivalence. Parameter values other than8/16 are not promised: constants15 and6-bit addresses belong to this geometry.

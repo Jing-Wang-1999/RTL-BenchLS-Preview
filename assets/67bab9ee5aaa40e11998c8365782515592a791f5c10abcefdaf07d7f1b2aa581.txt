@@ -1,0 +1,21 @@
+The module `HLS_cdp_icvt_core_chn_data_in_rsci_chn_data_in_wait_ctrl` is a control unit designed to manage data input flow in a hardware system, specifically within the context of an NVDLA (NVIDIA Deep Learning Accelerator) core. This module is responsible for controlling the readiness and waiting states of the data channel input interface.
+
+### Inputs:
+1. **nvdla_core_clk**: This is the clock signal for the NVDLA core, which synchronizes the operations within the module.
+2. **nvdla_core_rstn**: This is an active-low reset signal for the NVDLA core. When asserted (low), it resets the internal state of the module.
+3. **chn_data_in_rsci_oswt**: A control signal that indicates whether the output switch for the channel data input is enabled.
+4. **core_wen**: A write enable signal for the core, indicating when writing operations are permitted.
+5. **chn_data_in_rsci_iswt0**: An input switch control signal for the channel data input, determining whether the input path is enabled.
+6. **chn_data_in_rsci_ld_core_psct**: A load control signal that indicates whether the core should load data from the channel.
+7. **core_wten**: A write enable signal that, when low, allows certain operations to proceed.
+8. **chn_data_in_rsci_vd**: A valid data signal indicating that the data on the channel is valid and can be processed.
+
+### Outputs:
+1. **chn_data_in_rsci_biwt**: A signal indicating that the channel data input is ready to be written, contingent on the valid data signal.
+2. **chn_data_in_rsci_bdwt**: A signal indicating that the channel data input is ready to be read, contingent on the output switch and write enable signals.
+3. **chn_data_in_rsci_ld_core_sct**: A signal that controls the loading of data into the core, based on the load control and output gate signals.
+
+### Internal Behavior:
+- The module uses a combination of input signals to determine the state of the channel data input interface, specifically whether it should be in a waiting state or ready to process data.
+- The internal signal `chn_data_in_rsci_icwt` is used to manage the internal wait state of the channel. It is updated on each clock cycle based on the reset signal and the current state of other control signals.
+- The module generates the `chn_data_in_rsci_biwt` signal by combining the output gate and valid data signals, ensuring that data is

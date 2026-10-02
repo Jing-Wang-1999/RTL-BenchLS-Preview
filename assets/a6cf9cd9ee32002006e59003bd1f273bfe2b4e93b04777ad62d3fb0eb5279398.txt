@@ -1,0 +1,531 @@
+always @ (*) begin
+	decode_match = 1'b0;
+	rdata = {XLEN{1'b0}};
+	pmp_cfg_wen = 1'b0;
+	trig_cfg_wen = 1'b0;
+	case (addr)
+
+	// ------------------------------------------------------------------------
+	// Mandatory CSRs
+
+	MISA: if (CSR_M_MANDATORY) begin
+		// WARL, so it is legal to be tied constant
+		decode_match = match_mrw;
+		rdata = MISA_VAL;
+	end
+	MVENDORID: if (CSR_M_MANDATORY) begin
+		decode_match = match_mro;
+		rdata = MVENDORID_VAL;
+	end
+	MARCHID: if (CSR_M_MANDATORY) begin
+		decode_match = match_mro;
+		// Hazard3's open source architecture ID
+		rdata = 32'd27;
+	end
+	MIMPID: if (CSR_M_MANDATORY) begin
+		decode_match = match_mro;
+		rdata = mimpid_rdata;
+	end
+	MHARTID: if (CSR_M_MANDATORY) begin
+		decode_match = match_mro;
+		rdata = mhartid_val;
+	end
+
+	MCONFIGPTR: if (CSR_M_MANDATORY) begin
+		decode_match = match_mro;
+		rdata = MCONFIGPTR_VAL;
+	end
+
+	MSTATUS: if (CSR_M_MANDATORY || CSR_M_TRAP) begin
+		decode_match = match_mrw;
+		rdata = {
+			1'b0,             // Never any dirty state besides GPRs
+			8'd0,             // (WPRI)
+			1'b0,             // TSR (Trap SRET), tied 0 if no S mode.
+			mstatus_tw,       // TW (Timeout Wait)
+			1'b0,             // TVM (trap virtual memory), tied 0 if no S mode.
+			1'b0,             // MXR (Make eXecutable Readable), tied 0 if no S mode.
+			1'b0,             // SUM, tied 0 if no S mode
+			mstatus_mprv,     // MPRV (modify privilege)
+			4'd0,             // XS, FS always "off" (no extension state to clear!)
+			{2{mstatus_mpp}}, // MPP (M-mode previous privilege), only M and U supported
+			2'd0,             // (WPRI)
+			1'b0,             // SPP, tied 0 if S mode not supported
+			mstatus_mpie,     // Previous interrupt enable
+			3'd0,             // No S, U
+			mstatus_mie,      // Interrupt enable
+			3'd0              // No S, U
+		};
+	end
+
+	// MSTATUSH is all zeroes (fields are MBE and SBE, which are zero because
+	// we are pure little-endian.) Prior to priv-1.12 MSTATUSH could be left
+	// unimplemented in this case, but now it must be decoded even if
+	// hardwired to 0.
+	MSTATUSH: if (CSR_M_MANDATORY || CSR_M_TRAP) begin
+		decode_match = match_mrw;
+	end
+
+	// MEDELEG, MIDELEG should not exist for no-S-mode implementations. Will
+	// raise illegal instruction exception if accessed.
+
+	// MENVCFG is seemingly mandatory as of M-mode v1.12, if U-mode is
+	// implemented. All of its fields are tied to 0 in our implementation.
+	MENVCFGH: if (U_MODE) begin
+		decode_match = match_mrw;
+	end
+	MENVCFG: if (U_MODE) begin
+		decode_match = match_mrw;
+	end
+
+	// ------------------------------------------------------------------------
+	// Trap-handling CSRs
+
+	// This is a 32 bit synthesised register with set/clear/write/read, don't
+	// turn it on unless we really have to
+	MSCRATCH: if (CSR_M_TRAP && CSR_M_MANDATORY) begin
+		decode_match = match_mrw;
+		rdata = mscratch;
+	end
+
+	MEPC: if (CSR_M_TRAP) begin
+		decode_match = match_mrw;
+		rdata = mepc;
+	end
+
+	MCAUSE: if (CSR_M_TRAP) begin
+		decode_match = match_mrw;
+		rdata = {
+			mcause_irq,      // Sign bit is 1 for IRQ, 0 for exception
+			{27{1'b0}},      // Padding
+			mcause_code[3:0] // Enough for 16 external IRQs, which is all we have room for in mip/mie
+		};
+	end
+
+	MTVAL: if (CSR_M_TRAP) begin
+		decode_match = match_mrw;
+		// Hardwired to 0
+	end
+
+	MIE: if (CSR_M_TRAP) begin
+		decode_match = match_mrw;
+		rdata = mie;
+	end
+
+	MIP: if (CSR_M_TRAP) begin
+		// Writes are permitted, but ignored.
+		decode_match = match_mrw;
+		rdata = mip;
+	end
+
+	MTVEC: if (CSR_M_TRAP) begin
+		decode_match = match_mrw;
+		rdata = {
+			mtvec[XLEN-1:2],  // BASE
+			1'b0,             // Reserved mode bit gets WARL'd to 0
+			irq_vector_enable // MODE is vectored (2'h1) or direct (2'h0)
+		};
+	end
+
+	// ------------------------------------------------------------------------
+	// Counter CSRs
+
+	// Get the tied WARLs out the way first
+	MHPMCOUNTER3:   if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER4:   if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER5:   if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER6:   if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER7:   if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER8:   if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER9:   if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER10:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER11:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER12:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER13:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER14:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER15:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER16:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER17:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER18:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER19:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER20:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER21:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER22:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER23:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER24:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER25:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER26:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER27:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER28:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER29:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER30:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER31:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+
+	MHPMCOUNTER3H:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER4H:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER5H:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER6H:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER7H:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER8H:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER9H:  if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER10H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER11H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER12H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER13H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER14H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER15H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER16H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER17H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER18H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER19H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER20H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER21H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER22H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER23H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER24H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER25H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER26H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER27H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER28H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER29H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER30H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMCOUNTER31H: if (CSR_COUNTER) begin decode_match = match_mrw; end
+
+	MHPMEVENT3:     if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT4:     if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT5:     if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT6:     if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT7:     if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT8:     if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT9:     if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT10:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT11:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT12:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT13:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT14:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT15:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT16:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT17:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT18:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT19:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT20:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT21:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT22:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT23:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT24:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT25:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT26:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT27:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT28:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT29:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT30:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+	MHPMEVENT31:    if (CSR_COUNTER) begin decode_match = match_mrw; end
+
+	MCOUNTINHIBIT:  if (CSR_COUNTER) begin
+		decode_match = match_mrw;
+		rdata = {
+			29'd0,
+			mcountinhibit_ir,
+			1'b0,
+			mcountinhibit_cy
+		};
+	end
+
+	MCYCLE: if (CSR_COUNTER) begin
+		decode_match = match_mrw;
+		rdata = mcycle;
+	end
+	MINSTRET: if (CSR_COUNTER) begin
+		decode_match = match_mrw;
+		rdata = minstret;
+	end
+
+	MCYCLEH: if (CSR_COUNTER) begin
+		decode_match = match_mrw;
+		rdata = mcycleh;
+	end
+	MINSTRETH: if (CSR_COUNTER) begin
+		decode_match = match_mrw;
+		rdata = minstreth;
+	end
+
+	MCOUNTEREN: if (CSR_COUNTER && U_MODE) begin
+		decode_match = match_mrw;
+		rdata = {
+			29'd0,
+			mcounteren_ir,
+			mcounteren_tm,
+			mcounteren_cy
+		};
+	end
+
+	// ------------------------------------------------------------------------
+	// PMP CSRs (bridge to PMP config interface)
+
+	// If PMP is present, all 16 registers are present, but some may be WARL'd
+	// to 0 depending on how many regions are actually implemented.
+	PMPCFG0:   if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPCFG1:   if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPCFG2:   if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPCFG3:   if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR0:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR1:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR2:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR3:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR4:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR5:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR6:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR7:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR8:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR9:  if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR10: if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR11: if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR12: if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR13: if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR14: if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+	PMPADDR15: if (PMP_REGIONS > 0) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+
+	// MSECCFG is strictly optional, and we don't implement any of its
+	// features (ePMP etc) so we don't decode it.
+
+	// ------------------------------------------------------------------------
+	// U-mode CSRs
+
+	// The read-only counters are always visible to M mode, and are visible to
+	// U mode if the corresponding mcounteren bit is set.
+	CYCLE: if (CSR_COUNTER) begin
+		decode_match = mcounteren_cy ? match_uro : match_mro;
+		rdata = mcycle;
+	end
+	CYCLEH: if (CSR_COUNTER) begin
+		decode_match = mcounteren_cy ? match_uro : match_mro;
+		rdata = mcycleh;
+	end
+
+	INSTRET: if (CSR_COUNTER) begin
+		decode_match = mcounteren_ir ? match_uro : match_mro;
+		rdata = minstret;
+	end
+	INSTRETH: if (CSR_COUNTER) begin
+		decode_match = mcounteren_ir ? match_uro : match_mro;
+		rdata = minstreth;
+	end
+
+	// ------------------------------------------------------------------------
+	// Trigger Module CSRs
+
+	// When debug support is enabled, we always have basic trigger support
+	// (instruction count, interrupt and exception). Breakpoints are optional.
+	TSELECT: if (DEBUG_SUPPORT) begin
+		decode_match = match_mrw;
+		trig_cfg_wen = match_mrw && wen;
+		rdata = trig_cfg_rdata;
+	end
+
+	TDATA1: if (DEBUG_SUPPORT) begin
+		decode_match = match_mrw;
+		trig_cfg_wen = match_mrw && wen;
+		rdata = trig_cfg_rdata;
+	end
+
+	TDATA2: if (DEBUG_SUPPORT) begin
+		decode_match = match_mrw;
+		trig_cfg_wen = match_mrw && wen;
+		rdata = trig_cfg_rdata;
+	end
+
+	TDATA3: if (DEBUG_SUPPORT) begin
+		// Unimplemented but must be accessible, so hardwired to 0.
+		decode_match = match_mrw;
+		rdata = 32'h00000000;
+	end
+
+	TINFO: if (DEBUG_SUPPORT) begin
+		// Note tinfo is a read-write CSR (writes don't trap) even though it
+		// is entirely read-only.
+		decode_match = match_mrw;
+		trig_cfg_wen = match_mrw && wen;
+		rdata = trig_cfg_rdata;
+	end
+
+	TCONTROL: if (DEBUG_SUPPORT) begin
+		decode_match = match_mrw;
+		rdata = {
+			24'h0,
+			tcontrol_mpte,
+			3'h0,
+			tcontrol_mte,
+			3'h0
+		};
+	end
+
+	// ------------------------------------------------------------------------
+	// Debug CSRs
+
+	DCSR: if (DEBUG_SUPPORT) begin
+		decode_match = match_drw;
+		rdata = {
+			4'h4,         // xdebugver = 4, for 0.13.2 debug spec
+			12'd0,        // reserved
+			dcsr_ebreakm,
+			2'h0,         // No mode 2/1
+			dcsr_ebreaku,
+			1'b0,         // stepie = 0, no interrupts in single-step mode
+			1'b1,         // stopcount = 1, no counter increment in debug mode
+			1'b1,         // stoptime = 0, no core-local timer increment in debug mode
+			dcsr_cause,
+			1'b0,         // reserved
+			1'b0,         // mprven = 0, debugger always acts as M-mode
+			1'b0,         // nmip = 0, we have no NMI
+			dcsr_step,
+			{2{m_mode}}   // priv = M or U, report the core state directly
+		};
+	end
+
+	DPC: if (DEBUG_SUPPORT) begin
+		decode_match = match_drw;
+		rdata = debug_dpc_rdata;
+	end
+
+	DMDATA0: if (DEBUG_SUPPORT) begin
+		decode_match = match_drw;
+		rdata = dbg_data0_rdata;
+	end
+
+	// ------------------------------------------------------------------------
+	// Custom CSRs
+
+	PMPCFGM0: if (PMP_REGIONS > 0 && EXTENSION_XH3PMPM) begin
+		decode_match = match_mrw;
+		pmp_cfg_wen = match_mrw && wen;
+		rdata = pmp_cfg_rdata;
+	end
+
+	MEIEA: if (CSR_M_TRAP && EXTENSION_XH3IRQ) begin
+		decode_match = match_mrw;
+		rdata = irq_ctrl_rdata;
+	end
+
+	MEIPA: if (CSR_M_TRAP && EXTENSION_XH3IRQ) begin
+		decode_match = match_mrw;
+		rdata = irq_ctrl_rdata;
+	end
+
+	MEIFA: if (CSR_M_TRAP && EXTENSION_XH3IRQ) begin
+		decode_match = match_mrw;
+		rdata = irq_ctrl_rdata;
+	end
+
+	MEIPRA: if (CSR_M_TRAP && EXTENSION_XH3IRQ) begin
+		decode_match = match_mrw;
+		rdata = irq_ctrl_rdata;
+	end
+
+	MEINEXT: if (CSR_M_TRAP && EXTENSION_XH3IRQ) begin
+		decode_match = match_mrw;
+		rdata = irq_ctrl_rdata;
+	end
+
+	MEICONTEXT: if (CSR_M_TRAP && EXTENSION_XH3IRQ) begin
+		decode_match = match_mrw;
+		rdata = irq_ctrl_rdata;
+	end
+
+	MSLEEP: if (EXTENSION_XH3POWER) begin
+		decode_match = match_mrw;
+		rdata = {
+			29'h0,
+			msleep_sleeponblock,
+			msleep_powerdown,
+			msleep_deepsleep
+		};
+	end
+
+	H3MISA: if (CSR_M_MANDATORY) begin
+		decode_match = match_mrw;
+		rdata = h3misa_rdata;
+	end
+
+	default: begin end
+	endcase
+end

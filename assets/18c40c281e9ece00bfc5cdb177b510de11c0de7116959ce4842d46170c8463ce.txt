@@ -1,0 +1,109 @@
+{
+  "case_id": "s1derived.6842528f62efd54e791b.8ed109286bc0",
+  "compile_check": {
+    "case_id": "s1derived.6842528f62efd54e791b.8ed109286bc0",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "servant_gpio",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.servant_gpio.bd2001752b0fc32f/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.6842528f62efd54e791b",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "6842528f62efd54e791b6a2af6a931262127b03f9f60f45f648f6cc49cb7fa39",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.6842528f62efd54e791b.8ed109286bc0",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.servant_gpio.bd2001752b0fc32f/private/commercial_positive.log",
+    "commercial_log_sha256": "56fa77f2884f31e73c2702d9dd859423f635ecbdca9b60f9dbfd4a08b28d8052",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.servant_gpio.bd2001752b0fc32f/private/historical_harness/00_sec_servant_gpio.tcl",
+    "executed_script_sha256": "69b5ffcf6a3619c3db4ab3a86c325fa73f7926cf4c53e1c9d5eddf58de3f8add",
+    "golden_tops": [
+      "servant_gpio"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.servant_gpio.bd2001752b0fc32f",
+    "parent_id": "s1p.6842528f62efd54e791b",
+    "revised_tops": [
+      "servant_gpio"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "servant_gpio",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.6842528f62efd54e791b.8ed109286bc0",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The edge captures old o_gpio into readback independently of writes, and GPIO write enable is exactly cyc AND we; unspecified initial state is explicit.",
+        "rtl_excerpt": "o_wb_rdt <= o_gpio;",
+        "spec_excerpt": "`o_wb_rdt` captures the pre-edge value of `o_gpio`"
+      }
+    ],
+    "flaws": [],
+    "reviewed_specification_sha256": "c9cf34b7c704abf930648569ca837991334c948b93c5ef6bbd8f09093c2ef725",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6842528f62efd54e791b6a2af6a931262127b03f9f60f45f648f6cc49cb7fa39",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.servant_gpio.bd2001752b0fc32f/private/historical_harness/00_sec_servant_gpio.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.servant_gpio.bd2001752b0fc32f/private/historical_harness/01_sec_servant_gpio.tcl"
+  ],
+  "parent_id": "s1p.6842528f62efd54e791b",
+  "primary_review": {
+    "case_id": "s1derived.6842528f62efd54e791b.8ed109286bc0",
+    "checks": {
+      "behavior": "The partial claim needs precise one-cycle semantics and the missing write contract.",
+      "boundaries": "checked full Boolean/data mapping and interface widths",
+      "interface": "checked against complete RTL port declarations",
+      "rtl_reasonableness": "reasonable synthesizable hardware for the stated function; compile diagnostic considered",
+      "sequential_and_reset": "checked clock edge, reset/initial state, update and hold semantics"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The partial claim needs precise one-cycle semantics and the missing write contract.",
+        "rtl_excerpt": "nonblocking o_wb_rdt <= o_gpio captures the pre-edge GPIO value",
+        "spec_excerpt": "On each positive edge o_wb_rdt mirrors o_gpio."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The truncated prose omits the write condition, old-value readback latency, hold behavior, and absence of reset/initialization.",
+        "rtl_evidence": "at posedge: o_wb_rdt<=o_gpio; if(cyc & we) o_gpio<=dat",
+        "spec_evidence": "ends after 'If'",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.6842528f62efd54e791b",
+    "proposed_specification_path": "proposed_repairs_3_sol_01/s1derived.6842528f62efd54e791b.8ed109286bc0.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6842528f62efd54e791b6a2af6a931262127b03f9f60f45f648f6cc49cb7fa39",
+    "source_group": "S1",
+    "specification_sha256": "8ed109286bc020b9e7f3f873fb6a8df914fcfdd7fa271644c6ee09931a432ece",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_01/s1derived.6842528f62efd54e791b.8ed109286bc0.md",
+  "qualified_specification_sha256": "c9cf34b7c704abf930648569ca837991334c948b93c5ef6bbd8f09093c2ef725",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.servant_gpio.bd2001752b0fc32f/private/golden_design.v",
+  "rtl_sha256": "6842528f62efd54e791b6a2af6a931262127b03f9f60f45f648f6cc49cb7fa39",
+  "source_corpus": "SEC-Flow-Star-repos-7.serv",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.servant_gpio.bd2001752b0fc32f/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "8ed109286bc020b9e7f3f873fb6a8df914fcfdd7fa271644c6ee09931a432ece",
+  "top_module": "servant_gpio"
+}

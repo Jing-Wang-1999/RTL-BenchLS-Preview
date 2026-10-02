@@ -1,0 +1,32 @@
+module i2c_master_byte_ctrl (
+	clk, rst, nReset, ena, clk_cnt, start, stop, read, write, ack_in, din,
+	cmd_ack, ack_out, dout, i2c_busy, i2c_al, scl_i, scl_o, scl_oen, sda_i, sda_o, sda_oen );
+parameter [4:0] ST_IDLE  = 5'b0_0000;
+parameter [4:0] ST_START = 5'b0_0001;
+parameter [4:0] ST_READ  = 5'b0_0010;
+parameter [4:0] ST_WRITE = 5'b0_0100;
+parameter [4:0] ST_ACK   = 5'b0_1000;
+parameter [4:0] ST_STOP  = 5'b1_0000;
+input clk;
+input rst;
+input nReset;
+input ena;
+input [15:0] clk_cnt;
+input       start;
+input       stop;
+input       read;
+input       write;
+input       ack_in;
+input [7:0] din;
+output       cmd_ack;
+output       ack_out;
+output       i2c_busy;
+output       i2c_al;
+output [7:0] dout;
+input  scl_i;
+output scl_o;
+output scl_oen;
+input  sda_i;
+output sda_o;
+output sda_oen;
+endmodule

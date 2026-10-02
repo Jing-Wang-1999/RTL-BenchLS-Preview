@@ -1,0 +1,58 @@
+The Verilog module implements a DMA sequencer that manages the sequential processing and writing of various data inputs to the DMA interface based on the validity flags and control signals.
+
+1. **Primary Function**: The module reads several data inputs (phase, raw data, filtered data, I/Q data, filtered I/Q data) each with associated validity signals. It sequentially processes these inputs and writes them to the DMA, ensuring proper synchronization and overflow handling.
+
+2. **Key Control Flow**: The primary control flow is driven by a 4-bit counter that sequences through 14 specific states. Each state corresponds to a specific data input processing stage. The module resets and synchronizes the processing states based on reset signals (`resetn` and `dma_wr_xfer_req`) and validity conditions of the input data.
+
+3. **Data Processing and Signal Interactions**:
+   - Depending on the counter's current state, the module assigns the relevant data input to the `dma_wr_data` register.
+   - It enables the DMA write (`dma_wr_en`) only if the corresponding data input validity is true and the channel is enabled.
+   - The `dma_wr_sync` signal is managed to ensure synchronization, asserting high when transitioning to the first state and de-asserting when a valid write occurs.
+   - The module monitors overflow conditions and manages the readiness of the input data lines based on the current count state.
+   - Various ready signals (`phase_ready`, `data_ready`, `data_filtered_ready`, `i_q_ready`, `i_q_filtered_ready`) are asserted high during specific states to indicate readiness to accept new data.
+
+This step-by-step sequencing, coupled with the control and synchronization mechanisms, ensures a robust data management process for DMA operations.
+
+Module Interface:
+module dma_instruction_sequencer (
+  input clk,
+  input resetn,
+
+  input [31:0] phase,
+  input phase_valid,
+  output reg phase_ready,
+
+  input [23:0] data,
+  input data_valid,
+  output reg data_ready,
+
+  input [31:0] data_filtered,
+  input data_filtered_valid,
+  output reg data_filtered_ready,
+
+  input [31:0] i_q,
+  input i_q_valid,
+  output reg i_q_ready,
+
+  input [31:0] i_q_filtered,
+  input i_q_filtered_valid,
+  output reg i_q_filtered_ready,
+
+  output overflow,
+
+  output reg [31:0] dma_wr_data,
+  output reg dma_wr_en,
+  output reg dma_wr_sync,
+  input dma_wr_overflow,
+  input dma_wr_xfer_req,
+
+  input [13:0] channel_enable,
+
+  output processing_resetn
+);
+
+Behavioral Clarifications:
+- The 4-bit counter counts states 0 through 13 (14 states) and wraps back to 0, running the full sequence twice per complete cycle. The counter advances only when the validity signal for the current state's data source is asserted.
+- The 24-bit `data` input is zero-extended to 32 bits (upper 8 bits set to 0) when written to `dma_wr_data`.
+- `overflow` is a direct wire from `dma_wr_overflow`; `processing_resetn` is a direct wire from `dma_wr_xfer_req`. The counter resets to 0 on either active-low `resetn` or when `processing_resetn` is low.
+- `dma_wr_sync` asserts high when `processing_resetn` deasserts or when the counter is at state 0, and clears when a valid DMA write (`dma_wr_en`) occurs.

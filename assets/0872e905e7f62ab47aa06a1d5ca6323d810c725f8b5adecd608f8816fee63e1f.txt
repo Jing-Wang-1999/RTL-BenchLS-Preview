@@ -1,0 +1,29 @@
+always @(*) begin: timer_logic__comb_code
+    reg [3:0] timer_combs__fractional_half_adder__var;
+    reg [7:0] timer_combs__integer_one_and_half_adder__var;
+    reg [31:0] timer_combs__upper_sum__var;
+
+    timer_combs__fractional_half_adder__var = timer_control__fractional_adder >> 1;
+    timer_combs__fractional_half_adder__var[3] = timer_control__integer_adder[0];
+    timer_combs__fractional_one_and_half_adder = ({1'h0, timer_combs__fractional_half_adder__var} + {1'h0, timer_control__fractional_adder});
+    timer_combs__integer_half_adder = timer_control__integer_adder >> 1;
+    timer_combs__integer_one_and_half_adder__var = timer_combs__integer_half_adder + timer_control__integer_adder;
+
+    if (timer_combs__fractional_one_and_half_adder[4] != 1'h0) begin
+        timer_combs__integer_one_and_half_adder__var = timer_combs__integer_one_and_half_adder__var + 8'h1;
+    end
+
+    timer_combs__fractional_sum = ({1'h0, timer_state__fraction} + {1'h0, timer_state__fractional_adder}) + (timer_combs__fractional_bonus != 1'h0 ? 64'h1 : 64'h0);
+    timer_combs__lower_sum = ({1'h0, timer_state__timer_lower} + {25'h0, timer_state__integer_adder}) + (timer_combs__fractional_sum[4] != 1'h0 ? 64'h1 : 64'h0);
+    timer_combs__upper_sum__var = timer_state__timer_upper;
+
+    if (timer_combs__lower_sum[32] != 1'h0) begin
+        timer_combs__upper_sum__var = timer_state__timer_upper + 32'h1;
+    end
+    timer_value__value = {timer_state__timer_upper, timer_state__timer_lower};
+    timer_value__irq = 1'h0;
+    timer_value__locked = 1'h0;
+    timer_combs__fractional_half_adder = timer_combs__fractional_half_adder__var;
+    timer_combs__integer_one_and_half_adder = timer_combs__integer_one_and_half_adder__var;
+    timer_combs__upper_sum = timer_combs__upper_sum__var;
+end

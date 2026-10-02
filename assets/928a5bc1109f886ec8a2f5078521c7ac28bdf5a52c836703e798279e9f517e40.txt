@@ -1,0 +1,19 @@
+The module named "origen_167265" is designed to manage signal selection based on a given input selector. It primarily functions as a multiplexer, choosing between multiple input signals and directing the selected signals to its outputs.
+
+### Inputs:
+1. **sel**: A 3-bit input that serves as the selector. It determines which set of signals will be routed to the outputs.
+2. **out_ack_reset_0 to out_ack_reset_5**: Six individual input signals, each corresponding to a potential output for the acknowledgment reset signal.
+3. **packet_drop_signal_0 to packet_drop_signal_5**: Six individual input signals, each corresponding to a potential output for the packet drop signal.
+
+### Outputs:
+1. **out_ack_reset_out**: A single output signal that reflects the selected acknowledgment reset signal based on the selector input.
+2. **packet_drop_signal_out**: A single output signal that reflects the selected packet drop signal based on the selector input.
+
+### Behavior:
+- The module continuously monitors the selector input (`sel`) and uses it to determine which pair of input signals (one from `out_ack_reset` and one from `packet_drop_signal`) should be routed to the outputs.
+- The selection is made based on the binary value of `sel`:
+  - `sel` value `000` selects `out_ack_reset_0` and `packet_drop_signal_0`.
+  - `sel` value `001` selects `out_ack_reset_1` and `packet_drop_signal_1`.
+  - `sel` value `010` selects `out_ack_reset_2` and `packet_drop_signal_2`.
+  - `sel` value `011` selects `out_ack_reset_3` and `packet_drop_signal_3`.
+  - `sel` value `100` selects `out_ack_reset_4` and `packet_drop_signal_4`.

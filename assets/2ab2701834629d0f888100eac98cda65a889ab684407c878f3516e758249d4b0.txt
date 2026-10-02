@@ -1,0 +1,54 @@
+The UART Verilog module provides full-duplex serial communication capabilities between digital devices. Here's an outline of its operation and key features:
+
+1. **Primary Function**:
+   - This Verilog module serves as a UART (Universal Asynchronous Receiver-Transmitter) that handles serial data transmission and reception. It converts parallel data from the transmitting device into a serial format for the receiving device and vice versa.
+
+2. **Control Flow and Decision Points**:
+   - The module operates based on two finite state machines (FSM): one for receiving (`recv_state`) and one for transmitting (`tx_state`).
+   - In the receiver FSM:
+     - `RX_IDLE` waits for a start bit (logic 0) on the `rx` input.
+     - `RX_CHECK_START` verifies the presence of the start bit.
+     - `RX_READ_BITS` samples incoming bits.
+     - `RX_CHECK_STOP` checks for the stop bit.
+     - `RX_ERROR` handles errors in the received frame.
+     - `RX_RECEIVED` indicates a successful reception and readies the received byte.
+   - In the transmitter FSM:
+     - `TX_IDLE` waits for a transmit request (`transmit`).
+     - `TX_SENDING` shifts out bits of the data byte (`tx_byte`).
+     - `TX_DELAY_RESTART` introduces a delay after transmitting the entire byte.
+
+3. **Data Processing and Signal Interactions**:
+   - **Clock Dividers**: Two clock dividers `rx_clk_divider` and `tx_clk_divider` are used to generate baud rates for receiving and transmitting data based on an input clock (`clk`).
+   - **Reception**:
+     - The `rx` signal is sampled and debounced.
+     - The received byte (`rx_data`) is assembled bit by bit.
+     - During errors or completion, appropriate status signals (`received`, `recv_error`) are asserted.
+   - **Transmission**:
+     - The byte to be transmitted (`tx_byte`) is loaded into `tx_data` upon a transmit request.
+     - Bits are sequentially shifted out via the `tx` output while status signals (`is_transmitting`, `tx_out`) are updated accordingly.
+   - **Status Outputs**: Several status outputs (`is_receiving`, `is_transmitting`, `received`, `recv_error`) provide real-time status about the module operations.
+
+4. **Additional Details**:
+   - All operations are synchronized with the positive edge of the clock (`clk`) and are reset asynchronously via `rst`.
+   - The parameters (`CLOCK_DIVIDE`, various states) and registers hold necessary FSM and data-related information.
+
+This concise yet detailed instruction should enable an LLM to generate the corresponding Verilog code for the UART module, capturing its essential functionality and interactions.
+
+Module Interface:
+module uart_transceiver_e(
+    input clk,
+    input rst,
+    input rx,
+    output tx,
+    input transmit,
+    input [7:0] tx_byte,
+    output received,
+    output [7:0] rx_byte,
+    output is_receiving,
+    output is_transmitting,
+    output recv_error
+    );
+
+Behavioral Clarifications:
+- CLOCK_DIVIDE parameter is 651. Both 11-bit clock dividers initialize to CLOCK_DIVIDE at power-on. The `rx` input is registered through an input flip-flop (`rx_ff`) before being used by the state machine, providing one cycle of input synchronization.
+- RX countdown values: CHECK_START uses 8, READ_BITS uses 16, ERROR delay uses 32. TX countdown values: SENDING uses 16, DELAY_RESTART uses 32. These are larger than typical UART oversampling ratios.

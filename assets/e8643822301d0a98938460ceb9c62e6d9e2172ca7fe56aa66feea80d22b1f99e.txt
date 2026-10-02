@@ -1,0 +1,103 @@
+module mg_06437 (clk,incr_addr,reset_n,new_rom,q,safe);
+parameter POLL_RATE = 100; 
+  output new_rom; 
+  output [ 7: 0] q; 
+  output safe; 
+  input clk; 
+  input incr_addr; 
+  input reset_n; 
+  reg [ 10: 0] address; 
+  reg d1_pre; 
+  reg d2_pre; 
+  reg d3_pre; 
+  reg d4_pre; 
+  reg d5_pre; 
+  reg d6_pre; 
+  reg d7_pre; 
+  reg d8_pre; 
+  reg d9_pre; 
+  reg [ 7: 0] mem_array [1023: 0]; 
+  reg [ 31: 0] mutex [ 1: 0]; 
+  reg new_rom; 
+  reg pre; 
+  wire [ 7: 0] q; 
+  wire safe; 
+  assign q = mem_array[address]; 
+  always @(posedge clk or negedge reset_n) 
+  begin 
+  if (reset_n == 0) 
+  begin 
+  d1_pre <= 0; 
+  d2_pre <= 0; 
+  d3_pre <= 0; 
+  d4_pre <= 0; 
+  d5_pre <= 0; 
+  d6_pre <= 0; 
+  d7_pre <= 0; 
+  d8_pre <= 0; 
+  d9_pre <= 0; 
+  new_rom <= 0; 
+  end 
+  else 
+  begin 
+  d1_pre <= pre; 
+  d2_pre <= d1_pre; 
+  d3_pre <= d2_pre; 
+  d4_pre <= d3_pre; 
+  d5_pre <= d4_pre; 
+  d6_pre <= d5_pre; 
+  d7_pre <= d6_pre; 
+  d8_pre <= d7_pre; 
+  d9_pre <= d8_pre; 
+  new_rom <= d9_pre; 
+  end 
+  end 
+  reg safe_delay; 
+  reg [31:0] poll_count; 
+  reg [31:0] mutex_handle; 
+  wire interactive = 1'b0 ; 
+  assign safe = (address < mutex[1]); 
+  initial poll_count = POLL_RATE; 
+  always @(posedge clk or negedge reset_n) begin 
+  if (reset_n !== 1) begin 
+  safe_delay <= 0; 
+  end else begin 
+  safe_delay <= safe; 
+  end 
+  end 
+  always @(posedge clk or negedge reset_n) begin 
+  if (reset_n !== 1) begin 
+  address <= 0; 
+  mem_array[0] <= 0; 
+  mutex[0] <= 0; 
+  mutex[1] <= 0; 
+  pre <= 0; 
+  end else begin 
+  pre <= 0; 
+  if (incr_addr && safe) address <= address + 1; 
+  if (mutex[0] && !safe && safe_delay) begin 
+  if (interactive) begin 
+  mutex_handle = $fopen ("uart_input_data_mutex.dat"); 
+  $fdisplay (mutex_handle, "0"); 
+  $fclose (mutex_handle); 
+  end else begin 
+  wait (!reset_n); 
+  end 
+  end 
+  if (poll_count < POLL_RATE) begin 
+  poll_count = poll_count + 1; 
+  end else begin 
+  poll_count = 0; 
+  if (mutex_handle) begin 
+  $readmemh ("uart_input_data_mutex.dat", mutex); 
+  end 
+  if (mutex[0] && !safe) begin 
+  mutex[1] <= mutex[0]; 
+  $readmemh("uart_input_data_stream.dat", mem_array); 
+  address <= 0; 
+  pre <= -1; 
+  end 
+  end 
+  end 
+  end 
+ endmodule

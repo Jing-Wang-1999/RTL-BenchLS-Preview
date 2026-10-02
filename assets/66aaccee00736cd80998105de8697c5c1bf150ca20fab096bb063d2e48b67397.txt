@@ -1,0 +1,21 @@
+always @(negedge ECLK)
+  begin
+    if (rst_i)
+    begin
+      pra  <= 8'd0;
+      prb  <= 8'd0;
+      ddra <= 8'd0;
+      ddrb <= 8'd0;
+    end
+    else if (sel_i & we_i)
+    begin
+      if (adr_pra)
+        pra   <= DBi;
+      if (adr_prb)
+        prb   <= DBi;
+      if (adr_ddra)
+        ddra  <= DBi;
+      if (adr_ddrb)
+        ddrb  <= DBi;
+    end
+  end

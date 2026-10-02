@@ -1,0 +1,50 @@
+{
+  "additions": 1,
+  "base_commit": "88f1a7e38f03bd044453356a84ef803fb06541bf",
+  "base_ref": "master",
+  "deletions": 1,
+  "head_commit": "557799ebcfeea88fa5eae0adc84eee10fbf70adc",
+  "issue_info": {
+    "body": "Looks, like there is small typo [here](https://github.com/lowRISC/ibex/blob/cb9413e38bc43117a0a5dfd7221bbf8155815478/rtl/ibex_id_stage.sv#L687). \r\nWarning message:\r\n ncvlog: *W,UEXPSC (ibex/rtl/ibex_id_stage.sv,687|89): Ignored unexpected semicolon following SystemVerilog description keyword (endif).",
+    "created_at": "2020-03-04T10:38:58Z",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "title": "unexpected semicolon in ibex_id_stage.sv",
+    "updated_at": "2020-03-05T16:09:36Z"
+  },
+  "issue_number": 650,
+  "issue_url": "https://github.com/lowRISC/ibex/issues/650",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 1,
+      "changes": 2,
+      "deletions": 1,
+      "filename": "rtl/ibex_id_stage.sv",
+      "patch": "@@ -684,7 +684,7 @@ module ibex_id_stage #(\n   // Duplicated instruction flops must match\n   // === as DV environment can produce instructions with Xs in, so must use precise match that\n   // includes Xs\n-  `ASSERT(IbexDuplicateInstrMatch, instr_valid_i |-> instr_rdata_i === instr_rdata_alu_i);\n+  `ASSERT(IbexDuplicateInstrMatch, instr_valid_i |-> instr_rdata_i === instr_rdata_alu_i)\n \n   `ifdef CHECK_MISALIGNED\n   `ASSERT(IbexMisalignedMemoryAccess, !lsu_addr_incr_req_i)"
+    }
+  ],
+  "pr_info": {
+    "body": "This seems to cause lint errors with ncsim (see bug #650).",
+    "created_at": "2020-03-05T15:58:32Z",
+    "merged_at": "2020-03-05T16:09:18Z",
+    "state": "closed",
+    "title": "Remove stray semicolon",
+    "updated_at": "2020-03-05T16:18:22Z",
+    "user": "rswarbrick"
+  },
+  "pr_number": 658,
+  "pr_url": "https://github.com/lowRISC/ibex/pull/658",
+  "repository": "lowRISC/ibex",
+  "source_info": {
+    "line_number": 189,
+    "source_file": "14.txt"
+  },
+  "task_id": "lowRISC_ibex_658_650",
+  "verilog_files": [
+    "rtl/ibex_id_stage.sv"
+  ]
+}

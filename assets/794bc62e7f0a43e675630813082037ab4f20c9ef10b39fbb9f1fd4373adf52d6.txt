@@ -1,0 +1,168 @@
+module autovcoder_120143 (
+    O_reg_0,
+    PS2Clk_IBUF,
+    CLK50MHZ_BUFG
+);
+  output O_reg_0;
+  input PS2Clk_IBUF;
+  input CLK50MHZ_BUFG;
+
+  wire CLK50MHZ_BUFG;
+  wire Iv;
+  wire O_i_1_n_0;
+  wire O_i_2_n_0;
+  wire O_reg_0;
+  wire PS2Clk_IBUF;
+  wire clear;
+  wire \count[0]_i_1_n_0 ;
+  wire \count[1]_i_1_n_0 ;
+  wire \count[2]_i_1_n_0 ;
+  wire \count[3]_i_1_n_0 ;
+  wire \count[4]_i_1_n_0 ;
+  wire [4:0] count_reg;
+
+  LUT2 #(
+      .INIT(4'h6)
+  ) Iv_i_1 (
+      .I0(PS2Clk_IBUF),
+      .I1(Iv),
+      .O (clear)
+  );
+  FDRE #(
+      .INIT(1'b0)
+  ) Iv_reg (
+      .C (CLK50MHZ_BUFG),
+      .CE(clear),
+      .D (PS2Clk_IBUF),
+      .Q (Iv),
+      .R (1'b0)
+  );
+  LUT6 #(
+      .INIT(64'h0040000000000000)
+  ) O_i_1 (
+      .I0(count_reg[2]),
+      .I1(count_reg[0]),
+      .I2(count_reg[1]),
+      .I3(count_reg[3]),
+      .I4(count_reg[4]),
+      .I5(O_i_2_n_0),
+      .O (O_i_1_n_0)
+  );
+  LUT2 #(
+      .INIT(4'h9)
+  ) O_i_2 (
+      .I0(Iv),
+      .I1(PS2Clk_IBUF),
+      .O (O_i_2_n_0)
+  );
+  FDRE #(
+      .INIT(1'b0)
+  ) O_reg (
+      .C (CLK50MHZ_BUFG),
+      .CE(O_i_1_n_0),
+      .D (PS2Clk_IBUF),
+      .Q (O_reg_0),
+      .R (1'b0)
+  );
+  LUT6 #(
+      .INIT(64'h4444444444C44444)
+  ) \count[0]_i_1 (
+      .I0(count_reg[0]),
+      .I1(O_i_2_n_0),
+      .I2(count_reg[4]),
+      .I3(count_reg[3]),
+      .I4(count_reg[1]),
+      .I5(count_reg[2]),
+      .O (\count[0]_i_1_n_0 )
+  );
+  LUT6 #(
+      .INIT(64'h1000FF00FF000000)
+  ) \count[1]_i_1 (
+      .I0(count_reg[2]),
+      .I1(count_reg[3]),
+      .I2(count_reg[4]),
+      .I3(O_i_2_n_0),
+      .I4(count_reg[1]),
+      .I5(count_reg[0]),
+      .O (\count[1]_i_1_n_0 )
+  );
+  LUT6 #(
+      .INIT(64'h0D00F000F000F000)
+  ) \count[2]_i_1 (
+      .I0(count_reg[4]),
+      .I1(count_reg[3]),
+      .I2(count_reg[2]),
+      .I3(O_i_2_n_0),
+      .I4(count_reg[1]),
+      .I5(count_reg[0]),
+      .O (\count[2]_i_1_n_0 )
+  );
+  LUT6 #(
+      .INIT(64'h7F00007F80000080)
+  ) \count[3]_i_1 (
+      .I0(count_reg[1]),
+      .I1(count_reg[0]),
+      .I2(count_reg[2]),
+      .I3(PS2Clk_IBUF),
+      .I4(Iv),
+      .I5(count_reg[3]),
+      .O (\count[3]_i_1_n_0 )
+  );
+  LUT6 #(
+      .INIT(64'h7FFF000080000000)
+  ) \count[4]_i_1 (
+      .I0(count_reg[3]),
+      .I1(count_reg[1]),
+      .I2(count_reg[0]),
+      .I3(count_reg[2]),
+      .I4(O_i_2_n_0),
+      .I5(count_reg[4]),
+      .O (\count[4]_i_1_n_0 )
+  );
+  FDRE #(
+      .INIT(1'b0)
+  ) \count_reg[0] (
+      .C (CLK50MHZ_BUFG),
+      .CE(1'b1),
+      .D (\count[0]_i_1_n_0 ),
+      .Q (count_reg[0]),
+      .R (1'b0)
+  );
+  FDRE #(
+      .INIT(1'b0)
+  ) \count_reg[1] (
+      .C (CLK50MHZ_BUFG),
+      .CE(1'b1),
+      .D (\count[1]_i_1_n_0 ),
+      .Q (count_reg[1]),
+      .R (1'b0)
+  );
+  FDRE #(
+      .INIT(1'b0)
+  ) \count_reg[2] (
+      .C (CLK50MHZ_BUFG),
+      .CE(1'b1),
+      .D (\count[2]_i_1_n_0 ),
+      .Q (count_reg[2]),
+      .R (1'b0)
+  );
+  FDRE #(
+      .INIT(1'b0)
+  ) \count_reg[3] (
+      .C (CLK50MHZ_BUFG),
+      .CE(1'b1),
+      .D (\count[3]_i_1_n_0 ),
+      .Q (count_reg[3]),
+      .R (1'b0)
+  );
+  FDRE #(
+      .INIT(1'b0)
+  ) \count_reg[4] (
+      .C (CLK50MHZ_BUFG),
+      .CE(1'b1),
+      .D (\count[4]_i_1_n_0 ),
+      .Q (count_reg[4]),
+      .R (1'b0)
+  );
+endmodule
+

@@ -1,0 +1,11 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/harder3_63526e1386b2dfbdfcb3_negative.v0.v
+check_sec -analyze -imp -sv ./input/rtl/harder3_63526e1386b2dfbdfcb3_negative.negative.v
+check_sec -elaborate -spec -top sirv_qspi_physical -disable_auto_bbox
+check_sec -elaborate -imp -top sirv_qspi_physical -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clock
+reset -expression {reset}
+check_sec -gen
+check_sec -prove -strategy proof

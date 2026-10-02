@@ -1,0 +1,57 @@
+module origen_047099 (
+    input wire clk_50,
+    output reg led
+);
+
+    // Parameters
+    localparam PWM_PERIOD = 2500;
+    localparam PWM_WIDTH_UPDATE_PERIOD = 100000;
+    localparam PWM_WIDTH_MAX = 255;
+
+    // Registers
+    reg [11:0] pwm_counter;
+    reg [7:0] pwm_pos;
+    reg [7:0] pwm_width;
+    reg [16:0] pwm_width_counter;
+    reg pwm_width_dir;
+
+    // PWM generation
+    always @(posedge clk_50) begin
+        if (pwm_counter == PWM_PERIOD - 1) begin
+            pwm_counter <= 0;
+            pwm_pos <= 0;
+        end else begin
+            pwm_counter <= pwm_counter + 1;
+            pwm_pos <= pwm_pos + 1;
+        end
+
+        // LED control
+        led <= (pwm_pos < pwm_width);
+    end
+
+    // PWM width update
+    always @(posedge clk_50) begin
+        if (pwm_width_counter == PWM_WIDTH_UPDATE_PERIOD - 1) begin
+            pwm_width_counter <= 0;
+
+            if (pwm_width_dir) begin
+                if (pwm_width == PWM_WIDTH_MAX) begin
+                    pwm_width_dir <= 0;
+                    pwm_width <= pwm_width - 1;
+                end else begin
+                    pwm_width <= pwm_width + 1;
+                end
+            end else begin
+                if (pwm_width == 0) begin
+                    pwm_width_dir <= 1;
+                    pwm_width <= pwm_width + 1;
+                end else begin
+                    pwm_width <= pwm_width - 1;
+                end
+            end
+        end else begin
+            pwm_width_counter <= pwm_width_counter + 1;
+        end
+    end
+
+endmodule

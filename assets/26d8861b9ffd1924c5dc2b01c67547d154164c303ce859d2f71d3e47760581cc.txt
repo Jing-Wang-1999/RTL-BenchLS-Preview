@@ -1,0 +1,52 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/10943",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/10909",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 10943,
+  "issue_number": 10909,
+  "verilog_files": [
+    "hw/ip/sram_ctrl/rtl/sram_ctrl.sv"
+  ],
+  "deletions": 1,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "hw/ip/sram_ctrl/rtl/sram_ctrl.sv",
+      "patch": "@@ -406,7 +406,7 @@ module sram_ctrl\n \n   // Interposing mux logic for initialization with pseudo random data.\n   assign sram_req        = tlul_req | init_req;\n-  assign tlul_gnt        = sram_gnt & ~init_req;\n+  assign tlul_gnt        = sram_gnt & ~init_req & ~local_esc;\n   assign sram_we         = tlul_we | init_req;\n   assign sram_intg_error = local_esc & ~init_req;\n   assign sram_addr       = (init_req) ? init_cnt          : tlul_addr;",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "[sram_ctrl] Align behavior of global and local escalation",
+    "body": "Before, global escalation caused the sram_ctrl to block transactions on top of other defenses (like scrapping the key, blanking return data). Local escalation on the other hand did not cause the sram_ctrl to block transactions.\r\n\r\nThis patch aligns the behavior of both escalations (block transactions), since both are fatal conditions.\r\n\r\nSee #10909 for context.\r\n\r\nSigned-off-by: Michael Schaffner <msf@opentitan.org>",
+    "state": "closed",
+    "created_at": "2022-02-18T00:48:53Z",
+    "updated_at": "2022-09-30T00:44:41Z",
+    "merged_at": "2022-02-24T01:16:27Z",
+    "user": "msfschaffner"
+  },
+  "issue_info": {
+    "title": "[sram_ctrl] GLOBAL_ESC/LOCAL_ESC behavior",
+    "body": "@msfschaffner \r\n\r\nQuestion regarding how to verify these 2 countermeasures.\r\n\r\nSRAM_CTRL.KEY.GLOBAL_ESC | Scrambling key and nonce are reset to a fixed value upon escalation.\r\n-- | --\r\nSRAM_CTRL.KEY.LOCAL_ESC | Scrambling key and nonce are reset to a fixed value upon local escalation due to bus integrity or counter errors.\r\n\r\n\r\nIn prim_ram_1p_scr, when `intg_error_q` is set, rdata_o is assigned to 0. When LOCAL_ESC is triggered, intg_error_q will be set and we will receive 0 for a SRAM read, which means key and nonce aren't even used. Hence, I plan to check it returns 0 for read when LOCAL_ESC occurs, instead of tracing the internal key and nonce are reset. WDYT?\r\n```\r\n  always_comb begin : p_forward_mux\r\n    rdata_o = '0;\r\n    // regular reads. note that we just return zero in case\r\n    // an integrity error was signalled.\r\n    if (rvalid_q && !intg_error_q) begin\r\n      rdata_o = rdata;\r\n    end\r\n    // In case of a collision, we forward the valid bytes of the write data from the unscrambled\r\n    // holding register.\r\n    if (addr_collision_q && !intg_error_q) begin\r\n      for (int k = 0; k < Width; k++) begin\r\n        if (wmask_q[k]) begin\r\n          rdata_o[k] = wdata_q[k];\r\n        end\r\n      end\r\n    end\r\n  end\r\n```\r\n\r\nIf GLOBAL_ESC (escalation) is set, `gnt_o` is always 0. All SRAM access will get stuck. I will test  no sram access will be accepted after GLOBAL_ESC. WDYT?\r\n```\r\nassign gnt_o = req_i & key_valid_i;\r\n```\r\n```\r\n  assign key_valid = ~(key_req_pending_q | reg2hw.status.escalated.q);\r\n```",
+    "labels": [
+      "Priority:P1",
+      "Type:Question",
+      "Component:RTL",
+      "IP:sram_ctrl"
+    ],
+    "state": "closed",
+    "created_at": "2022-02-17T06:15:36Z",
+    "updated_at": "2022-02-24T05:26:16Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 1695
+  },
+  "base_commit": "5cb04a7b86aa50a091f27f2a14d3a9f6bb569d60",
+  "head_commit": "00e12753cf244713f6392ab5cd7c8010110f47a8",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_10943_10909",
+  "lec_status": "useful_pass"
+}

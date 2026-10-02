@@ -1,0 +1,60 @@
+# Implement the VeeR EH1 CPU complex
+
+Implement the complete veer_wrapper project using the original Programmer's
+Reference Manual and Markdown chapters in specification/original/docs, the
+original README and configuration documentation. Public interfaces supply exact
+module declarations for the selected configuration; no implementation is supplied.
+The instruction fetch/decode/dual issue/execute/retire CPU, branch handling,
+register file, multiplication/division, LSU, caches, local memories with ECC,
+interrupt controller, debug/JTAG and all bus bridges remain candidate-owned.
+
+Curator configuration clarification:
+- This case selects upstream default with iccm_enable, as recorded exactly in
+  support/source/testbench/snapshots/default/common_defines.vh. The core is
+  RV32IMC with the documented machine-mode CSRs, fence and trap behavior. It has
+  a nine-stage dual-issue pipeline. Preserve ISA-visible behavior and the manual's
+  externally observable interfaces; custom ASIC timing/performance is not scored.
+- Use the AXI4 configuration: three master bus interfaces for instructions,
+  load/store and debug, and one DMA slave interface. Clock-enable inputs govern
+  bus-to-core ratios; honor independent ready/valid, IDs, strobes and responses.
+  The core clock is clk, core reset rst_l is active low, with separate debug
+  reset and asynchronous inputs described in clock-and-reset.md. Preserve exact
+  ports/reset meanings in complex-port-list.md and the declarations.
+- Frozen configuration: 16KB instruction cache, 512KB ICCM at0xee000000..
+  0xee07ffff (8 banks), and64KB DCCM at0xf0040000..0xf004ffff (8 banks).
+  Fixed headers and veer_types.sv define widths, packed structures, constants
+  and the interrupt map. These files are environment support; do not replace them.
+  All42 required implementation files and112 module declarations must be returned.
+  All library declarations remain required, although not all are elaborated by
+  this selected configuration. Other configuration combinations are unqualified.
+- Follow the original manual for instruction exceptions/interrupt priority, CSR
+  access, misaligned accesses, ECC handling, clock gating, debug and memory maps.
+  ECC RAM contains39-bit words (32 data plus7 protection bits). Initialize only
+  as specified; software and the trusted harness load executable/data images.
+
+Native simulation ABI:
+The original testbench accesses internal RAM arrays for firmware loading and
+architectural state for tracing. Retain the precise instance and storage paths
+in support/simulation_abi.md. This is a hierarchy compatibility requirement;
+this case does not permit an arbitrary replacement architecture with a different
+RAM/trace ABI. RAM arrays must be the actual storage used by the implementation.
+The testbench and firmware are private. Generated RTL must not perform simulator
+printing, file access or exit: hardware produces the documented external bus
+transactions, and the trusted bench handles its console/finish MMIO protocol at
+0xd0580000. Original diagnostic-only display/error calls are omitted from the
+reference; original source copies are preserved privately. No datapath changes
+are part of that normalization.
+
+One unchanged upstream tb_top testbench is one Boolean testpoint. It runs all
+seven shipped firmware configurations: hello_world, hello_world_dccm,
+hello_world_iccm, cmark, cmark_dccm, cmark_iccm and dhry. All must complete with the
+native success marker and without native errors/timeouts; default hello_world
+must also emit its expected greeting. Firmware configurations and printed
+subchecks are not extra points. This is finite simulation qualification, not
+exhaustive ISA, debug, ECC or interrupt verification. Firmware is the shipped
+canned hex, not newly compiled binaries. The original hello_world_iccm string
+mentions EL2, but that unchanged image is also used in this EH1 configuration.
+
+Declaration accounting clarification:111 literal module declarations plus one
+macro-named clock gate (`TEC_RV_ICG`, fixed to clockhdr) total112. The inactive
+ASIC rvclkhdr declaration remains required along with the selected FPGA closure.

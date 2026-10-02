@@ -1,0 +1,69 @@
+module mg_02124(
+    input               clk,
+    input               rst_n,
+    input       [7:0]   data_in,
+    input               data_in_valid,
+    output reg  [31:0]  data_out,
+    output reg          sha_reset,
+    output reg          sha_init,
+    output reg          sha_next
+);
+
+reg [7:0]               block[64];
+reg [31:0]              digest;
+reg [7:0]               padding;
+reg                     prev_data_in_valid;
+reg [5:0]               block_idx;
+
+always @(posedge clk or negedge rst_n) begin
+    if (~rst_n) begin
+        sha_reset       <= 1'b1;
+        sha_init       <= 1'b0;
+        sha_next       <= 1'b0;
+        prev_data_in_valid <= 1'b0;
+        block_idx      <= 6'd0;
+    end else begin
+        sha_reset       <= 1'b0;
+        if (data_in_valid && !prev_data_in_valid) begin
+            sha_init       <= 1'b1;
+            sha_next       <= 1'b0;
+            block_idx      <= 6'd0;
+        end else if (data_in_valid) begin
+            sha_init       <= 1'b0;
+            sha_next       <= 1'b1;
+        end else begin
+            sha_init       <= 1'b0;
+            sha_next       <= 1'b0;
+        end
+        if (data_in_valid) begin
+            block[block_idx] <= data_in;
+            block_idx      <= block_idx + 6'd1;
+            if (block_idx == 6'd63) begin
+                padding     <= 8'h80;
+                block[64-1] <= padding;
+            end
+        end
+        prev_data_in_valid <= data_in_valid;
+    end
+end
+
+always @(posedge clk) begin
+    if (sha_init) begin
+        // Initialize SHA processing
+        digest <= 32'h00000000;
+    end else if (sha_next) begin
+        // Perform SHA processing on block
+        // This is a simplified example and actual implementation may vary
+        digest <= digest + block[block_idx];
+    end
+end
+
+always @(posedge clk) begin
+    if (block_idx == 6'd64) begin
+        data_out <= digest;
+    end else begin
+        data_out <= 32'd0;
+    end
+end
+
+endmodule

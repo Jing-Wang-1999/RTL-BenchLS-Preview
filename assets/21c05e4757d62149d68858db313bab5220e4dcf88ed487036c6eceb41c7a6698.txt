@@ -1,0 +1,29 @@
+The module `mg_03081` is a fixed permutation and concatenation block. It takes eight 4-bit input vectors and produces a single 32-bit output vector by first concatenating the inputs and then applying a specific, hardwired reordering of the bits.
+
+**Inputs:**
+- `so1x`, `so2x`, `so3x`, `so4x`, `so5x`, `so6x`, `so7x`, `so8x`: Eight independent input signals, each 4 bits wide (bits 1 to 4).
+
+**Output:**
+- `ppo`: A 32-bit output signal (bits 1 to 32).
+
+**Function:**
+1.  **Concatenation:** The eight 4-bit inputs are concatenated in order to form an internal 32-bit vector `XX`. Specifically, `so1x` forms bits 1-4 of `XX`, `so2x` forms bits 5-8, and so on, with `so8x` forming bits 29-32.
+2.  **Permutation:** Each bit of the output `ppo` is directly driven by a specific bit from the internal `XX` vector according to a fixed mapping. The mapping is:
+    - `ppo[1]` = `XX[16]`
+    - `ppo[2]` = `XX[7]`
+    - `ppo[3]` = `XX[20]`
+    - `ppo[4]` = `XX[21]`
+    - `ppo[5]` = `XX[29]`
+    - `ppo[6]` = `XX[12]`
+    - `ppo[7]` = `XX[28]`
+    - `ppo[8]` = `XX[17]`
+    - `ppo[9]` = `XX[1]`
+    - `ppo[10]` = `XX[15]`
+    - `ppo[11]` = `XX[23]`
+    - `ppo[12]` = `XX[26]`
+    - `ppo[13]` = `XX[5]`
+    - `ppo[14]` = `XX[18]`
+    - `ppo[15]` = `XX[31]`
+    - `ppo[16]` = `XX[10]`
+    - `ppo[17]` = `XX[2]`
+    - `ppo[18]` = `XX[

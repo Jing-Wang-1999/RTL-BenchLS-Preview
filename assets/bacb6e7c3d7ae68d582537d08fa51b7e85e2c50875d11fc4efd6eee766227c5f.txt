@@ -1,0 +1,48 @@
+module input_sequence_detector_fsm(
+    input CLK,
+    input [3:0] I,
+    output reg Y
+);
+
+localparam s1 = 4'd0, 
+           s2 = 4'd1,
+           s3 = 4'd2, 
+           s4 = 4'd3,
+           s5 = 4'd4,
+           s6 = 4'd5,
+           s7 = 4'd6;
+           
+reg [3:0] cs = s1;
+
+always @(posedge CLK)
+begin 
+    Y <= 0;
+    case (cs)
+        s1: 
+            if (I == 4'b0001) cs <= s2;
+            else cs <= s1;
+        s2: 
+            if (I == 4'b0000) cs <= s3;
+            else cs <= s1;
+        s3: 
+            if (I == 4'b0010) cs <= s4;
+            else cs <= s1;
+        s4: 
+            if (I == 4'b0010) cs <= s5;
+            else cs <= s1;
+        s5: 
+            if (I == 4'b0001) cs <= s6;
+            else cs <= s1;
+        s6: 
+            if (I == 4'b0000) begin 
+                cs <= s7; 
+                Y <= 1;
+            end else cs <= s1;
+        s7: 
+            if (I != 4'b0010) cs <= s4;
+            else if (I == 4'b0001) cs <= s2;
+            else cs <= s1;
+    endcase
+end
+
+endmodule

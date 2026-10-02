@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.68da7edf44675bf9b6ac.6e75b1b5016b",
+  "compile_check": {
+    "case_id": "s1derived.68da7edf44675bf9b6ac.6e75b1b5016b",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "NV_NVDLA_SDP_CORE_Y_idx_core_chn_lut_out_rsci_chn_lut_out_wait_ctrl",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.68da7edf44675bf9b6ac.6e75b1b5016b/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "68da7edf44675bf9b6ac194574008d3562e45a83f71d831c322d6ce3b31b492d",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.68da7edf44675bf9b6ac.6e75b1b5016b",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.68da7edf44675bf9b6ac",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "NV_NVDLA_SDP_CORE_Y_idx_core_chn_lut_out_rsci_chn_lut_out_wait_ctrl"
+  },
+  "independent_review": {
+    "case_id": "s1derived.68da7edf44675bf9b6ac.6e75b1b5016b",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Exact ports and equations match, including level-sensitive combinational output and pending-wait reset behavior.",
+        "rtl_excerpt": "`assign ...ld_core_sct=...ld_core_psct & ...ogwt; ...icwt <= ... & ~...biwt;`",
+        "spec_excerpt": "\u201cld_core_sct is not inherently a one-cycle pulse\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.68da7edf44675bf9b6ac",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "4ee4be73f439b79f0e07b319c82dea33afb3f4b42fcef87275429c14e70b5c16",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "68da7edf44675bf9b6ac194574008d3562e45a83f71d831c322d6ce3b31b492d",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.68da7edf44675bf9b6ac",
+  "primary_review": {
+    "case_id": "s1derived.68da7edf44675bf9b6ac.6e75b1b5016b",
+    "checks": {
+      "behavior": "Wait equations mostly match.",
+      "boundaries": "Output duration follows input conditions, not fixed pulse length.",
+      "interface": "Ports match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Reset is asynchronous."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Wait equations mostly match. Reset is asynchronous.",
+        "rtl_excerpt": "negedge reset; assign ld_core_sct=ld_core_psct&ogwt",
+        "spec_excerpt": "\u201cActive-low synchronous reset\u201d and \u201cfor exactly one cycle\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "Reset is incorrectly called synchronous, and prose claims ld_core_sct lasts exactly one cycle although it is combinational.",
+        "rtl_evidence": "negedge reset; assign ld_core_sct=ld_core_psct&ogwt",
+        "spec_evidence": "\u201cActive-low synchronous reset\u201d and \u201cfor exactly one cycle\u201d",
+        "type": "reset_and_pulse_semantics"
+      }
+    ],
+    "parent_id": "s1p.68da7edf44675bf9b6ac",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.68da7edf44675bf9b6ac.6e75b1b5016b.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "68da7edf44675bf9b6ac194574008d3562e45a83f71d831c322d6ce3b31b492d",
+    "source_group": "S1",
+    "specification_sha256": "6e75b1b5016b6ad0c0aeb73d8027d1226686fc0c1aa5e72fa6714ab896246a60",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.68da7edf44675bf9b6ac.6e75b1b5016b.md",
+  "qualified_specification_sha256": "4ee4be73f439b79f0e07b319c82dea33afb3f4b42fcef87275429c14e70b5c16",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.68da7edf44675bf9b6ac.6e75b1b5016b/private/golden_design.v",
+  "rtl_sha256": "68da7edf44675bf9b6ac194574008d3562e45a83f71d831c322d6ce3b31b492d",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.68da7edf44675bf9b6ac.6e75b1b5016b/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "6e75b1b5016b6ad0c0aeb73d8027d1226686fc0c1aa5e72fa6714ab896246a60",
+  "top_module": "NV_NVDLA_SDP_CORE_Y_idx_core_chn_lut_out_rsci_chn_lut_out_wait_ctrl"
+}

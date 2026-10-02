@@ -1,0 +1,95 @@
+# Default Hazard3 compressed-instruction decoder
+
+Implement `hazard3_instr_decompress` for its default configuration: EXTENSION_C=1, EXTENSION_E=0, EXTENSION_M=1; EXTENSION_ZCB,ZBB,ZILSD,ZCLSD,ZCMP all0. Other project parameters have no behavioral effect on this module in this configuration. Only the default configuration is qualified; optional extension configurations need not be implemented. Inputs: clk,rst_n,instr_in[31:0],instr_out_uop_stall,instr_out_uop_clear. Outputs: instr_is_32bit,instr_out[31:0],instr_out_is_uop,instr_out_is_final_uop,instr_out_uop_no_pc_update,instr_out_uop_atomic,df_uop_step[3:0],invalid. With ZCMP disabled all outputs are combinational; clock/reset/stall/clear have no effect. All four uop flags and df_uop_step are always0.
+
+If instr_in[1:0]=3, instr_is_32bit=1,instr_out=instr_in,invalid=0. Otherwise instr_is_32bit=0, decode only bits15:0 (upper16 ignored). Default instr_out=0,invalid=1 for unmatched patterns. For matched base compressed instructions invalid=0 unless explicitly specified below; the output expansion remains defined even when invalid=1. This is an expander, not a full legality checker for arbitrary32-bit instructions or hint encodings.
+
+Let c=instr_in[15:0], L=c[11:7], M=c[6:2], S=8+c[9:7], T=8+c[4:2]. Concatenations below are MSB first. Sign extension is from the highest listed bit, zero extension otherwise. I(OP,rd,rs1,imm) ORs the listed instruction base with rd<<7,rs1<<15 and low12(imm)<<20. R(OP,rd,rs1,rs2) additionally places rs2<<20. Sfmt(OP,rs1,rs2,imm) places low12 imm[11:5] at31:25 and imm[4:0] at11:7. Bfmt places low13 immediate[12|10:5|4:1|11] in bits31|30:25|11:8|7. Jfmt places low21 immediate[20|10:1|11|19:12] in bits31|30:21|20|19:12; rd at11:7. Unspecified fields are0. Bases are given below and ORed, not overwritten.
+
+Immediates: CI=signextend({c[12],c[6:2]}); CJ=signextend({c[12],c[8],c[10:9],c[6],c[7],c[2],c[11],c[5:3],0}); CB=signextend({c[12],c[6:5],c[2],c[11:10],c[4:3],0}); CLB=zeroextend({c[5],c[6]}); CLH=zeroextend({c[5],0}).
+
+|Pattern name|Expansion|Invalid condition|
+|---|---|---|
+|C_ADDI4SPN|I(ADDI,T,2,{c[10:7],c[12:11],c[5],c[6],00})|c[12:2]=0 (exact implemented check)|
+|C_LW|I(LW,T,S,{c[5],c[12:10],c[6],00})|none|
+|C_SW|Sfmt(SW,S,T,{c[5],c[12:10],c[6],00})|none|
+|C_ADDI|I(ADDI,L,L,CI)|none, including hints|
+|C_JAL / C_J|Jfmt(JAL,1 /0,CJ)|none|
+|C_LI|I(ADDI,L,0,CI)|none|
+|C_LUI|If L=2: I(ADDI,2,2,signextend({c[12],c[4:3],c[5],c[2],c[6],0000})); otherwise LUI base OR L<<7 OR (signextended20-bit {c[12],c[6:2]})<<12|{c[12],c[6:2]}=0|
+|C_SLLI|I(SLLI,L,L,CI)|none|
+|C_SRLI / C_SRAI / C_ANDI|I(SRLI/SRAI/ANDI,S,S,CI)|none|
+|C_SUB / C_XOR / C_OR / C_AND|R(SUB/XOR/OR/AND,S,S,T)|none|
+|C_ADD|If M!=0:R(ADD,L,L,M); else if L!=0:I(JALR,1,L,0); else EBREAK|none|
+|C_MV|If M!=0:R(ADD,L,0,M); else I(JALR,0,L,0)|only when M=0 and L=0|
+|C_LWSP|I(LW,L,2,{c[3:2],c[12],c[6:4],00})|L=0|
+|C_SWSP|Sfmt(SW,2,M,{c[8:7],c[12:9],00})|none|
+|C_BEQZ / C_BNEZ|Bfmt(BEQ/BNE,S,0,CB)|none|
+
+Disabled-extension patterns are still recognized and output the expansion below with invalid=1; do not replace these outputs with0:
+
+|Pattern|Expansion (invalid=1)|
+|---|---|
+|C_LBU / C_LHU / C_LH|I(LBU,T,S,CLB) / I(LHU,T,S,CLH) / I(LH,T,S,CLH)|
+|C_SB / C_SH|Sfmt(SB,S,T,CLB) / Sfmt(SH,S,T,CLH); these immediates only occupy the low immediate field|
+|C_ZEXT_B|I(ANDI,S,S,255)|
+|C_SEXT_B / C_ZEXT_H / C_SEXT_H|R(SEXT_B/ZEXT_H/SEXT_H,S,S,0)|
+|C_NOT|I(XORI,S,S,-1)|
+|C_MUL|R(MUL,S,S,T)|
+|C_LD / C_SD|I(LD,T,S,{c[6:5],c[12:10],000}) / Sfmt(SD,S,T,same)|
+|C_LDSP / C_SDSP|I(LD,L,2,{c[4:2],c[12],c[6:5],000}) / Sfmt(SD,2,M,{c[9:7],c[12:10],000})|
+|All CM_* below|0|
+
+Pattern matching (question mark means either0 or1):
+
+|Name|16-bit pattern|
+|---|---|
+|C_ADDI4SPN|000???????????00|
+|C_LW|010???????????00|
+|C_SW|110???????????00|
+|C_ADDI|000???????????01|
+|C_JAL|001???????????01|
+|C_J|101???????????01|
+|C_LI|010???????????01|
+|C_LUI|011???????????01|
+|C_SRLI|100000????????01|
+|C_SRAI|100001????????01|
+|C_ANDI|100?10????????01|
+|C_SUB|100011???00???01|
+|C_XOR|100011???01???01|
+|C_OR|100011???10???01|
+|C_AND|100011???11???01|
+|C_BEQZ|110???????????01|
+|C_BNEZ|111???????????01|
+|C_SLLI|0000??????????10|
+|C_MV|1000??????????10|
+|C_ADD|1001??????????10|
+|C_LWSP|010???????????10|
+|C_SWSP|110???????????10|
+|C_LBU|100000????????00|
+|C_LHU|100001???0????00|
+|C_LH|100001???1????00|
+|C_SB|100010????????00|
+|C_SH|100011???0????00|
+|C_ZEXT_B|100111???1100001|
+|C_SEXT_B|100111???1100101|
+|C_ZEXT_H|100111???1101001|
+|C_SEXT_H|100111???1101101|
+|C_NOT|100111???1110101|
+|C_MUL|100111???10???01|
+|C_LD|011??????????000|
+|C_LDSP|011?????0?????10|
+|C_SD|111??????????000|
+|C_SDSP|111??????????010|
+|CM_PUSH|10111000??????10|
+|CM_POP|10111010??????10|
+|CM_POPRETZ|10111100??????10|
+|CM_POPRET|10111110??????10|
+|CM_MVSA01|101011???01???10|
+|CM_MVA01S|101011???11???10|
+
+Instruction bases (hexadecimal):
+
+BEQ=0x00000063; BNE=0x00001063; BLT=0x00004063; BGE=0x00005063; BLTU=0x00006063; BGEU=0x00007063; JALR=0x00000067; JAL=0x0000006f; LUI=0x00000037; AUIPC=0x00000017; ADDI=0x00000013; SLLI=0x00001013; SLTI=0x00002013; SLTIU=0x00003013; XORI=0x00004013; SRLI=0x00005013; SRAI=0x40005013; ORI=0x00006013; ANDI=0x00007013; ADD=0x00000033; SUB=0x40000033; SLL=0x00001033; SLT=0x00002033; SLTU=0x00003033; XOR=0x00004033; SRL=0x00005033; SRA=0x40005033; OR=0x00006033; AND=0x00007033; LB=0x00000003; LH=0x00001003; LW=0x00002003; LBU=0x00004003; LHU=0x00005003; SB=0x00000023; SH=0x00001023; SW=0x00002023; FENCE=0x0000000f; FENCE_I=0x0000100f; ECALL=0x00000073; EBREAK=0x00100073; CSRRW=0x00001073; CSRRS=0x00002073; CSRRC=0x00003073; CSRRWI=0x00005073; CSRRSI=0x00006073; CSRRCI=0x00007073; SYSTEM=0x00000073; MUL=0x02000033; SEXT_B=0x60401013; SEXT_H=0x60501013; ZEXT_H=0x08004033; LD=0x00003003; SD=0x00003023; 
+
+No inputs are constrained to legal compressed instructions. Reserved and disabled encodings retain the specified deterministic expansion and invalid indication.

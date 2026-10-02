@@ -1,0 +1,52 @@
+module origen_177256(
+    input wire [31:0] dividend,
+    input wire [31:0] divisor,
+    input wire start,
+    input wire clock,
+    input wire reset,
+    output reg [31:0] q,
+    output reg [31:0] r,
+    output reg busy,
+    output reg over
+);
+
+reg [31:0] reg_r, reg_q, reg_b;
+reg r_val, q_val;
+reg [5:0] count;
+
+always @(posedge clock or posedge reset) begin
+    if (reset) begin
+        reg_r <= 0;
+        reg_q <= 0;
+        reg_b <= 0;
+        r_val <= 0;
+        q_val <= 0;
+        count <= 0;
+        busy <= 0;
+        over <= 0;
+    end else begin
+        if (start) begin
+            reg_r <= dividend;
+            reg_q <= 0;
+            reg_b <= (divisor == 0) ? 1 : (divisor[31] ? ~divisor + 1 : divisor);
+            r_val <= dividend[31];
+            q_val <= (dividend[31] ^ divisor[31]);
+            count <= 0;
+            busy <= 1;
+            over <= 0;
+        end else if (busy) begin
+            if (count == 32) begin
+                busy <= 0;
+                over <= 1;
+                q <= (over) ? reg_q : reg_q;
+                r <= (over) ? (r_val ? -reg_r : reg_r) : reg_r;
+            end else begin
+                reg_r <= (reg_r[31] == reg_b[31]) ? reg_r - reg_b : reg_r + reg_b;
+                reg_q <= {reg_q[30:0], ~reg_r[31]};
+                count <= count + 1;
+            end
+        end
+    end
+end
+
+endmodule

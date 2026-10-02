@@ -1,0 +1,86 @@
+always @ (posedge clock or posedge reset)
+begin 
+	if (reset) begin 
+		tx_sm <= 3'b000;
+		tx_data <= 8'h0;
+		new_tx_data <= 1'b0;
+	end 
+	else 
+		case (tx_sm)
+			// wait for read done indication 
+			3'b000: 
+				// on end of every read operation check how the data read should be transmitted 
+				// according to read type: ascii or binary.
+				if (read_done_s) 
+					// on binary mode read transmit byte value 
+					if (bin_read_op)
+					begin 
+						// note that there is no need to change state 
+						tx_data <= read_data_s;
+						new_tx_data <= 1'b1;
+					end 
+					else 
+					begin 
+						tx_sm <= 3'b001;
+						tx_data <= tx_char;
+						new_tx_data <= 1'b1;
+					end 
+				// check if status byte should be transmitted 
+				else if ((send_stat_flag && bin_read_op && tx_end_p && bin_last_byte) ||	// end of read command 
+					(send_stat_flag && bin_write_op && new_rx_data && bin_last_byte) ||	// end of write command 
+					((main_sm == 4'b1000) && new_rx_data && (rx_data[5:4] == 2'b00)))	// NOP 
+				begin 
+					// send status byte - currently a constant 
+					tx_data <= 8'h5a;
+					new_tx_data <= 1'b1;
+				end 
+				else 
+					new_tx_data <= 1'b0;
+
+			// wait for transmit to end 
+			3'b001:	
+				if (tx_end_p) 
+				begin 
+					tx_sm <= 3'b100;
+					tx_data <= tx_char;
+					new_tx_data <= 1'b1;
+				end 
+				else 
+					new_tx_data <= 1'b0;
+					
+			// wait for transmit to end 
+			3'b100:	
+				if (tx_end_p) 
+				begin 
+					tx_sm <= 3'b101;
+					tx_data <= 8'h0d;
+					new_tx_data <= 1'b1;
+				end 
+				else 
+					new_tx_data <= 1'b0;
+					
+			// wait for transmit to end 
+			3'b101:	
+				if (tx_end_p) 
+				begin 
+					tx_sm <= 3'b110;
+					tx_data <= 8'h0a;
+					new_tx_data <= 1'b1;
+				end 
+				else 
+					new_tx_data <= 1'b0;
+					
+			// wait for transmit to end 
+			3'b110:	
+				begin 
+					if (tx_end_p) 
+						tx_sm <= 3'b000;
+					// clear tx new data flag 
+					new_tx_data <= 1'b0;
+				end 
+					
+			// return to idle 
+			default:
+				tx_sm <= 3'b000;
+		endcase 
+end

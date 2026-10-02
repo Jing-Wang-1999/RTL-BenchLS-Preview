@@ -1,0 +1,40 @@
+{
+  "approved": true,
+  "case_id": "t2.1.aes_key_mem.block_f55977a68212bc23",
+  "case_manifest_sha256": "f4f781d1bfd650348512b93643170a66467db6202abea75d43a27559eb42ee95",
+  "copyable_complete_sibling_present": false,
+  "evidence": [
+    "Both key-size branches are removed, including word dependencies, key history write enables and S-box word routing; neither key-size sibling remains to copy.",
+    "Screened equations specify initial rounds, odd/even AES-256 rounds, live keylen and arbitrary external new_sboxw behavior. Remaining registers/controller provide sufficient integration context.",
+    "Local zero_initial_round_key fault changes only the AES-128 initial entry write within the hidden span; a nonzero key makes round_key observably wrong."
+  ],
+  "formal_qualification": "Pending separate parent-owned SEC qualification; this review does not assert proof completion.",
+  "hidden_noncomment_source_lines": 101,
+  "hidden_spans": [
+    {
+      "end": 9598,
+      "end_line": 307,
+      "golden_sha256": "39449467df74e3704062e8b82b26376795a86601f8eafcc1653941e1eafdf042",
+      "label": "round_key_generation",
+      "marker": "/* RTL_BENCHLS_BLOCK_0: restore round_key_generation */\n",
+      "offset_unit": "unicode_codepoints",
+      "start": 5938,
+      "start_line": 191
+    }
+  ],
+  "local_fault_changes_confined_to_hidden_spans": true,
+  "local_fault_compile_evidence_retained": true,
+  "mask_restores_exact_parent": true,
+  "noncomment_source_lines": 275,
+  "parent_case_id": "s1quality.d5fbd6124f7b4ac2a50a.62e28b3ecf5f",
+  "parent_rtl_sha256": "d5fbd6124f7b4ac2a50a2dcfaa2a02bfe65f8cb9a387b3488111a257e833ca55",
+  "public_artifacts_sha256": {
+    "TASK.md": "98c7589aa6baed379d90292e9bd3fdc8fcb9e736a4ad8f5970a4e6911eb561dc",
+    "design.v": "f163ac4817bc18e8a4c03934629a7523169832e04e6410a7eb478e2301d1dbdb",
+    "specification.md": "62e28b3ecf5fadad1632a2b60ab1189a0e4c081e5f4a03ff0c06c9689b677cff"
+  },
+  "reason": "Hides the AES-128/256 round-key datapath while retaining key memory, register updates, round counter, round-constant logic and generation controller.",
+  "retained_noncomment_source_lines": 174,
+  "sufficient_context": true,
+  "top_module": "aes_key_mem"
+}

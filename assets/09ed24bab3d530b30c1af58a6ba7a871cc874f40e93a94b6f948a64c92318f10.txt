@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.80785fa51efef0e1ab68.583060f0f726",
+  "compile_check": {
+    "case_id": "s1derived.80785fa51efef0e1ab68.583060f0f726",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_09097",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_09097.6355f0ba41898375/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.80785fa51efef0e1ab68",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "80785fa51efef0e1ab68a4dcb116530f484cad6d1ac89019a75d51c7d8d5eb5f",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.80785fa51efef0e1ab68.583060f0f726",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_09097.6355f0ba41898375/private/commercial_positive.log",
+    "commercial_log_sha256": "397bc7361e42c6f78887e4e5c18e5cf0efa833980ca63acd61f02848a22aad96",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_09097.6355f0ba41898375/private/historical_harness/00_sec_mg_09097.tcl",
+    "executed_script_sha256": "27a44c494dce65208414532b71c307868af8a598b95ba50c047b944d637289de",
+    "golden_tops": [
+      "mg_09097"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.mg_09097.6355f0ba41898375",
+    "parent_id": "s1p.80785fa51efef0e1ab68",
+    "revised_tops": [
+      "mg_09097"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_09097",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.80785fa51efef0e1ab68.583060f0f726",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The enabled instruction register, all four field slices, and five 32-bit extension/shift outputs agree, including the different sign bits and unspecified initial state.",
+        "rtl_excerpt": "assign sx26s2[31:0] = { copy_sign_26[3:0], ir[25:0], 2'b00 };",
+        "specification_excerpt": "sign-extended from bit 25 to 30 bits"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.80785fa51efef0e1ab68",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "8a71af4ad724ab9c191bc064aa562033b0f32c3bcc296aac35aa0ed14f60553a",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "80785fa51efef0e1ab68a4dcb116530f484cad6d1ac89019a75d51c7d8d5eb5f",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_09097.6355f0ba41898375/private/historical_harness/00_sec_mg_09097.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_09097.6355f0ba41898375/private/historical_harness/01_sec_mg_09097.tcl"
+  ],
+  "parent_id": "s1p.80785fa51efef0e1ab68",
+  "primary_review": {
+    "case_id": "s1derived.80785fa51efef0e1ab68.583060f0f726",
+    "checks": {
+      "behavior": "The file truncates while describing sign-copy logic and omits hold/startup boundaries.",
+      "boundaries": "The repair states the omitted truncation, startup, default, and parameter boundaries.",
+      "interface": "The repair supplies the complete actual interface and parameter defaults.",
+      "rtl_reasonableness": "The RTL is coherent and reasonable hardware for the repaired or original contract.",
+      "sequential_and_reset": "The repair gives actual clock, reset, priority, hold, and CDC timing."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The file truncates while describing sign-copy logic and omits hold/startup boundaries.",
+        "rtl_excerpt": "ir loads only when ir_we is high and has no reset or initializer.",
+        "spec_excerpt": "It ends after introducing copy_sign_16."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The file truncates while describing sign-copy logic and omits hold/startup boundaries.",
+        "rtl_evidence": "ir loads only when ir_we is high and has no reset or initializer.",
+        "spec_evidence": "It ends after introducing copy_sign_16.",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.80785fa51efef0e1ab68",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_07/s1derived.80785fa51efef0e1ab68.583060f0f726.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "80785fa51efef0e1ab68a4dcb116530f484cad6d1ac89019a75d51c7d8d5eb5f",
+    "source_group": "S5",
+    "specification_sha256": "583060f0f7264dd6f1eaae8f4b380b5a7848d00de66865e368dc2dc7717e365e",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_07/s1derived.80785fa51efef0e1ab68.583060f0f726.md",
+  "qualified_specification_sha256": "8a71af4ad724ab9c191bc064aa562033b0f32c3bcc296aac35aa0ed14f60553a",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_09097.6355f0ba41898375/private/golden_design.v",
+  "rtl_sha256": "80785fa51efef0e1ab68a4dcb116530f484cad6d1ac89019a75d51c7d8d5eb5f",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_09097.6355f0ba41898375/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "583060f0f7264dd6f1eaae8f4b380b5a7848d00de66865e368dc2dc7717e365e",
+  "top_module": "mg_09097"
+}

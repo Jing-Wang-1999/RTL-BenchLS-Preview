@@ -1,0 +1,39 @@
+always @(posedge clk_i or negedge arst_i)
+	begin : gen_regs
+	  if (!arst_i)
+	    begin
+	        htim       <=  0;
+	        vtim       <=  0;
+	        hvlen      <=  0;
+	        VBARa      <=  0;
+	        VBARb      <=  0;
+	        cursor0_xy <=  0;
+	        cursor0_ba <=  0;
+	        cursor1_xy <=  0;
+	        cursor1_ba <=  0;
+	    end
+	  else if (rst_i)
+	    begin
+	        htim       <=  0;
+	        vtim       <=  0;
+	        hvlen      <=  0;
+	        VBARa      <=  0;
+	        VBARb      <=  0;
+	        cursor0_xy <=  0;
+	        cursor0_ba <=  0;
+	        cursor1_xy <=  0;
+	        cursor1_ba <=  0;
+	    end
+	  else if (reg_wacc)
+	    case (adr_i) // synopsis full_case parallel_case
+	        HTIM_ADR  : htim       <=  dat_i;
+	        VTIM_ADR  : vtim       <=  dat_i;
+	        HVLEN_ADR : hvlen      <=  dat_i;
+	        VBARA_ADR : VBARa      <=  dat_i[31: 2];
+	        VBARB_ADR : VBARb      <=  dat_i[31: 2];
+	        C0XY_ADR  : cursor0_xy <=  dat_i[31: 0];
+	        C0BAR_ADR : cursor0_ba <=  dat_i[31:11];
+	        C1XY_ADR  : cursor1_xy <=  dat_i[31: 0];
+	        C1BAR_ADR : cursor1_ba <=  dat_i[31:11];
+	    endcase
+	end

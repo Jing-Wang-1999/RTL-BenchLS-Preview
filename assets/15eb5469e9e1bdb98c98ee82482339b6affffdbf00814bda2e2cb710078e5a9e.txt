@@ -1,0 +1,61 @@
+module autovcoder_086108 (
+    input RESET,
+    input CLOCK,
+    input [3:0] PUSH_BUTTONS,
+    output reg [1:0] STATE_OUT
+);
+
+    // State encoding
+    localparam RIGHT = 2'b00;
+    localparam DOWN  = 2'b01;
+    localparam UP    = 2'b10;
+    localparam LEFT  = 2'b11;
+
+    // State machine
+    always @(posedge CLOCK or posedge RESET) begin
+        if (RESET) begin
+            STATE_OUT <= RIGHT;
+        end else begin
+            case (STATE_OUT)
+                RIGHT: begin
+                    if (PUSH_BUTTONS[1])
+                        STATE_OUT <= DOWN;
+                    else if (PUSH_BUTTONS[2])
+                        STATE_OUT <= UP;
+                    else
+                        STATE_OUT <= RIGHT;
+                end
+                
+                DOWN: begin
+                    if (PUSH_BUTTONS[0])
+                        STATE_OUT <= RIGHT;
+                    else if (PUSH_BUTTONS[3])
+                        STATE_OUT <= LEFT;
+                    else
+                        STATE_OUT <= DOWN;
+                end
+                
+                UP: begin
+                    if (PUSH_BUTTONS[0])
+                        STATE_OUT <= RIGHT;
+                    else if (PUSH_BUTTONS[3])
+                        STATE_OUT <= LEFT;
+                    else
+                        STATE_OUT <= UP;
+                end
+                
+                LEFT: begin
+                    if (PUSH_BUTTONS[1])
+                        STATE_OUT <= DOWN;
+                    else if (PUSH_BUTTONS[2])
+                        STATE_OUT <= UP;
+                    else
+                        STATE_OUT <= LEFT;
+                end
+                
+                default: STATE_OUT <= RIGHT;
+            endcase
+        end
+    end
+
+endmodule

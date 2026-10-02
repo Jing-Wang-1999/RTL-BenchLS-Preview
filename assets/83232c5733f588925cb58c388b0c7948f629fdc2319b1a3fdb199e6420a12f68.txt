@@ -1,0 +1,28 @@
+module xout8(clk, rst, ctrl, sel, d, q);
+	input			clk;		
+	input			rst;		
+	input	[15:0]	ctrl;		
+	input			sel;		
+	inout	[7:0]	d;			
+	output	[7:0]	q;			
+
+	tri		[7:0]	d;
+	reg		[7:0]	q;
+
+	wire [4:0]	addr;
+	wire		ud_t, ld_t, ud_ce, ld_ce;
+
+	// Logic for ctrl_dec
+	assign ud_t = (ctrl[0] & sel);
+	assign ld_t = (ctrl[1] & sel);
+	assign ud_ce = (ctrl[2] & sel);
+	assign ld_ce = (ctrl[3] & sel);
+	assign addr = ctrl[15:11];
+
+	always @(posedge clk or posedge rst) begin
+		if (rst)
+			q <= 0;
+		else if (ld_ce)
+			q <= d;
+	end
+endmodule

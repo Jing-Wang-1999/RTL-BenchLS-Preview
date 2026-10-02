@@ -1,0 +1,21 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+begin
+    branch_taken_q   <= 1'b0;
+    branch_ntaken_q  <= 1'b0;
+    pc_x_q           <= 32'b0;
+    pc_m_q           <= 32'b0;
+    branch_call_q    <= 1'b0;
+    branch_ret_q     <= 1'b0;
+    branch_jmp_q     <= 1'b0;
+end
+else if (opcode_valid_i)
+begin
+    branch_taken_q   <= branch_r && opcode_valid_i & branch_taken_r;
+    branch_ntaken_q  <= branch_r && opcode_valid_i & ~branch_taken_r;
+    pc_x_q           <= branch_taken_r ? branch_target_r : opcode_pc_i + 32'd4;
+    branch_call_q    <= branch_r && opcode_valid_i && branch_call_r;
+    branch_ret_q     <= branch_r && opcode_valid_i && branch_ret_r;
+    branch_jmp_q     <= branch_r && opcode_valid_i && branch_jmp_r;
+    pc_m_q           <= opcode_pc_i;
+end

@@ -1,0 +1,26 @@
+module rtlpp_05472 (
+    input  wire CLK,
+    input  wire D,
+    input  wire SCD,
+    input  wire SCE,
+    input  wire RESET_B,
+    input  wire VPWR,
+    input  wire VGND,
+    input  wire VPB,
+    input  wire VNB,
+    output reg  Q
+);
+
+    always @(posedge CLK or negedge RESET_B) begin
+        if (!RESET_B) begin
+            Q <= 1'b0;
+        end else begin
+            if (SCE) begin
+                Q <= SCD;
+            end else begin
+                Q <= D;
+            end
+        end
+    end
+
+endmodule

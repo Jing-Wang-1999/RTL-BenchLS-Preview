@@ -1,0 +1,53 @@
+module origen_215894(
+  input clk,
+  input [4:0] data,
+  output reg go,
+  output reg [7:0] tx_character
+);
+
+  reg [4:0] current_data;
+  reg [3:0] delay_count;
+
+  localparam IDLE = 2'b00;
+  localparam TX_CHAR_TRANSMIT = 2'b01;
+  localparam DELAY = 2'b10;
+
+  reg [1:0] state;
+
+  always @(posedge clk) begin
+    case (state)
+      IDLE: begin
+        if (data == 5'b00000) begin
+          go <= 0;
+        end else begin
+          current_data <= data;
+          state <= TX_CHAR_TRANSMIT;
+        end
+      end
+      TX_CHAR_TRANSMIT: begin
+        case (current_data)
+          5'b00000: tx_character <= 8'h30; // '0'
+          5'b00001: tx_character <= 8'h31; // '1'
+          5'b00010: tx_character <= 8'h32; // '2'
+          // Add more cases for other character mappings
+          default: tx_character <= 8'h20; // ' '
+        endcase
+        go <= 1;
+        state <= DELAY;
+      end
+      DELAY: begin
+        delay_count <= delay_count + 1;
+        if (delay_count == 12) begin
+          go <= 0;
+          if (current_data == data) begin
+            state <= DELAY;
+          end else begin
+            current_data <= 5'b00000;
+            state <= IDLE;
+          end
+        end
+      end
+    endcase
+  end
+
+endmodule

@@ -1,0 +1,111 @@
+{
+  "case_id": "s1derived.9fbcefef4227713ee4b6.eca5a557754c",
+  "compile_check": {
+    "case_id": "s1derived.9fbcefef4227713ee4b6.eca5a557754c",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_05748",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05748.b0caa8dd686c669e/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.9fbcefef4227713ee4b6",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "9fbcefef4227713ee4b6e7dce17cb8d48f978a2d8feb0db8fb45e307dec53b78",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.9fbcefef4227713ee4b6.eca5a557754c",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05748.b0caa8dd686c669e/private/commercial_positive.log",
+    "commercial_log_sha256": "bbcf0d1ba2001b6421b3e003ca494bfe90ca30ab3e8d927f67ae33302b30cd79",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05748.b0caa8dd686c669e/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mg_05748"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.mg_05748.b0caa8dd686c669e",
+    "parent_id": "s1p.9fbcefef4227713ee4b6",
+    "revised_tops": [
+      "mg_05748"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_05748",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.9fbcefef4227713ee4b6.eca5a557754c",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The complete three-scalar bidirectional buffer interface and binary enable drive/release behavior match.",
+        "rtl_excerpt": "assign pad = ena ? data : 1'bz;",
+        "specification_excerpt": "when ena is zero"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.9fbcefef4227713ee4b6",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "5e354e26a1c027eef46809cbbc8a754fd3c0ba93fdece9602fd390d4847c030a",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9fbcefef4227713ee4b6e7dce17cb8d48f978a2d8feb0db8fb45e307dec53b78",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05748.b0caa8dd686c669e/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05748.b0caa8dd686c669e/private/historical_harness/01_conformal_rtl_mg_05748.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05748.b0caa8dd686c669e/private/historical_harness/02_fm_rtl_mg_05748.tcl"
+  ],
+  "parent_id": "s1p.9fbcefef4227713ee4b6",
+  "primary_review": {
+    "case_id": "s1derived.9fbcefef4227713ee4b6.eca5a557754c",
+    "checks": {
+      "behavior": "Tri-state intent is clear, but disabled-pad behavior is missing.",
+      "boundaries": "Address and data widths, disabled cycles, default/illegal cases, and simultaneous controls were checked for this module.",
+      "interface": "All named ports, directions, and widths match the complete RTL interface.",
+      "rtl_reasonableness": "RTL compiles and is a coherent standalone implementation with no missing dependency.",
+      "sequential_and_reset": "No sequential state or reset is present."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Tri-state intent is clear, but disabled-pad behavior is missing.",
+        "rtl_excerpt": "assign pad = ena ? data : 1'bz; \n endmodule",
+        "specification_excerpt": "Enable signal controlling output driver\n- `data`: Data signal to drive onto pad\n\n**Inout:**\n- `pad`:"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends at the pad description and never states high-impedance behavior when disabled.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.9fbcefef4227713ee4b6",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_08/s1derived.9fbcefef4227713ee4b6.eca5a557754c.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9fbcefef4227713ee4b6e7dce17cb8d48f978a2d8feb0db8fb45e307dec53b78",
+    "source_group": "S5",
+    "specification_sha256": "eca5a557754cb8cea6158637736bc0551f8a3156f8e633e378425866b8316a86",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_08/s1derived.9fbcefef4227713ee4b6.eca5a557754c.md",
+  "qualified_specification_sha256": "5e354e26a1c027eef46809cbbc8a754fd3c0ba93fdece9602fd390d4847c030a",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05748.b0caa8dd686c669e/private/golden_design.v",
+  "rtl_sha256": "9fbcefef4227713ee4b6e7dce17cb8d48f978a2d8feb0db8fb45e307dec53b78",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_05748.b0caa8dd686c669e/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "eca5a557754cb8cea6158637736bc0551f8a3156f8e633e378425866b8316a86",
+  "top_module": "mg_05748"
+}

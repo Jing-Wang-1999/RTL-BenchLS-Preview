@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.a28c05061e213790cd17.e5294eaaf596",
+  "compile_check": {
+    "case_id": "s1derived.a28c05061e213790cd17.e5294eaaf596",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "UINT16_TO_FP17_mgc_in_wire_wait_v1",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.UINT16_TO_FP17_mgc_in_wire_wait_v1.7092af62b51232a7/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.a28c05061e213790cd17",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "a28c05061e213790cd173e1a2019d302a6ea88c96849d419136590eca535feeb",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.a28c05061e213790cd17.e5294eaaf596",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.UINT16_TO_FP17_mgc_in_wire_wait_v1.7092af62b51232a7/private/commercial_positive.log",
+    "commercial_log_sha256": "8a9aa1401dcf47eef553b8b95bfdf6733c2ce4ceacf5859c4f7f0fda014f035c",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.UINT16_TO_FP17_mgc_in_wire_wait_v1.7092af62b51232a7/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "UINT16_TO_FP17_mgc_in_wire_wait_v1"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.UINT16_TO_FP17_mgc_in_wire_wait_v1.7092af62b51232a7",
+    "parent_id": "s1p.a28c05061e213790cd17",
+    "revised_tops": [
+      "UINT16_TO_FP17_mgc_in_wire_wait_v1"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "UINT16_TO_FP17_mgc_in_wire_wait_v1",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.a28c05061e213790cd17.e5294eaaf596",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Directions and width default8 are exact, rscid is unused as stated, and no handshake signal gates the independent wires. This is a sensible HLS interface adapter.",
+        "rtl_excerpt": "assign d = z;\n  assign lz = ld;\n  assign vd = vz;",
+        "specification_excerpt": "It continuously assigns `d = z`, `lz = ld`, and `vd = vz`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.a28c05061e213790cd17",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "754216410d3bca2df80cbf94cf18ace108d135e5687e9fea9e96375ff2873b4c",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "a28c05061e213790cd173e1a2019d302a6ea88c96849d419136590eca535feeb",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.UINT16_TO_FP17_mgc_in_wire_wait_v1.7092af62b51232a7/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.UINT16_TO_FP17_mgc_in_wire_wait_v1.7092af62b51232a7/private/historical_harness/01_conformal_rtl_UINT16_TO_FP17_mgc_in_wire_wait_v1.do"
+  ],
+  "parent_id": "s1p.a28c05061e213790cd17",
+  "primary_review": {
+    "case_id": "s1derived.a28c05061e213790cd17.e5294eaaf596",
+    "checks": {
+      "behavior": "Those claims agree, but the complete interface and independent load path are absent.",
+      "boundaries": "checked parameter default and vector width",
+      "interface": "revise: truncated prose omits lz and parameterized width contract",
+      "rtl_reasonableness": "reasonable synthesizable hardware for the stated function; compile diagnostic considered",
+      "sequential_and_reset": "combinational/no sequential state, except case-specific diagnostics stated in flaws"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Those claims agree, but the complete interface and independent load path are absent.",
+        "rtl_excerpt": "assign d=z; assign vd=vz;",
+        "spec_excerpt": "d mirrors upstream z and vd mirrors vz."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The truncated prose omits output lz, parameter defaults, and completes neither the data description nor handshake behavior.",
+        "rtl_evidence": "rscid=1; width=8; d=z; lz=ld; vd=vz",
+        "spec_evidence": "ends during the d description",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.a28c05061e213790cd17",
+    "proposed_specification_path": "proposed_repairs_3_sol_01/s1derived.a28c05061e213790cd17.e5294eaaf596.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "a28c05061e213790cd173e1a2019d302a6ea88c96849d419136590eca535feeb",
+    "source_group": "S1",
+    "specification_sha256": "e5294eaaf59692d53b8a63980b3f8ec127b23cb2a2912b7ef19f762ff606cfd3",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_01/s1derived.a28c05061e213790cd17.e5294eaaf596.md",
+  "qualified_specification_sha256": "754216410d3bca2df80cbf94cf18ace108d135e5687e9fea9e96375ff2873b4c",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.UINT16_TO_FP17_mgc_in_wire_wait_v1.7092af62b51232a7/private/golden_design.v",
+  "rtl_sha256": "a28c05061e213790cd173e1a2019d302a6ea88c96849d419136590eca535feeb",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.UINT16_TO_FP17_mgc_in_wire_wait_v1.7092af62b51232a7/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "e5294eaaf59692d53b8a63980b3f8ec127b23cb2a2912b7ef19f762ff606cfd3",
+  "top_module": "UINT16_TO_FP17_mgc_in_wire_wait_v1"
+}

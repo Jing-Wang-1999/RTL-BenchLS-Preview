@@ -1,0 +1,98 @@
+module origen_038333(
+    input wire clk25,
+    input wire rst,
+    input wire enable,
+    input wire [9:0] x_from,
+    input wire [9:0] y_from,
+    input wire [9:0] x_to,
+    input wire [9:0] y_to,
+    input wire draw_enable,
+    output reg busy,
+    output reg [19:0] SRAM_ADDR,
+    inout wire [15:0] SRAM_DQ,
+    output wire SRAM_CE_N,
+    output wire SRAM_OE_N,
+    output reg SRAM_WE_N,
+    output reg SRAM_UB_N,
+    output reg SRAM_LB_N
+);
+
+    reg [1:0] state_r;
+    reg [9:0] x_r, y_r, x_from_r, y_from_r, x_to_r, y_to_r;
+    reg [10:0] dx_r, dy_r;
+    reg [11:0] err_r;
+    reg [11:0] e2;
+    reg right_r, down_r;
+    reg [19:0] sram_addr_r;
+    reg [15:0] sram_dq_r;
+    reg sram_val_r;
+
+    assign SRAM_CE_N = ~(enable & sram_val_r);
+    assign SRAM_OE_N = 1'b1;
+    assign SRAM_DQ = (enable & sram_val_r) ? sram_dq_r : 16'hzzzz;
+
+    always @(posedge clk25 or posedge rst) begin
+        if (rst) begin
+            state_r <= 2'b00;
+            busy <= 1'b0;
+            sram_val_r <= 1'b0;
+            SRAM_WE_N <= 1'b1;
+            SRAM_UB_N <= 1'b1;
+            SRAM_LB_N <= 1'b1;
+        end else if (enable) begin
+            case (state_r)
+                2'b00: begin // Idle state
+                    if (draw_enable) begin
+                        state_r <= 2'b01;
+                        busy <= 1'b1;
+                        x_from_r <= x_from;
+                        y_from_r <= y_from;
+                        x_to_r <= x_to;
+                        y_to_r <= y_to;
+                    end else begin
+                        busy <= 1'b0;
+                    end
+                    sram_val_r <= 1'b0;
+                    SRAM_WE_N <= 1'b1;
+                end
+                2'b01: begin // Initialization state
+                    x_r <= x_from_r;
+                    y_r <= y_from_r;
+                    dx_r <= (x_to_r > x_from_r) ? (x_to_r - x_from_r) : (x_from_r - x_to_r);
+                    dy_r <= (y_to_r > y_from_r) ? (y_to_r - y_from_r) : (y_from_r - y_to_r);
+                    right_r <= x_to_r >= x_from_r;
+                    down_r <= y_to_r >= y_from_r;
+                    err_r <= dx_r - dy_r;
+                    state_r <= 2'b10;
+                end
+                2'b10: begin // Drawing state
+                    sram_addr_r <= {y_r, x_r};
+                    sram_dq_r <= 16'hFFFF; // White color
+                    sram_val_r <= 1'b1;
+                    SRAM_WE_N <= ~SRAM_WE_N;
+                    SRAM_UB_N <= ~x_r[0];
+                    SRAM_LB_N <= x_r[0];
+                    
+                    if (x_r == x_to_r && y_r == y_to_r) begin
+                        state_r <= 2'b00;
+                    end else begin
+                        e2 = {err_r[11], err_r} << 1;
+                        if (e2 > -dy_r) begin
+                            err_r <= err_r - dy_r;
+                            x_r <= right_r ? x_r + 1 : x_r - 1;
+                        end
+                        if (e2 < dx_r) begin
+                            err_r <= err_r + dx_r;
+                            y_r <= down_r ? y_r + 1 : y_r - 1;
+                        end
+                    end
+                end
+            endcase
+        end
+    end
+
+    always @(*) begin
+        SRAM_ADDR = sram_addr_r;
+    end
+
+endmodule

@@ -1,0 +1,35 @@
+### Instruction to Generate Verilog Code
+
+Create a Verilog module named `write_once_register` that manages a one-time write process to a 16-bit register. This module should perform the following operations:
+
+1. **Primary Function**: This module captures a data input into an output register `Data_out` only once, triggered by a write-enable signal. Once written, it retains the data and ignores further writes until reset.
+
+2. **Key Control Flow**:
+   - **Reset Handling**: When the `ip_resetn` signal is deasserted (active-low reset), the output register `Data_out` should reset to `16'h0000`, and a status register `Write_once_status` should reset to `1'b0`.
+   - **Write Operation**: On the rising edge of the clock `Clk`, if the `write` input is asserted and `Write_once_status` is not set (indicating no previous write), the data from `Data_in` should be captured into `Data_out`, with the least significant bit (LSB) masked out (`Data_in & 16'hFFFE`). Then, set `Write_once_status` to `1'b1` to prevent further writes.
+
+3. **Important Data Processing and Signal Interactions**:
+   - The `Write_once_status` register prevents multiple writes by indicating if the data has already been written. It ensures that `Data_out` can only be written once per reset cycle.
+   - When `write` is asserted, the incoming data `Data_in` is captured into `Data_out` masked with `16'hFFFE` to ensure that the LSB is zero.
+   - Regardless of the write condition, the 0th bit of `Data_out` continuously reflects the status of `Write_once_status`.
+
+Use this detailed description to generate the Verilog code, ensuring the correct interactions and control flows as specified.
+
+### Sample Verilog Code
+
+Use this sample as a reference for code implementation, following the provided control flow and data processing details.
+
+Module Interface:
+module write_once_register
+(
+    input [15:0] Data_in,
+    input Clk,
+    input ip_resetn,
+    input global_resetn,
+    input write,
+    output reg [15:0] Data_out
+);
+
+Behavioral Clarifications:
+- The `global_resetn` input is present in the port list but is not used in any logic; only `ip_resetn` drives the reset behavior.
+- There is one sequential always block sensitive to posedge Clk and negedge ip_resetn; the else branch (no write or already written) explicitly holds bits [15:1] and sets bit 0 to Write_once_status.

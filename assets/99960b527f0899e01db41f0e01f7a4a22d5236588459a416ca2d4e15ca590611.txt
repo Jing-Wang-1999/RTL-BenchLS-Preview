@@ -1,0 +1,15 @@
+always @ (posedge clk or negedge rst_n) begin
+	if (!rst_n) begin
+		tcontrol_mpte <= 1'b0;
+		tcontrol_mte <= 1'b0;
+	end else if (wen_m_mode && addr == TCONTROL) begin
+		tcontrol_mpte <= wdata_update[7] && DEBUG_SUPPORT;
+		tcontrol_mte <= wdata_update[3] && DEBUG_SUPPORT;
+	end else if (DEBUG_SUPPORT && trapreg_update_enter) begin
+		tcontrol_mte <= 1'b0;
+		tcontrol_mpte <= tcontrol_mte;
+	end else if (DEBUG_SUPPORT && trapreg_update_exit) begin
+		tcontrol_mte <= tcontrol_mpte;
+		// Unlike mstatus.mie/mpie, tcontrol.mpte is unchanged by trap exit.
+	end
+end

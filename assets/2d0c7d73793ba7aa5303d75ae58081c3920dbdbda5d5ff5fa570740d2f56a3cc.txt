@@ -1,0 +1,176 @@
+module aes (
+	clk, reset,
+	i_start, i_enable,
+	i_ende, i_key,
+	i_key_mode, i_data,
+	i_data_valid, o_ready, 
+	o_data, o_data_valid, 
+	o_key_ready
+);
+input			clk;
+input			reset;
+input			i_start;
+input			i_enable;
+input	[1:0]	i_key_mode;
+input	[255:0]	i_key;
+input	[127:0]	i_data;
+input			i_data_valid;
+input			i_ende;
+output			o_ready;
+output	[127:0]	o_data;
+output			o_data_valid;
+output			o_key_ready;
+endmodule
+
+module shift_rows (
+	si, so 
+);
+input	[127:0]	si;
+output	[127:0]	so;
+endmodule
+
+module inv_shift_rows (
+	si, so 
+);
+input	[127:0]	si;
+output	[127:0]	so;
+endmodule
+
+module xtimes (
+	in, out
+);
+input	[7:0]	in;
+output	[7:0]	out;
+endmodule
+
+module MUL3 (
+	in, out
+);
+input	[7:0]	in;
+output	[7:0]	out;
+endmodule
+
+module MULE (
+	in, out
+);
+input	[7:0]	in;
+output	[7:0]	out;
+endmodule
+
+module MULB (
+	in, out
+);
+input	[7:0]	in;
+output	[7:0]	out;
+endmodule
+
+module MULD (
+	in, out
+);
+input	[7:0]	in;
+output	[7:0]	out;
+endmodule
+
+module MUL9 (
+	in, out
+);
+input	[7:0]	in;
+output	[7:0]	out;
+endmodule
+
+module byte_mix_columns (
+	a, b, c, d, out
+);
+input	[7:0]	a, b, c, d;
+output	[7:0]	out;
+endmodule
+
+module inv_byte_mix_columns (
+	a, b, c, d, out
+);
+input	[7:0]	a, b, c, d;
+output	[7:0]	out;
+endmodule
+
+module word_mix_columns (
+	in, out
+);
+input	[31:0]	in;
+output	[31:0]	out;
+endmodule
+
+module inv_word_mix_columns (
+	in, out
+);
+input	[31:0]	in;
+output	[31:0]	out;
+endmodule
+
+module mix_columns (
+	in, out
+);
+input	[127:0]	in;
+output	[127:0]	out;
+endmodule
+
+module inv_mix_columns (
+	in, out
+);
+input	[127:0]	in;
+output	[127:0]	out;
+endmodule
+
+module xram_16x64 
+(
+	clk, wr,
+	wr_addr, wr_data,
+	rd_addr, rd_data
+);
+input clk, wr;
+input [3:0] wr_addr, rd_addr;
+input [63:0] wr_data;
+output [63:0] rd_data;
+endmodule
+
+module key_exp (
+   clk,
+   reset,
+   key_in,
+   key_mode,
+   key_start,
+   wr,
+   wr_addr,
+   wr_data,
+   key_ready
+);
+parameter   IDLE       = 2'b00,
+            START      = 2'b01,
+            GENKEY1    = 2'b10,
+            GENKEY_256 = 2'b11;
+input             clk;
+input             reset;
+input   [255:0]   key_in;
+input   [1:0]     key_mode;
+input             key_start;
+output            wr;
+output  [4:0]     wr_addr;
+output  [63:0]    wr_data;
+output            key_ready;
+endmodule
+
+module sbox(
+	clk,
+	reset,
+	enable,
+	din,
+	ende,
+	en_dout,
+	de_dout);
+input		clk;
+input		reset;
+input		enable;
+input	[7:0]	din;
+input		ende;
+output	[7:0]	en_dout;
+output	[7:0]	de_dout;
+endmodule

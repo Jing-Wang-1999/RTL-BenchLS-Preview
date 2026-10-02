@@ -1,0 +1,9 @@
+# xpm_counter_updn
+
+## Interface
+
+Parameters are integer `COUNTER_WIDTH=4` and integer `RESET_VALUE=0`. Inputs `rst`, `clk`, `cnt_en`, `cnt_up`, and `cnt_down` are scalar. Output `count_value[COUNTER_WIDTH-1:0]` exposes the counter register.
+
+## Behavior
+
+On each rising edge of `clk`, active-high synchronous `rst` has priority and loads the low `COUNTER_WIDTH` bits of `RESET_VALUE`. Otherwise, when `cnt_en=1`, the next value is `count_value + cnt_up - cnt_down` modulo `2**COUNTER_WIDTH`. Consequently up-only increments, down-only decrements, both asserted leave the value unchanged, and neither asserted leaves it unchanged. When `cnt_en=0`, all up/down combinations hold the value. The register also has a declaration-time initialization to `RESET_VALUE`; normal functional reset is synchronous.

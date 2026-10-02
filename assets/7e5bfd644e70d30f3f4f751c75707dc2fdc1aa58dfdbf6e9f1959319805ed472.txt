@@ -1,0 +1,28 @@
+# Module Specification: rtlpp_10457
+
+## Overview
+This module implements a 32-bit multiplier that computes an approximate multiplication result using a split-operand approach. The design trades full precision for reduced hardware complexity.
+
+## Inputs
+- **A_mul_src1** (32-bit): First multiplicand input
+- **A_mul_src2** (32-bit): Second multiplicand input
+- **clk**: Clock signal (present but unused in current implementation)
+- **reset_n**: Active-low reset signal
+
+## Outputs
+- **A_mul_cell_result** (32-bit): The computed multiplication result
+
+## Functional Behavior
+
+The module performs multiplication by splitting the operation into two partial products:
+
+1. **Lower Partial Product (Part 1)**:
+   - Multiplies the lower 16 bits of A_mul_src1 by the lower 16 bits of A_mul_src2
+   - Produces a 32-bit intermediate result
+
+2. **Upper Partial Product (Part 2)**:
+   - Multiplies the upper 16 bits of A_mul_src1 by the lower 16 bits of A_mul_src2
+   - Produces a 16-bit intermediate result
+
+3. **Result Combination**:
+   - The final 32-bit output is constructed by:

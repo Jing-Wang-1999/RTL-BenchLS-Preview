@@ -1,0 +1,32 @@
+module ym2149_logic (
+    input RESET,
+    input CLK,
+    input CE,
+    input SEL,
+    input BC,
+    input BDIR,
+    input MODE,
+    input [7:0] DI,
+    output reg [7:0] CHANNEL_A,
+    output reg [7:0] CHANNEL_B,
+    output reg [7:0] CHANNEL_C
+);
+
+    always @(posedge CLK or posedge RESET) begin
+        if (RESET) begin
+            CHANNEL_A <= 8'b0;
+            CHANNEL_B <= 8'b0;
+            CHANNEL_C <= 8'b0;
+        end else if (CE) begin
+            if (BDIR) begin
+                case ({SEL, BC})
+                    2'b11: CHANNEL_A <= DI;
+                    2'b10: CHANNEL_B <= DI;
+                    2'b00, 2'b01: CHANNEL_C <= DI;
+                    default: begin end
+                endcase
+            end
+        end
+    end
+
+endmodule

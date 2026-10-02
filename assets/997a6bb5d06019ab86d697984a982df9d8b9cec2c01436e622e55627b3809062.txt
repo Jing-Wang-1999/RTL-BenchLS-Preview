@@ -1,0 +1,53 @@
+module autovcoder_125938 #(parameter NUM_USERS = 10, NUM_ITEMS = 10, LATENT_DIM = 5) (  
+    input clk,  
+    input rst,  
+    input valid_input,  
+    input [3:0] user_idx,  
+    input [3:0] item_idx,  
+    input [31:0] true_rating,  
+    output reg [31:0] predicted_rating  
+);  
+  
+    reg signed [31:0] user_factors [0:NUM_USERS-1][0:LATENT_DIM-1];  
+    reg signed [31:0] item_factors [0:NUM_ITEMS-1][0:LATENT_DIM-1];  
+    reg signed [31:0] learning_rate;  
+  
+    integer i;  
+  
+    initial begin  
+        learning_rate = 32'h00000001; // Small learning rate  
+        // Initialize user and item factors  
+        for (i = 0; i < NUM_USERS; i = i + 1) begin  
+            user_factors[i][0] = $urandom_range(0, 100);  
+            user_factors[i][1] = $urandom_range(0, 100);  
+            user_factors[i][2] = $urandom_range(0, 100);  
+            user_factors[i][3] = $urandom_range(0, 100);  
+            user_factors[i][4] = $urandom_range(0, 100);  
+        end  
+        for (i = 0; i < NUM_ITEMS; i = i + 1) begin  
+            item_factors[i][0] = $urandom_range(0, 100);  
+            item_factors[i][1] = $urandom_range(0, 100);  
+            item_factors[i][2] = $urandom_range(0, 100);  
+            item_factors[i][3] = $urandom_range(0, 100);  
+            item_factors[i][4] = $urandom_range(0, 100);  
+        end  
+    end  
+  
+    always @(posedge clk or posedge rst) begin  
+        if (rst) begin  
+            predicted_rating <= 0;  
+        end else if (valid_input) begin  
+            // Predict the rating  
+            predicted_rating <= 0;  
+            for (i = 0; i < LATENT_DIM; i = i + 1) begin  
+                predicted_rating <= predicted_rating + user_factors[user_idx][i] * item_factors[item_idx][i];  
+            end  
+  
+            // Update the factors using gradient descent  
+            for (i = 0; i < LATENT_DIM; i = i + 1) begin  
+                user_factors[user_idx][i] <= user_factors[user_idx][i] + learning_rate * (true_rating - predicted_rating) * item_factors[item_idx][i];  
+                item_factors[item_idx][i] <= item_factors[item_idx][i] + learning_rate * (true_rating - predicted_rating) * user_factors[user_idx][i];  
+            end  
+        end  
+    end  
+endmodule

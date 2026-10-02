@@ -1,0 +1,56 @@
+module origen_028849 (
+    input wire clk,
+    input wire rst,
+    output reg [5:0] light
+);
+
+    // State encoding
+    typedef enum reg [2:0] {
+        S0 = 3'b000,
+        S1 = 3'b001,
+        S2 = 3'b010,
+        S3 = 3'b011,
+        S4 = 3'b100,
+        S5 = 3'b101,
+        S6 = 3'b110
+    } state_t;
+
+    state_t current_state, next_state;
+
+    // State transition logic
+    always @(posedge clk or negedge rst) begin
+        if (!rst)
+            current_state <= S0;
+        else
+            current_state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (current_state)
+            S0: next_state = S1;
+            S1: next_state = S2;
+            S2: next_state = S3;
+            S3: next_state = S4;
+            S4: next_state = S5;
+            S5: next_state = S6;
+            S6: next_state = S0;
+            default: next_state = S0;
+        endcase
+    end
+
+    // Output logic
+    always @(*) begin
+        case (current_state)
+            S0: light = 6'b111111;
+            S1: light = 6'b101010;
+            S2: light = 6'b100011;
+            S3: light = 6'b100111;
+            S4: light = 6'b110011;
+            S5: light = 6'b111000;
+            S6: light = 6'b000000;
+            default: light = 6'b000000;
+        endcase
+    end
+
+endmodule

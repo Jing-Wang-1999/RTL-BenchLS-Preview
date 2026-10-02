@@ -1,0 +1,20 @@
+The YM2149 logic module provides three 8-bit output channels (A, B, C) based on register writes from a control interface.
+
+**Inputs:**  
+- RESET: Asynchronous reset, clears all channel registers to zero.  
+- CLK: System clock.  
+- CE: Clock enable; operations occur only when high.  
+- SEL and BC: Select which register to write (A, B, or C) when BDIR is active.  
+- BDIR: Write enable; when high with CE, data on DI is stored.  
+- MODE: Unused in this implementation (no effect).  
+- DI: 8-bit data input for register writes.
+
+**Operation:**  
+On a rising clock edge with CE high, if BDIR is high, the module writes DI to an internal register based on SEL and BC:  
+- If SEL=1 and BC=1 → write to Channel A register.  
+- If SEL=1 and BC=0 → write to Channel B register.  
+- If SEL=0 → write to Channel C register (BC ignored).  
+If RESET is asserted, all three channel registers are cleared immediately.
+
+**Outputs:**  
+The current values of the three registers are continuously output on CHANNEL_A

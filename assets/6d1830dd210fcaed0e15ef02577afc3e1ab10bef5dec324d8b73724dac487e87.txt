@@ -1,0 +1,55 @@
+module origen_201974 (
+    input i_clk,
+    input i_gate,
+    input [7:0] i_attack,
+    input [7:0] i_decay,
+    output [15:0] o_env
+);
+
+    // State definitions
+    localparam IDLE = 4'b0001;
+    localparam ATTACK = 4'b0010;
+    localparam DECAY = 4'b0100;
+
+    reg [3:0] state, next_state;
+    reg [25:0] env_counter;
+
+    always @(posedge i_clk) begin
+        state <= next_state;
+        case (state)
+            IDLE: begin
+                env_counter <= 26'b0;
+            end
+            ATTACK: begin
+                env_counter <= env_counter + {18'b0, i_attack, 8'b0};
+            end
+            DECAY: begin
+                env_counter <= env_counter - {18'b0, i_decay, 8'b0};
+            end
+        endcase
+    end
+
+    always @* begin
+        next_state = state;
+        case (state)
+            IDLE: begin
+                if (i_gate) begin
+                    next_state = ATTACK;
+                end
+            end
+            ATTACK: begin
+                if (!i_gate || env_counter[25:10] == 16'hFFFF) begin
+                    next_state = DECAY;
+                end
+            end
+            DECAY: begin
+                if (env_counter[25:10] == 16'h0000 || !i_gate) begin
+                    next_state = IDLE;
+                end
+            end
+        endcase
+    end
+
+    assign o_env = env_counter[25:10];
+
+endmodule

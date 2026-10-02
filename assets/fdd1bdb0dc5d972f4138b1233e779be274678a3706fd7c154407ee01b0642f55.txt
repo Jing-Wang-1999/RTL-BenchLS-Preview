@@ -1,0 +1,8 @@
+always @(posedge clk or posedge rst)
+	if(rst)					bank0_open <=  1'b0;
+	else
+	if((bank_adr == 2'h0) & bank_set)	bank0_open <=  1'b1;
+	else
+	if((bank_adr == 2'h0) & bank_clr)	bank0_open <=  1'b0;
+	else
+	if(bank_clr_all)			bank0_open <=  1'b0;

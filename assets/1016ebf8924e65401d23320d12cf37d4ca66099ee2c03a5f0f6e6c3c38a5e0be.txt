@@ -1,0 +1,7 @@
+# rtlpp_10457
+
+This combinational approximate multiplier has 32-bit unsigned inputs `A_mul_src1` and `A_mul_src2`, unused one-bit inputs `clk` and active-low `reset_n`, and 32-bit output `A_mul_cell_result`. There are no parameters or submodules.
+
+Let `p0` be the full 32-bit product of `A_mul_src1[15:0]` and `A_mul_src2[15:0]`. Let `p1` be the low 16 bits of the product of `A_mul_src1[31:16]` and `A_mul_src2[15:0]`; any upper 16 bits of that partial product are discarded. The result is `{p0[31:16] + p1, p0[15:0]}`, with the upper addition also truncated to 16 bits. Equivalently, this is the low 32 bits of `A_mul_src1 * A_mul_src2[15:0]`; `A_mul_src2[31:16]` does not affect the output.
+
+`reset_n` only feeds an unused internal wire, and `clk` is unused, so neither changes the output and the module has no state or latency.

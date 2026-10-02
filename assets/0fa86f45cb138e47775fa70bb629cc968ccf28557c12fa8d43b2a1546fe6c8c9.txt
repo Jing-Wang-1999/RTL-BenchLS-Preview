@@ -1,0 +1,22 @@
+module True2Comp(
+	true,
+	complement);
+
+	parameter data_channel = 1;
+	parameter data_width = 17;
+
+	input[data_channel * data_width - 1 : 0] true;
+	output[data_channel * data_width - 1 : 0] complement;
+
+	genvar i;
+	generate
+		`define h (i + 1) * data_width - 1
+		`define l i * data_width
+		for (i = 0; i < data_channel; i = i + 1) begin
+			assign complement[`h : `l] = true[`h] == 0 ? 
+				true[`h : `l] : {1'b1, ~true[`h - 1 : `l] + 1};
+		end
+		`undef h
+		`undef l
+	endgenerate
+endmodule

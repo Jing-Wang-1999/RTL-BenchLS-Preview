@@ -1,0 +1,162 @@
+module origen_173390(
+    clk_50MHZ, reset, t, f,
+    LCD_RS, LCD_E, LCD_RW, DATA_BUS
+);
+
+    input clk_50MHZ, reset, t, f;
+    output reg LCD_RS, LCD_E, LCD_RW;
+    inout wire [7:0] DATA_BUS;
+
+    reg [7:0] str [0:15];
+    reg [3:0] str_index;
+    reg [15:0] counter;
+    reg [3:0] state;
+    reg [7:0] next_command;
+
+    parameter HOLD = 4'd0, FUNC_SET = 4'd1, DISPLAY_ON = 4'd2, MODE_SET = 4'd3,
+              PRINT_STRING = 4'd4, RETURN = 4'd5, DROP_LCD_E = 4'd6,
+              RESET = 4'd7, DISPLAY_OFF = 4'd8, DISPLAY_CLEAR = 4'd9;
+
+    reg [7:0] DATA_BUS_INTERNAL;
+    assign DATA_BUS = (LCD_RW == 1'b0) ? DATA_BUS_INTERNAL : 8'bZZZZZZZZ;
+
+    reg CLK_400HZ;
+    always @(posedge clk_50MHZ or posedge reset)
+    begin
+        if (reset)
+            counter <= 16'd0;
+        else
+            counter <= counter + 16'd1;
+    end
+    always @(posedge clk_50MHZ or posedge reset)
+    begin
+        if (reset)
+            CLK_400HZ <= 1'b0;
+        else if (counter == 16'd62500)
+            CLK_400HZ <= ~CLK_400HZ;
+    end
+
+    always @(posedge CLK_400HZ or posedge reset)
+    begin
+        if (reset)
+        begin
+            state <= RESET;
+            str_index <= 4'd0;
+            LCD_RS <= 1'b0;
+            LCD_E <= 1'b0;
+            LCD_RW <= 1'b0;
+            DATA_BUS_INTERNAL <= 8'b00111000; // Function set: 8-bit, 2-line, 5x7 dots
+        end
+        else
+        begin
+            case (state)
+                HOLD:
+                begin
+                    LCD_E <= 1'b0;
+                    if (t && f)
+                        state <= PRINT_STRING;
+                    else if (t)
+                        state <= DISPLAY_ON;
+                    else if (f)
+                        state <= DISPLAY_OFF;
+                end
+                FUNC_SET:
+                begin
+                    LCD_RS <= 1'b0;
+                    LCD_RW <= 1'b0;
+                    DATA_BUS_INTERNAL <= 8'b00111000; // Function set: 8-bit, 2-line, 5x7 dots
+                    LCD_E <= 1'b1;
+                    state <= DROP_LCD_E;
+                end
+                DISPLAY_ON:
+                begin
+                    LCD_RS <= 1'b0;
+                    LCD_RW <= 1'b0;
+                    DATA_BUS_INTERNAL <= 8'b00001100; // Display on, cursor on, blink off
+                    LCD_E <= 1'b1;
+                    state <= DROP_LCD_E;
+                end
+                MODE_SET:
+                begin
+                    LCD_RS <= 1'b0;
+                    LCD_RW <= 1'b0;
+                    DATA_BUS_INTERNAL <= 8'b00000110; // Entry mode set: Increment cursor, no display shift
+                    LCD_E <= 1'b1;
+                    state <= DROP_LCD_E;
+                end
+                PRINT_STRING:
+                begin
+                    LCD_RS <= 1'b1;
+                    LCD_RW <= 1'b0;
+                    DATA_BUS_INTERNAL <= str[str_index];
+                    LCD_E <= 1'b1;
+                    state <= DROP_LCD_E;
+                    if (str_index == 4'd15)
+                        state <= RETURN;
+                    else
+                        str_index <= str_index + 4'd1;
+                end
+                RETURN:
+                begin
+                    LCD_RS <= 1'b0;
+                    LCD_RW <= 1'b0;
+                    DATA_BUS_INTERNAL <= 8'b10000000; // Return cursor to home position
+                    LCD_E <= 1'b1;
+                    state <= DROP_LCD_E;
+                end
+                DROP_LCD_E:
+                begin
+                    LCD_E <= 1'b0;
+                    state <= HOLD;
+                end
+                RESET:
+                begin
+                    LCD_RS <= 1'b0;
+                    LCD_RW <= 1'b0;
+                    DATA_BUS_INTERNAL <= 8'b00110000; // Function set: 8-bit, 2-line, 5x7 dots
+                    LCD_E <= 1'b1;
+                    state <= FUNC_SET;
+                end
+                DISPLAY_OFF:
+                begin
+                    LCD_RS <= 1'b0;
+                    LCD_RW <= 1'b0;
+                    DATA_BUS_INTERNAL <= 8'b00001000; // Display off, cursor off, blink off
+                    LCD_E <= 1'b1;
+                    state <= DROP_LCD_E;
+                end
+                DISPLAY_CLEAR:
+                begin
+                    LCD_RS <= 1'b0;
+                    LCD_RW <= 1'b0;
+                    DATA_BUS_INTERNAL <= 8'b00000001; // Clear display
+                    LCD_E <= 1'b1;
+                    state <= DROP_LCD_E;
+                end
+                default:
+                    state <= HOLD;
+            endcase
+        end
+    end
+
+    initial
+    begin
+        str[0] = "H";
+        str[1] = "e";
+        str[2] = "l";
+        str[3] = "l";
+        str[4] = "o";
+        str[5] = " ";
+        str[6] = "W";
+        str[7] = "o";
+        str[8] = "r";
+        str[9] = "l";
+        str[10] = "d";
+        str[11] = "!";
+        str[12] = " ";
+        str[13] = " ";
+        str[14] = " ";
+        str[15] = " ";
+    end
+
+endmodule

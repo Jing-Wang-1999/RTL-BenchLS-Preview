@@ -1,0 +1,61 @@
+# mig_axi_adapter — default configuration specification
+
+Implement a single-outstanding 32-bit backend to 64-bit AXI memory adapter. There are no parameters. All state changes on rising clk; synchronous active-high rst clears the state to idle, all registered outputs, and the remembered read-half selector to zero. Constant outputs are unaffected by reset. Backend readiness equals init_calib_complete AND idle; busy is its complement. Calibration only gates acceptance, not an operation already underway.
+
+A backend request is accepted on backend_valid AND backend_ready. backend_we chooses write. The 27-bit byte address is aligned down to 8 bytes; bit2 selects the upper/lower 32-bit lane and bits1:0 are ignored. Write data and four byte strobes are placed in that half, with the other half zero. The same acceptance edge asserts AWVALID, WVALID and BREADY and enters write wait. AW and W handshakes clear their valid bits independently; payloads hold. A BVALID/BREADY handshake clears BREADY, sets response data zero, and enters response state. In read acceptance, register aligned ARADDR and bit2, assert ARVALID and RREADY, enter read wait. AR handshake independently clears ARVALID. The first RVALID/RREADY handshake captures the selected 32-bit half, clears RREADY and enters response state. The following edge pulses backend_resp_valid and returns to idle; response data holds until reset or another response. Every nonreset edge defaults response-valid low. No backend response-ready exists. Idle clears all AXI valid/ready registers before optional new request assignments, which take priority.
+
+Both address channels have ID=0, LEN=0, SIZE=3 (8 bytes), BURST=1, LOCK=0, CACHE=3, PROT=0, QOS=0. WLAST=1. BID, BRESP, RID, RRESP and RLAST are ignored: error reporting and multibeat response validation are absent. A compliant one-beat AXI response is the intended transaction domain; do not invent error status. For arbitrary input sequences, a response can advance the wait state even if the address/data valid registers remain set, and those registers clear on the next idle edge. No extra assumptions are introduced into formal comparison. AXI output data/address retain values when invalid; reset fully defines them. The design does not offer misaligned byte extraction, bursts, multiple outstanding requests or model-specific behavior.
+
+Public interface declarations (widths above resolve the parameter expressions):
+
+```text
+input wire clk
+input wire rst
+input wire backend_valid
+input wire backend_we
+input wire[3:0] backend_wstrb
+input wire[26:0] backend_addr
+input wire[31:0] backend_wdata
+output wire backend_ready
+output reg backend_resp_valid
+output reg[31:0] backend_resp_rdata
+input wire init_calib_complete
+output wire busy
+output wire[0:0] s_axi_awid
+output reg[26:0] s_axi_awaddr
+output wire[7:0] s_axi_awlen
+output wire[2:0] s_axi_awsize
+output wire[1:0] s_axi_awburst
+output wire[0:0] s_axi_awlock
+output wire[3:0] s_axi_awcache
+output wire[2:0] s_axi_awprot
+output wire[3:0] s_axi_awqos
+output reg s_axi_awvalid
+input wire s_axi_awready
+output reg[63:0] s_axi_wdata
+output reg[7:0] s_axi_wstrb
+output wire s_axi_wlast
+output reg s_axi_wvalid
+input wire s_axi_wready
+input wire[0:0] s_axi_bid
+input wire[1:0] s_axi_bresp
+input wire s_axi_bvalid
+output reg s_axi_bready
+output wire[0:0] s_axi_arid
+output reg[26:0] s_axi_araddr
+output wire[7:0] s_axi_arlen
+output wire[2:0] s_axi_arsize
+output wire[1:0] s_axi_arburst
+output wire[0:0] s_axi_arlock
+output wire[3:0] s_axi_arcache
+output wire[2:0] s_axi_arprot
+output wire[3:0] s_axi_arqos
+output reg s_axi_arvalid
+input wire s_axi_arready
+input wire[0:0] s_axi_rid
+input wire[63:0] s_axi_rdata
+input wire[1:0] s_axi_rresp
+input wire s_axi_rlast
+input wire s_axi_rvalid
+output reg s_axi_rready
+```

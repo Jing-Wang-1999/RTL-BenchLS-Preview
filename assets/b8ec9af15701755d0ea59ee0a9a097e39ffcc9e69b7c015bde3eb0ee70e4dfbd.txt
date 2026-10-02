@@ -1,0 +1,24 @@
+`timescale 1ns/1ns
+module tb;
+reg clk=0,srst=0;reg[31:0]vdat_buffer_di;reg[1:0]ColorDepth;reg PseudoColor=0,vdat_buffer_empty=1,rgb_fifo_full=0,clut_ack=0;reg[23:0]clut_q=0;
+wire vdat_buffer_rreq,rgb_fifo_wreq,clut_req;wire[7:0]r,g,b,clut_offs;
+vga_colproc dut(.*);
+reg[31:0]words[0:2];reg[23:0]want[0:3];integer mode,n,src,got,total;
+task tick;begin clk=0;#5;clk=1;#5;clk=0;#1;end endtask
+initial begin
+words[0]=32'h11223344;words[1]=32'h55667788;words[2]=32'h99aabbcc;
+for(mode=0;mode<4;mode=mode+1)begin
+ srst=1;vdat_buffer_empty=1;tick;srst=0;ColorDepth=mode;src=0;got=0;total=(mode==2)?3:1;vdat_buffer_empty=0;
+ if(mode==0)begin want[0]=24'h111111;want[1]=24'h222222;want[2]=24'h333333;want[3]=24'h444444;end
+ if(mode==1)begin want[0]=24'h102410;want[1]=24'h306820;end
+ if(mode==2)begin want[0]=24'h112233;want[1]=24'h445566;want[2]=24'h778899;want[3]=24'haabbcc;end
+ if(mode==3)want[0]=24'h223344;
+ for(n=0;n<30;n=n+1)begin
+  if(vdat_buffer_rreq)begin vdat_buffer_di=words[src];src=src+1;end
+  vdat_buffer_empty=(src>=total);tick;
+  if(rgb_fifo_wreq)begin if({r,g,b}!==want[got])$fatal(1,"color mode=%0d index=%0d actual=%h want=%h",mode,got,{r,g,b},want[got]);got=got+1;end
+ end
+ if(got!=((mode==0||mode==2)?4:((mode==1)?2:1)))$fatal(1,"pixel count mode=%0d got=%0d",mode,got);
+end
+$display("PASS vga_colproc packed grayscale8, RGB56516, cross-word RGB24, paddedRGB32; public request/data timing");$finish;
+end endmodule

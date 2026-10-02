@@ -1,0 +1,145 @@
+module rtlpp_09941 
+ (
+  input  clk,                      
+  input  reset,                    
+  output [1:0]  count_o,           
+  input  signed [16:0] x_in,       
+  output signed [16:0] pre_o,      
+  output signed [16:0] x_o,        
+  output signed [16:0] post_o,     
+  output signed [3:0]  ind_o,      
+  output signed [16:0] imm_o,      
+  output signed [16:0] a_o,        
+  output signed [16:0] f_o,        
+  output reg signed [16:0] f_out); 
+
+  
+  parameter load=0, mac=1, scale=2, denorm=3, nop=4;
+  
+  parameter start=0, leftshift=1, sop=2, 
+                   rightshift=3, done=4;
+
+  reg [3:0] s, op;
+  reg [16:0] x; 
+  reg signed [16:0] a, b, f, imm; 
+  reg signed [33:0] af; 
+  reg [16:0] pre, post;
+  reg signed [3:0] ind;
+  reg [1:0] count;
+  
+  wire signed [16:0] p [0:4]; 
+  
+  assign p[0] = 7563;
+  assign p[1] = 42299;
+  assign p[2] = -29129;
+  assign p[3] = 15813;
+  assign p[4] = -3778;
+  
+  always @(posedge reset or posedge clk) 
+  begin : States                      
+    if (reset) begin               
+      s <= start; 
+      f_out <= 0; 
+      op <= 0; 
+      count <= 0;
+      imm <= 0; 
+      ind <= 0; 
+      a <= 0; 
+      x <= 0; 
+    end else begin 
+      case (s)                 
+        start : begin          
+          s <= leftshift; 
+          ind <= 4;
+          imm <= x_in;         
+          op <= load; 
+          count <= 0;
+        end
+        leftshift : begin      
+          count <= count + 1; 
+          a <= pre; 
+          op <= scale;
+          imm <= p[4];
+          if (count == 2) op <= nop;
+          if (count == 3) begin 
+            s <= sop; 
+            op <= load; 
+            x <= f; 
+          end
+        end
+        sop :  begin            
+          ind <= ind - 1; 
+          a <= x;
+          if (ind == -1) begin  
+            s <= rightshift; 
+            op <= denorm; 
+            a <= post;
+          end else begin
+            imm <= p[ind]; 
+            op <= mac;
+          end
+        end
+        rightshift : begin 
+          s <= done; 
+          op <= nop;
+        end
+        done :  begin          
+          f_out <= f;            
+          op <= nop;
+          s <= start;            
+        end                   
+      endcase
+    end
+  end
+
+  always @(posedge reset or posedge clk) 
+  begin : ALU             
+    if (reset)            
+      f <= 0;
+    else begin
+      af = a * f;
+      case (op)
+        load    : f  <= imm;
+        mac     : f  <= (af >>> 15) + imm;
+        scale   : f  <= af;
+        denorm  : f  <= af >>> 15;
+        nop     : f  <= f;
+        default : f  <= f;
+      endcase
+    end
+  end
+
+  always @(posedge x_in)
+  begin : EXP
+    reg [16:0] slv;
+    reg [16:0] po, pr;
+    integer K; 
+
+    slv = x_in;
+    
+    for (K=0; K <= 15; K= K+1) 
+      if (slv[K] == 1)
+        pre = 1 << (14-K);
+    
+    po = 1;     
+    for (K=0; K <= 7; K= K+1) begin
+      if (slv[2*K] == 1)    
+        po = 1 << (K+8);
+
+      if (slv[2*K+1] == 1) 
+        po = (1<<(K+9)) - (1<<(K+7)) - (1<<(K+5))
+              + (1<<(K+3)) + (1<<(K+1)) + (1<<(K-5));
+    end
+    post <= po;
+  end
+
+  assign a_o = a;   
+  assign imm_o = imm;
+  assign f_o = f;
+  assign pre_o = pre;
+  assign post_o = post;
+  assign x_o = x;
+  assign ind_o = ind;
+  assign count_o = count;
+
+endmodule

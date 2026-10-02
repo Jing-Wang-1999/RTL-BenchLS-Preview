@@ -1,0 +1,106 @@
+{
+  "case_id": "s1derived.af2e9874aa1df7c4a260.e6a7777fb987",
+  "compile_check": {
+    "case_id": "s1derived.af2e9874aa1df7c4a260.e6a7777fb987",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_02828",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_02828.dbb29b44bdaeac6c/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.af2e9874aa1df7c4a260",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "af2e9874aa1df7c4a260447cc834d57cea2583b16160e27374d0ecb2082cd63d",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.af2e9874aa1df7c4a260.e6a7777fb987",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_02828.dbb29b44bdaeac6c/private/commercial_positive.log",
+    "commercial_log_sha256": "cd5b1a4058535f058315abc00b832b18bb610d8fc3a61013c1d41d27dd0a28d5",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_02828.dbb29b44bdaeac6c/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mg_02828"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.mg_02828.dbb29b44bdaeac6c",
+    "parent_id": "s1p.af2e9874aa1df7c4a260",
+    "revised_tops": [
+      "mg_02828"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_02828",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.af2e9874aa1df7c4a260.e6a7777fb987",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The 512x64 single-port organization, nine-bit address, read/write controls, read latency, holds, and RANDOMIZE behavior match.",
+        "rtl_excerpt": "Separate positive-edge blocks update `reg_RW0_addr` for `RW0_en&&!RW0_wmode` and RAM for `RW0_en&&RW0_wmode`; `RW0_rdata=ram[reg_RW0_addr]`.",
+        "spec_excerpt": "Enabled reads latch `RW0_addr`; enabled writes store `RW0_wdata`; output continuously reads the latched address, with optional random simulation initialization."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.af2e9874aa1df7c4a260",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "e6a7777fb9872c8d82489dc6e1de5202a8dec3dea4b85bb65a69e6f5b1918b66",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "af2e9874aa1df7c4a260447cc834d57cea2583b16160e27374d0ecb2082cd63d",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_02828.dbb29b44bdaeac6c/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_02828.dbb29b44bdaeac6c/private/historical_harness/01_conformal_rtl_mg_02828.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_02828.dbb29b44bdaeac6c/private/historical_harness/02_fm_rtl_mg_02828.tcl"
+  ],
+  "parent_id": "s1p.af2e9874aa1df7c4a260",
+  "primary_review": {
+    "case_id": "s1derived.af2e9874aa1df7c4a260.e6a7777fb987",
+    "checks": {
+      "behavior": "Enabled writes and registered read address with continuous data output match.",
+      "boundaries": "Address and data widths, disabled cycles, default/illegal cases, and simultaneous controls were checked for this module.",
+      "interface": "All named ports, directions, and widths match the complete RTL interface.",
+      "rtl_reasonableness": "RTL compiles and is a coherent standalone implementation with no missing dependency.",
+      "sequential_and_reset": "Clock edge, reset polarity/timing, enable, and hold behavior were compared directly."
+    },
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Enabled writes and registered read address with continuous data output match.",
+        "rtl_excerpt": "assign RW0_rdata = ram[reg_RW0_addr]; \n endmodule",
+        "specification_excerpt": "e contains only internal storage elements and address latching logic; no other sub-modules are used."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.af2e9874aa1df7c4a260",
+    "proposed_specification_path": null,
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "af2e9874aa1df7c4a260447cc834d57cea2583b16160e27374d0ecb2082cd63d",
+    "source_group": "S5",
+    "specification_sha256": "e6a7777fb9872c8d82489dc6e1de5202a8dec3dea4b85bb65a69e6f5b1918b66",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_02828.dbb29b44bdaeac6c/visible/specification.md",
+  "qualified_specification_sha256": "e6a7777fb9872c8d82489dc6e1de5202a8dec3dea4b85bb65a69e6f5b1918b66",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_02828.dbb29b44bdaeac6c/private/golden_design.v",
+  "rtl_sha256": "af2e9874aa1df7c4a260447cc834d57cea2583b16160e27374d0ecb2082cd63d",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_02828.dbb29b44bdaeac6c/visible/specification.md",
+  "specification_provenance": "retained_generated_specification",
+  "specification_sha256": "e6a7777fb9872c8d82489dc6e1de5202a8dec3dea4b85bb65a69e6f5b1918b66",
+  "top_module": "mg_02828"
+}

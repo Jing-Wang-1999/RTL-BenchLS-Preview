@@ -1,0 +1,40 @@
+### JTAG Shifter Module Specification
+
+#### Overview
+The JTAG Shifter is a serial-in, serial-out shift register chain designed to interface with a JTAG test access port. Its primary function is to distribute control signals and data to multiple PicoBlaze processor instruction memories (BRAMs) via a daisy-chained shift register architecture. The module operates synchronously with a shift clock and enables loading of instruction data directly when required.
+
+#### Parameters
+- **C_NUM_PICOBLAZE**: Defines the number of PicoBlaze processors (and associated BRAMs) in the system. Minimum value is 1.
+- **C_BRAM_MAX_ADDR_WIDTH**: Specifies the maximum width (in bits) of the BRAM address bus.
+- **C_PICOBLAZE_INSTRUCTION_DATA_WIDTH**: Defines the width (in bits) of the instruction data loaded into BRAM.
+
+#### Inputs
+- **shift_clk**: Clock input; all internal operations occur on the rising edge of this clock.
+- **shift_din**: Serial data input; new bits are shifted in from this line when shifting is active.
+- **shift**: Shift enable signal; when high, the internal shift registers advance on each clock cycle.
+- **din_load**: Data load enable; when high, parallel instruction data from `din` is loaded into the data shift register.
+- **din**: Parallel instruction data input; its width matches `C_PICOBLAZE_INSTRUCTION_DATA_WIDTH`.
+
+#### Outputs
+- **shift_dout**: Serial data output; outputs the most significant bit of the data shift register, forming the serial chain output.
+- **control_reg_ce**: Control register clock enable; derived directly from the serial input when shifting.
+- **bram_ce**: BRAM chip enable vector; one enable bit per PicoBlaze BRAM. These enables propagate sequentially through the chain.
+- **bram_a**: BRAM address bus; width matches `C_BRAM_MAX_ADDR_WIDTH`. Address bits are shifted serially.
+- **bram_d**: BRAM write data bus; width matches `C_PICOBLAZE_INSTRUCTION_DATA_WIDTH`. Can be loaded in parallel from `din` or shifted serially.
+- **bram_we**: BRAM write enable signal; becomes active after the last BRAM chip enable in the chain is set.
+
+#### Functional Description
+The module consists of several internal shift registers that form a continuous serial chain. When the `shift` signal is active, data flows sequentially from `shift_din` through the following stages on each rising clock edge:
+
+1.  **Control Register Clock Enable**: The first bit shifted in directly becomes the `control_reg_ce` output.
+2.  **BRAM Chip Enable Chain**: The `control_reg_ce` value is fed into the first BRAM chip enable bit. For systems with more than one PicoBlaze, this enable propagates through a chain of registers, one per BRAM, creating a pulse that travels down the enable line.
+3.  **BRAM Write Enable**: After propagating through all BRAM chip enables, the pulse sets the `bram_we` (write enable) output.
+4.  **BRAM Address Shift Register**: The `bram_we` signal is fed into the first bit of the address shift register. The address is then shifted through a register chain whose width is defined by `C_BRAM_MAX_ADDR_WIDTH`.
+5.  **BRAM Data Shift Register**: The most significant bit of the address register is fed into the first bit of the data shift register. Data then shifts through a register chain whose width is defined by `C_PICOBLAZE_INSTRUCTION_DATA_WIDTH`. The final bit of this register is output as `shift_dout`, completing the serial chain.
+
+An alternative **parallel load mode** exists for the data shift register. When the `din_load` signal is high, the parallel input `din` is loaded directly into the data shift register, overriding the serial shifting path for that clock cycle. This allows instruction data to be loaded rapidly.
+
+#### Key Behavior
+- All shifting and internal state updates occur only on the rising edge of `shift_clk` and when `shift` is high (except for parallel load, which also requires `din_load`).
+- The `bram_ce` outputs are pulsed sequentially; only one BRAM is enabled at a time as the enable pulse shifts through the chain.
+- The `bram

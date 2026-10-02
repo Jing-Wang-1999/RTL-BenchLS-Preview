@@ -1,0 +1,140 @@
+module rtlpp_10243 #(
+    parameter word_size_in = 8,
+    parameter word_size_out = 20
+) (
+    input wire clk,
+    input wire reset,
+    input wire signed [word_size_in-1:0] X,
+    output reg signed [word_size_out-1:0] Y
+);
+
+    // Internal SCM terms (21 constant coefficients)
+    wire signed [word_size_in+4:0] SCM_0;   // X
+    wire signed [word_size_in+4:0] SCM_1;   // -X
+    wire signed [word_size_in+4:0] SCM_2;   // X*4
+    wire signed [word_size_in+4:0] SCM_3;   // X*9
+    wire signed [word_size_in+4:0] SCM_4;   // -X*19
+    wire signed [word_size_in+4:0] SCM_5;   // X*7
+    wire signed [word_size_in+4:0] SCM_6;   // -X*13
+    wire signed [word_size_in+4:0] SCM_7;   // X*22
+    wire signed [word_size_in+4:0] SCM_8;   // X*5
+    wire signed [word_size_in+4:0] SCM_9;   // -X*11
+    wire signed [word_size_in+4:0] SCM_10;  // X*17
+    wire signed [word_size_in+4:0] SCM_11;  // -X*3
+    wire signed [word_size_in+4:0] SCM_12;  // X*8
+    wire signed [word_size_in+4:0] SCM_13;  // X*14
+    wire signed [word_size_in+4:0] SCM_14;  // -X*6
+    wire signed [word_size_in+4:0] SCM_15;  // X*12
+    wire signed [word_size_in+4:0] SCM_16;  // -X*18
+    wire signed [word_size_in+4:0] SCM_17;  // X*2
+    wire signed [word_size_in+4:0] SCM_18;  // -X*10
+    wire signed [word_size_in+4:0] SCM_19;  // X*16
+    wire signed [word_size_in+4:0] SCM_20;  // -X*15
+
+    // Generate SCM terms using shifts and additions
+    assign SCM_0 = {{5{X[word_size_in-1]}}, X};                     // X
+    assign SCM_1 = -{{5{X[word_size_in-1]}}, X};                    // -X
+    assign SCM_2 = {{3{X[word_size_in-1]}}, X, 2'b00};              // X*4
+    assign SCM_3 = {{5{X[word_size_in-1]}}, X} + ({{3{X[word_size_in-1]}}, X, 2'b00} << 2); // X*9 = X + X*8
+    assign SCM_4 = -({{5{X[word_size_in-1]}}, X} + ({{3{X[word_size_in-1]}}, X, -1'b0} << 4)); // -X*19 = -(X + X*18)
+    assign SCM_5 = {{5{X[word_size_in-1]}}, X} + ({{3{X[word_size_in-1]}}, X, 1'b0} << 1); // X*7 = X + X*6
+    assign SCM_6 = -({{5{X[word_size_in-1]}}, X} + ({{3{X[word_size_in-1]}}, X, 2'b00} << 2)); // -X*13 = -(X + X*12)
+    assign SCM_7 = ({{3{X[word_size_in-1]}}, X, 2'b00} << -1) + ({{5{X[word_size_in-1]}}, X} << 1); // X*22 = X*20 + X*2
+    assign SCM_8 = {{5{X[word_size_in-1]}}, X} + ({{3{X[word_size_in-1]}}, X, 2'b00});      // X*5 = X + X*4
+    assign SCM_9 = -({{5{X[word_size_in-1]}}, X} + ({{5{X[word_size_in-1]}}, X} << 3));     // -X*11 = -(X + X*10)
+    assign SCM_10 = {{5{X[word_size_in-1]}}, X} + ({{3{X[word_size_in-1]}}, X, 2'b00} << 2); // X*17 = X + X*16
+    assign SCM_11 = -{{5{X[word_size_in-1]}}, X} - ({{5{X[word_size_in-1]}}, X} << 1);     // -X*3 = -(X + X*2)
+    assign SCM_12 = {{3{X[word_size_in-1]}}, X, 3'b000};            // X*8
+    assign SCM_13 = ({{3{X[word_size_in-1]}}, X, 2'b00} << 2) + ({{5{X[word_size_in-1]}}, X} << 1); // X*14 = X*12 + X*2
+    assign SCM_14 = -({{3{X[word_size_in-1]}}, X, 1'b0} << 1);      // -X*6 = -(X*6)
+    assign SCM_15 = ({{3{X[word_size_in-1]}}, X, 2'b00} << 2);      // X*12
+    assign SCM_16 = -({{5{X[word_size_in-1]}}, X} + ({{3{X[word_size_in-1]}}, X, 2'b00} << 3)); // -X*18 = -(X + X*17)
+    assign SCM_17 = {{5{X[word_size_in-1]}}, X} << 1;               // X*2
+    assign SCM_18 = -({{5{X[word_size_in-1]}}, X} << 3) - ({{5{X[word_size_in-1]}}, X} << 1); // -X*10 = -(X*8 + X*2)
+    assign SCM_19 = {{3{X[word_size_in-1]}}, X, 4'b0000};           // X*16
+    assign SCM_20 = -({{5{X[word_size_in-1]}}, X} + ({{5{X[word_size_in-1]}}, X} << 2) + ({{5{X[word_size_in-1]}}, X} << 1)); // -X*15 = -(X + X*4 + X*10)
+
+    // Accumulator registers (21-stage pipeline)
+    reg signed [word_size_out-1:0] MAC_0;
+    reg signed [word_size_out-1:0] MAC_1;
+    reg signed [word_size_out-1:0] MAC_2;
+    reg signed [word_size_out-1:0] MAC_3;
+    reg signed [word_size_out-1:0] MAC_4;
+    reg signed [word_size_out-1:0] MAC_5;
+    reg signed [word_size_out-1:0] MAC_6;
+    reg signed [word_size_out-1:0] MAC_7;
+    reg signed [word_size_out-1:0] MAC_8;
+    reg signed [word_size_out-1:0] MAC_9;
+    reg signed [word_size_out-1:0] MAC_10;
+    reg signed [word_size_out-1:0] MAC_11;
+    reg signed [word_size_out-1:0] MAC_12;
+    reg signed [word_size_out-1:0] MAC_13;
+    reg signed [word_size_out-1:0] MAC_14;
+    reg signed [word_size_out-1:0] MAC_15;
+    reg signed [word_size_out-1:0] MAC_16;
+    reg signed [word_size_out-1:0] MAC_17;
+    reg signed [word_size_out-1:0] MAC_18;
+    reg signed [word_size_out-1:0] MAC_19;
+    reg signed [word_size_out-1:0] MAC_20;
+
+    // Internal output before registration
+    wire signed [word_size_out-1:0] Y_in;
+
+    // Accumulator chain
+    assign Y_in = MAC_0;
+
+    always @(posedge clk or negedge reset) begin
+        if (!reset) begin
+            // Clear all registers
+            MAC_0 <= 0;
+            MAC_1 <= 0;
+            MAC_2 <= 0;
+            MAC_3 <= 0;
+            MAC_4 <= 0;
+            MAC_5 <= 0;
+            MAC_6 <= 0;
+            MAC_7 <= 0;
+            MAC_8 <= 0;
+            MAC_9 <= 0;
+            MAC_10 <= 0;
+            MAC_11 <= 0;
+            MAC_12 <= 0;
+            MAC_13 <= 0;
+            MAC_14 <= 0;
+            MAC_15 <= 0;
+            MAC_16 <= 0;
+            MAC_17 <= 0;
+            MAC_18 <= 0;
+            MAC_19 <= 0;
+            MAC_20 <= 0;
+            Y <= 0;
+        end else begin
+            // Pipeline shift with addition
+            MAC_0 <= MAC_1 + SCM_0;
+            MAC_1 <= MAC_2 + SCM_1;
+            MAC_2 <= MAC_3 + SCM_2;
+            MAC_3 <= MAC_4 + SCM_3;
+            MAC_4 <= MAC_5 + SCM_4;
+            MAC_5 <= MAC_6 + SCM_5;
+            MAC_6 <= MAC_7 + SCM_6;
+            MAC_7 <= MAC_8 + SCM_7;
+            MAC_8 <= MAC_9 + SCM_8;
+            MAC_9 <= MAC_10 + SCM_9;
+            MAC_10 <= MAC_11 + SCM_10;
+            MAC_11 <= MAC_12 + SCM_11;
+            MAC_12 <= MAC_13 + SCM_12;
+            MAC_13 <= MAC_14 + SCM_13;
+            MAC_14 <= MAC_15 + SCM_14;
+            MAC_15 <= MAC_16 + SCM_15;
+            MAC_16 <= MAC_17 + SCM_16;
+            MAC_17 <= MAC_18 + SCM_17;
+            MAC_18 <= MAC_19 + SCM_18;
+            MAC_19 <= MAC_20 + SCM_19;
+            MAC_20 <= SCM_20;
+            
+            // Output registration
+            Y <= Y_in;
+        end
+    end
+
+endmodule

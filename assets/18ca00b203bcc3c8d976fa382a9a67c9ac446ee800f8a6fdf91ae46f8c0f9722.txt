@@ -1,0 +1,115 @@
+module origen_138733 #(
+    parameter n = 4,  // Number of input signals
+    parameter m = 4,  // Number of output signals
+    parameter R = 8,  // Decimation rate
+    parameter M = 3,  // Number of integrator stages
+    parameter N = 16  // Number of samples per input cycle
+) (
+    input wire clk,
+    input wire rst,
+    input wire [15:0] in [0:n-1],
+    output wire [15:0] out [0:m-1]
+);
+
+    // Intermediate signals
+    reg [15:0] decimated [0:n-1];
+    wire [15:0] integrated [0:n-1][0:M];
+    wire [15:0] combed [0:n-1];
+
+    // Decimation counter
+    reg [$clog2(R)-1:0] decim_count;
+
+    // Decimation
+    integer i;
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            decim_count <= 0;
+            for (i = 0; i < n; i = i + 1) begin
+                decimated[i] <= 16'b0;
+            end
+        end else begin
+            if (decim_count == R - 1) begin
+                decim_count <= 0;
+                for (i = 0; i < n; i = i + 1) begin
+                    decimated[i] <= in[i];
+                end
+            end else begin
+                decim_count <= decim_count + 1;
+            end
+        end
+    end
+
+    genvar j, k;
+    generate
+        // Integrator stages
+        for (j = 0; j < n; j = j + 1) begin : integrator_chain
+            assign integrated[j][0] = decimated[j];
+            for (k = 1; k <= M; k = k + 1) begin : integrator_stage
+                integrator integ (
+                    .clk(clk),
+                    .rst(rst),
+                    .in(integrated[j][k-1]),
+                    .out(integrated[j][k])
+                );
+            end
+        end
+
+        // Comb filter
+        for (j = 0; j < n; j = j + 1) begin : comb_filter
+            comb #(.N(N)) comb_inst (
+                .clk(clk),
+                .rst(rst),
+                .in(integrated[j][M]),
+                .out(combed[j])
+            );
+        end
+
+        // Output assignment
+        for (j = 0; j < m; j = j + 1) begin : output_assign
+            assign out[j] = combed[j];
+        end
+    endgenerate
+
+endmodule
+
+module integrator (
+    input wire clk,
+    input wire rst,
+    input wire [15:0] in,
+    output reg [15:0] out
+);
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            out <= 16'b0;
+        end else begin
+            out <= out + in;
+        end
+    end
+endmodule
+
+module comb #(
+    parameter N = 16
+) (
+    input wire clk,
+    input wire rst,
+    input wire [15:0] in,
+    output reg [15:0] out
+);
+    reg [15:0] delay_line [0:N-1];
+    integer i;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            for (i = 0; i < N; i = i + 1) begin
+                delay_line[i] <= 16'b0;
+            end
+            out <= 16'b0;
+        end else begin
+            for (i = N-1; i > 0; i = i - 1) begin
+                delay_line[i] <= delay_line[i-1];
+            end
+            delay_line[0] <= in;
+            out <= in - delay_line[N-1];
+        end
+    end
+endmodule

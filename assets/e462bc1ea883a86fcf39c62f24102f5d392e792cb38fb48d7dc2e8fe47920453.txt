@@ -1,0 +1,43 @@
+always @(posedge clk )
+     if (rst)
+       begin
+	  current_bus_pc		<= OPTION_RESET_PC;
+	  just_took_branch_addr         <= 0;
+       end
+     else if (du_restart_i)
+       begin
+	  current_bus_pc <= du_restart_pc_i;
+	  just_took_branch_addr         <= 0;
+       end
+     else if (fetch_take_exception_branch_i)
+       begin
+	  current_bus_pc <= branch_dest_i;
+	  just_took_branch_addr         <= 1;
+       end
+     else if (branch_occur_i & padv_i)
+       begin
+	  current_bus_pc <= branch_dest_i;
+	  just_took_branch_addr         <= 1;
+       end
+     else if (ibus_ack_i & (padv_i | (just_waited_single_cycle_r &&
+				      !({padv_r[0],padv_i}==2'b00))) &
+	      !execute_waited_single_cycle & !stepping_i)
+       begin
+	  current_bus_pc <= next_bus_pc;
+	  just_took_branch_addr         <= 0;
+       end
+     else if (execute_waiting_asserted & ibus_ack_i & !just_took_branch_addr)
+       begin
+	  current_bus_pc <= next_bus_pc;
+       end
+     else if (just_took_branch_addr)
+       begin
+	  just_took_branch_addr <= 0;
+       end
+
+     else if (long_stall)
+       begin
+	  // Long wait - this is a work around for an annoying bug which
+	  // I can't solve any other way!
+	  current_bus_pc <= fetched_pc_o + 4;
+       end

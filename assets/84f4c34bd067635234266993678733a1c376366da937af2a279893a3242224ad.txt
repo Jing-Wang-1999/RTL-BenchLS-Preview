@@ -1,0 +1,21 @@
+always @ (posedge clk) begin
+// Bank Bits are always - 2 Bits
+    r2b_ba <= (cfg_colbits == 2'b00) ? {map_address[9:8]}   :
+	      (cfg_colbits == 2'b01) ? {map_address[10:9]}  :
+	      (cfg_colbits == 2'b10) ? {map_address[11:10]} : map_address[12:11];
+
+/********************
+*  Colbits Mapping:
+*           2'b00 - 8 Bit
+*           2'b01 - 16 Bit
+*           2'b10 - 10 Bit
+*           2'b11 - 11 Bits
+************************/
+    r2b_caddr <= (cfg_colbits == 2'b00) ? {5'b0, map_address[7:0]} :
+	         (cfg_colbits == 2'b01) ? {4'b0, map_address[8:0]} :
+	         (cfg_colbits == 2'b10) ? {3'b0, map_address[9:0]} : {2'b0, map_address[10:0]};
+
+    r2b_raddr <= (cfg_colbits == 2'b00)  ? map_address[22:10] :
+	         (cfg_colbits == 2'b01)  ? map_address[23:11] :
+	         (cfg_colbits == 2'b10)  ? map_address[24:12] : map_address[25:13];
+end

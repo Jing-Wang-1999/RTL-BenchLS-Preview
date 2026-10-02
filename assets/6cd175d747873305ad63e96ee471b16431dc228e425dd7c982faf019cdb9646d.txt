@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.6675be31564fa3f5da99.521834a7a713",
+  "compile_check": {
+    "case_id": "s1derived.6675be31564fa3f5da99.521834a7a713",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_10333",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.rtlpp_10333.3300468bf2a4a868/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.6675be31564fa3f5da99",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "6675be31564fa3f5da9924cd612e554a43c622fa9947c0c5f76bf376564a1cc5",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.6675be31564fa3f5da99.521834a7a713",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.rtlpp_10333.3300468bf2a4a868/private/commercial_positive.log",
+    "commercial_log_sha256": "f2280ff880f782bcf34999b9f03a2cf4a8ae063845b7831548e212748922404a",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.rtlpp_10333.3300468bf2a4a868/private/historical_harness/00_sec_rtlpp_10333.tcl",
+    "executed_script_sha256": "5a7ba1e0b12f596b81204a3d2f51f1bc48cebaba260e179321513aef6ce306c8",
+    "golden_tops": [
+      "rtlpp_10333"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.rtlpp_10333.3300468bf2a4a868",
+    "parent_id": "s1p.6675be31564fa3f5da99",
+    "revised_tops": [
+      "rtlpp_10333"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_10333",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.6675be31564fa3f5da99.521834a7a713",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Both partial products use only the second operand low half. The final 16-bit high-half sum and low-half concatenation implement the stated modulo-32 product after two register stages; asynchronous clears agree.",
+        "rtl_excerpt": "part_2_datab = {16'b0, A_mul_src2[15:0]};",
+        "specification_excerpt": "`A_mul_src2[31:16]` is ignored"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.6675be31564fa3f5da99",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "32888b5eb26209d8b0c41e3fe8b58718290c6323b9e7180b2b7f5a14be76d7cf",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6675be31564fa3f5da9924cd612e554a43c622fa9947c0c5f76bf376564a1cc5",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.rtlpp_10333.3300468bf2a4a868/private/historical_harness/00_sec_rtlpp_10333.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.rtlpp_10333.3300468bf2a4a868/private/historical_harness/01_sec_rtlpp_10333.tcl"
+  ],
+  "parent_id": "s1p.6675be31564fa3f5da99",
+  "primary_review": {
+    "case_id": "s1derived.6675be31564fa3f5da99.521834a7a713",
+    "checks": {
+      "behavior": "Compared exact equations, decoding, dataflow, and state transitions. RTL pipelines two partial products and uses only A_mul_src2[15:0].",
+      "boundaries": "Checked terminal counts, invalid states, selector defaults, arithmetic width, undriven/missing cells, tristate and ignored controls as applicable.",
+      "interface": "Compared complete port names, directions, widths, parameters, and defaults. The prose truncates and does not state two-cycle latency or ignored upper multiplier half.",
+      "rtl_reasonableness": "RTL implements a coherent hardware function under the reviewed contract.",
+      "sequential_and_reset": "Checked edge sensitivity, reset polarity/timing, enables, holds, priority, and latency."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file semantic comparison supports revise.",
+        "rtl_excerpt": "RTL pipelines two partial products and uses only A_mul_src2[15:0].",
+        "spec_excerpt": "The prose truncates and does not state two-cycle latency or ignored upper multiplier half."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose truncates and does not state two-cycle latency or ignored upper multiplier half.",
+        "rtl_evidence": "RTL pipelines two partial products and uses only A_mul_src2[15:0].",
+        "spec_evidence": "The prose truncates and does not state two-cycle latency or ignored upper multiplier half.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.6675be31564fa3f5da99",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_04/s1derived.6675be31564fa3f5da99.521834a7a713.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6675be31564fa3f5da9924cd612e554a43c622fa9947c0c5f76bf376564a1cc5",
+    "source_group": "S4",
+    "specification_sha256": "521834a7a7135ccc9456e95d541cffbb2d108a93b2987eac230eb7e1718a25c1",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_04/s1derived.6675be31564fa3f5da99.521834a7a713.md",
+  "qualified_specification_sha256": "32888b5eb26209d8b0c41e3fe8b58718290c6323b9e7180b2b7f5a14be76d7cf",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.rtlpp_10333.3300468bf2a4a868/private/golden_design.v",
+  "rtl_sha256": "6675be31564fa3f5da9924cd612e554a43c622fa9947c0c5f76bf376564a1cc5",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.rtlpp_10333.3300468bf2a4a868/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "521834a7a7135ccc9456e95d541cffbb2d108a93b2987eac230eb7e1718a25c1",
+  "top_module": "rtlpp_10333"
+}

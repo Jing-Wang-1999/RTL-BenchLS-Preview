@@ -1,0 +1,582 @@
+`ifndef DEFINES_V
+`define DEFINES_V
+
+//==================  Instruction opcode in RISC-V ================== 
+`define OP_LUI      7'b0110111
+`define OP_AUIPC    7'b0010111
+`define OP_JAL      7'b1101111
+`define OP_JALR     7'b1100111
+`define OP_BRANCH   7'b1100011
+`define OP_LOAD     7'b0000011
+`define OP_STORE    7'b0100011
+`define OP_OP_IMM   7'b0010011
+`define OP_OP       7'b0110011
+`define OP_MISC_MEM 7'b0001111
+
+//================== Instruction funct3 in RISC-V ================== 
+// JALR
+`define FUNCT3_JALR 3'b000
+// BRANCH
+`define FUNCT3_BEQ  3'b000
+`define FUNCT3_BNE  3'b001
+`define FUNCT3_BLT  3'b100
+`define FUNCT3_BGE  3'b101
+`define FUNCT3_BLTU 3'b110
+`define FUNCT3_BGEU 3'b111
+// LOAD
+`define FUNCT3_LB   3'b000
+`define FUNCT3_LH   3'b001
+`define FUNCT3_LW   3'b010
+`define FUNCT3_LBU  3'b100
+`define FUNCT3_LHU  3'b101
+// STORE
+`define FUNCT3_SB   3'b000
+`define FUNCT3_SH   3'b001
+`define FUNCT3_SW   3'b010
+// OP-IMM
+`define FUNCT3_ADDI      3'b000
+`define FUNCT3_SLTI      3'b010
+`define FUNCT3_SLTIU     3'b011
+`define FUNCT3_XORI      3'b100
+`define FUNCT3_ORI       3'b110
+`define FUNCT3_ANDI      3'b111
+`define FUNCT3_SLLI      3'b001
+`define FUNCT3_SRLI_SRAI 3'b101
+// OP
+`define FUNCT3_ADD_SUB 3'b000
+`define FUNCT3_SLL     3'b001
+`define FUNCT3_SLT     3'b010
+`define FUNCT3_SLTU    3'b011
+`define FUNCT3_XOR     3'b100
+`define FUNCT3_SRL_SRA 3'b101
+`define FUNCT3_OR      3'b110
+`define FUNCT3_AND     3'b111
+// MISC-MEM
+`define FUNCT3_FENCE  3'b000
+`define FUNCT3_FENCEI 3'b001
+
+//================== Instruction funct7 in RISC-V ================== 
+`define FUNCT7_SLLI 7'b0000000
+// SRLI_SRAI
+`define FUNCT7_SRLI 7'b0000000
+`define FUNCT7_SRAI 7'b0100000
+// ADD_SUB
+`define FUNCT7_ADD  7'b0000000
+`define FUNCT7_SUB  7'b0100000
+`define FUNCT7_SLL  7'b0000000
+`define FUNCT7_SLT  7'b0000000
+`define FUNCT7_SLTU 7'b0000000
+`define FUNCT7_XOR  7'b0000000
+// SRL_SRA
+`define FUNCT7_SRL 7'b0000000
+`define FUNCT7_SRA 7'b0100000
+`define FUNCT7_OR  7'b0000000
+`define FUNCT7_AND 7'b0000000
+
+//================== AluSel ================== 
+`define EXE_RES_LOGIC       3'b001
+`define EXE_RES_SHIFT       3'b010
+`define EXE_RES_MOVE        3'b011
+`define EXE_RES_NOP         3'b000
+`define EXE_RES_ARITH       3'b100
+`define EXE_RES_MUL         3'b101
+`define EXE_RES_JUMP_BRANCH 3'b110
+`define EXE_RES_LOAD_STORE  3'b111
+
+//================== AluOp ==================
+
+`define EXE_NOP_OP 0
+`define EXE_AND_OP 1
+`define EXE_OR_OP  2
+`define EXE_XOR_OP 3
+
+`define EXE_SLL_OP 5
+`define EXE_SRL_OP 6
+`define EXE_SRA_OP 7
+
+`define EXE_ADD_OP  8
+`define EXE_SLT_OP  9
+`define EXE_SLTU_OP 10
+`define EXE_SUB_OP  11
+
+`define EXE_JAL_OP  12
+`define EXE_JALR_OP 13
+`define EXE_BEQ_OP  14
+`define EXE_BNE_OP  15
+`define EXE_BLT_OP  16
+`define EXE_BGE_OP  17
+`define EXE_BLTU_OP 18
+`define EXE_BGEU_OP 19
+
+`define EXE_LB_OP  20
+`define EXE_LH_OP  21
+`define EXE_LW_OP  22
+`define EXE_LBU_OP 23
+`define EXE_LHU_OP 24
+`define EXE_SB_OP  25
+`define EXE_SH_OP  26
+`define EXE_SW_OP  27
+
+//==================  Hardware Properties ================== 
+
+// Instruction Memory
+`define InstAddrBus 31:0 
+`define InstBus 31:0
+`define InstMemNum 131072
+`define InstMemNumLog2 17
+
+// Register File
+`define RegAddrBus 4:0
+`define RegBus 31:0
+`define RegNum 32
+`define RegNumLog2 5
+
+// ALU
+`define AluOpBus 7:0
+`define AluSelBus 2:0
+
+// Memory
+`define MemAddrBus 31:0
+`define MemAddrWidth 32
+`define MemDataBus 31:0
+`define MemDataWidth 32
+`define ByteBus 7:0
+`define DataMemNum 131072
+`define DataMemNumLog2 17
+
+`endif
+// This file is base on Zhekai Zhang's code
+
+`define CLOG2(x) \
+	((x <= 0)		? -1 : \
+	(x == 1)		? 0 : \
+	(x <= 2) 		? 1 : \
+	(x <= 4) 		? 2 : \
+	(x <= 8) 		? 3 : \
+	(x <= 16) 		? 4 : \
+	(x <= 32)		? 5 : \
+	(x <= 64)		? 6 : \
+	(x <= 128)		? 7 : \
+	(x <= 256)		? 8 : \
+	(x <= 512)		? 9 : \
+	(x <= 1024)		? 10 : \
+	(x <= 2048)		? 11 : \
+	(x <= 4096)		? 12 : \
+	(x <= 8192)		? 13 : \
+	(x <= 16384)	? 14 : \
+	(x <= 32768)	? 15 : \
+	(x <= 65536)	? 16 : \
+	(x <= 131072)	? 17 : \
+	(x <= 262144)	? 18 : \
+	(x <= 524288)	? 19 : \
+	(x <= 1048576)	? 20 : -1)
+module cache #(
+	parameter WORD_SELECT_BIT = 3, 
+	parameter INDEX_BIT       = 2, 
+	parameter NASSOC          = 4
+) (
+	input             clk           ,
+	input             rst           ,
+	
+	input      [ 1:0] rw_flag_      , 
+	input      [31:0] addr_         ,
+	output     [31:0] read_data     ,
+	input      [31:0] write_data_   ,
+	input      [ 3:0] write_mask_   ,
+	output reg        busy          ,
+	output reg        done          ,
+	input             flush_flag    ,
+	input      [31:0] flush_addr    ,
+	
+	output reg [ 1:0] mem_rw_flag   ,
+	output reg [31:0] mem_addr      ,
+	input      [31:0] mem_read_data ,
+	output reg [31:0] mem_write_data,
+	output reg [ 3:0] mem_write_mask,
+	input             mem_busy      ,
+	input             mem_done
+);
+endmodule
+
+module cpu (
+	input  wire EXCLK  ,
+	input  wire button ,
+	output wire rst_led,
+	output wire Tx     ,
+	input  wire Rx
+);
+endmodule
+
+module ctrl (
+	input  wire       rst         ,
+	input  wire       stallreq_if ,
+	input  wire       stallreq_id ,
+	input  wire       stallreq_ex ,
+	input  wire       stallreq_mem,
+	output reg  [5:0] stall
+);
+endmodule
+
+module mem_ctrl
+	#(
+	parameter PORT_COUNT = 2,
+	parameter DATA_WIDTH_BYTE = 4,
+	parameter ADDR_WIDTH_BYTE = 4
+	)
+	(
+	CLK, RST,
+	
+	send_flag, send_data, send_length,
+	recv_flag, recv_data, recv_length,
+	
+	sendable, receivable,
+	
+	rw_flag_,		
+	addr_, 
+	read_data_, write_data_, write_mask_,
+	busy, done
+    );
+localparam DATA_WIDTH = 	8 * DATA_WIDTH_BYTE;
+localparam ADDR_WIDTH = 	8 * ADDR_WIDTH_BYTE;
+localparam LENGTH_WIDTH = 	`CLOG2(DATA_WIDTH_BYTE) + 1;
+localparam PORT_COUNT_BIT = `CLOG2(PORT_COUNT);
+localparam SEND_BYTE = 		DATA_WIDTH_BYTE + ADDR_WIDTH_BYTE + DATA_WIDTH_BYTE / 8 + 1;
+localparam NO_PORT = (1 << (PORT_COUNT_BIT + 1)) - 1;
+localparam STATE_IDLE = 0;
+localparam STATE_WAIT_FOR_RECV = 1;
+input CLK, RST;
+output reg send_flag;
+output reg [SEND_BYTE*8-1:0] send_data;
+output reg [4:0] send_length;
+output reg recv_flag;
+input [SEND_BYTE*8-1:0] recv_data;
+input [4:0] recv_length;
+input sendable, receivable;
+input [PORT_COUNT*2-1:0] 					rw_flag_;
+input [PORT_COUNT * ADDR_WIDTH-1:0] 		addr_;
+output [PORT_COUNT * DATA_WIDTH-1:0] 		read_data_;
+input [PORT_COUNT * DATA_WIDTH-1:0] 		write_data_;
+input [PORT_COUNT * DATA_WIDTH_BYTE-1:0]	write_mask_;
+output reg [PORT_COUNT-1:0]					busy;
+output reg [PORT_COUNT-1:0] 				done;
+endmodule
+
+module reg_ex_mem (
+	input  wire               clk          ,
+	input  wire               rst          ,
+	input  wire [`RegAddrBus] ex_reg_waddr ,
+	input  wire               ex_we        ,
+	input  wire [    `RegBus] ex_reg_wdata ,
+	input  wire [        5:0] stall        ,
+	input  wire [`MemAddrBus] ex_mem_addr  ,
+	input  wire [  `AluOpBus] ex_aluop     ,
+	input  wire [    `RegBus] ex_rt_data   ,
+	output reg  [`RegAddrBus] mem_reg_waddr,
+	output reg                mem_we       ,
+	output reg  [    `RegBus] mem_reg_wdata,
+	output reg  [`MemAddrBus] mem_mem_addr ,
+	output reg  [  `AluOpBus] mem_aluop    ,
+	output reg  [    `RegBus] mem_rt_data
+);
+endmodule
+
+module reg_id_ex (
+	input  wire                clk          ,
+	input  wire                rst          ,
+	input  wire [   `AluOpBus] id_aluop     ,
+	input  wire [  `AluSelBus] id_alusel    ,
+	input  wire [     `RegBus] id_opv1      ,
+	input  wire [     `RegBus] id_opv2      ,
+	input  wire [ `RegAddrBus] id_reg_waddr ,
+	input  wire                id_we        ,
+	input  wire [         5:0] stall        ,
+	input  wire [`InstAddrBus] id_link_addr ,
+	input  wire [     `RegBus] id_mem_offset,
+	output reg  [   `AluOpBus] ex_aluop     ,
+	output reg  [  `AluSelBus] ex_alusel    ,
+	output reg  [     `RegBus] ex_opv1      ,
+	output reg  [     `RegBus] ex_opv2      ,
+	output reg  [ `RegAddrBus] ex_reg_waddr ,
+	output reg                 ex_we        ,
+	output reg  [`InstAddrBus] ex_link_addr ,
+	output reg  [     `RegBus] ex_mem_offset
+);
+endmodule
+
+module reg_if_id (
+	input  wire                clk    ,
+	input  wire                rst    ,
+	input  wire [`InstAddrBus] if_pc  ,
+	input  wire [    `InstBus] if_inst,
+	input  wire [         5:0] stall  ,
+	input  wire                br     ,
+	output reg  [`InstAddrBus] id_pc  ,
+	output reg  [    `InstBus] id_inst
+);
+endmodule
+
+module reg_mem_wb (
+	input  wire               clk          ,
+	input  wire               rst          ,
+	input  wire [`RegAddrBus] mem_reg_waddr,
+	input  wire               mem_we       ,
+	input  wire [    `RegBus] mem_reg_wdata,
+	input  wire [5:0]         stall        ,
+	output reg  [`RegAddrBus] wb_reg_waddr ,
+	output reg                wb_we        ,
+	output reg  [    `RegBus] wb_reg_wdata
+);
+endmodule
+
+module reg_pc (
+	input  wire                clk        ,
+	input  wire                rst        ,
+	input  wire [         5:0] stall      ,
+	input  wire                br         ,
+	input  wire [`InstAddrBus] br_addr    ,
+	output reg  [`InstAddrBus] pc_o       ,
+	output reg                 right_one_o
+);
+endmodule
+
+module regfile (
+	input  wire               clk   ,
+	input  wire               rst   ,
+	input  wire               we    ,
+	input  wire [`RegAddrBus] waddr ,
+	input  wire [    `RegBus] wdata ,
+	input  wire               re1   ,
+	input  wire [`RegAddrBus] raddr1,
+	output reg  [    `RegBus] rdata1,
+	input  wire               re2   ,
+	input  wire [`RegAddrBus] raddr2,
+	output reg  [    `RegBus] rdata2
+);
+endmodule
+
+module riscv_cpu (
+	input  wire                       clk       ,
+	input  wire                       rst       ,
+	input  wire [2*`MemDataWidth-1:0] mem_data_i,
+	input  wire [                1:0] mem_busy_i,
+	input  wire [                1:0] mem_done_i,
+	output wire [                3:0] mem_rwe_o ,
+	output wire [2*`MemAddrWidth-1:0] mem_addr_o,
+	output wire [                7:0] mem_sel_o ,
+	output wire [2*`MemDataWidth-1:0] mem_data_o
+);
+endmodule
+
+module simple_ram #(
+	parameter AddrBusWidth     = 16,
+	parameter DataBusByteWidth = 4
+) (
+	input  wire                          clk   ,
+	input  wire                          rst   ,
+	input  wire                          re    ,
+	input  wire [      AddrBusWidth-1:0] r_addr,
+	input  wire                          we    ,
+	input  wire [8*DataBusByteWidth-1:0] w_data,
+	input  wire [      AddrBusWidth-1:0] w_addr,
+	input  wire [  DataBusByteWidth-1:0] w_sel ,
+	output reg  [8*DataBusByteWidth-1:0] r_data
+);
+endmodule
+
+module stage_ex (
+	input  wire                rst        ,
+	input  wire [   `AluOpBus] aluop      ,
+	input  wire [  `AluSelBus] alusel     ,
+	input  wire [     `RegBus] opv1       ,
+	input  wire [     `RegBus] opv2       ,
+	input  wire [ `RegAddrBus] reg_waddr_i,
+	input  wire                we_i       ,
+	input  wire [`InstAddrBus] link_addr  ,
+	input  wire [     `RegBus] mem_offset ,
+	output reg  [ `RegAddrBus] reg_waddr_o,
+	output reg                 we_o       ,
+	output reg  [     `RegBus] reg_wdata  ,
+	output reg                 stallreq   ,
+	output reg  [ `MemAddrBus] mem_addr   ,
+	output wire [   `AluOpBus] ex_aluop   ,
+	output wire [     `RegBus] rt_data
+);
+endmodule
+
+module stage_id (
+	input  wire                rst          ,
+	input  wire [`InstAddrBus] pc           ,
+	input  wire [    `InstBus] inst         ,
+	input  wire [     `RegBus] reg_data1    ,
+	input  wire [     `RegBus] reg_data2    ,
+	
+	input  wire [   `AluOpBus] ex_aluop     ,
+	input  wire                ex_we        ,
+	input  wire [     `RegBus] ex_reg_wdata ,
+	input  wire [ `RegAddrBus] ex_reg_waddr ,
+	input  wire                mem_we       ,
+	input  wire [     `RegBus] mem_reg_wdata,
+	input  wire [ `RegAddrBus] mem_reg_waddr,
+	output reg                 re1          ,
+	output reg                 re2          ,
+	output reg  [ `RegAddrBus] reg_addr1    ,
+	output reg  [ `RegAddrBus] reg_addr2    ,
+	output reg  [   `AluOpBus] aluop        ,
+	output reg  [  `AluSelBus] alusel       ,
+	output reg  [     `RegBus] opv1         ,
+	output reg  [     `RegBus] opv2         ,
+	output reg  [ `RegAddrBus] reg_waddr    ,
+	output reg                 we           ,
+	output wire                stallreq     ,
+	output reg                 br           ,
+	output reg  [`InstAddrBus] br_addr      ,
+	output reg  [`InstAddrBus] link_addr    ,
+	output reg  [     `RegBus] mem_offset
+);
+endmodule
+
+module stage_if (
+	input  wire               rst       ,
+	input  wire [`MemAddrBus] pc_i      ,
+	input  wire [    `RegBus] mem_data_i,
+	input  wire               mem_busy  ,
+	input  wire               mem_done  ,
+	input  wire               br        ,
+	input  wire               right_one ,
+	output reg                mem_re    ,
+	output reg  [`MemAddrBus] mem_addr_o,
+	output reg  [`MemAddrBus] pc_o      ,
+	output reg  [   `InstBus] inst_o    ,
+	output reg                stallreq
+);
+endmodule
+
+module stage_mem (
+	input  wire               rst        ,
+	input  wire [`RegAddrBus] reg_waddr_i,
+	input  wire               we_i       ,
+	input  wire [    `RegBus] reg_wdata_i,
+	input  wire [`MemAddrBus] mem_addr_i ,
+	input  wire [  `AluOpBus] aluop      ,
+	input  wire [    `RegBus] rt_data    ,
+	input  wire [    `RegBus] mem_data_i ,
+	input  wire               mem_busy   ,
+	input  wire               mem_done   ,
+	output reg  [`RegAddrBus] reg_waddr_o,
+	output reg                we_o       ,
+	output reg  [    `RegBus] reg_wdata_o,
+	output reg  [`MemAddrBus] mem_addr_o ,
+	output reg                mem_re     ,
+	output reg                mem_we     ,
+	output reg  [        3:0] mem_sel    ,
+	output reg  [    `RegBus] mem_data_o ,
+	output reg                stallreq
+);
+endmodule
+
+module uart_trans #(
+	parameter BAUDRATE  = 2304000 ,
+	parameter CLOCKRATE = 40000000
+) (
+	input            CLK       ,
+	input            RST       ,
+	input            send_flag ,
+	input      [7:0] send_data ,
+	input            recv_flag ,
+	output     [7:0] recv_data ,
+	output           sendable  ,
+	output           receivable,
+	output reg       Tx        ,
+	input            Rx
+);
+endmodule
+
+module fifo
+	#(
+	parameter SIZE_BIT	= 3,
+	parameter WIDTH 	= 8
+	)
+	(
+	input CLK,
+	input RST,
+	input read_flag,
+	output [WIDTH-1:0] read_data,
+	input write_flag,
+	input [WIDTH-1:0] write_data,
+	output empty,
+	output full
+    );
+endmodule
+
+module simo_fifo
+	#(
+	parameter CHANNEL_BIT = 1,
+	parameter SIZE_BIT = 3,
+	parameter WIDTH = 8
+	)
+	(
+	input CLK,
+	input RST,
+	
+	input [(1<<CHANNEL_BIT)-1:0] read_flags,
+	output [(1<<CHANNEL_BIT)*WIDTH-1:0] read_datas,
+	
+	input write_flag,
+	input [CHANNEL_BIT-1:0] write_select,
+	input [WIDTH-1:0] write_data,
+	
+	output [(1<<CHANNEL_BIT)-1:0] empty,
+	output [(1<<CHANNEL_BIT)-1:0] full
+    );
+endmodule
+
+module miso_fifo
+	#(
+	parameter CHANNEL_BIT = 1,
+	parameter SIZE_BIT = 3,
+	parameter WIDTH = 8
+	)
+	(
+	input CLK,
+	input RST,
+	
+	input read_flag,
+	input [CHANNEL_BIT-1:0] read_select,
+	output [WIDTH-1:0] read_data,
+	
+	input [(1<<CHANNEL_BIT)-1:0] write_flags,
+	input [(1<<CHANNEL_BIT)*WIDTH-1:0] write_datas,
+	
+	output [(1<<CHANNEL_BIT)-1:0] empty,
+	output [(1<<CHANNEL_BIT)-1:0] full
+	);
+endmodule
+
+module multichan_trans
+	#(
+	parameter PACKET_SIZE = 8,
+	parameter MESSAGE_BIT = 256,
+	parameter CHANNEL_BIT = 1,
+	parameter [5*(1<<CHANNEL_BIT)-1:0] CHANNEL_PRIORITY = {(1<<CHANNEL_BIT){5'd8}}
+	)
+	(
+	input CLK,
+	input RST,
+	
+	output reg send_flag,
+	output reg [PACKET_SIZE-1:0] send_data,
+	output reg recv_flag,
+	input [PACKET_SIZE-1:0] recv_data,
+	
+	input sendable,
+	input receivable,
+	
+	input [(1<<CHANNEL_BIT)-1:0] read_flags,
+	output [(1<<CHANNEL_BIT)*(MESSAGE_BIT+5)-1:0] read_datas,
+	input [(1<<CHANNEL_BIT)-1:0] write_flags,
+	input [(1<<CHANNEL_BIT)*(MESSAGE_BIT+5)-1:0] write_datas,
+	
+	output [(1<<CHANNEL_BIT)-1:0] readable,
+	output [(1<<CHANNEL_BIT)-1:0] writable
+	);
+endmodule

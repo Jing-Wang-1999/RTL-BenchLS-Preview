@@ -1,0 +1,51 @@
+module origen_186182(
+    input clk,
+    input [4:0] randomNum1, randomNum2, randomNum3,
+    input key_1, key_2, key_3,
+    output reg [4:0] fsm_out,
+    output reg [4:0] t1, t2, t3
+);
+
+reg [2:0] state;
+parameter INITIAL = 3'b000, SPIN1 = 3'b001, SPIN2_MATCH = 3'b010, SPIN2_NOMATCH = 3'b100, WIN = 3'b011;
+
+always @(posedge clk) begin
+    case(state)
+        INITIAL: begin
+            fsm_out <= 5'b00000;
+            if (key_1) begin
+                t1 <= randomNum1;
+                state <= SPIN1;
+            end
+        end
+        SPIN1: begin
+            if (key_2) begin
+                t2 <= randomNum2;
+                if (randomNum2 == randomNum1)
+                    state <= SPIN2_MATCH;
+                else
+                    state <= SPIN2_NOMATCH;
+            end
+        end
+        SPIN2_MATCH: begin
+            if (key_3) begin
+                t3 <= randomNum3;
+                if (randomNum3 == randomNum1)
+                    state <= WIN;
+                else
+                    state <= INITIAL;
+            end
+        end
+        SPIN2_NOMATCH: begin
+            if (key_3)
+                state <= INITIAL;
+        end
+        WIN: begin
+            fsm_out <= 5'b11111;
+            if (key_3)
+                state <= INITIAL;
+        end
+    endcase
+end
+
+endmodule

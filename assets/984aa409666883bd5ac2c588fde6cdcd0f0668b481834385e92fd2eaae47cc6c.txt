@@ -1,0 +1,20 @@
+always @(wr_sfr or data2_in or wr2_acc or wr_acc or wr_bit_acc or wr_addr[2:0] or data_in or bit_in or data_out)
+begin
+  if (wr2_acc)
+    acc = data2_in;
+  else if (wr_acc)
+    acc = data_in;
+  else if (wr_bit_acc)
+    case (wr_addr[2:0]) /* synopsys full_case parallel_case */
+      3'b000: acc = {data_out[7:1], bit_in};
+      3'b001: acc = {data_out[7:2], bit_in, data_out[0]};
+      3'b010: acc = {data_out[7:3], bit_in, data_out[1:0]};
+      3'b011: acc = {data_out[7:4], bit_in, data_out[2:0]};
+      3'b100: acc = {data_out[7:5], bit_in, data_out[3:0]};
+      3'b101: acc = {data_out[7:6], bit_in, data_out[4:0]};
+      3'b110: acc = {data_out[7],   bit_in, data_out[5:0]};
+      3'b111: acc = {bit_in, data_out[6:0]};
+    endcase
+  else
+    acc = data_out;
+end

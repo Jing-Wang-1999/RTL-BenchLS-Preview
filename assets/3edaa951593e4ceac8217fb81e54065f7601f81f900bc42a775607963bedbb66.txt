@@ -1,0 +1,11 @@
+always @(negedge ECLK)
+  begin
+    if (rst_i)
+    begin
+      tb_fld <= 1'b0;
+    end
+    else if (sel_crb & we_i) // write to crb bit 4 (force load strobe)
+      tb_fld <= DBi[4];
+    else // timer is reloaded when TBHI is written and counter not running
+      tb_fld <= sel_i & adr_tbhi & we_i & ~crb_strt;
+  end

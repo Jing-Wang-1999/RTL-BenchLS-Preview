@@ -1,0 +1,92 @@
+module autovcoder_024804 #(
+    // parameter declaration and default value assignemnt
+    parameter enable_debug_info = "false",	//Valid values: false|true; this is simulation-only parameter, for debug purpose only
+
+    parameter auto_negotiation = "false",  //Valid values: false|true
+    parameter channel_number = 0,  //Valid values: 0..65
+    parameter clk_divtx_deskew = 0,  //Valid values: 0..15
+    parameter clk_forward_only_mode = "false",  //Valid values: false|true
+    parameter [0:0] forced_data_mode = 1'b0,  //Valid values: 1
+    parameter mode = 8,  //Valid values: 8|10|16|20|64|80
+    parameter post_tap_1_en = "false",  //Valid values: false|true
+    parameter ser_loopback = "false",  //Valid values: false|true
+    parameter avmm_group_channel_index = 0,  //Valid values: 0..2
+    parameter use_default_base_address = "true",  //Valid values: false|true
+    parameter user_base_address = 0,  //Valid values: 0..2047
+    parameter pma_direct = "false",  //Valid values: false|true
+    parameter duty_cycle_tune = "duty_cycle3"	//Valid values: duty_cycle0|duty_cycle1|duty_cycle2|duty_cycle3|duty_cycle4|duty_cycle5|duty_cycle6|duty_cycle7
+) (
+    //input and output port declaration
+    input  [ 0:0] cpulse,
+    input  [79:0] datain,
+    input  [ 0:0] hfclk,
+    input  [ 0:0] hfclkn,
+    input  [ 0:0] lfclk,
+    input  [ 0:0] lfclkn,
+    input  [ 2:0] pclk,
+    input  [ 0:0] rstn,
+    input  [ 0:0] slpbk,
+    output [ 0:0] clkdivtx,
+    output [ 0:0] dataout,
+    output [ 0:0] lbvop,
+    output [ 0:0] preenout,
+    input  [10:0] avmmaddress,
+    input  [ 1:0] avmmbyteen,
+    input  [ 0:0] avmmrstn,
+    input  [ 0:0] avmmclk,
+    input  [ 0:0] avmmread,
+    input  [ 0:0] avmmwrite,
+    input  [15:0] avmmwritedata,
+    output [15:0] avmmreaddata,
+    output [ 0:0] blockselect,
+    output [ 0:0] avgvon,
+    output [ 0:0] avgvop
+);
+
+  cyclonev_hssi_pma_tx_ser_encrypted #(
+      .enable_debug_info(enable_debug_info),
+
+      .auto_negotiation(auto_negotiation),
+      .channel_number(channel_number),
+      .clk_divtx_deskew(clk_divtx_deskew),
+      .clk_forward_only_mode(clk_forward_only_mode),
+      .forced_data_mode(forced_data_mode),
+      .mode(mode),
+      .post_tap_1_en(post_tap_1_en),
+      .ser_loopback(ser_loopback),
+      .avmm_group_channel_index(avmm_group_channel_index),
+      .use_default_base_address(use_default_base_address),
+      .user_base_address(user_base_address),
+      .pma_direct(pma_direct),
+      .duty_cycle_tune(duty_cycle_tune)
+
+  ) cyclonev_hssi_pma_tx_ser_encrypted_inst (
+      .cpulse(cpulse),
+      .datain(datain),
+      .hfclk(hfclk),
+      .hfclkn(hfclkn),
+      .lfclk(lfclk),
+      .lfclkn(lfclkn),
+      .pclk(pclk),
+      .rstn(rstn),
+      .slpbk(slpbk),
+      .clkdivtx(clkdivtx),
+      .dataout(dataout),
+      .lbvop(lbvop),
+      .preenout(preenout),
+      .avmmaddress(avmmaddress),
+      .avmmbyteen(avmmbyteen),
+      .avmmrstn(avmmrstn),
+      .avmmclk(avmmclk),
+      .avmmread(avmmread),
+      .avmmwrite(avmmwrite),
+      .avmmwritedata(avmmwritedata),
+      .avmmreaddata(avmmreaddata),
+      .blockselect(blockselect),
+      .avgvon(avgvon),
+      .avgvop(avgvop)
+  );
+
+
+endmodule
+

@@ -1,0 +1,31 @@
+**Module Name:** HLS_fp17_add_core_chn_a_rsci_chn_a_wait_ctrl  
+
+**Overview**  
+This module implements a handshake controller for a channel interface in a high-level synthesis (HLS) design. It manages the flow control and synchronization of data transfers for channel "a" by generating internal wait and load signals based on external control inputs and valid data indications.  
+
+**Primary Function**  
+The controller coordinates when the channel is ready to accept or process data, ensuring proper sequencing between the core logic and the channel interface. It uses a combination of combinatorial logic and a single internal state bit to track pending operations.  
+
+**Inputs**  
+- **Clock and Reset:**  
+  - `nvdla_core_clk`: System clock.  
+  - `nvdla_core_rstn`: Active-low synchronous reset.  
+
+- **Channel Control Signals:**  
+  - `chn_a_rsci_oswt`: Output side write trigger; indicates the channel is ready to write data out.  
+  - `chn_a_rsci_iswt0`: Input side write trigger; indicates new data is available for the channel.  
+  - `chn_a_rsci_ld_core_psct`: Load core pipeline stage control; a request to load data into the core.  
+  - `chn_a_rsci_vd`: Valid data signal; confirms the channel data is valid.  
+
+- **Core Control Signals:**  
+  - `core_wen`: Core write enable; allows writes when high.  
+  - `core_wten`: Core wait enable; when high, the core is stalled.  
+
+**Outputs**  
+- `chn_a_rsci_biwt`: Buffer internal write trigger; asserted when the channel is ready and data is valid.  
+- `chn_a_rsci_bdwt`: Buffer done write trigger; asserted when the output side is enabled and the core can write.  
+- `chn_a_rsci_ld_core_sct`: Load core pipeline stage control output; the gated version of the load request, enabled only when the channel is ready.  
+
+**Internal Signals**  
+- `chn_a_rsci_ogwt`: Overall gate wait; combines the input trigger and internal wait state.  
+- `chn_a_rsci_pdswt0`: Power-down wait zero; a combinatorial signal that enables the input

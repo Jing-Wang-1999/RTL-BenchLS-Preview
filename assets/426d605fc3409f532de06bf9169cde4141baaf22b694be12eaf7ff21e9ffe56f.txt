@@ -1,0 +1,83 @@
+{
+  "additions": 8,
+  "base_commit": "cdbe6a2b5981d623e6d4b8a2efb7e2df2b8218a9",
+  "base_ref": "master",
+  "deletions": 3,
+  "head_commit": "e42de1a17df45bef43a0a57a56578b8ea4f11e69",
+  "issue_info": {
+    "body": "### Description\r\n\r\nRTL files need to have countermeasure annotations. Missing countermeasures trigger warnings from regtool. We currently have such warnings for\r\n- [x] kmac #21315\r\n- [x] keymgr #21315\r\n- [x] rom_ctrl #21315\r\n- [x] otbn #21315\r\n ",
+    "created_at": "2024-01-18T22:46:28Z",
+    "labels": [
+      "Component:RTL",
+      "Component:Security",
+      "Milestone:D3"
+    ],
+    "state": "closed",
+    "title": "[dv] Add countermeasure annotations in RTL",
+    "updated_at": "2024-02-14T17:51:03Z"
+  },
+  "issue_number": 20887,
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/20887",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 1,
+      "changes": 1,
+      "deletions": 0,
+      "filename": "hw/ip/keymgr/rtl/keymgr_sideload_key_ctrl.sv",
+      "patch": "@@ -60,6 +60,7 @@ module keymgr_sideload_key_ctrl import keymgr_pkg::*;(\n \n   keymgr_sideload_e state_q, state_d;\n \n+  // SEC_CM: SIDELOAD_CTRL.FSM.SPARSE\n   // This primitive is used to place a size-only constraint on the\n   // flops in order to prevent FSM state encoding optimizations.\n   `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, keymgr_sideload_e, StSideloadReset)"
+    },
+    {
+      "additions": 1,
+      "changes": 1,
+      "deletions": 0,
+      "filename": "hw/ip/kmac/rtl/kmac.sv",
+      "patch": "@@ -276,6 +276,7 @@ module kmac\n   // Indicating AppIntf is active. This signal is used to check SW error\n   logic app_active;\n \n+  // SEC_CM: SW_CMD.CTRL.SPARSE\n   // Command\n   // sw_cmd is the command written by SW\n   // checked_sw_cmd is checked in the kmac_errchk module."
+    },
+    {
+      "additions": 1,
+      "changes": 1,
+      "deletions": 0,
+      "filename": "hw/ip/kmac/rtl/kmac_pkg.sv",
+      "patch": "@@ -68,6 +68,7 @@ package kmac_pkg;\n   } key_len_e;\n \n \n+  // SEC_CM: SW_CMD.CTRL.SPARSE\n   // kmac_cmd_e defines the possible command sets that software issues via\n   // !!CMD register. This is mainly to limit the error scenario that SW writes\n   // multiple commands at once. Additionally they are sparse encoded to harden"
+    },
+    {
+      "additions": 1,
+      "changes": 1,
+      "deletions": 0,
+      "filename": "hw/ip/otbn/rtl/otbn_start_stop_control.sv",
+      "patch": "@@ -419,6 +419,7 @@ module otbn_start_stop_control\n   assign sec_wipe_addr_o = addr_cnt_q[4:0];\n   `ASSERT(NoSecWipeAbove32Bit_A, addr_cnt_q[5] |-> (!sec_wipe_wdr_o && !sec_wipe_acc_urnd_o))\n \n+  // SEC_CM: START_STOP_CTRL.STATE.CONSISTENCY\n   // A check for spurious or dropped secure wipe requests.\n   // We only expect to start a secure wipe when running.\n   assign spurious_secure_wipe_req = secure_wipe_req_i & ~allow_secure_wipe;"
+    },
+    {
+      "additions": 4,
+      "changes": 7,
+      "deletions": 3,
+      "filename": "hw/ip/rom_ctrl/rtl/rom_ctrl.sv",
+      "patch": "@@ -53,9 +53,10 @@ module rom_ctrl\n   localparam int unsigned RomSizeWords = RomSizeByte >> 2;\n   localparam int unsigned RomIndexWidth = vbits(RomSizeWords);\n \n-  // DataWidth is normally 39, representing 32 bits of actual data plus 7 ECC check bits. If\n-  // scrambling is disabled (\"insecure mode\"), we store a raw 32-bit image and generate ECC check\n-  // bits on the fly.\n+  // SEC_CM: CTRL.MEM.INTEGRITY\n+  // DataWidth is normally 39, representing 32 bits of actual data plus 7 ECC check bits for the bus\n+  // end-to-end integrity scheme. If scrambling is disabled(\"insecure mode\"), we store a raw 32-bit\n+  // image and generate ECC check bits on the fly.\n   localparam int unsigned DataWidth = SecDisableScrambling ? 32 : 39;\n \n   mubi4_t                   rom_select_bus;"
+    }
+  ],
+  "pr_info": {
+    "body": "This fixes #20887.\r\n\r\nNote that #10071 can only be closed once all autogen'd IPs have been transitioned to IPGen, since the annotation checker does not look in the right RTL locations otherwise. I.e., there are some IPs like `pinmux` which are correctly annotated, but will fail since the top-specific Hjson resides in a different subtree than the associated RTL (which will be fixes once transitioned to IPGen).",
+    "created_at": "2024-02-12T22:30:21Z",
+    "merged_at": "2024-02-14T17:51:01Z",
+    "state": "closed",
+    "title": "[regtool/rtl] Add missing CM annotations",
+    "updated_at": "2024-02-14T17:51:01Z",
+    "user": "msfschaffner"
+  },
+  "pr_number": 21315,
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/21315",
+  "repository": "lowRISC/opentitan",
+  "source_info": {
+    "line_number": 763,
+    "source_file": "12.txt"
+  },
+  "task_id": "lowRISC_opentitan_21315_20887",
+  "verilog_files": [
+    "hw/ip/keymgr/rtl/keymgr_sideload_key_ctrl.sv",
+    "hw/ip/kmac/rtl/kmac.sv",
+    "hw/ip/kmac/rtl/kmac_pkg.sv",
+    "hw/ip/otbn/rtl/otbn_start_stop_control.sv",
+    "hw/ip/rom_ctrl/rtl/rom_ctrl.sv"
+  ]
+}

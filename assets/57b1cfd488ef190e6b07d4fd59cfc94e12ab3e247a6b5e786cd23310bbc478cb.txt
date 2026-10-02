@@ -1,0 +1,73 @@
+module rtlpp_06767(clock, reset, imem_clock, dmem_clock, processor_clock, regfile_clock);
+    input clock, reset;
+    output imem_clock, dmem_clock, processor_clock, regfile_clock;
+
+    wire clockd4;
+
+    // clk_div_4 module logic embedded
+    reg [1:0] clk_div_counter;
+    always @(posedge clock or posedge reset) begin
+        if (reset) 
+            clk_div_counter <= 2'b0;
+        else 
+            clk_div_counter <= clk_div_counter + 2'b1;
+    end
+    assign clockd4 = clk_div_counter[1];
+
+    assign imem_clock = clock;
+    assign dmem_clock = ~clock;
+    assign processor_clock = ~clockd4;
+    assign regfile_clock = ~clockd4;
+
+    // imem module logic embedded
+    reg [31:0] imem [0:4095]; // Assuming 4K words of memory
+    initial $readmemh("imem.hex", imem); // Initialize with imem.hex file
+    wire [11:0] address_imem;
+    wire [31:0] q_imem;
+    assign q_imem = imem[address_imem];
+    
+    // dmem module logic embedded
+    reg [31:0] dmem [0:4095]; // Assuming 4K words of memory
+    wire [11:0] address_dmem;
+    wire [31:0] data;
+    wire wren;
+    wire [31:0] q_dmem;
+    always @(posedge dmem_clock) begin
+        if (wren)
+            dmem[address_dmem] <= data;
+    end
+    assign q_dmem = dmem[address_dmem];
+    
+    // regfile module logic embedded
+    reg [31:0] regfile [0:31];
+    wire ctrl_writeEnable;
+    wire [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
+    wire [31:0] data_writeReg;
+    wire [31:0] data_readRegA, data_readRegB;
+    always @(posedge regfile_clock or posedge reset) begin
+        if (reset) begin
+            integer i;
+            for (i = 0; i < 32; i = i + 1) 
+                regfile[i] <= 32'b0;
+        end else if (ctrl_writeEnable) begin
+            regfile[ctrl_writeReg] <= data_writeReg;
+        end
+    end
+    assign data_readRegA = regfile[ctrl_readRegA];
+    assign data_readRegB = regfile[ctrl_readRegB];
+    
+    // processor module logic embedded
+    // Placeholder for processor logic, assuming connections to all internal wires/logic
+    wire [31:0] dummy; // Placeholder wire to avoid unconnected ports
+    assign address_imem = dummy[11:0];
+    assign address_dmem = dummy[11:0];
+    assign data = dummy;
+    assign wren = 1'b0;
+    assign ctrl_writeEnable = 1'b0;
+    assign ctrl_writeReg = 5'b0;
+    assign ctrl_readRegA = 5'b0;
+    assign ctrl_readRegB = 5'b0;
+    assign data_writeReg = 32'b0;
+    assign data_readRegA = dummy;
+    assign data_readRegB = dummy;
+endmodule

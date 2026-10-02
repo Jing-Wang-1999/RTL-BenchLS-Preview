@@ -1,0 +1,33 @@
+The primary function of the high-resolution timer module is to implement a configurable countdown timer with interrupt capabilities. The timer can load a predefined period, start, stop, and snapshot the current counter value, and generate an interrupt upon timeout.
+
+1. **Instantiation and Configuration**: This module includes input signals for address, chipselect, clock, reset, write enable, and write data. It produces output signals for interrupt requests and read data.
+
+2. **Control Flow**: The counter operates based on `counter_is_running`, with strobe signals controlling start and stop operations. Upon reset, all registers are initialized. The timer starts or stops based on the strobe signals, which are manipulated by the write data.
+
+3. **Data Processing and Interactions**:
+   - **Counter Management**: The main counter (`internal_counter`) loads its initial value from two period registers. On each clock cycle, it decrements unless stopped or forced to reload.
+   - **Force Reload Control**: The timer forces reload when new period values are written.
+   - **Timeout Detection**: It detects a zero count, triggering a timeout event, updating the timeout status, and potentially setting the interrupt flag.
+   - **Handling Snapshots**: The current counter value can be captured (snapshotted) on demand and read back when addressed.
+
+4. **Outputs and Register Interactions**:
+   - **Register Writes**: The module updates period registers, control registers, and snapshots based on the write strobes.
+   - **Register Reads**: It uses a multiplexer to route the correct register data to the output based on the provided address.
+
+Overall, this module is a countdown timer with configurable period and interrupt capabilities, controlled via bus writes and reads, with snapshot functionalities for monitoring the counter value.
+
+Module Interface:
+module high_resolution_timer (
+    address,
+    chipselect,
+    clk,
+    reset_n,
+    write_n,
+    writedata,
+    irq,
+    readdata
+);
+
+Behavioral Clarifications:
+- On reset, `internal_counter` initializes to 32'h63 (99 decimal). `period_l_register` initializes to 99 and `period_h_register` initializes to 0, giving a default 32-bit load value of 99.
+- The 4-bit `control_register` bit 0 is interrupt enable, bit 1 is continuous mode; writedata[2] and writedata[3] serve as start and stop strobes on control address writes.

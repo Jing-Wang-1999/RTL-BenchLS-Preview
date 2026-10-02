@@ -1,0 +1,57 @@
+module origen_075199 (
+    input wire I_clk,
+    input wire [7:0] I_tx_data,
+    input wire I_tx_start,
+    input wire I_spi_miso,
+    output reg O_spi_mosi,
+    output wire O_spi_clk,
+    output reg [7:0] O_rx_data,
+    output reg O_busy
+);
+
+    reg [7:0] txbuffer, rxbuffer;
+    reg [1:0] clkcounter;
+    reg spiclk, lastspiclk;
+    wire risingclk, fallingclk;
+    reg [3:0] bitcounter;
+    reg [1:0] state;
+
+    localparam IDLE = 2'b00, ACTIVE = 2'b01;
+
+    assign O_spi_clk = spiclk;
+    assign risingclk = spiclk & ~lastspiclk;
+    assign fallingclk = ~spiclk & lastspiclk;
+
+    always @(posedge I_clk) begin
+        lastspiclk <= spiclk;
+        clkcounter <= clkcounter + 1;
+        spiclk <= clkcounter[1];
+
+        case (state)
+            IDLE: begin
+                O_busy <= 0;
+                if (I_tx_start && fallingclk) begin
+                    state <= ACTIVE;
+                    txbuffer <= I_tx_data;
+                    bitcounter <= 4'd8;
+                    O_busy <= 1;
+                end
+            end
+
+            ACTIVE: begin
+                if (risingclk) begin
+                    rxbuffer <= {rxbuffer[6:0], I_spi_miso};
+                    bitcounter <= bitcounter - 1;
+                    if (bitcounter == 0) begin
+                        state <= IDLE;
+                        O_rx_data <= {rxbuffer[6:0], I_spi_miso};
+                    end
+                end else if (fallingclk) begin
+                    O_spi_mosi <= txbuffer[7];
+                    txbuffer <= {txbuffer[6:0], 1'b0};
+                end
+            end
+        endcase
+    end
+
+endmodule

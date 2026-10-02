@@ -1,0 +1,98 @@
+module origen_069061(
+    input CLK_5M,
+    inout sda,
+    output reg SCK,
+    output reg [15:0] data,
+    output reg output_light,
+    input reset
+);
+
+parameter addr = 8'b10010000;
+parameter w_adder = 7'b1010000;
+parameter r_adder = 7'b1010001;
+
+reg [15:0] num;
+reg CLK;
+reg [4:0] state;
+reg [23:0] receive;
+reg [1:0] sda_r;
+wire sda_negedge;
+reg sendstate;
+reg pp_1, pp_2;
+reg sda_out;
+
+always @(posedge CLK_5M or negedge reset) begin
+    if (!reset) begin
+        num <= 16'd0;
+        CLK <= 1'b0;
+    end else begin
+        if (num == 16'd4) begin
+            num <= 16'd0;
+            CLK <= ~CLK;
+        end else begin
+            num <= num + 1'b1;
+        end
+    end
+end
+
+always @(posedge CLK or negedge reset) begin
+    if (!reset) begin
+        sda_r <= 2'b11;
+    end else begin
+        sda_r <= {sda_r[0], sda};
+    end
+end
+
+assign sda_negedge = (sda_r == 2'b10);
+
+always @(posedge CLK or negedge reset) begin
+    if (!reset) begin
+        state <= 5'b10111;
+        sendstate <= 1'b0;
+        SCK <= 1'b1;
+        pp_1 <= 1'b0;
+        pp_2 <= 1'b0;
+        receive <= 24'd0;
+        data <= 16'd0;
+    end else begin
+        if (sda_negedge && !sendstate) begin
+            sendstate <= 1'b1;
+            state <= 5'b10111;
+        end else if (sendstate) begin
+            if (state == 5'd0) begin
+                sendstate <= 1'b0;
+                data <= receive[23:8];
+            end else begin
+                state <= state - 1'b1;
+            end
+            
+            if (state[0] == 1'b0) begin
+                SCK <= 1'b0;
+                pp_1 <= 1'b1;
+            end else begin
+                if (pp_1) begin
+                    receive <= {receive[22:0], sda};
+                    pp_1 <= 1'b0;
+                end
+                SCK <= 1'b1;
+                pp_2 <= 1'b1;
+            end
+            
+            if (pp_2) begin
+                pp_2 <= 1'b0;
+            end
+        end
+    end
+end
+
+assign sda = (sda_out) ? 1'bz : 1'b0;
+
+always @(posedge CLK or negedge reset) begin
+    if (!reset) begin
+        output_light <= 1'b0;
+    end else begin
+        output_light <= SCK;
+    end
+end
+
+endmodule

@@ -1,0 +1,77 @@
+module rtlpp_03278 (
+    input wire data,
+    input wire enable,
+    input wire shift,
+    input wire rst,
+    input wire sync_rst,
+    input wire clk,
+    output wire crc_out,
+    output wire crc_match
+);
+
+    // 32-bit CRC register
+    reg [31:0] crc_reg;
+    
+    // CRC output is MSB of the register
+    assign crc_out = crc_reg[31];
+    
+    // CRC match indicates all zeros
+    assign crc_match = (crc_reg == 32'h00000000);
+    
+    // Compute feedback bit (XOR of data with MSB)
+    wire feedback;
+    assign feedback = data ^ crc_reg[31];
+    
+    // CRC computation logic
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            // Asynchronous reset to all ones
+            crc_reg <= 32'hFFFFFFFF;
+        end
+        else if (sync_rst) begin
+            // Synchronous reset to all ones
+            crc_reg <= 32'hFFFFFFFF;
+        end
+        else if (enable) begin
+            // CRC computation mode
+            // Apply polynomial taps at positions: 0, 1, 2, 4, 5, 7, 8, 10, 11, 12, 16, 22, 23, 26
+            crc_reg[0]  <= feedback;
+            crc_reg[1]  <= crc_reg[0] ^ feedback;
+            crc_reg[2]  <= crc_reg[1] ^ feedback;
+            crc_reg[3]  <= crc_reg[2];
+            crc_reg[4]  <= crc_reg[3] ^ feedback;
+            crc_reg[5]  <= crc_reg[4] ^ feedback;
+            crc_reg[6]  <= crc_reg[5];
+            crc_reg[7]  <= crc_reg[6] ^ feedback;
+            crc_reg[8]  <= crc_reg[7] ^ feedback;
+            crc_reg[9]  <= crc_reg[8];
+            crc_reg[10] <= crc_reg[9] ^ feedback;
+            crc_reg[11] <= crc_reg[10] ^ feedback;
+            crc_reg[12] <= crc_reg[11] ^ feedback;
+            crc_reg[13] <= crc_reg[12];
+            crc_reg[14] <= crc_reg[13];
+            crc_reg[15] <= crc_reg[14];
+            crc_reg[16] <= crc_reg[15] ^ feedback;
+            crc_reg[17] <= crc_reg[16];
+            crc_reg[18] <= crc_reg[17];
+            crc_reg[19] <= crc_reg[18];
+            crc_reg[20] <= crc_reg[19];
+            crc_reg[21] <= crc_reg[20];
+            crc_reg[22] <= crc_reg[21] ^ feedback;
+            crc_reg[23] <= crc_reg[22] ^ feedback;
+            crc_reg[24] <= crc_reg[23];
+            crc_reg[25] <= crc_reg[24];
+            crc_reg[26] <= crc_reg[25] ^ feedback;
+            crc_reg[27] <= crc_reg[26];
+            crc_reg[28] <= crc_reg[27];
+            crc_reg[29] <= crc_reg[28];
+            crc_reg[30] <= crc_reg[29];
+            crc_reg[31] <= crc_reg[30];
+        end
+        else if (shift) begin
+            // Shift mode - shift left by one position, insert zero at LSB
+            crc_reg <= {crc_reg[30:0], 1'b0};
+        end
+    end
+
+endmodule

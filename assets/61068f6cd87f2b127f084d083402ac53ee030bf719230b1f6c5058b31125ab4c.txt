@@ -1,0 +1,55 @@
+module origen_128443 (
+    input wire A,
+    input wire B,
+    input wire VPWR,
+    input wire VGND,
+    input wire VPB,
+    input wire VNB,
+    output wire Y
+);
+
+    reg A_reg, B_reg;
+    wire Y_wire;
+
+    // NOR gate logic
+    assign Y_wire = !(A_reg | B_reg);
+
+    // Output assignment
+    assign Y = Y_wire;
+
+    // Input registers
+    always @(posedge VPWR or negedge VGND) begin
+        if (!VGND) begin
+            A_reg <= 1'b0;
+            B_reg <= 1'b0;
+        end else begin
+            A_reg <= A;
+            B_reg <= B;
+        end
+    end
+
+    // Simulation initialization
+    initial begin
+        A_reg = 1'bx;
+        B_reg = 1'bx;
+        #20 A_reg = 1'b0;
+        #20 B_reg = 1'b0;
+        #20 force VGND = 1'b0;
+        #20 force VNB = 1'b0;
+        #20 force VPB = 1'b0;
+        #20 force VPWR = 1'b0;
+        #20 force VPWR = 1'b1;
+        #20 force VPB = 1'b1;
+        #20 force VNB = 1'b1;
+        #20 force VGND = 1'b1;
+        #20 B_reg = 1'b1;
+        #20 A_reg = 1'b1;
+        #340 A_reg = 1'bx;
+        #20 B_reg = 1'bx;
+        #20 release VGND;
+        #20 release VNB;
+        #20 release VPB;
+        #20 release VPWR;
+    end
+
+endmodule

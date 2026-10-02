@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.54594d3aa1736775f7f5.94e5a268ab02",
+  "compile_check": {
+    "case_id": "s1derived.54594d3aa1736775f7f5.94e5a268ab02",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_10557",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10557.c5e6b2b5be9a838a/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.54594d3aa1736775f7f5",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "54594d3aa1736775f7f588aa1fc9ffa0680d6e7e62381d4692a1633684be66b8",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.54594d3aa1736775f7f5.94e5a268ab02",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10557.c5e6b2b5be9a838a/private/commercial_positive.log",
+    "commercial_log_sha256": "a271d524dbf69bcf210f6ecb4739dbbf206f154202851c9a7891fe19a4bd0cff",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10557.c5e6b2b5be9a838a/private/historical_harness/00_sec_mg_10557.tcl",
+    "executed_script_sha256": "d32707872e74a9a5f50d0660e7bba29580619ee41528d5a46a408c560bee7375",
+    "golden_tops": [
+      "mg_10557"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.mg_10557.c5e6b2b5be9a838a",
+    "parent_id": "s1p.54594d3aa1736775f7f5",
+    "revised_tops": [
+      "mg_10557"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_10557",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.54594d3aa1736775f7f5.94e5a268ab02",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Compared every one of the 44 hexadecimal samples, wavelength truncation and undriven/out-of-range boundary. Default valid-index ROM behavior is complete.",
+        "rtl_excerpt": "assign wave[43] = 16'hEDC9;",
+        "specification_excerpt": "callers must restrict `pos` to 0\u201343"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.54594d3aa1736775f7f5",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "f604f5e7798571d5f39c9880fb4c9c07f8b836e96d91222ff33098c1a1ea2ba8",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "54594d3aa1736775f7f588aa1fc9ffa0680d6e7e62381d4692a1633684be66b8",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10557.c5e6b2b5be9a838a/private/historical_harness/00_sec_mg_10557.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10557.c5e6b2b5be9a838a/private/historical_harness/01_sec_mg_10557.tcl"
+  ],
+  "parent_id": "s1p.54594d3aa1736775f7f5",
+  "primary_review": {
+    "case_id": "s1derived.54594d3aa1736775f7f5.94e5a268ab02",
+    "checks": {
+      "behavior": "The specification omits the undefined index 44/out-of-range behavior and the exact waveform table.",
+      "boundaries": "The repair explicitly covers indexing, wrap, startup, and latency boundaries.",
+      "interface": "Interface is repairable as documented in the proposed specification.",
+      "rtl_reasonableness": "The circuit is coherent and reasonable for its stated hardware role.",
+      "sequential_and_reset": "The repair states the actual clock/reset/hold timing."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The specification omits the undefined index 44/out-of-range behavior and the exact waveform table.",
+        "rtl_excerpt": "wave is declared [WAVELENGTH:0], entries 0..43 alone are assigned, and value is wave[pos].",
+        "spec_excerpt": "It promises a fixed 44-sample waveform selected by an 8-bit position."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification omits the undefined index 44/out-of-range behavior and the exact waveform table.",
+        "rtl_evidence": "wave is declared [WAVELENGTH:0], entries 0..43 alone are assigned, and value is wave[pos].",
+        "spec_evidence": "It promises a fixed 44-sample waveform selected by an 8-bit position.",
+        "type": "missing_boundary"
+      }
+    ],
+    "parent_id": "s1p.54594d3aa1736775f7f5",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_05/s1derived.54594d3aa1736775f7f5.94e5a268ab02.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "54594d3aa1736775f7f588aa1fc9ffa0680d6e7e62381d4692a1633684be66b8",
+    "source_group": "S5",
+    "specification_sha256": "94e5a268ab02771430c478231de5d042e031e26d06ee88798aa342fac02333a9",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_05/s1derived.54594d3aa1736775f7f5.94e5a268ab02.md",
+  "qualified_specification_sha256": "f604f5e7798571d5f39c9880fb4c9c07f8b836e96d91222ff33098c1a1ea2ba8",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10557.c5e6b2b5be9a838a/private/golden_design.v",
+  "rtl_sha256": "54594d3aa1736775f7f588aa1fc9ffa0680d6e7e62381d4692a1633684be66b8",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10557.c5e6b2b5be9a838a/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "94e5a268ab02771430c478231de5d042e031e26d06ee88798aa342fac02333a9",
+  "top_module": "mg_10557"
+}

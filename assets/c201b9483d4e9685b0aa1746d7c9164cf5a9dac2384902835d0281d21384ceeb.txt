@@ -1,0 +1,37 @@
+The radar Verilog module is designed to implement a radar system's transmit (TX) and receive (RX) functionalities with control and data flow mechanisms for signal processing.
+
+### Summary of the Primary Function:
+The module primarily facilitates radar signal transmission and reception by controlling various operations like frequency start, frequency increment, amplitude adjustments, and pulse numbering.
+
+### Key Control Flow and Decision Points:
+1. **Strobe Signal Handling**: When `s_strobe_i` is active, the module reads data and addresses from inputs `sdata_i` and `saddr_i` to configure operational parameters like `tx_ctrl`, `rx_ctrl`, `ampl`, `fstart`, `fincr`, and `pulse_num`.
+2. **Reset Operation**: On reset, initiated by the `reset` signal, the module sets specific output signals (`tx_dac_i_o`, `tx_dac_q_o`, `rx_ech_i_o`, `rx_ech_q_o`, `rx_strobe_o`) to their initial states.
+
+### Important Data Processing and Signal Interactions:
+1. **Transmit Data Handling**: When `s_strobe_i` is high, `tx_ctrl` is initiated based on `saddr_i`. The transmission DAC outputs (`tx_dac_i_o` and `tx_dac_q_o`) are calculated using the amplitude (`ampl`) and frequency start (`fstart`) or increment (`fincr`) values derived from `sdata_i`.
+2. **Receive Data Handling**: `rx_ctrl` management happens similarly based on `saddr_i`. The module processes incoming ADC data (`rx_adc_i_i` and `rx_adc_q_i`), combining them with `pulse_num` to generate echo outputs (`rx_ech_i_o` and `rx_ech_q_o`).
+3. **Enable Signals**: The `io_tx_ena_o` signal is set high when `s_strobe_i` is active, indicating the module is ready to transmit. The `rx_strobe_o` signal is managed based on the `debug_enabled` wire, which is derived from `dbg_o`.
+
+Given these detailed operations, your task is to generate the Verilog code for the radar module ensuring all control flows and data dependencies align correctly to form a robust radar signal processing unit.
+
+Module Interface:
+module radar_timing_controller(
+   input         clk_i,
+   input  [6:0]  saddr_i,
+   input  [31:0] sdata_i,
+   input         s_strobe_i,
+   output        tx_side_o,
+   output        tx_strobe_o,
+   output [13:0] tx_dac_i_o,
+   output [13:0] tx_dac_q_o,
+   output        io_tx_ena_o,
+   input  [15:0] rx_adc_i_i,
+   input  [15:0] rx_adc_q_i,
+   output        rx_strobe_o,
+   output [15:0] rx_ech_i_o,
+   output [15:0] rx_ech_q_o
+);
+
+Behavioral Clarifications:
+- The controller sequential block is sensitive to posedge clk_i only (no asynchronous reset); tx_ctrl is set when saddr_i==7'h01, rx_ctrl when saddr_i==7'h02, ampl (16-bit) when 7'h03, fstart (32-bit) when 7'h04, fincr (32-bit) when 7'h05, pulse_num (16-bit) when 7'h06.
+- The TX and RX always blocks are sensitive to posedge clk_i and posedge reset; internal reset signal is derived from a register cleared when s_strobe_i is active.

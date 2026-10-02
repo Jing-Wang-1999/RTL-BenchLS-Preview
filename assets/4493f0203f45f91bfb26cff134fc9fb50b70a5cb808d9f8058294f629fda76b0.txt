@@ -1,0 +1,47 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/22438",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/22437",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 22438,
+  "issue_number": 22437,
+  "verilog_files": [
+    "hw/ip/usbdev/rtl/usb_fs_nb_in_pe.sv"
+  ],
+  "deletions": 3,
+  "additions": 3,
+  "patches": [
+    {
+      "filename": "hw/ip/usbdev/rtl/usb_fs_nb_in_pe.sv",
+      "patch": "@@ -16,10 +16,10 @@ module usb_fs_nb_in_pe #(\n   parameter logic [4:0] NumInEps = 12,\n   parameter int unsigned MaxInPktSizeByte = 32,\n   // Targeting 17 bit times for the timeout. The counter runs on the 48 MHz\n-  // clock, the SOP delay to rx_pkt_start_i is 3 bit times, and the EOP delay\n-  // to tx_pkt_end_i is essentially 0. This timeout originates from Section\n+  // clock, the SOP delay to rx_pkt_start_i is 1.5 bit times (synchronizer flops and K detection),\n+  // and the EOP delay to tx_pkt_end_i is essentially 0. This timeout originates from Section\n   // 7.1.19.1 of the USB 2.0 specification.\n-  parameter int unsigned AckTimeoutCnt = (17 + 3) * 4,\n+  parameter int unsigned AckTimeoutCnt = ((17 * 4) + 6) - 1,  // -1 because [N-1:0] counted\n   localparam int unsigned InEpW = $clog2(NumInEps), // derived parameter\n   localparam int unsigned PktW = $clog2(MaxInPktSizeByte), // derived parameter\n   localparam int unsigned AckTimeoutCntW = $clog2(AckTimeoutCnt) // derived parameter",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6
+    }
+  ],
+  "pr_info": {
+    "title": "[usbdev] Reduce timeout interval",
+    "body": "Time out in the event of a missing handshake response from the host was tardy. Must time out after 16-18 bit intervals (7.1.19.1) and the calculation anticipated a longer delay in the receipt of 'rx_pkt_start_i' signaling.\r\n\r\nThis PR reduces the time out to 17 bit intervals plus the 1.5 bit intervals for the SOP be seen within the IN packet engine.\r\n\r\nFixes #22437, from observations in simulation.",
+    "state": "closed",
+    "created_at": "2024-04-04T19:09:57Z",
+    "updated_at": "2024-04-05T10:42:17Z",
+    "merged_at": "2024-04-05T10:42:17Z",
+    "user": "alees24"
+  },
+  "issue_info": {
+    "title": "[usbdev] Timeout too long on host handshake response",
+    "body": "### Description\n\nThe IN side logic must time out in the event of a missing handshake response from the host. It is permitted to time out/after 16 bit intervals measured at the device ports (SE0->J transition to to SOP transition J->K) but must time out before 18 bit intervals.\r\n\r\nThe comment and counter initialization value at the top of 'usb_fs_nb_in_pe.sv' claim to be targeting 17 bit intervals and that there is a 3 bit interval delay before the receipt of 'rx_pkt_start_i' after the SOP transition at the port pins. In fact rx_pkt_start_i is asserted 1.5 bit intervals after the SOP transition at the usbdev ports - 0.5 bit interval delay through the 2 synchronizer flops, and 1 bit interval of K signaling.\r\n\r\nThe value of (17 + 3) * 4 therefore results in a time out occurring after ca. 19 bit intervals at the ports, which is unlikely to cause problems, but could be improved.\r\n\r\n(Background: observations in sim having deliberately modified the usbdpi model to drop the ACK following an IN DATA packet.)\r\n",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2024-04-04T18:57:21Z",
+    "updated_at": "2024-04-05T10:42:18Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 615
+  },
+  "base_commit": "2723ca659d32a153da6be2a50e45123d2302c319",
+  "head_commit": "6e9bb597b448214210e3759d1ad3a12cbbe499e8",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_22438_22437",
+  "lec_status": "useful_pass"
+}

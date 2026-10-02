@@ -1,0 +1,20 @@
+always @(posedge clk or negedge rst_n)
+		if (!rst_n) begin
+			CS <= 3'd0;
+			rdata_q <= 32'b0;
+			data_misaligned_q <= 1'b0;
+			misaligned_addr_o <= 32'b0;
+		end
+		else begin
+			CS <= NS;
+			if (lsu_update_addr_o) begin
+				data_misaligned_q <= data_misaligned;
+				if (increase_address)
+					misaligned_addr_o <= data_addr_int;
+			end
+			if (data_rvalid_i && !data_we_q)
+				if (data_misaligned_q || data_misaligned)
+					rdata_q <= data_rdata_i;
+				else
+					rdata_q <= data_rdata_ext;
+		end

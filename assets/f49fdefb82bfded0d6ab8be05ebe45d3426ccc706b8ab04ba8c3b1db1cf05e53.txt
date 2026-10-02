@@ -1,0 +1,27 @@
+module autovcoder_067172 #(parameter width_a = 4, parameter signd_a = 1, parameter width_s = 2, parameter width_z = 8) (
+    input [width_a-1:0] a,
+    input [width_s-1:0] s,
+    output [width_z-1:0] z
+);
+    function [width_z-1:0] fshl_u;
+        input [width_a-1:0] a;
+        input [width_s-1:0] s;
+        input integer width_z;
+        input integer signd_a;
+        reg [width_z-1:0] extended_a;
+        begin
+            if (signd_a) begin
+                // Sign-extend the input 'a' if signed
+                extended_a = {{(width_z-width_a){a[width_a-1]}}, a};
+            end else begin
+                // Zero-extend the input 'a' if unsigned
+                extended_a = {{(width_z-width_a){1'b0}}, a};
+            end
+            // Perform the left shift operation
+            fshl_u = extended_a << s;
+        end
+    endfunction
+
+    assign z = fshl_u(a, s, width_z, signd_a);
+
+endmodule

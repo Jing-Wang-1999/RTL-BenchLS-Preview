@@ -1,0 +1,14 @@
+always @* begin
+    write = 1'b0;
+
+    wr_ptr_next = wr_ptr_reg;
+
+    if (s_axi_wvalid) begin
+        // input data valid
+        if (!full && !hold) begin
+            // not full, perform write
+            write = 1'b1;
+            wr_ptr_next = wr_ptr_reg + 1;
+        end
+    end
+end

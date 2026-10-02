@@ -1,0 +1,125 @@
+module origen_210953(
+    input clock,
+    input reset,
+    output reg a, b, c, d, e, f, g,
+    output reg dp,
+    output reg [3:0] an
+);
+
+reg [28:0] ticker;
+reg [2:0] clickcount;
+reg [6:0] first, second, third, fourth;
+
+wire click;
+assign click = (ticker == 29'd50000000);
+
+always @(posedge clock or posedge reset) begin
+    if (reset) begin
+        ticker <= 29'd0;
+        clickcount <= 3'd0;
+    end
+    else begin
+        ticker <= ticker + 29'd1;
+        if (click) begin
+            ticker <= 29'd0;
+            clickcount <= clickcount + 3'd1;
+        end
+    end
+end
+
+always @(clickcount) begin
+    case (clickcount)
+        3'd0: begin
+            first <= 7'b1000000; // 'S'
+            second <= 7'b0100001; // 'c'
+            third <= 7'b1000000; // 'S'
+            fourth <= 7'b0100011; // 'r'
+        end
+        3'd1: begin
+            first <= 7'b0100011; // 'r'
+            second <= 7'b0001000; // 'o'
+            third <= 7'b1000000; // 'S'
+            fourth <= 7'b0100011; // 'r'
+        end
+        3'd2: begin
+            first <= 7'b0100011; // 'r'
+            second <= 7'b0100001; // 'c'
+            third <= 7'b0100011; // 'r'
+            fourth <= 7'b0100001; // 'c'
+        end
+        3'd3: begin
+            first <= 7'b0100001; // 'c'
+            second <= 7'b0100001; // 'c'
+            third <= 7'b0100001; // 'c'
+            fourth <= 7'b0100001; // 'c'
+        end
+        3'd4: begin
+            first <= 7'b1000000; // 'S'
+            second <= 7'b1000000; // 'S'
+            third <= 7'b1000000; // 'S'
+            fourth <= 7'b1000000; // 'S'
+        end
+        3'd5: begin
+            first <= 7'b0100011; // 'r'
+            second <= 7'b0100011; // 'r'
+            third <= 7'b0100011; // 'r'
+            fourth <= 7'b0100011; // 'r'
+        end
+        3'd6: begin
+            first <= 7'b0100001; // 'c'
+            second <= 7'b0100001; // 'c'
+            third <= 7'b0100001; // 'c'
+            fourth <= 7'b0100001; // 'c'
+        end
+        3'd7: begin
+            first <= 7'b1000000; // 'S'
+            second <= 7'b1000000; // 'S'
+            third <= 7'b1000000; // 'S'
+            fourth <= 7'b1000000; // 'S'
+        end
+        default: begin
+            first <= 7'b1000000; // 'S'
+            second <= 7'b0100001; // 'c'
+            third <= 7'b1000000; // 'S'
+            fourth <= 7'b0100011; // 'r'
+        end
+    endcase
+end
+
+reg [1:0] count;
+always @(posedge clock) begin
+    if (click) begin
+        count <= count + 2'd1;
+    end
+end
+
+always @(count, first, second, third, fourth) begin
+    case (count)
+        2'd0: begin
+            a <= ~first[6]; b <= ~first[5]; c <= ~first[4];
+            d <= ~first[3]; e <= ~first[2]; f <= ~first[1];
+            g <= ~first[0]; dp <= 1'b1;
+            an <= 4'b1110;
+        end
+        2'd1: begin
+            a <= ~second[6]; b <= ~second[5]; c <= ~second[4];
+            d <= ~second[3]; e <= ~second[2]; f <= ~second[1];
+            g <= ~second[0]; dp <= 1'b1;
+            an <= 4'b1101;
+        end
+        2'd2: begin
+            a <= ~third[6]; b <= ~third[5]; c <= ~third[4];
+            d <= ~third[3]; e <= ~third[2]; f <= ~third[1];
+            g <= ~third[0]; dp <= 1'b1;
+            an <= 4'b1011;
+        end
+        2'd3: begin
+            a <= ~fourth[6]; b <= ~fourth[5]; c <= ~fourth[4];
+            d <= ~fourth[3]; e <= ~fourth[2]; f <= ~fourth[1];
+            g <= ~fourth[0]; dp <= 1'b1;
+            an <= 4'b0111;
+        end
+    endcase
+end
+
+endmodule

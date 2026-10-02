@@ -1,0 +1,46 @@
+{
+  "additions": 4,
+  "base_commit": "ae4a07250710508c2e0bc39f14de4965fdf3efe7",
+  "deletions": 1,
+  "head_commit": "1615f0b019f6eec3f6d488526063ae8fb2223953",
+  "issue_info": {
+    "body": "Tried to run synth yesterday and got a DC error\r\n\r\nError:  .../nightly_220424/opentitan/hw/ip/flash_ctrl/rtl/flash_phy_core.sv:260: The construct 'assignment pattern in port connection' is not supported.  (VER-721)\r\n\r\n![image](https://user-images.githubusercontent.com/35176391/165029336-9c1e3b79-7d42-43c5-8b2f-99f3e72ea118.png)\r\n\r\nThe highlighted line should be fixed",
+    "created_at": "2022-04-25T06:49:00Z",
+    "labels": [],
+    "state": "closed",
+    "title": "flash_phy breaks DC synth",
+    "updated_at": "2022-04-25T20:29:08Z"
+  },
+  "issue_number": 12306,
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/12306",
+  "lec_status": "error",
+  "patches": [
+    {
+      "additions": 4,
+      "changes": 5,
+      "deletions": 1,
+      "filename": "hw/ip/flash_ctrl/rtl/flash_phy_core.sv",
+      "patch": "@@ -239,6 +239,9 @@ module flash_phy_core\n   assign ctrl_req = req_i & rd_stage_idle & ~host_req &\n                     mubi4_test_false_strict(flash_disable[CtrlDisableIdx]);\n \n+  logic [1:0] data_tie_off [2];\n+  assign data_tie_off = '{default: '0};\n+\n   // SEC_CM: PHY_ARBITER.CTRL.REDUN\n   logic phy_req;\n   prim_arbiter_tree_dup #(\n@@ -250,7 +253,7 @@ module flash_phy_core\n     .rst_ni,\n     .req_chk_i('0),\n     .req_i({host_req, ctrl_req}),\n-    .data_i('{1'b0, 1'b0}),\n+    .data_i(data_tie_off),\n     .gnt_o({host_req_rdy_o, ctrl_gnt}),\n     .idx_o(),\n     .valid_o(phy_req),"
+    }
+  ],
+  "pr_info": {
+    "body": "Fixes #12306\r\n\r\nSigned-off-by: Michael Schaffner <msf@opentitan.org>",
+    "created_at": "2022-04-25T17:27:16Z",
+    "merged_at": "2022-04-25T20:29:08Z",
+    "state": "closed",
+    "title": "[flash_ctrl] RTL fix for DC elab failure",
+    "updated_at": "2022-09-30T00:48:08Z",
+    "user": "msfschaffner"
+  },
+  "pr_number": 12316,
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/12316",
+  "repository": "lowRISC/opentitan",
+  "source_info": {
+    "line_number": 1649,
+    "source_file": "12.txt"
+  },
+  "task_id": "lowRISC_opentitan_12316_12306",
+  "verilog_files": [
+    "hw/ip/flash_ctrl/rtl/flash_phy_core.sv"
+  ]
+}

@@ -1,0 +1,98 @@
+// Full Adder module
+module origen_099909(
+    input a, b, cin,
+    output s, cout
+);
+    assign s = a ^ b ^ cin;
+    assign cout = (a & b) | (b & cin) | (a & cin);
+endmodule
+
+// Parameterized Ripple Carry Adder module
+module ripple_carry_adder #(
+    parameter N = 4
+)(
+    input carry_in,
+    input [N-1:0] op1, op2,
+    output [N-1:0] sum,
+    output carry_out
+);
+    wire [N:0] carry;
+    assign carry[0] = carry_in;
+    assign carry_out = carry[N];
+
+    genvar i;
+    generate
+        for (i = 0; i < N; i = i + 1) begin : fa_loop
+            full_adder fa_inst (
+                .a(op1[i]),
+                .b(op2[i]),
+                .cin(carry[i]),
+                .s(sum[i]),
+                .cout(carry[i+1])
+            );
+        end
+    endgenerate
+endmodule
+
+// 5-bit Ripple Carry Adder module
+module ripple_carry_adder_5bit(
+    input carry_in,
+    input [4:0] op1, op2,
+    output [4:0] sum,
+    output carry_out
+);
+    ripple_carry_adder #(.N(5)) rca_5bit (
+        .carry_in(carry_in),
+        .op1(op1),
+        .op2(op2),
+        .sum(sum),
+        .carry_out(carry_out)
+    );
+endmodule
+
+// Test Bench module
+module tb_ripple_carry_adder();
+    parameter OP_WIDTH = 7;
+    
+    reg carry_in;
+    reg [OP_WIDTH-1:0] op1, op2;
+    wire [OP_WIDTH-1:0] sum;
+    wire carry_out;
+    
+    // Instantiate the 7-bit Ripple Carry Adder
+    ripple_carry_adder #(.N(OP_WIDTH)) dut (
+        .carry_in(carry_in),
+        .op1(op1),
+        .op2(op2),
+        .sum(sum),
+        .carry_out(carry_out)
+    );
+    
+    // Test vector variables
+    reg [OP_WIDTH-1:0] expected_sum;
+    reg expected_carry;
+    
+    // Testbench logic
+    initial begin
+        $dumpfile("ripple_carry_adder.vcd");
+        $dumpvars(0, tb_ripple_carry_adder);
+        
+        // Exhaustive testing
+        for (carry_in = 0; carry_in <= 1; carry_in = carry_in + 1) begin
+            for (op1 = 0; op1 < 2**OP_WIDTH; op1 = op1 + 1) begin
+                for (op2 = 0; op2 < 2**OP_WIDTH; op2 = op2 + 1) begin
+                    #10; // Wait for combinational logic to settle
+                    {expected_carry, expected_sum} = op1 + op2 + carry_in;
+                    
+                    // Check result
+                    if ({carry_out, sum} !== {expected_carry, expected_sum}) begin
+                        $error("Test failed for carry_in=%b, op1=%b, op2=%b", carry_in, op1, op2);
+                    end
+                end
+            end
+        end
+        
+        $display("All tests completed");
+        $finish;
+    end
+endmodule

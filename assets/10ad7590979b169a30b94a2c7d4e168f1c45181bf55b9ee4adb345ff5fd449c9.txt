@@ -1,0 +1,101 @@
+module origen_033329 (
+    input wire clk,
+    input wire reset,
+    input wire enable,
+    input wire scl,
+    inout wire sda,
+    output reg [7:0] data_out
+);
+
+    // State encoding
+    localparam IDLE = 3'b000;
+    localparam START_BIT = 3'b001;
+    localparam ADDRESS_BITS = 3'b010;
+    localparam ACK_AD = 3'b011;
+    localparam RECEIVE_DATA = 3'b100;
+    localparam ACK_RD = 3'b101;
+    localparam STOP_BIT = 3'b110;
+
+    reg [2:0] state, next_state;
+    reg [2:0] count_address_bit;
+    reg [2:0] count_data_bit;
+    reg [7:0] shift_reg;
+    reg sda_out;
+    reg enable_to_send_slave;
+
+    // Tri-state buffer for SDA
+    assign sda = enable_to_send_slave ? sda_out : 1'bz;
+
+    // State register
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        next_state = state;
+        case (state)
+            IDLE: if (enable && !sda && scl) next_state = START_BIT;
+            START_BIT: if (!scl) next_state = ADDRESS_BITS;
+            ADDRESS_BITS: if (count_address_bit == 3'b111 && !scl) next_state = ACK_AD;
+            ACK_AD: if (!scl) next_state = RECEIVE_DATA;
+            RECEIVE_DATA: if (count_data_bit == 3'b111 && !scl) next_state = ACK_RD;
+            ACK_RD: if (!scl) next_state = STOP_BIT;
+            STOP_BIT: if (scl && sda) next_state = IDLE;
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Counter and shift register logic
+    always @(posedge scl or posedge reset) begin
+        if (reset) begin
+            count_address_bit <= 3'b000;
+            count_data_bit <= 3'b000;
+            shift_reg <= 8'b0;
+        end else begin
+            case (state)
+                ADDRESS_BITS: begin
+                    shift_reg <= {shift_reg[6:0], sda};
+                    count_address_bit <= count_address_bit + 1;
+                end
+                RECEIVE_DATA: begin
+                    shift_reg <= {shift_reg[6:0], sda};
+                    count_data_bit <= count_data_bit + 1;
+                end
+                default: begin
+                    count_address_bit <= 3'b000;
+                    count_data_bit <= 3'b000;
+                end
+            endcase
+        end
+    end
+
+    // Output logic
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            data_out <= 8'b0;
+            sda_out <= 1'b1;
+            enable_to_send_slave <= 1'b0;
+        end else begin
+            case (state)
+                ACK_AD: begin
+                    sda_out <= 1'b0;
+                    enable_to_send_slave <= 1'b1;
+                end
+                ACK_RD: begin
+                    sda_out <= 1'b0;
+                    enable_to_send_slave <= 1'b1;
+                    data_out <= shift_reg;
+                end
+                default: begin
+                    sda_out <= 1'b1;
+                    enable_to_send_slave <= 1'b0;
+                end
+            endcase
+        end
+    end
+
+endmodule

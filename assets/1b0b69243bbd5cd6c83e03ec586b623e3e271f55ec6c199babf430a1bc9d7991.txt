@@ -1,0 +1,22 @@
+The `mg_04164` module implements a 16-bit Cyclic Redundancy Check (CRC) generator using a linear feedback shift register (LFSR). It processes a single-bit serial data stream on each clock cycle when enabled, producing a 16-bit CRC output.
+
+**Inputs:**
+- `clk`: The system clock signal (positive-edge triggered).
+- `reset`: Synchronous reset signal; when high, it forces the CRC value to its initial state.
+- `enable`: When high, allows the LFSR to shift and update with new data on each clock cycle. When low, the CRC value remains unchanged.
+- `init`: When high and `enable` is active, it re-initializes the LFSR to its initial state without needing a global reset.
+- `data_in`: The single-bit serial data input for CRC computation.
+
+**Outputs:**
+- `crc_out`: A 16-bit output representing the current LFSR state, which is the computed CRC value.
+
+**Operation:**
+On every rising clock edge:
+- If `reset` is high, the LFSR is set to the initial value `0xFFFF`.
+- If `reset` is low and `enable` is high:
+  - If `init` is high, the LFSR is also set to `0xFFFF`.
+  - Otherwise, the LFSR performs one step of a Galois-style update. The update incorporates `data_in` and a feedback term from bit 15 of the LFSR (`lfsr[15]`) into specific tap positions (bits 0, 5, and 12). All other bits shift one position to the left (e.g., `lfsr[1]` takes the previous value of `lfsr[0]`).
+- If `enable` is low, the LFSR retains its previous value.
+
+**Function:**
+The module continuously computes a CRC-16 checksum on the serial input stream. The polynomial appears to be CRC-16-ANSI (also known as CRC-16-IBM), defined by the taps. The initial state is `0xFFFF`. The CRC output reflects the current state after each processed data bit, suitable for serial communication error detection.

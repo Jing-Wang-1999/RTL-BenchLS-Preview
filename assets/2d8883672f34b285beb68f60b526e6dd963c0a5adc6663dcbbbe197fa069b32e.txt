@@ -1,0 +1,39 @@
+always @ (*) begin
+      r2x_idle    = 1'b0;
+      req_idle    = 1'b0;
+      req_ack     = 1'b0;
+      req_ld      = 1'b0;
+      r2b_req     = 1'b0;
+      next_req_st = 2'b00;
+
+      case (req_st)      // synopsys full_case parallel_case
+
+	2'b00 : begin
+	   r2x_idle = ~req;
+	   req_idle = 1'b1;
+	   req_ack = req & b2r_arb_ok;
+	   req_ld = 1'b0;
+	   r2b_req = 1'b0;
+	   next_req_st = (req & b2r_arb_ok) ? 2'b01 : 2'b00;
+	end // case: `REQ_IDLE
+
+	2'b01 : begin
+	   r2x_idle = 1'b0;
+	   req_idle = 1'b0;
+	   req_ack = 1'b0;
+	   req_ld = b2r_ack;
+	   r2b_req = 1'b1;                       // req_gen to bank_req
+	   next_req_st = (b2r_ack ) ? ((page_ovflw_r) ? 2'b10 :2'b00) : 2'b01;
+	end // case: `REQ_ACTIVE
+	2'b10 : begin
+	   r2x_idle = 1'b0;
+	   req_idle = 1'b0;
+	   req_ack  = 1'b0;
+	   req_ld = b2r_ack;
+	   r2b_req = 1'b1;                       // req_gen to bank_req
+	   next_req_st = (b2r_ack) ? 2'b00 : 2'b10;
+	end // case: `REQ_ACTIVE
+
+      endcase // case(req_st)
+
+   end

@@ -1,0 +1,119 @@
+module autovcoder_094468 (
+    latched_full_s,
+    \FSM_sequential_AR_CS_reg[1] ,
+    D,
+    Q,
+    latched_full_s0,
+    clk_IBUF_BUFG,
+    s_rst_n_reg,
+    reg_data,
+    \cmd_reg_reg[6] ,
+    \state_reg[2] ,
+    \state_reg[3] ,
+    \state_reg[2]_0 ,
+    \state_reg[7] ,
+    \state_reg[1] ,
+    \state_reg[0] ,
+    \state_reg[2]_1 ,
+    \state_reg[7]_0 ,
+    E,
+    \curr_data_tx_reg[31]
+);
+  output latched_full_s;
+  output \FSM_sequential_AR_CS_reg[1] ;
+  output [31:0] D;
+  output [7:0] Q;
+  input latched_full_s0;
+  input clk_IBUF_BUFG;
+  input s_rst_n_reg;
+  input [7:0] reg_data;
+  input \cmd_reg_reg[6] ;
+  input \state_reg[2] ;
+  input \state_reg[3] ;
+  input \state_reg[2]_0 ;
+  input [4:0] \state_reg[7] ;
+  input \state_reg[1] ;
+  input \state_reg[0] ;
+  input \state_reg[2]_1 ;
+  input \state_reg[7]_0 ;
+  input [0:0] E;
+  input [31:0] \curr_data_tx_reg[31] ;
+
+  wire [31:0] D;
+  wire [0:0] E;
+  wire \FSM_sequential_AR_CS_reg[1] ;
+  wire [7:0] Q;
+  wire clk_IBUF_BUFG;
+  wire \cmd_reg_reg[6] ;
+  wire [31:0] \curr_data_tx_reg[31] ;
+  wire \data_reg[0]_3 ;
+  wire \data_reg[1]_4 ;
+  wire \data_reg[2]_5 ;
+  wire \data_reg[3]_2 ;
+  wire \data_reg[4]_8 ;
+  wire \data_reg[5]_7 ;
+  wire \data_reg[6]_9 ;
+  wire \data_reg[7]_6 ;
+  wire full_dn;
+  wire latched_full_s;
+  wire latched_full_s0;
+  wire [7:0] reg_data;
+  wire s_rst_n_reg;
+  wire \state_reg[0] ;
+  wire \state_reg[1] ;
+  wire \state_reg[2] ;
+  wire \state_reg[2]_0 ;
+  wire \state_reg[2]_1 ;
+  wire \state_reg[3] ;
+  wire [4:0] \state_reg[7] ;
+  wire \state_reg[7]_0 ;
+
+  dc_data_buffer buffer (
+      .D(D),
+      .E(\data_reg[7]_6 ),
+      .clk_IBUF_BUFG(clk_IBUF_BUFG),
+      .\cmd_reg_reg[6] (\cmd_reg_reg[6] ),
+      .\curr_data_tx_reg[31] (\curr_data_tx_reg[31] ),
+      .reg_data(reg_data),
+      .s_rst_n_reg(s_rst_n_reg),
+      .\state_reg[1] (\data_reg[3]_2 ),
+      .\state_reg[1]_0 (\data_reg[2]_5 ),
+      .\state_reg[1]_1 (\data_reg[1]_4 ),
+      .\state_reg[1]_2 (\data_reg[0]_3 ),
+      .\state_reg[2] (\state_reg[2] ),
+      .\state_reg[2]_0 (\state_reg[2]_1 ),
+      .\state_reg[7] (\state_reg[7]_0 ),
+      .\state_reg[7]_0 (\data_reg[6]_9 ),
+      .\state_reg[7]_1 (\data_reg[5]_7 ),
+      .\state_reg[7]_2 (\data_reg[4]_8 )
+  );
+  dc_full_detector full (
+      .\FSM_sequential_AR_CS_reg[1] (\FSM_sequential_AR_CS_reg[1] ),
+      .clk_IBUF_BUFG(clk_IBUF_BUFG),
+      .full_dn(full_dn),
+      .latched_full_s(latched_full_s),
+      .latched_full_s0(latched_full_s0),
+      .s_rst_n_reg(s_rst_n_reg)
+  );
+  dc_token_ring write_tr (
+      .E(\data_reg[7]_6 ),
+      .\FSM_sequential_AR_CS_reg[1] (E),
+      .Q(Q),
+      .clk_IBUF_BUFG(clk_IBUF_BUFG),
+      .\data_reg[0][31] (\data_reg[0]_3 ),
+      .\data_reg[1][31] (\data_reg[1]_4 ),
+      .\data_reg[2][31] (\data_reg[2]_5 ),
+      .\data_reg[3][31] (\data_reg[3]_2 ),
+      .\data_reg[4][31] (\data_reg[4]_8 ),
+      .\data_reg[5][31] (\data_reg[5]_7 ),
+      .\data_reg[6][31] (\data_reg[6]_9 ),
+      .full_dn(full_dn),
+      .s_rst_n_reg(s_rst_n_reg),
+      .\state_reg[0]_0 (\state_reg[0] ),
+      .\state_reg[1]_0 (\state_reg[1] ),
+      .\state_reg[2]_0 (\state_reg[2]_0 ),
+      .\state_reg[3]_0 (\state_reg[3] ),
+      .\state_reg[7]_0 (\state_reg[7] )
+  );
+endmodule
+

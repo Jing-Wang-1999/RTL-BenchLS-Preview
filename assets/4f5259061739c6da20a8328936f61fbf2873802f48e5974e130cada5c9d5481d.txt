@@ -1,0 +1,65 @@
+module rtlpp_00826(CLOCK, 
+                 A, 
+                 B, 
+                 C, 
+                 D);
+   
+   input CLOCK;
+   output A;
+   output B;
+   output C;
+   output D;
+   
+   reg A_DUMMY;
+   reg B_DUMMY;
+   reg C_DUMMY;
+   reg D_DUMMY;
+   
+   assign A = A_DUMMY;
+   assign B = B_DUMMY;
+   assign C = C_DUMMY;
+   assign D = D_DUMMY;
+   
+   reg XLXN_2 = 1;
+   wire XLXN_6;
+   wire XLXN_11;
+   wire XLXN_22;
+   wire XLXN_26;
+   
+   assign XLXN_6 = !A_DUMMY;
+   assign XLXN_11 = XLXN_6 & D_DUMMY;
+   assign XLXN_22 = D_DUMMY & C_DUMMY;
+   assign XLXN_26 = B_DUMMY & C_DUMMY & D_DUMMY;
+   
+   always @(posedge CLOCK)
+     begin
+       if (!XLXN_2 & XLXN_2)
+         D_DUMMY <= 0;
+       else if (XLXN_2 & !XLXN_2)
+         D_DUMMY <= 1;
+       else if (XLXN_2 & XLXN_2)
+         D_DUMMY <= !D_DUMMY;
+      
+       if (!XLXN_11 & D_DUMMY)
+         C_DUMMY <= 0;
+       else if (XLXN_11 & !D_DUMMY)
+         C_DUMMY <= 1;
+       else if (XLXN_11 & D_DUMMY)
+         C_DUMMY <= !C_DUMMY;
+      
+       if (!XLXN_22 & XLXN_22)
+         B_DUMMY <= 0;
+       else if (XLXN_22 & !XLXN_22)
+         B_DUMMY <= 1;
+       else if (XLXN_22 & XLXN_22)
+         B_DUMMY <= !B_DUMMY;
+      
+       if (!XLXN_26 & D_DUMMY)
+         A_DUMMY <= 0;
+       else if (XLXN_26 & !D_DUMMY)
+         A_DUMMY <= 1;
+       else if (XLXN_26 & D_DUMMY)
+         A_DUMMY <= !A_DUMMY;
+     end
+   
+endmodule

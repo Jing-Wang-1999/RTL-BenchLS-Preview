@@ -1,0 +1,10 @@
+always @(posedge clk or posedge rst)
+begin
+  if (rst) begin
+    cycle <= #1 2'b0;
+    tmp_mul <= #1 16'b0;
+  end else begin
+    if (enable) cycle <= #1 cycle + 2'b1;
+    tmp_mul <= #1 mul_result;
+  end
+end

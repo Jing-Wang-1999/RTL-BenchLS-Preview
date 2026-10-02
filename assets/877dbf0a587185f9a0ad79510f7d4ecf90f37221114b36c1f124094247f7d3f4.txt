@@ -1,0 +1,5 @@
+# rtlpp_11426
+
+Parameters `word_size_in=8` and `word_size_out=20` set signed input `X` and output `Y`; scalar inputs are `clk` and active-low asynchronous `reset`. Reset clears `Y` and all 21 pipeline registers. Each rising edge sets `Y` to the old first accumulator and advances a transposed FIR pipeline using the current signed X.
+
+The coefficient sequence applied at pipeline stages 0 through 20 is `-4,-1,4,9,5,-15,-36,-22,51,161,244,244,161,51,-22,-36,-15,5,9,4,-1`. Each stage adds its coefficient-times-current-X term to the old next stage; stage 20 loads `-X`. Intermediate registers have the exact implementation widths 20,20,20,20,20,20,20,20,19,19,19,19,18,17,16,16,15,14,13,12,10 bits, so arithmetic truncates to those signed widths. `Y` adds one register after stage 0: the stage-0 contribution appears one edge later and the stage-20 contribution 21 edges later. There is no enable or submodule.

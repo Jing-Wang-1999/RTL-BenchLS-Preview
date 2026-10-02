@@ -1,0 +1,12 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/pcf_641b534cab28b50df1.v0.v
+check_sec -analyze -imp -sv ./input/rtl/pcf_641b534cab28b50df1.negative.v
+check_sec -elaborate -spec -top riscv_multiplier -disable_auto_bbox
+check_sec -elaborate -imp -top riscv_multiplier -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clk_i
+reset -expression {rst_i}
+check_sec -gen
+check_sec -prove -strategy proof
+exit

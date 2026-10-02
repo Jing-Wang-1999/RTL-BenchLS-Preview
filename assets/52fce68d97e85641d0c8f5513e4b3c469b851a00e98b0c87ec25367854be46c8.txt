@@ -1,0 +1,110 @@
+module rtlpp_05913 (
+    // Clock and Reset
+    input Clk,
+    input Reset,
+    
+    // Interrupt Interface
+    input Interrupt,
+    input [31:0] Interrupt_Address,
+    output [1:0] Interrupt_Ack,
+    
+    // Instruction Memory Interface
+    output [31:0] Instr_Addr,
+    input [31:0] Instr,
+    output IFetch,
+    output I_AS,
+    input IReady,
+    input IWAIT,
+    input ICE,
+    input IUE,
+    
+    // Data Memory Interface
+    output [31:0] Data_Addr,
+    input [31:0] Data_Read,
+    output [31:0] Data_Write,
+    output D_AS,
+    output Read_Strobe,
+    output Write_Strobe,
+    output [3:0] Byte_Enable,
+    input DReady,
+    input DWait,
+    input DCE,
+    input DUE,
+    
+    // AXI4-Lite Data Port (Master)
+    // Write Address Channel
+    output [31:0] AWADDR,
+    output [2:0] AWPROT,
+    output AWVALID,
+    input AWREADY,
+    
+    // Write Data Channel
+    output [31:0] WDATA,
+    output [3:0] WSTRB,
+    output WVALID,
+    input WREADY,
+    
+    // Write Response Channel
+    input [1:0] BRESP,
+    input BVALID,
+    output BREADY,
+    
+    // Read Address Channel
+    output [31:0] ARADDR,
+    output [2:0] ARPROT,
+    output ARVALID,
+    input ARREADY,
+    
+    // Read Data Channel
+    input [31:0] RDATA,
+    input [1:0] RRESP,
+    input RVALID,
+    output RREADY,
+    
+    // Debug Interface
+    input Dbg_Clk,
+    input Dbg_TDI,
+    output Dbg_TDO,
+    input [7:0] Dbg_Reg_En,
+    input Dbg_Shift,
+    input Dbg_Capture,
+    input Dbg_Update,
+    input Debug_Rst,
+    input Dbg_Disable
+);
+
+    // All outputs are driven to constant inactive states
+    assign Interrupt_Ack = 2'b00;
+    
+    assign Instr_Addr = 32'h00000000;
+    assign IFetch = 1'b0;
+    assign I_AS = 1'b0;
+    
+    assign Data_Addr = 32'h00000000;
+    assign Data_Write = 32'h00000000;
+    assign D_AS = 1'b0;
+    assign Read_Strobe = 1'b0;
+    assign Write_Strobe = 1'b0;
+    assign Byte_Enable = 4'b0000;
+    
+    // AXI4-Lite outputs
+    assign AWADDR = 32'h00000000;
+    assign AWPROT = 3'b000;
+    assign AWVALID = 1'b0;
+    
+    assign WDATA = 32'h00000000;
+    assign WSTRB = 4'b0000;
+    assign WVALID = 1'b0;
+    
+    assign BREADY = 1'b0;
+    
+    assign ARADDR = 32'h00000000;
+    assign ARPROT = 3'b000;
+    assign ARVALID = 1'b0;
+    
+    assign RREADY = 1'b0;
+    
+    // Debug Interface outputs
+    assign Dbg_TDO = 1'b0;
+
+endmodule

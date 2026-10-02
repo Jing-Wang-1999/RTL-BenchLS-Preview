@@ -1,0 +1,65 @@
+`timescale 1ns/1ps
+module tb;
+reg clk=0,reset_n=1; always #5 clk=~clk;
+task tick; begin @(posedge clk); #1; end endtask
+task reset; begin @(negedge clk); reset_n=0; repeat(4) tick; @(negedge clk); reset_n=1; end endtask
+initial begin #10000000; $fatal(1,"timeout"); end
+reg reg_cs=0,reg_wr=0; reg [3:0] reg_addr=0,reg_be=15; reg [31:0] reg_wdata=0;
+wire [31:0] reg_rdata; wire reg_ack;
+task wr; input [3:0] a; input [31:0] d; input [3:0] be;
+begin @(negedge clk);reg_cs=1;reg_wr=1;reg_addr=a;reg_wdata=d;reg_be=be;tick;
+if(reg_ack!==1) $fatal(1,"write ack"); @(negedge clk);reg_cs=0; tick; end endtask
+task rd; input [3:0] a; input [31:0] expected;
+begin @(negedge clk);reg_cs=1;reg_wr=0;reg_addr=a;tick;
+if(reg_ack!==1 || reg_rdata!==expected) $fatal(1,"read %h got %h expected %h",a,reg_rdata,expected);
+@(negedge clk);reg_cs=0;tick;end endtask
+wire sck,so;reg si=0;wire [3:0] cs_n;
+spi_core dut(clk,reset_n,reg_cs,reg_wr,reg_addr,reg_wdata,reg_be,reg_rdata,reg_ack,sck,so,si,cs_n);
+integer bits=0;reg [31:0] captured=0;reg monitor=0;
+always @(posedge sck) if(monitor)begin
+ if(cs_n===4'b1111) $fatal(1,"SCK while all CS idle");
+ captured={captured[30:0],so};bits=bits+1;end
+ task wait_done;integer k;begin k=0;
+ @(negedge clk);reg_cs=1;reg_wr=0;reg_addr=0;
+ while(k<6000)begin tick;if(reg_ack===1 && reg_rdata[31]===0)k=6001;else k=k+1;end
+ if(k==6000)$fatal(1,"SPI request timeout");@(negedge clk);reg_cs=0;tick;end endtask
+initial begin
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=0;wr(1,32'h5d80db62,15);monitor=1;wr(0,32'h80208240,15);wait_done;monitor=0;
+if(bits!=8)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'h00000000);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=1;wr(1,32'he1b0eff3,15);monitor=1;wr(0,32'h80a90210,15);wait_done;monitor=0;
+if(bits!=16)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'hffff0000);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=0;wr(1,32'hb818151c,15);monitor=1;wr(0,32'h80318204,15);wait_done;monitor=0;
+if(bits!=24)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'h00000000);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=1;wr(1,32'h48d8737b,15);monitor=1;wr(0,32'h80b88201,15);wait_done;monitor=0;
+if(bits!=32)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'hffffffff);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=0;wr(1,32'hf00ea885,15);monitor=1;wr(0,32'h80210240,15);wait_done;monitor=0;
+if(bits!=8)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'h00000000);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=1;wr(1,32'hfdbe2324,15);monitor=1;wr(0,32'h80a98210,15);wait_done;monitor=0;
+if(bits!=16)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'hffff0000);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=0;wr(1,32'he1d80a82,15);monitor=1;wr(0,32'h80308204,15);wait_done;monitor=0;
+if(bits!=24)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'h00000000);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=1;wr(1,32'h1c7edbc9,15);monitor=1;wr(0,32'h80b90201,15);wait_done;monitor=0;
+if(bits!=32)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'hffffffff);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=0;wr(1,32'h521aae92,15);monitor=1;wr(0,32'h80218240,15);wait_done;monitor=0;
+if(bits!=8)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'h00000000);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=1;wr(1,32'hc3a0f755,15);monitor=1;wr(0,32'h80a88210,15);wait_done;monitor=0;
+if(bits!=16)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'hffff0000);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=0;wr(1,32'h6b4ab447,15);monitor=1;wr(0,32'h80310204,15);wait_done;monitor=0;
+if(bits!=24)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'h00000000);
+monitor=0;reset;repeat(4)tick;bits=0;captured=0;si=1;wr(1,32'hefbb406f,15);monitor=1;wr(0,32'h80b98201,15);wait_done;monitor=0;
+if(bits!=32)$fatal(1,"SPI edge count %d",bits);if(cs_n!==4'hF)$fatal(1,"CS completion");
+rd(2,32'hffffffff);
+
+$display("RTL_BENCHLS_PASS"); $finish(0); end
+endmodule

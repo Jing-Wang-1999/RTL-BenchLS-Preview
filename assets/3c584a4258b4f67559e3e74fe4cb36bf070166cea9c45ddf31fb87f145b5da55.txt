@@ -1,0 +1,62 @@
+// Synchronous ROM Module
+module origen_115565 #(
+    parameter romVals = "truthtable8.txt",
+    parameter addr_width = 8,
+    parameter data_width = 8
+)(
+    input wire clk,
+    input wire [addr_width-1:0] addr,
+    output reg [data_width-1:0] data
+);
+
+    reg [data_width-1:0] rom [0:(2**addr_width)-1];
+    
+    initial begin
+        $readmemh(romVals, rom);
+    end
+    
+    always @(posedge clk) begin
+        data <= rom[addr];
+    end
+
+endmodule
+
+// Testbench
+module sync_rom_tb;
+
+    reg clk;
+    reg [7:0] addr;
+    wire [7:0] data;
+    
+    sync_rom #(
+        .romVals("truthtable8.txt"),
+        .addr_width(8),
+        .data_width(8)
+    ) dut (
+        .clk(clk),
+        .addr(addr),
+        .data(data)
+    );
+    
+    // Clock generation
+    always #50 clk = ~clk;
+    
+    initial begin
+        clk = 0;
+        addr = 0;
+        
+        // Read all ROM locations
+        repeat (256) begin
+            @(posedge clk);
+            addr = addr + 1;
+        end
+        
+        $finish;
+    end
+    
+    // Optional: Add monitoring for visualization
+    initial begin
+        $monitor("Time=%0t, Address=%h, Data=%h", $time, addr, data);
+    end
+
+endmodule

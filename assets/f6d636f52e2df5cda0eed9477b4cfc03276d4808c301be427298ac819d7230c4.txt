@@ -1,0 +1,48 @@
+### Instruction to Generate Verilog Code for the Given Module
+
+The purpose of the Verilog module is to implement an interface for controlling and monitoring a robotic system. 
+
+1. **Primary Function:**
+   - This Verilog module provides read and write access to various robot control and status registers. The module handles data interaction between external inputs and the internal state of the robot's controls and sensors.
+
+2. **Key Control Flow/Decision Points:**
+   - The module consists of three primary always blocks, each triggered by the positive edge of the clock (`clk`) and influenced by a reset signal (`reset`). 
+   - The first always block handles reading operations based on `AddrIn`, outputting data to `DataOut`.
+   - The second always block manages writing operations when `Wr_Strobe` is active, updating internal registers based on `AddrIn` and `DataIn`.
+   - The third and fourth always blocks are responsible for synchronizing internal registers with the main interface registers and updating system registers, based on the states of `load_sys_regs`, `load_dist_regs`, and `upd_sysregs`.
+
+3. **Important Data Processing/Signal Interactions:**
+   - Data read from the internal state is output through `DataOut` based on the address specified by `AddrIn`. Specific bits within a 4-bit section of `AddrIn` determine which internal register's data should be output.
+   - During a write operation (`Wr_Strobe`), `DataIn` values are stored into internal registers determined by the lower 4 bits of `AddrIn`.
+   - The `reset` signal reinitializes all registers and control flags to zero, ensuring a known startup state.
+   - `load_sys_regs` and `load_dist_regs` flags are used to copy internal register values to the main output registers (`LocX`, `LocY`, `Sensors`, `BotInfo`, `LMDist`, `RMDist`).
+   - The `upd_sysregs` is an additional control signal that influences register updates extending the module's capabilities.
+
+### Implementation in Verilog:
+
+Module Interface:
+module virtual_world_interface(
+    input            Wr_Strobe,		
+    input            Rd_Strobe,		
+    input      [7:0] AddrIn,			
+    input      [7:0] DataIn,			
+    output reg [7:0] DataOut,		
+    input      [7:0] MotCtl,			
+    output reg [7:0] LocX,			
+    output reg [7:0] LocY,			
+    output reg [7:0] BotInfo,		
+    output reg [7:0] Sensors,		
+    output reg [7:0] LMDist,			
+    output reg [7:0] RMDist,			
+    output reg [7:0] MapX,			
+    output reg [7:0] MapY,			
+    input      [1:0] MapVal,			
+    input            clk,			
+    input            reset,			
+    output reg       upd_sysregs,		
+    input      [7:0] BotConfig	
+);
+
+Behavioral Clarifications:
+- There are four sequential always blocks, all on posedge clk with synchronous reset. The read always block (DataOut) has no reset guard and decodes AddrIn[3:0] with a 16-entry case table where all 16 entries are explicitly handled.
+- load_sys_regs and load_dist_regs are toggled (XOR with 1) on writes at addresses 12 and 13 respectively; upd_sysregs toggles at address 14. The output registers (LocX, LocY, etc.) latch to their own current value in the else branch to avoid inferring latches.

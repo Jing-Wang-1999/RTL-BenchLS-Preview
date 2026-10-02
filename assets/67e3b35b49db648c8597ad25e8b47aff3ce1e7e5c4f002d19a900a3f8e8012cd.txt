@@ -1,0 +1,114 @@
+module autovcoder_073432 (
+    a,
+    b,
+    sel,
+    out
+);
+  input a, b;
+  input [3-1:0] sel;
+  output out;
+
+  wire w_not;
+  wire w_nor;
+  wire w_and;
+  wire w_or;
+  wire w_xor;
+  wire w_xnor;
+  wire w_nand0;
+  wire w_nand1;
+  wire [8-1:0] w_decs;
+  wire [8-1:0] w_ands;
+
+  Not_in_nor not0 (
+      w_not,
+      a
+  );
+  Nor_in_nor nor0 (
+      w_nor,
+      a,
+      b
+  );
+  And_in_nor and0 (
+      w_and,
+      a,
+      b
+  );
+  Or_in_nor or0 (
+      w_or,
+      a,
+      b
+  );
+  Xor_in_nor xor0 (
+      w_xor,
+      a,
+      b
+  );
+  Xnor_in_nor xnor0 (
+      w_xnor,
+      a,
+      b
+  );
+  Nand_in_nor nand0 (
+      w_nand0,
+      a,
+      b
+  );
+  Nand_in_nor nand1 (
+      w_nand1,
+      a,
+      b
+  );
+
+  Decoder_3x8_in_nor decoder_3x8_0 (
+      w_decs,
+      sel
+  );
+
+  And_in_nor ands0 (
+      w_ands[0],
+      w_decs[0],
+      w_not
+  );
+  And_in_nor ands1 (
+      w_ands[1],
+      w_decs[1],
+      w_nor
+  );
+  And_in_nor ands2 (
+      w_ands[2],
+      w_decs[2],
+      w_and
+  );
+  And_in_nor ands3 (
+      w_ands[3],
+      w_decs[3],
+      w_or
+  );
+  And_in_nor ands4 (
+      w_ands[4],
+      w_decs[4],
+      w_xor
+  );
+  And_in_nor ands5 (
+      w_ands[5],
+      w_decs[5],
+      w_xnor
+  );
+  And_in_nor ands6 (
+      w_ands[6],
+      w_decs[6],
+      w_nand0
+  );
+  And_in_nor ands7 (
+      w_ands[7],
+      w_decs[7],
+      w_nand1
+  );
+
+  Or_8x1_in_nor or_8x1_0 (
+      out,
+      w_ands
+  );
+
+endmodule
+

@@ -1,0 +1,58 @@
+module origen_053795
+(
+    input wire ap_clk,
+    input wire ap_rst,
+    output reg led_V
+);
+
+// State definitions
+localparam [1:0]
+    ap_ST_fsm_state1 = 2'd1,
+    ap_ST_fsm_state2 = 2'd2;
+
+reg [1:0] ap_CS_fsm;
+wire [1:0] ap_NS_fsm;
+reg [25:0] i_reg_39;
+wire [25:0] i_1_fu_56_p2;
+wire exitcond_fu_50_p2;
+
+// State machine
+always @(posedge ap_clk) begin
+    if (ap_rst) begin
+        ap_CS_fsm <= ap_ST_fsm_state1;
+    end else begin
+        ap_CS_fsm <= ap_NS_fsm;
+    end
+end
+
+// Next state logic
+assign ap_NS_fsm = (ap_CS_fsm == ap_ST_fsm_state1) ? ap_ST_fsm_state2 :
+                   (ap_CS_fsm == ap_ST_fsm_state2 && exitcond_fu_50_p2) ? ap_ST_fsm_state1 :
+                   (ap_CS_fsm == ap_ST_fsm_state2) ? ap_ST_fsm_state2 :
+                   ap_ST_fsm_state1;
+
+// Counter logic
+always @(posedge ap_clk) begin
+    if (ap_rst) begin
+        i_reg_39 <= 26'd0;
+    end else if (ap_CS_fsm == ap_ST_fsm_state2) begin
+        i_reg_39 <= i_1_fu_56_p2;
+    end
+end
+
+assign i_1_fu_56_p2 = i_reg_39 + 26'd1;
+assign exitcond_fu_50_p2 = (i_reg_39 == 26'd49999999);
+
+// LED control
+always @(posedge ap_clk) begin
+    if (ap_rst) begin
+        led_V <= 1'b0;
+    end else if (ap_CS_fsm == ap_ST_fsm_state2) begin
+        led_V <= (i_reg_39 > 26'd24999999);
+    end
+end
+
+// Attribute for synthesis tool
+(* CORE_GENERATION_INFO = "led_control,hls_ip_2022_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7z020-clg400-2,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=others,HLS_SYN_CLOCK=6.290000,HLS_SYN_LAT=-1,HLS_SYN_TPT=none,HLS_SYN_MEM=0,HLS_SYN_DSP=0,HLS_SYN_FF=30,HLS_SYN_LUT=63,HLS_VERSION=2022_2}" *)
+
+endmodule

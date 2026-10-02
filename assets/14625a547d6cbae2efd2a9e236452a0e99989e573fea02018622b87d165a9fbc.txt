@@ -1,0 +1,53 @@
+module autovcoder_097057 #(
+    parameter ActiveLevel = 1,
+    parameter NrOfBits = 8
+)(
+    input Clock,
+    input ClockEnable,
+    input [NrOfBits-1:0] D,
+    input Reset,
+    input Tick,
+    input cs,
+    input pre,
+    output reg [NrOfBits-1:0] Q
+);
+
+    reg [NrOfBits-1:0] pos_reg;
+    reg [NrOfBits-1:0] neg_reg;
+
+    // Positive-edge triggered register
+    always @(posedge Clock or posedge Reset or posedge pre) begin
+        if (Reset) begin
+            pos_reg <= {NrOfBits{1'b0}};
+        end else if (pre) begin
+            pos_reg <= {NrOfBits{1'b1}};
+        end else if (ClockEnable && Tick) begin
+            pos_reg <= D;
+        end
+    end
+
+    // Negative-edge triggered register
+    always @(negedge Clock or posedge Reset or posedge pre) begin
+        if (Reset) begin
+            neg_reg <= {NrOfBits{1'b0}};
+        end else if (pre) begin
+            neg_reg <= {NrOfBits{1'b1}};
+        end else if (ClockEnable && Tick) begin
+            neg_reg <= D;
+        end
+    end
+
+    // Output selection with tri-state control
+    always @* begin
+        if (cs) begin
+            Q = {NrOfBits{1'bz}};
+        end else begin
+            if (ActiveLevel) begin
+                Q = pos_reg;
+            end else begin
+                Q = neg_reg;
+            end
+        end
+    end
+
+endmodule

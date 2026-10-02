@@ -1,0 +1,51 @@
+module autovcoder_139686 (
+    input clk,
+    input rst,
+    input [7:0] data_in,
+    input valid_in,
+    output reg [11:0] code_out,
+    output reg valid_out
+);
+    reg [7:0] dictionary [0:4095]; // Dictionary for LZW
+    reg [11:0] dict_size; // Current size of the dictionary
+    reg [7:0] current_seq [0:255]; // Current sequence being processed
+    reg [7:0] seq_length; // Length of the current sequence
+    reg [11:0] last_code; // Last code outputted
+
+    initial begin
+        dict_size = 0;
+        seq_length = 0;
+        last_code = 0;
+        valid_out = 0;
+    end
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            dict_size <= 0;
+            seq_length <= 0;
+            last_code <= 0;
+            valid_out <= 0;
+        end else if (valid_in) begin
+            if (seq_length == 0 || current_seq[seq_length - 1] == data_in) begin
+                // Extend the current sequence
+                current_seq[seq_length] = data_in;
+                seq_length = seq_length + 1;
+            end else begin
+                // Output the code for the found sequence
+                code_out = last_code; // Output the last code
+                valid_out = 1;
+                last_code = dict_size; // Assign new code for the current sequence
+
+                // Add the new sequence to the dictionary
+                dictionary[dict_size] = current_seq[0]; // Store the sequence in the dictionary
+                dict_size = dict_size + 1;
+
+                // Reset current sequence
+                current_seq[0] = data_in;
+                seq_length = 1;
+            end
+        end else begin
+            valid_out = 0; // No valid output if input is not valid
+        end
+    end
+endmodule

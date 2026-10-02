@@ -1,0 +1,9 @@
+always @(posedge dest_clk) begin
+    if (dest_beat == 1'b1) begin
+      if (dest_last == 1'b1) begin
+        dest_mem_data_strb <= {DATA_WIDTH_MEM_DEST/8{1'b1}} >> ~dest_burst_len_data[BYTES_PER_BEAT_WIDTH_DEST-1:0];
+      end else begin
+        dest_mem_data_strb <= {DATA_WIDTH_MEM_DEST/8{1'b1}};
+      end
+    end
+  end

@@ -1,0 +1,51 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/176",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/25",
+  "repository": "lowRISC/ibex",
+  "pr_number": 176,
+  "issue_number": 25,
+  "verilog_files": [
+    "rtl/ibex_decoder.sv"
+  ],
+  "deletions": 36,
+  "additions": 15,
+  "patches": [
+    {
+      "filename": "rtl/ibex_decoder.sv",
+      "patch": "@@ -299,12 +299,10 @@ module ibex_decoder #(\n \n         // store size\n         unique case (instr[13:12])\n-          2'b00: data_type_o = 2'b10; // SB\n-          2'b01: data_type_o = 2'b01; // SH\n-          2'b10: data_type_o = 2'b00; // SW\n-          default: begin\n-            illegal_insn = 1'b1;\n-          end\n+          2'b00:   data_type_o  = 2'b10; // SB\n+          2'b01:   data_type_o  = 2'b01; // SH\n+          2'b10:   data_type_o  = 2'b00; // SW\n+          default: illegal_insn = 1'b1;\n         endcase\n       end\n \n@@ -325,37 +323,18 @@ module ibex_decoder #(\n \n         // load size\n         unique case (instr[13:12])\n-          2'b00:   data_type_o = 2'b10; // LB\n-          2'b01:   data_type_o = 2'b01; // LH\n-          2'b10:   data_type_o = 2'b00; // LW\n-          default: data_type_o = 2'b00; // illegal or reg-reg\n-        endcase\n-\n-        // reg-reg load (different encoding)\n-        if (instr[14:12] == 3'b111) begin\n-          // offset from RS2\n-          alu_op_b_mux_sel_o = OP_B_REG_B;\n-\n-          // sign/zero extension\n-          data_sign_extension_o = ~instr[30];\n-\n-          // load size\n-          unique case (instr[31:25])\n-            7'b0000_000,\n-            7'b0100_000: data_type_o = 2'b10; // LB, LBU\n-            7'b0001_000,\n-            7'b0101_000: data_type_o = 2'b01; // LH, LHU\n-            7'b0010_000: data_type_o = 2'b00; // LW\n-            default: begin\n-              illegal_insn = 1'b1;\n+          2'b00: data_type_o = 2'b10; // LB(U)\n+          2'b01: data_type_o = 2'b01; // LH(U)\n+          2'b10: begin\n+            data_type_o = 2'b00;      // LW\n+            if (instr[14]) begin\n+              illegal_insn = 1'b1;    // LWU does not exist\n             end\n-          endcase\n-        end\n-\n-        if (instr[14:12] == 3'b011) begin\n-          // LD -> RV64 only\n-          illegal_insn = 1'b1;\n-        end\n+          end\n+          default: begin\n+            illegal_insn = 1'b1;\n+          end\n+        endcase\n       end\n \n       /////////",
+      "additions": 15,
+      "deletions": 36,
+      "changes": 51
+    }
+  ],
+  "pr_info": {
+    "title": "Decoder: remove reg-reg load, make LWU illegal",
+    "body": "The custom reg-reg instruction was added in the original design but is\r\nno longer needed. This commit removes it. Also, load instructions with\r\n`instr[14:12] == 3'b110` are now decoded as illegal.\r\n\r\nThis resolves #25.",
+    "state": "closed",
+    "created_at": "2019-07-19T09:09:48Z",
+    "updated_at": "2019-07-19T17:21:48Z",
+    "merged_at": "2019-07-19T10:29:34Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "Remove reg-reg loads",
+    "body": "reg-reg load (i.e., offset taken from a register and not from an immediate) should not be part of the Ibex ISA.\r\n\r\nThe code at line 261 here:\r\nhttps://github.com/lowRISC/ibex/blob/master/rtl/ibex_decoder.sv\r\n\r\nis a piece of code coming from RISCY and it should be removed.",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL",
+      "Type:Spec-Compliance"
+    ],
+    "state": "closed",
+    "created_at": "2019-05-06T14:07:10Z",
+    "updated_at": "2019-07-19T10:29:34Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 322
+  },
+  "base_commit": "04f4cd44f6b62a48af65f11143278be00d54132b",
+  "head_commit": "fd73277b4309815ce4a2bee786fc5cdd50fc838a",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_176_25",
+  "lec_status": "useful_pass"
+}

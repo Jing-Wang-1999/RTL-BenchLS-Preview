@@ -1,0 +1,15 @@
+The module is a 16-bit counter with overflow tracking, controlled by three enable signals and a clock. It increments on each positive clock edge when not reset.
+
+Inputs:
+- clk: Clock signal.
+- reset: Asynchronous reset; when high, clears the counter and overflow count.
+- enable_1: Enables increment of the upper 12 bits (bits 15:4).
+- enable_2: Enables increment of the upper 8 bits (bits 15:8).
+- enable_3: Enables increment of the upper 4 bits (bits 15:12).
+
+Outputs:
+- count[15:0]: The current 16-bit counter value.
+- overflow_count[3:0]: A 4-bit count of overflow events.
+
+Operation:
+The 16-bit counter is divided into four 4-bit nibbles: bits 3:0 (least significant), bits 7:4, bits 11:8, and bits 15:12 (most significant). The least significant nibble increments on every clock cycle. When it rolls over from 15 to 0, the next nibble (bits 7:4) increments only if enable_1 is high. Similarly, when that nibble rolls over from 15 to 0, the third nibble (bits 11:8) increments only if enable_2 is high. When the third nibble rolls over from 15 to 0, the most significant nibble (bits 15:12) increments only if enable_3 is high. If the most significant nibble rolls over from 15 to 0, the overflow_count increments by one. All increments and overflow tracking are synchronous to the clock, except reset which clears both counter and overflow_count immediately.

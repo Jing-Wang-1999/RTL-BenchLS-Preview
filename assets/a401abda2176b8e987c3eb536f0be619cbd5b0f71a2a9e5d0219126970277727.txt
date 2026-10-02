@@ -1,0 +1,152 @@
+module origen_162224 (
+    input clk,
+    input rst_n,
+    input [7:0] cap_flow,
+    input [7:0] low_flow,
+    output reg [7:0] out_flow
+);
+
+    // State encoding
+    localparam S0 = 4'd0;
+    localparam S1 = 4'd1;
+    localparam S2 = 4'd2;
+    localparam S3 = 4'd3;
+    localparam S4 = 4'd4;
+    localparam S5 = 4'd5;
+    localparam S6 = 4'd6;
+    localparam S7 = 4'd7;
+    localparam S8 = 4'd8;
+    localparam S9 = 4'd9;
+    localparam S10 = 4'd10;
+    localparam S11 = 4'd11;
+
+    reg [3:0] state, next_state;
+
+    // State register
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= S0;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            S0: begin
+                if (cap_flow == 8'h49 && low_flow == 8'h6c)
+                    next_state = S1;
+                else
+                    next_state = S0;
+            end
+            S1: begin
+                if (cap_flow == 8'h4c && low_flow == 8'h6f)
+                    next_state = S2;
+                else
+                    next_state = S0;
+            end
+            S2: begin
+                if (cap_flow == 8'h4c && low_flow == 8'h6f)
+                    next_state = S3;
+                else
+                    next_state = S0;
+            end
+            S3: begin
+                if (cap_flow == 8'h56 && low_flow == 8'h65)
+                    next_state = S4;
+                else
+                    next_state = S0;
+            end
+            S4: begin
+                if (cap_flow == 8'h45 && low_flow == 8'h20)
+                    next_state = S5;
+                else
+                    next_state = S0;
+            end
+            S5: begin
+                if (cap_flow == 8'h59 && low_flow == 8'h6f)
+                    next_state = S6;
+                else
+                    next_state = S0;
+            end
+            S6: begin
+                if (cap_flow == 8'h4f && low_flow == 8'h75)
+                    next_state = S7;
+                else
+                    next_state = S0;
+            end
+            S7: begin
+                if (cap_flow == 8'h21 && low_flow == 8'h00)
+                    next_state = S8;
+                else
+                    next_state = S0;
+            end
+            S8: next_state = S9;
+            S9: next_state = S10;
+            S10: next_state = S11;
+            S11: next_state = S0;
+            default: next_state = S0;
+        endcase
+    end
+
+    // Output logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            out_flow <= 8'h00;
+        end else begin
+            case (state)
+                S0: begin
+                    if (cap_flow == 8'h49 && low_flow == 8'h6c)
+                        out_flow <= 8'h49;
+                    else
+                        out_flow <= 8'h00;
+                end
+                S1: begin
+                    if (cap_flow == 8'h4c && low_flow == 8'h6f)
+                        out_flow <= 8'h6c;
+                    else
+                        out_flow <= 8'h00;
+                end
+                S2: begin
+                    if (cap_flow == 8'h4c && low_flow == 8'h6f)
+                        out_flow <= 8'h6f;
+                    else
+                        out_flow <= 8'h00;
+                end
+                S3: begin
+                    if (cap_flow == 8'h56 && low_flow == 8'h65)
+                        out_flow <= 8'h76;
+                    else
+                        out_flow <= 8'h00;
+                end
+                S4: begin
+                    if (cap_flow == 8'h45 && low_flow == 8'h20)
+                        out_flow <= 8'h65;
+                    else
+                        out_flow <= 8'h00;
+                end
+                S5: begin
+                    if (cap_flow == 8'h59 && low_flow == 8'h6f)
+                        out_flow <= 8'h79;
+                    else
+                        out_flow <= 8'h00;
+                end
+                S6: begin
+                    if (cap_flow == 8'h4f && low_flow == 8'h75)
+                        out_flow <= 8'h6f;
+                    else
+                        out_flow <= 8'h00;
+                end
+                S7: begin
+                    if (cap_flow == 8'h21 && low_flow == 8'h00)
+                        out_flow <= 8'h21;
+                    else
+                        out_flow <= 8'h00;
+                end
+                default: out_flow <= 8'h00;
+            endcase
+        end
+    end
+
+endmodule

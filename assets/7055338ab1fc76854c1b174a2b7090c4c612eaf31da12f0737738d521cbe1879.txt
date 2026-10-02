@@ -1,0 +1,28 @@
+This module is a dual-port, eight-location register file with separate high and low byte storage, plus dedicated access to specific registers.
+
+**Function:** It maintains two independent sets of eight 8-bit registers: a high byte array (`RegsH`) and a low byte array (`RegsL`). It provides three concurrent read ports and one synchronous write port.
+
+**Inputs:**
+*   `clk`: The system clock.
+*   `CEN`: Clock Enable. When high, enables writes on the clock edge.
+*   `WEH`, `WEL`: Write Enables for the high and low byte arrays, respectively.
+*   `AddrA`: 3-bit address for write operations and for the "A" read port.
+*   `DIH`, `DIL`: 8-bit data inputs for writing to the high and low byte arrays.
+*   `AddrB`, `AddrC`: 3-bit addresses for the "B" and "C" read ports.
+
+**Outputs:**
+*   `DOAH`, `DOAL`: High and low byte outputs driven by the register addressed by `AddrA`.
+*   `DOBH`, `DOBL`: High and low byte outputs driven by the register addressed by `AddrB`.
+*   `DOCH`, `DOCL`: High and low byte outputs driven by the register addressed by `AddrC`.
+
+**Operation:**
+On the rising edge of `clk`, if `CEN` is high, data from `DIH` is written to `RegsH[AddrA]` when `WEH` is high, and data from `DIL` is written to `RegsL[AddrA]` when `WEL` is high. All six output ports continuously present the data stored at their respective addresses, independent of the clock.
+
+**Special Register Mapping:** Internally, specific register addresses have pre-defined names and combined outputs:
+*   Address 0: `B` (`RegsH[0]`), `C` (`RegsL[0]`).
+*   Address 1: `D` (`RegsH[1]`), `E` (`RegsL[1]`).
+*   Address 2: `H` (`RegsH[2]`), `L` (`RegsL[2]`).
+*   Address 3 forms a 16-bit value `IX` (`RegsH[3]` concatenated with `RegsL[3]`).
+*   Address 7 forms a 16-bit value `IY` (`RegsH[7]` concatenated with `RegsL[7]`).
+
+**Allowed Sub-modules:** None. The specification is for a monolithic register file block.

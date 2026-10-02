@@ -1,0 +1,58 @@
+always @*
+    begin : api_logic
+      init_new      = 0;
+      next_new      = 0;
+      mode_new      = 0;
+      mode_we       = 0;
+      block_we      = 0;
+      tmp_read_data = 32'h0;
+      tmp_error     = 0;
+
+      if (cs)
+        begin
+          if (we)
+            begin
+              if (address == ADDR_CTRL)
+                begin
+                  init_new = write_data[CTRL_INIT_BIT];
+                  next_new = write_data[CTRL_NEXT_BIT];
+                  mode_new = write_data[CTRL_MODE_BIT];
+                  mode_we  = 1;
+                end
+
+              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK15))
+                block_we = 1;
+            end // if (we)
+
+          else
+            begin
+              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK15))
+                tmp_read_data = block_reg[address[3 : 0]];
+
+              if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7))
+                tmp_read_data = digest_reg[(7 - (address - ADDR_DIGEST0)) * 32 +: 32];
+
+              case (address)
+                // Read operations.
+                ADDR_NAME0:
+                  tmp_read_data = CORE_NAME0;
+
+                ADDR_NAME1:
+                  tmp_read_data = CORE_NAME1;
+
+                ADDR_VERSION:
+                  tmp_read_data = CORE_VERSION;
+
+                ADDR_CTRL:
+                  tmp_read_data = {29'h0, mode_reg, next_reg, init_reg};
+
+                ADDR_STATUS:
+                  tmp_read_data = {30'h0, digest_valid_reg, ready_reg};
+
+                default:
+                  begin
+                  end
+              endcase // case (address)
+            end
+        end
+    end

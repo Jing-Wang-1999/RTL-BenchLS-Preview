@@ -1,0 +1,103 @@
+module autovcoder_069337 (
+    output [3:0] SF_D,
+    output LCD_E,
+    output LCD_RS,
+    output LCD_RW,
+    input clock_in,
+    input sw1,
+    input sw0
+    //output [7:0] s3
+);
+  parameter clock_mode = 2;
+
+  reg [24:0] counter = 25'b0;
+  always @(posedge clock_in) counter <= counter + 1;
+  wire clock;
+  assign clock = counter[clock_mode];
+
+  wire [7:0] w1, w2, w3, w4, w5, w6;
+  assign w1 = 8'd215;
+  assign w2 = 8'd2;
+  assign w3 = 8'd148;
+  assign w4 = 8'd39;
+  assign w5 = 8'd1;
+  assign w6 = 8'd54;
+
+  reg [2:0] signal = {3'b100};
+
+  always @(negedge clock) signal <= {1'b0, signal[2:1]};
+
+  wire [7:0] s0, s1, s2, s3;
+
+  //////////////////////////////////////////////////////
+  wire [31:0] sig1, sig2, sig3, sig4, sig5, sig6;
+  reg [31:0] tsig1, tsig2, tsig3, tsig4, tsig5, tsig6;
+  always @(posedge sig6[31]) begin
+    tsig1 = sig1;
+    tsig2 = sig2;
+    tsig3 = sig3;
+    tsig4 = sig4;
+    tsig5 = sig5;
+    tsig6 = sig6;
+  end
+
+  //////////////////////////////////////////////////////
+
+  berlekamp_messey b1 (
+      .S1(w1),
+      .S2(w2),
+      .S3(w3),
+      .S4(w4),
+      .S5(w5),
+      .S6(w6),
+      .clock(clock),
+      .signal(signal[0]),
+      .w0(s0),
+      .w1(s1),
+      .w2(s2),
+      .w3(s3),
+      .sig1(sig1),
+      .sig2(sig2),
+      .sig3(sig3),
+      .sig4(sig4),
+      .sig5(sig5),
+      .sig6(sig6)
+  );
+  //////////////////////////////////////////////////////////////
+  reg [31:0] data1, data2;
+  always @(*) begin
+    case ({
+      sw1, sw0
+    })
+      2'd0: begin
+        data1 = tsig1;
+        data2 = tsig2;
+      end
+      2'd1: begin
+        data1 = tsig3;
+        data2 = tsig4;
+      end
+      2'd2: begin
+        data1 = tsig5;
+        data2 = tsig6;
+      end
+      default: begin
+        data1 = 32'b1;
+        data2 = {s3, s2, s1, s0};
+      end
+    endcase
+  end
+
+  LCD_hexadecimal #(
+      .no_of_hex_char(16),
+      .delay_rate(10)
+  ) LCD1 (
+      .SF_D  (SF_D),
+      .LCD_E (LCD_E),
+      .LCD_RS(LCD_RS),
+      .LCD_RW(LCD_RW),
+      .data  ({data1, data2}),
+      .clock (clock_in)
+  );
+endmodule
+

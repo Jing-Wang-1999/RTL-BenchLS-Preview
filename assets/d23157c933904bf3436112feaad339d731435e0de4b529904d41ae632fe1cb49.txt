@@ -1,0 +1,163 @@
+module origen_134722 (
+    input [15:0] a,
+    input [15:0] b,
+    input sel,
+    output [31:0] result
+);
+
+    wire [31:0] mult_result;
+    wire [31:0] div_result;
+
+    multiplier mult (
+        .a(a),
+        .b(b),
+        .result(mult_result)
+    );
+
+    divider div (
+        .a(mult_result),
+        .b(b),
+        .result(div_result)
+    );
+
+    mux_2to1 output_mux (
+        .a(mult_result),
+        .b(div_result),
+        .sel(sel),
+        .out(result)
+    );
+
+endmodule
+
+module multiplier (
+    input [15:0] a,
+    input [15:0] b,
+    output [31:0] result
+);
+
+    wire [15:0] partial_products [15:0];
+    wire [31:0] sum [14:0];
+
+    genvar i, j;
+    generate
+        for (i = 0; i < 16; i = i + 1) begin : gen_partial_products
+            assign partial_products[i] = a & {16{b[i]}};
+        end
+
+        for (i = 0; i < 15; i = i + 1) begin : gen_adder_stages
+            wire [31:0] stage_in1, stage_in2;
+
+            if (i == 0) begin
+                assign stage_in1 = ~({16'b0, partial_products[0]});
+                assign stage_in2 = {15'b0, partial_products[1], 1'b0};
+            end else begin
+                assign stage_in1 = sum[i-1];
+                assign stage_in2 = {{15-i{1'b0}}, partial_products[i+1], {i+1{1'b0}}};
+            end
+
+            ripple_carry_adder_32bit adder (
+                .a(stage_in1),
+                .b(stage_in2),
+                .sum(sum[i]),
+                .cout()
+            );
+        end
+    endgenerate
+
+    assign result = sum[14];
+
+endmodule
+
+module divider (
+    input [31:0] a,
+    input [15:0] b,
+    output [31:0] result
+);
+
+    reg [31:0] quotient;
+    reg [31:0] remainder;
+    reg [15:0] divisor;
+    integer i;
+
+    always @(*) begin
+        quotient = 32'b0;
+        remainder = a;
+        divisor = b;
+
+        for (i = 31; i >= 0; i = i - 1) begin
+            if (remainder[31:16] >= divisor) begin
+                remainder = remainder - {divisor, 16'b0};
+                quotient[i] = 1'b1;
+            end
+            remainder = remainder << 1;
+        end
+    end
+
+    assign result = quotient;
+
+endmodule
+
+module ripple_carry_adder_32bit (
+    input [31:0] a,
+    input [31:0] b,
+    output [31:0] sum,
+    output cout
+);
+
+    wire [7:0] carry;
+
+    ripple_carry_adder_4bit rca0 (.a(a[3:0]), .b(b[3:0]), .cin(1'b0), .sum(sum[3:0]), .cout(carry[0]));
+    ripple_carry_adder_4bit rca1 (.a(a[7:4]), .b(b[7:4]), .cin(carry[0]), .sum(sum[7:4]), .cout(carry[1]));
+    ripple_carry_adder_4bit rca2 (.a(a[11:8]), .b(b[11:8]), .cin(carry[1]), .sum(sum[11:8]), .cout(carry[2]));
+    ripple_carry_adder_4bit rca3 (.a(a[15:12]), .b(b[15:12]), .cin(carry[2]), .sum(sum[15:12]), .cout(carry[3]));
+    ripple_carry_adder_4bit rca4 (.a(a[19:16]), .b(b[19:16]), .cin(carry[3]), .sum(sum[19:16]), .cout(carry[4]));
+    ripple_carry_adder_4bit rca5 (.a(a[23:20]), .b(b[23:20]), .cin(carry[4]), .sum(sum[23:20]), .cout(carry[5]));
+    ripple_carry_adder_4bit rca6 (.a(a[27:24]), .b(b[27:24]), .cin(carry[5]), .sum(sum[27:24]), .cout(carry[6]));
+    ripple_carry_adder_4bit rca7 (.a(a[31:28]), .b(b[31:28]), .cin(carry[6]), .sum(sum[31:28]), .cout(carry[7]));
+
+    assign cout = carry[7];
+
+endmodule
+
+module ripple_carry_adder_4bit (
+    input [3:0] a,
+    input [3:0] b,
+    input cin,
+    output [3:0] sum,
+    output cout
+);
+
+    wire [3:0] carry;
+
+    full_adder fa0 (.a(a[0]), .b(b[0]), .cin(cin), .sum(sum[0]), .cout(carry[0]));
+    full_adder fa1 (.a(a[1]), .b(b[1]), .cin(carry[0]), .sum(sum[1]), .cout(carry[1]));
+    full_adder fa2 (.a(a[2]), .b(b[2]), .cin(carry[1]), .sum(sum[2]), .cout(carry[2]));
+    full_adder fa3 (.a(a[3]), .b(b[3]), .cin(carry[2]), .sum(sum[3]), .cout(carry[3]));
+
+    assign cout = carry[3];
+
+endmodule
+
+module full_adder (
+    input a,
+    input b,
+    input cin,
+    output sum,
+    output cout
+);
+
+    assign sum = a ^ b ^ cin;
+    assign cout = (a & b) | (cin & (a ^ b));
+
+endmodule
+
+module mux_2to1 (
+    input [31:0] a,
+    input [31:0] b,
+    input sel,
+    output [31:0] out
+);
+
+    assign out = sel ? b : a;
+
+endmodule

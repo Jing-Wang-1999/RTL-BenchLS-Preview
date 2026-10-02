@@ -1,0 +1,43 @@
+{
+  "schema_version": "complexity_primary_review.v1",
+  "candidate_id": "large_module.4f70692f50b8356578d5",
+  "reviewer": "/root/harder_specs_historical",
+  "review_method": "manual RTL/specification inspection; no model experiment or formal proof executed",
+  "decision": "revise",
+  "original_specification_decision": "revise",
+  "rtl_reasonableness": "pass",
+  "rtl_sha256": "0022e156834a15b5b49974b42565abf1d1b54f09b67a5f5e790bb0d542236b5b",
+  "specification_sha256": "28954712360eff16c5e5f680e6340fb298e5367e0284e4db0ea6992ac39f9239",
+  "corrected_specification_sha256": "4da431ee84a7c7f912cb6dd56dc843cbfd663f1fd103b538bcc80431d278c5b2",
+  "corrected_specification_path": "scope1/task1_1_spec_to_rtl/results/complexity_admission_20260913_v1/reviews/large_module.4f70692f50b8356578d5/specification.md",
+  "evidence": [
+    {
+      "rtl_lines": "12\u201319",
+      "finding": "Original specification omits exact port widths and names; corrected interface is complete."
+    },
+    {
+      "rtl_lines": "54\u201398,128\u2013145",
+      "finding": "Asynchronous active-low reset, default 49999, delayed period reload, zero edge detection and start-over-stop priorities absent from original."
+    },
+    {
+      "rtl_lines": "100\u2013125,147\u2013174",
+      "finding": "Readback is registered without chipselect gating; status clear beats timeout; write snapshots are pre-edge; scalar assignment at line 173 truncates control_register to bit 0."
+    },
+    {
+      "rtl_lines": "1\u2013176",
+      "finding": "Near-duplicate of rtlpp_11048; differences are reset period constants and semantically equivalent syntax. Retain this representative only unless family balancing explicitly allows variants."
+    }
+  ],
+  "complexity_review": {
+    "classification": "substantive_register_mapped_timer",
+    "new_architecture_relative_to_frozen_signature_audit": true,
+    "cosmetic_line_inflation": false,
+    "family": "nios_generated_programmable_timer",
+    "family_candidate_count_reviewed": 2,
+    "default_period_only_variants_should_not_be_counted_as_independent_hard_families": true,
+    "recommended_family_representative": true
+  },
+  "formal_qualification": "pending_parent_replay",
+  "independent_specification_review": "pending",
+  "frozen": false
+}

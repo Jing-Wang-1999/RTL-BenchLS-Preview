@@ -1,0 +1,50 @@
+always @* begin
+    select_next = select_reg;
+    select_ctl = select_reg;
+    drop_next = drop_reg;
+    drop_ctl = drop_reg;
+    frame_next = frame_reg;
+    frame_ctl = frame_reg;
+
+    s_axis_tready_next = 1'b0;
+
+    if (s_axis_tvalid && s_axis_tready) begin
+        // end of frame detection
+        if (s_axis_tlast) begin
+            frame_next = 1'b0;
+            drop_next = 1'b0;
+        end
+    end
+
+    if (!frame_reg && s_axis_tvalid && s_axis_tready) begin
+        // start of frame, grab select value
+        if (TDEST_ROUTE) begin
+            if (M_COUNT > 1) begin
+                select_ctl = s_axis_tdest[S_DEST_WIDTH-1:S_DEST_WIDTH-CL_M_COUNT];
+                drop_ctl = s_axis_tdest[S_DEST_WIDTH-1:S_DEST_WIDTH-CL_M_COUNT] >= M_COUNT;
+            end else begin
+                select_ctl = 0;
+                drop_ctl = 1'b0;
+            end
+        end else begin
+            select_ctl = select;
+            drop_ctl = drop || select >= M_COUNT;
+        end
+        frame_ctl = 1'b1;
+        if (!(s_axis_tready && s_axis_tvalid && s_axis_tlast)) begin
+            select_next = select_ctl;
+            drop_next = drop_ctl;
+            frame_next = 1'b1;
+        end
+    end
+
+    s_axis_tready_next = (m_axis_tready_int_early || drop_ctl);
+
+    m_axis_tdata_int  = s_axis_tdata;
+    m_axis_tkeep_int  = s_axis_tkeep;
+    m_axis_tvalid_int = (s_axis_tvalid && s_axis_tready && !drop_ctl) << select_ctl;
+    m_axis_tlast_int  = s_axis_tlast;
+    m_axis_tid_int    = s_axis_tid;
+    m_axis_tdest_int  = s_axis_tdest;
+    m_axis_tuser_int  = s_axis_tuser; 
+end

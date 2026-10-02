@@ -1,0 +1,156 @@
+module origen_135523 (
+    input wire core_clock_in,
+    input wire reset_n_core_clock_in,
+    input wire fr_clock_in,
+    input wire hr_clock_in,
+    input wire write_strobe_clock_in,
+    input wire strobe_ena_hr_clock_in,
+    input wire write_oe_in,
+    input wire oct_ena_in,
+    input wire [7:0] config_data_in,
+    input wire config_update,
+    input wire config_io_ena,
+    input wire config_extra_io_ena,
+    input wire config_dqs_io_ena,
+    input wire config_clock_in,
+    input wire lfifo_rdata_en,
+    input wire lfifo_rdata_en_full,
+    input wire [3:0] lfifo_rd_latency,
+    input wire lfifo_reset_n,
+    input wire vfifo_qvld,
+    input wire vfifo_inc_wr_ptr,
+    input wire vfifo_reset_n,
+    input wire rfifo_reset_n,
+    
+    inout wire [31:0] read_write_data_io,
+    input wire [31:0] write_data_in,
+    input wire [3:0] extra_write_data_in,
+    output wire [31:0] read_data_out,
+    output wire capture_strobe_out,
+    inout wire [3:0] strobe_io,
+    inout wire [3:0] strobe_n_io,
+    output wire [3:0] extra_write_data_out
+);
+
+    // Internal registers and wires
+    reg [31:0] write_data_reg;
+    reg [3:0] extra_write_data_reg;
+    reg [31:0] read_data_reg;
+    reg [3:0] strobe_reg;
+    reg [3:0] strobe_n_reg;
+    reg capture_strobe_reg;
+    
+    // Configuration registers
+    reg [7:0] config_reg;
+    reg config_io_ena_reg;
+    reg config_extra_io_ena_reg;
+    reg config_dqs_io_ena_reg;
+    
+    // FIFOs
+    reg [31:0] lfifo [15:0];
+    reg [3:0] lfifo_wr_ptr;
+    reg [3:0] lfifo_rd_ptr;
+    reg [31:0] vfifo [15:0];
+    reg [3:0] vfifo_wr_ptr;
+    reg [3:0] vfifo_rd_ptr;
+    reg [31:0] rfifo [15:0];
+    reg [3:0] rfifo_wr_ptr;
+    reg [3:0] rfifo_rd_ptr;
+    
+    // Clock domain crossing
+    reg [1:0] write_oe_sync;
+    reg [1:0] oct_ena_sync;
+    
+    // Main logic
+    always @(posedge core_clock_in or negedge reset_n_core_clock_in) begin
+        if (!reset_n_core_clock_in) begin
+            write_data_reg <= 32'b0;
+            extra_write_data_reg <= 4'b0;
+            config_reg <= 8'b0;
+            config_io_ena_reg <= 1'b0;
+            config_extra_io_ena_reg <= 1'b0;
+            config_dqs_io_ena_reg <= 1'b0;
+        end else begin
+            // Handle configuration updates
+            if (config_update) begin
+                config_reg <= config_data_in;
+                config_io_ena_reg <= config_io_ena;
+                config_extra_io_ena_reg <= config_extra_io_ena;
+                config_dqs_io_ena_reg <= config_dqs_io_ena;
+            end
+            
+            // Handle write data
+            if (write_oe_sync[1]) begin
+                write_data_reg <= write_data_in;
+                extra_write_data_reg <= extra_write_data_in;
+            end
+        end
+    end
+    
+    // Read data handling
+    always @(posedge hr_clock_in) begin
+        if (lfifo_rdata_en) begin
+            read_data_reg <= lfifo[lfifo_rd_ptr];
+            lfifo_rd_ptr <= lfifo_rd_ptr + 1;
+        end
+    end
+    
+    // Strobe generation
+    always @(posedge write_strobe_clock_in) begin
+        if (strobe_ena_hr_clock_in) begin
+            strobe_reg <= 4'b1010;
+            strobe_n_reg <= 4'b0101;
+        end else begin
+            strobe_reg <= 4'b0000;
+            strobe_n_reg <= 4'b0000;
+        end
+    end
+    
+    // Capture strobe generation
+    always @(posedge fr_clock_in) begin
+        capture_strobe_reg <= ~capture_strobe_reg;
+    end
+    
+    // FIFO management
+    always @(posedge core_clock_in) begin
+        if (!lfifo_reset_n) begin
+            lfifo_wr_ptr <= 4'b0;
+            lfifo_rd_ptr <= 4'b0;
+        end else if (lfifo_rdata_en_full) begin
+            lfifo[lfifo_wr_ptr] <= read_write_data_io;
+            lfifo_wr_ptr <= lfifo_wr_ptr + 1;
+        end
+        
+        if (!vfifo_reset_n) begin
+            vfifo_wr_ptr <= 4'b0;
+            vfifo_rd_ptr <= 4'b0;
+        end else if (vfifo_inc_wr_ptr) begin
+            vfifo[vfifo_wr_ptr] <= write_data_in;
+            vfifo_wr_ptr <= vfifo_wr_ptr + 1;
+        end
+        
+        if (!rfifo_reset_n) begin
+            rfifo_wr_ptr <= 4'b0;
+            rfifo_rd_ptr <= 4'b0;
+        end else if (vfifo_qvld) begin
+            rfifo[rfifo_wr_ptr] <= vfifo[vfifo_rd_ptr];
+            rfifo_wr_ptr <= rfifo_wr_ptr + 1;
+            vfifo_rd_ptr <= vfifo_rd_ptr + 1;
+        end
+    end
+    
+    // Clock domain crossing
+    always @(posedge hr_clock_in) begin
+        write_oe_sync <= {write_oe_sync[0], write_oe_in};
+        oct_ena_sync <= {oct_ena_sync[0], oct_ena_in};
+    end
+    
+    // Output assignments
+    assign read_write_data_io = write_oe_sync[1] ? write_data_reg : 32'bz;
+    assign read_data_out = read_data_reg;
+    assign capture_strobe_out = capture_strobe_reg;
+    assign strobe_io = oct_ena_sync[1] ? strobe_reg : 4'bz;
+    assign strobe_n_io = oct_ena_sync[1] ? strobe_n_reg : 4'bz;
+    assign extra_write_data_out = extra_write_data_reg;
+
+endmodule

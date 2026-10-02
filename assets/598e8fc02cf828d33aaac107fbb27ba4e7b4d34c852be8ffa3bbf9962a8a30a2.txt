@@ -1,0 +1,58 @@
+module autovcoder_026524 (
+    input wire CLK_50,
+    input wire RESET,  // KEY0 - active low
+    input wire PS2_KEYBOARD_CLK,
+    input wire PS2_KEYBOARD_DAT,
+    input wire PS2_MOUSE_CLK,
+    input wire PS2_MOUSE_DAT,
+    input wire UART_RXD,
+    input wire UART_TXD,
+    input wire JOY1_UP,
+    input wire JOY1_DOWN,
+    input wire JOY1_LEFT,
+    input wire JOY1_RIGHT,
+    input wire JOY1_B1_P6,
+    input wire JOY1_B2_P9,
+    output wire JOYX_SEL_O,
+    inout wire [7:0] PMOD1,
+    output wire [3:0] BOARD_LEDS
+);
+
+    // Default configuration: Direct mapping to PS/2 signals
+    assign BOARD_LEDS[0] = PS2_KEYBOARD_CLK;
+    assign BOARD_LEDS[1] = PS2_KEYBOARD_DAT;
+    assign BOARD_LEDS[2] = PS2_MOUSE_CLK;
+    assign BOARD_LEDS[3] = PS2_MOUSE_DAT;
+    
+    // Alternative configurations (commented out)
+    
+    // Configuration 1: UART signals
+    // assign BOARD_LEDS[0] = UART_RXD;
+    // assign BOARD_LEDS[1] = UART_TXD;
+    // assign BOARD_LEDS[2] = 1'b0;  // Unused
+    // assign BOARD_LEDS[3] = 1'b0;  // Unused
+    
+    // Configuration 2: Joystick buttons (with reset indicator)
+    // assign BOARD_LEDS[0] = JOY1_B1_P6;
+    // assign BOARD_LEDS[1] = JOY1_B2_P9;
+    // assign BOARD_LEDS[2] = ~RESET;  // Active-high reset indicator
+    // assign BOARD_LEDS[3] = 1'b0;    // Unused
+    
+    // Configuration 3: Combined joystick directions (OR of all directions)
+    // wire joystick_activity;
+    // assign joystick_activity = JOY1_UP | JOY1_DOWN | JOY1_LEFT | JOY1_RIGHT;
+    // assign BOARD_LEDS[0] = joystick_activity;
+    // assign BOARD_LEDS[1] = joystick_activity;
+    // assign BOARD_LEDS[2] = joystick_activity;
+    // assign BOARD_LEDS[3] = joystick_activity;
+    
+    // Configuration 4: Test pattern using RESET
+    // assign BOARD_LEDS[0] = ~RESET;  // LED0 on when reset active
+    // assign BOARD_LEDS[1] = RESET;   // LED1 on when reset inactive
+    // assign BOARD_LEDS[2] = 1'b1;    // LED2 always on
+    // assign BOARD_LEDS[3] = 1'b0;    // LED3 always off
+    
+    // Joystick select output (active low enable for joystick)
+    assign JOYX_SEL_O = 1'b0;
+    
+endmodule

@@ -1,0 +1,13 @@
+module mg_00232(input clk,input [widthad-1:0] addr,output reg [width-1:0] q);
+parameter width = 8; 
+ parameter widthad = 10; 
+ parameter datafile = "./designs/sound/src/dsp_dma_identification_rom.hex"; 
+ reg [width-1:0] mem [(2**widthad)-1:0]; 
+ initial 
+ begin 
+ $readmemb(datafile, mem); 
+ end 
+ always @(posedge clk) begin 
+  q <= mem[addr]; 
+ end 
+ endmodule

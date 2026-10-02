@@ -1,0 +1,41 @@
+always @(posedge clk/* or posedge rst*/) begin
+		if(rst) begin
+			done <= 0;
+			for(j=0; j<NASSOC; j=j+1)
+				for(k=0; k<NBLOCK; k=k+1) begin
+					recuse[j][k] <= 0;
+					valid[j][k] <= 0;
+				end
+			for(j=0; j<NBLOCK; j=j+1)
+				recent_use_counter[j] <= 0;
+			state <= STATE_IDLE;
+			current_cache <= 0;
+			current_block <= 0;
+			current_block <= 0;
+			current_word <= 0;
+			critical_word <= 0;
+			RAM_read_select <= 0;
+					
+			//TODO
+		end else begin
+			if(!read_cache[SET_SELECT_BIT]) begin
+				if(read_block != addr_index)
+					$display("Assertion Failed: read_block == addr_index");
+				RAM_read_select <= read_cache[SET_SELECT_BIT-1:0];
+				use_cache(read_cache);
+			end
+			if(valid_flag) begin
+				valid[valid_cache][valid_block] <= 1;
+				tag[valid_cache][valid_block] <= valid_tag;
+			end
+			if(flush_flag)
+				valid[one_hot_lookup[found_in_cache_flush]][addr_flush_index] <= 0;
+			state <= next_state;
+			done <= next_done;
+			current_cache <= next_current_cache;
+			current_tag <= next_current_tag;
+			current_block <= next_current_block;
+			current_word <= next_current_word;
+			critical_word <= next_critical_word;
+		end
+	end

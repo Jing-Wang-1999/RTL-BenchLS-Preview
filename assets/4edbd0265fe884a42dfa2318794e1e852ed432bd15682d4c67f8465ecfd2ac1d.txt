@@ -1,0 +1,105 @@
+module origen_021286(
+    input clk50, clr, key0, key1,
+    output clk1,
+    output reg [6:0] out0, out1, out2, out3, out4
+);
+
+    wire clk1;
+    clk50mto1 clock_divider(.clk50(clk50), .clk1(clk1));
+
+    reg [1:0] state;
+    reg [2:0] S;
+    reg [1:0] i;
+
+    always @(posedge clk1 or posedge clr) begin
+        if (clr) begin
+            state <= 2'b00;
+            S <= 3'b000;
+            i <= 2'b00;
+        end else begin
+            case (state)
+                2'b00: begin // Normal operation
+                    S <= S + 1;
+                    if (S == 3'b100) S <= 3'b000;
+                end
+                2'b01: begin // Slow operation
+                    i <= i + 1;
+                    if (i == 2'b11) begin
+                        S <= S + 1;
+                        if (S == 3'b100) S <= 3'b000;
+                        i <= 2'b00;
+                    end
+                end
+            endcase
+
+            if (key0) state <= 2'b00;
+            if (key1) state <= 2'b01;
+        end
+    end
+
+    always @(*) begin
+        case (S)
+            3'b000: begin
+                out0 = 7'b0001001; // H
+                out1 = 7'b0000110; // E
+                out2 = 7'b1000111; // L
+                out3 = 7'b1000111; // L
+                out4 = 7'b0000001; // O
+            end
+            3'b001: begin
+                out0 = 7'b0000001; // O
+                out1 = 7'b0001001; // H
+                out2 = 7'b0000110; // E
+                out3 = 7'b1000111; // L
+                out4 = 7'b1000111; // L
+            end
+            3'b010: begin
+                out0 = 7'b1000111; // L
+                out1 = 7'b0000001; // O
+                out2 = 7'b0001001; // H
+                out3 = 7'b0000110; // E
+                out4 = 7'b1000111; // L
+            end
+            3'b011: begin
+                out0 = 7'b1000111; // L
+                out1 = 7'b1000111; // L
+                out2 = 7'b0000001; // O
+                out3 = 7'b0001001; // H
+                out4 = 7'b0000110; // E
+            end
+            3'b100: begin
+                out0 = 7'b0000110; // E
+                out1 = 7'b1000111; // L
+                out2 = 7'b1000111; // L
+                out3 = 7'b0000001; // O
+                out4 = 7'b0001001; // H
+            end
+            default: begin
+                out0 = 7'b1111111; // All segments off
+                out1 = 7'b1111111;
+                out2 = 7'b1111111;
+                out3 = 7'b1111111;
+                out4 = 7'b1111111;
+            end
+        endcase
+    end
+
+endmodule
+
+module clk50mto1(
+    input clk50,
+    output reg clk1
+);
+
+    reg [24:0] counter;
+
+    always @(posedge clk50) begin
+        if (counter == 25'd24999999) begin
+            counter <= 25'd0;
+            clk1 <= ~clk1;
+        end else begin
+            counter <= counter + 1;
+        end
+    end
+
+endmodule

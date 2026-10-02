@@ -1,0 +1,40 @@
+The `uart_axi_address_mapper` Verilog module facilitates communication between an AXI interface and a UART device. It manages AXI transactions (both read and write) and interacts with UART signals. 
+
+1. **Primary Function:**
+   The Verilog module interfaces an AXI bus with a UART device, primarily handling read and write operations to and from the AXI interface and the UART. It supports address, data, and control signals from the AXI protocol and translates these into UART protocol-specific signals.
+
+2. **Key Control Flow or Decision Points:**
+   - The module utilizes `posedge clk` and `aresetn` for synchronous operations and reset control.
+   - The `reg_awready`, `reg_wready`, `reg_bvalid`, `reg_arready`, `reg_rdata`, and `reg_rvalid` registers manage the readiness and validity of AXI transactions.
+   - Write operations involve checking `s_axi_awvalid` and `s_axi_wvalid` signals, setting `reg_awready` and `reg_wready` to signal transaction readiness, and asserting `reg_bvalid` to indicate a valid write response.
+   - Read operations check `s_axi_arvalid` to assert `reg_arready` and then set `reg_rdata` and `reg_rvalid` to indicate data is ready for reading.
+
+3. **Important Data Processing or Signal Interactions:**
+   - Write operations: When `s_axi_awvalid` and `s_axi_wvalid` are asserted, the module acknowledges the write with `s_axi_awready` and `s_axi_wready`; upon valid write completion, it asserts `s_axi_bvalid`.
+   - Read operations: When `s_axi_arvalid` is asserted, the module prepares data (`reg_rdata`, hardcoded example data `128'hDEADBEEFDEADBEEFDEADBEEFDEADBEEF`) and asserts `s_axi_rvalid` to indicate data readiness for the read transaction.
+   - UART interactions: The module includes simple UART transmit (`UART_tx`) and receive (`UART_rx`) signals; however, UART logic is not fully implemented and would need further expansion based on specific use-cases.
+
+Module Interface:
+module uart_axi_address_mapper (
+  input wire clk,
+  input wire aresetn,
+  input wire [11:0] s_axi_awaddr,
+  input wire [2:0] s_axi_awsize,
+  input wire s_axi_awvalid,
+  output wire s_axi_awready,
+  input wire [127:0] s_axi_wdata,
+  input wire [15:0] s_axi_wstrb,
+  input wire s_axi_wvalid,
+  output wire s_axi_wready,
+  input wire s_axi_bready,
+  output wire s_axi_bvalid,
+  input wire [11:0] s_axi_araddr,
+  input wire [2:0] s_axi_arsize,
+  input wire s_axi_arvalid,
+  output wire s_axi_arready,
+  input wire s_axi_rready,
+  output wire [127:0] s_axi_rdata,
+  output wire s_axi_rvalid,
+  output wire UART_tx,
+  input wire UART_rx
+);

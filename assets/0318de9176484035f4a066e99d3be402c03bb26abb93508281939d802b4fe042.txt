@@ -1,0 +1,58 @@
+module autovcoder_008484 #(
+    parameter C_FAMILY  = "none",  // FPGA Family
+    parameter C_A_WIDTH = 1        // Address Width (>= 1)
+) (
+    input  wire                 CLK,  // Clock
+    input  wire [C_A_WIDTH-1:0] A,    // Address
+    input  wire                 CE,   // Clock Enable
+    input  wire                 D,    // Input Data
+    output wire                 Q     // Output Data
+);
+
+  localparam P_SRLASIZE = 5;
+  localparam P_NUMSRLS = (C_A_WIDTH > P_SRLASIZE) ? (2 ** (C_A_WIDTH - P_SRLASIZE)) : 1;
+
+  wire [P_NUMSRLS:0] d_i;
+  wire [P_NUMSRLS-1:0] q_i;
+  wire [(C_A_WIDTH>P_SRLASIZE) ? (C_A_WIDTH-1) : (P_SRLASIZE-1) : 0] a_i;
+
+  genvar i;
+
+  // Instantiate SRLs in carry chain format
+  assign d_i[0] = D;
+  assign a_i = A;
+
+  generate
+    for (i = 0; i < P_NUMSRLS; i = i + 1) begin : gen_srls
+      SRLC32E srl_inst (
+          .CLK(CLK),
+          .A  (a_i[P_SRLASIZE-1:0]),
+          .CE (CE),
+          .D  (d_i[i]),
+          .Q  (q_i[i]),
+          .Q31(d_i[i+1])
+      );
+    end
+  endgenerate
+
+  // Instantiate MUX
+  generate
+    if (C_A_WIDTH > P_SRLASIZE) begin : gen_srl_mux
+      axi_interconnect_v1_7_nto1_mux #(
+          .C_RATIO        (2 ** (C_A_WIDTH - P_SRLASIZE)),
+          .C_SEL_WIDTH    (C_A_WIDTH - P_SRLASIZE),
+          .C_DATAOUT_WIDTH(1),
+          .C_ONEHOT       (0)
+      ) srl_q_mux_inst (
+          .SEL_ONEHOT({2 ** (C_A_WIDTH - P_SRLASIZE) {1'b0}}),
+          .SEL       (a_i[C_A_WIDTH-1:P_SRLASIZE]),
+          .IN        (q_i),
+          .OUT       (Q)
+      );
+    end else begin : gen_no_srl_mux
+      assign Q = q_i[0];
+    end
+  endgenerate
+
+endmodule
+

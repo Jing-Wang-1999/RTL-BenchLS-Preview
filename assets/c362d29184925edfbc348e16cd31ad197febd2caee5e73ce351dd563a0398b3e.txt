@@ -1,0 +1,36 @@
+always @(posedge ptp_clk) begin
+    td_shift_reg <= {ptp_td_sdi_pipe[TD_SDI_PIPELINE], td_shift_reg[15:1]};
+
+    td_tvalid_reg <= 1'b0;
+
+    if (bit_cnt_reg) begin
+        bit_cnt_reg <= bit_cnt_reg - 1;
+    end else begin
+        td_valid_reg <= 1'b0;
+        if (td_valid_reg) begin
+            td_tdata_reg <= td_shift_reg;
+            td_tvalid_reg <= 1'b1;
+            td_tlast_reg <= ptp_td_sdi_pipe[TD_SDI_PIPELINE];
+            td_tid_reg <= {td_msg_reg, td_index_reg};
+            if (td_index_reg == 0) begin
+                td_msg_reg <= td_shift_reg[3:0];
+                td_tid_reg[7:4] <= td_shift_reg[3:0];
+            end
+            td_index_reg <= td_index_reg + 1;
+            td_sync_reg = !td_sync_reg;
+        end
+        if (ptp_td_sdi_pipe[TD_SDI_PIPELINE] == 0) begin
+            bit_cnt_reg <= 16;
+            td_valid_reg <= 1'b1;
+        end else begin
+            td_index_reg <= 0;
+        end
+    end
+
+    if (ptp_rst) begin
+        bit_cnt_reg <= 0;
+        td_valid_reg <= 1'b0;
+
+        td_tvalid_reg <= 1'b0;
+    end
+end

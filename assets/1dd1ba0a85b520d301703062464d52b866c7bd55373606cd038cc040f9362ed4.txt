@@ -1,0 +1,58 @@
+module origen_160666(
+    input   clk,
+    input   rst_n,
+    input   sw1_n,
+    input   sw2_n,
+    input   sw3_n,
+    output  led_d1,
+    output  led_d2,
+    output  led_d3
+);
+
+reg [2:0] key_rst;
+reg [2:0] key_rst_r;
+reg [2:0] key_an;
+reg [19:0] cnt;
+reg [2:0] low_sw;
+reg [2:0] low_sw_r;
+reg [2:0] led_ctrl;
+reg d1, d2, d3;
+
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        key_rst <= 3'b111;
+        key_rst_r <= 3'b111;
+        low_sw <= 3'b111;
+        low_sw_r <= 3'b111;
+        cnt <= 20'd0;
+    end
+    else begin
+        key_rst <= {sw3_n, sw2_n, sw1_n};
+        key_rst_r <= key_rst;
+        key_an <= key_rst ^ key_rst_r;
+
+        if (|key_an) begin
+            cnt <= 20'd0;
+        end
+        else if (cnt != 20'hfffff) begin
+            cnt <= cnt + 1'b1;
+        end
+
+        if (cnt == 20'hfffff) begin
+            low_sw <= key_rst;
+        end
+
+        low_sw_r <= low_sw;
+        led_ctrl <= low_sw ^ low_sw_r;
+
+        d1 <= (led_ctrl[0]) ? ~d1 : d1;
+        d2 <= (led_ctrl[1]) ? ~d2 : d2;
+        d3 <= (led_ctrl[2]) ? ~d3 : d3;
+    end
+end
+
+assign led_d1 = d1;
+assign led_d2 = d2;
+assign led_d3 = d3;
+
+endmodule

@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.3fe57eee88d9f65fa0c2.1b0b69243bbd",
+  "compile_check": {
+    "case_id": "s1derived.3fe57eee88d9f65fa0c2.1b0b69243bbd",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_04164",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_04164.0a82003cd6d7569c/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.3fe57eee88d9f65fa0c2",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "3fe57eee88d9f65fa0c22ce7dd54d9eeca1cdee8dbefcf3f1ad76ada9b41554d",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.3fe57eee88d9f65fa0c2.1b0b69243bbd",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_04164.0a82003cd6d7569c/private/commercial_positive.log",
+    "commercial_log_sha256": "c052a9d43f1fd6cd946ce6827bce47f3a102303eba2b0de7a2cf6047f185548b",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_04164.0a82003cd6d7569c/private/historical_harness/00_sec_mg_04164.tcl",
+    "executed_script_sha256": "200f62287da518dbc88d2e6a01c9a1a0545c957426e76dacb3be0a29af80e679",
+    "golden_tops": [
+      "mg_04164"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.mg_04164.0a82003cd6d7569c",
+    "parent_id": "s1p.3fe57eee88d9f65fa0c2",
+    "revised_tops": [
+      "mg_04164"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_04164",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.3fe57eee88d9f65fa0c2.1b0b69243bbd",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The complete16-bit recurrence matches taps0,5,12 with high-bit feedback; synchronous reset and enabled-init priority agree.",
+        "rtl_excerpt": "lfsr[12] <= lfsr[11] ^ data_in ^ lfsr[15];",
+        "specification_excerpt": "new bits 5 and 12"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.3fe57eee88d9f65fa0c2",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "208d12578c9cfba07e4ddf5b0bf7142b1596c1b1f376181283f6f082ce0e19e7",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3fe57eee88d9f65fa0c22ce7dd54d9eeca1cdee8dbefcf3f1ad76ada9b41554d",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_04164.0a82003cd6d7569c/private/historical_harness/00_sec_mg_04164.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_04164.0a82003cd6d7569c/private/historical_harness/01_sec_mg_04164.tcl"
+  ],
+  "parent_id": "s1p.3fe57eee88d9f65fa0c2",
+  "primary_review": {
+    "case_id": "s1derived.3fe57eee88d9f65fa0c2.1b0b69243bbd",
+    "checks": {
+      "behavior": "Exact shift/tap operation matches except the polynomial name.",
+      "boundaries": "Reset overrides enable; enable low holds.",
+      "interface": "All ports match.",
+      "rtl_reasonableness": "The CRC LFSR is reasonable.",
+      "sequential_and_reset": "Synchronous reset; init only acts under enable."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Exact shift/tap operation matches except the polynomial name. Synchronous reset; init only acts under enable.",
+        "rtl_excerpt": "feedback is applied to new bits 0,5,12 from old bit15 and data_in",
+        "spec_excerpt": "\u201cCRC-16-ANSI (also known as CRC-16-IBM)\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The bit-update equations are accurate, but calling taps 0,5,12 CRC-16-ANSI/IBM is incorrect; they correspond to x^16+x^12+x^5+1.",
+        "rtl_evidence": "feedback is applied to new bits 0,5,12 from old bit15 and data_in",
+        "spec_evidence": "\u201cCRC-16-ANSI (also known as CRC-16-IBM)\u201d",
+        "type": "polynomial_misidentification"
+      }
+    ],
+    "parent_id": "s1p.3fe57eee88d9f65fa0c2",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.3fe57eee88d9f65fa0c2.1b0b69243bbd.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3fe57eee88d9f65fa0c22ce7dd54d9eeca1cdee8dbefcf3f1ad76ada9b41554d",
+    "source_group": "S5",
+    "specification_sha256": "1b0b69243bbd5cd6c83e03ec586b623e3e271f55ec6c199babf430a1bc9d7991",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.3fe57eee88d9f65fa0c2.1b0b69243bbd.md",
+  "qualified_specification_sha256": "208d12578c9cfba07e4ddf5b0bf7142b1596c1b1f376181283f6f082ce0e19e7",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_04164.0a82003cd6d7569c/private/golden_design.v",
+  "rtl_sha256": "3fe57eee88d9f65fa0c22ce7dd54d9eeca1cdee8dbefcf3f1ad76ada9b41554d",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_04164.0a82003cd6d7569c/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "1b0b69243bbd5cd6c83e03ec586b623e3e271f55ec6c199babf430a1bc9d7991",
+  "top_module": "mg_04164"
+}

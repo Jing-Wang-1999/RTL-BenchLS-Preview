@@ -1,0 +1,5 @@
+# autovcoder_034947
+
+Inputs are `clk` and active-low asynchronous `rst_n`. Registered outputs are `c1[7:0]`, `x[7:0]`, `y[7:0]`, `act1[7:0]`, `act2[7:0]`, and state `i[1:0]`. Reset immediately clears every output.
+
+In state 0, each rising edge increments `c1`, except old `c1=99` clears `c1,x,y` and enters state 1. Independently using pre-edge values, `x==c1` adds 10 to x and increments act1, while `y==c1` increments y and copies old act1 to act2; the terminal clears override x/y updates on the same edge. In state 1, the next edge clears act1/act2 and returns to state 0 while c1/x/y hold. States 2 and 3 have no assignments and hold all registers indefinitely. Eight-bit arithmetic wraps. No submodule exists.

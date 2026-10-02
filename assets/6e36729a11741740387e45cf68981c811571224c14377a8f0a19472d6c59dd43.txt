@@ -1,0 +1,176 @@
+module processor_execution_stage (
+	clk,
+	rst_n,
+	alu_operator_i,
+	multdiv_operator_i,
+	mult_en_i,
+	div_en_i,
+	eFPGA_en_i,
+	eFPGA_operator_i,
+	eFPGA_result_a_i,
+	eFPGA_result_b_i,
+	eFPGA_result_c_i,
+	eFPGA_delay_i,
+	eFPGA_fpga_done_i,
+	eFPGA_write_strobe_o,
+	alu_operand_a_i,
+	alu_operand_b_i,
+	multdiv_signed_mode_i,
+	multdiv_operand_a_i,
+	multdiv_operand_b_i,
+	alu_adder_result_ex_o,
+	regfile_wdata_ex_o,
+	jump_target_o,
+	branch_decision_o,
+	lsu_en_i,
+	lsu_ready_ex_i,
+	ex_ready_o
+);
+	parameter [0:0] RV32M = 1;
+	input wire clk;
+	input wire rst_n;
+	input wire [4:0] alu_operator_i;
+	input wire [1:0] multdiv_operator_i;
+	input wire mult_en_i;
+	input wire div_en_i;
+	input wire eFPGA_en_i;
+	input wire [1:0] eFPGA_operator_i;
+	input wire [31:0] eFPGA_result_a_i;
+	input wire [31:0] eFPGA_result_b_i;
+	input wire [31:0] eFPGA_result_c_i;
+	input wire [3:0] eFPGA_delay_i;
+	input wire eFPGA_fpga_done_i;
+	output wire eFPGA_write_strobe_o;
+	input wire [31:0] alu_operand_a_i;
+	input wire [31:0] alu_operand_b_i;
+	input wire [1:0] multdiv_signed_mode_i;
+	input wire [31:0] multdiv_operand_a_i;
+	input wire [31:0] multdiv_operand_b_i;
+	output wire [31:0] alu_adder_result_ex_o;
+	output wire [31:0] regfile_wdata_ex_o;
+	output wire [31:0] jump_target_o;
+	output wire branch_decision_o;
+	input wire lsu_en_i;
+	input wire lsu_ready_ex_i;
+	output reg ex_ready_o;
+	localparam MULT_TYPE = 1;
+	wire [31:0] alu_result;
+	wire [31:0] multdiv_result;
+	wire [31:0] eFPGA_result;
+	wire [32:0] multdiv_alu_operand_b;
+	wire [32:0] multdiv_alu_operand_a;
+	wire [33:0] alu_adder_result_ext;
+	wire alu_cmp_result;
+	wire alu_is_equal_result;
+	wire multdiv_ready;
+	wire multdiv_en_sel;
+	wire multdiv_en;
+	generate
+		if (RV32M) begin : gen_multdiv_m
+			assign multdiv_en_sel = (MULT_TYPE ? div_en_i : mult_en_i | div_en_i);
+			assign multdiv_en = mult_en_i | div_en_i;
+		end
+		else begin : gen_multdiv_nom
+			assign multdiv_en_sel = 1'b0;
+			assign multdiv_en = 1'b0;
+		end
+	endgenerate
+	assign regfile_wdata_ex_o = (multdiv_en ? multdiv_result : (eFPGA_en_i ? eFPGA_result : alu_result));
+	assign branch_decision_o = alu_cmp_result;
+	assign jump_target_o = alu_adder_result_ex_o;
+
+	// ALU
+	reg [31:0] alu_out;
+	reg [32:0] alu_adder_a;
+	reg [32:0] alu_adder_b;
+	reg [33:0] alu_adder_ext;
+	reg alu_cmp;
+	reg alu_equal;
+	always @(*) begin
+		// ALU operations can be complex, here is a simplified model
+		case (alu_operator_i)
+			5'b00000: alu_out = alu_operand_a_i + alu_operand_b_i;
+			5'b00001: alu_out = alu_operand_a_i - alu_operand_b_i;
+			5'b00010: alu_out = alu_operand_a_i & alu_operand_b_i;
+			5'b00011: alu_out = alu_operand_a_i | alu_operand_b_i;
+			5'b00100: alu_out = alu_operand_a_i ^ alu_operand_b_i;
+			// Other operations can be added as needed
+			default: alu_out = 0;
+		endcase
+		alu_cmp = (alu_operand_a_i < alu_operand_b_i);
+		alu_equal = (alu_operand_a_i == alu_operand_b_i);
+		alu_adder_a = alu_operand_a_i + multdiv_alu_operand_a;
+		alu_adder_b = alu_operand_b_i + multdiv_alu_operand_b;
+		alu_adder_ext = alu_adder_a + alu_adder_b;
+	end
+
+	assign alu_result = alu_out;
+	assign alu_cmp_result = alu_cmp;
+	assign alu_is_equal_result = alu_equal;
+	assign alu_adder_result_ex_o = alu_adder_a[31:0];
+	assign alu_adder_result_ext = alu_adder_ext;
+
+	// Mult/Div
+	reg [31:0] multdiv_res;
+	reg multdiv_rdy;
+	always @(posedge clk or negedge rst_n) begin
+		if (!rst_n) begin
+			multdiv_res <= 0;
+			multdiv_rdy <= 0;
+		end else begin
+			if (mult_en_i || div_en_i) begin
+				// Simplified model: only handles unsigned multiply
+				if (multdiv_operator_i == 2'b00) begin
+					multdiv_res <= multdiv_operand_a_i * multdiv_operand_b_i;
+					multdiv_rdy <= 1;
+				end else begin
+					multdiv_res <= 0;
+					multdiv_rdy <= 1;
+				end
+			end else begin
+				multdiv_rdy <= 0;
+			end
+		end
+	end
+
+	assign multdiv_result = multdiv_res;
+	assign multdiv_ready = multdiv_rdy;
+	assign multdiv_alu_operand_a = {1'b0, multdiv_operand_a_i};
+	assign multdiv_alu_operand_b = {1'b0, multdiv_operand_b_i};
+
+	// eFPGA
+	reg [31:0] eFPGA_res;
+	reg eFPGA_rdy;
+	always @(posedge clk or negedge rst_n) begin
+		if (!rst_n) begin
+			eFPGA_res <= 0;
+			eFPGA_rdy <= 0;
+		end else begin
+			if (eFPGA_en_i) begin
+				// Simplified model of eFPGA operations
+				if (eFPGA_operator_i == 2'b00) begin
+					eFPGA_res <= eFPGA_result_a_i + eFPGA_result_b_i + eFPGA_result_c_i;
+					eFPGA_rdy <= 1;
+				end else begin
+					eFPGA_res <= 0;
+					eFPGA_rdy <= 1;
+				end
+			end else begin
+				eFPGA_rdy <= 0;
+			end
+		end
+	end
+
+	assign eFPGA_result = eFPGA_res;
+	assign eFPGA_ready = eFPGA_rdy;
+	assign eFPGA_write_strobe_o = eFPGA_fpga_done_i;
+
+	always @(*) begin
+		case (1'b1)
+			multdiv_en: ex_ready_o = multdiv_ready;
+			lsu_en_i: ex_ready_o = lsu_ready_ex_i;
+			eFPGA_en_i: ex_ready_o = eFPGA_ready;
+			default: ex_ready_o = 1'b1;
+		endcase
+	end
+endmodule

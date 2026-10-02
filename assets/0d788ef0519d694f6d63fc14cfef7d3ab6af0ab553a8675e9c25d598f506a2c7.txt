@@ -1,0 +1,81 @@
+module rtlpp_11228 (
+    // Inputs
+    input clk,
+    input reset_n,
+    input resetlatch,
+    input [31:0] MonDReg,
+    input monitor_ready,
+    input monitor_error,
+    input debugack,
+    input [31:0] break_readreg,
+    input dbrk_hit0_latch,
+    input dbrk_hit1_latch,
+    input dbrk_hit2_latch,
+    input dbrk_hit3_latch,
+    input [31:0] tracemem_trcdata,
+    input tracemem_tw,
+    input trc_wrap,
+    input [31:0] trc_im_addr,
+    input tracemem_on,
+    input trc_on,
+    input trigger_state_1,
+    input trigbrktype,
+    
+    // Outputs
+    output reg [37:0] jdo,
+    output reg jrst_n,
+    output reg take_action_break_a,
+    output reg take_action_break_b,
+    output reg take_action_break_c,
+    output reg take_no_action_break_a,
+    output reg take_no_action_break_b,
+    output reg take_no_action_break_c,
+    output reg take_action_ocimem_a,
+    output reg take_action_ocimem_b,
+    output reg take_no_action_ocimem_a,
+    output reg take_no_action_ocimem_b,
+    output reg take_action_tracemem_a,
+    output reg take_action_tracemem_b,
+    output reg take_no_action_tracemem_a,
+    output reg take_no_action_tracemem_b,
+    output reg take_action_tracectrl,
+    output reg take_no_action_tracectrl,
+    output reg st_ready_test_idle
+);
+
+    // Internal signals (all tied to 0)
+    wire vji_tck = 1'b0;
+    wire vji_tdi = 1'b0;
+    wire vji_tdo = 1'b0;
+    wire vji_shiftir = 1'b0;
+    wire vji_updateir = 1'b0;
+    wire vji_captureir = 1'b0;
+    wire vji_shiftdr = 1'b0;
+    wire vji_updatedr = 1'b0;
+    wire vji_capturedr = 1'b0;
+    wire [37:0] sr = 38'b0;
+
+    // All outputs driven to constant inactive state (0)
+    always @(*) begin
+        jdo = 38'b0;
+        jrst_n = 1'b0;
+        take_action_break_a = 1'b0;
+        take_action_break_b = 1'b0;
+        take_action_break_c = 1'b0;
+        take_no_action_break_a = 1'b0;
+        take_no_action_break_b = 1'b0;
+        take_no_action_break_c = 1'b0;
+        take_action_ocimem_a = 1'b0;
+        take_action_ocimem_b = 1'b0;
+        take_no_action_ocimem_a = 1'b0;
+        take_no_action_ocimem_b = 1'b0;
+        take_action_tracemem_a = 1'b0;
+        take_action_tracemem_b = 1'b0;
+        take_no_action_tracemem_a = 1'b0;
+        take_no_action_tracemem_b = 1'b0;
+        take_action_tracectrl = 1'b0;
+        take_no_action_tracectrl = 1'b0;
+        st_ready_test_idle = 1'b0;
+    end
+
+endmodule

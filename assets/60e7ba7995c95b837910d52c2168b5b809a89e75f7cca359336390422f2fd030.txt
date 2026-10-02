@@ -1,0 +1,62 @@
+always @*
+    begin: key_mem_ctrl
+      reg [3 : 0] num_rounds;
+
+      // Default assignments.
+      ready_new        = 1'b0;
+      ready_we         = 1'b0;
+      round_key_update = 1'b0;
+      round_ctr_rst    = 1'b0;
+      round_ctr_inc    = 1'b0;
+      key_mem_ctrl_new = CTRL_IDLE;
+      key_mem_ctrl_we  = 1'b0;
+
+      if (keylen == AES_128_BIT_KEY)
+        num_rounds = AES_128_NUM_ROUNDS;
+      else
+        num_rounds = AES_256_NUM_ROUNDS;
+
+      case(key_mem_ctrl_reg)
+        CTRL_IDLE:
+          begin
+            if (init)
+              begin
+                ready_new        = 1'b0;
+                ready_we         = 1'b1;
+                key_mem_ctrl_new = CTRL_INIT;
+                key_mem_ctrl_we  = 1'b1;
+              end
+          end
+
+        CTRL_INIT:
+          begin
+            round_ctr_rst    = 1'b1;
+            key_mem_ctrl_new = CTRL_GENERATE;
+            key_mem_ctrl_we  = 1'b1;
+          end
+
+        CTRL_GENERATE:
+          begin
+            round_ctr_inc    = 1'b1;
+            round_key_update = 1'b1;
+            if (round_ctr_reg == num_rounds)
+              begin
+                key_mem_ctrl_new = CTRL_DONE;
+                key_mem_ctrl_we  = 1'b1;
+              end
+          end
+
+        CTRL_DONE:
+          begin
+            ready_new        = 1'b1;
+            ready_we         = 1'b1;
+            key_mem_ctrl_new = CTRL_IDLE;
+            key_mem_ctrl_we  = 1'b1;
+          end
+
+        default:
+          begin
+          end
+      endcase // case (key_mem_ctrl_reg)
+
+    end

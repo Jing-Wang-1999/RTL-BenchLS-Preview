@@ -1,0 +1,88 @@
+module origen_167311 (
+    input [31:0] t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13,
+    input [3:0] aluc,
+    input [5:0] c,
+    input [1:0] o,
+    output reg [31:0] r,
+    output reg carry,
+    output reg overflow
+);
+
+    always @(*) begin
+        // Default assignments
+        r = 32'b0;
+        carry = 1'b0;
+        overflow = 1'b0;
+
+        // Carry flag assignment (always from c[0] except default case)
+        if (aluc <= 4'd13) begin
+            carry = c[0];
+        end
+
+        // Result selection and overflow logic
+        case (aluc)
+            4'd0: begin
+                r = t0;
+                overflow = 1'b0;
+            end
+            4'd1: begin
+                r = t1;
+                overflow = o[0];
+            end
+            4'd2: begin
+                r = t2;
+                overflow = o[0];
+            end
+            4'd3: begin
+                r = t3;
+                overflow = c[1];
+            end
+            4'd4: begin
+                r = t4;
+                overflow = c[1];
+            end
+            4'd5: begin
+                r = t5;
+                overflow = c[1];
+            end
+            4'd6: begin
+                r = t6;
+                overflow = c[1];
+            end
+            4'd7: begin
+                r = t7;
+                overflow = c[1];
+            end
+            4'd8: begin
+                r = t8;
+                overflow = c[1];
+            end
+            4'd9: begin
+                r = t9;
+                overflow = c[1];
+            end
+            4'd10: begin
+                r = t10;
+                overflow = c[1];
+            end
+            4'd11: begin
+                r = t11;
+                overflow = c[1];
+            end
+            4'd12: begin
+                r = t12;
+                overflow = c[1];
+            end
+            4'd13: begin
+                r = t13;
+                overflow = c[1];
+            end
+            default: begin
+                r = 32'b0;
+                carry = 1'b0;
+                overflow = 1'b0;
+            end
+        endcase
+    end
+
+endmodule

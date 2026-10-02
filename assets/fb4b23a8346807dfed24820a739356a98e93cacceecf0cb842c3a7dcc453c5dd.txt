@@ -1,0 +1,96 @@
+module rtlpp_11484 (
+    // Global Control Signals
+    input pReset,
+    input prog_clk,
+    input set,
+    input reset,
+    input clk,
+    
+    // Data Inputs
+    // Top Port
+    input I_0,
+    input I_4,
+    input I_8,
+    input clk_0,
+    
+    // Right Port
+    input I_1,
+    input I_5,
+    input I_9,
+    
+    // Bottom Port
+    input I_2,
+    input I_6,
+    input I_10,
+    
+    // Left Port
+    input I_3,
+    input I_7,
+    input I_11,
+    
+    // Configuration Chain
+    input ccff_head,
+    
+    // Data Outputs
+    // Top Port
+    output O_0,
+    output O_4,
+    
+    // Right Port
+    output O_1,
+    output O_5,
+    
+    // Bottom Port
+    output O_2,
+    output O_6,
+    
+    // Left Port
+    output O_3,
+    output O_7,
+    
+    // Configuration Chain
+    output ccff_tail
+);
+
+    // Internal signals
+    wire [11:0] clb_I;
+    wire clb_clk;
+    wire [7:0] clb_O;
+    
+    // Input Aggregation: Concatenate in order top, right, bottom, left
+    // Group 0: I_0 (top), I_1 (right), I_2 (bottom), I_3 (left)
+    // Group 1: I_4 (top), I_5 (right), I_6 (bottom), I_7 (left)
+    // Group 2: I_8 (top), I_9 (right), I_10 (bottom), I_11 (left)
+    assign clb_I = {I_11, I_10, I_9, I_8,  // Group 2: left, bottom, right, top
+                    I_7, I_6, I_5, I_4,    // Group 1: left, bottom, right, top
+                    I_3, I_2, I_1, I_0};   // Group 0: left, bottom, right, top
+    
+    // Clock Forwarding
+    assign clb_clk = clk_0;
+    
+    // Output Mapping: Select bits 11 down to 4 of clb_I and assign in reverse order
+    // clb_O[7] = clb_I[4], clb_O[6] = clb_I[5], ..., clb_O[0] = clb_I[11]
+    assign clb_O[7] = clb_I[4];
+    assign clb_O[6] = clb_I[5];
+    assign clb_O[5] = clb_I[6];
+    assign clb_O[4] = clb_I[7];
+    assign clb_O[3] = clb_I[8];
+    assign clb_O[2] = clb_I[9];
+    assign clb_O[1] = clb_I[10];
+    assign clb_O[0] = clb_I[11];
+    
+    // Output Distribution: Assign to output pins in sequence
+    // Starting with O_0 (top) as most significant bit
+    assign O_0 = clb_O[7];  // Top port
+    assign O_1 = clb_O[6];  // Right port
+    assign O_2 = clb_O[5];  // Bottom port
+    assign O_3 = clb_O[4];  // Left port
+    assign O_4 = clb_O[3];  // Top port
+    assign O_5 = clb_O[2];  // Right port
+    assign O_6 = clb_O[1];  // Bottom port
+    assign O_7 = clb_O[0];  // Left port
+    
+    // Configuration Chain: Direct pass-through
+    assign ccff_tail = ccff_head;
+
+endmodule

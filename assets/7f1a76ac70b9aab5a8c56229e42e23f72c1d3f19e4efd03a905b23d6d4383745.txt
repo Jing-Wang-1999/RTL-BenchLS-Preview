@@ -1,0 +1,26 @@
+always @(*) begin
+        next_internal_state = internal_state;
+        
+        case (internal_state)
+            IDLE:
+                if (START) next_internal_state = LCD_POWERUP1;
+            
+            LCD_POWERUP1:
+                if (frame_count == 2'b01) next_internal_state = LCD_POWERUP2;
+            
+            LCD_POWERUP2:
+                if (frame_count == 2'b00 && BL_ENABLE) next_internal_state = RUNNING;
+            
+            RUNNING:
+                if (STOP) next_internal_state = LCD_POWERDOWN1;
+            
+            LCD_POWERDOWN1:
+                if (frame_count == 2'b01) next_internal_state = LCD_POWERDOWN2;
+            
+            LCD_POWERDOWN2:
+                if (frame_count == 2'b00) next_internal_state = FIFO_RUNDOWN;
+            
+            FIFO_RUNDOWN:
+                next_internal_state = IDLE;
+        endcase
+    end

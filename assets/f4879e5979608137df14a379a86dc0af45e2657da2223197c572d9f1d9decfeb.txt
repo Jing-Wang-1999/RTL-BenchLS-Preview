@@ -1,0 +1,31 @@
+The hardware design consists of two modules: `origen_085719` and `ADD48`. 
+
+### Module: origen_085719
+
+**Purpose**: This module performs 16-bit addition with carry-in and provides outputs for the sum, carry-out, and overflow detection.
+
+**Inputs**:
+- `A`: A 16-bit input operand.
+- `B`: A 16-bit input operand.
+- `CI`: A single-bit carry-in input.
+
+**Outputs**:
+- `S`: A 16-bit output representing the sum of inputs `A`, `B`, and `CI`.
+- `CO`: A single-bit output representing the carry-out from the addition.
+- `OFL`: A single-bit output indicating an overflow condition. Overflow occurs if the sign bits of `A` and `B` are the same, but the sign bit of `S` differs.
+
+**Behavior**: The module calculates the sum of `A`, `B`, and `CI`, producing a 17-bit result. The least significant 16 bits are assigned to `S`, while the most significant bit is assigned to `CO`. Overflow detection is based on the sign bits of the operands and the result.
+
+### Module: ADD48
+
+**Purpose**: This module performs 48-bit addition using three instances of the `origen_085719` module to handle the operation in segments of 16 bits.
+
+**Inputs**:
+- `A`: A 48-bit input operand.
+- `B`: A 48-bit input operand.
+- `CI`: A single-bit carry-in input.
+
+**Outputs**:
+- `S`: A 48-bit output representing the sum of inputs `A`, `B`, and `CI`.
+- `CO`: A single-bit output representing the carry-out from the addition.
+- `OFL`: A

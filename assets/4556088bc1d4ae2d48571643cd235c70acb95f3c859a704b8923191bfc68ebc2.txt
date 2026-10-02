@@ -1,0 +1,143 @@
+module origen_124712 #(
+    parameter BIT_RATE = 1000000
+)(
+    input wire clk,
+    input wire rst_n,
+    
+    // Transmitter inputs
+    input wire [63:0] tx_data,
+    input wire [10:0] tx_id,
+    input wire tx_rtr,
+    input wire tx_en,
+    
+    // Receiver outputs
+    output reg [63:0] rx_data,
+    output reg [10:0] rx_id,
+    output reg rx_rtr,
+    output reg rx_en,
+    
+    // CAN bus
+    inout wire can_bus
+);
+
+    // Constants
+    localparam CLOCK_PERIOD = 1000000000 / BIT_RATE;
+    
+    // Internal signals
+    reg [63:0] tx_buffer;
+    reg [10:0] tx_id_buffer;
+    reg tx_rtr_buffer;
+    reg tx_active;
+    reg [7:0] tx_bit_counter;
+    reg tx_stuff_bit;
+    
+    reg [63:0] rx_buffer;
+    reg [10:0] rx_id_buffer;
+    reg rx_rtr_buffer;
+    reg rx_active;
+    reg [7:0] rx_bit_counter;
+    reg rx_stuff_bit;
+    
+    reg [15:0] bit_timer;
+    
+    // Transmitter logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            tx_buffer <= 64'h0;
+            tx_id_buffer <= 11'h0;
+            tx_rtr_buffer <= 1'b0;
+            tx_active <= 1'b0;
+            tx_bit_counter <= 8'h0;
+            tx_stuff_bit <= 1'b0;
+        end else if (tx_en && !tx_active) begin
+            tx_buffer <= tx_data;
+            tx_id_buffer <= tx_id;
+            tx_rtr_buffer <= tx_rtr;
+            tx_active <= 1'b1;
+            tx_bit_counter <= 8'h0;
+            tx_stuff_bit <= 1'b0;
+        end else if (tx_active && bit_timer == CLOCK_PERIOD - 1) begin
+            if (tx_bit_counter < 84) begin // 11 (ID) + 1 (RTR) + 64 (Data) + 8 (CRC) = 84
+                tx_bit_counter <= tx_bit_counter + 1;
+                
+                // Implement bit stuffing
+                if (tx_stuff_bit) begin
+                    tx_stuff_bit <= 1'b0;
+                end else begin
+                    if (tx_bit_counter < 11)
+                        tx_stuff_bit <= (tx_id_buffer[10 - tx_bit_counter] == 1'b1);
+                    else if (tx_bit_counter == 11)
+                        tx_stuff_bit <= tx_rtr_buffer;
+                    else
+                        tx_stuff_bit <= (tx_buffer[74 - tx_bit_counter] == 1'b1);
+                end
+            end else begin
+                tx_active <= 1'b0;
+            end
+        end
+    end
+    
+    // Receiver logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rx_buffer <= 64'h0;
+            rx_id_buffer <= 11'h0;
+            rx_rtr_buffer <= 1'b0;
+            rx_active <= 1'b0;
+            rx_bit_counter <= 8'h0;
+            rx_stuff_bit <= 1'b0;
+            rx_data <= 64'h0;
+            rx_id <= 11'h0;
+            rx_rtr <= 1'b0;
+            rx_en <= 1'b0;
+        end else if (!rx_active && can_bus == 1'b0) begin
+            rx_active <= 1'b1;
+            rx_bit_counter <= 8'h0;
+            rx_stuff_bit <= 1'b0;
+        end else if (rx_active && bit_timer == CLOCK_PERIOD/2) begin
+            if (rx_bit_counter < 84) begin
+                rx_bit_counter <= rx_bit_counter + 1;
+                
+                // Implement bit destuffing
+                if (rx_stuff_bit) begin
+                    rx_stuff_bit <= 1'b0;
+                end else begin
+                    if (rx_bit_counter < 11)
+                        rx_id_buffer <= {rx_id_buffer[9:0], can_bus};
+                    else if (rx_bit_counter == 11)
+                        rx_rtr_buffer <= can_bus;
+                    else
+                        rx_buffer <= {rx_buffer[62:0], can_bus};
+                    
+                    rx_stuff_bit <= (can_bus == 1'b1);
+                end
+            end else begin
+                rx_active <= 1'b0;
+                rx_data <= rx_buffer;
+                rx_id <= rx_id_buffer;
+                rx_rtr <= rx_rtr_buffer;
+                rx_en <= 1'b1;
+            end
+        end else if (!rx_active) begin
+            rx_en <= 1'b0;
+        end
+    end
+    
+    // Bit timing
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            bit_timer <= 16'h0;
+        end else if (bit_timer == CLOCK_PERIOD - 1) begin
+            bit_timer <= 16'h0;
+        end else begin
+            bit_timer <= bit_timer + 1;
+        end
+    end
+    
+    // CAN bus driver
+    assign can_bus = (tx_active) ? 
+                     ((tx_bit_counter < 11) ? tx_id_buffer[10 - tx_bit_counter] :
+                      (tx_bit_counter == 11) ? tx_rtr_buffer :
+                      tx_buffer[74 - tx_bit_counter]) : 1'bz;
+
+endmodule

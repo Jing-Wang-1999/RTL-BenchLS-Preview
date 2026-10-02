@@ -1,0 +1,111 @@
+module autovcoder_079424 #(
+    parameter P          = 5,
+    parameter NX         = 4,
+    parameter NY         = 4,
+    parameter SW_LOC     = 0,
+    parameter TOPOLOGY   = "MESH",  //"MESH","TORUS"
+    parameter ROUTE_NAME = "XY"     // "XY", "TRANC_XY"
+) (
+    current_x,  //current router x address
+    current_y,  //current router y address
+    dest_x,  // destination router x address          
+    dest_y,  // destination router y address                  
+    destport,  // current router destination port number       
+    lkdestport  // look ahead destination port number
+
+);
+
+
+  function integer log2;
+    input integer number;
+    begin
+      log2 = (number <= 1) ? 1 : 0;
+      while (2 ** log2 < number) begin
+        log2 = log2 + 1;
+      end
+    end
+  endfunction  // log2 
+
+
+  localparam P_1 = P - 1, Xw = log2(
+      NX
+  ),  // number of node in x axis
+  Yw = (TOPOLOGY == "RING" || TOPOLOGY == "LINE") ? 1 : log2(
+      NY
+  );  // number of node in y axis
+
+
+  input [Xw-1 : 0] current_x;
+  input [Yw-1 : 0] current_y;
+  input [Xw-1 : 0] dest_x;
+  input [Yw-1 : 0] dest_y;
+  input [P_1-1 : 0] destport;
+  output [P_1-1 : 0] lkdestport;
+
+
+
+  wire [Xw-1 : 0] next_x;
+  wire [Yw-1 : 0] next_y;
+
+  wire [ P-1 : 0] destport_one_hot;
+
+  generate
+    /* verilator lint_off WIDTH */
+    if (TOPOLOGY == "MESH" || TOPOLOGY == "TORUS" || TOPOLOGY == "FMESH") begin : twoD
+      /* verilator lint_on WIDTH */
+      mesh_tori_decode_dstport decoder (
+          .dstport_encoded(destport),
+          .dstport_one_hot(destport_one_hot)
+      );
+
+
+    end else begin : oneD
+      line_ring_decode_dstport decoder (
+          .dstport_encoded(destport),
+          .dstport_one_hot(destport_one_hot)
+      );
+
+
+    end
+  endgenerate
+
+
+  mesh_torus_next_router_addr_predictor #(
+      .P(P),
+      .TOPOLOGY(TOPOLOGY),
+      .NX(NX),
+      .NY(NY)
+  ) addr_predictor (
+      .destport(destport_one_hot),
+      .current_x(current_x),
+      .current_y(current_y),
+      .next_x(next_x),
+      .next_y(next_y)
+  );
+
+
+  wire [P_1-1 : 0] lkdestport_encoded;
+
+  mesh_torus_conventional_routing #(
+      .TOPOLOGY(TOPOLOGY),
+      .ROUTE_NAME(ROUTE_NAME),
+      .ROUTE_TYPE("DETERMINISTIC"),
+      .NX(NX),
+      .NY(NY),
+      .LOCATED_IN_NI(0)
+  ) conv_routing (
+      .current_x(next_x),
+      .current_y(next_y),
+      .dest_x(dest_x),
+      .dest_y(dest_y),
+      .destport(lkdestport_encoded)
+
+  );
+
+  //take the value of a&b only.  x&y can be obtained from destport in the router
+  assign lkdestport = lkdestport_encoded;  //[1:0];
+
+
+
+endmodule
+

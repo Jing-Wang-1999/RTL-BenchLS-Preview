@@ -1,0 +1,78 @@
+# OpenMSP430 instruction front end
+
+Implement `omsp_frontend` in the upstream default FPGA configuration: IRQ_NR=16 (14 external maskable IRQ pins), no ASIC/CLOCK_GATING/CPUOFF_EN. All internal derived clocks equal mclk. State updates use rising `mclk` and asynchronous active-high `puc_rst`. No processor datapath or instruction memory is inside the module. Use the default state encodings below; they are visible through e_state and are normative.
+
+Inputs: cpu_en_s,cpuoff,dbg_halt_cmd,dbg_reg_sel[3:0],fe_pmem_wait,gie,irq[13:0],mclk,mdb_in[15:0],nmi_pnd,nmi_wkup,pc_sw[15:0],pc_sw_wr,puc_rst,scan_enable,wdt_irq,wdt_wkup,wkup. Outputs: dbg_halt_st,decode_noirq,e_state[3:0],exec_done,inst_ad[7:0],inst_as[7:0],inst_alu[11:0],inst_bw,inst_dest[15:0],inst_dext[15:0],inst_irq_rst,inst_jmp[7:0],inst_mov,inst_sext[15:0],inst_so[7:0],inst_src[15:0],inst_type[2:0],irq_acc[13:0],mab[15:0],mb_en,mclk_enable,mclk_wkup,nmi_acc,pc[15:0],pc_nxt[15:0]. Unannotated widths1. mclk_enable and mclk_wkup are constant1; wake and scan inputs have no effect in default FPGA configuration. cpuoff still participates in front-end sequencing.
+
+Abstract instruction states I: IRQ_FETCH0,IRQ_DONE1,DEC2,EXT1=3,EXT2=4,IDLE5; reset IRQ_FETCH. Execution states E: IRQ0=2,IRQ1=1,IRQ2=0,IRQ3=3,IRQ4=4,SRC_AD5,SRC_RD6,SRC_WR7,DST_AD8,DST_RD9,DST_WR10,EXEC11,JUMP12,IDLE13; reset IRQ1. Define halt=dbg_halt_cmd or !cpu_en_s; all state tests refer to current values. dbg_halt_st resets0 and samples halt and next_I==IDLE. inst_irq_rst resets1 and clears when exec_done. All other stored fields described below reset0, except irq_num=63. PC resets0.
+
+irq_detect=(nmi_pnd or ((any irq or wdt_irq) and gie)) and !halt and !dbg_halt_st and (exec_done or I==IDLE). decode_noirq=(I==DEC) and (exec_done or E==IDLE); decode=decode_noirq or irq_detect. On irq_detect capture the highest index set in a63-bit vector with nmi_pnd at62, irq[13:0] at61:48 and wdt_irq at58 ORed with irq[10]; if none,63. During I==IRQ_FETCH, irq_acc is one-hot irq_num mapped back bits61:48 and nmi_acc is bit62; otherwise both0. Reset irq_num63 selects reset vector fffe with no accepted IRQ output.
+
+Combinational instruction-state transitions, priority in each row:
+
+| I | next_I |
+|---|---|
+| IDLE | IRQ_FETCH if irq_detect and !halt, elseDEC if !cpuoff and !halt, elseIDLE |
+| IRQ_FETCH | IRQ_DONE |
+| IRQ_DONE | DEC |
+| DEC | IRQ_FETCH if irq_detect; elseIDLE if (cpuoff or halt) and exec_done; elseIDLE if halt and E==IDLE; elseDEC if pc_sw_wr; elseDEC if !exec_done and E!=IDLE; elseEXT1 if next_size!=0; elseDEC |
+| EXT1 | DEC if pc_sw_wr; elseEXT2 if stored_size!=1; elseDEC |
+| EXT2 | DEC |
+| other | IRQ_FETCH |
+
+fetch=not((I==DEC) and !(exec_done or E==IDLE)) and (next_E!=IDLE). pc_nxt priority: pc_sw_wr=>pc_sw; I==IRQ_FETCH=>0xff80 OR (irq_num<<1); I==IRQ_DONE=>mdb_in; otherwise pc+(fetch?2:0), modulo65536. Every edge captures pc_nxt into pc. mab=pc_nxt. A pmem_busy flag resets0 and samples fe_pmem_wait; mb_en=fetch or pc_sw_wr or I==IRQ_FETCH or pmem_busy or (dbg_halt_st and !halt). fe_pmem_wait does not stall the state machines by itself.
+
+Let ir=mdb_in. Next instruction type bits are {two_operand,jump,single_operand} = {ir[15:14]!=0,ir[15:13]==1,ir[15:13]==0}, then forced0 if irq_detect. Next single-op mask is0x80 for IRQ, otherwise (1<<ir[9:7]) when next type single. Bits0..7 mean RRC,SWPB,RRA,SXT,PUSH,CALL,RETI,IRQ. Two-operand opcode bits15:12 from4..15 map MOV,ADD,ADDC,SUBC,SUB,CMP,DADD,BIT,BIC,BIS,XOR,AND. All decode fields capture on decode and otherwise hold, unless separately stated.
+
+Store type,SO mask, jump index ir[12:10], destination index ir[3:0], source index ir[11:8], MOV indicator. inst_jmp=(1<<stored_jump_index) when stored type jump, else0. inst_dest priority: if dbg_halt_st use1<<dbg_reg_sel; else jump=>1; else IRQ/PUSH/CALL=>2; else1<<stored destination index. inst_src priority: two-operand=>1<<stored source index; else RETI=>2; elseIRQ=>1; else single-operand=>1<<stored destination index; else0. Thus reset inst_dest=1 even though stored decode fields reset0.
+
+Addressing-mode output bits0..7 are DIR,IDX,INDIR,INDIR_I,SYMB,IMM,ABS,CONST. Next source register is ir[3:0] for next single-op type, else ir[11:8]. For jump choose DIR. Otherwise select from this table by ir[5:4]:
+
+| Source register | 00 | 01 | 10 | 11 |
+|---|---|---|---|---|
+| 3 | CONST0 | CONST1 | CONST2 | CONST-1 |
+| 2 | DIR | ABS | CONST4 | CONST8 |
+| 0 | DIR | SYMB | INDIR | IMM |
+| other | DIR | IDX | INDIR | INDIR_I |
+
+Next destination mode is0 unless next type two-operand; then DIR if ir[7]==0, elseABS for destination2,SYMB for0,IDX for all others. Capture inst_as and inst_ad on decode. next_size is number of extension words: one for source IDX/SYMB/ABS/IMM plus one for destination IDX/SYMB/ABS (when not single-op). Capture stored_size on decode. inst_bw samples ir[6] and !next_jump and !irq_detect and !halt on decode.
+
+inst_sext priority each edge: if decode and next source constant, capture its16-bit constant; else if decode and next jump, capture sign_extend(ir[9:0]<<1); else if I==EXT1 and stored source mode is IDX/SYMB/ABS/IMM, capture ext. inst_dext captures ext if I==EXT1 and source needs no extension, or I==EXT2. ext=ir-2 modulo65536 if (I==EXT1 and sourceSYMB), or (I==EXT2 and destSYMB), or (I==EXT1 and !sourceSYMB and next_I!=EXT2 and destSYMB); otherwise ext=ir. Define sext_ready=(I==EXT1 and source needs extension),dext_ready=((I==EXT1 and source needs none) or I==EXT2).
+
+Execution sequencing uses four reset0 flags: J (pending jump), DW (destination-write pending), SW (source-write pending), DR (destination extension already ready). Update priority each edge: J sets on decode and ((next destDIR and ir[3:0]==0) or next_jump or next_RETI), else clears if E==JUMP. DW sets if E==DST_RD, else clears if E==DST_WR. SW sets if stored single-op type and E==SRC_RD, else clears if E==SRC_WR or E==DST_WR. DR clears if E==DST_RD, else sets if dext_ready.
+
+Define next_src_acalc=next source IDX/SYMB/ABS; next_src_read=next source INDIR/INDIR_I/IMM or next_RETI; next_dst_acalc=next dest IDX/SYMB/ABS; next_dst_read=next destIDX or next_PUSH/CALL/RETI. Their stored counterparts dst_acalc and dst_read use inst_ad/inst_so. First_E priority: IRQ0 if !dbg_halt_st and next_IRQ; elseIDLE if halt or I==IDLE; elseIDLE if cpuoff; elseSRC_AD if next_src_acalc; elseSRC_RD if next_src_read; elseDST_AD if next_dst_acalc; elseDST_RD if next_dst_read; elseEXEC.
+
+| E | next_E |
+|---|---|
+| IDLE | First_E |
+| IRQ0,IRQ1,IRQ2,IRQ3,IRQ4 | IRQ1,IRQ2,IRQ3,IRQ4,EXEC respectively |
+| SRC_AD | SRC_RD if sext_ready, elseSRC_AD |
+| SRC_RD | DST_AD if dst_acalc, elseDST_RD if dst_read, elseEXEC |
+| DST_AD | DST_RD if dext_ready or DR, elseDST_AD |
+| DST_RD | EXEC |
+| EXEC | DST_WR if DW, elseJUMP if J, elseSRC_WR if SW, elseFirst_E |
+| JUMP,SRC_WR | First_E |
+| DST_WR | JUMP if J, elseFirst_E |
+| other | IRQ0 |
+
+exec_done priority: if J then E==JUMP; else if DW then E==DST_WR; else if SW then E==SRC_WR; else E==EXEC. The ordering differs from next_E priority and must be retained.
+
+inst_alu is a12-bit control vector captured on decode, reset0. Below names refer to next decoded opcode/type; OR alternatives within each bit:
+
+| bit | Condition |
+|---|---|
+| 0 source invert | SUB,SUBC,CMP,BIC |
+| 1 increment | SUB,CMP |
+| 2 increment carry | ADDC,DADD,SUBC |
+| 3 add | ADD,ADDC,SUB,SUBC,CMP,jump,RETI |
+| 4 and | AND,BIC,BIT |
+| 5 or | BIS |
+| 6 xor | XOR |
+| 7 decimal add | DADD |
+| 8 status7 | BIT,AND,SXT |
+| 9 status flags | ADD,ADDC,SUB,SUBC,CMP,DADD,BIT,XOR,AND,RRC,RRA,SXT |
+| 10 shift | RRC,RRA |
+| 11 no write | CMP,BIT |
+
+There is no external instruction-valid signal; ir and controls drive decode exactly as above. The decoder intentionally classifies all ir[15:13]==0 as single-op patterns, without an illegal-instruction output. All current payload/control combinations follow these rules, including debug/IRQ overlaps. No promise of powerup state before reset or ASIC clock-gating behavior is made.

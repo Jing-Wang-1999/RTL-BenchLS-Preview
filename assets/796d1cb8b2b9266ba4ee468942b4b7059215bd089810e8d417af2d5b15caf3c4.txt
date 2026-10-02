@@ -1,0 +1,105 @@
+module origen_144498 (
+    input wire clk,
+    input wire rst_n,
+    inout wire dht_data,
+    output reg [7:0] temperature,
+    output reg [7:0] humidity,
+    output reg valid,
+    output reg error
+);
+
+    localparam IDLE = 3'd0;
+    localparam START = 3'd1;
+    localparam RESPONSE = 3'd2;
+    localparam RECEIVE = 3'd3;
+    localparam PROCESS = 3'd4;
+
+    reg [2:0] state;
+    reg [5:0] bit_count;
+    reg [39:0] data;
+    reg [23:0] timer;
+    reg dht_out;
+
+    assign dht_data = dht_out ? 1'bz : 1'b0;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE;
+            bit_count <= 0;
+            data <= 0;
+            timer <= 0;
+            dht_out <= 1'b1;
+            temperature <= 8'h00;
+            humidity <= 8'h00;
+            valid <= 1'b0;
+            error <= 1'b0;
+        end else begin
+            case (state)
+                IDLE: begin
+                    if (timer == 24'd1_000_000) begin // 1 second delay
+                        state <= START;
+                        timer <= 0;
+                        dht_out <= 1'b0;
+                    end else begin
+                        timer <= timer + 1;
+                    end
+                end
+
+                START: begin
+                    if (timer == 24'd18_000) begin // 18ms low pulse
+                        state <= RESPONSE;
+                        timer <= 0;
+                        dht_out <= 1'b1;
+                    end else begin
+                        timer <= timer + 1;
+                    end
+                end
+
+                RESPONSE: begin
+                    if (!dht_data) begin
+                        state <= RECEIVE;
+                        timer <= 0;
+                        bit_count <= 0;
+                    end else if (timer == 24'd100_000) begin // 100us timeout
+                        state <= IDLE;
+                        error <= 1'b1;
+                    end else begin
+                        timer <= timer + 1;
+                    end
+                end
+
+                RECEIVE: begin
+                    if (timer == 24'd50) begin // 50us
+                        if (dht_data) begin
+                            data <= {data[38:0], 1'b1};
+                        end else begin
+                            data <= {data[38:0], 1'b0};
+                        end
+                        bit_count <= bit_count + 1;
+                        if (bit_count == 6'd39) begin
+                            state <= PROCESS;
+                        end
+                        timer <= 0;
+                    end else begin
+                        timer <= timer + 1;
+                    end
+                end
+
+                PROCESS: begin
+                    if (data[7:0] == data[39:32] + data[31:24] + data[23:16] + data[15:8]) begin
+                        humidity <= data[39:32];
+                        temperature <= data[23:16];
+                        valid <= 1'b1;
+                        error <= 1'b0;
+                    end else begin
+                        error <= 1'b1;
+                    end
+                    state <= IDLE;
+                end
+
+                default: state <= IDLE;
+            endcase
+        end
+    end
+
+endmodule

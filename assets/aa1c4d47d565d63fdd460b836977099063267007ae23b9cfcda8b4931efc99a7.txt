@@ -1,0 +1,34 @@
+{
+  "candidate_id": "large_module.48e0ea83a986b48c5b02",
+  "reviewer_identity": "/root/screen_memory_v2",
+  "independent_of_primary_author": "/root/screen_protocol_v2",
+  "decision": "pass",
+  "rtl_sha256": "27c0c73514ee1002a73ceef622d64a5084a3d8fc78f9689131cdb4277d98cd36",
+  "specification_sha256": "81fbe6189a2683ee53febd4b320c3d49a59cb1768fa3822ab8d072564d687b11",
+  "rtl_reasonable": true,
+  "blocking_findings": [],
+  "evidence": [
+    {
+      "kind": "independent_full_specification_and_rtl_review",
+      "findings": [
+        "Independently traced synchronization C/S/M and delayed clock/select sampling, effective Reset/start state override, receive-byte final-bit bypass, and incomplete transaction handling.",
+        "Checked command2 resets receive address rather than continuing; command4 continues transmit address; register-read command does not reset transmit bit index, whereas command3 and register-write commands do. Specification preserves actual source priorities.",
+        "Checked four-byte big-endian register assembly, live regReadData, unreset word/data registers, register-address lookahead, and transmit address combinational increment on final sampled bit. No idealized packet restart behavior is introduced."
+      ]
+    },
+    {
+      "kind": "reviewed_primary_local_probe",
+      "path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/complexity_admission_20260913_v2/reviews/large_module.48e0ea83a986b48c5b02/directed_smoke.log",
+      "sha256": "13c8040167015f596fc5a201c018bc4cfcfa654c592a9cacf131755f198606e5",
+      "result": "receive addr=000 data=a0\nreceive addr=001 data=a1\nPASS receive-memory writes and big-endian register write",
+      "note": "Existing bounded local evidence read; no redundant rerun needed after independent source/contract inspection."
+    }
+  ],
+  "formal_scope_review": {
+    "configuration": "Declared defaults only; preprocessor_defines empty",
+    "clock": "SysClk",
+    "reset_expression": "Reset",
+    "input_assumptions": "None beyond reset-first qualification; intended external timing advice does not constrain equivalence histories.",
+    "qualification": "Positive/negative formal control and complete output coverage remain separately required; this review does not claim model evaluation or freeze."
+  }
+}

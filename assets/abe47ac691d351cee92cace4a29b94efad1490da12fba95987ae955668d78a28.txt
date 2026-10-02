@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+import json,sys,shutil,hashlib,re,subprocess
+from pathlib import Path
+ROOT=Path('/home/jwangjw/project_3rd/ICLR-RTL-BenchLS');TASK=ROOT/'scope2/task2_1_spec_to_project';BATCH=TASK/'results/direct50_wbuart_20260911_v1';HERE=Path(__file__).resolve().parent
+sys.path.insert(0,str(TASK/'pipeline'))
+from build_expansion_cases import interfaces
+from evaluate_case_v2 import write_json
+CID='github_zipcpu_wbuart32_direct_v1'
+UP=ROOT/'scope2/task2_3_specification_round_trip/cases/frozen/upstream172_followup_20260909_v1/cases/000_github_zipcpu_wbuart32_wbuart'
+SRC=ROOT/'scope2/common/sources/rtl_repos_checkouts/zipcpu__wbuart32'
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def main():
+ draft=BATCH/'packages'/CID;assert not draft.exists();draft.mkdir(parents=True)
+ c=json.loads((UP/'case.json').read_text());private=draft/'private';public=draft/'public';(public/'specification').mkdir(parents=True);(public/'interfaces').mkdir();(private/'verification').mkdir(parents=True)
+ docs=[]
+ for rel in ['README.md','doc/spec.pdf','bench/README.md','bench/cpp/README.md','bench/verilog/README.md']:
+  dest=public/'specification'/rel;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(SRC/rel,dest);docs.append({'original_path':rel,'public_path':str(dest.relative_to(draft)),'sha256':sha(dest)})
+ subprocess.run(['pdftotext','-layout',str(public/'specification/doc/spec.pdf'),str(public/'specification/doc/spec.txt')],check=True)
+ files=[];decl=[]
+ for rel in c['source_closure']:
+  p=UP/'payload/source'/rel;dest=private/'reference'/rel;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,dest);modules=interfaces(p.read_text());files.append({'path':rel,'module':modules[0][0],'modules':[m for m,_ in modules]});decl.append('// Required path: '+rel+'\n'+'\n'.join(d for _,d in modules))
+ write_json(public/'output_contract.json',{'top_module':'wbuart','required_files':files});(public/'interfaces/modules.v').write_text('\n'.join(decl))
+ (public/'instruction.md').write_text('''# Implement the WBUART32 project
+Implement all six RTL files listed in output_contract.json: the Wishbone UART integration top, full/lite transmitters and receivers, and FIFO. Use the unchanged upstream specification/doc/spec.pdf and its extracted text, README, and declaration-only interfaces. AXI-Lite and wbuart-insert wrappers are outside this case.
+
+## Reviewed configuration and clarifications
+- Rising-edge i_clk. UART is idle-high and sends the least-significant data bit first. Full UART configuration supports 5–8 bits, 1–2 stop bits and optional odd/even/mark/space parity as described in the manual; lite cores implement 8N1 with fixed CLOCKS_PER_BAUD. Retain the complete full and lite modules; internal state encodings are unrestricted.
+- wbuart is a pipelined Wishbone peripheral with four WORD-addressed registers: SETUP=0, FIFO status=1, RXDATA=2, TXDATA=3. o_wb_stall is zero; the acknowledgment/data pipeline has two rising-edge stages and acknowledgments are suppressed when i_wb_cyc is low or reset is asserted. Valid transactions assert cyc alongside stb. Honor i_wb_sel byte enables; select byte 0 for character operations. No external clock or asynchronous bus is assumed.
+- SETUP is 31 bits, despite the 30-bit width in the old register table. Bit 30 disables hardware flow control; bits 29:28 select 8/7/6/5 bits respectively; bit 27 selects two stop bits; bits 26/25/24 select parity enable/fixed/type; bits 23:0 are clocks per baud. The register starts at INITIAL_SETUP, with bit30 forced high when HARDWARE_FLOW_CONTROL_PRESENT=0. Its value is preserved across i_reset, rather than cleared; software may reconfigure it using byte-enabled writes. Reconfiguration resets RX/TX FIFOs. Wait for idle stabilization before traffic; do not reconfigure in a frame.
+- i_reset synchronously resets wrapper FIFO/control state. The source uses synthesizable initial register values as well, including initial setup and UART idle state. These are part of this FPGA implementation contract and may be retained. The source formal-property blocks are optional; no FORMAL define is enabled by the evaluator.
+- FIFOs are parameterized by LGFLEN; this project uses real FIFOs, not the one-word buffering mentioned in the older usage prose. FIFO status combines TX in bits31:16 and RX in15:0, with size/count/ready flags per the manual. RXDATA low byte returns the oldest received byte; bit8 indicates empty, bit9 parity error, bit10 frame error, bit11 break and bit12 FIFO error. A valid RX read advances the queue. o_uart_rx_int indicates a byte is available. Interrupt signals are levels derived from FIFO state, not one-cycle pulse notifications.
+- Writing TXDATA byte0 queues a character. Byte1 bit9 controls transmit break and bit12 requests transmitter/FIFO reset. RXDATA byte1 bit12 requests receive/FIFO reset. Hardware CTS/RTS is active-low; when hardware flow control is absent, ignore CTS and force SETUP bit30 high. Preserve documented receive framing/parity handling and backpressure behavior. Reserved/unused bits and reset behavior follow the declared interface and these clarifications, not stale manual width labels.
+- The added Wishbone integration test uses INITIAL_SETUP=0x40000010, LGFLEN=4, HARDWARE_FLOW_CONTROL_PRESENT=0, 8N1, and 16 clock cycles per bit. It checks setup reads/byte writes, acknowledgment, external serial TX/RX and FIFO read/interrupt effects. The three upstream line/speech/hello benches are also scored, each with both original full/lite configurations. Each complete bench is one equally weighted point; the two configurations do not create extra cases or points.
+
+Implement all declared modules at their declared paths. No simulator file/network/process I/O, test-result printing, force/release, external includes, or delays are permitted in submitted RTL. Synthesizable initial values and elaboration/formal helper functions are allowed. The public files contain no golden implementation. Run python3 checks/check.py for public compilation feedback; behavioral testbenches remain private.
+''')
+ (public/'checks').mkdir();(public/'checks/check.py').write_text('''import json,subprocess,tempfile
+from pathlib import Path
+root=Path(__file__).resolve().parents[1];c=json.loads((root/'output_contract.json').read_text())
+with tempfile.TemporaryDirectory() as d:
+ subprocess.run(['iverilog','-g2012','-s',c['top_module'],'-o',d+'/out.vvp']+[str(root/f['path']) for f in c['required_files']],check=True)
+print('PUBLIC_COMPILE_PASS')
+''')
+ shutil.copytree(UP,private/'upstream_case')
+ adapter=TASK/'results/direct50_opencores_20260911_v1/implementation/evaluate_direct_package.py';shutil.copy2(adapter,private/'verification/evaluate_direct_package.py')
+ for p in HERE.glob('*'):
+  if p.is_file():shutil.copy2(p,private/'verification'/p.name)
+ shutil.copy2(ROOT/'scope2/task2_3_specification_round_trip/pipeline/replay_wbuart32_172.py',private/'verification/replay_wbuart32_172.py')
+ names=['wishbone_uart','bench/cpp/linetest.cpp','bench/cpp/speechtest.cpp','bench/cpp/helloworld.cpp']
+ points=[{'id':name,'target':'wbuart' if i==0 else 'txuart/rxuart/txuartlite/rxuartlite/ufifo','weight':1,'timeout_seconds':600,'command':['python3','private/verification/replay_wbuart_direct.py','--payload','<private_payload>','--candidate','<submission>','--output','<output>'],'pass_criterion':'all checks/configurations of the whole bench pass; nonzero exits/timeouts fail'} for i,name in enumerate(names)]
+ write_json(private/'scoring.json',{'points':points,'gate_failure_score':0,'oracle':'Four whole testbenches; finite behavioral simulation','limitations':'Sampled full/lite UART traffic and explicit Wishbone top transactions, not exhaustive equivalence.'})
+ write_json(private/'direct_adapter.json',{'upstream_case':'private/upstream_case','entrypoint':'private/verification/replay_wbuart_direct.py','argv':['{python}','{entrypoint}','--payload','{payload}','--candidate','{candidate}','--output','{output}'],'passed_count_key':'passed_testpoints','total_count_key':'total_testpoints','points_key':'points','result_file':'result.json','timeout_seconds':900,'iverilog':'/home/jwangjw/anaconda3/envs/securitylab/bin/iverilog','allowed_includes':[],'allowed_system_functions':['$clog2','$signed','$unsigned','$bits','$past','$stable','$rose','$fell']})
+ (draft/'environment').mkdir();write_json(draft/'environment/runtime.json',{'simulators':['Icarus Verilog','Verilator'],'iverilog':'/home/jwangjw/anaconda3/envs/securitylab/bin/iverilog','verilator':'/home/jwangjw/anaconda3/envs/securitylab/bin/verilator','native_dependencies':json.loads((UP/'private/evaluator.json').read_text())['dependencies'],'native_runner':'private/verification/replay_wbuart32_172.py'})
+ review={'status':'PASS','reviewer':'Codex root manual specification-to-RTL review','original_specifications':docs,'original_coverage':['UART architecture and serial format','four-register Wishbone interface','FIFO size/status and interrupt semantics','full/lite usage and source interfaces'],'curator_corrections':['SETUP width 31 rather than old table 30','current byte enables and two-stage ack','INITIAL_SETUP survives runtime reset','FIFO depths replace old one-word prose','exact frozen top parameters and native bench configurations'],'rtl_reasonableness':'Complete six-module source closure, unchanged from qualified upstream case. Native benches cover serial engines/FIFO; new Wishbone test closes top-level bus coverage.','not_exhaustive':True,'roundtrip_source_manifest':str((UP/'case.json').relative_to(ROOT)),'roundtrip_source_manifest_sha256':sha(UP/'case.json')};write_json(private/'specification_review.json',review)
+ manifest={'schema_version':'task2.1.case.v1','case_id':CID,'project_id':c['project_id'],'configuration_id':'wbuart_full_and_lite_with_wishbone_v1','status':'draft','source':c['source'],'required_module_count':6,'source_subtree':'.','closure_lines':sum(len((private/'reference'/x['path']).read_text().splitlines()) for x in files),'normalizations':[],'evaluator_entrypoint':'private/verification/evaluate_direct_package.py','artifacts':{str(p.relative_to(draft)):sha(p) for p in sorted(draft.rglob('*')) if p.is_file()}}
+ write_json(draft/'case.json',manifest);print(draft)
+if __name__=='__main__':main()

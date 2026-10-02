@@ -1,0 +1,50 @@
+# Implement the AES-128 pipelined cipher project
+Read specification/project.txt and the original project PDF. Implement all nine
+modules/files in output_contract.json with the hierarchy described in the PDF.
+The integration top is Top_PipelinedCipher. Fix DATA_W=KEY_L=128, NO_ROUNDS=10;
+SubBytes also supports its 32-bit use inside key generation. Keep parameter
+names/defaults and every declared interface. No decryption is required.
+
+Public timing clarifications, reviewed before experiments:
+- All state uses rising clk and asynchronous ACTIVE-LOW reset, despite the
+  ambiguous reset port name. Reset clears valid and registered data outputs.
+  With invalid input, each stage clears its valid flag and holds stored data.
+- SBox is the AES byte substitution, registered when valid_in/en is high.
+  SubBytes applies SBox independently to each byte and has one register stage.
+  ShiftRows and MixColumns each have one register stage. Interpret the most
+  significant byte as AES state byte 0; bytes 0..3 are column 0. ShiftRows rotates
+  row r left by r columns; MixColumns uses the standard 02/03/01/01 matrix over
+  GF(2^8), irreducible polynomial x^8+x^4+x^3+x+1. AES SBox is multiplicative
+  inverse (zero maps to zero) followed by the standard affine transform/0x63.
+- AddRoundKey is one register stage: valid_out=data_valid_in AND key_valid_in;
+  update data_out with data_in XOR round_key only when both inputs are valid.
+- Round chains SubBytes, ShiftRows, MixColumns and AddRoundKey (four stages).
+  Its round_key/key_valid_in are sampled by the last stage, not at the input
+  stage; external standalone tests hold the round key stable and valid.
+- RoundKeyGen has four register stages. RotWord rotates the low 32-bit word
+  left by one byte; SubWord uses the AES SBox. New word 0 is old word 0 XOR
+  SubWord(RotWord(old word 3)) XOR RCON_Word; words 1..3 XOR the respective
+  old word with the previous new word. RCON_Word remains constant for the
+  transaction. KeyExpantion chains ten RoundKeyGen blocks with RCON high bytes
+  01,02,04,08,10,20,40,80,1b,36. W[1279:1152] is round key 1, W[127:0] key 10;
+  valid_out[r-1] marks round key r after 4*r register stages.
+- Top XORs the initial key, performs nine normal rounds, then SubBytes,
+  ShiftRows, one delay register and final AddRoundKey. Latency is 41 register
+  stages: a pair accepted at rising edge n appears after edge n+40. Throughput
+  is one pair each clock. Each valid pair can have a different key. Both input
+  valid flags must be high together to accept a pair; holes propagate without
+  stale valid results. Reset discards all in-flight pairs. The final data holds
+  its previous value when output valid is low.
+
+Private points test SBox exhaustively, SubBytes at 128/32 bits, ShiftRows,
+MixColumns, AddRoundKey, Round, RoundKeyGen, KeyExpantion, streaming encryption,
+and reset during streaming. Algorithm vectors are independently generated;
+public feedback only compiles. Save the actual RTL files and finish.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

@@ -1,0 +1,7 @@
+# CPU run and pipeline-reset controller (`rtlpp_05296`)
+
+Inputs are scalar `clk`, active-low asynchronous `rst_n`, `cpu_start`, and `quit_cmd`. Outputs are scalar combinational `stall` and `stall_1shot`, and registered scalar `stall_dly`, `rst_pipe`, `rst_pipe_id`, `rst_pipe_ex`, `rst_pipe_ma`, and `rst_pipe_wb`. There are no parameters.
+
+`cpu_run_state` clears asynchronously on reset. On a rising edge, `quit_cmd` clears it with priority over `cpu_start`, which sets it; with neither command it holds. `stall` is its complement. `stall_dly` asynchronously resets to one and otherwise captures `stall`; `stall_1shot=stall & ~stall_dly`, so it is high from entry into stopped state until the next rising edge updates `stall_dly`.
+
+Before each rising edge, `start_reset` is true for `cpu_start` while stopped and `end_reset` for `quit_cmd` while running. `rst_pipe` asynchronously clears and otherwise captures their OR. The ID, EX, MA, and WB reset registers asynchronously clear and shift the prior values of `rst_pipe`, ID, EX, and MA respectively on each rising edge. Thus a one-edge accepted start/quit event becomes one cycle of `rst_pipe`, followed successively by one cycle at each stage output.

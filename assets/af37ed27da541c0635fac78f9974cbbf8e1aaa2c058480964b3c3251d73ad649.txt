@@ -1,0 +1,48 @@
+module two_state_mealy_fsm (
+    input wire X,
+    input wire RST,
+    input wire CLK,
+    output reg y
+);
+
+reg PR_STATE_B, PR_STATE_C;
+wire NX_STATE_C_0_combout, Selector1_0_combout, CLK_combout, CLK_clkctrl_outclk;
+wire X_combout, RST_combout, RST_clkctrl_outclk, y_1_combout;
+wire gnd = 1'b0;
+wire vcc = 1'b1;
+
+// Clock Control Logic
+assign CLK_combout = CLK;
+assign RST_combout = RST;
+assign CLK_clkctrl_outclk = CLK_combout;
+assign RST_clkctrl_outclk = RST_combout;
+
+// State combinational logic
+assign Selector1_0_combout = PR_STATE_C | X;
+assign NX_STATE_C_0_combout = ~Selector1_0_combout & (PR_STATE_B & vcc);
+
+// Output logic
+assign y_1_combout = ~((PR_STATE_C & X) & vcc);
+
+// State registers
+always @(posedge CLK_clkctrl_outclk or posedge RST_clkctrl_outclk)
+begin
+    if (RST_clkctrl_outclk)
+    begin
+        PR_STATE_B <= 1'b0;
+        PR_STATE_C <= 1'b0;
+    end
+    else
+    begin
+        PR_STATE_B <= Selector1_0_combout;
+        PR_STATE_C <= NX_STATE_C_0_combout;
+    end
+end
+
+// Output assignment
+always @(posedge CLK_clkctrl_outclk)
+begin
+    y <= y_1_combout;
+end
+
+endmodule

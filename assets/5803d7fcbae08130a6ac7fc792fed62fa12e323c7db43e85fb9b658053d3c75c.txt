@@ -1,0 +1,35 @@
+{
+  "source_root": "github/ultraembedded/riscv",
+  "native_testbench_count": 2,
+  "qualified_cases": 2,
+  "testpoints": 2,
+  "testbench_policy": "Two distinct project top modules, one whole native SystemC testbench each. Ten firmware sections remain internal checks, not ten testpoints.",
+  "testbenches": [
+    {
+      "path": "top_tcm_axi/tb/main.cpp",
+      "project_top": "riscv_tcm_top",
+      "firmware": "isa_sim/images/basic.elf",
+      "qualified": true
+    },
+    {
+      "path": "top_cache_axi/tb/main.cpp",
+      "project_top": "riscv_top",
+      "firmware": "isa_sim/images/basic.elf",
+      "qualified": true
+    }
+  ],
+  "other_entries": [
+    {
+      "path": "isa_sim/makefile",
+      "reason": "Software ISA simulator/library; not an RTL testbench."
+    },
+    {
+      "path": "isa_sim/images/linux.elf",
+      "reason": "Different firmware configuration of existing bench; full OS image exceeds the qualified basic memory/system setup and was not attempted."
+    },
+    {
+      "path": "top_tcm_wrapper",
+      "reason": "Separate wrapper with no additional native upstream testbench in this checkout."
+    }
+  ]
+}

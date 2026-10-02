@@ -1,0 +1,47 @@
+The `pn2112_table` module is a digital hardware component designed to map a 7-bit input to a specific 32-bit output based on a predefined lookup table. This module is primarily used in applications where a specific transformation or mapping of input data to output data is required, such as in digital signal processing or control systems.
+
+### Inputs and Outputs
+
+- **Input:**
+  - `din`: A 7-bit input signal. This input serves as an index or address to select one of the predefined 32-bit output values from the lookup table.
+
+- **Output:**
+  - `dout`: A 32-bit output signal. This output provides the value associated with the input index from the lookup table.
+
+### Functional Behavior
+
+The module operates by continuously monitoring the `din` input. Whenever the input changes, the module immediately updates the `dout` output to reflect the corresponding 32-bit value from the lookup table. This behavior is achieved through a combinational logic block that evaluates the input and determines the output without any clock dependency, ensuring that the output is always current with the input.
+
+### Lookup Table
+
+The lookup table within the module consists of 66 predefined mappings from the 7-bit input to 32-bit output values. Each possible value of `din` (ranging from 0 to 65) has a specific 32-bit hexadecimal value associated with it. These mappings are hardcoded into the module and are as follows:
+
+- For `din` = 0, the output `dout` is set to `0xffffffff`.
+- For `din` = 1, the output `dout` is set to `0x02aaaaff`.
+- For `din` = 2, the output `dout` is set to `0xaaaa8000`.
+- This pattern continues for each value of `din` up to 65, with each input having a unique corresponding output value.
+
+If the input `din` is outside the range of 0 to 65, the module defaults the output `dout` to `0x0`, effectively providing a null or zero output for undefined inputs.
+
+### Design Considerations
+
+- **Combinational Logic:** The module is designed using combinational logic, meaning it does not rely on clock signals or sequential logic elements like flip-flops. This ensures that the output is updated instantly in response to changes in the input.
+  
+- **Deterministic Output:** The module guarantees a deterministic output for every valid input, making it suitable for applications requiring consistent and predictable behavior.
+
+- **Efficiency:** By using a lookup table, the module can quickly translate inputs to outputs without complex computations, enhancing performance in time-critical applications.
+
+### Applications
+
+The `pn2112_table` module can be used in various applications, including:
+
+- **Digital Signal Processing:** Where specific transformations of data are required based on predefined patterns.
+- **Control Systems:** To map sensor inputs or control signals to specific output actions.
+- **Data Encoding/Decoding:** For applications that require specific encoding or decoding schemes based on input values.
+
+### Limitations
+
+- The module is limited to handling only 66 specific input values. Any input outside this range results in a default output of zero.
+- The output values are fixed and cannot be dynamically changed without modifying the module's internal logic.
+
+In summary, the `pn2112_table` module is a straightforward and efficient solution for mapping a limited range of input values to specific output values using a predefined lookup table. Its design ensures rapid response and consistent output, making it suitable for a variety of digital applications.

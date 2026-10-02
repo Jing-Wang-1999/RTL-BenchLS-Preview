@@ -1,0 +1,5 @@
+# Combinational controller equations (`autovcoder_010647`)
+
+Scalar inputs are `Start`, `Done`, `state0`, and `state1`. Scalar outputs are `nstate0`, `nstate1`, `SubCount`, `CountRst`, `accRst`, `accLd`, `Bld`, `Ald`, `biRst`, `Ready`, and `Shift`. There are no parameters, clocks, resets, or state registers.
+
+The exact combinational equations are: `nstate1=state0 & ~Done`; `nstate0=(state1 & ~Done) | (~state1 & ~state0 & Start)`; `accRst=Bld=Ald=biRst=(~state1 & ~state0 & Start)`; `accLd=state0 & ~Done`; `Ready=(state1 & Done) | (state0 & Done) | (~state1 & ~state0 & ~Start)`; `Shift=SubCount=state1 & ~Done`; and `CountRst=Done`. These equations also define behavior for the otherwise illegal current encoding `state1=state0=1`.

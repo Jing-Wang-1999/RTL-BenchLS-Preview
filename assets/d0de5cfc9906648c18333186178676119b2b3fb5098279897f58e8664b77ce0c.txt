@@ -1,0 +1,48 @@
+module autovcoder_075423 (
+    A,
+    B,
+    Cin,
+    C,
+    Cout
+);
+  input [15:0] A;
+  input [15:0] B;
+  output [15:0] C;
+  input Cin;
+  output Cout;
+  wire rca_cin;
+
+  rca_12bits SUB_ADDER (
+      .Sum(C[15:4]),
+      .Cout(Cout),
+      .A(A[15:4]),
+      .B(B[15:4]),
+      .Cin(rca_cin)
+  );
+  AND2X1 U6 (
+      .A(B[3]),
+      .B(A[3]),
+      .Y(rca_cin)
+  );
+  OR2X1 U7 (
+      .A(B[3]),
+      .B(A[3]),
+      .Y(C[3])
+  );
+  OR2X1 U8 (
+      .A(A[2]),
+      .B(B[2]),
+      .Y(C[2])
+  );
+  OR2X1 U9 (
+      .A(A[1]),
+      .B(B[1]),
+      .Y(C[1])
+  );
+  OR2X1 U10 (
+      .A(A[0]),
+      .B(B[0]),
+      .Y(C[0])
+  );
+endmodule
+

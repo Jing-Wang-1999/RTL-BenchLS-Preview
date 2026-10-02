@@ -1,0 +1,38 @@
+**Module Specification: origen_097116**
+
+**Overview**  
+This module is a combinational hexadecimal-to-seven-segment decoder with two digit outputs. It converts an 8-bit input into two separate 7-segment display patterns (with decimal point), one for the higher nibble and one for the lower nibble.
+
+**Inputs**  
+- CLK: Clock signal (unused in this purely combinational design; included for interface compatibility).  
+- RST: Reset signal (unused; included for interface compatibility).  
+- in[7:0]: An 8-bit input representing a hexadecimal value. The upper four bits (in[7:4]) encode the most significant digit, and the lower four bits (in[3:0]) encode the least significant digit.
+
+**Outputs**  
+- HEXHigh[7:0]: An 8-bit output driving the seven segments and decimal point for the most significant digit (active-low logic: 0 lights the segment, 1 turns it off).  
+- HEXLow[7:0]: An 8-bit output driving the seven segments and decimal point for the least significant digit (active-low logic).
+
+**Functionality**  
+The module decodes each 4-bit nibble of the input independently into a predefined 8-bit pattern corresponding to a common seven-segment display encoding. The mapping is as follows:
+
+For HEXLow (lower nibble in[3:0]):  
+- 0x0 → 0b11000000 (displays '0')  
+- 0x1 → 0b11111001 (displays '1')  
+- 0x2 → 0b10100100 (displays '2')  
+- 0x3 → 0b10110000 (displays '3')  
+- 0x4 → 0b10011001 (displays '4')  
+- 0x5 → 0b10010010 (displays '5')  
+- 0x6 → 0b10000010 (displays '6')  
+- 0x7 → 0b11111000 (displays '7')  
+- 0x8 → 0b10000000 (displays '8')  
+- 0x9 → 0b10010000 (displays '9')  
+- 0xA → 0b10001000 (displays 'A')  
+- 0xB → 0b10000011 (displays 'b')  
+- 0xC → 0b11000110 (displays 'C')  
+- 0xD → 0b10100001 (displays 'd')  
+- 0xE → 0b10000110 (displays 'E')  
+- 0xF → 0b10001110 (displays 'F')  
+- Default (unused) → 0b11111111 (all segments off)
+
+For HEXHigh (upper nibble in[7:4]):  
+The same mapping as above applies,

@@ -1,0 +1,53 @@
+module origen_041691 (
+    input wire iODCK,
+    input wire iRST,
+    input wire iV_Duty,
+    input wire iWEA,
+    input wire [13:0] iPreLineSum,
+    input wire [6:0] iV_Block_Duty_Count,
+    input wire [7:0] iBlockData,
+    output wire [7:0] oBpixel,
+    output reg [1:0] oEnhaRate
+);
+
+    reg [13:0] PreLineSum [0:66];
+    reg [6:0] tV_BlockDutyCount;
+    reg [13:0] tA, tB;
+    reg [19:0] oVar;
+    reg [13:0] tVar;
+    wire SubSel;
+
+    initial begin
+        $readmemh("Enha.mem", PreLineSum);
+    end
+
+    assign oBpixel = iBlockData;
+    assign SubSel = (iBlockData << 6) > PreLineSum[tV_BlockDutyCount];
+
+    always @(posedge iODCK or negedge iRST) begin
+        if (!iRST) begin
+            tV_BlockDutyCount <= 7'd0;
+            oVar <= 20'd0;
+            tA <= 14'd0;
+            tB <= 14'd0;
+            tVar <= 14'd0;
+            oEnhaRate <= 2'd0;
+        end else begin
+            if (iV_Duty) begin
+                tV_BlockDutyCount <= 7'd0;
+                oVar <= 20'd0;
+                if (iWEA) PreLineSum[iV_Block_Duty_Count] <= iPreLineSum;
+            end else begin
+                if (tV_BlockDutyCount < 7'd67) begin
+                    tV_BlockDutyCount <= tV_BlockDutyCount + 7'd1;
+                    tA <= SubSel ? (iBlockData << 6) : PreLineSum[tV_BlockDutyCount];
+                    tB <= SubSel ? PreLineSum[tV_BlockDutyCount] : (iBlockData << 6);
+                    tVar <= tA - tB;
+                    oVar <= oVar + {6'b0, tVar};
+                end
+            end
+            oEnhaRate <= oVar[19:18];
+        end
+    end
+
+endmodule

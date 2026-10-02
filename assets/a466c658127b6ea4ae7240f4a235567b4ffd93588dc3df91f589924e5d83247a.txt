@@ -1,0 +1,26 @@
+module mg_01213 #(parameter SIZE = 8) (
+    input wire [SIZE-1:0] din,
+    input wire clk,
+    input wire se,
+    input wire [SIZE-1:0] si,
+    output reg [SIZE-1:0] q,
+    output wire [SIZE-1:0] so
+);
+
+`ifdef CONNECT_SHADOW_SCAN
+    always @(posedge clk) begin
+        if (se) begin
+            q <= si;
+        end else begin
+            q <= din;
+        end
+    end
+    assign so = q;
+`else
+    always @(posedge clk) begin
+        q <= din;
+    end
+    assign so = {SIZE{1'b0}};
+`endif
+
+endmodule

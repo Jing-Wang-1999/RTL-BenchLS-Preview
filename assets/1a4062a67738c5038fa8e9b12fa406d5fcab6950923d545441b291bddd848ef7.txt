@@ -1,0 +1,151 @@
+module autovcoder_004524 (
+    input  wire clk_en,
+    input  wire data_en,
+    input  wire iclkn,
+    input  wire iopad,
+    input  wire por,
+    output wire oclkn,
+    output wire oclkp,
+    output wire odat,
+    output wire odat_async,
+    output wire por_vccl,
+    output wire porb_vccl,
+    inout  wire VDDCore,
+    inout  wire VDDIO,
+    inout  wire VSS
+);
+
+  wire clk_en_vccl;
+  wire clk_enb_vccl;
+  wire data_en_vccl;
+  wire data_enb_vccl;
+  wire dumn;
+  wire dump;
+  wire oclkn_vccl;
+  wire oclkp_vccl;
+  wire odatb;
+  wire odatn_vccl;
+  wire odatp_vccl;
+  wire por_buf;
+  wire porb_buf;
+  wire [2:0] unused;
+
+  aib_frontend_inv_14__w_sup XDUM (
+      .in (VSS),
+      .out(unused[0]),
+      .VDD(VDDCore),
+      .VSS(VSS)
+  );
+
+  aib_frontend_inv_14__w_sup XINV (
+      .in (odatb),
+      .out(odat_async),
+      .VDD(VDDCore),
+      .VSS(VSS)
+  );
+
+  aib_frontend_lvshift_core_w_drivers_6__w_sup XLV_CLK (
+      .in(oclkp_vccl),
+      .inb(oclkn_vccl),
+      .rst_casc(porb_buf),
+      .rst_out(por_buf),
+      .rst_outb(VSS),
+      .out(oclkp),
+      .outb(oclkn),
+      .VDD(VDDCore),
+      .VSS(VSS)
+  );
+
+  aib_frontend_lvshift_4__w_sup XLV_CLK_EN (
+      .in(clk_en),
+      .rst_casc(porb_vccl),
+      .rst_out(por_vccl),
+      .rst_outb(VSS),
+      .out(clk_en_vccl),
+      .outb(clk_enb_vccl),
+      .VDD(VDDIO),
+      .VDD_in(VDDCore),
+      .VSS(VSS)
+  );
+
+  aib_frontend_lvshift_core_w_drivers_6__w_sup XLV_DATA (
+      .in(odatp_vccl),
+      .inb(odatn_vccl),
+      .rst_casc(porb_buf),
+      .rst_out(por_buf),
+      .rst_outb(VSS),
+      .out(odat),
+      .outb(odatb),
+      .VDD(VDDCore),
+      .VSS(VSS)
+  );
+
+  aib_frontend_lvshift_4__w_sup XLV_DATA_EN (
+      .in(data_en),
+      .rst_casc(porb_vccl),
+      .rst_out(por_vccl),
+      .rst_outb(VSS),
+      .out(data_en_vccl),
+      .outb(data_enb_vccl),
+      .VDD(VDDIO),
+      .VDD_in(VDDCore),
+      .VSS(VSS)
+  );
+
+  aib_frontend_lvshift_core_w_drivers_8__w_sup XLV_DUM (
+      .in  (dump),
+      .inb (dumn),
+      .out (unused[1]),
+      .outb(unused[2]),
+      .VDD (VDDIO),
+      .VSS (VSS)
+  );
+
+  aib_frontend_lvshift_core_w_drivers_8__w_sup XLV_POR (
+      .in  (por_buf),
+      .inb (porb_buf),
+      .out (por_vccl),
+      .outb(porb_vccl),
+      .VDD (VDDIO),
+      .VSS (VSS)
+  );
+
+  aib_frontend_inv_chain_12__w_sup XPOR (
+      .in  (por),
+      .out (por_buf),
+      .outb(porb_buf),
+      .VDD (VDDCore),
+      .VSS (VSS)
+  );
+
+  aib_frontend_inv_chain_12__w_sup XPOR_DUM (
+      .in  (VSS),
+      .out (dump),
+      .outb(dumn),
+      .VDD (VDDCore),
+      .VSS (VSS)
+  );
+
+  aib_frontend_aib_se2diff_match_1__w_sup XSE_CLK (
+      .en  (clk_en_vccl),
+      .enb (clk_enb_vccl),
+      .inn (iclkn),
+      .inp (iopad),
+      .outn(oclkn_vccl),
+      .outp(oclkp_vccl),
+      .VDD (VDDIO),
+      .VSS (VSS)
+  );
+
+  aib_frontend_aib_se2diff_1__w_sup XSE_DATA (
+      .en  (data_en_vccl),
+      .enb (data_enb_vccl),
+      .in  (iopad),
+      .outn(odatn_vccl),
+      .outp(odatp_vccl),
+      .VDD (VDDIO),
+      .VSS (VSS)
+  );
+
+endmodule
+

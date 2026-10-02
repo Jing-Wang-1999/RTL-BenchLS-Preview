@@ -1,0 +1,94 @@
+module origen_204462(
+    input aclclk,
+    input aclwdav,
+    input [5:0] acladdr,
+    input [7:0] aclwdata,
+    input aclrdav,
+    input aclsdo,
+    output reg wdavacl,
+    output reg rdavacl,
+    output reg [7:0] acldata,
+    output reg aclsclk,
+    output reg aclsdi,
+    output reg aclss
+);
+
+reg [2:0] aclstate;
+reg [5:0] addr;
+reg [7:0] data;
+reg [3:0] bitcount;
+
+always @(posedge aclclk) begin
+    case (aclstate)
+        3'd0: begin // Idle
+            if (aclwdav) begin
+                aclstate <= 3'd1;
+                addr <= {2'b00, acladdr};
+                data <= aclwdata;
+                bitcount <= 4'd0;
+                aclss <= 1'b1;
+            end
+            else if (aclrdav) begin
+                aclstate <= 3'd4;
+                addr <= {2'b10, acladdr};
+                bitcount <= 4'd0;
+                aclss <= 1'b1;
+            end
+        end
+        3'd1: begin // Write Address
+            aclsdi <= addr[5];
+            aclsclk <= 1'b1;
+            addr <= {addr[4:0], 1'b0};
+            bitcount <= bitcount + 4'd1;
+            if (bitcount == 4'd6) begin
+                aclstate <= 3'd2;
+                bitcount <= 4'd0;
+            end
+        end
+        3'd2: begin // Write Data
+            aclsdi <= data[7];
+            aclsclk <= 1'b1;
+            data <= {data[6:0], 1'b0};
+            bitcount <= bitcount + 4'd1;
+            if (bitcount == 4'd8) begin
+                aclstate <= 3'd3;
+                bitcount <= 4'd0;
+                wdavacl <= 1'b1;
+            end
+        end
+        3'd3: begin // Idle after Write
+            aclss <= 1'b0;
+            wdavacl <= 1'b0;
+            aclstate <= 3'd0;
+        end
+        3'd4: begin // Read Address
+            aclsdi <= addr[5];
+            aclsclk <= 1'b1;
+            addr <= {addr[4:0], 1'b0};
+            bitcount <= bitcount + 4'd1;
+            if (bitcount == 4'd6) begin
+                aclstate <= 3'd5;
+                bitcount <= 4'd0;
+            end
+        end
+        3'd5: begin // Read Data
+            aclsclk <= 1'b1;
+            data[7] <= aclsdo;
+            data <= {data[6:0], 1'b0};
+            bitcount <= bitcount + 4'd1;
+            if (bitcount == 4'd8) begin
+                aclstate <= 3'd6;
+                bitcount <= 4'd0;
+                acldata <= data;
+                rdavacl <= 1'b1;
+            end
+        end
+        3'd6: begin // Idle after Read
+            aclss <= 1'b0;
+            rdavacl <= 1'b0;
+            aclstate <= 3'd0;
+        end
+    endcase
+end
+
+endmodule

@@ -1,0 +1,127 @@
+// Turbo Code Encoder
+module origen_126622 #(
+    parameter K = 8,  // Number of input bits
+    parameter N = 16  // Number of output bits
+) (
+    input wire [K-1:0] in,
+    output wire [N-1:0] out
+);
+
+    wire [K-1:0] interleaved_in;
+    wire [K-1:0] encoded_stream1, encoded_stream2;
+
+    // Interleaver
+    interleaver #(.K(K)) interleaver_inst (
+        .in(in),
+        .out(interleaved_in)
+    );
+
+    // Convolutional encoders
+    conv_encoder #(.K(K)) conv_encoder1 (
+        .in(in),
+        .out(encoded_stream1)
+    );
+
+    conv_encoder #(.K(K)) conv_encoder2 (
+        .in(interleaved_in),
+        .out(encoded_stream2)
+    );
+
+    // Combine encoded streams
+    assign out = {encoded_stream1, encoded_stream2};
+
+endmodule
+
+// Turbo Code Decoder
+module turbo_decoder #(
+    parameter K = 8,  // Number of decoded bits
+    parameter N = 16  // Number of received bits
+) (
+    input wire [N-1:0] r,
+    output wire [K-1:0] d
+);
+
+    wire [K-1:0] decoded_stream1, decoded_stream2;
+    wire [K-1:0] interleaved_decoded;
+
+    // Split received data
+    wire [K-1:0] r1 = r[N-1:K];
+    wire [K-1:0] r2 = r[K-1:0];
+
+    // Viterbi decoders
+    viterbi_decoder #(.K(K)) viterbi_decoder1 (
+        .in(r1),
+        .out(decoded_stream1)
+    );
+
+    viterbi_decoder #(.K(K)) viterbi_decoder2 (
+        .in(r2),
+        .out(decoded_stream2)
+    );
+
+    // Interleaver
+    interleaver #(.K(K)) interleaver_inst (
+        .in(decoded_stream1),
+        .out(interleaved_decoded)
+    );
+
+    // Combine decoded streams
+    assign d = interleaved_decoded ^ decoded_stream2;
+
+endmodule
+
+// Interleaver module
+module interleaver #(
+    parameter K = 8
+) (
+    input wire [K-1:0] in,
+    output wire [K-1:0] out
+);
+
+    // Implement interleaving logic here
+    // This is a simple example, you may need a more complex interleaver
+    genvar i;
+    generate
+        for (i = 0; i < K; i = i + 1) begin : interleave_loop
+            assign out[i] = in[(i * 3) % K];
+        end
+    endgenerate
+
+endmodule
+
+// Convolutional Encoder module
+module conv_encoder #(
+    parameter K = 8
+) (
+    input wire [K-1:0] in,
+    output reg [K-1:0] out
+);
+
+    // Implement convolutional encoding logic here
+    // This is a simple example, you may need a more complex encoder
+    reg [2:0] state;
+    integer i;
+
+    always @(*) begin
+        state = 3'b000;
+        for (i = 0; i < K; i = i + 1) begin
+            out[i] = in[i] ^ state[0] ^ state[2];
+            state = {in[i], state[2:1]};
+        end
+    end
+
+endmodule
+
+// Viterbi Decoder module
+module viterbi_decoder #(
+    parameter K = 8
+) (
+    input wire [K-1:0] in,
+    output wire [K-1:0] out
+);
+
+    // Implement Viterbi decoding logic here
+    // This is a placeholder, you need to implement the actual Viterbi algorithm
+    assign out = in; // Placeholder, replace with actual Viterbi decoding
+
+endmodule

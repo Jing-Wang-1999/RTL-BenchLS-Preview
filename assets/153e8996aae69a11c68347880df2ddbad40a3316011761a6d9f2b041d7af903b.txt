@@ -1,0 +1,122 @@
+// INBUF module
+module origen_125198 (
+    input wire clk,
+    input wire rst,
+    input wire enq,
+    input wire [31:0] din,
+    output reg full,
+    output reg [31:0] dout
+);
+    reg [31:0] buffer;
+    reg valid;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            buffer <= 32'b0;
+            valid <= 1'b0;
+            full <= 1'b0;
+        end else if (enq && !full) begin
+            buffer <= din;
+            valid <= 1'b1;
+            full <= 1'b1;
+        end
+    end
+
+    always @(*) begin
+        dout = valid ? buffer : 32'b0;
+    end
+endmodule
+
+// MRE2 module
+module MRE2 (
+    input wire clk,
+    input wire rst,
+    input wire enq,
+    input wire deq,
+    input wire [31:0] din,
+    output reg [31:0] dot,
+    output reg emp,
+    output reg full,
+    output reg [1:0] cnt
+);
+    reg [31:0] buffer [0:1];
+    reg [1:0] head, tail;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            head <= 2'b0;
+            tail <= 2'b0;
+            emp <= 1'b1;
+            full <= 1'b0;
+            cnt <= 2'b0;
+        end else begin
+            if (enq && !full) begin
+                buffer[tail] <= din;
+                tail <= tail + 1;
+                cnt <= cnt + 1;
+                emp <= 1'b0;
+                full <= (cnt == 1);
+            end
+            if (deq && !emp) begin
+                head <= head + 1;
+                cnt <= cnt - 1;
+                full <= 1'b0;
+                emp <= (cnt == 1);
+            end
+        end
+    end
+
+    always @(*) begin
+        dot = buffer[head];
+    end
+endmodule
+
+// SCELL module
+module SCELL (
+    input wire clk,
+    input wire rst,
+    input wire emp1,
+    input wire emp2,
+    input wire deq1,
+    input wire deq2,
+    input wire [31:0] dot1,
+    input wire [31:0] dot2,
+    input wire full,
+    input wire [31:0] din,
+    input wire enq,
+    output reg [31:0] dout,
+    output reg deq_out1,
+    output reg deq_out2,
+    output reg enq_out
+);
+    reg [31:0] min_value;
+
+    always @(*) begin
+        if (emp1 && emp2) begin
+            min_value = 32'hFFFFFFFF;
+            deq_out1 = 1'b0;
+            deq_out2 = 1'b0;
+        end else if (emp1) begin
+            min_value = dot2;
+            deq_out1 = 1'b0;
+            deq_out2 = 1'b1;
+        end else if (emp2) begin
+            min_value = dot1;
+            deq_out1 = 1'b1;
+            deq_out2 = 1'b0;
+        end else begin
+            if (dot1 <= dot2) begin
+                min_value = dot1;
+                deq_out1 = 1'b1;
+                deq_out2 = 1'b0;
+            end else begin
+                min_value = dot2;
+                deq_out1 = 1'b0;
+                deq_out2 = 1'b1;
+            end
+        end
+
+        dout = min_value;
+        enq_out = !full && (deq1 || deq2);
+    end
+endmodule

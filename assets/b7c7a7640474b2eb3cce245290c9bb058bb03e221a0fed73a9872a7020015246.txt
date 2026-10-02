@@ -1,0 +1,52 @@
+module autovcoder_095362 #(
+    parameter I_SIG_W = 27,
+    parameter SIG_W   = 23,
+    parameter EXP_W   = 9
+) (
+    input [EXP_W-1:0] aExp,
+    input [6-1:0] aStatus,
+    input [I_SIG_W-1:0] aSig,
+    input aSign,
+    specialTiny,
+    zToInf,
+    input [2:0] rnd,
+    input [EXP_W-1:0] tailZeroCnt,
+    output reg [SIG_W+EXP_W:0] z,
+    output reg [7:0] zStatus
+);
+
+  wire sticky, round_bit, guard_bit;
+  R5FP_postproc_prepare #(
+      .I_SIG_W(I_SIG_W),
+      .SIG_W  (SIG_W),
+      .EXP_W  (EXP_W)
+  ) prepare (
+      .tailZeroCnt(tailZeroCnt),
+      .aSig(aSig),
+      .sticky(sticky),
+      .round_bit(round_bit),
+      .guard_bit(guard_bit)
+  );
+
+  R5FP_postproc_core #(
+      .I_SIG_W(I_SIG_W),
+      .SIG_W  (SIG_W),
+      .EXP_W  (EXP_W)
+  ) core (
+      .sticky_in(sticky),
+      .round_bit(round_bit),
+      .guard_bit(guard_bit),
+      .aExp(aExp),
+      .aStatus(aStatus),
+      .aSig(aSig),
+      .rnd(rnd),
+      .aSign(aSign),
+      .specialTiny(specialTiny),
+      .zToInf(zToInf),
+      .tailZeroCnt(tailZeroCnt),
+      .z(z),
+      .zStatus(zStatus)
+  );
+
+endmodule
+

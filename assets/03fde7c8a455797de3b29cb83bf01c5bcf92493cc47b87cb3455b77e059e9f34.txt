@@ -1,0 +1,51 @@
+# Module Specification: rtlpp_03278
+
+## Overview
+This module implements a 32-bit Cyclic Redundancy Check (CRC) calculator with serial input/output capabilities. It computes CRC values according to a specific polynomial and provides mechanisms for both CRC computation and verification.
+
+## Inputs
+- **data**: Single-bit serial data input for CRC calculation
+- **enable**: Control signal to enable CRC computation on the incoming data bit
+- **shift**: Control signal to shift the CRC register left by one position
+- **rst**: Asynchronous reset signal (active high)
+- **sync_rst**: Synchronous reset signal (active high)
+- **clk**: Clock signal for synchronous operations
+
+## Outputs
+- **crc_out**: The most significant bit (bit 31) of the current CRC value, used for serial output
+- **crc_match**: Boolean signal indicating whether the CRC register contains all zeros (0x00000000), used for verification
+
+## Functional Behavior
+
+### CRC Polynomial
+The module implements a specific 32-bit CRC polynomial. The polynomial taps are at positions 0, 1, 2, 4, 5, 7, 8, 10, 11, 12, 16, 22, 23, and 26, as evidenced by the XOR operations with the incoming data bit and the MSB of the current CRC value.
+
+### Reset Operation
+The CRC register initializes to all ones (0xFFFFFFFF) under two conditions:
+1. When the asynchronous reset (rst) is asserted
+2. When the synchronous reset (sync_rst) is asserted on a clock edge
+
+This initialization value is standard for many CRC implementations.
+
+### CRC Computation Mode
+When the enable signal is asserted (and resets are inactive), the module:
+- Takes the current data input bit
+- Computes the next CRC state based on the polynomial
+- Updates the 32-bit CRC register with the new value on the next clock edge
+- The computation involves XORing the data bit with specific positions of the current CRC state according to the polynomial definition
+
+### Shift Mode
+When the shift signal is asserted (and enable and resets are inactive), the module:
+- Shifts the entire CRC register left by one bit position
+- Inserts a zero into the least significant bit (bit 0)
+- This mode is typically used for serial output of the computed CRC value
+
+### Priority
+The control signals have the following priority (highest to lowest):
+1. Asynchronous reset (rst)
+2. Synchronous reset (sync_rst)
+3. Enable (CRC computation)
+4. Shift (left shift operation)
+
+### CRC Verification
+The crc_match output provides a convenient way to verify data integrity. When a complete data stream followed by its CRC is processed through the calculator, the final

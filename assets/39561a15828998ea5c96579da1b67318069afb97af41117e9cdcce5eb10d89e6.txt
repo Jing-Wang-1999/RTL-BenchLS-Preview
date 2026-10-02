@@ -1,0 +1,103 @@
+module origen_069621 (
+    input CLOCK_50,
+    input [1:0] KEY,
+    output [7:0] LED,
+    output I2C_SCLK,
+    inout I2C_SDAT,
+    output [6:0] SD_COUNTER_OUT,
+    output [9:0] COUNT
+);
+
+    reg [6:0] SD_COUNTER;
+    reg [9:0] COUNT;
+    reg SCLK;
+    reg SDI;
+    reg GO;
+    wire reset_n;
+
+    assign reset_n = KEY[0];
+    assign I2C_SCLK = SCLK;
+    assign I2C_SDAT = SDI ? 1'bz : 1'b0;
+    assign SD_COUNTER_OUT = SD_COUNTER;
+
+    always @(posedge CLOCK_50 or negedge reset_n) begin
+        if (!reset_n)
+            COUNT <= 10'b0;
+        else
+            COUNT <= COUNT + 1'b1;
+    end
+
+    always @(posedge CLOCK_50 or negedge reset_n) begin
+        if (!reset_n)
+            GO <= 1'b0;
+        else if (KEY[1])
+            GO <= 1'b1;
+        else if (SD_COUNTER == 7'd31)
+            GO <= 1'b0;
+    end
+
+    always @(posedge COUNT[9] or negedge reset_n) begin
+        if (!reset_n)
+            SD_COUNTER <= 7'b1111111;
+        else if (GO)
+            SD_COUNTER <= SD_COUNTER + 1'b1;
+    end
+
+    always @(negedge COUNT[9] or negedge reset_n) begin
+        if (!reset_n) begin
+            SCLK <= 1'b1;
+            SDI <= 1'b1;
+        end
+        else begin
+            case (SD_COUNTER)
+                7'd0  : SDI <= 1'b1;
+                7'd1  : SDI <= 1'b0;
+                7'd2  : SCLK <= 1'b0;
+                7'd3  : SDI <= 1'b1;
+                7'd4  : SDI <= 1'b0;
+                7'd5  : SDI <= 1'b1;
+                7'd6  : SDI <= 1'b0;
+                7'd7  : SDI <= 1'b0;
+                7'd8  : SDI <= 1'b0;
+                7'd9  : SDI <= 1'b0;
+                7'd10 : SDI <= 1'b0;
+                7'd11 : SDI <= 1'b1;
+                7'd12 : SDI <= 1'b0;
+                7'd13 : SDI <= 1'b0;
+                7'd14 : SDI <= 1'b0;
+                7'd15 : SDI <= 1'b0;
+                7'd16 : SDI <= 1'b0;
+                7'd17 : SDI <= 1'b0;
+                7'd18 : SDI <= 1'b0;
+                7'd19 : SDI <= 1'b0;
+                7'd20 : SDI <= 1'b1;
+                7'd21 : SDI <= 1'b1;
+                7'd22 : SDI <= 1'b0;
+                7'd23 : SDI <= 1'b1;
+                7'd24 : SDI <= 1'b0;
+                7'd25 : SDI <= 1'b1;
+                7'd26 : SDI <= 1'b0;
+                7'd27 : SDI <= 1'b1;
+                7'd28 : SDI <= 1'b0;
+                7'd29 : SDI <= 1'b1;
+                7'd30 : begin
+                    SCLK <= 1'b1;
+                    SDI <= 1'b0;
+                end
+                7'd31 : SDI <= 1'b1;
+                default : begin
+                    SCLK <= 1'b1;
+                    SDI <= 1'b1;
+                end
+            endcase
+        end
+    end
+
+    always @(posedge COUNT[9] or negedge reset_n) begin
+        if (!reset_n)
+            SCLK <= 1'b1;
+        else if ((SD_COUNTER >= 7'd4) && (SD_COUNTER <= 7'd31))
+            SCLK <= ~SCLK;
+    end
+
+endmodule

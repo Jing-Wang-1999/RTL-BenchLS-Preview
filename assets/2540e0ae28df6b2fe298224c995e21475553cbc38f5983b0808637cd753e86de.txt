@@ -1,0 +1,68 @@
+# Axi stream cobs decoder
+
+Module interface:
+
+module axi_stream_cobs_decoder
+(
+    input  wire        clk,
+    input  wire        rst,
+    input  wire [7:0]  s_axis_tdata,
+    input  wire        s_axis_tvalid,
+    output wire        s_axis_tready,
+    input  wire        s_axis_tlast,
+    input  wire        s_axis_tuser,
+    output wire [7:0]  m_axis_tdata,
+    output wire        m_axis_tvalid,
+    input  wire        m_axis_tready,
+    output wire        m_axis_tlast,
+    output wire        m_axis_tuser
+);
+
+## End markers, errors and observable buffering
+
+A byte is accepted only when current s_axis_tready and s_axis_tvalid are high.
+The ready output is registered. No accepted byte means segment state, count and
+pending decoder byte retain their values, except the idle drain described below.
+In idle, zero inputs are ignored; nonzero code bytes set remaining count to
+code-1, select next-segment for code=1 or segment otherwise, and suppress boundary
+zero insertion iff code=255. tlast/tuser on this idle code byte are ignored.
+
+In segment, each accepted byte replaces the pending decoder byte and decrements
+the 8-bit count; the previous pending byte is offered to the output buffer.
+An unexpected zero forces an output marked valid,last,user=1 using the PREVIOUS
+pending byte as data (even if its valid was zero), discards the incoming byte,
+clears pending-valid and returns to idle. A nonzero byte with tlast is a clean
+end only when the previous count was one and tuser is zero: retain the new byte
+for idle draining. Otherwise generate the same error end marker. Without tlast,
+a previous count of one enters next-segment; other counts stay in segment.
+
+At next-segment, offer the previous pending byte and tentatively replace it with
+zero, valid iff the previous segment did not suppress zero insertion. An input
+zero cancels the tentative byte, sets last=1 and user=input tuser on the offered
+previous byte, and returns to idle WITHOUT forcing its valid. A nonzero byte
+with tlast is clean only for code=1 and tuser=0, returning to idle with the
+tentative zero retained. Otherwise force an error end marker on the old pending
+data and discard the tentative zero. For a nonterminal nonzero code, update
+count/suppression and choose the next state as in idle. Unused user bits have no
+effect. Default intermediate data, valid, last and user are zero when not otherwise specified.
+
+Idle continuously offers the pending byte with last equal to its valid flag and
+user zero. It clears pending-valid when the registered internal output-ready is
+high. Next input-ready is early output-ready OR no pending-valid in idle, and
+early output-ready in other states. Consuming a nonzero idle code overrides ready
+to early output-ready; error or explicit zero termination in the other states
+overrides next input-ready to one.
+
+The output stage has a visible register and one skid register. Define early
+ready as downstream-ready OR (skid-empty AND (output-empty OR intermediate-invalid)).
+Register this internal ready each cycle. Using its PREVIOUS value: when high,
+write the intermediate tuple to the visible register if downstream-ready or
+output-empty, else to the skid register. When previous internal-ready is low
+and downstream-ready is high, move skid to visible and clear skid-valid.
+Otherwise hold both. Data/last/user are copied even when the copied valid is zero;
+therefore preserve these rules on invalid cycles too. Decoder byte storage is
+separate from this two-register output stage.
+All state, count, suppression, byte, data, last/user and valid/ready registers
+start at zero. Synchronous rst clears only state, pending-valid, input-ready,
+output-valid, internal-ready and skid-valid; other registers still follow their
+normal data-update rules at the reset edge.

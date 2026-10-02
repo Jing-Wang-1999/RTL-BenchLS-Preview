@@ -1,0 +1,29 @@
+wire [63:0] key;
+passwd_to_bin ptob (.in(pass),.out(key));
+
+reg [8:0] cntr;
+assign {super_round,des_round} = cntr;
+always @(posedge clk or posedge rst) begin
+	if (rst) cntr <= 9'b0;
+	else begin
+		if (cntr == 9'b110001111)  // super 24, round 15
+			cntr <= 9'b0;
+		else 
+			cntr <= cntr + 1'b1;		
+	end
+end
+
+wire [63:0] des_out;
+wire [63:0] block_in;
+wire [11:0] salt_bin;
+
+salt_to_bin stob (.in(salt),.out(salt_bin));
+
+assign block_in = (cntr[8:4] == 5'b0 ? 64'b0 : des_out);
+des d (.clk(clk),.rst(rst),.in(block_in),
+	.out(des_out),.key(key),.salt(salt_bin));
+defparam d .PIPE_16B = 1'b1;
+defparam d .USE_SALT = 1'b1;
+
+des_to_string dtos (.in(des_out),.out(out));
+

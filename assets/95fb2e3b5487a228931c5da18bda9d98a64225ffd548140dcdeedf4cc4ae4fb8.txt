@@ -1,0 +1,29 @@
+always @ (posedge clk or negedge rst_n) begin
+	if (!rst_n) begin
+		have_just_reset <= |DEBUG_SUPPORT;
+		dbg_req_halt_on_reset_sticky <= 1'b0;
+		step_halt_req <= 1'b0;
+		dbg_req_resume_prev <= 1'b0;
+		pending_dbg_resume_prev <= 1'b0;
+	end else if (DEBUG_SUPPORT) begin
+		have_just_reset <= 1'b0;
+
+		// One-cycle delay on assertion of reset halt req is harmless because
+		// of a matching delay on the first instruction fetch (reset_holdoff).
+		if (have_just_reset && dbg_req_halt_on_reset) begin
+			dbg_req_halt_on_reset_sticky <= 1'b1;
+		end else if (enter_debug_mode) begin
+			dbg_req_halt_on_reset_sticky <= 1'b0;
+		end
+
+		dbg_req_resume_prev <= dbg_req_resume;
+
+		if (debug_mode) begin
+			step_halt_req <= 1'b0;
+		end else if (dcsr_step && step_event) begin
+			step_halt_req <= 1'b1;
+		end
+
+		pending_dbg_resume_prev <= pending_dbg_resume;
+	end
+end

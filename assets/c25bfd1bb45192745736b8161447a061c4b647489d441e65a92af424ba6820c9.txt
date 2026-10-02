@@ -1,0 +1,35 @@
+# Module Specification: rtlpp_09585
+
+## Overview
+This module is a data alignment and buffering unit designed to handle memory write operations with optional support for unaligned accesses. It reads data from a FIFO and prepares it for writing to memory, performing byte-level alignment when necessary.
+
+## Parameters
+- **DATA_WIDTH**: Width of data bus in bits (default: 32)
+- **BYTEENABLE_WIDTH_LOG2**: Log2 of byte enable width (default: 2, meaning 4 bytes)
+- **ADDRESS_WIDTH**: Width of address bus (default: 32)
+- **UNALIGNED_ACCESS_ENABLE**: Enable/disable unaligned access support (default: 0/disabled)
+
+## Inputs
+- **clk**: System clock
+- **reset**: Asynchronous reset signal
+- **enable**: Module enable control
+- **address**: Target memory address for write operation
+- **start**: Signal to initiate a new transfer sequence
+- **waitrequest**: Backpressure signal from memory system
+- **stall**: Pipeline stall signal
+- **fifo_data**: Data word from input FIFO
+- **fifo_empty**: FIFO empty status flag
+
+## Outputs
+- **write_data**: Aligned data to be written to memory
+- **fifo_readack**: Acknowledgment signal to read from FIFO
+
+## Functional Behavior
+
+### Aligned Access Mode (UNALIGNED_ACCESS_ENABLE = 0)
+When unaligned access is disabled, the module operates in pass-through mode:
+- Data from FIFO is directly forwarded to write_data output
+- FIFO read occurs when: FIFO is not empty, no stall, no waitrequest, and module is enabled
+
+### Unaligned Access Mode (UNALIGNED_ACCESS_ENABLE = 1)
+When unaligned access

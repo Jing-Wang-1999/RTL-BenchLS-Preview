@@ -1,0 +1,60 @@
+{
+  "additions": 2,
+  "base_commit": "8ce77f202c842b492fdba68266ae59d0f93bf6ed",
+  "base_ref": "master",
+  "deletions": 2,
+  "head_commit": "a8c683b362c9eba9fc4434f9c8034cc07eef80be",
+  "issue_info": {
+    "body": "This results in lint warnings to be thrown - see https://github.com/lowRISC/opentitan/pull/14601/files#r957086642 for reference. ",
+    "created_at": "2022-08-29T16:29:18Z",
+    "labels": [
+      "Priority:P2",
+      "Type:Cleanup",
+      "Component:RTL",
+      "IP:prim"
+    ],
+    "state": "closed",
+    "title": "[prim_lfsr] Missing label on initial block",
+    "updated_at": "2022-08-29T17:54:52Z"
+  },
+  "issue_number": 14628,
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/14628",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 1,
+      "changes": 2,
+      "deletions": 1,
+      "filename": "hw/ip/prim/rtl/prim_double_lfsr.sv",
+      "patch": "@@ -87,7 +87,7 @@ module prim_double_lfsr #(\n `ifndef SYNTHESIS\n `ifndef VERILATOR\n   // Ensure both LFSRs start off with the same default seed. if randomized in simulations.\n-  initial begin\n+  initial begin : p_sync_lfsr_default_seed\n     wait (!$isunknown(gen_double_lfsr[0].u_prim_lfsr.DefaultSeedLocal));\n     wait (!$isunknown(gen_double_lfsr[1].u_prim_lfsr.DefaultSeedLocal));\n     gen_double_lfsr[1].u_prim_lfsr.DefaultSeedLocal ="
+    },
+    {
+      "additions": 1,
+      "changes": 2,
+      "deletions": 1,
+      "filename": "hw/ip/prim/rtl/prim_lfsr.sv",
+      "patch": "@@ -322,7 +322,7 @@ module prim_lfsr #(\n     logic [LfsrDw-1:0] DefaultSeedLocal;\n     logic prim_lfsr_use_default_seed;\n \n-    initial begin\n+    initial begin : p_randomize_default_seed\n       if (!$value$plusargs(\"prim_lfsr_use_default_seed=%0d\", prim_lfsr_use_default_seed)) begin\n         // 30% of the time, use the DefaultSeed parameter; 70% of the time, randomize it.\n         `ASSERT_I(UseDefaultSeedRandomizeCheck_A, std::randomize(prim_lfsr_use_default_seed) with {"
+    }
+  ],
+  "pr_info": {
+    "body": "Add label to initial block to fix lint error.\r\nFixes #14628.\r\n\r\nSigned-off-by: Srikrishna Iyer <sriyer@google.com>",
+    "created_at": "2022-08-29T16:30:34Z",
+    "merged_at": "2022-08-29T17:54:51Z",
+    "state": "closed",
+    "title": "[prim_lfsr] Initial block label",
+    "updated_at": "2022-08-29T17:54:53Z",
+    "user": "sriyerg"
+  },
+  "pr_number": 14629,
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/14629",
+  "repository": "lowRISC/opentitan",
+  "source_info": {
+    "line_number": 1810,
+    "source_file": "12.txt"
+  },
+  "task_id": "lowRISC_opentitan_14629_14628",
+  "verilog_files": [
+    "hw/ip/prim/rtl/prim_double_lfsr.sv",
+    "hw/ip/prim/rtl/prim_lfsr.sv"
+  ]
+}

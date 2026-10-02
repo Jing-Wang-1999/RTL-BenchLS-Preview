@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.9f380d5c95228b91aa37.6e14cea358a6",
+  "compile_check": {
+    "case_id": "s1derived.9f380d5c95228b91aa37.6e14cea358a6",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_104119",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_104119.dfe432424f14e875/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.9f380d5c95228b91aa37",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "9f380d5c95228b91aa378619a98ed5fedd167cc74911f8dfe21fcfe7122e7a18",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.9f380d5c95228b91aa37.6e14cea358a6",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_104119.dfe432424f14e875/private/commercial_positive.log",
+    "commercial_log_sha256": "cf736ff74c9f7db7010757fc451469b2fb5250130894e8cacedea05e49fc0956",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_104119.dfe432424f14e875/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "autovcoder_104119"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.autovcoder_104119.dfe432424f14e875",
+    "parent_id": "s1p.9f380d5c95228b91aa37",
+    "revised_tops": [
+      "autovcoder_104119"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_104119",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.9f380d5c95228b91aa37.6e14cea358a6",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Checked all32 explicit shift cases against the stated 33-bit rotate-right formula and q/c split, including0,1,31.",
+        "rtl_excerpt": "5'h1f: {rq, cq} = {a[29:0], flagc, a[31:30]};",
+        "specification_excerpt": "rotates the 33-bit vector"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.9f380d5c95228b91aa37",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "c23083a5aa4917efe5c8e79a07b06989cae95088faed18839402cf6357ae0a16",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9f380d5c95228b91aa378619a98ed5fedd167cc74911f8dfe21fcfe7122e7a18",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_104119.dfe432424f14e875/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_104119.dfe432424f14e875/private/historical_harness/01_conformal_rtl_autovcoder_104119.do"
+  ],
+  "parent_id": "s1p.9f380d5c95228b91aa37",
+  "primary_review": {
+    "case_id": "s1derived.9f380d5c95228b91aa37.6e14cea358a6",
+    "checks": {
+      "behavior": "The bit becoming carry is misstated; RTL rotates the 33-bit concatenation {a,flagc} right, so shift 1 makes c=a[0].",
+      "boundaries": "Checked defaults, widths, zero/default cases, and latency.",
+      "interface": "Compared all named ports and widths.",
+      "rtl_reasonableness": "Reasonable hardware.",
+      "sequential_and_reset": "Checked clock, reset, enable, priority, hold, and combinational behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The bit becoming carry is misstated; RTL rotates the 33-bit concatenation {a,flagc} right, so shift 1 makes c=a[0].",
+        "rtl_excerpt": "shift 1: {rq,cq}={flagc,a[31:0]}",
+        "spec_excerpt": "original MSB of input a becomes the new carry output"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The bit becoming carry is misstated; RTL rotates the 33-bit concatenation {a,flagc} right, so shift 1 makes c=a[0].",
+        "rtl_evidence": "shift 1: {rq,cq}={flagc,a[31:0]}",
+        "spec_evidence": "original MSB of input a becomes the new carry output",
+        "type": "rotation_bit_error"
+      }
+    ],
+    "parent_id": "s1p.9f380d5c95228b91aa37",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_05/s1derived.9f380d5c95228b91aa37.6e14cea358a6.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9f380d5c95228b91aa378619a98ed5fedd167cc74911f8dfe21fcfe7122e7a18",
+    "source_group": "S3",
+    "specification_sha256": "6e14cea358a630a272e5751b0605d0eb4fe7bba1253a2f57ddbb4afae1d789b2",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_05/s1derived.9f380d5c95228b91aa37.6e14cea358a6.md",
+  "qualified_specification_sha256": "c23083a5aa4917efe5c8e79a07b06989cae95088faed18839402cf6357ae0a16",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_104119.dfe432424f14e875/private/golden_design.v",
+  "rtl_sha256": "9f380d5c95228b91aa378619a98ed5fedd167cc74911f8dfe21fcfe7122e7a18",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.autovcoder_104119.dfe432424f14e875/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "6e14cea358a630a272e5751b0605d0eb4fe7bba1253a2f57ddbb4afae1d789b2",
+  "top_module": "autovcoder_104119"
+}

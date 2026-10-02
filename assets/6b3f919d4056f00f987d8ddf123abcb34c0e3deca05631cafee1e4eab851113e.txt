@@ -1,0 +1,9 @@
+always @ (posedge clock or posedge reset)
+begin 
+	if (reset)
+		bit_count <= 4'h0;
+	else if (~rx_busy) 
+		bit_count <= 4'h0;
+	else if (rx_busy & ce_1_mid)
+		bit_count <= bit_count + 4'h1;
+end

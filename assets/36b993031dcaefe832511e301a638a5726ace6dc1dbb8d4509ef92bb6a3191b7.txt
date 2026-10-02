@@ -1,0 +1,122 @@
+module origen_124765 #(
+    parameter aw = 19
+) (
+    // Wishbone interface
+    input wire wb_clk_i,
+    input wire wb_rst_i,
+    input wire [31:0] wb_dat_i,
+    input wire [aw-1:0] wb_adr_i,
+    input wire [3:0] wb_sel_i,
+    input wire wb_we_i,
+    input wire wb_cyc_i,
+    input wire wb_stb_i,
+    output reg [31:0] wb_dat_o,
+    output reg wb_ack_o,
+    output reg wb_err_o,
+
+    // Right SRAM bank interface (16-bit)
+    output reg r0_wen,
+    output reg r1_wen,
+    output reg r_oen,
+    output reg r_cen,
+    input wire [15:0] r_d_i,
+    output reg [15:0] r_d_o,
+    output reg [aw-2:0] r_a,
+
+    // Left SRAM bank interface (8-bit)
+    output reg l0_wen,
+    output reg l1_wen,
+    output reg l_oen,
+    output reg l_cen,
+    input wire [7:0] l_d_i,
+    output reg [7:0] l_d_o,
+    output reg [aw-2:0] l_a,
+
+    // Common data output enable
+    output reg d_oe
+);
+
+    localparam MAX_ADDRESS = 20'h200000; // 2MB
+
+    reg [1:0] state;
+    localparam IDLE = 2'b00, READ = 2'b01, WRITE = 2'b10, ERROR = 2'b11;
+
+    always @(posedge wb_clk_i or posedge wb_rst_i) begin
+        if (wb_rst_i) begin
+            state <= IDLE;
+            wb_ack_o <= 1'b0;
+            wb_err_o <= 1'b0;
+            r0_wen <= 1'b1;
+            r1_wen <= 1'b1;
+            l0_wen <= 1'b1;
+            l1_wen <= 1'b1;
+            r_oen <= 1'b1;
+            l_oen <= 1'b1;
+            r_cen <= 1'b1;
+            l_cen <= 1'b1;
+            d_oe <= 1'b0;
+        end else begin
+            case (state)
+                IDLE: begin
+                    if (wb_cyc_i && wb_stb_i) begin
+                        if ({1'b0, wb_adr_i} >= MAX_ADDRESS) begin
+                            state <= ERROR;
+                        end else if (wb_we_i) begin
+                            state <= WRITE;
+                        end else begin
+                            state <= READ;
+                        end
+                    end
+                    wb_ack_o <= 1'b0;
+                    wb_err_o <= 1'b0;
+                end
+
+                READ: begin
+                    if (wb_adr_i[aw-1]) begin
+                        // Left SRAM bank (8-bit)
+                        l_cen <= 1'b0;
+                        l_oen <= 1'b0;
+                        l_a <= wb_adr_i[aw-2:0];
+                        wb_dat_o <= {24'b0, l_d_i};
+                    end else begin
+                        // Right SRAM bank (16-bit)
+                        r_cen <= 1'b0;
+                        r_oen <= 1'b0;
+                        r_a <= wb_adr_i[aw-2:0];
+                        wb_dat_o <= {16'b0, r_d_i};
+                    end
+                    d_oe <= 1'b1;
+                    wb_ack_o <= 1'b1;
+                    state <= IDLE;
+                end
+
+                WRITE: begin
+                    if (wb_adr_i[aw-1]) begin
+                        // Left SRAM bank (8-bit)
+                        l_cen <= 1'b0;
+                        l_a <= wb_adr_i[aw-2:0];
+                        l_d_o <= wb_dat_i[7:0];
+                        l0_wen <= ~wb_sel_i[0];
+                        l1_wen <= ~wb_sel_i[1];
+                    end else begin
+                        // Right SRAM bank (16-bit)
+                        r_cen <= 1'b0;
+                        r_a <= wb_adr_i[aw-2:0];
+                        r_d_o <= wb_dat_i[15:0];
+                        r0_wen <= ~wb_sel_i[0];
+                        r1_wen <= ~wb_sel_i[1];
+                    end
+                    wb_ack_o <= 1'b1;
+                    state <= IDLE;
+                end
+
+                ERROR: begin
+                    wb_err_o <= 1'b1;
+                    wb_ack_o <= 1'b1;
+                    state <= IDLE;
+                end
+            endcase
+        end
+    end
+
+endmodule

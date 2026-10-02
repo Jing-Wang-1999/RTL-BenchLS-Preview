@@ -1,0 +1,34 @@
+module autovcoder_021611 #(parameter width_a = 4, parameter signd_a = 1, parameter width_s = 2, parameter width_z = 8) (
+    input  [width_a-1:0] a,
+    input  [width_s-1:0] s,
+    output [width_z-1:0] z
+);
+
+    // Internal function to perform left shift with sign extension
+    function [width_z-1:0] fshl_u_1;
+        input [width_a-1:0] a;
+        input [width_s-1:0] s;
+        begin
+            if (signd_a) begin
+                // If signed, extend with sign bit
+                fshl_u_1 = $signed(a) <<< s;
+            end else begin
+                // If unsigned, extend with zero
+                fshl_u_1 = a <<< s;
+            end
+        end
+    endfunction
+
+    // Internal function to perform the final shift operation
+    function [width_z-1:0] fshl_u;
+        input [width_a-1:0] a;
+        input [width_s-1:0] s;
+        begin
+            fshl_u = fshl_u_1(a, s);
+        end
+    endfunction
+
+    // Assign the result of the shift operation to output z
+    assign z = fshl_u(a, s);
+
+endmodule

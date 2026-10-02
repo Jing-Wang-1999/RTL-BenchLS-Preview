@@ -1,0 +1,57 @@
+module origen_134121 (
+    input sys0_clkp,
+    input sys0_clkn,
+    input pci0_clkp,
+    input pci0_clkn,
+    input pci0_rstn,
+    input ppsExtIn,
+    output [7:0] pci_exp_txp,
+    output [7:0] pci_exp_txn,
+    input [7:0] pci_exp_rxp,
+    input [7:0] pci_exp_rxn,
+    output [2:0] led,
+    output ppsOut
+);
+
+    wire gps_ppsSyncOut;
+
+    // Instantiate mkFTop_alder module
+    mkFTop_alder mkFTop_alder_inst (
+        .sys0_clkp(sys0_clkp),
+        .sys0_clkn(sys0_clkn),
+        .pci0_clkp(pci0_clkp),
+        .pci0_clkn(pci0_clkn),
+        .pci0_rstn(pci0_rstn),
+        .pcie_txp(pci_exp_txp),
+        .pcie_txn(pci_exp_txn),
+        .pcie_rxp_i(pci_exp_rxp),
+        .pcie_rxn_i(pci_exp_rxn),
+        .led(led),
+        .gps_ppsSyncOut(gps_ppsSyncOut),
+        .gps_ppsSyncIn_x(ppsExtIn)
+    );
+
+    assign ppsOut = gps_ppsSyncOut;
+
+endmodule
+
+// Define the mkFTop_alder module
+module mkFTop_alder (
+    input sys0_clkp,
+    input sys0_clkn,
+    input pci0_clkp,
+    input pci0_clkn,
+    input pci0_rstn,
+    output [7:0] pcie_txp,
+    output [7:0] pcie_txn,
+    input [7:0] pcie_rxp_i,
+    input [7:0] pcie_rxn_i,
+    output [2:0] led,
+    output gps_ppsSyncOut,
+    input gps_ppsSyncIn_x
+);
+
+    // Implementation of mkFTop_alder module goes here
+    // This is just a placeholder and should be replaced with the actual implementation
+
+endmodule

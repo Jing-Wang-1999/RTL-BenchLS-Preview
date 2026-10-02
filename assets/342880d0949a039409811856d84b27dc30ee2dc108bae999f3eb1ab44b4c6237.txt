@@ -1,0 +1,53 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/13794",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/13751",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 13794,
+  "issue_number": 13751,
+  "verilog_files": [
+    "hw/ip/flash_ctrl/rtl/flash_mp.sv"
+  ],
+  "deletions": 10,
+  "additions": 17,
+  "patches": [
+    {
+      "filename": "hw/ip/flash_ctrl/rtl/flash_mp.sv",
+      "patch": "@@ -180,6 +180,7 @@ module flash_mp import flash_ctrl_pkg::*; import flash_ctrl_reg_pkg::*; (\n \n   logic data_en;\n   assign data_en          = data_part_sel &\n+                            ~addr_invalid &\n                             mubi4_test_true_strict(data_region_cfg.en);\n \n   assign data_rd_en       = data_en & rd_i &\n@@ -247,7 +248,9 @@ module flash_mp import flash_ctrl_pkg::*; import flash_ctrl_reg_pkg::*; (\n   assign page_cfg = hw_sel ? hw_page_cfg : info_page_cfgs_i[bank_addr][info_sel_i][info_page_addr];\n \n   // final operation\n-  assign info_en          = info_part_sel             & mubi4_test_true_strict(page_cfg.en);\n+  assign info_en          = info_part_sel &\n+                            ~addr_invalid &\n+                            mubi4_test_true_strict(page_cfg.en);\n   assign info_rd_en       = info_en & rd_i            & mubi4_test_true_strict(page_cfg.rd_en);\n   assign info_prog_en     = info_en & prog_i          & mubi4_test_true_strict(page_cfg.prog_en);\n   assign info_pg_erase_en = info_en & pg_erase_i      & mubi4_test_true_strict(page_cfg.erase_en);\n@@ -315,35 +318,39 @@ module flash_mp import flash_ctrl_pkg::*; import flash_ctrl_reg_pkg::*; (\n \n   // Bank erase enable should always be one-hot.  We cannot erase multiple banks\n   // at the same time\n-  `ASSERT(bkEraseEnOnehot_a, (req_o & bk_erase_o) |-> $onehot(bk_erase_en))\n+  `ASSERT(bkEraseEnOnehot_A, (req_o & bk_erase_o) |-> $onehot(bk_erase_en))\n   // Requests can only happen one at a time\n-  `ASSERT(requestTypesOnehot_a, req_o |-> $onehot({rd_o, prog_o, pg_erase_o, bk_erase_o}))\n+  `ASSERT(requestTypesOnehot_A, req_o |-> $onehot({rd_o, prog_o, pg_erase_o, bk_erase_o}))\n   // Info / data errors are mutually exclusive\n-  `ASSERT(invalidReqOnehot_a, req_o |-> $onehot0({invalid_data_txn, invalid_info_txn}))\n+  `ASSERT(invalidReqOnehot_A, req_o |-> $onehot0({invalid_data_txn, invalid_info_txn}))\n   // Cannot match more than one info rule at a time\n-  `ASSERT(hwInfoRuleOnehot_a, req_i & hw_sel |-> $onehot0(unused_rule_match))\n+  `ASSERT(hwInfoRuleOnehot_A, req_i & hw_sel |-> $onehot0(unused_rule_match))\n   // An input request should lead to an output request if there are no errors\n-  `ASSERT(InReqOutReq_a, req_i |-> req_o | no_allowed_txn)\n+  `ASSERT(InReqOutReq_A, req_i |-> req_o | no_allowed_txn)\n   // An Info request should not lead to data requests\n-  `ASSERT(InfoReqToData_a, req_i & info_part_sel |-> ~|{data_en,\n+  `ASSERT(InfoReqToData_A, req_i & info_part_sel |-> ~|{data_en,\n                                                         data_rd_en,\n                                                         data_prog_en,\n                                                         data_pg_erase_en})\n   // A data request should not lead to info requests\n-  `ASSERT(DataReqToInfo_a, req_i & data_part_sel |->\n+  `ASSERT(DataReqToInfo_A, req_i & data_part_sel |->\n     ~|{info_en,\n     info_rd_en,\n     info_prog_en,\n     info_pg_erase_en,\n     info_bk_erase_en})\n \n   // If a bank erase request only selects data, then info should be erased\n-  `ASSERT(BankEraseData_a, req_i & bk_erase_i & |bk_erase_en & data_part_sel |-> data_bk_erase_en &\n+  `ASSERT(BankEraseData_A, req_i & bk_erase_i & |bk_erase_en & data_part_sel |-> data_bk_erase_en &\n           ~info_bk_erase_en)\n \n   // If a bank erase request also selects the info partition, then both data\n   // and info must be erased\n-  `ASSERT(BankEraseInfo_a, req_i & bk_erase_i & |bk_erase_en & info_part_sel |-> &{data_bk_erase_en,\n+  `ASSERT(BankEraseInfo_A, req_i & bk_erase_i & |bk_erase_en & info_part_sel |-> &{data_bk_erase_en,\n                                                                     info_bk_erase_en})\n \n+  // When no transactions are allowed, the output request should always be 0.\n+  `ASSERT(NoReqWhenErr_A, no_allowed_txn |-> ~req_o)\n+\n+\n endmodule // flash_erase_ctrl",
+      "additions": 17,
+      "deletions": 10,
+      "changes": 27
+    }
+  ],
+  "pr_info": {
+    "title": "[flash_ctrl] Fix info access overflow",
+    "body": "- When an out-of-bound info partition address is supplied, the previous\r\n  memory protection would compare against unknown values even though\r\n  an invalid address was already registered.\r\n\r\n- Move the invalid address indication into the datapath to fix this issue.\r\n\r\n- fixes issue identified in #13751\r\n\r\nSigned-off-by: Timothy Chen <timothytim@google.com>",
+    "state": "closed",
+    "created_at": "2022-07-21T19:57:29Z",
+    "updated_at": "2022-07-22T17:46:52Z",
+    "merged_at": "2022-07-22T17:46:49Z",
+    "user": "tjaychen"
+  },
+  "issue_info": {
+    "title": "[flash_ctrl] info partitoin overflow is not handled gracefully",
+    "body": "Run #13750 \r\nTest sends program FlashPartInfo with page address 10 (which is out of range) @2787751.5ns\r\n@27877619,\r\ntb.dut.u_flash_mp.page_cfg becomes 'x' due to index of info_page_cfgs_i is out of range and\r\ntb.dut.flash_phy_req.req and tb.dut.flash_phy_req.prog become x.\r\n",
+    "labels": [
+      "Priority:P1",
+      "Type:Bug",
+      "Component:RTL",
+      "IP:flash_ctrl",
+      "Milestone:V2"
+    ],
+    "state": "closed",
+    "created_at": "2022-07-20T12:49:37Z",
+    "updated_at": "2022-08-01T17:39:30Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 1902
+  },
+  "base_commit": "737e1a4407f5a1f2de4da2311bcab48c7b686a9e",
+  "head_commit": "2ef8474d362bfe90e5f136d28a43060e49be56ad",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_13794_13751",
+  "lec_status": "useful_pass"
+}

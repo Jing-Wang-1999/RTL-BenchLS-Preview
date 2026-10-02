@@ -1,0 +1,103 @@
+module origen_128196 (
+    input wire FCLK_IN,
+    inout wire [7:0] BUS_DATA,
+    input wire [15:0] ADD,
+    input wire RD_B,
+    input wire WR_B,
+    inout wire [7:0] FD,
+    input wire FREAD,
+    input wire FSTROBE,
+    input wire FMODE,
+    input wire [63:0][63:0] HIT,
+    input wire TRIGGER,
+    output wire CLK_BX,
+    output wire [1:0] RESET,
+    output wire OUT_DATA,
+    output wire [63:0][63:0] HIT_OR
+);
+
+    // Internal wires and registers
+    wire clk;
+    wire reset_n;
+    reg [7:0] data_in;
+    reg [7:0] data_out;
+    reg [15:0] address;
+    reg read_enable;
+    reg write_enable;
+    reg [7:0] fd_in;
+    reg [7:0] fd_out;
+    reg fread_reg;
+    reg fstrobe_reg;
+    reg fmode_reg;
+    reg [63:0][63:0] hit_reg;
+    reg trigger_reg;
+    reg clk_bx_reg;
+    reg [1:0] reset_reg;
+    reg out_data_reg;
+    reg [63:0][63:0] hit_or_reg;
+
+    // Clock and reset
+    assign clk = FCLK_IN;
+    assign reset_n = ~RESET[0];
+
+    // Bidirectional bus handling
+    assign BUS_DATA = (RD_B == 1'b0) ? data_out : 8'bz;
+    assign FD = (FREAD == 1'b0) ? fd_out : 8'bz;
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            data_in <= 8'b0;
+            fd_in <= 8'b0;
+        end else begin
+            data_in <= BUS_DATA;
+            fd_in <= FD;
+        end
+    end
+
+    // Input registers
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            address <= 16'b0;
+            read_enable <= 1'b0;
+            write_enable <= 1'b0;
+            fread_reg <= 1'b0;
+            fstrobe_reg <= 1'b0;
+            fmode_reg <= 1'b0;
+            hit_reg <= {64{64'b0}};
+            trigger_reg <= 1'b0;
+        end else begin
+            address <= ADD;
+            read_enable <= ~RD_B;
+            write_enable <= ~WR_B;
+            fread_reg <= FREAD;
+            fstrobe_reg <= FSTROBE;
+            fmode_reg <= FMODE;
+            hit_reg <= HIT;
+            trigger_reg <= TRIGGER;
+        end
+    end
+
+    // Output registers
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            clk_bx_reg <= 1'b0;
+            reset_reg <= 2'b0;
+            out_data_reg <= 1'b0;
+            hit_or_reg <= {64{64'b0}};
+        end else begin
+            clk_bx_reg <= ~clk_bx_reg;
+            reset_reg <= {reset_reg[0], ~reset_n};
+            out_data_reg <= |fd_in;
+            hit_or_reg <= hit_reg;
+        end
+    end
+
+    // Output assignments
+    assign CLK_BX = clk_bx_reg;
+    assign RESET = reset_reg;
+    assign OUT_DATA = out_data_reg;
+    assign HIT_OR = hit_or_reg;
+
+    // Add your submodule instantiations and additional logic here
+
+endmodule

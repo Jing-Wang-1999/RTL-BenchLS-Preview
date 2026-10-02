@@ -1,0 +1,20 @@
+always @ (posedge clk)
+      if (~reset_n) begin
+	 sdr_cs_n <= 1'b1;
+	 sdr_cke <= 1'b1;
+	 sdr_ras_n <= 1'b1;
+	 sdr_cas_n <= 1'b1;
+	 sdr_we_n <= 1'b1;
+	 sdr_dqm   <= {SDR_BW{1'b1}};
+	 sdr_den_n <= {SDR_BW{1'b1}};
+      end // if (~reset_n)
+      else begin
+	 sdr_cs_n <= xfr_cmd[3];
+	 sdr_ras_n <= xfr_cmd[2];
+	 sdr_cas_n <= xfr_cmd[1];
+	 sdr_we_n <= xfr_cmd[0];
+	 sdr_cke <= (xfr_st != 2'b00) ? 1'b1 : 
+		    ~(mgmt_idle & b2x_idle & r2x_idle);
+	 sdr_dqm <= (wr_next) ? a2x_wren_n : {SDR_BW{1'b0}};
+         sdr_den_n <= (wr_next) ? {SDR_BW{1'b0}} : {SDR_BW{1'b1}};
+      end

@@ -1,0 +1,42 @@
+always @ *
+begin
+    wb_result_r   = 32'b0;
+
+    // Tag associated with load
+    addr_lsb_r    = resp_addr_w[1:0];
+    load_byte_r   = resp_byte_w;
+    load_half_r   = resp_half_w;
+    load_signed_r = resp_signed_w;
+
+    // Access fault - pass badaddr on writeback result bus
+    if ((mem_ack_i && mem_error_i) || mem_unaligned_e2_q)
+        wb_result_r = resp_addr_w;
+    // Handle responses
+    else if (mem_ack_i && resp_load_w)
+    begin
+        if (load_byte_r)
+        begin
+            case (addr_lsb_r[1:0])
+            2'h3: wb_result_r = {24'b0, mem_data_rd_i[31:24]};
+            2'h2: wb_result_r = {24'b0, mem_data_rd_i[23:16]};
+            2'h1: wb_result_r = {24'b0, mem_data_rd_i[15:8]};
+            2'h0: wb_result_r = {24'b0, mem_data_rd_i[7:0]};
+            endcase
+
+            if (load_signed_r && wb_result_r[7])
+                wb_result_r = {24'hFFFFFF, wb_result_r[7:0]};
+        end
+        else if (load_half_r)
+        begin
+            if (addr_lsb_r[1])
+                wb_result_r = {16'b0, mem_data_rd_i[31:16]};
+            else
+                wb_result_r = {16'b0, mem_data_rd_i[15:0]};
+
+            if (load_signed_r && wb_result_r[15])
+                wb_result_r = {16'hFFFF, wb_result_r[15:0]};
+        end
+        else
+            wb_result_r = mem_data_rd_i;
+    end
+end

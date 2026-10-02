@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.87992bfec5906212a88d.6aabbb4a54d8",
+  "compile_check": {
+    "case_id": "s1derived.87992bfec5906212a88d.6aabbb4a54d8",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_142995",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_142995.47b9f1d01541b070/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.87992bfec5906212a88d",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "87992bfec5906212a88dc276c08c515aa5ebacb8b40e18e9b73ee3d1eca7c239",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.87992bfec5906212a88d.6aabbb4a54d8",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_142995.47b9f1d01541b070/private/commercial_positive.log",
+    "commercial_log_sha256": "8bd04ca9db1f5265c5215a4abde7e365a53638c93cc1cc51c9726cc6c64c24cb",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_142995.47b9f1d01541b070/private/historical_harness/00_sec_autovcoder_142995.tcl",
+    "executed_script_sha256": "afbf42223057ff0ef80203581d97979b3a9ff5388b7759642e9fbb69581d2c62",
+    "golden_tops": [
+      "autovcoder_142995"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.autovcoder_142995.47b9f1d01541b070",
+    "parent_id": "s1p.87992bfec5906212a88d",
+    "revised_tops": [
+      "autovcoder_142995"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_142995",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.87992bfec5906212a88d.6aabbb4a54d8",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Every cyclic priority branch begins at the last winner, registered grants clear each edge and no-request index holds. The spec correctly avoids promising round-robin fairness.",
+        "rtl_excerpt": "case (last_granted)",
+        "specification_excerpt": "beginning with `last_granted`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.87992bfec5906212a88d",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "0c74338883ab575fcfea8e00ab4c0b7a13ad0c90f422b7e001b538045d2bb58b",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "87992bfec5906212a88dc276c08c515aa5ebacb8b40e18e9b73ee3d1eca7c239",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_142995.47b9f1d01541b070/private/historical_harness/00_sec_autovcoder_142995.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_142995.47b9f1d01541b070/private/historical_harness/01_sec_autovcoder_142995.tcl"
+  ],
+  "parent_id": "s1p.87992bfec5906212a88d",
+  "primary_review": {
+    "case_id": "s1derived.87992bfec5906212a88d.6aabbb4a54d8",
+    "checks": {
+      "behavior": "Calling the policy fair round-robin is misleading: each last-granted requester retains highest priority indefinitely.",
+      "boundaries": "Checked defaults, widths, zero/default cases, and latency.",
+      "interface": "Compared all named ports and widths.",
+      "rtl_reasonableness": "Reasonable hardware.",
+      "sequential_and_reset": "Checked clock, reset, enable, priority, hold, and combinational behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Calling the policy fair round-robin is misleading: each last-granted requester retains highest priority indefinitely.",
+        "rtl_excerpt": "case(last_granted): request at last_granted is tested first",
+        "spec_excerpt": "ensures fairness by rotating the priority"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "Calling the policy fair round-robin is misleading: each last-granted requester retains highest priority indefinitely.",
+        "rtl_evidence": "case(last_granted): request at last_granted is tested first",
+        "spec_evidence": "ensures fairness by rotating the priority",
+        "type": "fairness_mischaracterized"
+      }
+    ],
+    "parent_id": "s1p.87992bfec5906212a88d",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_05/s1derived.87992bfec5906212a88d.6aabbb4a54d8.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "87992bfec5906212a88dc276c08c515aa5ebacb8b40e18e9b73ee3d1eca7c239",
+    "source_group": "S3",
+    "specification_sha256": "6aabbb4a54d8f3b6ab9d9e08f8ce7e5bcc0f27c592c45b9d9b4143f0fadef1af",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_05/s1derived.87992bfec5906212a88d.6aabbb4a54d8.md",
+  "qualified_specification_sha256": "0c74338883ab575fcfea8e00ab4c0b7a13ad0c90f422b7e001b538045d2bb58b",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_142995.47b9f1d01541b070/private/golden_design.v",
+  "rtl_sha256": "87992bfec5906212a88dc276c08c515aa5ebacb8b40e18e9b73ee3d1eca7c239",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_142995.47b9f1d01541b070/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "6aabbb4a54d8f3b6ab9d9e08f8ce7e5bcc0f27c592c45b9d9b4143f0fadef1af",
+  "top_module": "autovcoder_142995"
+}

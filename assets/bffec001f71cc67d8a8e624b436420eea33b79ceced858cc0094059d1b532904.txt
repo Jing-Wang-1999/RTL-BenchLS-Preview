@@ -1,0 +1,153 @@
+module ALT_IOBUF(
+  input i,
+  input oe,
+  output o,
+  inout io
+);
+  assign io = oe ? i : 1'bz;
+  assign o = io;
+endmodule
+
+module rtlpp_01573 (
+
+  input            sys_clk,
+
+  output  [14:0]   ddr3_a,
+  output  [ 2:0]   ddr3_ba,
+  output           ddr3_reset_n,
+  output           ddr3_ck_p,
+  output           ddr3_ck_n,
+  output           ddr3_cke,
+  output           ddr3_cs_n,
+  output           ddr3_ras_n,
+  output           ddr3_cas_n,
+  output           ddr3_we_n,
+  inout   [31:0]   ddr3_dq,
+  inout   [ 3:0]   ddr3_dqs_p,
+  inout   [ 3:0]   ddr3_dqs_n,
+  output  [ 3:0]   ddr3_dm,
+  output           ddr3_odt,
+  input            ddr3_rzq,
+
+  output            eth1_tx_clk,
+  output            eth1_tx_ctl,
+  output  [  3:0]   eth1_tx_d,
+  input             eth1_rx_clk,
+  input             eth1_rx_ctl,
+  input   [  3:0]   eth1_rx_d,
+  output            eth1_mdc,
+  inout             eth1_mdio,
+
+  output            sdio_clk,
+  inout             sdio_cmd,
+  inout   [  3:0]   sdio_d,
+
+  output            spim1_ss0,
+  output            spim1_clk,
+  output            spim1_mosi,
+  input             spim1_miso,
+
+  input             usb1_clk,
+  output            usb1_stp,
+  input             usb1_dir,
+  input             usb1_nxt,
+  inout   [  7:0]   usb1_d,
+
+  input             uart0_rx,
+  output            uart0_tx,
+  inout             hps_conv_usb_n,
+
+  output  [  7:0]   gpio_bd_o,
+  input   [  5:0]   gpio_bd_i,
+
+  output            hdmi_out_clk,
+  output            hdmi_vsync,
+  output            hdmi_hsync,
+  output            hdmi_data_e,
+  output  [ 23:0]   hdmi_data,
+
+  inout             hdmi_i2c_scl,
+  inout             hdmi_i2c_sda,
+
+  output            ltc2308_cs,
+  output            ltc2308_sclk,
+  output            ltc2308_mosi,
+  input             ltc2308_miso
+);
+
+  wire             sys_resetn;
+  wire    [63:0]   gpio_i;
+  wire    [63:0]   gpio_o;
+
+  wire             i2c0_out_data;
+  wire             i2c0_sda;
+  wire             i2c0_out_clk;
+  wire             i2c0_scl_in_clk;
+
+  assign gpio_i[63:14] = gpio_o[63:14];
+  assign gpio_i[13:8] = gpio_bd_i[5:0];
+
+  assign gpio_bd_o[7:0] = gpio_o[7:0];
+  assign ltc2308_cs = gpio_o[41];
+
+  ALT_IOBUF scl_iobuf (
+    .i(1'b0),
+    .oe(i2c0_out_clk),
+    .o(i2c0_scl_in_clk),
+    .io(hdmi_i2c_scl)
+  );
+
+  ALT_IOBUF sda_iobuf (
+    .i(1'b0),
+    .oe(i2c0_out_data),
+    .o(i2c0_sda),
+    .io(hdmi_i2c_sda)
+  );
+
+  // Assuming system_bd module is replaced with internal logic
+  assign sys_resetn = 1'b1; // Example assignment
+  // Additional internal logic for the replaced system_bd module goes here
+
+  assign eth1_tx_clk = 1'b0;
+  assign eth1_tx_ctl = 1'b0;
+  assign eth1_tx_d = 4'b0000;
+  assign eth1_rx_clk = 1'b0;
+  assign eth1_rx_ctl = 1'b0;
+  assign eth1_rx_d = 4'b0000;
+  assign eth1_mdc = 1'b0;
+  assign eth1_mdio = 1'bz;
+
+  assign sdio_clk = 1'b0;
+  assign sdio_cmd = 1'bz;
+  assign sdio_d = 4'bzzzz;
+
+  assign spim1_ss0 = 1'b0;
+  assign spim1_clk = 1'b0;
+  assign spim1_mosi = 1'b0;
+  assign spim1_miso = 1'b0;
+
+  assign usb1_clk = 1'b0;
+  assign usb1_stp = 1'b0;
+  assign usb1_dir = 1'b0;
+  assign usb1_nxt = 1'b0;
+  assign usb1_d = 8'bzzzzzzzz;
+
+  assign uart0_rx = 1'b0;
+  assign uart0_tx = 1'b0;
+  assign hps_conv_usb_n = 1'b0;
+
+  assign hdmi_out_clk = 1'b0;
+  assign hdmi_vsync = 1'b0;
+  assign hdmi_hsync = 1'b0;
+  assign hdmi_data_e = 1'b0;
+  assign hdmi_data = 24'b0;
+
+  assign hdmi_i2c_scl = 1'bz;
+  assign hdmi_i2c_sda = 1'bz;
+
+  assign ltc2308_cs = 1'b0;
+  assign ltc2308_sclk = 1'b0;
+  assign ltc2308_mosi = 1'b0;
+  assign ltc2308_miso = 1'b0;
+
+endmodule

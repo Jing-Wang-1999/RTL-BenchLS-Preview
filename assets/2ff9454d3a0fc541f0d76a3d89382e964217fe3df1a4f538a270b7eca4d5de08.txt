@@ -1,0 +1,96 @@
+module rtlpp_04601(
+	clk, rst, rdy, ud_t, ld_t, udlt_t, int_req, dma_req, zerodma,
+    insn, mem_ce, word_nxt, read_nxt, dbus_nxt, dma, addr_nxt, d);
+
+	parameter	W	= 16;
+	parameter	N	= W-1;
+
+	input	clk;
+	input	rst;
+	input	rdy;
+	input	ud_t;
+	input	ld_t;
+	input	udlt_t;
+	input	int_req;
+	input	dma_req;
+	input	zerodma;
+	input	[N:0]	insn;
+	output	reg	mem_ce;
+	output	reg	word_nxt;
+	output	reg	read_nxt;
+	output	reg	dbus_nxt;
+	output	reg	dma;
+	output	reg	[N:0]	addr_nxt;
+	inout	[N:0]	d;
+
+	wire	a15;
+	wire	z;
+	wire	n;
+	wire	co;
+	wire	v;
+	wire	rf_we;
+	wire	[3:0]	rna;
+	wire	[3:0]	rnb;
+	wire	fwd;
+	wire	[11:0]	imm;
+	wire	sextimm4;
+	wire	zextimm4;
+	wire	wordimm4;
+	wire	imm12;
+	wire	pipe_ce;
+	wire	b15_4_ce;
+	wire	add;
+	wire	ci;
+	wire	[1:0]	logicop;
+	wire	sri;
+	wire	sum_t;
+	wire	logic_t;
+	wire	zeroext_t;
+	wire	shr_t;
+	wire	shl_t;
+	wire	ret_t;
+	wire	branch;
+	wire	[7:0]	brdisp;
+	wire	selpc;
+	wire	zeropc;
+	wire	dmapc;
+	wire	pc_ce;
+	wire	ret_ce;
+
+    // Include the logic for the control module directly within xr16.
+	
+	always @(posedge clk or posedge rst) begin
+		if (rst) begin
+			mem_ce <= 0;
+			word_nxt <= 0;
+			read_nxt <= 0;
+			dbus_nxt <= 0;
+			dma <= 0;
+            // Initialize other internal states as necessary
+		end else if (rdy) begin
+			// Implement control logic based on inputs and internal states
+            // For demonstration purposes, these are simple assignments
+			mem_ce <= int_req & ~dma_req;
+			word_nxt <= insn[0];
+			read_nxt <= insn[1];
+			dbus_nxt <= insn[2];
+			dma <= dma_req;
+            // Add the actual complex control logic here
+		end
+	end
+	
+    // Include the logic for the datapath module directly within xr16.
+	
+	always @(posedge clk or posedge rst) begin
+		if (rst) begin
+			addr_nxt <= 0;
+            // Initialize other internal states as necessary
+		end else begin
+			// Implement datapath logic based on inputs and internal states
+            // For demonstration purposes, these are simple assignments
+			addr_nxt <= insn + 1;
+            // Add the actual complex datapath logic here
+		end
+	end
+	
+endmodule

@@ -1,0 +1,107 @@
+module origen_031543 (
+    input wire clock,
+    input wire nreset,
+    input wire [15:0] db_address,
+    inout wire [7:0] db_data,
+    input wire nread,
+    input wire nwrite,
+    output reg int_timer,
+    input wire reset_div
+);
+
+    // Internal registers
+    reg [7:0] div, tima, tma;
+    reg [2:0] tac;
+    
+    // Prescalers
+    reg [7:0] div_prescaler;
+    reg [9:0] tima_prescaler;
+    
+    // Timer control signals
+    wire timer_enable = tac[2];
+    wire [1:0] clock_select = tac[1:0];
+    
+    // Clock divider for TIMA
+    wire tima_tick = (clock_select == 2'b00 && tima_prescaler == 10'd1023) ||
+                     (clock_select == 2'b01 && tima_prescaler == 10'd15) ||
+                     (clock_select == 2'b10 && tima_prescaler == 10'd63) ||
+                     (clock_select == 2'b11 && tima_prescaler == 10'd255);
+    
+    // Memory-mapped I/O addresses
+    localparam DIV_ADDR  = 16'hFF04;
+    localparam TIMA_ADDR = 16'hFF05;
+    localparam TMA_ADDR  = 16'hFF06;
+    localparam TAC_ADDR  = 16'hFF07;
+    
+    // Bidirectional data bus management
+    reg [7:0] data_out;
+    assign db_data = (!nread) ? data_out : 8'bz;
+    wire [7:0] data_in = db_data;
+    
+    // Read operation
+    always @(*) begin
+        case (db_address)
+            DIV_ADDR:  data_out = div;
+            TIMA_ADDR: data_out = tima;
+            TMA_ADDR:  data_out = tma;
+            TAC_ADDR:  data_out = {5'b0, tac};
+            default:   data_out = 8'h00;
+        endcase
+    end
+    
+    // Write operation and register updates
+    always @(posedge clock or negedge nreset) begin
+        if (!nreset) begin
+            div <= 8'h00;
+            tima <= 8'h00;
+            tma <= 8'h00;
+            tac <= 3'b000;
+            div_prescaler <= 8'h00;
+            tima_prescaler <= 10'h000;
+            int_timer <= 1'b0;
+        end else begin
+            // DIV update
+            if (div_prescaler == 8'd255) begin
+                div <= div + 1'b1;
+                div_prescaler <= 8'h00;
+            end else begin
+                div_prescaler <= div_prescaler + 1'b1;
+            end
+            
+            // TIMA update
+            if (timer_enable) begin
+                if (tima_tick) begin
+                    if (tima == 8'hFF) begin
+                        tima <= tma;
+                        int_timer <= 1'b1;
+                    end else begin
+                        tima <= tima + 1'b1;
+                    end
+                    tima_prescaler <= 10'h000;
+                end else begin
+                    tima_prescaler <= tima_prescaler + 1'b1;
+                end
+            end
+            
+            // Write operations
+            if (!nwrite) begin
+                case (db_address)
+                    DIV_ADDR:  begin div <= 8'h00; div_prescaler <= 8'h00; end
+                    TIMA_ADDR: tima <= data_in;
+                    TMA_ADDR:  tma <= data_in;
+                    TAC_ADDR:  tac <= data_in[2:0];
+                endcase
+            end
+            
+            // Reset DIV on reset_div signal
+            if (reset_div) begin
+                div <= 8'h00;
+                div_prescaler <= 8'h00;
+            end
+            
+            // Clear interrupt flag after one clock cycle
+            if (int_timer) int_timer <= 1'b0;
+        end
+    end
+
+endmodule

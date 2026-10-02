@@ -1,0 +1,116 @@
+{
+  "schema_version": "complexity_independent_review.v1",
+  "candidate_id": "large_module.4695f376e8c5f10d8377",
+  "reviewer": {
+    "identity": "/root/harder_specs_historical",
+    "independent_of_author": "/root/harder_specs_datapath",
+    "method": "manual independent full RTL/specification inspection plus exact-integer arithmetic reference simulation"
+  },
+  "reviewed_specification_sha256": "d914d62fb13bf9313795234a284855b51aff26986dfd7a9997575a491848636a",
+  "rtl_sha256": "0cd444cd873fda6068e2b91a92574679d61303aa75c025971a6d2ecb72c7980f",
+  "decision": "pass",
+  "rtl_reasonable": true,
+  "flaws": [],
+  "evidence": {
+    "interface": {
+      "rtl_lines": [
+        5,
+        50,
+        286,
+        289
+      ],
+      "specification_lines": [
+        5,
+        17
+      ],
+      "finding": "All nine input/output names, operand widths, registered handshakes and default four-bit state encodings agree. No data-width parameter or alternate rounding-mode promise."
+    },
+    "behavior": {
+      "rtl_lines": [
+        96,
+        156,
+        159,
+        205,
+        235,
+        264
+      ],
+      "specification_lines": [
+        29,
+        45
+      ],
+      "finding": "Priority-ordered NaNs, operand-order-dependent opposite-infinity NaN sign, signed-zero shortcuts, gradual underflow and nearest-even rounding agree. Normalized arithmetic was additionally checked against exact integer binary32 addition on 3661 input pairs with zero discrepancies."
+    },
+    "sequential_and_reset": {
+      "rtl_lines": [
+        60,
+        94,
+        266,
+        283
+      ],
+      "specification_lines": [
+        19,
+        27,
+        47,
+        53
+      ],
+      "finding": "Synchronous active-high reset sets only FSM and three handshake registers. Unreset output data and reset-edge datapath updates are explicitly documented. Handshakes use pre-edge ready/valid; A then B cannot be accepted on each state entry edge. Output is held in put_z during backpressure. Timing is 3 cycles for special cases and 10+D+N otherwise: one cycle unpack, special, exit alignment, add_0, add_1, exit normalise_1, exit normalise_2, round, pack, put_z plus D/N loop cycles. Effective exponents never fall below -126 on supported finite add inputs, so normalise_2 adds no additional loop cycles."
+    },
+    "boundaries": {
+      "rtl_lines": [
+        99,
+        141,
+        143,
+        154,
+        211,
+        241,
+        251,
+        261
+      ],
+      "specification_lines": [
+        31,
+        45,
+        49,
+        53
+      ],
+      "finding": "No signaling-NaN exception output is promised; NaN payloads intentionally discarded. Both negative zeros return negative zero; mixed zeros and nonzero exact cancellation return positive zero. Overflow maps to signed infinity. Subnormal and ties-even examples, largest finite overflow, both infinity orders, near cancellation and full exponent differences are represented in independent probes. This is bounded simulation, not an exhaustive IEEE proof."
+    },
+    "RTL_reasonableness": {
+      "rtl_lines": [
+        38,
+        60,
+        159,
+        274
+      ],
+      "finding": "Substantive sequential floating-point datapath with variable alignment/normalization loops. Finite bounded exponent arithmetic, synthesizable signed casts, no black-box dependencies, initial values or simulation-only operations. Invalid FSM encodings are unspecified before reset and require the documented reset-first contract."
+    }
+  },
+  "nonblocking_caveats": [
+    {
+      "topic": "invalid_result_data",
+      "finding": "When output_z_stb is zero, output_z has no transaction meaning; SEC must consistently handle retained/uninitialized data rather than equating an arbitrary reset value to a specification requirement."
+    },
+    {
+      "topic": "timing",
+      "finding": "Latency includes one exit edge for each normalization/alignment state and normalization of cancellation through low guard/round positions. Parent formal replay remains required; successful arithmetic simulation alone does not qualify SEC."
+    }
+  ],
+  "local_validation": {
+    "result": "pass",
+    "arithmetic_reference": "exact integer binary32 nearest-even addition, custom documented special cases",
+    "cases": 3661,
+    "checked": 3661,
+    "seed": 913,
+    "failures": [],
+    "rtl_sha256": "0cd444cd873fda6068e2b91a92574679d61303aa75c025971a6d2ecb72c7980f",
+    "scope": "bounded local simulation; not exhaustive IEEE proof; 2 cycles output backpressure on each transaction"
+  },
+  "local_validation_artifacts": [
+    "independent_probe.py",
+    "independent_vectors.hex",
+    "independent_probe.v",
+    "independent_probe.log",
+    "independent_probe_result.json"
+  ],
+  "formal_qualification": "not_run_by_independent_reviewer",
+  "frozen_admission": false
+}

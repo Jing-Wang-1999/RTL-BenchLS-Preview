@@ -1,0 +1,80 @@
+module rtlpp_02012 #(
+    parameter DATA_WIDTH = 32,
+    parameter BYTEENABLE_WIDTH_LOG2 = 2,
+    parameter ADDRESS_WIDTH = 32,
+    parameter UNALIGNED_ACCESS_ENABLE = 0
+) (
+    input clk,
+    input reset,
+    input enable,
+    input [ADDRESS_WIDTH-1:0] address,
+    input start,
+    input waitrequest,
+    input stall,
+    input [DATA_WIDTH-1:0] fifo_data,
+    input fifo_empty,
+    output [DATA_WIDTH-1:0] write_data,
+    output fifo_readack
+);
+
+    // Calculate bytes to boundary
+    // For a 32-bit word (4 bytes), address bits [1:0] determine alignment
+    // bytes_to_boundary = 4 - (address % 4) = 4 - address[1:0]
+    wire [BYTEENABLE_WIDTH_LOG2:0] bytes_to_boundary;
+    assign bytes_to_boundary = (1 << BYTEENABLE_WIDTH_LOG2) - address[BYTEENABLE_WIDTH_LOG2-1:0];
+    
+    // Shift amount is bytes_to_boundary - 1
+    wire [BYTEENABLE_WIDTH_LOG2-1:0] shift_amount_current;
+    assign shift_amount_current = bytes_to_boundary[BYTEENABLE_WIDTH_LOG2-1:0] - 1;
+    
+    // Pipeline registers
+    reg [BYTEENABLE_WIDTH_LOG2-1:0] shift_amount_reg;
+    reg [DATA_WIDTH-1:0] right_shifted_data_reg;
+    
+    // Barrel shifter logic
+    wire [DATA_WIDTH-1:0] left_shifted;
+    wire [DATA_WIDTH-1:0] right_shifted;
+    wire [DATA_WIDTH-1:0] aligned_data;
+    
+    // Left shift by shift_amount_current bytes (shift_amount_current * 8 bits)
+    assign left_shifted = fifo_data << (shift_amount_current * 8);
+    
+    // Right shift by shift_amount_current bytes (shift_amount_current * 8 bits)
+    assign right_shifted = fifo_data >> (shift_amount_current * 8);
+    
+    // Combine shifted versions with previous right-shifted data
+    assign aligned_data = left_shifted | right_shifted_data_reg;
+    
+    // FIFO read acknowledgment logic
+    wire fifo_readack_unaligned;
+    wire fifo_readack_aligned;
+    
+    // Unaligned mode: don't read on start signal
+    assign fifo_readack_unaligned = ~fifo_empty & ~stall & ~waitrequest & enable & ~start;
+    
+    // Aligned mode (pass-through): read whenever conditions are met
+    assign fifo_readack_aligned = ~fifo_empty & ~stall & ~waitrequest & enable;
+    
+    // Select read acknowledgment based on configuration
+    assign fifo_readack = UNALIGNED_ACCESS_ENABLE ? fifo_readack_unaligned : fifo_readack_aligned;
+    
+    // Select output data based on configuration
+    assign write_data = UNALIGNED_ACCESS_ENABLE ? aligned_data : fifo_data;
+    
+    // Pipeline register updates
+    always @(posedge clk or negedge reset) begin
+        if (~reset) begin
+            shift_amount_reg <= 0;
+            right_shifted_data_reg <= 0;
+        end else if (start) begin
+            // Reset on start signal
+            shift_amount_reg <= 0;
+            right_shifted_data_reg <= 0;
+        end else if (fifo_readack) begin
+            // Update pipeline registers when FIFO data is acknowledged
+            shift_amount_reg <= shift_amount_current;
+            right_shifted_data_reg <= right_shifted;
+        end
+    end
+
+endmodule

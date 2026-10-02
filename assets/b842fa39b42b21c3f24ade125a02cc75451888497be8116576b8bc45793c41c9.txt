@@ -1,0 +1,57 @@
+module origen_132697 (
+    input D,
+    input CLK,
+    input RESET_B,
+    input SCD,
+    input SCE,
+    input VPWR,
+    input VGND,
+    input VPB,
+    input VNB,
+    output Q,
+    output Q_N
+);
+
+    reg buf_Q;
+    wire RESET, mux_out;
+    wire notifier, D_delayed, SCD_delayed, SCE_delayed, RESET_B_delayed, CLK_delayed;
+    reg awake;
+    wire cond0, cond1, cond2, cond3, cond4;
+
+    // Power-up detection
+    initial begin
+        awake = 1'b0;
+        #1;
+        awake = 1'b1;
+    end
+
+    // Reset signal generation
+    assign RESET = ~RESET_B;
+
+    // 2-to-1 multiplexer
+    assign mux_out = SCE ? SCD : D;
+
+    // D flip-flop with asynchronous reset and set
+    always @(posedge CLK or posedge RESET or negedge SCD) begin
+        if (RESET)
+            buf_Q <= 1'b0;
+        else if (~SCD)
+            buf_Q <= 1'b1;
+        else
+            buf_Q <= mux_out;
+    end
+
+    // Output assignments
+    assign Q = buf_Q;
+    assign Q_N = ~buf_Q;
+
+    // Delay modeling
+    specify
+        (D +=> Q) = (0:0:0, 0:0:0);
+        (CLK +=> Q) = (0:0:0, 0:0:0);
+        (RESET_B +=> Q) = (0:0:0, 0:0:0);
+        (SCD +=> Q) = (0:0:0, 0:0:0);
+        (SCE +=> Q) = (0:0:0, 0:0:0);
+    endspecify
+
+endmodule

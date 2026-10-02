@@ -1,0 +1,52 @@
+module autovcoder_063389 (
+    input  wire A1_S0,
+    input  wire A1_S1,
+    input  wire A2_S0,
+    input  wire A2_S1,
+    output wire Z_S0,
+    output wire Z_S1
+);
+  wire X1, X2, Y1, Y2;
+  wire X1_AN_Y1, X1_OR_Y2;
+  wire X2_OR_Y1, X2_AN_Y2;
+
+  assign X1 = A1_S0;
+  assign X2 = A1_S1;
+  assign Y1 = A2_S0;
+  assign Y2 = A2_S1;
+
+  // z1 = (x1 & y1) xor (x1 | y2)
+  AN2D0 cmo_and0 (
+      .A1(X1),
+      .A2(Y1),
+      .Z (X1_AN_Y1)
+  );
+  OR2D0 cmo_or0 (
+      .A1(X1),
+      .A2(Y2),
+      .Z (X1_OR_Y2)
+  );
+  XOR2D0 cmo_xor0 (
+      .A1(X1_AN_Y1),
+      .A2(X1_OR_Y2),
+      .Z (Z_S0)
+  );
+
+  // z2 = (x2 | y1) xor (x2 & y2)
+  OR2D0 cmo_or1 (
+      .A1(X2),
+      .A2(Y1),
+      .Z (X2_OR_Y1)
+  );
+  AN2D0 cmo_and1 (
+      .A1(X2),
+      .A2(Y2),
+      .Z (X2_AN_Y2)
+  );
+  XOR2D0 cmo_xor1 (
+      .A1(X2_OR_Y1),
+      .A2(X2_AN_Y2),
+      .Z (Z_S1)
+  );
+endmodule
+

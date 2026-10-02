@@ -1,0 +1,96 @@
+module autovcoder_031389 (
+    nACLK2,
+    ACLK1,
+    ACLK2,
+    PHI1,
+    RES,
+    LOCK,
+    DFLOAD,
+    DOUT,
+    n_NOUT,
+    n_DMCAB,
+    BLOAD,
+    BSTEP,
+    PCM,
+    DSTEP,
+    DMC1,
+    CTRL1
+);
+
+  input nACLK2;
+  input ACLK1;
+  input ACLK2;
+  input PHI1;
+  input RES;
+  input LOCK;
+  input DFLOAD;
+  input DOUT;
+  input n_NOUT;
+  input n_DMCAB;
+  output BLOAD;
+  output BSTEP;
+  output PCM;
+  output DSTEP;
+  output DMC1;
+  output CTRL1;
+
+  wire n_DFLOAD;
+  wire step_ff_nq;
+  wire stop_ff_q;
+  wire pcm_ff_nq;
+  wire dout_latch_q;
+  wire dstep_latch_q;
+  wire stop_latch_nq;
+  wire pcm_latch_q;
+
+  assign n_DFLOAD = ~DFLOAD;
+
+  rsff_2_3 step_ff (
+      .res1(~(~stop_latch_nq | n_DFLOAD | n_NOUT)),
+      .res2(RES),
+      .s(BLOAD),
+      .nq(step_ff_nq)
+  );
+  rsff_2_3 stop_ff (
+      .res1(BLOAD),
+      .res2(RES),
+      .s(PCM),
+      .q(stop_ff_q),
+      .nq(CTRL1)
+  );
+  rsff_2_3 pcm_ff (
+      .res1(DMC1),
+      .res2(RES),
+      .s(PCM),
+      .nq(pcm_ff_nq)
+  );
+
+  dlatch dout_latch (
+      .d (DOUT),
+      .en(ACLK1),
+      .q (dout_latch_q)
+  );
+  dlatch dstep_latch (
+      .d (step_ff_nq),
+      .en(ACLK1),
+      .q (dstep_latch_q)
+  );
+  dlatch stop_latch (
+      .d (stop_ff_q),
+      .en(ACLK1),
+      .nq(stop_latch_nq)
+  );
+  dlatch pcm_latch (
+      .d (pcm_ff_nq),
+      .en(ACLK1),
+      .q (pcm_latch_q)
+  );
+
+  nor (PCM, PHI1, n_DMCAB);
+  nor (DMC1, pcm_latch_q, ~ACLK2);
+  nor (DSTEP, dout_latch_q, dstep_latch_q, n_DFLOAD, LOCK);
+  nor (BLOAD, stop_latch_nq, n_DFLOAD, n_NOUT);
+  nor (BSTEP, n_DFLOAD, ~n_NOUT);
+
+endmodule
+

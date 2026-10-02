@@ -1,0 +1,76 @@
+module mg_09980 (input clk_in,input sclr_in,output reg ce_out);
+integer rseed = 0; 
+  integer ce_period = 10; 
+  integer ce_period_cnt = 0; 
+  reg enable = 0; 
+  reg [1:0] ce_pattern = 2'b00; 
+  task start_random; 
+  input [31:0] seed; 
+  begin 
+  rseed <= seed; 
+  ce_pattern <= 2'b10; 
+  enable <= 1; 
+  $display("@%10t : CE Generator : Enabled (Random)", $time); 
+  end 
+  endtask 
+  task start_periodic; 
+  input [31:0] input_period; 
+  begin 
+  ce_period <= input_period; 
+  ce_period_cnt <= 0; 
+  ce_pattern <= 2'b01; 
+  enable <= 1; 
+  $display("@%10t : CE Generator : Enabled (Periodic) [%dns]", $time, input_period); 
+  end 
+  endtask 
+  task start; 
+  begin 
+  ce_pattern <= 2'b00; 
+  enable <= 1; 
+  $display("@%10t : CE Generator : Enabled (always asserted)", $time); 
+  end 
+  endtask 
+  task stop; 
+  begin 
+  enable <= 0; 
+  $display("@%10t : CE Generator : Disabled.", $time); 
+  end 
+  endtask 
+  always @ (posedge sclr_in) 
+  begin 
+  ce_out = 0; 
+  ce_period_cnt = 0; 
+  enable = 0; 
+  end 
+  always @ (posedge clk_in) 
+  begin 
+  if (enable) 
+  begin 
+  case (ce_pattern) 
+  2'b00 : begin 
+  ce_out = 1; 
+  end 
+  2'b01 : begin 
+  if (ce_period_cnt % (ce_period/2) == 0) 
+  begin 
+  ce_out = ~ce_out; 
+  ce_period_cnt = 0; 
+  end 
+  ce_period_cnt = ce_period_cnt + 1; 
+  end 
+  2'b10 : begin 
+  ce_out = {$random(rseed)}%2; 
+  end 
+  default : begin 
+  $display("CE Generator : ERROR! ce_pattern[1:0] = 2'b11 IS NOT A VALID SETTING."); 
+  $finish; 
+  end 
+  endcase 
+  end 
+  else 
+  begin 
+  ce_period_cnt <= 0; 
+  ce_out <= 0; 
+  end 
+  end 
+  endmodule

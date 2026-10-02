@@ -1,0 +1,34 @@
+The module named "autovcoder_032635" is a finite state machine (FSM) designed to operate based on a clock signal and a reset input. It processes a 3-bit input signal and produces four output signals. The module transitions through six distinct states, each uniquely identified by a parameter: A2, B1, B2, C1, C2, and D1. The state transitions and output values are determined by the current state and the input signals.
+
+### Inputs:
+1. **clk**: This is the clock signal input. It triggers state transitions on its rising edge.
+2. **reset**: This input initializes the FSM to the starting state (A2) when activated.
+3. **s**: A 3-bit input vector (s[3:1]) that influences state transitions. Each bit can be individually checked to determine the next state.
+
+### Outputs:
+1. **fr3, fr2, fr1, dfr**: These are the output signals, each represented as a single bit. Their values depend on the current state of the FSM.
+
+### States and Transitions:
+- **A2**: The initial state upon reset. The FSM remains in A2 unless s[1] is high, which transitions it to B1.
+- **B1**: From B1, the FSM moves to C1 if s[2] is high. If s[1] is high, it stays in B1; otherwise, it returns to A2.
+- **B2**: Similar to B1, but the FSM moves to C1 if s[2] is high, stays in B2 if s[1] is high, or returns to A2.
+- **C1**: The FSM transitions to D1 if s[3] is high. If s[2] is high, it remains in C1; otherwise, it moves to B2.
+- **C2**: Similar to C1, but transitions to D1 if s[3] is high, stays in C2 if s[2] is high, or moves to B2.
+- **D1**: The FSM remains in D1 if s[3] is high; otherwise, it transitions to C2.
+
+### Output Logic:
+- **A2**: Outputs are set to 1111.
+- **B1**: Outputs are set to 0110.
+- **B2**: Outputs are set to 0111.
+- **C1**: Outputs are set to 0010.
+- **C2**: Outputs are set to 0011.
+- **D1**: Outputs are set to 0000.
+
+### Operational Details:
+- The FSM uses synchronous logic, meaning state transitions occur on the clock's rising edge.
+- The reset signal is synchronous, ensuring the FSM returns to the initial state A2 when activated.
+- The module employs combinational logic to determine the next state based on current state and input signals.
+- Outputs are generated using combinational logic based on the current state, ensuring no latches are inadvertently created.
+
+### Constraints:
+- The module must handle

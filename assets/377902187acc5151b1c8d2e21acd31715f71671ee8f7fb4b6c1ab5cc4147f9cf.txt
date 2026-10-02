@@ -1,0 +1,114 @@
+module rtlpp_05248(
+  input clk,
+  input rst_n,
+  input fetch_enable_i,
+  input spi_clk_i,
+  input spi_cs_i,
+  output [1:0] spi_mode_o,
+  output spi_sdo0_o,
+  output spi_sdo1_o,
+  output spi_sdo2_o,
+  output spi_sdo3_o,
+  input spi_sdi0_i,
+  input spi_sdi1_i,
+  input spi_sdi2_i,
+  input spi_sdi3_i,
+  output spi_master_clk_o,
+  output [3:0] spi_master_oen_o,
+  output spi_master_csn0_o,
+  output spi_master_csn1_o,
+  output spi_master_csn2_o,
+  output spi_master_csn3_o,
+  output [1:0] spi_master_mode_o,
+  output spi_master_sdo0_o,
+  output spi_master_sdo1_o,
+  output spi_master_sdo2_o,
+  output spi_master_sdo3_o,
+  input spi_master_sdi0_i,
+  input spi_master_sdi1_i,
+  input spi_master_sdi2_i,
+  input spi_master_sdi3_i,
+  output uart_tx,
+  input uart_rx,
+  output uart_rts,
+  output uart_dtr,
+  input uart_cts,
+  input uart_dsr,
+  input scl_i,
+  output scl_o,
+  output scl_oen_o,
+  input sda_i,
+  output sda_o,
+  output sda_oen_o,
+  input [31:0] gpio_in,
+  output [31:0] gpio_out,
+  output [31:0] gpio_dir,
+  input tck_i,
+  input trstn_i,
+  input tms_i,
+  input tdi_i,
+  output tdo_o
+);
+  // Internal logic for each component
+
+  // SPI Master Controller Logic
+  wire spi_master_clk;
+  wire [3:0] spi_master_cs;
+  wire [3:0] spi_master_oen;
+  wire [3:0] spi_master_sdo;
+  wire [3:0] spi_master_sdi;
+
+  assign spi_master_clk_o = spi_master_clk;
+  assign spi_master_oen_o = spi_master_oen;
+  assign spi_master_csn0_o = spi_master_cs[0];
+  assign spi_master_csn1_o = spi_master_cs[1];
+  assign spi_master_csn2_o = spi_master_cs[2];
+  assign spi_master_csn3_o = spi_master_cs[3];
+  assign spi_master_sdo0_o = spi_master_sdo[0];
+  assign spi_master_sdo1_o = spi_master_sdo[1];
+  assign spi_master_sdo2_o = spi_master_sdo[2];
+  assign spi_master_sdo3_o = spi_master_sdo[3];
+
+  assign spi_master_sdi[0] = spi_master_sdi0_i;
+  assign spi_master_sdi[1] = spi_master_sdi1_i;
+  assign spi_master_sdi[2] = spi_master_sdi2_i;
+  assign spi_master_sdi[3] = spi_master_sdi3_i;
+
+  // UART Controller Logic
+  wire uart_transmit;
+  wire uart_receive;
+  wire uart_rts_n;
+  wire uart_dtr_n;
+  wire uart_cts_n;
+  wire uart_dsr_n;
+
+  assign uart_tx = uart_transmit;
+  assign uart_rts = uart_rts_n;
+  assign uart_dtr = uart_dtr_n;
+
+  // I2C Controller Logic
+  wire i2c_scl_o;
+  wire i2c_scl_oen;
+  wire i2c_sda_o;
+  wire i2c_sda_oen;
+
+  assign scl_o = i2c_scl_o;
+  assign scl_oen_o = i2c_scl_oen;
+  assign sda_o = i2c_sda_o;
+  assign sda_oen_o = i2c_sda_oen;
+
+  // GPIO Controller Logic
+  wire [31:0] gpio_output;
+  wire [31:0] gpio_direction;
+
+  assign gpio_out = gpio_output;
+  assign gpio_dir = gpio_direction;
+
+  // JTAG Controller Logic
+  wire jtag_tdo;
+
+  assign tdo_o = jtag_tdo;
+
+  // Additional logic can be implemented here based on requirements
+
+endmodule

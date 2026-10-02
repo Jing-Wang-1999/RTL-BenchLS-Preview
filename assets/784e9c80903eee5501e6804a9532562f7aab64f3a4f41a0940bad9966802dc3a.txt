@@ -1,0 +1,113 @@
+{
+  "case_id": "s1derived.2d9b641710e288736b29.05691c68622a",
+  "compile_check": {
+    "case_id": "s1derived.2d9b641710e288736b29.05691c68622a",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_00944",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_00944.95543e516cd8b79e/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.2d9b641710e288736b29",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "2d9b641710e288736b29249cd81cd354e5d8f0f1fb4f566af229a1d0b3170c72",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.2d9b641710e288736b29.05691c68622a",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_00944.95543e516cd8b79e/private/commercial_positive.log",
+    "commercial_log_sha256": "91f79fd141cbe0b4f682a30244773a9ce24e107bf15bff6c5e57bf6236aa1282",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_00944.95543e516cd8b79e/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mg_00944"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.mg_00944.95543e516cd8b79e",
+    "parent_id": "s1p.2d9b641710e288736b29",
+    "revised_tops": [
+      "mg_00944"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_00944",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.2d9b641710e288736b29.05691c68622a",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "For the stated binary selector combinations the two-level conditional LUT has the exact four INIT choices, with EQN unused and no state.",
+        "rtl_excerpt": "wire [1:0] s1 = b ? INIT[ 3:2] : INIT[1:0];",
+        "specification_excerpt": "`INIT[{b,a}]`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.2d9b641710e288736b29",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "06161798b7c75dd2c9e767aef07049913fe7cfd48dc901d60c6e0c1bb9d56669",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "2d9b641710e288736b29249cd81cd354e5d8f0f1fb4f566af229a1d0b3170c72",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_00944.95543e516cd8b79e/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_00944.95543e516cd8b79e/private/historical_harness/01_conformal_rtl_mg_00944.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_00944.95543e516cd8b79e/private/historical_harness/02_fm_rtl_mg_00944.tcl"
+  ],
+  "parent_id": "s1p.2d9b641710e288736b29",
+  "primary_review": {
+    "case_id": "s1derived.2d9b641710e288736b29.05691c68622a",
+    "checks": {
+      "behavior": "Two mux levels select the four INIT bits.",
+      "boundaries": "All four input pairs map exactly by {b,a}.",
+      "interface": "Scalar a, b, and o match.",
+      "rtl_reasonableness": "A two-input LUT is reasonable.",
+      "sequential_and_reset": "Purely combinational."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Two mux levels select the four INIT bits. Purely combinational.",
+        "rtl_excerpt": "o = INIT[{b,a}]; INIT=4'h0; EQN=\"(A)\" is unused.",
+        "spec_excerpt": "The last sentence ends \u201cThe output o\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends before stating the final a selection and omits INIT and EQN defaults.",
+        "rtl_evidence": "o = INIT[{b,a}]; INIT=4'h0; EQN=\"(A)\" is unused.",
+        "spec_evidence": "The last sentence ends \u201cThe output o\u201d.",
+        "type": "truncated_lookup_mapping"
+      }
+    ],
+    "parent_id": "s1p.2d9b641710e288736b29",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.2d9b641710e288736b29.05691c68622a.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "2d9b641710e288736b29249cd81cd354e5d8f0f1fb4f566af229a1d0b3170c72",
+    "source_group": "S5",
+    "specification_sha256": "05691c68622adc9bf40f2c16d4deb57430c8fcb1878568f830139817ba51e993",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.2d9b641710e288736b29.05691c68622a.md",
+  "qualified_specification_sha256": "06161798b7c75dd2c9e767aef07049913fe7cfd48dc901d60c6e0c1bb9d56669",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_00944.95543e516cd8b79e/private/golden_design.v",
+  "rtl_sha256": "2d9b641710e288736b29249cd81cd354e5d8f0f1fb4f566af229a1d0b3170c72",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_00944.95543e516cd8b79e/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "05691c68622adc9bf40f2c16d4deb57430c8fcb1878568f830139817ba51e993",
+  "top_module": "mg_00944"
+}

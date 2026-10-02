@@ -1,0 +1,52 @@
+always @(posedge clk) begin
+    sum_valid_reg[0] <= sum_valid_reg[0] && !csum_in_ready;
+
+    if (s_axis_tvalid && s_axis_tready) begin
+        for (i = 0; i < DATA_WIDTH/8/4; i = i + 1) begin
+            sum_reg[0][i*17 +: 17] <= {s_axis_tdata_masked[(4*i+0)*8 +: 8], s_axis_tdata_masked[(4*i+1)*8 +: 8]} + {s_axis_tdata_masked[(4*i+2)*8 +: 8], s_axis_tdata_masked[(4*i+3)*8 +: 8]};
+        end
+        sum_valid_reg[0] <= 1'b1;
+        sum_last_reg[0] <= s_axis_tlast;
+        sum_init_valid_reg[0] <= first_cycle_reg;
+
+        first_cycle_reg <= 1'b0;
+
+        if (s_axis_tlast) begin
+            transfer_in_reg <= 1'b0;
+        end
+
+        if (input_offset_reg > 0) begin
+            if (input_offset_reg >= KEEP_WIDTH) begin
+                mask_reg <= 0;
+                input_offset_reg <= input_offset_reg - KEEP_WIDTH;
+            end else begin
+                mask_reg <= {KEEP_WIDTH{1'b1}} << input_offset_reg;
+                input_offset_reg <= 0;
+            end
+        end else begin
+            mask_reg <= {KEEP_WIDTH{1'b1}};
+        end
+    end
+
+    if (s_axis_cmd_valid && s_axis_cmd_ready) begin
+        transfer_in_reg <= 1'b1;
+        sum_odd_reg[0] <= s_axis_cmd_csum_start[0];
+        sum_enable_reg[0] <= s_axis_cmd_csum_enable;
+        sum_offset_reg[0] <= s_axis_cmd_csum_offset;
+        sum_init_reg[0] <= s_axis_cmd_csum_init;
+        first_cycle_reg <= 1'b1;
+        
+        if (s_axis_cmd_csum_start >= KEEP_WIDTH) begin
+            mask_reg <= 0;
+            input_offset_reg <= s_axis_cmd_csum_start - KEEP_WIDTH;
+        end else begin
+            mask_reg <= {KEEP_WIDTH{1'b1}} << s_axis_cmd_csum_start;
+            input_offset_reg <= 0;
+        end
+    end
+
+    if (rst) begin
+        transfer_in_reg <= 1'b0;
+        sum_valid_reg[0] <= 1'b0;
+    end
+end

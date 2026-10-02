@@ -1,0 +1,9 @@
+# Programmable code-address generator (`autovcoder_088563`)
+
+## Interface and parameters
+
+Inputs are scalar `clk`, active-low asynchronous `rst_n`, `flag_op_caddr[1:0]`, `code[CODE_BITWIDTH-1:0]`, `data[DATA_BITWIDTH-1:0]`, and scalar `dbg_clk`. Outputs are `code_addr[ADDR_BITWIDTH-1:0]` and scalar `dbg_local_f_pn`, `dbg_local_f_mem`, and `dbg_local_f_lh`. Defaults are `DATA_BITWIDTH=8`, `CODE_BITWIDTH=16`, `ADDR_BITWIDTH=16`, `CADDR_NOP=2'h0`, `CADDR_INC=2'h1`, `CADDR_MOD=2'h2`, and `CADDR_SET=2'h3`. The implementation directly indexes through `code[15]`, so `CODE_BITWIDTH` must be at least 16. `data` and `dbg_clk` are unused.
+
+## Behavior
+
+The debug outputs continuously expose `code[15]`, `code[13]`, and `code[12]`, respectively. Pulling `rst_n` low asynchronously clears the address to zero. At each rising `clk` edge otherwise: NOP and unrecognized operation values hold the address; INC adds one modulo `2^ADDR_BITWIDTH`; MOD subtracts unsigned `code[14:4]` when `code[15]=1` and otherwise adds it, with result truncated to the address width; SET assigns zero-extended `code[15:4]`, again truncated to the address width. The address register also has a declaration-time zero initializer.

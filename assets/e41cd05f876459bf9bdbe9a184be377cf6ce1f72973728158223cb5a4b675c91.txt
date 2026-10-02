@@ -1,0 +1,14 @@
+always @ (posedge clk)
+    casex(ep00_setup_cmd[31:0])
+        32'hXXXX_08_80  : ep00_data <= (ep00_resp_idx>=  9'd1) ? 8'h00 : 8'h01;                                                   // GetConfiguration -> response configuration 1
+        32'h01XX_06_80  : ep00_data <= (ep00_resp_idx>= 9'd18) ? 8'h00 : DESCRIPTOR_DEVICE[ (18 - 1 - ep00_resp_idx) * 8 +: 8 ];  // GetDescriptor -> response device descriptor
+        32'h02XX_06_80  : ep00_data <=                                   DESCRIPTOR_CONFIG[ (512- 1 - ep00_resp_idx) * 8 +: 8 ];  // GetDescriptor -> response configuration descriptor
+        32'h0300_06_80  : ep00_data <= (ep00_resp_idx>=  9'd4) ? 8'h00 : DESCRIPTOR_STR0  [ (4  - 1 - ep00_resp_idx) * 8 +: 8 ];  // GetDescriptor -> response string descriptor 0
+        32'h0301_06_80  : ep00_data <= (ep00_resp_idx>= 9'd64) ? 8'h00 : DESCRIPTOR_STR1  [ (64 - 1 - ep00_resp_idx) * 8 +: 8 ];  // GetDescriptor -> response string descriptor 1
+        32'h0302_06_80  : ep00_data <= (ep00_resp_idx>= 9'd64) ? 8'h00 : DESCRIPTOR_STR2  [ (64 - 1 - ep00_resp_idx) * 8 +: 8 ];  // GetDescriptor -> response string descriptor 2
+        32'h0303_06_80  : ep00_data <= (ep00_resp_idx>= 9'd64) ? 8'h00 : DESCRIPTOR_STR3  [ (64 - 1 - ep00_resp_idx) * 8 +: 8 ];  // GetDescriptor -> response string descriptor 3
+        32'h0304_06_80  : ep00_data <= (ep00_resp_idx>= 9'd64) ? 8'h00 : DESCRIPTOR_STR4  [ (64 - 1 - ep00_resp_idx) * 8 +: 8 ];  // GetDescriptor -> response string descriptor 4
+        32'h0305_06_80  : ep00_data <= (ep00_resp_idx>= 9'd64) ? 8'h00 : DESCRIPTOR_STR5  [ (64 - 1 - ep00_resp_idx) * 8 +: 8 ];  // GetDescriptor -> response string descriptor 5
+        32'h0306_06_80  : ep00_data <= (ep00_resp_idx>= 9'd64) ? 8'h00 : DESCRIPTOR_STR6  [ (64 - 1 - ep00_resp_idx) * 8 +: 8 ];  // GetDescriptor -> response string descriptor 6
+        default          : ep00_data <= ep00_resp;                                                                                 // other : response by user
+    endcase

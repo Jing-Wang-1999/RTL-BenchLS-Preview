@@ -1,0 +1,34 @@
+# Module Specification: mg_04944
+
+## Overview
+This module implements a clock domain crossing synchronizer with handshake protocol. It safely transfers a pulse signal from the clk2 domain to the clk1 domain while preventing metastability issues through multi-stage synchronization.
+
+## Inputs
+- **clk1**: Clock signal for the destination domain
+- **clk2**: Clock signal for the source domain
+- **reset1**: Asynchronous reset for clk1 domain (active high)
+- **reset2**: Asynchronous reset for clk2 domain (active high)
+- **set2**: Input pulse signal in clk2 domain that triggers synchronization
+
+## Output
+- **sync_out**: Synchronized output pulse in clk1 domain
+
+## Functional Behavior
+
+### Signal Flow
+The module implements a two-way handshake mechanism:
+
+1. **Set Path (clk2 domain)**: When set2 is asserted, it sets an internal latch (set2_q) that persists until cleared by feedback from the clk1 domain. The latched signal is then synchronized across clock domains through two cascaded flip-flops (set2_q2 and set1_q) to eliminate metastability.
+
+2. **Synchronization (clk1 domain)**: The synchronized signal passes through two additional flip-flops (set1_q2) to ensure proper timing in the destination clock domain.
+
+3. **Clear Path (clk2 domain)**: The synchronized acknowledgment signal (set1_q2) is fed back to the clk2 domain through two cascaded flip-flops (clear2_q and clear2_q2) to generate a clear signal that resets the input latch.
+
+4. **Output**: The final synchronized pulse appears at sync_out, which is updated on each clk1 rising edge.
+
+### Reset Behavior
+All internal registers are asynchronously reset to zero when their respective reset signals are asserted (reset1 for clk1 domain, reset2 for clk2 domain).
+
+## Key Characteristics
+- Implements proper clock domain crossing with four-stage synchronization (two stages per direction)
+- Uses handshake protocol to ensure pulse is captured and acknowledge

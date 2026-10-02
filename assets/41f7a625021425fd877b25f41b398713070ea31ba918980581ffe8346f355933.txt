@@ -1,0 +1,53 @@
+module origen_206085(
+    input clk,
+    input [30:0] n,
+    input calc,
+    output reg calc_done,
+    output reg [15:0] result
+);
+
+    reg [5:0] shift;
+    reg [31:0] nShifted;
+    reg [15:0] candidateResult;
+
+    localparam STATE_IDLE = 2'b00;
+    localparam STATE_FINDSHIFT = 2'b01;
+    localparam STATE_GETRESULT = 2'b10;
+
+    reg [1:0] state;
+
+    always @(posedge clk) begin
+        case (state)
+            STATE_IDLE: begin
+                calc_done <= 1'b0;
+                if (calc) begin
+                    state <= STATE_FINDSHIFT;
+                    nShifted <= n << 1;
+                    shift <= 6'd30;
+                end
+            end
+            STATE_FINDSHIFT: begin
+                if (shift == 0 || nShifted == n || nShifted == 0) begin
+                    state <= STATE_GETRESULT;
+                    result <= 0;
+                    candidateResult <= 1;
+                end else begin
+                    nShifted <= nShifted >> 2;
+                    shift <= shift - 2;
+                end
+            end
+            STATE_GETRESULT: begin
+                if (shift == 0 || candidateResult * candidateResult > nShifted) begin
+                    calc_done <= 1'b1;
+                    state <= STATE_IDLE;
+                end else begin
+                    result <= (result << 1) | (candidateResult <= (nShifted >> shift));
+                    nShifted <= nShifted - (candidateResult <= (nShifted >> shift) ? (candidateResult * candidateResult) : 0);
+                    candidateResult <= (candidateResult << 1) | (candidateResult <= (nShifted >> shift));
+                    shift <= shift - 1;
+                end
+            end
+        endcase
+    end
+
+endmodule

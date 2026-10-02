@@ -1,0 +1,13 @@
+always @(posedge rx_clk or posedge rx_rst) begin
+    if (rx_rst) begin
+        rx_rst_sync_1_reg <= 1'b1;
+        rx_status_sync_1_reg <= 1'b0;
+        rx_lfc_req_sync_1_reg <= 1'b0;
+        rx_pfc_req_sync_1_reg <= 8'd0;
+    end else begin
+        rx_rst_sync_1_reg <= 1'b0;
+        rx_status_sync_1_reg <= rx_status;
+        rx_lfc_req_sync_1_reg <= MAC_CTRL_ENABLE ? rx_lfc_req_int : rx_lfc_req;
+        rx_pfc_req_sync_1_reg <= MAC_CTRL_ENABLE ? rx_pfc_req_int : rx_pfc_req;
+    end
+end

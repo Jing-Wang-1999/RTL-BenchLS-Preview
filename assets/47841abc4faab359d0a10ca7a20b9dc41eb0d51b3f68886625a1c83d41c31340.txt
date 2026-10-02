@@ -1,0 +1,59 @@
+module origen_092053 (
+    input [3:0] din,
+    input clk,
+    input rst,
+    output reg dout
+);
+
+    reg [1:0] count;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            dout <= 0;
+            count <= 0;
+            $display("Time=%0t, Reset=1, Input=%b, Output=%b", $time, din, dout);
+        end else begin
+            case (count)
+                2'b00: dout <= din[3];
+                2'b01: dout <= din[2];
+                2'b10: dout <= din[1];
+                2'b11: dout <= din[0];
+            endcase
+            count <= count + 1;
+            $display("Time=%0t, Reset=0, Input=%b, Output=%b", $time, din, dout);
+        end
+    end
+endmodule
+
+module tb;
+    reg [3:0] din;
+    reg clk, rst;
+    wire dout;
+
+    PISO uut (
+        .din(din),
+        .clk(clk),
+        .rst(rst),
+        .dout(dout)
+    );
+
+    initial begin
+        clk = 0;
+        forever #1 clk = ~clk;
+    end
+
+    initial begin
+        $dumpfile("piso_waveform.vcd");
+        $dumpvars(0, tb);
+
+        rst = 1;
+        din = 4'b0000;
+        #5 rst = 0;
+
+        repeat(10) begin
+            #1 din = $random;
+        end
+
+        #5 $finish;
+    end
+endmodule

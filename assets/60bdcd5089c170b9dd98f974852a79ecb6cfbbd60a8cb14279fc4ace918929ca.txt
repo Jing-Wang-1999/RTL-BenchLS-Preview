@@ -1,0 +1,52 @@
+module origen_091016 #(
+    parameter WIDTH = 60,
+    parameter HEIGHT = 30
+) (
+    input wire clk,
+    input wire flip_even,
+    input wire flip_odd,
+    input wire next_data,
+    output reg reset,
+    output reg [7:0] array_x,
+    output reg [7:0] array_y,
+    output reg next_frame
+);
+
+reg [7:0] x;
+reg [7:0] y;
+
+always @(posedge clk) begin
+    if (next_data) begin
+        if (reset) begin
+            x <= 0;
+            y <= 0;
+            reset <= 0;
+        end else begin
+            if (x == WIDTH - 1) begin
+                x <= 0;
+                if (y == HEIGHT - 1) begin
+                    y <= 0;
+                    next_frame <= 1;
+                    reset <= 1;
+                end else begin
+                    y <= y + 1;
+                end
+            end else begin
+                x <= x + 1;
+            end
+        end
+    end else if (next_frame) begin
+        next_frame <= 0;
+    end
+end
+
+always @(*) begin
+    if ((y[0] && flip_odd) || (!y[0] && flip_even)) begin
+        array_x = WIDTH - 1 - x;
+    end else begin
+        array_x = x;
+    end
+    array_y = y;
+end
+
+endmodule

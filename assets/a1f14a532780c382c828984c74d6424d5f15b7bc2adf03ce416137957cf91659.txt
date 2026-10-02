@@ -1,0 +1,142 @@
+"""Private upstream bus/pixel/sync scoreboards, with fail-fast error handling."""
+from pathlib import Path
+import re
+SOURCE=Path('/home/jwangjw/project_3rd/ICLR-RTL-BenchLS-backup-jul-29/sources/opencores_git_mirror/video_controller_vga-lcd_controller')
+BENCH=SOURCE/'bench/verilog'
+HELPERS=['wb_mast_model.v','wb_slv_model.v','wb_model_defines.v','wb_b3_check.v','sync_check.v','tests.v']
+
+CLOCKED_BUS_CHECKER = r"""
+module wb_b3_check(input clk_i,cyc_i,stb_i,we_i,input[2:0]cti_i,input[1:0]bte_i,input ack_i,err_i,rty_i);
+reg previous_cyc=0,previous_stb=0,previous_ack=0,previous_we=0;
+reg[2:0]previous_cti=0;reg[1:0]previous_bte=0;
+always @(posedge clk_i)begin
+if(cyc_i && stb_i)begin
+if((ack_i && err_i)||(ack_i && rty_i)||(err_i && rty_i))$fatal(1,"multiple bus terminations");
+if(cti_i!==0 && cti_i!==2 && cti_i!==7)$fatal(1,"unsupported CTI");
+if(previous_cyc && previous_stb && !previous_ack && (cti_i!==previous_cti || bte_i!==previous_bte || we_i!==previous_we))$fatal(1,"control changed during stalled request");
+end
+// Pinned master can terminate a partial burst at image completion (ImDone).
+// CYC deassertion ends that transfer; this is a compatibility, not conformance case.
+previous_cyc<=cyc_i;previous_stb<=stb_i;previous_ack<=ack_i|err_i|rty_i;
+previous_cti<=cti_i;previous_bte<=bte_i;previous_we<=we_i;
+end
+endmodule
+"""
+
+def expand(text):
+ def inc(m):
+  name=m[1]
+  p=BENCH/name
+  if not p.exists():p=SOURCE/'rtl/verilog'/name
+  return expand(p.read_text())
+ return re.sub(r'`include\s+"([^"]+)"',inc,text)
+
+def quiet(text):
+ # Strip comments before scanning displays; replacing each call with a statement
+ # preserves if/else branches. Any original ERROR becomes fatal immediately.
+ text=re.sub(r'/\*.*?\*/|//[^\n]*','',text,flags=re.S)
+ def display(m):
+  args=m[1]
+  return '$fatal(1,'+args+');' if 'error' in args.lower() and 'total errors' not in args.lower() else 'begin end'
+ text=re.sub(r'\$display\s*\((.*?)\)\s*;',display,text,flags=re.S)
+ text=re.sub(r'\$(?:finish|stop)\s*;', '$fatal(1,"upstream early stop");',text)
+ return text
+
+def test(task):
+ original=(BENCH/'test_bench_top.v').read_text()
+ prefix=original.split('initial\n')[0]
+ suffix=original[original.index('// Sync Monitor')-len('/////////////////////////////////////////////////////////////////////\n//\n'):]
+ # Prefix/suffix keep only declarations, instantiated DUT/models, monitors/tasks.
+ body=prefix+f'''initial begin
+scen=0;error_cnt=0;clk=0;pclk_i=0;rst=0;int_warn=0;wd_cnt=0;
+repeat(20)@(posedge clk);rst=1;repeat(20)@(posedge clk);
+{task};
+if(error_cnt!=0)$fatal(1,"accumulated errors");
+$display("RTL_BENCHLS_PASS");$finish(0);
+end
+initial begin #500000000;$fatal(1,"test timeout");end
+'''+suffix
+ # Temporarily protect our success sentinel from quieting original diagnostics.
+ body=body.replace('$display("RTL_BENCHLS_PASS");','BENCH_SUCCESS;')
+ if task=='ur_test':body=body.replace('#500000000;', '#5000000;')
+ body=expand(body)+'\n'+'\n'.join(expand((BENCH/n).read_text()) for n in HELPERS[:-1] if n!='wb_model_defines.v')
+ # Old TB packs buffer switches one bit too low; match the pinned register map.
+ body=re.sub(r"1'b0,\s*// Reserved\s*1'b1,\s*// CBSWE\s*1'b1,\s*// VBSWE","1'b1, 1'b1, 1'b0,",body)
+ # Explicitly type the legacy task port; Icarus rejects scalar input + vector reg.
+ body=body.replace('input dly;', 'input [5:0] dly;').replace('reg [5:0] dly;', '')
+ # Sample blank only at the settled half-cycle, avoiding obsolete #1 edge races.
+ body=body.replace('always @(bval or blanc)\n\t#0.01', 'always @(negedge pclk)')
+ # Compact frames preserve all format/polarity/burst cases and FIFO crossings.
+ for signal,value in [('thgate','159'),('tvgate','15'),('thlen','thsync+thgdel+thgate+17'),('tvlen','tvsync+tvgdel+tvgate+9')]:
+  body=re.sub(r'\b'+signal+r'\s*=\s*\d+\s*;',signal+'='+value+';',body)
+ # Cover every format/burst pair once, with distributed ACK delays0..5,
+ # instead of the upstream sixfold full cross-product.
+ body=body.replace('for(delay=0;delay<6;delay=delay+1)', 'for(delay=0;delay<1;delay=delay+1)')
+ body=re.sub(r'(for\(mode=0;mode<4;mode=mode\+1\)\s*begin)',r'\1 s0.set_delay((mode+vbl)%6);',body)
+ body=quiet(body).replace('BENCH_SUCCESS;', '$display("RTL_BENCHLS_PASS");')
+ # The old event-triggered bus checker compares delayed snapshots against NBA
+ # transitions; use settled clock-edge protocol samples instead.
+ body=re.sub(r'module wb_b3_check\b.*?endmodule',lambda m:CLOCKED_BUS_CHECKER,body,flags=re.S)
+ body=re.sub(r'\btest\b','tb',body);body=re.sub(r'\bint\b','vga_irq',body)
+ # Compact buffer-B base0x40000 fits17 address bits; preserve distinct banks.
+ body=body.replace('wb_slv #(24)', 'wb_slv #(17)').replace("32'h0040_0000","32'h0004_0000")
+ body=body.replace('if(pd !== {red, green, blue} )', 'if((^pd)===1\'bx || (^{red,green,blue})===1\'bx || pd !== {red, green, blue})')
+ assert '`include' not in body
+ return body
+
+INSTRUCTION='''# Implement the VGA/LCD controller project
+Implement the complete required VGA enhanced-controller hierarchy: Wishbone
+register slave and frame-buffer read master, timing and pixel generation,
+color conversion/lookup, line FIFOs, cursor logic, generic RAMs and vga_enh_top.
+Read the original specification. The fixed configuration uses RGB888 parallel
+outputs (no optional DVI or BIST), generic RAMs, ARST_LVL=0 and LINE_FIFO_AWIDTH=7.
+Keep parameterized port declarations; tests instantiate that stated configuration.
+
+The reference uses old Verilog RAM port name `do`; interfaces express it as
+escaped identifier `\\do ` for SystemVerilog compatibility. Preserve that name,
+including required escaping, in module declarations and named connections.
+Generic RAM diagnostic print_ram tasks and explicitly marked simulation-only
+regions are removed; #1 assignment annotations are removed. Functional RAM,
+FIFO and controller logic is unchanged by this normalization.
+
+rst_i is active low in this configuration; wb_rst_i is held0. Wishbone clock
+period4.8ns, pixel clock30ns. Slave addresses are byte offsets: CTRL0, STAT4,
+HTIM8, VTIM0xc, HVLEN0x10, VBARA0x14, VBARB0x18; color lookup table occupies
+0x800..0xfff. Slave writes and returned data follow the document's byte ordering.
+Base addresses are word-aligned. Register reads are checked with the documented
+masks; hardware-managed CTRL buffer-switch bits need not echo software writes.
+
+CTRL fields: enable[0], VIE[1], HIE[2], video-switch-interrupt[3],
+color-switch-interrupt[4], video-buffer-switch[5], color-buffer-switch[6],
+burst-length[8:7], color-depth[10:9],
+pseudo-color[11], HSYNC/VSYNC/CSYNC/BLANK polarities[12..15]. HTIM/VTIM pack
+sync-width[31:24], gate-delay[23:16], gate-length[15:0]; HVLEN packs horizontal
+and vertical totals. Follow the original count-minus-one convention. Tests use
+multiple programmed porches/polarities with compact160-by16 active frames and
+actual frame-buffer traffic. Blank is checked at settled pixel half-cycles.
+
+For true-color32-bit pixels use the low24 bits as RGB. RGB565 expands five/six
+bit components with low zero bits, as documented. Packed pixels appear most
+significant first within a32-bit fetched word. Pseudo-color uses programmed CLUT
+entries. Preserve burst and address behavior while the frame-buffer slave delays
+ACK (all four format/burst combinations, distributed delays0..5; not every
+delay crossed with every combination). The pinned master can drop CYC at image completion or video disable
+without an end-of-burst CTI, including partial bursts. The external memory
+accepts that termination; stable controls while stalled are still checked.
+This compatibility case does not claim full Wishbone-B3 conformance.
+A FIFO underrun sets STAT[1] and raises interrupt. No reset/startup memory
+contents may be assumed; the evaluator initializes its external frame buffer.
+
+Private points are independent executions of upstream register, timing, pixel,
+buffer-switch and underrun scoreboards, with a clocked Wishbone sanity checker
+(the legacy event-based checker races delayed snapshots). Every ERROR becomes a
+fatal failure and strict pass termination. The old testbench buffer-switch
+control packing is corrected to bits6/5, matching the pinned register map.
+Public checks compile only. These
+finite configurations do not establish all optional cursor/DVI/BIST behavior.
+'''
+
+def vga_spec():
+ return dict(case_id='opencores_vga_rgb_v1',project='video_controller_vga-lcd_controller',top='vga_enh_top',preprocess=True,strip_simulation_regions=True,strip_diagnostic_print_ram=True,escape_do=True,point_timeout_seconds=120,instruction=INSTRUCTION,builder_source=__file__,original_tests=[str(BENCH/'test_bench_top.v')]+[str(BENCH/n) for n in HELPERS],
+ tests=[(n,'vga_enh_top',test(t)) for n,t in [('registers','reg_test'),('timing','tim_test'),('pixels','pd1_test'),('buffer_switch','pd2_test'),('underrun','ur_test')]],
+ mutations=[('red_invert','rtl/verilog/vga_pgen.v','r_o <=  r;','r_o <=  ~r;'),('sync_invert','rtl/verilog/vga_pgen.v','hsync_o <=  hsync;','hsync_o <=  ~hsync;'),('interrupt_mask','rtl/verilog/vga_wb_slave.v','| luint | sint','| 1\'b0 | sint'),('timing_register','rtl/verilog/vga_wb_slave.v','Thgate = htim[15:0]','Thgate = htim[15:0] ^ 1')])

@@ -1,0 +1,28 @@
+This module is a synchronous sequential circuit with a clock, reset, and a 2-bit input. It produces a single-bit registered output.
+
+**Inputs:**
+- `clk`: System clock.
+- `rst`: Active-low asynchronous reset.
+- `in[1:0]`: A 2-bit input vector.
+
+**Output:**
+- `o`: A single-bit registered output.
+
+**Internal State:**
+The module maintains two internal state bits, `yB` and `yC`. Both are positive-edge triggered flip-flops, asynchronously cleared by the active-low reset.
+
+**Function:**
+The circuit's behavior is defined by combinational logic that drives the next state and the output, based on the current input and internal state.
+
+1.  **Next State Logic (`selector1`, `selector2`):**
+    *   The next value for state bit `yB` (`selector1`) is logic high only when all the following are low: input bit `in0`, input bit `in1`, the current state `yB`, and the current state `yC`.
+    *   The next value for state bit `yC` (`selector2`) is logic high only when the following are low: `in0`, `in1`, `yC`, and when the current state `yB` is high.
+
+2.  **Output Logic (`selector3`):**
+    *   The next value for the registered output `o` is logic high only when all the following are low: `in0`, `in1`, `yC`, and `yB`.
+
+**Operation:**
+On every positive clock edge, the internal state bits `yB` and `yC` are updated with their respective next-state values. Simultaneously, the output register `o` is updated with its computed next value. An active-low reset immediately clears all registers (`yB`, `yC`, `o`) to logic low, overriding the normal clocked operation.
+
+**Allowed Sub-modules:**
+The implementation may only use standard D-type flip-flops with asynchronous reset and

@@ -1,0 +1,52 @@
+module origen_192626 (
+    input [4:0] FUNCT,
+    input ALU_Op,
+    output reg [2:0] ALU_Ctrl,
+    output reg [1:0] Flag_Write,
+    output reg No_Write
+);
+
+    always @(*) begin
+        if (!ALU_Op) begin
+            // Default operation when ALU_Op is low
+            ALU_Ctrl = 3'b000;      // Logical OR
+            Flag_Write = 2'b00;     // No flags updated
+            No_Write = 1'b0;        // Allow register writes
+        end else begin
+            // ALU_Op is high, decode FUNCT[4:1]
+            case (FUNCT[4:1])
+                4'b0100: begin      // Logical OR
+                    ALU_Ctrl = 3'b000;
+                    Flag_Write = {1'b0, FUNCT[0]};  // 01 or 10 based on FUNCT[0]
+                    No_Write = 1'b0;
+                end
+                4'b0010: begin      // Logical AND
+                    ALU_Ctrl = 3'b001;
+                    Flag_Write = {1'b0, FUNCT[0]};  // 01 or 10 based on FUNCT[0]
+                    No_Write = 1'b0;
+                end
+                4'b0000: begin      // Addition
+                    ALU_Ctrl = 3'b100;
+                    Flag_Write = {1'b0, FUNCT[0]};  // 01 or 10 based on FUNCT[0]
+                    No_Write = 1'b0;
+                end
+                4'b1100: begin      // Subtraction
+                    ALU_Ctrl = 3'b101;
+                    Flag_Write = {1'b0, FUNCT[0]};  // 01 or 10 based on FUNCT[0]
+                    No_Write = 1'b0;
+                end
+                4'b1010: begin      // Logical AND with special flags
+                    ALU_Ctrl = 3'b001;
+                    Flag_Write = 2'b11;     // All flags updated
+                    No_Write = 1'b1;        // Inhibit register write
+                end
+                default: begin      // Any other FUNCT[4:1] value
+                    ALU_Ctrl = 3'b000;      // Logical OR
+                    Flag_Write = 2'b00;     // No flags updated
+                    No_Write = 1'b0;        // Allow register writes
+                end
+            endcase
+        end
+    end
+
+endmodule

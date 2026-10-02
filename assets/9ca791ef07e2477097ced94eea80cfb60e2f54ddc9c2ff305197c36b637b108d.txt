@@ -1,0 +1,26 @@
+This module is a configurable register with asynchronous reset and preset, and a three-state output controlled by a chip-select signal.
+
+**Inputs:**
+- Clock: The main clock signal.
+- ClockEnable: When high, enables clock-driven updates.
+- D: Data input bus, width configurable via NrOfBits.
+- Reset: Asynchronous reset signal (active high).
+- Tick: When high with ClockEnable, allows data latching.
+- cs: Chip-select; when high, the output is high-impedance (tri-state).
+- pre: Asynchronous preset signal (active high).
+
+**Outputs:**
+- Q: Data output bus, same width as D. Outputs the stored register value or high-impedance.
+
+**Parameters:**
+- ActiveLevel: Selects which internal register drives the output (1 for positive-edge, 0 for negative-edge).
+- NrOfBits: Defines the bit-width of the data bus and internal storage.
+
+**Function:**
+The module maintains two internal registers of width NrOfBits. The positive-edge-triggered register updates on the rising clock edge, and the negative-edge-triggered register updates on the falling clock edge. Both registers share the same control logic.
+
+**Operation:**
+The asynchronous Reset signal has highest priority and clears the internal registers to zero. The asynchronous pre signal has the next priority and sets all bits of the internal registers to one. If neither Reset nor pre is active, and both ClockEnable and Tick are high on the relevant clock edge, the register latches the value from input D.
+
+**Output Selection:**
+The output Q is driven by the value of the positive-edge register if ActiveLevel is 1, or by the negative-edge register if ActiveLevel is 0. If the cs input is high, the output Q enters a high-impedance state regardless of the ActiveLevel setting.

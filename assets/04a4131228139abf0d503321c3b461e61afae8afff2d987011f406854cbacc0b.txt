@@ -1,0 +1,62 @@
+{
+  "golden_score": 1.0,
+  "limits": "Sampled valid transactions only; register/clock exact semantics; handshake implementations have bounded timing slack.",
+  "negative_controls": [
+    {
+      "compile_pass": true,
+      "detected": true,
+      "failed_points": [
+        "clock_divider"
+      ],
+      "name": "bad_divider"
+    },
+    {
+      "compile_pass": true,
+      "detected": true,
+      "failed_points": [
+        "register_primitives",
+        "spi_registers",
+        "spi_write",
+        "top_uart_spi"
+      ],
+      "name": "bad_register"
+    },
+    {
+      "compile_pass": true,
+      "detected": true,
+      "failed_points": [
+        "spi_shift_interface",
+        "spi_write",
+        "top_uart_spi"
+      ],
+      "name": "bad_spi_data"
+    },
+    {
+      "compile_pass": true,
+      "detected": true,
+      "failed_points": [
+        "uart_tx",
+        "top_uart_spi"
+      ],
+      "name": "bad_uart_tx"
+    },
+    {
+      "compile_pass": true,
+      "detected": true,
+      "failed_points": [
+        "parser_transactions",
+        "top_uart_spi"
+      ],
+      "name": "bad_parser"
+    },
+    {
+      "compile_pass": true,
+      "detected": true,
+      "failed_points": [
+        "top_uart_spi"
+      ],
+      "name": "bad_integration_address"
+    }
+  ],
+  "review": "Independent functional scoreboards, golden and compile-valid mutants; 8N1 scope and document corrections public; original implementation and grading code remain private."
+}

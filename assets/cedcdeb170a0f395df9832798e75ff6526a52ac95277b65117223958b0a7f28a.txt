@@ -1,0 +1,85 @@
+`timescale 1ns/1ps
+module tb;
+reg clk=0,mc_clk=0,rst=0,cyc=0,stb=0,we=0;reg[31:0]addr=0,di=0;reg[3:0]sel=15;
+wire[31:0]dout,mdout,poc;wire ack,err,doe,oe_n,we_n;wire[23:0]ma;wire[3:0]dqm;wire[7:0]cs;
+wire[31:0]mdin=(!cs[0] && !oe_n)?mem0[ma[11:0]]:(!cs[1] && !oe_n)?mem1[ma[11:0]]:32'h0;
+reg[31:0]mem0[0:4095],mem1[0:4095];integer i,j,reads=0,writes=0;reg[31:0]last;
+always #5 clk=~clk;always #10 mc_clk=~mc_clk;
+mc_top dut(.clk_i(clk),.rst_i(rst),.wb_data_i(di),.wb_data_o(dout),.wb_addr_i(addr),.wb_sel_i(sel),.wb_we_i(we),.wb_cyc_i(cyc),.wb_stb_i(stb),.wb_ack_o(ack),.wb_err_o(err),
+.susp_req_i(1'b0),.resume_req_i(1'b0),.poc_o(poc),.mc_clk_i(mc_clk),.mc_br_pad_i(1'b0),.mc_ack_pad_i(1'b1),.mc_addr_pad_o(ma),.mc_data_pad_i(mdin),.mc_data_pad_o(mdout),.mc_dp_pad_i(4'b0),.mc_doe_pad_doe_o(doe),.mc_dqm_pad_o(dqm),.mc_oe_pad_o_(oe_n),.mc_we_pad_o_(we_n),.mc_cs_pad_o_(cs),.mc_sts_pad_i(1'b0));
+always @(negedge mc_clk)if(!rst)begin
+if(!cs[0] && !cs[1])$fatal(1,"overlapping chip selects");
+if((!cs[0] || !cs[1]) && !we_n && doe)begin
+writes=writes+1;
+for(j=0;j<4;j=j+1)if(!dqm[j])begin
+if(!cs[0])mem0[ma[11:0]][8*j+:8]=mdout[8*j+:8];
+if(!cs[1])mem1[ma[11:0]][8*j+:8]=mdout[8*j+:8];end end
+if((!cs[0] || !cs[1]) && !oe_n && we_n)reads=reads+1;
+end
+task access;input wr;input[31:0]a,d;input[3:0]mask;input expected_error;integer count;begin
+@(negedge clk);addr=a;di=d;sel=mask;we=wr;cyc=1;stb=1;
+count=0;@(posedge clk);while(ack!==1 && err!==1 && count<2000)begin @(posedge clk);count=count+1;end
+if(count>=2000)$fatal(1,"bus timeout %h",a);
+if(err!==expected_error)$fatal(1,"bus error %h %b expected%0d",a,err,expected_error);
+last=dout;
+@(negedge clk);cyc=0;stb=0;we=0;repeat(8)@(posedge clk);end endtask
+task readcheck;input[31:0]a,expected;begin access(0,a,0,15,0);if(last!==expected)$fatal(1,"read %h %h != %h",a,last,expected);end endtask
+initial begin #10000000;$fatal(1,"timeout");end
+initial begin
+for(i=0;i<4096;i=i+1)begin mem0[i]=32'h5a000000^i;mem1[i]=32'ha5000000^i;end
+#1;rst=1;repeat(12)@(posedge clk);@(negedge clk);rst=0;repeat(320)@(posedge mc_clk);
+access(1,32'h60000008,32'hff,15,0);
+access(1,32'h60000014,32'h222204,15,0);
+access(1,32'h6000001c,32'h222204,15,0);
+access(1,32'h60000010,32'h25,15,0);
+access(1,32'h60000018,32'h800025,15,0);
+access(1,32'h2e90,32'hbdf7abed,15,0);readcheck(32'h2e90,32'hbdf7abed);
+access(1,32'h10000668,32'ha40a914c,15,0);readcheck(32'h10000668,32'ha40a914c);
+access(1,32'h538,32'hc1aeebf9,15,0);readcheck(32'h538,32'hc1aeebf9);
+access(1,32'h100015d4,32'h57c368cb,15,0);readcheck(32'h100015d4,32'h57c368cb);
+access(1,32'h3a2c,32'h74f42684,15,0);readcheck(32'h3a2c,32'h74f42684);
+access(1,32'h10001698,32'h96b884ec,15,0);readcheck(32'h10001698,32'h96b884ec);
+access(1,32'h1c30,32'h955c553b,15,0);readcheck(32'h1c30,32'h955c553b);
+access(1,32'h10000c50,32'h49b6e3fe,15,0);readcheck(32'h10000c50,32'h49b6e3fe);
+access(1,32'h11b8,32'hfef3b97f,15,0);readcheck(32'h11b8,32'hfef3b97f);
+access(1,32'h10000438,32'hd8427660,15,0);readcheck(32'h10000438,32'hd8427660);
+access(1,32'h3bd0,32'h5eea24f3,15,0);readcheck(32'h3bd0,32'h5eea24f3);
+access(1,32'h100029a4,32'h2f98f85d,15,0);readcheck(32'h100029a4,32'h2f98f85d);
+access(1,32'h12f0,32'h982f16fe,15,0);readcheck(32'h12f0,32'h982f16fe);
+access(1,32'h10002da4,32'h63207c34,15,0);readcheck(32'h10002da4,32'h63207c34);
+access(1,32'h2f18,32'h46ba7efa,15,0);readcheck(32'h2f18,32'h46ba7efa);
+access(1,32'h10001574,32'h91f4a2f3,15,0);readcheck(32'h10001574,32'h91f4a2f3);
+access(1,32'h1588,32'h252ebb6f,15,0);readcheck(32'h1588,32'h252ebb6f);
+access(1,32'h10002668,32'h2e0ba50e,15,0);readcheck(32'h10002668,32'h2e0ba50e);
+access(1,32'h518,32'ha3a756a,15,0);readcheck(32'h518,32'ha3a756a);
+access(1,32'h10003344,32'h2e5ada51,15,0);readcheck(32'h10003344,32'h2e5ada51);
+access(1,32'h17b8,32'hba3caccf,15,0);readcheck(32'h17b8,32'hba3caccf);
+access(1,32'h10003e5c,32'hf0db8c07,15,0);readcheck(32'h10003e5c,32'hf0db8c07);
+access(1,32'h3b00,32'h32716d22,15,0);readcheck(32'h3b00,32'h32716d22);
+access(1,32'h100013d0,32'h7652f2f4,15,0);readcheck(32'h100013d0,32'h7652f2f4);
+access(1,32'h274c,32'h9eb895f3,15,0);readcheck(32'h274c,32'h9eb895f3);
+access(1,32'h100025e4,32'haa648695,15,0);readcheck(32'h100025e4,32'haa648695);
+access(1,32'h624,32'h55e8a945,15,0);readcheck(32'h624,32'h55e8a945);
+access(1,32'h10002c24,32'h87adfe97,15,0);readcheck(32'h10002c24,32'h87adfe97);
+access(1,32'h8c4,32'h862cc640,15,0);readcheck(32'h8c4,32'h862cc640);
+access(1,32'h10002cec,32'hdf277ffb,15,0);readcheck(32'h10002cec,32'hdf277ffb);
+access(1,32'h2a88,32'ha4034a14,15,0);readcheck(32'h2a88,32'ha4034a14);
+access(1,32'h10002610,32'h4a90db63,15,0);readcheck(32'h10002610,32'h4a90db63);
+access(1,32'h13ec,32'hd0189a30,15,0);readcheck(32'h13ec,32'hd0189a30);
+access(1,32'h10001d8c,32'h8d7d428c,15,0);readcheck(32'h10001d8c,32'h8d7d428c);
+access(1,32'h2254,32'hf97f2d47,15,0);readcheck(32'h2254,32'hf97f2d47);
+access(1,32'h10003fc8,32'he4b61aee,15,0);readcheck(32'h10003fc8,32'he4b61aee);
+access(1,32'h11b4,32'h85af98b3,15,0);readcheck(32'h11b4,32'h85af98b3);
+access(1,32'h10002e1c,32'h28072410,15,0);readcheck(32'h10002e1c,32'h28072410);
+access(1,32'h26f8,32'h83a14199,15,0);readcheck(32'h26f8,32'h83a14199);
+access(1,32'h10000f08,32'hcf4d69,15,0);readcheck(32'h10000f08,32'hcf4d69);
+access(1,32'h614,32'hd9b93533,15,0);readcheck(32'h614,32'hd9b93533);
+access(1,32'h1000212c,32'h9f75d6b3,15,0);readcheck(32'h1000212c,32'h9f75d6b3);
+access(1,32'h3c14,32'ha93da532,15,0);readcheck(32'h3c14,32'ha93da532);
+access(1,32'h1000358c,32'h4a1baeb1,15,0);readcheck(32'h1000358c,32'h4a1baeb1);
+access(1,32'h394,32'hb75543ff,15,0);readcheck(32'h394,32'hb75543ff);
+access(1,32'h100014b4,32'hbb11cbb7,15,0);readcheck(32'h100014b4,32'hbb11cbb7);
+access(1,32'h1ec0,32'h7e8b25bd,15,0);readcheck(32'h1ec0,32'h7e8b25bd);
+access(1,32'h100021b8,32'h43bdc202,15,0);readcheck(32'h100021b8,32'h43bdc202);
+if(reads<1 || writes<1)$fatal(1,"no physical traffic");
+$display("RTL_BENCHLS_PASS");$finish(0);end endmodule

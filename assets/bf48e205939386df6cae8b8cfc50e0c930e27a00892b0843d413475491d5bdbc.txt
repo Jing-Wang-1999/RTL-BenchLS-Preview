@@ -1,0 +1,93 @@
+{
+  "case_id": "s1derived.e74ba309aba024615cb3.8a1c0dd243b1",
+  "compile_check": {
+    "case_id": "s1derived.e74ba309aba024615cb3.8a1c0dd243b1",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "pulse_sync",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.e74ba309aba024615cb3.8a1c0dd243b1/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "e74ba309aba024615cb3f5cc17a6f21021185308489d799b04fba4d620f8c9d3",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.e74ba309aba024615cb3.8a1c0dd243b1",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.e74ba309aba024615cb3",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "pulse_sync"
+  },
+  "independent_review": {
+    "case_id": "s1derived.e74ba309aba024615cb3.8a1c0dd243b1",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The repair captures the two synchronous resets, source-domain toggle, destination synchronizer, nonblocking pre-edge semantics, and pulse-event constraint.",
+        "rtl_excerpt": "`if(din && !din_d1) t <= ~t;`, `t_d <= {t_d[1:0], t};`, and `dout_r <= t_d[2] ^ t_d[1];`.",
+        "spec_excerpt": "A sampled `din` rising edge toggles `t`; the output domain shifts `t` through three bits and registers `dout=t_d[2]^t_d[1]`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.e74ba309aba024615cb3",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "2bccba24762d7ea07b31c36b6bcc2bdec9d91f5217765b4c16ad36ae128c3538",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e74ba309aba024615cb3f5cc17a6f21021185308489d799b04fba4d620f8c9d3",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.e74ba309aba024615cb3",
+  "primary_review": {
+    "case_id": "s1derived.e74ba309aba024615cb3.8a1c0dd243b1",
+    "checks": {
+      "behavior": "Input rising edges toggle t; the output detects synchronized toggle changes, details absent from prose.",
+      "boundaries": "Pulses must be separated enough for distinct toggle crossings; reset-domain skew can create or suppress an event.",
+      "interface": "Top name, port names, directions, and widths match the RTL.",
+      "rtl_reasonableness": "The RTL compiles, completely drives outputs, and has no unresolved external dependency.",
+      "sequential_and_reset": "Clock-domain state and reset behavior are coherent in RTL but incompletely specified."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The defining output pulse equation and latency are omitted.",
+        "rtl_excerpt": "dout_r <= t_d[2] ^ t_d[1];",
+        "specification_excerpt": "edge of `outclk`, if `rst_outclk` is active, internal registers are reset.\n   -"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The output-domain section truncates before defining synchronizer depth, pulse generation latency, reset, and pulse-loss limitations.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.e74ba309aba024615cb3",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_03/s1derived.e74ba309aba024615cb3.8a1c0dd243b1.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e74ba309aba024615cb3f5cc17a6f21021185308489d799b04fba4d620f8c9d3",
+    "source_group": "S1",
+    "specification_sha256": "8a1c0dd243b1ad41601baf7cb3aa79819c7a8b8cbd0da75d96641134a8689399",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_03/s1derived.e74ba309aba024615cb3.8a1c0dd243b1.md",
+  "qualified_specification_sha256": "2bccba24762d7ea07b31c36b6bcc2bdec9d91f5217765b4c16ad36ae128c3538",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.e74ba309aba024615cb3.8a1c0dd243b1/private/golden_design.v",
+  "rtl_sha256": "e74ba309aba024615cb3f5cc17a6f21021185308489d799b04fba4d620f8c9d3",
+  "source_corpus": "SEC-Flow-Star-repos-10.analog-hdl",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.e74ba309aba024615cb3.8a1c0dd243b1/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "8a1c0dd243b1ad41601baf7cb3aa79819c7a8b8cbd0da75d96641134a8689399",
+  "top_module": "pulse_sync"
+}

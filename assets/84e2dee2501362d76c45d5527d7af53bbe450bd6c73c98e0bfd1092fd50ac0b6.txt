@@ -1,0 +1,143 @@
+always @(posedge clk or negedge nReset)
+	  if (!nReset)
+	    begin
+	        core_cmd <=  4'b0000;
+	        core_txd <=  1'b0;
+	        shift    <=  1'b0;
+	        ld       <=  1'b0;
+	        cmd_ack  <=  1'b0;
+	        c_state  <=  ST_IDLE;
+	        ack_out  <=  1'b0;
+	    end
+	  else if (rst | i2c_al)
+	   begin
+	       core_cmd <=  4'b0000;
+	       core_txd <=  1'b0;
+	       shift    <=  1'b0;
+	       ld       <=  1'b0;
+	       cmd_ack  <=  1'b0;
+	       c_state  <=  ST_IDLE;
+	       ack_out  <=  1'b0;
+	   end
+	else
+	  begin
+	      // initially reset all signals
+	      core_txd <=  sr[7];
+	      shift    <=  1'b0;
+	      ld       <=  1'b0;
+	      cmd_ack  <=  1'b0;
+
+	      case (c_state) // synopsys full_case parallel_case
+	        ST_IDLE:
+	          if (go)
+	            begin
+	                if (start)
+	                  begin
+	                      c_state  <=  ST_START;
+	                      core_cmd <=  4'b0001;
+	                  end
+	                else if (read)
+	                  begin
+	                      c_state  <=  ST_READ;
+	                      core_cmd <=  4'b1000;
+	                  end
+	                else if (write)
+	                  begin
+	                      c_state  <=  ST_WRITE;
+	                      core_cmd <=  4'b0100;
+	                  end
+	                else // stop
+	                  begin
+	                      c_state  <=  ST_STOP;
+	                      core_cmd <=  4'b0010;
+	                  end
+
+	                ld <=  1'b1;
+	            end
+
+	        ST_START:
+	          if (core_ack)
+	            begin
+	                if (read)
+	                  begin
+	                      c_state  <=  ST_READ;
+	                      core_cmd <=  4'b1000;
+	                  end
+	                else
+	                  begin
+	                      c_state  <=  ST_WRITE;
+	                      core_cmd <=  4'b0100;
+	                  end
+
+	                ld <=  1'b1;
+	            end
+
+	        ST_WRITE:
+	          if (core_ack)
+	            if (cnt_done)
+	              begin
+	                  c_state  <=  ST_ACK;
+	                  core_cmd <=  4'b1000;
+	              end
+	            else
+	              begin
+	                  c_state  <=  ST_WRITE;       // stay in same state
+	                  core_cmd <=  4'b0100; // write next bit
+	                  shift    <=  1'b1;
+	              end
+
+	        ST_READ:
+	          if (core_ack)
+	            begin
+	                if (cnt_done)
+	                  begin
+	                      c_state  <=  ST_ACK;
+	                      core_cmd <=  4'b0100;
+	                  end
+	                else
+	                  begin
+	                      c_state  <=  ST_READ;       // stay in same state
+	                      core_cmd <=  4'b1000; // read next bit
+	                  end
+
+	                shift    <=  1'b1;
+	                core_txd <=  ack_in;
+	            end
+
+	        ST_ACK:
+	          if (core_ack)
+	            begin
+	               if (stop)
+	                 begin
+	                     c_state  <=  ST_STOP;
+	                     core_cmd <=  4'b0010;
+	                 end
+	               else
+	                 begin
+	                     c_state  <=  ST_IDLE;
+	                     core_cmd <=  4'b0000;
+
+	                     // generate command acknowledge signal
+	                     cmd_ack  <=  1'b1;
+	                 end
+
+	                 // assign ack_out output to bit_controller_rxd (contains last received bit)
+	                 ack_out <=  core_rxd;
+
+	                 core_txd <=  1'b1;
+	             end
+	           else
+	             core_txd <=  ack_in;
+
+	        ST_STOP:
+	          if (core_ack)
+	            begin
+	                c_state  <=  ST_IDLE;
+	                core_cmd <=  4'b0000;
+
+	                // generate command acknowledge signal
+	                cmd_ack  <=  1'b1;
+	            end
+
+	      endcase
+	  end

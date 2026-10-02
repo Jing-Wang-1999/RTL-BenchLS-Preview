@@ -1,0 +1,80 @@
+module rtlpp_06753(clock, reset, imem_clock, dmem_clock, processor_clock, regfile_clock);
+    input clock, reset;
+    output imem_clock, dmem_clock, processor_clock, regfile_clock;
+    
+    wire [7:0] clks;
+
+    // Embedding the logic of clocks module directly within the code
+    reg [7:0] clk_divider;
+    always @(posedge clock or posedge reset)
+    begin
+        if (reset)
+            clk_divider <= 8'b0;
+        else
+            clk_divider <= clk_divider + 1;
+    end
+    assign clks = clk_divider;
+
+    assign imem_clock = clks[0];
+    assign dmem_clock = clks[5];
+    assign regfile_clock = clks[5];
+    assign processor_clock = clks[7];
+    
+    reg [31:0] imem [0:4095];
+    reg [31:0] dmem [0:4095];
+    reg [31:0] regfile [0:31];
+    
+    wire [11:0] address_imem;
+    wire [31:0] q_imem;
+    
+    // imem logic
+    assign q_imem = imem[address_imem];
+    
+    wire [11:0] address_dmem;
+    wire [31:0] data;
+    wire wren;
+    wire [31:0] q_dmem;
+    
+    // dmem logic
+    always @(posedge dmem_clock) begin
+        if (wren)
+            dmem[address_dmem] <= data;
+    end
+    assign q_dmem = dmem[address_dmem];
+    
+    wire ctrl_writeEnable;
+    wire [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
+    wire [31:0] data_writeReg;
+    wire [31:0] data_readRegA, data_readRegB;
+    
+    // regfile logic
+    always @(posedge regfile_clock or posedge reset) begin
+        if (reset)
+            regfile[ctrl_writeReg] <= 32'b0;
+        else if (ctrl_writeEnable)
+            regfile[ctrl_writeReg] <= data_writeReg;
+    end
+    assign data_readRegA = regfile[ctrl_readRegA];
+    assign data_readRegB = regfile[ctrl_readRegB];
+    
+    // processor logic
+    wire [31:0] fetched_instruction;
+    wire [4:0] opcode, rs, rt, rd;
+    wire [15:0] immediate;
+    
+    assign fetched_instruction = q_imem;
+    assign opcode = fetched_instruction[31:27];
+    assign rs = fetched_instruction[26:22];
+    assign rt = fetched_instruction[21:17];
+    assign rd = fetched_instruction[16:12];
+    assign immediate = fetched_instruction[11:0];
+    
+    always @(posedge processor_clock or posedge reset) begin
+        if (reset)
+            // processor reset logic
+            ;
+
+        // processor control logic
+        // Needs further expansion depending on actual processor design
+    end
+endmodule

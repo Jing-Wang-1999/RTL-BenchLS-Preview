@@ -1,0 +1,16 @@
+always @*
+    begin
+      write_regs = 0;
+      if (wb_wacc)
+	case ({eight_bit_bus, address}) // synopsys parallel_case
+           // 8 bit Bus, 8 bit Granularity
+	   4'b1_000 : write_regs = 4'b0001;
+	   4'b1_001 : write_regs = 4'b0010;
+	   4'b1_010 : write_regs = 4'b0100;
+	   4'b1_011 : write_regs = 4'b1000;
+           // 16 bit Bus, 16 bit Granularity
+	   4'b0_000 : write_regs = 4'b0011;
+	   4'b0_001 : write_regs = 4'b1100;
+	   default: ;
+	endcase
+    end

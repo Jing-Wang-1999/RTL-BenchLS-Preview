@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.e98d2e311d11c57b8cb7.a9bd8c455412",
+  "compile_check": {
+    "case_id": "s1derived.e98d2e311d11c57b8cb7.a9bd8c455412",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "CDP_ICVT_leading_sign_10_0",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.e98d2e311d11c57b8cb7.a9bd8c455412/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "e98d2e311d11c57b8cb77313c22dc0c6c880750aff51b325724ffdaefa7aca92",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.e98d2e311d11c57b8cb7.a9bd8c455412",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.e98d2e311d11c57b8cb7",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "CDP_ICVT_leading_sign_10_0"
+  },
+  "independent_review": {
+    "case_id": "s1derived.e98d2e311d11c57b8cb7.a9bd8c455412",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "EveryintermediateBooleanformulainthecontractmatchesitsrenamedRTLwire, includingallzeroandNORparityterms. Independentlysimulatedall1024binaryinputsagainstamathematicalMSB-leading-zero-countoracle;allpassed, confirmingreasonablefunctionincludingallzeroresult10. Log:root_behavior_checks/leading_zero_10.log.",
+        "rtl_excerpt": "assign c_h_1_3 = c_h_1_2 & IntLeadZero_10U_leading_sign_10_0_rtn_wrs_c_18_3_sdt_3;",
+        "specification_excerpt": "`rtn[3]=h3`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.e98d2e311d11c57b8cb7",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "64b8b54b2b2573d725c6d70373871ff4c55f115c3c561224dff1a2ad5cdd84d0",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e98d2e311d11c57b8cb77313c22dc0c6c880750aff51b325724ffdaefa7aca92",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.e98d2e311d11c57b8cb7",
+  "primary_review": {
+    "case_id": "s1derived.e98d2e311d11c57b8cb7.a9bd8c455412",
+    "checks": {
+      "behavior": "Compared exact shift, ROM, Boolean, pass-through, or mux behavior. RTL rtn[3]=zero(9:8)&zero(7:6)&zero(5:4)&zero(3:2), while the prose calls it all five pairs zero.",
+      "boundaries": "Checked shift truncation, ROM address range, four-state Boolean behavior, and per-bit selector behavior.",
+      "interface": "Compared all top-level ports, widths, parameters, and defaults. Several described output-bit conditions contradict the RTL, including rtn[3] which ignores mantissa[1:0].",
+      "rtl_reasonableness": "RTL implements a coherent hardware function.",
+      "sequential_and_reset": "Checked combinational versus clocked behavior, initialization, latency, and absence of reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file semantic comparison supports revise.",
+        "rtl_excerpt": "RTL rtn[3]=zero(9:8)&zero(7:6)&zero(5:4)&zero(3:2), while the prose calls it all five pairs zero.",
+        "spec_excerpt": "Several described output-bit conditions contradict the RTL, including rtn[3] which ignores mantissa[1:0]."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "Several described output-bit conditions contradict the RTL, including rtn[3] which ignores mantissa[1:0].",
+        "rtl_evidence": "RTL rtn[3]=zero(9:8)&zero(7:6)&zero(5:4)&zero(3:2), while the prose calls it all five pairs zero.",
+        "spec_evidence": "Several described output-bit conditions contradict the RTL, including rtn[3] which ignores mantissa[1:0].",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.e98d2e311d11c57b8cb7",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_03/s1derived.e98d2e311d11c57b8cb7.a9bd8c455412.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e98d2e311d11c57b8cb77313c22dc0c6c880750aff51b325724ffdaefa7aca92",
+    "source_group": "S1",
+    "specification_sha256": "a9bd8c455412e5e76e97c279ce169cc3be696ca48d2e50e8859958e0f4350bf6",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_03/s1derived.e98d2e311d11c57b8cb7.a9bd8c455412.md",
+  "qualified_specification_sha256": "64b8b54b2b2573d725c6d70373871ff4c55f115c3c561224dff1a2ad5cdd84d0",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.e98d2e311d11c57b8cb7.a9bd8c455412/private/golden_design.v",
+  "rtl_sha256": "e98d2e311d11c57b8cb77313c22dc0c6c880750aff51b325724ffdaefa7aca92",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.e98d2e311d11c57b8cb7.a9bd8c455412/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "a9bd8c455412e5e76e97c279ce169cc3be696ca48d2e50e8859958e0f4350bf6",
+  "top_module": "CDP_ICVT_leading_sign_10_0"
+}

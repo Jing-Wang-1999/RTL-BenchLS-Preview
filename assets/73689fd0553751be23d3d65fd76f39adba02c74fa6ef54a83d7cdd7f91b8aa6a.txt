@@ -1,0 +1,50 @@
+The Verilog module `simplified_fft_stream` is designed to simulate a basic Fast Fourier Transform (FFT) operation, focusing on data readiness and simple transformation of input signals. The function and operation of the module can be explained as follows:
+
+1. **Primary Function:**
+   - The module performs a simple simulated Fast Fourier Transform on input complex data (real and imaginary parts) and outputs the transformed complex data along with control and status signals.
+
+2. **Key Control Flow:**
+   - The module operates based on a clock (`clk`) and an asynchronous reset (`reset_n`).
+   - When the reset is not active (`reset_n` is high), the module monitors the validity (`sink_valid`), start of packet (`sink_sop`), and end of packet (`sink_eop`) signals to determine if a transformation should occur.
+
+3. **Important Data Processing:**
+   - Once valid input data is detected (`sink_valid` is high and both `sink_sop` and `sink_eop` are high), the module signals readiness to process data (`sink_ready` is set high).
+   - The real and imaginary parts of the input data are doubled as a part of the transformation process (simulated FFT): `internal_source_real <= sink_real * 2` and `internal_source_imag <= sink_imag * 2`.
+   - Additional control signals such as `source_sop`, `source_eop`, `source_valid`, `source_error`, and `source_exp` are set based on the input control signals, indicating the start and end of the output packet, validity of the output, and the dummy exponent value.
+
+4. **Clear and Concise Instruction:**
+   - Design a Verilog module named `simplified_fft_stream` that processes input complex data (real and imaginary parts) and simulates an FFT transformation.
+   - The module should operate based on a clock (`clk`) and asynchronous reset (`reset_n`).
+   - When valid input data is detected (`sink_valid`, `sink_sop`, `sink_eop` are high), double the real and imaginary parts of the input data to generate corresponding output values.
+   - Set the sink ready signal (`sink_ready`) when processing can occur.
+   - Manage output control signals (`source_sop`, `source_eop`, `source_valid`) to reflect the start of packet, end of packet, and validity of the output data.
+   - Initialize internal registers correctly on reset and ensure proper signal assignments for output interfaces.
+
+This instruction provides a comprehensive understanding of the module's purpose, operation, control flow, and data processing behaviors required to generate the corresponding Verilog code.
+
+Module Interface:
+module simplified_fft_stream (
+    input       clk,
+    input       reset_n,
+    input       inverse,
+    input       sink_valid,
+    input       sink_sop,
+    input       sink_eop,
+    input [15:0] sink_real,
+    input [15:0] sink_imag,
+    input [1:0]  sink_error,
+    input       source_ready,
+    output      sink_ready,
+    output [1:0] source_error,
+    output      source_sop,
+    output      source_eop,
+    output      source_valid,
+    output [5:0] source_exp,
+    output [15:0] source_real,
+    output [15:0] source_imag
+);
+
+Behavioral Clarifications:
+- All outputs are driven from internal registers via continuous assign statements. The single always block triggers on `posedge clk or negedge reset_n` (asynchronous active-low reset), clearing all internal registers on reset.
+- When the active condition is not met, only `sink_ready` and `source_valid` are cleared; packet signals and data registers retain their prior values.
+- `source_exp` is set to 6'b000001 (a fixed dummy value) when the transform fires; `source_error` is set to 2'b00.

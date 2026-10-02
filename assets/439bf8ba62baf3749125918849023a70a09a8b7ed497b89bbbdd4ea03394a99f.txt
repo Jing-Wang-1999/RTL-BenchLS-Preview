@@ -1,0 +1,77 @@
+module origen_087699 (
+    input wire clk_sys,
+    input wire reset,
+    input wire we_n,
+    input wire [1:0] addr,
+    input wire [7:0] idata,
+    input wire [7:0] ipa,
+    input wire [7:0] ipb,
+    input wire [7:0] ipc,
+    output wire [7:0] opa,
+    output wire [7:0] opb,
+    output wire [7:0] opc,
+    output wire [7:0] odata
+);
+
+    reg [7:0] opa_r;
+    reg [7:0] opb_r;
+    reg [7:0] opc_r;
+    reg [7:0] mode_r;
+
+    // Write logic
+    always @(posedge clk_sys or posedge reset) begin
+        if (reset) begin
+            opa_r <= 8'h00;
+            opb_r <= 8'h00;
+            opc_r <= 8'h00;
+            mode_r <= 8'hFF;
+        end else if (!we_n) begin
+            case (addr)
+                2'b00: opa_r <= idata;
+                2'b01: opb_r <= idata;
+                2'b10: opc_r <= idata;
+                2'b11: begin
+                    if (idata[7]) begin
+                        mode_r <= idata;
+                        opa_r <= 8'h00;
+                        opb_r <= 8'h00;
+                        opc_r <= 8'h00;
+                    end else begin
+                        // Write single bit to opc_r
+                        case (idata[3:1])
+                            3'b000: opc_r[0] <= idata[0];
+                            3'b001: opc_r[1] <= idata[0];
+                            3'b010: opc_r[2] <= idata[0];
+                            3'b011: opc_r[3] <= idata[0];
+                            3'b100: opc_r[4] <= idata[0];
+                            3'b101: opc_r[5] <= idata[0];
+                            3'b110: opc_r[6] <= idata[0];
+                            3'b111: opc_r[7] <= idata[0];
+                        endcase
+                    end
+                end
+            endcase
+        end
+    end
+
+    // Output port logic
+    assign opa = mode_r[4] ? 8'hFF : opa_r;
+    assign opb = mode_r[1] ? 8'hFF : opb_r;
+    assign opc = {mode_r[3] ? 4'hF : opc_r[7:4],
+                  mode_r[0] ? 4'hF : opc_r[3:0]};
+
+    // Read logic (combinatorial)
+    reg [7:0] odata_r;
+    always @(*) begin
+        case (addr)
+            2'b00: odata_r = mode_r[4] ? ipa : opa_r;
+            2'b01: odata_r = mode_r[1] ? ipb : opb_r;
+            2'b10: odata_r = {mode_r[3] ? ipc[7:4] : opc_r[7:4],
+                              mode_r[0] ? ipc[3:0] : opc_r[3:0]};
+            2'b11: odata_r = mode_r;
+            default: odata_r = 8'h00;
+        endcase
+    end
+    assign odata = odata_r;
+
+endmodule

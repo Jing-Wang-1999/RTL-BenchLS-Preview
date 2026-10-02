@@ -1,0 +1,109 @@
+module rtlpp_01996(
+  input M_AXI_ACLK,
+  input M_AXI_ARESETN,
+  output [0:0] M_AXI_AWID,
+  output [31:0] M_AXI_AWADDR,
+  output [7:0] M_AXI_AWLEN,
+  output [2:0] M_AXI_AWSIZE,
+  output [1:0] M_AXI_AWBURST,
+  output M_AXI_AWLOCK,
+  output [3:0] M_AXI_AWCACHE,
+  output [2:0] M_AXI_AWPROT,
+  output [3:0] M_AXI_AWQOS,
+  output [0:0] M_AXI_AWUSER,
+  output M_AXI_AWVALID,
+  input M_AXI_AWREADY,
+  output [63:0] M_AXI_WDATA,
+  output [7:0] M_AXI_WSTRB,
+  output M_AXI_WLAST,
+  output [0:0] M_AXI_WUSER,
+  output M_AXI_WVALID,
+  input M_AXI_WREADY,
+  input [0:0] M_AXI_BID,
+  input [1:0] M_AXI_BRESP,
+  input [0:0] M_AXI_BUSER,
+  input M_AXI_BVALID,
+  output M_AXI_BREADY,
+  output [0:0] M_AXI_ARID,
+  output [31:0] M_AXI_ARADDR,
+  output [7:0] M_AXI_ARLEN,
+  output [2:0] M_AXI_ARSIZE,
+  output [1:0] M_AXI_ARBURST,
+  output M_AXI_ARLOCK,
+  output [3:0] M_AXI_ARCACHE,
+  output [2:0] M_AXI_ARPROT,
+  output [3:0] M_AXI_ARQOS,
+  output [0:0] M_AXI_ARUSER,
+  output M_AXI_ARVALID,
+  input M_AXI_ARREADY,
+  input [0:0] M_AXI_RID,
+  input [63:0] M_AXI_RDATA,
+  input [1:0] M_AXI_RRESP,
+  input M_AXI_RLAST,
+  input [0:0] M_AXI_RUSER,
+  input M_AXI_RVALID,
+  output M_AXI_RREADY,
+  input [7:0] I_wr_index,
+  input I_rd_start,
+  input [23:0] I_D_Size,
+  output O_Force_wr_de,
+  output O_wr_req,
+  input I_Aribe_wr_enable,
+  output O_wr_brust_now,
+  output O_wr_brust_end,
+  output O_rd_req,
+  input I_Aribe_rd_enable,
+  output O_rd_brust_now,
+  output O_rd_brust_end,
+  input I_Pre_clk,
+  input I_Pre_vs,
+  input [23:0] I_Pre_data,
+  input I_Pre_de,
+  input I_Ps_Access,
+  input I_Post_clk,
+  output O_Post_Start,
+  output [15:0] O_Post_data,
+  input I_Post_de,
+  input I_Post_vs
+);
+  // Internal signals definition and initialization
+  reg O_Force_wr_de;
+  reg O_wr_req;
+  reg O_wr_brust_now;
+  reg O_wr_brust_end;
+  reg O_rd_req;
+  reg O_rd_brust_now;
+  reg O_rd_brust_end;
+  reg O_Post_Start;
+  reg [15:0] O_Post_data;
+
+  // Add logic here
+  // Since the original logic of the module is not provided,
+  // placeholder assignments are provided.
+
+  always @(posedge M_AXI_ACLK or negedge M_AXI_ARESETN) begin
+    if (!M_AXI_ARESETN) begin
+      // Reset logic
+      O_Force_wr_de <= 0;
+      O_wr_req <= 0;
+      O_wr_brust_now <= 0;
+      O_wr_brust_end <= 0;
+      O_rd_req <= 0;
+      O_rd_brust_now <= 0;
+      O_rd_brust_end <= 0;
+      O_Post_Start <= 0;
+      O_Post_data <= 0;
+    end else begin
+      // Placeholder logic; replace with actual implementation
+      O_Force_wr_de <= I_Aribe_wr_enable;
+      O_wr_req <= I_wr_index;
+      O_wr_brust_now <= 1'b0;
+      O_wr_brust_end <= 1'b0;
+      O_rd_req <= I_rd_start;
+      O_rd_brust_now <= 1'b0;
+      O_rd_brust_end <= 1'b0;
+      O_Post_Start <= 1'b0;
+      O_Post_data <= I_Pre_data[15:0];
+    end
+  end
+endmodule

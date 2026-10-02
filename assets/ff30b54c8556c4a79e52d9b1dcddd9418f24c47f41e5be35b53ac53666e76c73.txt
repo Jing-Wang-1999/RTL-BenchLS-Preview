@@ -1,0 +1,54 @@
+module origen_162299 (
+    input sram_flag,
+    input [15:0] data_CH1, data_CH2, data_pro,
+    input [15:0] addr_CH1, addr_CH2, addr_pro,
+    input ce_CH1, ce_CH2, ce_pro,
+    input rw_CH1, rw_CH2, rw_pro,
+    input oe_CH1, oe_CH2, oe_pro,
+    output reg [15:0] dataout_CH1, dataout_pro,
+    output reg [15:0] addr_sram1, addr_sram2, addr_sram3, addr_sram4,
+    output reg ce_sram1, ce_sram2, ce_sram3, ce_sram4,
+    output reg rw_sram1, rw_sram2, rw_sram3, rw_sram4,
+    output reg oe_sram1, oe_sram2, oe_sram3, oe_sram4,
+    output reg [15:0] data_sram1, data_sram2, data_sram3, data_sram4
+);
+
+    always @(*) begin
+        // Control SRAM1 and SRAM2 based on sram_flag
+        if (sram_flag) begin
+            addr_sram1 = addr_CH2;
+            addr_sram2 = addr_CH2;
+            ce_sram1 = ce_CH2;
+            ce_sram2 = ce_CH2;
+            rw_sram1 = rw_CH2;
+            rw_sram2 = rw_CH2;
+            oe_sram1 = oe_CH2;
+            oe_sram2 = oe_CH2;
+            dataout_CH1 = data_sram2;
+        end else begin
+            addr_sram1 = addr_CH1;
+            addr_sram2 = addr_CH1;
+            ce_sram1 = ce_CH1;
+            ce_sram2 = ce_CH1;
+            rw_sram1 = rw_CH1;
+            rw_sram2 = rw_CH1;
+            oe_sram1 = oe_CH1;
+            oe_sram2 = oe_CH1;
+            dataout_CH1 = data_sram1;
+        end
+
+        // Control SRAM3 and SRAM4 based on processing module
+        addr_sram3 = addr_pro;
+        addr_sram4 = addr_pro;
+        ce_sram3 = ce_pro;
+        ce_sram4 = ce_pro;
+        rw_sram3 = rw_pro;
+        rw_sram4 = rw_pro;
+        oe_sram3 = oe_pro;
+        oe_sram4 = oe_pro;
+
+        // Combine data from SRAM3 and SRAM4 for processing module
+        dataout_pro = {data_sram3, data_sram4};
+    end
+
+endmodule

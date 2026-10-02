@@ -1,0 +1,56 @@
+module origen_052929 #(
+    parameter DW = 15,
+    parameter EW = 0,
+    parameter MDW = 15
+) (
+    input wire clk,
+    input wire reset,
+    
+    // Streaming sink
+    input wire [DW:0] stream_data,
+    input wire stream_startofpacket,
+    input wire stream_endofpacket,
+    input wire [EW:0] stream_empty,
+    input wire stream_valid,
+    output wire stream_ready,
+    
+    // Avalon-MM master
+    input wire master_waitrequest,
+    output wire master_write,
+    output wire [MDW:0] master_writedata,
+    
+    // Control signals
+    output wire inc_address,
+    output wire reset_address
+);
+
+    reg [DW:0] temp_data;
+    reg temp_valid;
+
+    // Data buffering
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            if (!master_waitrequest) begin
+                temp_data <= {(DW+1){1'b0}};
+                temp_valid <= 1'b0;
+            end
+        end else if (stream_ready & stream_valid) begin
+            temp_data <= stream_data;
+            temp_valid <= 1'b1;
+        end else if (!master_waitrequest) begin
+            temp_valid <= 1'b0;
+        end
+    end
+
+    // Flow control
+    assign stream_ready = !reset & (!temp_valid | !master_waitrequest);
+
+    // Data forwarding
+    assign master_write = temp_valid;
+    assign master_writedata = temp_data;
+
+    // Address management
+    assign inc_address = stream_ready & stream_valid;
+    assign reset_address = inc_address & stream_startofpacket;
+
+endmodule

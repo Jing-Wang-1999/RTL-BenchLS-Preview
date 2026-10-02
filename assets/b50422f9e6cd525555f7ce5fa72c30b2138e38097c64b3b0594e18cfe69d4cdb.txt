@@ -1,0 +1,65 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/2214",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/2193",
+  "repository": "lowRISC/ibex",
+  "pr_number": 2214,
+  "issue_number": 2193,
+  "verilog_files": [
+    "rtl/ibex_core.sv",
+    "rtl/ibex_decoder.sv",
+    "rtl/ibex_id_stage.sv"
+  ],
+  "deletions": 33,
+  "additions": 24,
+  "patches": [
+    {
+      "filename": "rtl/ibex_core.sv",
+      "patch": "@@ -618,6 +618,7 @@ module ibex_core import ibex_pkg::*; #(\n     // CSR ID/EX\n     .csr_access_o         (csr_access),\n     .csr_op_o             (csr_op),\n+    .csr_addr_o           (csr_addr),\n     .csr_op_en_o          (csr_op_en),\n     .csr_save_if_o        (csr_save_if),  // control signal to save PC\n     .csr_save_id_o        (csr_save_id),  // control signal to save PC\n@@ -1046,7 +1047,6 @@ module ibex_core import ibex_pkg::*; #(\n   /////////////////////////////////////////\n \n   assign csr_wdata  = alu_operand_a_ex;\n-  assign csr_addr   = csr_num_e'(csr_access ? alu_operand_b_ex[11:0] : 12'b0);\n \n   ibex_cs_registers #(\n     .DbgTriggerEn     (DbgTriggerEn),",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    },
+    {
+      "filename": "rtl/ibex_decoder.sv",
+      "patch": "@@ -83,6 +83,7 @@ module ibex_decoder #(\n   // CSRs\n   output logic                 csr_access_o,          // access to CSR\n   output ibex_pkg::csr_op_e    csr_op_o,              // operation to perform on CSR\n+  output ibex_pkg::csr_num_e   csr_addr_o,            // CSR address\n \n   // LSU\n   output logic                 data_req_o,            // start transaction to data memory\n@@ -138,6 +139,8 @@ module ibex_decoder #(\n   assign imm_u_type_o = { instr[31:12], 12'b0 };\n   assign imm_j_type_o = { {12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0 };\n \n+  assign csr_addr_o = csr_num_e'(instr[31:20]);\n+\n   // immediate for CSR manipulation (zero extended)\n   assign zimm_rs1_type_o = { 27'b0, instr_rs1 }; // rs1\n \n@@ -1168,9 +1171,10 @@ module ibex_decoder #(\n           alu_op_b_mux_sel_o = OP_B_IMM;\n         end else begin\n           // instruction to read/modify CSR\n-          alu_op_b_mux_sel_o = OP_B_IMM;\n           imm_a_mux_sel_o    = IMM_A_Z;\n-          imm_b_mux_sel_o    = IMM_B_I;  // CSR address is encoded in I imm\n+\n+          // No need for operand/immediate B mux selection. The CSR address is fed out as csr_addr_o\n+          // as the CSR address always comes from the same field in the instruction.\n \n           if (instr_alu[14]) begin\n             // rs1 field is used as immediate",
+      "additions": 6,
+      "deletions": 2,
+      "changes": 8
+    },
+    {
+      "filename": "rtl/ibex_id_stage.sv",
+      "patch": "@@ -95,6 +95,7 @@ module ibex_id_stage #(\n   // CSR\n   output logic                      csr_access_o,\n   output ibex_pkg::csr_op_e         csr_op_o,\n+  output ibex_pkg::csr_num_e        csr_addr_o,\n   output logic                      csr_op_en_o,\n   output logic                      csr_save_if_o,\n   output logic                      csr_save_id_o,\n@@ -290,6 +291,7 @@ module ibex_id_stage #(\n   logic        data_req_allowed;\n \n   // CSR control\n+  logic        no_flush_csr_addr;\n   logic        csr_pipe_flush;\n \n   logic [31:0] alu_operand_a;\n@@ -497,6 +499,7 @@ module ibex_id_stage #(\n     // CSRs\n     .csr_access_o(csr_access_o),\n     .csr_op_o    (csr_op_o),\n+    .csr_addr_o  (csr_addr_o),\n \n     // LSU\n     .data_req_o           (lsu_req_dec),\n@@ -509,36 +512,20 @@ module ibex_id_stage #(\n     .branch_in_dec_o(branch_in_dec)\n   );\n \n-  /////////////////////////////////\n-  // CSR-related pipeline flushes //\n-  /////////////////////////////////\n-  always_comb begin : csr_pipeline_flushes\n-    csr_pipe_flush = 1'b0;\n-\n-    // A pipeline flush is needed to let the controller react after modifying certain CSRs:\n-    // - When enabling interrupts, pending IRQs become visible to the controller only during\n-    //   the next cycle. If during that cycle the core disables interrupts again, it does not\n-    //   see any pending IRQs and consequently does not start to handle interrupts.\n-    // - When modifying any PMP CSR, PMP check of the next instruction might get invalidated.\n-    //   Hence, a pipeline flush is needed to instantiate another PMP check with the updated CSRs.\n-    // - When modifying debug CSRs.\n-    if (csr_op_en_o == 1'b1 && (csr_op_o == CSR_OP_WRITE || csr_op_o == CSR_OP_SET)) begin\n-      if (csr_num_e'(instr_rdata_i[31:20]) == CSR_MSTATUS ||\n-          csr_num_e'(instr_rdata_i[31:20]) == CSR_MIE     ||\n-          csr_num_e'(instr_rdata_i[31:20]) == CSR_MSECCFG ||\n-          // To catch all PMPCFG/PMPADDR registers, get the shared top most 7 bits.\n-          instr_rdata_i[31:25] == 7'h1D) begin\n-        csr_pipe_flush = 1'b1;\n-      end\n-    end else if (csr_op_en_o == 1'b1 && csr_op_o != CSR_OP_READ) begin\n-      if (csr_num_e'(instr_rdata_i[31:20]) == CSR_DCSR      ||\n-          csr_num_e'(instr_rdata_i[31:20]) == CSR_DPC       ||\n-          csr_num_e'(instr_rdata_i[31:20]) == CSR_DSCRATCH0 ||\n-          csr_num_e'(instr_rdata_i[31:20]) == CSR_DSCRATCH1) begin\n-        csr_pipe_flush = 1'b1;\n-      end\n-    end\n-  end\n+  // Flush pipe on most CSR modification. Some CSR modifications alter how instructions execute\n+  // (e.g. the PMP CSRs) so this ensures all instructions always see the latest architectural state\n+  // when entering the fetch stage. This causes some needless flushes but performance impact is\n+  // limited. We have a single fetch stage to flush not many stages of a deep pipeline and CSR\n+  // instructions are in general rare and not part of performance critical parts of the code.\n+  //\n+  // No flush is triggered for a small number of specific CSRs. These are ones that have been\n+  // specifically identified to be a) likely to be modifed in exception handlers and b) safe to\n+  // alter without a flush.\n+  assign no_flush_csr_addr = csr_addr_o inside {CSR_MSCRATCH, CSR_MEPC};\n+\n+  assign csr_pipe_flush = (csr_op_en_o == 1)                                         &&\n+                          (csr_op_o inside {CSR_OP_WRITE, CSR_OP_SET, CSR_OP_CLEAR}) &&\n+                          !no_flush_csr_addr;\n \n   ////////////////\n   // Controller //",
+      "additions": 17,
+      "deletions": 30,
+      "changes": 47
+    }
+  ],
+  "pr_info": {
+    "title": "[rtl] Flush pipe on all CSR modifications",
+    "body": "This fixes #2193, an issue that meant bit clears in PMP related CSRs didn't immediately apply to an instruction already in the fetch stage due to a lack of a pipeline flush.\r\n\r\nWith this change the pipeline will flush in that scenario, fixing the issue. It now flushes the pipeline on all CSR modifications as this makes the pipeline more resliant against similar issues in the future (where the list of CSRs to flush on should have been updated but wasn't).",
+    "state": "closed",
+    "created_at": "2024-09-17T13:02:25Z",
+    "updated_at": "2025-02-17T22:24:29Z",
+    "merged_at": "2025-02-17T17:14:29Z",
+    "user": "GregAC"
+  },
+  "issue_info": {
+    "title": "Pipeline not being flushed on PMP register clears",
+    "body": "In [this commit](https://github.com/lowRISC/ibex/commit/46404cf86f60f72fb84a2bc693d2ab08011bdb37) the pipeline was made to flush on changes to PMP registers, changes made via `CSR_OP_CLEAR` however are missed.\r\n\r\nThis is likely because prior to this commit only mstatus and mie were listed, and clearing is safe for those.\r\n\r\nThis meant that instructions being fetched were passing PMP checks which they should not have been.",
+    "labels": [
+      "Type:Bug"
+    ],
+    "state": "closed",
+    "created_at": "2024-07-18T13:43:11Z",
+    "updated_at": "2025-02-17T17:14:30Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 5
+  },
+  "base_commit": "78739562ce7b2606c4e208d4029ab890255769f6",
+  "head_commit": "866572c130bcbda0f8a6c5b3c28b8f5f8c68116b",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_2214_2193",
+  "lec_status": "useful_pass"
+}

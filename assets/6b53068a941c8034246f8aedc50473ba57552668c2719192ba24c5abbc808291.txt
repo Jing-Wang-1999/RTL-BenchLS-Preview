@@ -1,0 +1,16 @@
+read_verilog -sv golden.v
+hierarchy -check -top mix_one_column
+proc; opt; memory; opt; flatten; opt; check -assert
+select -assert-none t:$*ff* t:$*latch*
+design -stash gold
+read_verilog -sv revised.v
+hierarchy -check -top mix_one_column
+proc; opt; memory; opt; flatten; opt; check -assert
+select -assert-none t:$*ff* t:$*latch*
+design -stash gate
+design -copy-from gold -as gold mix_one_column
+design -copy-from gate -as gate mix_one_column
+miter -equiv -flatten gold gate miter
+hierarchy -check -top miter
+prep -top miter; check -assert
+sat -set-def-inputs -prove trigger 0 -verify -show-ports -dump_json witness.json

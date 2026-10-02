@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.33bfff44ae66056bd0c5.52b1dbf533e7",
+  "compile_check": {
+    "case_id": "s1derived.33bfff44ae66056bd0c5.52b1dbf533e7",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_099109",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_099109.6c56bed7b5d0903a/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.33bfff44ae66056bd0c5",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "33bfff44ae66056bd0c5bf85c27afdefd1b53ecb8deb724cf7dad80e42972e11",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.33bfff44ae66056bd0c5.52b1dbf533e7",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_099109.6c56bed7b5d0903a/private/commercial_positive.log",
+    "commercial_log_sha256": "a264e0d4fa2cb23fbd40191a8e2ac82b7ca015247988fae04eb474047024542c",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_099109.6c56bed7b5d0903a/private/historical_harness/00_sec_origen_099109.tcl",
+    "executed_script_sha256": "83fe58ba331355f9701a13dc6b49ee8e7e4de860e1ce61552969fc2e18eea632",
+    "golden_tops": [
+      "origen_099109"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.origen_099109.6c56bed7b5d0903a",
+    "parent_id": "s1p.33bfff44ae66056bd0c5",
+    "revised_tops": [
+      "origen_099109"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_099109",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.33bfff44ae66056bd0c5.52b1dbf533e7",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All four traffic-state outputs and sensor-controlled green holds match. Reset is asynchronous and the unrelated Traffic_sensor is excluded.",
+        "rtl_excerpt": "S2: {RA, YA, GA, RB, YB, GB} = 6'b100001;",
+        "specification_excerpt": "A red/B green"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.33bfff44ae66056bd0c5",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "25ddfd3ce0c0c714eaf32c497824ab89cc31b30cc59e79f0404a0b61fb7d611c",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "33bfff44ae66056bd0c5bf85c27afdefd1b53ecb8deb724cf7dad80e42972e11",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_099109.6c56bed7b5d0903a/private/historical_harness/00_sec_origen_099109.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_099109.6c56bed7b5d0903a/private/historical_harness/01_sec_origen_099109.tcl"
+  ],
+  "parent_id": "s1p.33bfff44ae66056bd0c5",
+  "primary_review": {
+    "case_id": "s1derived.33bfff44ae66056bd0c5.52b1dbf533e7",
+    "checks": {
+      "behavior": "Four normal state outputs/transitions match.",
+      "boundaries": "Invalid state shows both red with no yellow and transitions S0.",
+      "interface": "Top controller ports match; sensor ports are not part of top.",
+      "rtl_reasonableness": "The traffic controller is reasonable.",
+      "sequential_and_reset": "Active-high asynchronous reset selects S0."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Four normal state outputs/transitions match. Active-high asynchronous reset selects S0.",
+        "rtl_excerpt": "default output vector 6'b100100 means RA=1,RB=1 and all yellow/green zero; top instantiates nothing",
+        "spec_excerpt": "\u201cOutputs for undefined states default to red on both roads with one yellow light\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The task mixes a separate uninstantiated Traffic_sensor into the top specification and incorrectly says invalid state has a yellow light.",
+        "rtl_evidence": "default output vector 6'b100100 means RA=1,RB=1 and all yellow/green zero; top instantiates nothing",
+        "spec_evidence": "\u201cOutputs for undefined states default to red on both roads with one yellow light\u201d",
+        "type": "top_scope_and_fallback"
+      }
+    ],
+    "parent_id": "s1p.33bfff44ae66056bd0c5",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.33bfff44ae66056bd0c5.52b1dbf533e7.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "33bfff44ae66056bd0c5bf85c27afdefd1b53ecb8deb724cf7dad80e42972e11",
+    "source_group": "S2",
+    "specification_sha256": "52b1dbf533e7e8355357cb808e203dfb1d523b505cf4b7b7392bad8869aba022",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.33bfff44ae66056bd0c5.52b1dbf533e7.md",
+  "qualified_specification_sha256": "25ddfd3ce0c0c714eaf32c497824ab89cc31b30cc59e79f0404a0b61fb7d611c",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_099109.6c56bed7b5d0903a/private/golden_design.v",
+  "rtl_sha256": "33bfff44ae66056bd0c5bf85c27afdefd1b53ecb8deb724cf7dad80e42972e11",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_099109.6c56bed7b5d0903a/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "52b1dbf533e7e8355357cb808e203dfb1d523b505cf4b7b7392bad8869aba022",
+  "top_module": "origen_099109"
+}

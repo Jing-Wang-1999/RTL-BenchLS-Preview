@@ -1,0 +1,21 @@
+This module implements a 16-bit CRC (Cyclic Redundancy Check) generator using a linear feedback shift register (LFSR). It operates synchronously on the rising edge of a clock signal.
+
+**Inputs:**
+*   `clk`: The system clock.
+*   `reset`: A synchronous reset signal. When high, it initializes the internal CRC state.
+*   `enable`: An active-high control signal. The CRC calculation only updates when this signal is high.
+*   `init`: An active-high initialization signal. When high and `enable` is also high, it re-initializes the internal CRC state without requiring a full reset.
+*   `data_in`: The serial input data bit for which the CRC is calculated.
+
+**Outputs:**
+*   `crc_out` (16-bit): The current 16-bit CRC value, which is directly driven by the internal LFSR state.
+
+**Behavior:**
+The core function is a 16-bit LFSR that processes one input bit per clock cycle when enabled. The polynomial is implicitly defined by the feedback taps. The internal state (`lfsr`) is initialized to all ones (`0xFFFF`) upon either a `reset` or when `init` is asserted while `enable` is high. The state only updates on a clock edge if `enable` is high.
+
+When enabled and not initializing, the LFSR shifts its bits one position to the left (from lower indices to higher indices). The new value for bit 0 is computed as the XOR of the incoming `data_in` bit and the previous value of bit 15 (the most significant bit). Specific bits (5 and 12) also incorporate additional XOR feedback from `data_in` and the previous bit 15, defining the CRC polynomial. All other bits simply shift from their preceding neighbor.
+
+The computed 16-bit CRC value is continuously available on the `crc_out` output port.
+
+**Allowed Sub-modules:**
+The implementation is self-contained and does not require or allow any sub-modules. It consists solely of a 16-bit register and comb

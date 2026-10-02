@@ -1,0 +1,38 @@
+module FA(a, b, cin, sum, cout);
+
+    input a, b, cin;
+    output sum, cout;
+
+    assign sum = a ^ b ^ cin;
+    assign cout = (a & b) | (b & cin) | (cin & a);
+
+endmodule
+
+module CSAlike (result, carry, A, B, C);
+
+    input [63:0] A, B, C;
+    output [63:0] result, carry;
+    wire [63:0] sum_temp;
+    wire [63:0] carry_temp;
+
+    genvar i;
+
+    assign carry_temp[0] = 0;
+    assign sum_temp[63] = 0;
+
+    generate
+        for (i = 0; i < 63; i = i + 1) begin
+            FA fa(
+                .a(A[i]), 
+                .b(B[i]), 
+                .cin(C[i]), 
+                .sum(sum_temp[i]), 
+                .cout(carry_temp[i+1])
+            );
+        end
+    endgenerate
+
+    assign result = sum_temp;
+    assign carry = carry_temp;
+
+endmodule

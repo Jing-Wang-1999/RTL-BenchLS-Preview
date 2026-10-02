@@ -1,0 +1,35 @@
+module mg_02828 (
+    input RW0_clk,
+    input RW0_en,
+    input RW0_wmode,
+    input [8:0] RW0_addr,
+    input [63:0] RW0_wdata,
+    output reg [63:0] RW0_rdata
+);
+
+    reg [63:0] mem [0:511];
+    reg [8:0] read_addr_reg;
+    
+    integer i;
+    initial begin
+        for (i = 0; i < 512; i = i + 1) begin
+            mem[i] = $random;
+        end
+        read_addr_reg = 9'b0;
+    end
+    
+    always @(posedge RW0_clk) begin
+        if (RW0_en) begin
+            if (RW0_wmode) begin
+                mem[RW0_addr] <= RW0_wdata;
+            end else begin
+                read_addr_reg <= RW0_addr;
+            end
+        end
+    end
+    
+    always @(*) begin
+        RW0_rdata = mem[read_addr_reg];
+    end
+
+endmodule

@@ -1,0 +1,7 @@
+# origen_154623
+
+This four-state controller has one-bit inputs `send`, `rts`, `all`, `next`, `clock`, and active-high asynchronous `reset`. Its one-bit combinational outputs are `busy`, `load`, `set`, `shift`, and `increment`. State parameters are `IDLE=2'b00`, `START=2'b01`, `WAIT=2'b10`, and `SHIFT=2'b11`.
+
+Reset asynchronously selects IDLE; otherwise state updates on rising `clock` edges. IDLE stays idle unless both `rts` and `send` are one, which selects START. START unconditionally goes to WAIT. WAIT gives `all` priority: it goes to IDLE when `all=1`, otherwise to SHIFT when `next=1`, otherwise remains WAIT. SHIFT unconditionally returns to WAIT. An invalid state goes to IDLE.
+
+In IDLE all outputs are zero. START asserts `busy`, `load`, and `set`. WAIT asserts only `busy`. SHIFT asserts `busy`, `shift`, and `increment`. Outputs are combinational functions of current state. There are no submodules.

@@ -1,0 +1,93 @@
+module origen_202998 (
+    input clk,
+    output [2:0] SC_out,
+    output [7:0] AC_out,
+    output [3:0] PC_out,
+    output [3:0] AR_out,
+    output [7:0] IR_out,
+    output [2:0] opcode_out,
+    output I_out,
+    output [7:0] M_out [0:15]
+);
+
+    reg [2:0] SC;
+    reg [7:0] AC;
+    reg [3:0] PC;
+    reg [3:0] AR;
+    reg [7:0] IR;
+    reg [2:0] opcode;
+    reg I;
+    reg [7:0] M [0:15];
+    reg IR0, IR1, IR2, IR3, IR4, IR5, IR6, IR7;
+
+    initial begin
+        // Initialize memory with instructions and data
+        M[0] = 8'b10100010; // Load AC with value at address 2
+        M[1] = 8'b01000001; // Add value at address 1 to AC
+        M[2] = 8'd42;       // Data value
+        M[3] = 8'd20;       // Data value
+        // Add more memory initializations as needed
+    end
+
+    always @(posedge clk) begin
+        case (SC)
+            3'b000: begin // Fetch instruction address
+                AR = PC;
+            end
+            3'b001: begin // Fetch instruction
+                PC = PC + 1;
+                IR = M[AR];
+            end
+            3'b010: begin // Decode instruction
+                opcode = IR[7:5];
+                I = IR[4];
+                AR = IR[3:0];
+            end
+            3'b011: begin // Fetch operand (if indirect)
+                if (I) begin
+                    AC = M[M[AR]];
+                end
+            end
+            3'b100: begin // Execute instruction
+                case (opcode)
+                    3'b000: begin // Add
+                        AC = AC + M[AR];
+                    end
+                    3'b001: begin // Subtract
+                        AC = AC - M[AR];
+                    end
+                    3'b010: begin // XOR
+                        AC = AC ^ M[AR];
+                    end
+                    3'b011: begin // Double
+                        M[AR] = M[AR] << 1;
+                    end
+                    3'b100: begin // Load
+                        AC = M[AR];
+                    end
+                    3'b101: begin // Store
+                        M[AR] = AC;
+                    end
+                    3'b110: begin // Complement
+                        M[AR] = ~M[AR];
+                    end
+                endcase
+                SC = 3'b000; // Reset sequence counter
+            end
+            default: begin
+                SC = 3'b000; // Reset sequence counter
+            end
+        endcase
+    end
+
+    assign SC_out = SC;
+    assign AC_out = AC;
+    assign PC_out = PC;
+    assign AR_out = AR;
+    assign IR_out = IR;
+    assign opcode_out = opcode;
+    assign I_out = I;
+    assign M_out = M;
+
+    assign {IR7, IR6, IR5, IR4, IR3, IR2, IR1, IR0} = IR;
+endmodule

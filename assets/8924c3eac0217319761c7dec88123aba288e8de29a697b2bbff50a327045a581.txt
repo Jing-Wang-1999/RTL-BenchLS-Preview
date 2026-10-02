@@ -1,0 +1,36 @@
+The Verilog module, `fft_processing_chain`, is designed to process and monitor audio signals. It performs operations including fast Fourier transform (FFT), pitch correction, and pulse-width modulation (PWM) to generate audio outputs. The module interfaces with external audio input via SPI and provides multiple monitoring outputs.
+
+Key control flow points and decision points in the module include:
+1. **Audio Signal Selection and Routing:** Input selection is controlled by `aud_in_sel` and `aud_out_sel` control signals, determining the routing and processing path for the incoming audio signals.
+2. **PWM Control:** The module generates a PWM signal to drive an audio output, based on comparisons between processed audio data (`audio_in1` and `audio_in2`).
+3. **Pitch Enable Control:** The pitch correction logic is enabled or disabled based on the `pitch_enable` signal, affecting the data processing path through `pitch_correction_1`.
+
+Important data processing and signal interactions within the module involve:
+1. **SPI Data Reception:** The module receives audio data from the `MISO` input and processes it through various stages, including shifting and volume control.
+2. **FFT and Pitch Correction:** The data is processed through FFT (`xfft_2` and `xfft_3`), and pitch correction modules, with intermediate data being validated and routed based on control signals.
+3. **Monitoring Outputs:** Multiple monitor outputs (`monitor_audio_in`, `monitor_audio_out`, `monitor_fft_out`, and `monitor_pitch_out`) are generated to provide insights into the audio data at various stages of processing.
+
+The module is clocked by `clk` and can be reset using the `rst` signal. It provides several outputs to enable interfacing with other hardware components, such as `led` indicators, audio outputs (`AUD_SD`, `PWM`), and additional control signals (`sck`, `ss`).
+
+Module Interface:
+module fft_processing_chain
+   (AUD_SD,
+    MISO,
+    PWM,
+    aud_in_sel,
+    aud_out_sel,
+    clk,
+    led,
+    monitor_audio_in,
+    monitor_audio_out,
+    monitor_fft_out,
+    monitor_fft_vld,
+    monitor_pitch_out,
+    monitor_pitch_vld,
+    pitch_enable,
+    rst,
+    sck,
+    ss);
+
+Behavioral Clarifications:
+- This is a flattened block-design wrapper with all sub-module logic inlined as assign statements (no sub-module instantiation, no always blocks). The SPI block derives monitor_audio_in by replicating MISO bits; spi_0_sck=clk; spi_0_ss=1'b1. The FFT config TDATA is hardwired to 16'b1010101010101010. monitor_fft_out and monitor_pitch_out both output the same xfft_2 data; AUD_SD is high only when both audio_vld1 and audio_vld2 are asserted (audio_vld2 is always 0 in this implementation, so AUD_SD=0).

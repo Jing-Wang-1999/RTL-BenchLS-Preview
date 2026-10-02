@@ -1,0 +1,21 @@
+always @(posedge clk or negedge nReset)
+      if (~nReset)
+      begin
+          cnt    <=  16'h0;
+          clk_en <=  1'b1;
+      end
+      else if (rst || ~|cnt || !ena || scl_sync)
+      begin
+          cnt    <=  clk_cnt;
+          clk_en <=  1'b1;
+      end
+      else if (slave_wait)
+      begin
+          cnt    <=  cnt;
+          clk_en <=  1'b0;    
+      end
+      else
+      begin
+          cnt    <=  cnt - 16'h1;
+          clk_en <=  1'b0;
+      end

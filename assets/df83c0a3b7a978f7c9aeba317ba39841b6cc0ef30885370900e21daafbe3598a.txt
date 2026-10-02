@@ -1,0 +1,13 @@
+always @(negedge ECLK)
+  begin
+    if (rst_i)
+    begin
+      cra_strt <= 1'b0;
+    end
+    else if (sel_cra & we_i) // write to cra bit 1
+      cra_strt <= DBi[0];
+    else if (sel_i & adr_tahi & we_i & cra_rnmd & ~cra_strt) // write to TAHI when in oneshot mode and not already running
+      cra_strt <= 1'b1;
+    else if (ta_pls & cra_rnmd) // oneshot timer expired
+      cra_strt <= 1'b0;
+  end

@@ -1,0 +1,33 @@
+always @(posedge clk_i)
+	  if (sclr)
+	    begin
+	        case(ctrl_cd) // synopsys full_case parallel_case
+	          2'b00: hgate_cnt <=  Thgate >> 2; //  8bpp, 4 pixels per cycle
+	          2'b01: hgate_cnt <=  Thgate >> 1; // 16bpp, 2 pixels per cycle
+	          2'b10: hgate_cnt <=  Thgate >> 2; // 24bpp, 4/3 pixels per cycle
+	          2'b11: hgate_cnt <=  Thgate;      // 32bpp, 1 pixel per cycle
+	        endcase
+
+	        hgate_div_cnt <= 2'b10;
+	    end
+	  else if (vmem_ack)
+	    if (hdone)
+	      begin
+	          case(ctrl_cd) // synopsys full_case parallel_case
+	            2'b00: hgate_cnt <=  Thgate >> 2; //  8bpp, 4 pixels per cycle
+	            2'b01: hgate_cnt <=  Thgate >> 1; // 16bpp, 2 pixels per cycle
+	            2'b10: hgate_cnt <=  Thgate >> 2; // 24bpp, 4/3 pixels per cycle
+	            2'b11: hgate_cnt <=  Thgate;      // 32bpp, 1 pixel per cycle
+	          endcase
+
+	          hgate_div_cnt <= 2'b10;
+	      end
+	    else //if (vmem_ack)
+	      begin
+	          hgate_cnt <=  hgate_cnt_val[15:0];
+
+	          if ( hgate_div_val[2] )
+	            hgate_div_cnt <=  2'b10;
+	          else
+	            hgate_div_cnt <=  hgate_div_val[1:0];
+	      end

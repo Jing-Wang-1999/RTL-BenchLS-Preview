@@ -1,0 +1,84 @@
+module rtlpp_06392 (
+    input wire inp_bit,
+    input wire reset,
+    input wire clk,
+    output reg seq_seen
+);
+
+    // State encoding
+    localparam IDLE = 3'd0;
+    localparam GOT1 = 3'd1;
+    localparam GOT10 = 3'd2;
+    localparam GOT101 = 3'd3;
+    localparam GOT1011 = 3'd4;
+
+    reg [2:0] current_state, next_state;
+
+    // Sequential state transition
+    always @(posedge clk) begin
+        if (reset) begin
+            current_state <= IDLE;
+        end else begin
+            current_state <= next_state;
+        end
+    end
+
+    // Combinational next state logic
+    always @(*) begin
+        case (current_state)
+            IDLE: begin
+                if (inp_bit == 1'b1) begin
+                    next_state = GOT1;
+                end else begin
+                    next_state = IDLE;
+                end
+            end
+
+            GOT1: begin
+                if (inp_bit == 1'b0) begin
+                    next_state = GOT10;
+                end else begin
+                    next_state = GOT1;
+                end
+            end
+
+            GOT10: begin
+                if (inp_bit == 1'b1) begin
+                    next_state = GOT101;
+                end else begin
+                    next_state = IDLE;
+                end
+            end
+
+            GOT101: begin
+                if (inp_bit == 1'b1) begin
+                    next_state = GOT1011;
+                end else begin
+                    next_state = GOT10;
+                end
+            end
+
+            GOT1011: begin
+                if (inp_bit == 1'b1) begin
+                    next_state = GOT1;
+                end else begin
+                    next_state = IDLE;
+                end
+            end
+
+            default: begin
+                next_state = IDLE;
+            end
+        endcase
+    end
+
+    // Output logic: seq_seen is high only in state GOT1011
+    always @(posedge clk) begin
+        if (reset) begin
+            seq_seen <= 1'b0;
+        end else begin
+            seq_seen <= (next_state == GOT1011);
+        end
+    end
+
+endmodule

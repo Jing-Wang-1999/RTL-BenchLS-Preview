@@ -1,0 +1,62 @@
+module autovcoder_029592 (
+    //define inputs
+    input _clk,
+    _reset,
+    _start,
+    input [7:0] _dataInA,
+    _dataInB,
+
+    //define outputs
+    output _doneOut,
+    _errorOut,
+    output [7:0] _quotientOut,
+    _remainderOut
+);
+
+
+  wire [7:0] _count;
+  wire _clearOut, _loadAOut, _loadBOut, _countUpOut, _holdAOut, _loadHoldAOut;
+  wire _gt;
+
+  ControlPath CPM0 (
+      //define inputs
+      ._clk(_clk),
+      ._reset(_reset),
+      ._start(_start),
+      ._gt(_gt),
+      ._count(_quotientOut),
+
+      //define outputs
+      ._doneOut(_doneOut),
+      ._errorOut(_errorOut),
+      ._clearOut(_clearOut),
+      ._loadAOut(_loadAOut),
+      ._loadBOut(_loadBOut),
+      ._countUpOut(_countUpOut),
+      ._holdAOut(_holdAOut),
+      ._loadHoldAOut(_loadHoldAOut)
+  );
+
+
+
+
+  DataPath DPM0 (
+      //define inputs
+      ._clk(_clk),
+      ._reset(_clearOut),
+      ._loadA(_loadAOut),
+      ._loadB(_loadBOut),
+      ._loadHoldA(_loadHoldAOut),
+      ._countUp(_countUpOut),
+      ._holdA(_holdAOut),
+      ._dataAIn(_dataInA),
+      ._dataBIn(_dataInB),
+
+      //output
+      ._gtOut(_gt),
+      ._quotientOut(_quotientOut),
+      ._remainderOut(_remainderOut)
+  );
+
+endmodule
+

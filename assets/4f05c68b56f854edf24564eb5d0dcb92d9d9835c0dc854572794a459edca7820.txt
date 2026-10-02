@@ -1,0 +1,52 @@
+module mg_05772 #(
+    parameter work_mode = 0,
+    parameter color_channels = 3,
+    parameter color_width = 8
+)(
+    input wire clk,
+    input wire rst_n,
+    input wire signed [15:0] lm_gain,
+    input wire in_enable,
+    input wire [color_channels*color_width-1:0] in_data,
+    output reg out_ready,
+    output reg [color_channels*color_width-1:0] out_data
+);
+
+    reg [color_channels*color_width-1:0] data_reg;
+    reg signed [color_width:0] sum [0:color_channels-1];
+    wire signed [color_width:0] max_value = (1 << color_width) - 1;
+    wire signed [color_width:0] min_value = 0;
+
+    integer i;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            out_ready <= 0;
+            out_data <= 0;
+            data_reg <= 0;
+        end else begin
+            if (in_enable) begin
+                for (i = 0; i < color_channels; i = i + 1) begin
+                    sum[i] = $signed(in_data[i*color_width +: color_width]) * lm_gain;
+                    if (sum[i] > max_value) begin
+                        sum[i] = max_value;
+                    end else if (sum[i] < min_value) begin
+                        sum[i] = min_value;
+                    end
+                end
+
+                if (work_mode == 0) begin
+                    out_data <= {sum[color_channels-1][color_width-1:0], sum[color_channels-2][color_width-1:0], sum[color_channels-3][color_width-1:0]};
+                end else begin
+                    data_reg <= {sum[color_channels-1][color_width-1:0], sum[color_channels-2][color_width-1:0], sum[color_channels-3][color_width-1:0]};
+                    out_data <= data_reg;
+                end
+
+                out_ready <= 1;
+            end else begin
+                out_ready <= 0;
+            end
+        end
+    end
+
+endmodule

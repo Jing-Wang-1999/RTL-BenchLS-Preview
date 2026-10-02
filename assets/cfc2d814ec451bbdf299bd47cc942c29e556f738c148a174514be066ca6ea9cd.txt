@@ -1,0 +1,55 @@
+module autovcoder_093143 (
+    Q0,
+    Q1,
+    D,
+    WADDR,
+    RADDR,
+    PCLK,
+    ICLK,
+    RESET
+);
+
+  parameter GSREN = "false";  //"true"; "false"
+  parameter LSREN = "true";  //"true"; "false"
+
+  input D, ICLK, PCLK;
+  input [2:0] WADDR;
+  input [2:0] RADDR;
+  input RESET;
+  output Q0, Q1;
+  wire grstn;
+  wire lrstn;
+  //synthesis translate_off
+  assign grstn = GSREN == "true" ? GSR.GSRO : 1'b1;
+  assign lrstn = LSREN == "true" ? (~RESET) : 1'b1;
+
+  reg Dd0;
+  reg [7:0] D0_mem;
+  reg [7:0] D1_mem;
+  reg [1:0] Q_data;
+
+  always @(posedge ICLK or negedge grstn or negedge lrstn)
+    if (!grstn) Dd0 <= 0;
+    else if (!lrstn) Dd0 <= 0;
+    else Dd0 <= D;
+
+  always @(negedge ICLK or negedge grstn or negedge lrstn)
+    if (!grstn) D0_mem <= 0;
+    else if (!lrstn) D0_mem <= 0;
+    else D0_mem[WADDR] <= Dd0;
+
+  always @(negedge ICLK or negedge grstn or negedge lrstn)
+    if (!grstn) D1_mem <= 0;
+    else if (!lrstn) D1_mem <= 0;
+    else D1_mem[WADDR] <= D;
+
+  always @(posedge PCLK or negedge grstn or negedge lrstn)
+    if (!grstn) Q_data <= 0;
+    else if (!lrstn) Q_data <= 0;
+    else Q_data <= {D1_mem[RADDR], D0_mem[RADDR]};
+
+  assign {Q1, Q0} = Q_data;
+  //synthesis translate_on
+
+endmodule
+

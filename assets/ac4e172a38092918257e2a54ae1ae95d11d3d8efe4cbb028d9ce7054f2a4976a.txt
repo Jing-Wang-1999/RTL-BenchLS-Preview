@@ -1,0 +1,76 @@
+# JESD204 RX Controller Specification
+
+## Overview
+This module implements a state machine controller for the receive side of a JESD204 interface. It manages the initialization and synchronization sequence for multiple lanes and links, coordinating the transition through various operational states.
+
+## Parameters
+- **NUM_LANES**: Number of physical lanes in the JESD204 interface (default: 1)
+- **NUM_LINKS**: Number of logical links in the JESD204 interface (default: 1)
+- **ENABLE_FRAME_ALIGN_ERR_RESET**: When enabled (non-zero), allows the controller to reset back to initial state if frame alignment errors exceed a threshold
+
+## Inputs
+- **clk**: System clock signal
+- **reset**: Asynchronous reset signal
+- **cfg_lanes_disable**: Per-lane disable configuration bits (one bit per lane)
+- **cfg_links_disable**: Per-link disable configuration bits (one bit per link)
+- **phy_ready**: Indicates the physical layer is ready for operation
+- **cgs_ready**: Per-lane status indicating Code Group Synchronization is achieved (one bit per lane)
+- **lmfc_edge**: Local Multi-Frame Clock edge indicator, used for timing synchronization events
+- **frame_align_err_thresh_met**: Per-lane indicator that frame alignment error threshold has been exceeded (one bit per lane)
+
+## Outputs
+- **phy_en_char_align**: Enables character alignment in the physical layer
+- **cgs_reset**: Per-lane reset signals for Code Group Synchronization blocks (one bit per lane)
+- **ifs_reset**: Per-lane reset signals for Initial Frame Synchronization blocks (one bit per lane)
+- **sync**: Per-link synchronization request signals (one bit per link), active low
+- **latency_monitor_reset**: Reset signal for latency monitoring circuitry
+- **status_state**: Two-bit encoded current state indicator
+- **event_data_phase**: Single-cycle pulse indicating transition to data phase
+
+## State Machine
+The controller operates through four distinct states:
+
+### STATE_RESET (State 0)
+Initial state after reset. All lane resets are asserted, all link sync signals are deasserted (high), and latency monitor is held in reset. This state is always considered "good" and transitions immediately to the next state.
+
+### STATE_WAIT_FOR_PHY (State 1)
+Waits for the physical layer to become ready. The state is considered "good" when phy_ready is asserted. Character alignment is disabled in this state.
+
+### STATE_CGS (State 2)
+Code Group Synchronization state. The controller:
+- Deasserts sync signals for enabled links (respects cfg_links_disable)
+- Releases CGS reset for enabled lanes (respects cfg_lanes_disable)
+- Enables character alignment in the PHY
+- Waits for all enabled lanes to achieve CGS (cgs_ready asserted)
+- Requires 255 consecutive good cycles before transitioning
+
+### STATE_SYNCHRONIZED (State 3)
+Final operational state. On the first LMFC edge after entering:
+- All sync signals are deasserted (high)
+- IFS reset is released for enabled lanes
+- Latency monitor reset is deasserted
+
+The state remains "good" based on frame alignment error monitoring (if enabled via parameter).
+
+## State Transition Logic
+Transitions occur when a "good counter" reaches state-specific limits:
+- Most states require 7 consecutive good cycles
+- CGS state requires 255 consecutive good cycles
+- SYNCHRONIZED state transitions immediately if conditions are met
+
+A state is considered "good" when:
+- RESET: Always good
+- WAIT_FOR_PHY: PHY is ready
+- CGS: All enabled lanes have achieved CGS
+- SYNCHRONIZED: No frame alignment errors on enabled lanes (if monitoring enabled), otherwise always good
+
+If a state becomes "not good" and the good counter hasn't reached its limit, the counter resets to zero. If ENABLE_FRAME_ALIGN_ERR_RESET is enabled and frame alignment errors occur in SYNCHRONIZED state, the controller returns to RESET state.
+
+## Lane and Link Disable Handling
+Disabled lanes and links (via configuration inputs) are excluded from readiness checks. Their corresponding reset and sync signals follow the disable configuration, allowing partial operation of the interface.
+
+## Event Generation
+The event_data_phase output generates a single-cycle pulse when transitioning from CGS to SYNCHRONIZED state, indicating the start of the data transmission phase.
+
+## Timing Considerations
+The latency monitor reset is released synchronously with the first LMFC edge after entering SYNCHRONIZED state, ensuring proper alignment with the multi-frame clock structure.

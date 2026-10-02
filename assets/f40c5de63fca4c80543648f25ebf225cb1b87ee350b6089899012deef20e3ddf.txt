@@ -1,0 +1,25 @@
+# svo_tcard — default configuration specification
+
+Implement the SVO test-card pixel stream. Defaults: SVO_MODE="640x480", SVO_FRAMERATE=60, SVO_BITS_PER_PIXEL=18 and six bits each red/green/blue, alpha0. Only defaults qualified. clk rising-edge, synchronous active-low resetn. Reset clears hcursor,vcursor,x,y and xoff,yoff to0 and output valid/data/user to0. The stream contains640*480 active pixels, row-major, with no porch pixels. out_axis_tuser bit0 marks only pixel(0,0). Once valid, data/user/valid and all rendering state hold under !ready. When output invalid or ready, compute the next pixel, assert valid and advance raster. This creates the first valid pixel one edge after reset release independently of ready.
+
+Use 14-bit horizontal/vertical cursors, 9-bit cell coordinates x,y and 5-bit offsets xoff,yoff. A line wraps after hcursor639 and a frame after vcursor479. Each nonwrap horizontal pixel increments xoff modulo32 and increments x on an old xoff31. At line wrap reset x/xoff; increment yoff modulo32 and y when old yoff31; frame wrap resets y/yoff. Defaults give20 horizontal cells,15 vertical cells, zero offsets. Define X1=2,X2=8,X3=10,X4=16; Y1=1,Y2=4,Y3=5,Y4=8,Y5=9,Y6=12.
+
+Maintain 32-bit RNG. At the start of each line seed it with y XOR123456789, then on EVERY generated pixel apply sequential 32-bit xorshift operations u=u XOR(u<<13), then u=u XOR(u>>17), then u=u XOR(u<<5), truncating shifts to32 bits. At xoff0 or hcursor0 refresh six-bit colors: red=16*u[0]+16*u[1]+31*u[2], green similarly bits3,4,5, blue bits6,7,8. If all colors zero use32 for each. Otherwise colors persist between cell starts. If xoff31 or yoff31, set all colors zero. Then overlay solid bars: X1<x<=X2 has red,green,blue in the three respective vertical open-left/closed-right intervals(Y1,Y2],(Y3,Y4],(Y5,Y6]; X3<x<=X4 has cyan,magenta,yellow. Full intensity63. Finally force black for xoff31 and x equalX2 orX4, and for yoff31 and y equalY2,Y4,Y6. These overrides update the persistent colors as well as the emitted pixel.
+
+Four corner ornament cells have x=1 or18 and y=1 or13. They override the pixel to all18bits one or allzero using the 1024-bit bitmap below indexed by (yoff*32+xoff), with bit0 at the least significant end. Other pixels concatenate {blue,green,red}. RNG and color registers are not explicitly reset, but the first generated pixel seeds/overwrites them before use, so valid pixels are deterministic after reset. Disabled valid data is still reset tozero then held/updated as above. Alternative modes and color widths are outside qualification.
+
+Public interface declarations (widths above resolve the parameter expressions):
+
+```text
+input clk, resetn
+output reg out_axis_tvalid
+input out_axis_tready
+output reg [SVO_BITS_PER_PIXEL-1:0] out_axis_tdata
+output reg [0:0] out_axis_tuser
+```
+
+Ornament bitmap, hexadecimal most-significant digit first:
+
+```text
+000000007f00007f7c00001f7000000760000003600000034000000140000001000000000000000000000000000000000003c0000007e000000ff000000ff000000ff000000ff0000007e0000003c000000000000000000000000000000000000000000040000001400000016000000360000003700000077c00001f7f00007f
+```

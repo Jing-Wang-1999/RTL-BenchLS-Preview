@@ -1,0 +1,61 @@
+module origen_144098 (
+    input datain_h,
+    input datain_l,
+    input outclock,
+    input outclocken,
+    input aset,
+    input aclr,
+    input sset,
+    input sclr,
+    input oe,
+    output reg dataout,
+    output reg oe_out
+);
+
+    reg data_reg;
+    reg dataout_next;
+    reg oe_out_next;
+
+    // Data selection logic
+    wire selected_data = datain_h ? 1'b1 : datain_l;
+
+    // Asynchronous control for data register
+    always @(posedge outclock or posedge aset or posedge aclr) begin
+        if (aset) begin
+            data_reg <= 1'b1;
+        end else if (aclr) begin
+            data_reg <= 1'b0;
+        end else if (outclocken) begin
+            if (sset) begin
+                data_reg <= 1'b1;
+            end else if (sclr) begin
+                data_reg <= 1'b0;
+            end else begin
+                data_reg <= selected_data;
+            end
+        end
+    end
+
+    // Asynchronous control for data output
+    always @(posedge outclock or posedge aset or posedge aclr) begin
+        if (aset) begin
+            dataout <= 1'b1;
+        end else if (aclr) begin
+            dataout <= 1'b0;
+        end else if (outclocken) begin
+            dataout <= data_reg;
+        end
+    end
+
+    // Asynchronous control for output enable
+    always @(posedge outclock or posedge aset or posedge aclr) begin
+        if (aset) begin
+            oe_out <= 1'b1;
+        end else if (aclr) begin
+            oe_out <= 1'b0;
+        end else if (outclocken) begin
+            oe_out <= oe;
+        end
+    end
+
+endmodule

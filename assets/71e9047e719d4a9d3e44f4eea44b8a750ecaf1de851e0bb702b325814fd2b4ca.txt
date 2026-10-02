@@ -1,0 +1,43 @@
+**Module Purpose:**  
+This module implements a fuel control state machine that regulates a fuel output based on nozzle and pressure conditions.
+
+**Interface:**  
+- **Clock (clk):** Synchronizes state transitions.  
+- **Reset (reset):** When asserted, forces the system to an initial idle state.  
+- **Nozzle Switch (nozzleSwitch):** Indicates whether the fuel nozzle is engaged.  
+- **Pressure Sensor (pressureSensor):** Indicates whether adequate fuel line pressure is present.  
+- **Fuel Output (fuel_out):** Controls fuel flow (active high).  
+- **State Output (State_out):** A 3-bit value reflecting the current internal state.
+
+**Behavior:**  
+The system operates as a synchronous finite state machine with five distinct states (coded 000 through 100).  
+
+At each clock cycle:  
+1. If reset is active, the machine enters State 0 (idle).  
+2. Otherwise, it transitions according to the current state and inputs:
+
+- **State 0 (Idle):**  
+  - If both nozzle switch and pressure sensor are active, move to State 2.  
+  - Otherwise, move to State 1.  
+
+- **State 1 (Fuel On, Waiting):**  
+  - If both inputs are active, move to State 2.  
+  - Otherwise, remain in State 1.  
+
+- **State 2 (Fuel Off, Ready):**  
+  - If both inputs are active, move to State 4.  
+  - Otherwise, move to State 3.  
+
+- **State 3 (Fuel On, Active Flow):**  
+  - If both inputs are active, move to State 4.  
+  - Otherwise, remain in State 3.  
+
+- **State 4 (Fuel Off, Locked):**  
+  - Remain in State 4 indefinitely (locked condition).  
+
+**Outputs:**  
+- Fuel is enabled (logic high) only in States 1 and 3. It is disabled in all other states.  
+- The current state code is continuously presented on State_out.
+
+**Design Constraints:**  
+Allowed sub-modules are limited to basic combinational and sequential logic elements (e.g., flip-flops, gates, multiplexers). No external memory or complex arithmetic units are required. The system must be fully synchronous to the provided clock.

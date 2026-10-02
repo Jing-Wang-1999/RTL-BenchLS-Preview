@@ -1,0 +1,27 @@
+This module is a synchronous data and output enable register with asynchronous and synchronous control signals.
+
+**Inputs:**
+- `datain_h` and `datain_l`: Two data inputs; the logic selects `datain_h` if it is high (1), otherwise `datain_l`.
+- `outclock`: The main clock input for synchronous operations.
+- `outclocken`: Clock enable signal; synchronous updates occur only when this is high.
+- `aset`: Asynchronous set; immediately forces internal storage and outputs to 1 when high, overriding all other controls.
+- `aclr`: Asynchronous clear; immediately forces internal storage and outputs to 0 when high, overriding all other controls.
+- `sset`: Synchronous set; when `outclocken` is active, forces the internal data register to 1 on the clock edge.
+- `sclr`: Synchronous clear; when `outclocken` is active, forces the internal data register to 0 on the clock edge.
+- `oe`: Output enable input for synchronous capture.
+
+**Outputs:**
+- `dataout`: The registered data output.
+- `oe_out`: The registered output enable signal.
+
+**Behavior:**
+The module uses three separate processes, all triggered by the positive edge of `outclock` or by the asynchronous signals `aset` or `aclr`.
+
+1.  **Data Register Path:** An internal data register (`data_reg`) is updated. Asynchronous set or clear has highest priority, taking immediate effect. If neither is active and `outclocken` is high on a clock edge, synchronous set or clear takes priority. If neither synchronous control is active, the register loads the selected data (`datain_h` if high, else `datain_l`).
+
+2.  **Data Output Path:** The `dataout` signal follows similar asynchronous control. When `outclocken` is active on a clock edge (and no asynchronous control is asserted), it updates to the current value of the internal data register.
+
+3.  **Output Enable Path:** The `oe_out` signal also follows asynchronous set/clear. When `outclocken` is active on a clock edge (and no asynchronous control is asserted), it updates to the current value of the `oe` input.
+
+**Key Function:**
+The core function is to register a data value (selected from two inputs) and an output enable signal, with comprehensive asynchronous and synchronous reset/set capabilities, synchronized to a common clock.

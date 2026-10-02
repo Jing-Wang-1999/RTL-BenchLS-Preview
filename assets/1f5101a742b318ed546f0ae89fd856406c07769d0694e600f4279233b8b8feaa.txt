@@ -1,0 +1,13 @@
+# Native SystemC loading ABI
+
+Required instance path: `riscv_tcm_top.u_tcm.u_ram`.
+
+`u_tcm` is a `tcm_mem`, and `u_ram` is a `tcm_mem_ram`. The actual backing storage
+declaration in tcm_mem_ram is `reg [31:0] ram [16383:0] /* verilator public */;`.
+The evaluator supplies `tcm_mem.write(addr,byte)` and `read(addr)` helpers under
+Verilator, using `u_ram.ram[addr/4]` and byte lane `addr[1:0]`. Do not duplicate them.
+Both CPU-visible memory ports and AXI access must use that same actual storage.
+
+The fixed simulation CSR observer is appended to riscv_csr_regfile. Preserve
+`clk_i`, `rst_i`, `csr_waddr_i`, `csr_wdata_i`, `exception_i` ports and their
+architectural meaning. Simulator print/finish functions are private harness code.

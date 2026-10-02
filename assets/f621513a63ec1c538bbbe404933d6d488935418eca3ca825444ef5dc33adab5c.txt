@@ -1,0 +1,59 @@
+module __formal113_core_f8a832dc56ff (
+    input Clock,
+    input ClockEn,
+    input Reset,
+    input WE,
+    input [7:0] Address,
+    input [7:0] Data,
+    output reg [7:0] Q
+);   
+    wire scuba_vlo;
+    wire VCC_net;
+
+    assign scuba_vlo = 1'b0;
+    assign VCC_net = 1'b1;
+
+    reg [8:0] mem [0:255];
+    reg [7:0] read_address;
+
+    // Write logic
+    always @(posedge Clock) begin
+        if (ClockEn) begin
+            if (WE) begin
+                mem[Address] <= {scuba_vlo, Data};
+            end
+            read_address <= Address;
+        end
+    end
+
+    // Output logic
+    always @(posedge Clock) begin
+        if (ClockEn) begin
+            if (!Reset) begin
+                Q <= mem[read_address][7:0];
+            end else begin
+                Q <= 0;
+            end
+        end
+    end
+
+    // Initialization
+    integer i;
+    initial begin
+        for (i = 0; i < 256; i = i + 1)
+            mem[i] = 9'b0;
+    end
+endmodule
+module ble_packet_memory(
+  input wire [0:0] Clock,
+  input wire [0:0] ClockEn,
+  input wire [0:0] Reset,
+  input wire [0:0] WE,
+  input wire [7:0] Address,
+  input wire [7:0] Data,
+  output wire [7:0] Q
+);
+wire [7:0] __negative_output;
+__formal113_core_f8a832dc56ff dut(.Clock(Clock), .ClockEn(ClockEn), .Reset(Reset), .WE(WE), .Address(Address), .Data(Data), .Q(__negative_output));
+assign Q = __negative_output ^ 8'd1;
+endmodule

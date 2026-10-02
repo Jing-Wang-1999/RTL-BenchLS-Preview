@@ -1,0 +1,50 @@
+**Module Specification: origen_134492**
+
+**Overview**  
+This module processes two 4-bit inputs through a sequence of arithmetic and logic operations to produce a 4-bit output. The design integrates a carry-lookahead adder, a priority encoder, a multiplexer, and a final functional block.
+
+**Inputs**  
+- `a` (4 bits): First unsigned integer input.  
+- `b` (4 bits): Second unsigned integer input.
+
+**Outputs**  
+- `final_output` (4 bits): The computed result.
+
+**Allowed Sub-modules**  
+1. **Carry-Lookahead Adder (CLA)**  
+   - Adds inputs `a` and `b` to produce a 4-bit sum and a 1-bit carry-out.  
+   - Internally generates propagate (`p`) and generate (`g`) signals.  
+   - The carry chain is computed using lookahead logic across all bits.
+
+2. **Priority Encoder**  
+   - Takes a 5-bit input formed by concatenating the carry-out (MSB) and the 4-bit sum.  
+   - Encodes the position of the highest-priority '1' (starting from the MSB) into a 2-bit value:  
+     - `11` if the MSB (carry-out) is '1'.  
+     - `10` if the next bit is the first '1'.  
+     - `01` for the third bit.  
+     - `00` for the fourth bit or if no higher-priority '1' exists.  
+   - Lower bits are ignored when a higher-priority '1' is present.
+
+3. **3-to-1 Multiplexer**  
+   - Selects one of three inputs based on the 2-bit selector from the priority encoder:  
+     - `00`: Input `a` (zero-extended to 5 bits).  
+     - `01`: Input `b` (zero-extended to 5 bits).  
+     - `10` or `11`: The 5-bit concatenation of carry-out and sum.  
+   - Outputs a 5-bit value.
+
+4. **Functional Module**  
+   - Takes the original inputs `a` and `b`, the 5-bit sum-carry vector, and the 5-bit multiplexer output.  
+   - Uses the MSB of the multiplexer output as a control bit:  
+     - If '0': Outputs the XOR of the lower 4 bits of the multiplexer output with `a` and `b`.  
+     - If '1': Outputs the bitwise AND of the lower 4 bits of the sum-carry vector with `a` and `b`.
+
+**Behavior**  
+1. Compute the sum and carry-out of `a` and `b` using the CLA.  
+2. Priority-encode the 5-bit vector {carry-out, sum} to determine a selection code.  
+3. Multiplex between `a`, `b`, or the sum-carry vector based on the selection code.  
+4. Process the multiplexer result with the original inputs and sum-carry vector to generate the final 4-bit output.
+
+**Notes**  
+- All operations are combinational; no clocks or resets are used.  
+- The priority encoder prioritizes the carry-out as the most significant bit.  
+- The final output depends on both the multiplexer result and the original inputs.

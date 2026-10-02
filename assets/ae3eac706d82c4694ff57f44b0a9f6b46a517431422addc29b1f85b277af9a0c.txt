@@ -1,0 +1,45 @@
+The UART module facilitates serial communication by implementing a Finite State Machine (FSM) for both receiving and transmitting data.
+
+1. **Primary Function:**
+   The UART module is designed to handle asynchronous serial communication. It converts data bytes into a serial bit stream for transmission and reassembles incoming serial bits into data bytes for reception.
+
+2. **Key Control Flow/Decision Points:**
+   - The module operates two separate FSMs for receiving (`recv_state`) and transmitting (`tx_state`) data.
+   - **Receiving FSM:**
+     - Initial state is `RX_IDLE`, awaiting the start bit (logical low) on the `rx` input.
+     - Upon detecting the start bit, it moves to `RX_CHECK_START` to validate the start condition, then to `RX_READ_BITS` to read the data bits.
+     - After all bits have been read, it transitions to `RX_CHECK_STOP` to validate the stop bit.
+     - If a stop bit is detected, it finalizes by moving to `RX_RECEIVED`, otherwise transitions to `RX_ERROR`, followed by `RX_DELAY_RESTART`.
+   - **Transmitting FSM:**
+     - Starts in `TX_IDLE`, waiting for the `transmit` signal.
+     - On `transmit`, it loads the `tx_byte` and transitions to `TX_SENDING`, where it serializes the data bit-by-bit.
+     - After all bits are sent, it moves to `TX_DELAY_RESTART` and back to `TX_IDLE`.
+
+3. **Important Data Processing or Signal Interactions:**
+   - **Clock Dividers:** Separate clock dividers (`rx_clk_divider` and `tx_clk_divider`) ensure correct timing for both transmission and reception, counting down based on a `CLOCK_DIVIDE` parameter.
+   - **Data Handling:**
+     - For reception, incoming bits shift into `rx_data`. The FSM tracks bits using `rx_bits_remaining`.
+     - For transmission, bits from `tx_data` are shifted out via `tx_out`. The FSM uses `tx_bits_remaining` to track remaining bits.
+   - **Output and Flags:**
+     - The `received` signal indicates successful reception, `recv_error` flags errors, while `is_receiving` and `is_transmitting` indicate current operational states.
+
+**Concise Instruction for LLM:**
+Craft a UART Verilog module that implements serial communication using FSMs for separate receive and transmit functions. The receiving FSM should transition through idle, start-checking, bit-reading, and stop-checking states, handling potential errors and confirming data reception. The transmitting FSM transitions through idle, sending (bit-by-bit transmission), and delay-restart states. Use clock dividers to maintain timed operations, and ensure data bits are managed and shifted appropriately within internal registers. Provide outputs to indicate data reception, errors, and operational states.
+
+Module Interface:
+module uart_transceiver_a(
+    input clk,
+    input rst,
+    input rx,
+    output tx,
+    input transmit,
+    input [7:0] tx_byte,
+    output received,
+    output [7:0] rx_byte,
+    output is_receiving,
+    output is_transmitting,
+    output recv_error
+    );
+
+Behavioral Clarifications:
+- Parameter CLOCK_DIVIDE=1302. Both RX and TX FSMs plus both clock dividers are implemented in a single posedge clk / posedge rst always block. Clock dividers are 11 bits wide; rx_countdown and tx_countdown are 6 bits wide; rx_bits_remaining and tx_bits_remaining are 4 bits wide. The RX FSM uses 7 states (0-6); TX FSM uses 3 states (0-2). Received bits are shifted in MSB-first (right-shift into rx_data with new bit at [7]).

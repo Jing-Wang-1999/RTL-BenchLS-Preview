@@ -1,0 +1,54 @@
+module origen_018702 (
+    input wire clk,
+    input wire cnt,
+    input wire dir,
+    input wire mode,
+    output reg [7:0] q,
+    output reg [7:0] level,
+    output wire m_set,
+    output wire m_drv
+);
+
+reg s;
+reg [7:0] speed;
+reg [2:0] buffer;
+
+always @(posedge clk) begin
+    if (cnt) begin
+        buffer <= buffer + 1;
+        if (buffer == 3) begin
+            buffer <= 0;
+            if (mode == 0) begin
+                if (dir)
+                    {s, level} <= {level, 1'b1};
+                else
+                    {level, s} <= {1'b0, level};
+            end else begin
+                if (dir)
+                    q <= q - speed;
+                else
+                    q <= q + speed;
+            end
+        end
+    end
+end
+
+always @(*) begin
+    case (level)
+        8'd0: speed = 8'd0;
+        8'd1: speed = 8'd1;
+        8'd3: speed = 8'd2;
+        8'd7: speed = 8'd3;
+        8'd15: speed = 8'd7;
+        8'd31: speed = 8'd15;
+        8'd63: speed = 8'd31;
+        8'd127: speed = 8'd63;
+        8'd255: speed = 8'd127;
+        default: speed = 8'd0;
+    endcase
+end
+
+assign m_set = mode;
+assign m_drv = ~mode;
+
+endmodule

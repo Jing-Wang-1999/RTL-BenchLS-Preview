@@ -1,0 +1,66 @@
+module rtlpp_03311 (
+    // Clock and reset
+    input wire gmii_rxclk,
+    input wire gmii_txclk,
+    input wire rst_n,
+    
+    // Configuration
+    input wire port_type,
+    
+    // RX side from PHY
+    input wire gmii_rx_dv,
+    input wire gmii_rx_er,
+    input wire [7:0] gmii_rxd,
+    
+    // TX side from TSN Chip
+    input wire gmii_tx_en_tsnchip2adp,
+    input wire gmii_tx_er_tsnchip2adp,
+    input wire [7:0] gmii_txd_tsnchip2adp,
+    
+    // RX side to TSN Chip
+    output reg gmii_rx_dv_adp2tsnchip,
+    output reg gmii_rx_er_adp2tsnchip,
+    output reg [7:0] gmii_rxd_adp2tsnchip,
+    
+    // TX side to PHY
+    output reg gmii_tx_en,
+    output reg gmii_tx_er,
+    output reg [7:0] gmii_txd
+);
+
+    // Receive path (RX domain)
+    always @(posedge gmii_rxclk or negedge rst_n) begin
+        if (!rst_n) begin
+            gmii_rx_dv_adp2tsnchip <= 1'b0;
+            gmii_rx_er_adp2tsnchip <= 1'b0;
+            gmii_rxd_adp2tsnchip <= 8'h00;
+        end else begin
+            if (port_type) begin
+                // Enabled: pass through RX signals
+                gmii_rx_dv_adp2tsnchip <= gmii_rx_dv;
+                gmii_rx_er_adp2tsnchip <= gmii_rx_er;
+                gmii_rxd_adp2tsnchip <= gmii_rxd;
+            end else begin
+                // Disabled: force idle outputs
+                gmii_rx_dv_adp2tsnchip <= 1'b0;
+                gmii_rx_er_adp2tsnchip <= 1'b0;
+                gmii_rxd_adp2tsnchip <= 8'h00;
+            end
+        end
+    end
+
+    // Transmit path (TX domain)
+    always @(posedge gmii_txclk or negedge rst_n) begin
+        if (!rst_n) begin
+            gmii_tx_en <= 1'b0;
+            gmii_tx_er <= 1'b0;
+            gmii_txd <= 8'h00;
+        end else begin
+            // Always pass through TX signals (not gated by port_type)
+            gmii_tx_en <= gmii_tx_en_tsnchip2adp;
+            gmii_tx_er <= gmii_tx_er_tsnchip2adp;
+            gmii_txd <= gmii_txd_tsnchip2adp;
+        end
+    end
+
+endmodule

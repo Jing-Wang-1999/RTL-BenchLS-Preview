@@ -1,0 +1,50 @@
+module origen_023232 (
+    input [31:0] DataIn,
+    input [31:0] address,
+    input rw,
+    input mov,
+    input [1:0] typeData,
+    output reg [31:0] DataOut,
+    output reg moc
+);
+
+    reg [7:0] mem [0:255];
+
+    always @(rw or mov) begin
+        moc = 0;
+        if (rw == 1) begin // Read operation
+            case (typeData)
+                2'b00: begin // Byte access
+                    DataOut = {24'b0, mem[address[7:0]]};
+                end
+                2'b01: begin // Halfword access
+                    DataOut = {16'b0, mem[address[7:0]+1], mem[address[7:0]]};
+                end
+                2'b10: begin // Word access
+                    DataOut = {mem[address[7:0]+3], mem[address[7:0]+2], mem[address[7:0]+1], mem[address[7:0]]};
+                end
+                default: DataOut = 32'b0;
+            endcase
+            moc = 1;
+        end
+        else if (rw == 0 && mov == 1) begin // Write operation
+            case (typeData)
+                2'b00: begin // Byte access
+                    mem[address[7:0]] = DataIn[7:0];
+                end
+                2'b01: begin // Halfword access
+                    mem[address[7:0]] = DataIn[7:0];
+                    mem[address[7:0]+1] = DataIn[15:8];
+                end
+                2'b10: begin // Word access
+                    mem[address[7:0]] = DataIn[7:0];
+                    mem[address[7:0]+1] = DataIn[15:8];
+                    mem[address[7:0]+2] = DataIn[23:16];
+                    mem[address[7:0]+3] = DataIn[31:24];
+                end
+            endcase
+            moc = 1;
+        end
+    end
+
+endmodule

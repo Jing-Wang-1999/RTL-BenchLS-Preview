@@ -1,0 +1,51 @@
+The module "origen_147685" is designed to interface with a PS/2 device, such as a keyboard or mouse, and decode the serial data transmitted over the PS/2 protocol. This module operates as a finite state machine (FSM) with specific states to manage the reception and processing of PS/2 data.
+
+### Inputs and Outputs
+
+- **Inputs:**
+  - `clk`: A clock signal that synchronizes the operations within the module.
+  - `rst_n`: An active-low reset signal that initializes the module's state and registers.
+  - `PS2CLK`: The clock line from the PS/2 device, used to synchronize data transmission.
+  - `PS2DATA`: A bidirectional data line from the PS/2 device, carrying the serial data.
+
+- **Outputs:**
+  - `data_out`: An 8-bit register that holds the decoded byte of data received from the PS/2 device.
+  - `data_valid`: A signal indicating that `data_out` contains valid data.
+  - `busy`: A signal indicating that the module is currently processing data.
+  - `error`: A signal indicating that an error occurred during data reception, such as a parity error.
+
+### Internal Operation
+
+The module uses a finite state machine with the following states:
+
+1. **IDLE**: The default state where the module waits for the start of a data transmission. It monitors the PS/2 clock and data lines for a falling edge on the clock and a low data signal, indicating the start of a transmission.
+
+2. **START**: This state captures the start bit of the PS/2 data packet. The module shifts the incoming data bit into a shift register and increments a bit counter.
+
+3. **DATA**: In this state, the module continues to capture the next 8 bits of data, shifting each bit into the shift register as it arrives.
+
+4. **PARITY**: The module captures the parity bit, which is used to verify the integrity of the received data.
+
+5. **STOP**: The final state checks the stop bit and verifies the parity of the received data. If the stop bit is high and the parity check passes, the data is considered valid, and `data_out` is updated with the received byte. If there is a parity error or the stop bit is incorrect, the `error` signal is asserted.
+
+### Synchronization and Edge Detection
+
+- The module synchronizes the PS/2 clock and data signals to the internal clock using a two-stage shift register. This helps in detecting the falling edge of the PS/2 clock, which is crucial for timing the data capture.
+
+- A falling edge on the PS/2 clock is detected by comparing the synchronized clock signal's previous and current states.
+
+### State Transitions
+
+- The module transitions between states based on the bit count and the detection of a falling edge on the PS/2 clock.
+- From IDLE, it moves to START upon detecting the start condition.
+- It progresses through DATA, PARITY, and STOP states as it receives and processes each bit of the PS/2 data packet.
+- After processing the stop bit, it returns to IDLE, ready to receive the next data packet.
+
+### Error Handling
+
+- The module checks for a correct stop bit and verifies the parity of the received data.
+- If any error is detected, such as a parity mismatch or incorrect stop bit, the `error` signal is asserted, and the `busy` signal is de-asserted, indicating the end of the current data reception cycle.
+
+### Summary
+
+This module efficiently manages the reception of serial data from a PS/2 device, ensuring data integrity through synchronization, state management, and error checking. It provides a simple interface for capturing and validating PS/2 data, making it suitable for use in systems requiring PS/2 device communication.

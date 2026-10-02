@@ -1,0 +1,64 @@
+module origen_006784 (
+    input         clk,
+    input         rst_n,
+    input   [7:0] send_char,
+    input         send_en,
+    input   [7:0] rx_rdata,
+    input         rx_fifo_dvalid,
+    input         rx_fifo_full,
+    input         rx_fifo_overrun,
+    input         rx_fifo_underrun,
+    input         tx_fifo_full,
+    input         tx_fifo_overrun,
+    input         tx_fifo_underrun,
+    output  [7:0] rout,
+    output        rout_en,
+    output        rx_rden,
+    output  [7:0] tx_wdata,
+    output        tx_wten
+);
+
+    reg [7:0] latched_rx_data;
+    reg       latched_rx_valid;
+    reg       loopback_pending;
+    
+    // RX FIFO read control
+    assign rx_rden = rx_fifo_dvalid;
+    
+    // Latch RX data when valid
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            latched_rx_data  <= 8'h00;
+            latched_rx_valid <= 1'b0;
+        end else begin
+            if (rx_fifo_dvalid) begin
+                latched_rx_data  <= rx_rdata;
+                latched_rx_valid <= 1'b1;
+            end else if (loopback_pending && !tx_fifo_full) begin
+                latched_rx_valid <= 1'b0;
+            end
+        end
+    end
+    
+    // Loopback pending flag
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            loopback_pending <= 1'b0;
+        end else begin
+            if (rx_fifo_dvalid) begin
+                loopback_pending <= 1'b1;
+            end else if (loopback_pending && !tx_fifo_full && !send_en) begin
+                loopback_pending <= 1'b0;
+            end
+        end
+    end
+    
+    // TX FIFO write control
+    assign tx_wdata = send_en ? send_char : latched_rx_data;
+    assign tx_wten  = (send_en || (loopback_pending && latched_rx_valid && !tx_fifo_full)) ? 1'b1 : 1'b0;
+    
+    // Host output (echo received data)
+    assign rout     = latched_rx_data;
+    assign rout_en  = latched_rx_valid;
+    
+endmodule

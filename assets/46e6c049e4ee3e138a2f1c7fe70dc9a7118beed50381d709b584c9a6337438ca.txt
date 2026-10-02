@@ -1,0 +1,20 @@
+always @(*) begin
+        forwardaE = 2'b00;
+        forwardbE = 2'b00;
+
+        if (rsE != 5'b0) begin
+            if ((rsE == writeregM) && regwriteM) begin
+                forwardaE = 2'b10;
+            end else if ((rsE == writeregW) && regwriteW) begin
+                forwardaE = 2'b01;
+            end
+        end
+
+        if (rtE != 5'b0) begin
+            if ((rtE == writeregM) && regwriteM) begin
+                forwardbE = 2'b10;
+            end else if ((rtE == writeregW) && regwriteW) begin
+                forwardbE = 2'b01;
+            end
+        end
+    end

@@ -1,0 +1,124 @@
+module autovcoder_075433 (
+    x1,
+    y,
+    pp_rad4_0,
+    pp_rad4_1,
+    pp_rad4_2,
+    sign_factor
+);
+  // inputs
+  // y multiplicand
+  // x multipland 
+  // P1,P2,P3 partial products
+  input [15:0] y;
+  input [6:0] x1;
+  // output
+  output [16:0] pp_rad4_0;
+  output [16:0] pp_rad4_1;
+  output [16:0] pp_rad4_2;
+  output [2:0] sign_factor;
+
+  wire [2:0] one, two, sign;
+
+  code code0 (
+      one[0],
+      two[0],
+      sign[0],
+      x1[2],
+      x1[1],
+      x1[0]
+  );
+  code code1 (
+      one[1],
+      two[1],
+      sign[1],
+      x1[4],
+      x1[3],
+      x1[2]
+  );
+  code code2 (
+      one[2],
+      two[2],
+      sign[2],
+      x1[6],
+      x1[5],
+      x1[4]
+  );
+
+
+  wire [16:0] tmp1_pp;
+  assign tmp1_pp = {y[15], y};  // This variable is introduced because pp has 17 bits
+
+  // first pp generation 
+  wire [17:0] out1;
+  assign out1[0] = sign[0];
+
+  genvar i;
+  generate
+    for (i = 0; i < 17; i = i + 1) begin : pp_rad4_first
+      product pp_pr (
+          tmp1_pp[i],
+          out1[i],
+          one[0],
+          two[0],
+          sign[0],
+          pp_rad4_0[i],
+          out1[i+1]
+      );
+    end
+  endgenerate
+
+  // second pp generation 
+  wire [17:0] out2;
+  assign out2[0] = sign[1];
+
+
+  genvar i2;
+  generate
+    for (i2 = 0; i2 < 17; i2 = i2 + 1) begin : pp_second
+      product pp_pr (
+          tmp1_pp[i2],
+          out2[i2],
+          one[1],
+          two[1],
+          sign[1],
+          pp_rad4_1[i2],
+          out2[i2+1]
+      );
+    end
+  endgenerate
+
+  // third pp generation 
+  wire [17:0] out3;
+  assign out3[0] = sign[2];
+
+  genvar i3;
+  generate
+    for (i3 = 0; i3 < 17; i3 = i3 + 1) begin : pp_third
+      product pp_pr (
+          tmp1_pp[i3],
+          out3[i3],
+          one[2],
+          two[2],
+          sign[2],
+          pp_rad4_2[i3],
+          out3[i3+1]
+      );
+    end
+  endgenerate
+
+
+  genvar i_sign;
+  generate
+    for (i_sign = 0; i_sign < 3; i_sign = i_sign + 1) begin : sgn_fac
+      sgn_gen sgn_genXX (
+          one[i_sign],
+          two[i_sign],
+          sign[i_sign],
+          sign_factor[i_sign]
+      );
+    end
+  endgenerate
+
+endmodule
+

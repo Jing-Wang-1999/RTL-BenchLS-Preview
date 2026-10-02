@@ -1,0 +1,101 @@
+module origen_185509(
+    input we,
+    input [7:0] w_data,
+    input [7:0] b_addr,
+    input [7:0] a_addr,
+    input [7:0] r_addr,
+    input [7:0] w_addr,
+    input clk1,
+    input clk2,
+    input swap,
+    input reset,
+    output [7:0] r_data
+);
+
+reg [1:0] cur_state, next_state;
+reg [1:0] sel;
+reg w;
+reg [7:0] Reg [0:255];
+
+reg [7:0] l12_b_addr, l12_a_addr, l12_r_addr, l12_w_addr, l12_w_data;
+reg l12_w;
+
+reg [7:0] l23_b_addr, l23_a_addr, l23_r_addr, l23_w_addr, l23_w_data;
+reg l23_w;
+
+reg [7:0] l34_r_data;
+
+always @(posedge clk1 or posedge reset) begin
+    if (reset) begin
+        cur_state <= 'b0;
+    end else begin
+        cur_state <= next_state;
+    end
+end
+
+always @(*) begin
+    next_state = cur_state;
+    case (cur_state)
+        'b00: begin
+            if (swap) begin
+                next_state = 'b01;
+            end
+        end
+        'b01: begin
+            next_state = 'b10;
+        end
+        'b10: begin
+            next_state = 'b11;
+        end
+        'b11: begin
+            next_state = 'b00;
+        end
+    endcase
+end
+
+always @(*) begin
+    case (cur_state)
+        'b00: begin
+            sel = 'b00;
+        end
+        'b01: begin
+            sel = 'b01;
+        end
+        'b10: begin
+            sel = 'b10;
+        end
+        'b11: begin
+            sel = 'b11;
+        end
+    endcase
+end
+
+always @(posedge clk1) begin
+    l12_b_addr <= b_addr;
+    l12_a_addr <= a_addr;
+    l12_r_addr <= r_addr;
+    l12_w_addr <= w_addr;
+    l12_w_data <= w_data;
+    l12_w <= we;
+end
+
+always @(posedge clk2) begin
+    l23_b_addr <= l12_b_addr;
+    l23_a_addr <= l12_a_addr;
+    l23_r_addr <= l12_r_addr;
+    l23_w_addr <= l12_w_addr;
+    l23_w_data <= l12_w_data;
+    l23_w <= l12_w;
+end
+
+always @(posedge clk2) begin
+    if (l23_w) begin
+        Reg[l23_r_addr] <= l23_w_data;
+    end else begin
+        l34_r_data <= Reg[l23_r_addr];
+    end
+end
+
+assign r_data = l34_r_data;
+
+endmodule

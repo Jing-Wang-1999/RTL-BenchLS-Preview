@@ -1,0 +1,42 @@
+always @ (posedge clk)
+      if (~reset_n) begin
+	 rank_cnt <= 3'b0;
+	 rank_ba <= 8'b0;
+	 rank_ba_last <= 4'b0;
+
+      end // if (~reset_n)
+      else begin
+
+	 rank_cnt <= (rank_fifo_wr & ~rank_fifo_rd) ? rank_cnt + 3'b1 :
+		     (~rank_fifo_wr & rank_fifo_rd) ? rank_cnt - 3'b1 :
+		     rank_cnt;
+
+	 rank_ba[1:0] <= (rank_wr_sel[0]) ? r2b_ba :
+			 (rank_fifo_rd) ? rank_ba[3:2] : rank_ba[1:0];
+	 
+	 rank_ba[3:2] <= (rank_wr_sel[1]) ? r2b_ba :
+			 (rank_fifo_rd) ? rank_ba[5:4] : rank_ba[3:2];
+	 
+	 rank_ba[5:4] <= (rank_wr_sel[2]) ? r2b_ba :
+			 (rank_fifo_rd) ? rank_ba[7:6] : rank_ba[5:4];
+	 
+	 rank_ba[7:6] <= (rank_wr_sel[3]) ? r2b_ba :
+			 (rank_fifo_rd) ? 2'b00 : rank_ba[7:6];
+
+	 if(1'b0 == 1'b1) begin // This Logic is implemented for ASIC Only
+	    // Note: Currenly top-level does not generate the
+	    // sdr_req_norm_dma_last signal and can be tied zero at top-level
+            rank_ba_last[0] <= (rank_wr_sel[0]) ? sdr_req_norm_dma_last :
+                            (rank_fifo_rd) ?  rank_ba_last[1] : rank_ba_last[0];
+
+            rank_ba_last[1] <= (rank_wr_sel[1]) ? sdr_req_norm_dma_last :
+                               (rank_fifo_rd) ?  rank_ba_last[2] : rank_ba_last[1];
+
+            rank_ba_last[2] <= (rank_wr_sel[2]) ? sdr_req_norm_dma_last :
+                               (rank_fifo_rd) ?  rank_ba_last[3] : rank_ba_last[2];
+
+            rank_ba_last[3] <= (rank_wr_sel[3]) ? sdr_req_norm_dma_last :
+                               (rank_fifo_rd) ?  1'b0 : rank_ba_last[3];
+         end
+
+      end

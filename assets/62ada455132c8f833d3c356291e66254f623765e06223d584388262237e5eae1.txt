@@ -1,0 +1,38 @@
+### Module Specification: Origen_168168
+
+#### Overview
+The module is a combinational logic block that maps a 4-bit key input and a 3-bit columns input into a 4-bit rows output. It functions as a decoder or selector, activating specific row bits based on the combination of key and columns values.
+
+#### Inputs
+- **key** (4-bit unsigned): Selects one of several predefined mapping patterns.
+- **columns** (3-bit unsigned): Further refines the mapping within the selected pattern.
+
+#### Outputs
+- **rows** (4-bit unsigned, registered): Indicates which rows are active (logic high) based on the inputs.
+
+#### Behavior
+The module uses a two-level lookup structure:
+1. The key input selects a primary mapping case.
+2. Within that case, the columns input determines which specific row bit is set to logic high.
+
+The module operates as follows:
+- The rows output defaults to all zeros.
+- For each valid key value (0 through 9), a distinct mapping is applied:
+  - Keys 0–3: Set rows[0] to rows[3] respectively when columns values are between 0 and 3 inclusive.
+  - Keys 4–7: Set rows[0] to rows[3] respectively when columns values are between 4 and 7 inclusive.
+  - Key 8: Maps columns 0–3 to rows 0–3 respectively.
+  - Key 9: Maps columns 4–7 to rows 0–3 respectively.
+- For any key value outside 0–9, rows remains all zeros.
+
+#### Functional Description
+The module effectively acts as a programmable row selector. Based on the key, it defines how the columns input is interpreted to activate a single row bit:
+- Keys 0–3 and 4–7 treat columns as enabling signals for a fixed row, grouping columns into two ranges.
+- Keys 8 and 9 treat columns as direct indices to individual rows, with key 8 using the lower column range and key 9 using the upper range.
+
+#### Allowed Sub-modules
+None. The module is purely combinational and implemented directly with basic logic gates or lookup logic; no internal sub-modules are required.
+
+#### Notes
+- This is a static mapping module with no clock, reset, or sequential elements.
+- All outputs are generated purely from the current inputs (combinational logic).
+- The design is deterministic and fully specified for the given key and columns ranges.

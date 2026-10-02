@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/black-parrot/black-parrot/pull/859",
+  "issue_url": "https://github.com/black-parrot/black-parrot/issues/832",
+  "repository": "black-parrot/black-parrot",
+  "pr_number": 859,
+  "issue_number": 832,
+  "verilog_files": [
+    "bp_be/src/v/bp_be_calculator/bp_be_pipe_long.sv"
+  ],
+  "deletions": 1,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "bp_be/src/v/bp_be_calculator/bp_be_pipe_long.sv",
+      "patch": "@@ -47,7 +47,7 @@ module bp_be_pipe_long\n   wire [dword_width_gp-1:0] rs2 = reservation.rs2[0+:dword_width_gp];\n   wire [dword_width_gp-1:0] imm = reservation.imm[0+:dword_width_gp];\n \n-  wire v_li = reservation.v & reservation.decode.pipe_long_v;\n+  wire v_li = reservation.v & reservation.decode.pipe_long_v & (reservation.decode.late_iwb_v | reservation.decode.late_fwb_v);\n \n   wire signed_div_li = decode.fu_op inside {e_mul_op_div, e_mul_op_rem};\n   wire rem_not_div_li = decode.fu_op inside {e_mul_op_rem, e_mul_op_remu};",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "Fix division to zero bug",
+    "body": "- Only do the division if we actually want to do it\r\n- Specifically, don't write to zero on division instruction stored to zero\r\n\r\nFixes #832 ",
+    "state": "closed",
+    "created_at": "2021-05-06T19:14:08Z",
+    "updated_at": "2021-05-06T19:14:57Z",
+    "merged_at": "2021-05-06T19:14:54Z",
+    "user": "dpetrisko"
+  },
+  "issue_info": {
+    "title": "Division by zero results are incorrect according to the specification",
+    "body": "div instructions (including 32bit, signed, unsigned variants) return value is incorrect according to the specification when the divisor is is zero.\r\nrem instructions (including 32bit, signed, unsigned variants) return value is incorrect according to the specification when either the divisor is zero or dividend is zero. \r\n**Please refer Volume I: RISC-V Unprivileged ISA V20191213 - Table 7.1**\r\nWhen executed with dromajo, mismatches from these instructions are reported.\r\n\r\nFor example, following instructions will cause mismatches with dromajo Vs DUT simulation:\r\ndivu s9,s5,zero\r\nrem s1,s8,zero\r\ndivuw t5,a5,zero\r\nrem s9,zero,ra\r\n\r\n**How to reproduce:**\r\n```\r\ncd sdk/riscv-dv/\r\n# set RISCV_GCC and RISCV_OBJCOPY envs\r\npython run.py --steps gen,gcc_compile --simulator vcs --iterations 1 -o out/ -ct user_extension -cs user_extension -tn riscv_arithmetic_basic_test --isa rv64gc --mabi lp64 --seed 12345\r\nmkdir -p ../prog/riscv-dv\r\ncp  out/asm_tests/riscv_arithmetic_basic_test_0.riscv ../prog/riscv-dv/\r\ncd ../../bp_top/syn/\r\nmake build.v sim.v  SUITE=riscv-dv COSIM_P=1 PROG=riscv_arithmetic_basic_test_0\r\n```",
+    "labels": [
+      "bug"
+    ],
+    "state": "closed",
+    "created_at": "2021-04-09T01:15:34Z",
+    "updated_at": "2021-05-12T14:26:20Z"
+  },
+  "source_info": {
+    "source_file": "20.txt",
+    "line_number": 35
+  },
+  "base_commit": "4a9768147dd222867d13a0fb5c9a802252e459c6",
+  "head_commit": "c3df246dbfb5bb78f3abaa900804e847b75f1664",
+  "base_ref": "be_dev",
+  "task_id": "black-parrot_black-parrot_859_832",
+  "lec_status": "useful_pass"
+}

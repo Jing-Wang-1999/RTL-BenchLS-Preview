@@ -1,0 +1,79 @@
+{
+  "gate_failure_score": 0,
+  "limitations": "Fixed documented configuration; sampled transactions, not universal equivalence.",
+  "oracle": "independent protocol/algorithm assertions; finite simulation",
+  "points": [
+    {
+      "command": [
+        "iverilog",
+        "-g2012",
+        "-s",
+        "tb",
+        "<required_files>",
+        "registers.v",
+        "then",
+        "vvp"
+      ],
+      "id": "registers",
+      "pass_criterion": "exit zero and exact RTL_BENCHLS_PASS; all assertions pass",
+      "target": "i2c_master_top",
+      "testbench": "registers.v",
+      "timeout_seconds": 30,
+      "weight": 1
+    },
+    {
+      "command": [
+        "iverilog",
+        "-g2012",
+        "-s",
+        "tb",
+        "<required_files>",
+        "transactions.v",
+        "then",
+        "vvp"
+      ],
+      "id": "transactions",
+      "pass_criterion": "exit zero and exact RTL_BENCHLS_PASS; all assertions pass",
+      "target": "i2c_master_top",
+      "testbench": "transactions.v",
+      "timeout_seconds": 30,
+      "weight": 1
+    },
+    {
+      "command": [
+        "iverilog",
+        "-g2012",
+        "-s",
+        "tb",
+        "<required_files>",
+        "clock_stretch.v",
+        "then",
+        "vvp"
+      ],
+      "id": "clock_stretch",
+      "pass_criterion": "exit zero and exact RTL_BENCHLS_PASS; all assertions pass",
+      "target": "i2c_master_top",
+      "testbench": "clock_stretch.v",
+      "timeout_seconds": 30,
+      "weight": 1
+    },
+    {
+      "command": [
+        "iverilog",
+        "-g2012",
+        "-s",
+        "tb",
+        "<required_files>",
+        "arbitration.v",
+        "then",
+        "vvp"
+      ],
+      "id": "arbitration",
+      "pass_criterion": "exit zero and exact RTL_BENCHLS_PASS; all assertions pass",
+      "target": "i2c_master_top",
+      "testbench": "arbitration.v",
+      "timeout_seconds": 30,
+      "weight": 1
+    }
+  ]
+}

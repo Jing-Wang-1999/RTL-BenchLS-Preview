@@ -1,0 +1,32 @@
+The Verilog module called `clocked_output_pattern_counter` is designed to handle three 4-bit outputs (`a_out`, `b_out`, `c_out`) that are calculated based on a 4-bit counter (`cnt`), which increments on every positive edge of the clock (`clk`). If the active-low reset (`resetn`) is activated, the counter (`cnt`) and all outputs are reset to zero.
+
+1. **Primary Function**:
+   - The primary function of this module is to increment a 4-bit counter (`cnt`) on every positive clock edge and use the counter value to determine the values of three 4-bit output signals (`a_out`, `b_out`, `c_out`).
+
+2. **Control Flow**:
+   - Upon detecting an active-low reset (`resetn`), the counter (`cnt`) and all outputs are set to zero.
+   - Every positive clock edge increments the counter (`cnt`).
+
+3. **Data Processing and Signal Interactions**:
+   - **Counter Increment (Sequential Logic)**:
+     - The `cnt` register increments on every positive edge of the clock unless reset is active (`resetn` is low).
+   - **Output `a` (Combinational Logic)**:
+     - `a` is determined by the current value of `cnt` using combinational logic. If `cnt` is 0, `a` is 0. If `cnt` is 1, `a` is 1. Otherwise, `a` is set to 2.
+   - **Output `b` (Sequential Logic)**:
+     - `b` is similar to `a` but uses sequential logic, thus the value is updated at every clock edge. It follows the same rules for `cnt`.
+   - **Output `c` (Sequential Logic)**:
+     - `c` also depends on the current value of `cnt` and updates on every clock edge. If `cnt` is 0, `c` is 0. If `cnt` is 1, `c` is 1. If `cnt` is 2, `c` is 2. For other values of `cnt`, `c` retains its previous value.
+
+By synthesizing these descriptions, an LLM should be able to generate corresponding Verilog code.
+
+Module Interface:
+module clocked_output_pattern_counter(
+    input wire clk,
+    input wire resetn,
+    output wire [3:0] a_out,
+    output wire [3:0] b_out,
+    output wire [3:0] c_out
+);
+
+Behavioral Clarifications:
+- The module uses four always blocks: one sequential (posedge clk or negedge resetn) for cnt, one combinational (always @(*)) for a, and two sequential (posedge clk or negedge resetn) for b and c. Outputs a_out, b_out, c_out are wires driven by continuous assigns from internal registers a, b, c. The combinational block for a also resets to 0 when resetn is low.

@@ -1,0 +1,77 @@
+### Specification: Instruction Decoder Module
+
+#### Overview
+This module is an instruction decoder that translates a 6-bit instruction opcode into a set of control signals for a central processing unit (CPU) datapath. It determines the operation type from the opcode and generates the appropriate control signals for executing that instruction.
+
+#### Inputs
+- **instr_op_i (6-bit)**: The opcode field of an incoming instruction.
+
+#### Outputs
+All outputs are single-bit signals except where noted:
+- **RegWrite_o**: Enables writing a value to the register file.
+- **ALU_op_o (3-bit)**: Specifies the ALU operation to perform (e.g., addition, subtraction).
+- **ALUSrc_o**: Selects the source of the second ALU operand (register or immediate value).
+- **RegDst_o**: Selects the destination register for writing results (rt or rd field).
+- **Branch_o (2-bit)**: Determines branch behavior: no branch, branch if equal (BEQ), or branch if not equal (BNE).
+- **SignExtend_o**: Controls whether immediate values are sign-extended or zero-extended.
+- **MemRead_o**: Enables reading from memory.
+- **MemWrite_o**: Enables writing to memory.
+- **MemtoReg_o**: Selects the source for register write-back (ALU result or memory read data).
+
+#### Functionality
+The decoder examines the 6-bit opcode and assigns the control signals as follows:
+
+1. **R-type instructions (opcode 000000)**:
+   - RegWrite enabled.
+   - ALU operation set to R-type arithmetic (010).
+   - ALU source uses register values.
+   - Destination register uses the rd field.
+   - No branching, memory access, or sign extension.
+
+2. **Add Immediate (ADDI, opcode 001000)**:
+   - RegWrite enabled.
+   - ALU operation set to addition (000).
+   - ALU source uses immediate value.
+   - Destination register uses the rt field.
+   - Immediate value is sign-extended.
+
+3. **Branch if Equal (BEQ, opcode 000100)**:
+   - RegWrite disabled.
+   - ALU operation set to subtraction (001) for comparison.
+   - ALU source uses register values.
+   - Branch condition set to BEQ (01).
+   - Immediate value is sign-extended for branch offset.
+
+4. **Branch if Not Equal (BNE, opcode 000101)**:
+   - Similar to BEQ but branch condition set to BNE (10).
+
+5. **Load Word (LW, opcode 100011)**:
+   - RegWrite enabled.
+   - ALU operation set to addition (000) for address calculation.
+   - ALU source uses immediate value.
+   - Destination register uses the rt field.
+   - Immediate value is sign-extended.
+   - Memory read enabled.
+   - Write-back source set to memory data.
+
+6. **Store Word (SW, opcode 101011)**:
+   - RegWrite disabled.
+   - ALU operation set to addition (000) for address calculation.
+   - ALU source uses immediate value.
+   - Immediate value is sign-extended.
+   - Memory write enabled.
+
+7. **Default (all other opcodes)**:
+   - All control signals set to inactive (no operation).
+
+#### Allowed Sub-modules
+This module is a combinational decoder and may not instantiate other sub-modules. It uses only basic logic to map opcodes to control signals.
+
+#### Timing and Operation
+The module operates combinatorially, with outputs updating immediately whenever the input opcode changes. No clock or reset signals are required.
+
+#### Notes
+- The decoder supports a subset of typical CPU instructions: R-type arithmetic, ADDI, BEQ, BNE, LW, and SW.
+- Unsupported opcodes default to a no-operation (NOP) state, ensuring safe operation.
+- The 2-bit branch control distinguishes between no branch (00), BEQ (01), and BNE (10).
+- The 3-bit ALU operation encoding corresponds to common ALU functions (e.g., 000 for addition, 001 for subtraction, 010 for R-type).

@@ -1,0 +1,66 @@
+always @*
+    begin : state_logic
+      a_new  = 32'h0;
+      b_new  = 32'h0;
+      c_new  = 32'h0;
+      d_new  = 32'h0;
+      e_new  = 32'h0;
+      f_new  = 32'h0;
+      g_new  = 32'h0;
+      h_new  = 32'h0;
+      a_h_we = 0;
+
+      if (state_init)
+        begin
+          a_h_we = 1;
+          if (first_block)
+            begin
+              if (mode)
+                begin
+                  a_new  = SHA256_H0_0;
+                  b_new  = SHA256_H0_1;
+                  c_new  = SHA256_H0_2;
+                  d_new  = SHA256_H0_3;
+                  e_new  = SHA256_H0_4;
+                  f_new  = SHA256_H0_5;
+                  g_new  = SHA256_H0_6;
+                  h_new  = SHA256_H0_7;
+                end
+              else
+                begin
+                  a_new  = SHA224_H0_0;
+                  b_new  = SHA224_H0_1;
+                  c_new  = SHA224_H0_2;
+                  d_new  = SHA224_H0_3;
+                  e_new  = SHA224_H0_4;
+                  f_new  = SHA224_H0_5;
+                  g_new  = SHA224_H0_6;
+                  h_new  = SHA224_H0_7;
+                end
+            end
+          else
+            begin
+              a_new  = H0_reg;
+              b_new  = H1_reg;
+              c_new  = H2_reg;
+              d_new  = H3_reg;
+              e_new  = H4_reg;
+              f_new  = H5_reg;
+              g_new  = H6_reg;
+              h_new  = H7_reg;
+            end
+        end
+
+      if (state_update)
+        begin
+          a_new  = t1 + t2;
+          b_new  = a_reg;
+          c_new  = b_reg;
+          d_new  = c_reg;
+          e_new  = d_reg + t1;
+          f_new  = e_reg;
+          g_new  = f_reg;
+          h_new  = g_reg;
+          a_h_we = 1;
+        end
+    end

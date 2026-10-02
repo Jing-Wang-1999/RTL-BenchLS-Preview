@@ -1,0 +1,72 @@
+module rtlpp_08158(
+	key0,
+	rst_n,
+	clock,
+	ON,				
+	KEY0_EDGE,
+	counter	
+	);
+
+input			key0;
+input			rst_n;
+input			clock;
+
+output			ON;
+output			KEY0_EDGE;
+output	[9:0]	counter;
+
+reg     [9:0]  counter;
+reg		[3:0]	flag_temp;
+reg				flag;
+reg		[15:0]	delay;
+reg				D1;
+reg 			D2;
+wire			falling_edge;
+
+always@(negedge clock or negedge rst_n)
+begin
+	if (!rst_n)
+		flag_temp <= 4'b1111;
+	else if (flag)
+		flag_temp <= {key0, flag_temp[3:1]};
+end
+
+assign falling_edge = (flag_temp == 4'b0011) ? 1'b1 : 1'b0;
+
+always@(posedge clock or negedge rst_n)
+begin
+	if (!rst_n)
+		flag <= 1'b1;
+	else if (delay == 15'd4096)
+		flag <= 1'b1;
+	else if (falling_edge)
+		flag <= 1'b0;
+end
+
+always@(posedge clock or negedge rst_n)
+begin
+	if (!rst_n)
+		delay <= 15'd0;
+	else if (!key0)
+		delay <= delay + 1;
+	else
+		delay <= 15'd0;
+end
+
+always@(negedge clock or negedge rst_n)
+begin
+	if (!rst_n)
+	begin
+		D1 <= 0;
+		D2 <= 0;
+	end
+	else
+	begin
+		D1 <= flag;
+		D2 <= D1;
+	end
+end
+
+assign KEY0_EDGE = (D1 | !D2);
+
+endmodule

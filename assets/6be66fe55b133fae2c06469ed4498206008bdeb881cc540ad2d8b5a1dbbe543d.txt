@@ -1,0 +1,261 @@
+// Verilated -*- SystemC -*-
+// DESCRIPTION: Verilator output: Design internal header
+// See Vriscv_tcm_top.h for the primary calling header
+
+#ifndef _VRISCV_TCM_TOP_RISCV_ISSUE_H_
+#define _VRISCV_TCM_TOP_RISCV_ISSUE_H_  // guard
+
+#include "systemc.h"
+#include "verilated_sc.h"
+#include "verilated_heavy.h"
+#include "Vriscv_tcm_top__Dpi.h"
+
+//==========
+
+class Vriscv_tcm_top__Syms;
+class Vriscv_tcm_top_VerilatedVcd;
+class Vriscv_tcm_top_riscv_regfile;
+
+
+//----------
+
+VL_MODULE(Vriscv_tcm_top_riscv_issue) {
+  public:
+    // CELLS
+    Vriscv_tcm_top_riscv_regfile* u_regfile;
+    
+    // PORTS
+    VL_IN8(__PVT__clk_i,0,0);
+    VL_IN8(__PVT__rst_i,0,0);
+    VL_IN8(__PVT__fetch_valid_i,0,0);
+    VL_IN8(__PVT__fetch_fault_fetch_i,0,0);
+    VL_IN8(__PVT__fetch_fault_page_i,0,0);
+    VL_IN8(__PVT__fetch_instr_exec_i,0,0);
+    VL_IN8(__PVT__fetch_instr_lsu_i,0,0);
+    VL_IN8(__PVT__fetch_instr_branch_i,0,0);
+    VL_IN8(__PVT__fetch_instr_mul_i,0,0);
+    VL_IN8(__PVT__fetch_instr_div_i,0,0);
+    VL_IN8(__PVT__fetch_instr_csr_i,0,0);
+    VL_IN8(__PVT__fetch_instr_rd_valid_i,0,0);
+    VL_IN8(__PVT__fetch_instr_invalid_i,0,0);
+    VL_IN8(__PVT__branch_exec_request_i,0,0);
+    VL_IN8(__PVT__branch_exec_is_taken_i,0,0);
+    VL_IN8(__PVT__branch_exec_is_not_taken_i,0,0);
+    VL_IN8(__PVT__branch_exec_is_call_i,0,0);
+    VL_IN8(__PVT__branch_exec_is_ret_i,0,0);
+    VL_IN8(__PVT__branch_exec_is_jmp_i,0,0);
+    VL_IN8(__PVT__branch_d_exec_request_i,0,0);
+    VL_IN8(__PVT__branch_d_exec_priv_i,1,0);
+    VL_IN8(__PVT__branch_csr_request_i,0,0);
+    VL_IN8(__PVT__branch_csr_priv_i,1,0);
+    VL_IN8(__PVT__writeback_mem_valid_i,0,0);
+    VL_IN8(__PVT__writeback_mem_exception_i,5,0);
+    VL_IN8(__PVT__writeback_div_valid_i,0,0);
+    VL_IN8(__PVT__csr_result_e1_write_i,0,0);
+    VL_IN8(__PVT__csr_result_e1_exception_i,5,0);
+    VL_IN8(__PVT__lsu_stall_i,0,0);
+    VL_IN8(__PVT__take_interrupt_i,0,0);
+    VL_OUT8(__PVT__fetch_accept_o,0,0);
+    VL_OUT8(__PVT__branch_request_o,0,0);
+    VL_OUT8(__PVT__branch_priv_o,1,0);
+    VL_OUT8(__PVT__exec_opcode_valid_o,0,0);
+    VL_OUT8(__PVT__lsu_opcode_valid_o,0,0);
+    VL_OUT8(__PVT__csr_opcode_valid_o,0,0);
+    VL_OUT8(__PVT__mul_opcode_valid_o,0,0);
+    VL_OUT8(__PVT__div_opcode_valid_o,0,0);
+    VL_OUT8(__PVT__opcode_invalid_o,0,0);
+    VL_OUT8(__PVT__opcode_rd_idx_o,4,0);
+    VL_OUT8(__PVT__opcode_ra_idx_o,4,0);
+    VL_OUT8(__PVT__opcode_rb_idx_o,4,0);
+    VL_OUT8(__PVT__lsu_opcode_invalid_o,0,0);
+    VL_OUT8(__PVT__lsu_opcode_rd_idx_o,4,0);
+    VL_OUT8(__PVT__lsu_opcode_ra_idx_o,4,0);
+    VL_OUT8(__PVT__lsu_opcode_rb_idx_o,4,0);
+    VL_OUT8(__PVT__mul_opcode_invalid_o,0,0);
+    VL_OUT8(__PVT__mul_opcode_rd_idx_o,4,0);
+    VL_OUT8(__PVT__mul_opcode_ra_idx_o,4,0);
+    VL_OUT8(__PVT__mul_opcode_rb_idx_o,4,0);
+    VL_OUT8(__PVT__csr_opcode_invalid_o,0,0);
+    VL_OUT8(__PVT__csr_opcode_rd_idx_o,4,0);
+    VL_OUT8(__PVT__csr_opcode_ra_idx_o,4,0);
+    VL_OUT8(__PVT__csr_opcode_rb_idx_o,4,0);
+    VL_OUT8(__PVT__csr_writeback_write_o,0,0);
+    VL_OUT8(__PVT__csr_writeback_exception_o,5,0);
+    VL_OUT8(__PVT__exec_hold_o,0,0);
+    VL_OUT8(__PVT__mul_hold_o,0,0);
+    VL_OUT8(__PVT__interrupt_inhibit_o,0,0);
+    VL_OUT16(__PVT__csr_writeback_waddr_o,11,0);
+    VL_IN(__PVT__fetch_instr_i,31,0);
+    VL_IN(__PVT__fetch_pc_i,31,0);
+    VL_IN(__PVT__branch_exec_source_i,31,0);
+    VL_IN(__PVT__branch_exec_pc_i,31,0);
+    VL_IN(__PVT__branch_d_exec_pc_i,31,0);
+    VL_IN(__PVT__branch_csr_pc_i,31,0);
+    VL_IN(__PVT__writeback_exec_value_i,31,0);
+    VL_IN(__PVT__writeback_mem_value_i,31,0);
+    VL_IN(__PVT__writeback_mul_value_i,31,0);
+    VL_IN(__PVT__writeback_div_value_i,31,0);
+    VL_IN(__PVT__csr_result_e1_value_i,31,0);
+    VL_IN(__PVT__csr_result_e1_wdata_i,31,0);
+    VL_OUT(__PVT__branch_pc_o,31,0);
+    VL_OUT(__PVT__opcode_opcode_o,31,0);
+    VL_OUT(__PVT__opcode_pc_o,31,0);
+    VL_OUT(__PVT__opcode_ra_operand_o,31,0);
+    VL_OUT(__PVT__opcode_rb_operand_o,31,0);
+    VL_OUT(__PVT__lsu_opcode_opcode_o,31,0);
+    VL_OUT(__PVT__lsu_opcode_pc_o,31,0);
+    VL_OUT(__PVT__lsu_opcode_ra_operand_o,31,0);
+    VL_OUT(__PVT__lsu_opcode_rb_operand_o,31,0);
+    VL_OUT(__PVT__mul_opcode_opcode_o,31,0);
+    VL_OUT(__PVT__mul_opcode_pc_o,31,0);
+    VL_OUT(__PVT__mul_opcode_ra_operand_o,31,0);
+    VL_OUT(__PVT__mul_opcode_rb_operand_o,31,0);
+    VL_OUT(__PVT__csr_opcode_opcode_o,31,0);
+    VL_OUT(__PVT__csr_opcode_pc_o,31,0);
+    VL_OUT(__PVT__csr_opcode_ra_operand_o,31,0);
+    VL_OUT(__PVT__csr_opcode_rb_operand_o,31,0);
+    VL_OUT(__PVT__csr_writeback_wdata_o,31,0);
+    VL_OUT(__PVT__csr_writeback_exception_pc_o,31,0);
+    VL_OUT(__PVT__csr_writeback_exception_addr_o,31,0);
+    
+    // LOCAL SIGNALS
+    // Anonymous structures to workaround compiler member-count bugs
+    struct {
+        CData/*1:0*/ __PVT__priv_x_q;
+        CData/*0:0*/ __PVT__opcode_valid_w;
+        CData/*0:0*/ __PVT__pipe_squash_e1_e2_w;
+        CData/*0:0*/ __PVT__opcode_issue_r;
+        CData/*0:0*/ __PVT__opcode_accept_r;
+        CData/*0:0*/ __PVT__pipe_stall_raw_w;
+        CData/*4:0*/ __PVT__pipe_rd_e1_w;
+        CData/*4:0*/ __PVT__pipe_rd_e2_w;
+        CData/*0:0*/ __PVT__pipe_valid_wb_w;
+        CData/*4:0*/ __PVT__pipe_rd_wb_w;
+        CData/*5:0*/ __PVT__issue_fault_w;
+        CData/*0:0*/ __PVT__div_pending_q;
+        CData/*0:0*/ __PVT__csr_pending_q;
+        CData/*0:0*/ __PVT__u_pipe_ctrl__DOT__valid_e1_q;
+        CData/*5:0*/ __PVT__u_pipe_ctrl__DOT__exception_e1_q;
+        CData/*0:0*/ __PVT__u_pipe_ctrl__DOT__valid_e2_q;
+        CData/*0:0*/ __PVT__u_pipe_ctrl__DOT__csr_wr_e2_q;
+        CData/*5:0*/ __PVT__u_pipe_ctrl__DOT__exception_e2_q;
+        CData/*0:0*/ __PVT__u_pipe_ctrl__DOT__valid_e2_w;
+        CData/*5:0*/ __PVT__u_pipe_ctrl__DOT__exception_e2_r;
+        CData/*0:0*/ __PVT__u_pipe_ctrl__DOT__squash_e1_e2_q;
+        CData/*0:0*/ __PVT__u_pipe_ctrl__DOT__valid_wb_q;
+        CData/*0:0*/ __PVT__u_pipe_ctrl__DOT__csr_wr_wb_q;
+        CData/*5:0*/ __PVT__u_pipe_ctrl__DOT__exception_wb_q;
+        SData/*9:0*/ __PVT__u_pipe_ctrl__DOT__ctrl_e1_q;
+        SData/*9:0*/ __PVT__u_pipe_ctrl__DOT__ctrl_e2_q;
+        SData/*9:0*/ __PVT__u_pipe_ctrl__DOT__ctrl_wb_q;
+        IData/*31:0*/ __PVT__scoreboard_r;
+        IData/*31:0*/ __PVT__issue_b_ra_value_w;
+        IData/*31:0*/ __PVT__issue_b_rb_value_w;
+        IData/*31:0*/ __PVT__issue_ra_value_r;
+        IData/*31:0*/ __PVT__issue_rb_value_r;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__pc_e1_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__npc_e1_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__opcode_e1_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__operand_ra_e1_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__operand_rb_e1_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__csr_wdata_e2_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__result_e2_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__pc_e2_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__npc_e2_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__opcode_e2_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__operand_ra_e2_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__operand_rb_e2_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__result_e2_r;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__csr_wdata_wb_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__result_wb_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__pc_wb_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__npc_wb_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__opcode_wb_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__operand_ra_wb_q;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__operand_rb_wb_q;
+        WData/*79:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_d__DOT__dbg_inst_str[3];
+        WData/*79:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_d__DOT__dbg_inst_ra[3];
+        WData/*79:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_d__DOT__dbg_inst_rb[3];
+        WData/*79:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_d__DOT__dbg_inst_rd[3];
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_d__DOT__dbg_inst_imm;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_d__DOT__dbg_inst_pc;
+        WData/*79:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_wb__DOT__dbg_inst_str[3];
+        WData/*79:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_wb__DOT__dbg_inst_ra[3];
+        WData/*79:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_wb__DOT__dbg_inst_rb[3];
+        WData/*79:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_wb__DOT__dbg_inst_rd[3];
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_wb__DOT__dbg_inst_imm;
+        IData/*31:0*/ __PVT__u_pipe_ctrl__DOT__u_trace_wb__DOT__dbg_inst_pc;
+    };
+    struct {
+        WData/*79:0*/ __PVT__u_pipe_dec0_verif__DOT__dbg_inst_str[3];
+        WData/*79:0*/ __PVT__u_pipe_dec0_verif__DOT__dbg_inst_ra[3];
+        WData/*79:0*/ __PVT__u_pipe_dec0_verif__DOT__dbg_inst_rb[3];
+        WData/*79:0*/ __PVT__u_pipe_dec0_verif__DOT__dbg_inst_rd[3];
+        IData/*31:0*/ __PVT__u_pipe_dec0_verif__DOT__dbg_inst_imm;
+        IData/*31:0*/ __PVT__u_pipe_dec0_verif__DOT__dbg_inst_pc;
+    };
+    
+    // LOCAL VARIABLES
+    CData/*4:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_d__DOT__get_regname_str__0__regnum;
+    CData/*4:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_d__DOT__get_regname_str__1__regnum;
+    CData/*4:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_d__DOT__get_regname_str__2__regnum;
+    CData/*4:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_wb__DOT__get_regname_str__3__regnum;
+    CData/*4:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_wb__DOT__get_regname_str__4__regnum;
+    CData/*4:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_wb__DOT__get_regname_str__5__regnum;
+    CData/*4:0*/ __Vfunc_u_pipe_dec0_verif__DOT__get_regname_str__6__regnum;
+    CData/*4:0*/ __Vfunc_u_pipe_dec0_verif__DOT__get_regname_str__7__regnum;
+    CData/*4:0*/ __Vfunc_u_pipe_dec0_verif__DOT__get_regname_str__8__regnum;
+    SData/*9:0*/ __Vdly__u_pipe_ctrl__DOT__ctrl_e2_q;
+    WData/*79:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_d__DOT__get_regname_str__0__Vfuncout[3];
+    WData/*79:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_d__DOT__get_regname_str__1__Vfuncout[3];
+    WData/*79:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_d__DOT__get_regname_str__2__Vfuncout[3];
+    WData/*79:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_wb__DOT__get_regname_str__3__Vfuncout[3];
+    WData/*79:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_wb__DOT__get_regname_str__4__Vfuncout[3];
+    WData/*79:0*/ __Vfunc_u_pipe_ctrl__DOT__u_trace_wb__DOT__get_regname_str__5__Vfuncout[3];
+    WData/*79:0*/ __Vfunc_u_pipe_dec0_verif__DOT__get_regname_str__6__Vfuncout[3];
+    WData/*79:0*/ __Vfunc_u_pipe_dec0_verif__DOT__get_regname_str__7__Vfuncout[3];
+    WData/*79:0*/ __Vfunc_u_pipe_dec0_verif__DOT__get_regname_str__8__Vfuncout[3];
+    
+    // INTERNAL VARIABLES
+  private:
+    Vriscv_tcm_top__Syms* __VlSymsp;  // Symbol table
+  public:
+    
+    // CONSTRUCTORS
+  private:
+    VL_UNCOPYABLE(Vriscv_tcm_top_riscv_issue);  ///< Copying not allowed
+  public:
+    VL_CTOR(Vriscv_tcm_top_riscv_issue);
+    ~Vriscv_tcm_top_riscv_issue();
+    
+    // INTERNAL METHODS
+    void __Vconfigure(Vriscv_tcm_top__Syms* symsp, bool first);
+    static void _combo__TOP__v__u_core__u_issue__7(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+    static void _combo__TOP__v__u_core__u_issue__8(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+  private:
+    void _ctor_var_reset() VL_ATTR_COLD;
+  public:
+    static void _sequent__TOP__v__u_core__u_issue__4(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+    static void _sequent__TOP__v__u_core__u_issue__5(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+    static void _sequent__TOP__v__u_core__u_issue__6(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+    static void _settle__TOP__v__u_core__u_issue__1(Vriscv_tcm_top__Syms* __restrict vlSymsp) VL_ATTR_COLD;
+    static void _settle__TOP__v__u_core__u_issue__2(Vriscv_tcm_top__Syms* __restrict vlSymsp) VL_ATTR_COLD;
+    static void _settle__TOP__v__u_core__u_issue__3(Vriscv_tcm_top__Syms* __restrict vlSymsp);
+    uint32_t complete_exception();
+    uint32_t complete_opcode0();
+    uint32_t complete_pc0();
+    uint32_t complete_ra0();
+    uint32_t complete_ra_val0();
+    uint32_t complete_rb0();
+    uint32_t complete_rb_val0();
+    uint32_t complete_rd0();
+    uint32_t complete_rd_val0();
+    bool complete_valid0();
+  private:
+    static void traceInit(void* userp, VerilatedVcd* tracep, uint32_t code) VL_ATTR_COLD;
+} VL_ATTR_ALIGNED(VL_CACHE_LINE_BYTES);
+
+//----------
+
+
+#endif  // guard

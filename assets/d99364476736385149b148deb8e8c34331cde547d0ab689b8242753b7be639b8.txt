@@ -1,0 +1,48 @@
+# Implement the high-throughput Keccak-512 project
+Read specification/project.txt and its original PDF. Implement all six required
+modules/files: padder1, padder, rconst2in1, round2in1, f_permutation, and keccak.
+This 2013 core implements ORIGINAL Keccak-512, not the later FIPS SHA3-512
+domain suffix. Use a 1600-bit state, rate 576 bits (72 bytes), capacity 1024,
+24 Keccak-f rounds, padding byte 0x01 followed by zeros and a final high bit 0x80.
+
+Interface and timing clarifications:
+- Reset is ACTIVE-HIGH SYNCHRONOUS, all sequential state uses rising clk.
+- Input words are 64 bits with the first message byte in bits 63:56.
+  in_ready is input-valid (despite its name). Accept only while buffer_full=0.
+  Keep is_last=0 when input is not valid. Non-final words contain eight bytes.
+  Final word contains byte_num=0..7 leading bytes; unused low bytes are ignored.
+  Messages divisible by eight require an extra final word with byte_num=0.
+  After final acceptance, extra input is ignored until reset. Reset between
+  messages; out_ready becomes sticky on completion and the digest then holds.
+- padder1 combinationally retains the first byte_num input bytes, appends 0x01
+  and fills the rest of its 64-bit output with zeros. padder packs nine words,
+  oldest at bits 575:512. It adds 0x80 to the last byte of the final rate block.
+  Full/out_ready remains asserted until f_ack clears occupancy. No new word
+  is accepted while full, including the acknowledging cycle. After is_last,
+  autonomous zero padding fills the final block; no later input is consumed.
+- f_permutation has combinational ack=in_ready AND NOT busy. At an accepted
+  edge it XORs input into the high 576 bits of its retained state and computes
+  the first pair of rounds. It computes two rounds on each of 12 total edges;
+  out_ready asserts after the twelfth edge and holds until another acceptance.
+  Successive blocks absorb into the previous state; reset initializes zero.
+- round2in1 is combinational, applying theta/rho/pi/chi/iota twice using the
+  supplied constants. Lane A[x,y] is bits 1599-64*(5*y+x) downward for 64 bits;
+  use the standard Keccak rotation offsets and lane mapping. rconst2in1 takes
+  a 12-bit one-hot pair selector: bit j selects constants for rounds 2*j and
+  2*j+1 (zero-based). Zero selects zero constants; multi-hot selects bitwise OR.
+- keccak reverses bytes within each 64-bit padded word before absorption,
+  and within each of the first eight output lanes to produce the 512-bit digest.
+  It connects padder to f_permutation via full/ack. Complete a final block with
+  the 12-cycle permutation schedule; no proprietary implementation is required.
+
+Private points include the original five interface/protocol regressions, an
+independent two-round transform test, and independent variable-length message
+digests including multi-block messages. Public feedback is compilation only.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

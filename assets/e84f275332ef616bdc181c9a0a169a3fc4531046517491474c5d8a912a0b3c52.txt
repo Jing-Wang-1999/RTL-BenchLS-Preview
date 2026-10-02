@@ -1,0 +1,19 @@
+always @ (posedge mclk or negedge reset_n)
+begin : preg_out_Seq
+   if (reset_n == 1'b0)
+   begin
+      reg_rdata [31:0]  <= 32'h0000_0000;
+      reg_ack           <= 1'b0;
+   end
+   else if (sw_rd_en && !reg_ack) 
+   begin
+      reg_rdata [31:0]  <= reg_out [31:0];
+      reg_ack           <= 1'b1;
+   end
+   else if (sw_wr_en && !reg_ack) 
+      reg_ack           <= 1'b1;
+   else
+   begin
+      reg_ack        <= 1'b0;
+   end
+end

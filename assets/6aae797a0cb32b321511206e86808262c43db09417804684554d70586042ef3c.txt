@@ -1,0 +1,56 @@
+module origen_123748 (
+    input wire wr_clk,
+    input wire rd_clk,
+    input wire reset,
+    input wire rd_en,
+    input wire wr_en,
+    input wire [39:0] din,
+    output wire [39:0] dout,
+    output wire empty,
+    output wire full
+);
+
+    // Internal signals
+    reg [39:0] memory [0:15];
+    reg [3:0] wr_ptr, rd_ptr;
+    reg [4:0] count;
+
+    // Write operation
+    always @(posedge wr_clk or posedge reset) begin
+        if (reset) begin
+            wr_ptr <= 4'b0000;
+        end else if (wr_en && !full) begin
+            memory[wr_ptr] <= din;
+            wr_ptr <= wr_ptr + 1;
+        end
+    end
+
+    // Read operation
+    always @(posedge rd_clk or posedge reset) begin
+        if (reset) begin
+            rd_ptr <= 4'b0000;
+        end else if (rd_en && !empty) begin
+            rd_ptr <= rd_ptr + 1;
+        end
+    end
+
+    // Count logic
+    always @(posedge wr_clk or posedge rd_clk or posedge reset) begin
+        if (reset) begin
+            count <= 5'b00000;
+        end else if (wr_clk && rd_clk) begin
+            if (wr_en && !rd_en && !full) count <= count + 1;
+            else if (!wr_en && rd_en && !empty) count <= count - 1;
+        end else if (wr_clk && wr_en && !full) begin
+            count <= count + 1;
+        end else if (rd_clk && rd_en && !empty) begin
+            count <= count - 1;
+        end
+    end
+
+    // Output assignments
+    assign dout = memory[rd_ptr];
+    assign empty = (count == 0);
+    assign full = (count == 16);
+
+endmodule

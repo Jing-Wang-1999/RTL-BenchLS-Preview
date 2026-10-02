@@ -1,0 +1,19 @@
+module rtlpp_02425 (dll_clk, dll_delayctrlout);
+    input [0:0] dll_clk;
+    output [5:0] dll_delayctrlout;
+
+    wire [5:0] wire_dll_wys_m_delayctrlout;
+
+    // Simulating the functionality of the instantiated `stratixiv_dll` module
+    // Here we're assuming basic behavior for the DLL. Adjust as required for your specific case.
+    reg [5:0] internal_delayctrl;
+
+    always @(posedge dll_clk) begin
+        // You can adjust the delay control logic to closely match the real `stratixiv_dll` behavior
+        internal_delayctrl <= internal_delayctrl + 1;
+    end
+
+    assign wire_dll_wys_m_delayctrlout = internal_delayctrl;
+
+    assign dll_delayctrlout = wire_dll_wys_m_delayctrlout;
+endmodule

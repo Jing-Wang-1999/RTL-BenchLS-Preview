@@ -1,0 +1,50 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/483",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/481",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 483,
+  "issue_number": 481,
+  "verilog_files": [
+    "rtl/cv32e40p_cs_registers.sv"
+  ],
+  "deletions": 26,
+  "additions": 40,
+  "patches": [
+    {
+      "filename": "rtl/cv32e40p_cs_registers.sv",
+      "patch": "@@ -722,17 +722,23 @@ if(PULP_SECURE==1) begin\n       CSR_DCSR:\n                if (csr_we_int)\n                begin\n-                    dcsr_n = csr_wdata_int;\n-                    //31:28 xdebuger = 4 -> debug is implemented\n-                    dcsr_n.xdebugver=4'h4;\n-                    //privilege level: 0-> U;1-> S; 3->M.\n-                    dcsr_n.prv=priv_lvl_q;\n-                    //currently not supported:\n-                    dcsr_n.nmip=1'b0;   //nmip\n-                    dcsr_n.mprven=1'b0; //mprven\n-                    dcsr_n.stopcount=1'b0;   //stopcount\n-                    dcsr_n.stoptime=1'b0;  //stoptime\n+                    // Following are read-only and never assigned here (dcsr_q value is used):\n+                    //\n+                    // - xdebugver\n+                    // - cause\n+                    // - nmip\n+\n+                    dcsr_n.ebreakm   = csr_wdata_int[15];\n+                    dcsr_n.ebreaks   = csr_wdata_int[13];\n+                    dcsr_n.ebreaku   = csr_wdata_int[12];\n+                    dcsr_n.stepie    = 1'b0;                            // stepie\n+                    dcsr_n.stopcount = 1'b0;                            // stopcount\n+                    dcsr_n.stoptime  = 1'b0;                            // stoptime\n+                    dcsr_n.mprven    = 1'b0;                            // mprven\n+                    dcsr_n.step      = csr_wdata_int[2];                  \n+                    dcsr_n.prv       = PrivLvl_t'(csr_wdata_int[1:0]);  // R/W field, but value is allowed to be ignored\n                end\n+\n       CSR_DPC:\n                if (csr_we_int)\n                begin\n@@ -908,9 +914,9 @@ if(PULP_SECURE==1) begin\n \n \n       csr_restore_dret_i: begin //DRET\n-          // restore to the recorded privilege level\n-          // TODO: prevent illegal values, see riscv-debug p.44\n-          priv_lvl_n = dcsr_q.prv;\n+          // Restore to the recorded privilege level; if dcsr_q.prv is a non-supported mode,\n+          // then lowest privilege supported mode is selected.\n+          priv_lvl_n = (dcsr_q.prv == PRIV_LVL_M) ? PRIV_LVL_M : PRIV_LVL_U;\n \n       end //csr_restore_dret_i\n \n@@ -997,17 +1003,23 @@ end else begin //PULP_SECURE == 0\n       CSR_DCSR:\n                if (csr_we_int)\n                begin\n-                    dcsr_n = csr_wdata_int;\n-                    //31:28 xdebuger = 4 -> debug is implemented\n-                    dcsr_n.xdebugver=4'h4;\n-                    //privilege level: 0-> U;1-> S; 3->M.\n-                    dcsr_n.prv=priv_lvl_q;\n-                    //currently not supported:\n-                    dcsr_n.nmip=1'b0;   //nmip\n-                    dcsr_n.mprven=1'b0; //mprven\n-                    dcsr_n.stopcount=1'b0;   //stopcount\n-                    dcsr_n.stoptime=1'b0;  //stoptime\n+                    // Following are read-only and never assigned here (dcsr_q value is used):\n+                    //\n+                    // - xdebugver\n+                    // - cause\n+                    // - nmip\n+\n+                    dcsr_n.ebreakm   = csr_wdata_int[15];\n+                    dcsr_n.ebreaks   = csr_wdata_int[13];\n+                    dcsr_n.ebreaku   = csr_wdata_int[12];\n+                    dcsr_n.stepie    = 1'b0;                            // stepie\n+                    dcsr_n.stopcount = 1'b0;                            // stopcount\n+                    dcsr_n.stoptime  = 1'b0;                            // stoptime\n+                    dcsr_n.mprven    = 1'b0;                            // mprven\n+                    dcsr_n.step      = csr_wdata_int[2];                  \n+                    dcsr_n.prv       = PrivLvl_t'(csr_wdata_int[1:0]);  // R/W field, but value is allowed to be ignored\n                end\n+\n       CSR_DPC:\n                if (csr_we_int)\n                begin\n@@ -1073,9 +1085,11 @@ end else begin //PULP_SECURE == 0\n       end //csr_restore_mret_i\n \n       csr_restore_dret_i: begin //DRET\n-        // restore to the recorded privilege level\n-        // TODO: prevent illegal values, see riscv-debug p.44\n-        priv_lvl_n = dcsr_q.prv;\n+          // Restore to the recorded privilege level; if dcsr_q.prv is a non-supported mode,\n+          // then the lowest privilege supported mode is selected. Therefore, as only Machine\n+          // Mode is supported, priv_lvl_n will always be PRIV_LVL_M indepedent of the value\n+          // of dcsr_q.prv.\n+          priv_lvl_n = PRIV_LVL_M;\n       end //csr_restore_dret_i\n \n       default:;",
+      "additions": 40,
+      "deletions": 26,
+      "changes": 66
+    }
+  ],
+  "pr_info": {
+    "title": "Fix for #481",
+    "body": "Signed-off-by: Arjan Bink <Arjan.Bink@silabs.com>",
+    "state": "closed",
+    "created_at": "2020-09-04T13:13:12Z",
+    "updated_at": "2020-09-07T08:28:38Z",
+    "merged_at": "2020-09-07T08:28:31Z",
+    "user": "Silabs-ArjanB"
+  },
+  "issue_info": {
+    "title": "Cause bits in dcsr should be read only",
+    "body": "According to the riscv debug specification v0.13.2, the cause bits ([8:6]) in dcsr should be read only. During debug testing, I found that code executing in debug mode can actually write to these bits, causing a mismatch with the reference model.",
+    "labels": [
+      "Type:Bug",
+      "Status:Resolved"
+    ],
+    "state": "closed",
+    "created_at": "2020-09-04T09:52:35Z",
+    "updated_at": "2020-10-22T07:45:28Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 88
+  },
+  "base_commit": "6fbd88c645d2b51c316af6eda79bab3e4c284093",
+  "head_commit": "eb76040c692f084173f464c5cce3fa888c52e636",
+  "base_ref": "master",
+  "task_id": "openhwgroup_cv32e40p_483_481",
+  "lec_status": "useful_pass"
+}

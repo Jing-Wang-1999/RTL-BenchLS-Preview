@@ -1,0 +1,9 @@
+always @(posedge req_aclk) begin
+    if (req_aresetn == 1'b0) begin
+      req_ready <= 1'b1;
+    end else if (req_ready == 1'b1) begin
+      req_ready <= ~req_valid;
+    end else if (out_req_valid && out_req_ready) begin
+      req_ready <= ~req_cyclic;
+    end
+  end

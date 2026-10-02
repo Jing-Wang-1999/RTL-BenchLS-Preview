@@ -1,0 +1,101 @@
+module rtlpp_02345 (clk, x_in, y_real, y_imag); 
+
+  input         clk;
+  input  [7:0]  x_in;
+  output [10:0] y_real, y_imag;
+  reg    [10:0] y_real, y_imag;
+
+  reg [10:0]  accu; 
+
+  reg [18:0] imag0, imag1, imag2, imag3, imag4, imag5;
+  reg [18:0] real0, real1, real2, real3, real4, real5;
+
+  reg [18:0] x57, x111, x160, x200, x231, x250;
+
+  reg [18:0] x5, x25, x110, x125, x256;
+
+  reg [7:0]  x, x_0;                   
+
+  wire [18:0] x_sxt, x_0_sxt;
+
+  assign x_sxt = {{9{x[7]}},x}; 
+  assign x_0_sxt = {{9{x_0[7]}},x_0};
+
+  always @(posedge clk)  
+  begin : States
+    parameter Start=0, Load=1, Run=2;
+    reg [1:0] state;
+    reg [4:0] count;
+    case (state) 
+      Start : begin
+        state <= Load;
+        count <= 1;
+        x_0 <= x_in;
+        accu <= 0;
+        y_real  <= 0;
+        y_imag  <= 0;
+      end
+      Load : begin
+        if (count == 8)     
+          state <= Run;
+        else begin
+          state <= Load;
+          accu <= accu + x_sxt;
+        end
+        count <= count + 1;
+      end
+      Run : begin
+        if (count == 15) begin
+          y_real  <= accu;
+          y_imag  <= 0;
+          state <= Start;
+        end
+        else begin
+          y_real  <= (real0 >> 8) + x_0_sxt;
+          y_imag  <= (imag0 >> 8);
+          state <= Run;
+        end
+        count <= count + 1;
+      end
+    endcase
+  end
+
+  always @(posedge clk)
+  begin : Structure        
+    x <= x_in;
+
+    real0 <= real1 + x160;
+    real1 <= real2 - x231;
+    real2 <= real3 - x57;
+    real3 <= real4 + x160;
+    real4 <= real5 - x231;
+    real5 <= -x57;
+
+    imag0 <= imag1 - x200;
+    imag1 <= imag2 - x111;
+    imag2 <= imag3 - x250;
+    imag3 <= imag4 + x200;
+    imag4 <= imag5 + x111;
+    imag5 <= x250;
+  end
+
+  always @(posedge clk)
+  begin : Coeffs 
+    x160   <= x5 << 5;
+    x200   <= x25 << 3;
+    x250   <= x125 << 1;
+    x57    <= x25 + (x << 5);
+    x111   <= x110 + x;
+    x231   <= x256 - x25;
+  end
+
+  always  @(x_sxt or x5 or x25)
+  begin : Factors
+    x5     = (x_sxt << 2) + x_sxt;
+    x25    = (x5 << 2) + x5;
+    x110   = (x25 << 2) + (x5 << 2);
+    x125   = (x25 << 2) + x25;
+    x256   = x_sxt << 8;
+  end
+
+endmodule

@@ -1,0 +1,29 @@
+# Clock-enabled binary-to-BCD converter
+
+Implement `binary_to_bcd_converter_b` with parameters BITS_IN_PP=16,
+BCD_DIGITS_OUT_PP=5 and BIT_COUNT_WIDTH_PP=4. Inputs clk_i, ce_i, rst_i and start_i
+are one bit; dat_binary_i has BITS_IN_PP bits. Output dat_bcd_o contains
+BCD_DIGITS_OUT_PP packed four-bit decimal digits, least significant digit lowest;
+done_o is one bit. Preserve default-parameter cycle behavior.
+
+On each rising clk_i, synchronous active-high rst_i clears busy and dat_bcd_o.
+It does not reset the binary work register, decimal work register or iteration
+counter. done_o is continuously the inverse of busy: high while idle, including
+after reset; it is not a completion pulse.
+
+Outside reset, priority is: (1) start_i while previously idle captures the binary
+input, clears the decimal work value and sets busy, regardless of ce_i;
+(2) previously busy with ce_i and the final iteration count and start_i LOW
+finishes, clears busy and writes the final adjusted/shifted decimal result;
+(3) previously busy with ce_i and a nonfinal count shifts the binary work value
+left one and advances the decimal conversion. Otherwise hold these registers.
+The visible result retains its previous value until completion or reset.
+
+Each decimal step shifts in the previous binary MSB. Process digits from least
+to most significant: a digit 0..4 shifts left with the incoming carry and emits
+carry zero; a digit 5..15 subtracts five, shifts the low three bits left with the
+incoming carry, and emits carry one to the next digit. Discard final carry.
+The iteration counter is a separate register: on every clock, if previously idle
+set it to zero; otherwise increment when ce_i and the count is not BITS_IN_PP-1.
+This counter rule is not reset-gated. A continuously high start_i at the final
+count prevents completion; start_i during nonfinal busy cycles does not restart.

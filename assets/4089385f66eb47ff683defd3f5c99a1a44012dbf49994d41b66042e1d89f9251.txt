@@ -1,0 +1,9 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+    div_pending_q <= 1'b0;
+else if (pipe_squash_e1_e2_w)
+    div_pending_q <= 1'b0;
+else if (div_opcode_valid_o && issue_div_w)
+    div_pending_q <= 1'b1;
+else if (writeback_div_valid_i)
+    div_pending_q <= 1'b0;

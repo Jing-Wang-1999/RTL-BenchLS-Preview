@@ -1,0 +1,55 @@
+module origen_005102 (
+    input wire clock,
+    input wire endata,
+    input wire reset,
+    input wire [3:0] spdmeanlen,
+    input wire signed [18:0] phase,
+    output reg signed [15:0] speed,
+    output reg newAvg
+);
+
+    parameter N = 11;
+
+    reg signed [31:0] acc;
+    reg [N:0] counter;
+    reg [2:0] state, nextstate;
+
+    always @(posedge clock or posedge reset) begin
+        if (reset)
+            state <= 3'd0;
+        else
+            state <= nextstate;
+    end
+
+    always @(*) begin
+        case (state)
+            3'd0: nextstate = endata ? 3'd1 : 3'd0;
+            3'd1: nextstate = 3'd2;
+            3'd2: nextstate = endata ? 3'd3 : 3'd2;
+            3'd3: nextstate = (counter == 0) ? 3'd4 : 3'd2;
+            3'd4: nextstate = 3'd2;
+            default: nextstate = 3'd0;
+        endcase
+    end
+
+    always @(posedge clock) begin
+        case (state)
+            3'd1: begin
+                counter <= (1 << spdmeanlen) - 1;
+                acc <= 0;
+            end
+            3'd3: begin
+                acc <= acc + phase;
+                counter <= counter - 1;
+            end
+            3'd4: begin
+                speed <= ((acc >>> spdmeanlen) * 18026) >>> 17;
+                newAvg <= 1'b1;
+            end
+            default: begin
+                newAvg <= 1'b0;
+            end
+        endcase
+    end
+
+endmodule

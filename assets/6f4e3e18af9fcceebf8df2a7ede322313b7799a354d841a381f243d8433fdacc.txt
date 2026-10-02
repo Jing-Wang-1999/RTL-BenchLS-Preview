@@ -1,0 +1,58 @@
+`timescale 1ns/1ps
+`default_nettype none
+
+module origen_090921 (
+    input wire A, B, CI,
+    output wire S, CO
+);
+    wire sum, carry;
+    
+    assign #5.23 S = A ^ B ^ CI;
+    assign #2.13 CO = (A & B) | (CI & (A ^ B));
+endmodule
+
+module A2N_DLY (
+    input wire [1:0] A, B,
+    input wire CI,
+    output wire [1:0] S,
+    output wire CO
+);
+    wire gxy, gxx, gxz, gyy, gyx, gyz;
+    wire c0, c1;
+
+    nand #(1.58) nand1(gxy, A[0], B[0]);
+    nand #(1.58) nand2(gxx, A[0], gxy);
+    nand #(1.58) nand3(gxz, B[0], gxy);
+    nand #(1.58) nand4(c0, gxx, gxz, CI);
+
+    nand #(1.58) nand5(gyy, A[1], B[1]);
+    nand #(1.58) nand6(gyx, A[1], gyy);
+    nand #(1.58) nand7(gyz, B[1], gyy);
+    nand #(1.58) nand8(c1, gyx, gyz, c0);
+
+    assign #4.75 CO = c1;
+    assign #5.23 S[1] = A[1] ^ B[1] ^ c0;
+    assign #5.23 S[0] = A[0] ^ B[0] ^ CI;
+endmodule
+
+module A4H_DLY (
+    input wire [3:0] A, B,
+    input wire CI,
+    output wire [3:0] S,
+    output wire CO
+);
+    wire [3:0] P, G;
+    wire [4:0] C;
+
+    assign P = A ^ B;
+    assign G = A & B;
+
+    assign C[0] = CI;
+    assign C[1] = G[0] | (P[0] & C[0]);
+    assign C[2] = G[1] | (P[1] & G[0]) | (P[1] & P[0] & C[0]);
+    assign C[3] = G[2] | (P[2] & G[1]) | (P[2] & P[1] & G[0]) | (P[2] & P[1] & P[0] & C[0]);
+    assign C[4] = G[3] | (P[3] & G[2]) | (P[3] & P[2] & G[1]) | (P[3] & P[2] & P[1] & G[0]) | (P[3] & P[2] & P[1] & P[0] & C[0]);
+
+    assign #8.13 S = P ^ C[3:0];
+    assign #5.64 CO = C[4];
+endmodule

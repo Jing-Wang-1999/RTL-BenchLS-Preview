@@ -1,0 +1,58 @@
+module origen_210528 (
+    input Din,
+    input clk,
+    input reset,
+    output error,
+    output [4:0] current_state
+);
+
+    reg [4:0] state_reg;
+    
+    // State encodings (one-hot style)
+    localparam STATE_0 = 5'b00001;
+    localparam STATE_1 = 5'b00011;
+    localparam STATE_2 = 5'b00100;
+    localparam STATE_3 = 5'b00010;
+    localparam STATE_4 = 5'b10000;
+    
+    // State transitions
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            state_reg <= STATE_0;
+        end else begin
+            case (state_reg)
+                STATE_0: begin
+                    if (Din) begin
+                        state_reg <= STATE_3;
+                    end else begin
+                        state_reg <= STATE_2;
+                    end
+                end
+                STATE_1: begin
+                    state_reg <= STATE_0;
+                end
+                STATE_2: begin
+                    state_reg <= STATE_3;
+                end
+                STATE_3: begin
+                    if (Din) begin
+                        state_reg <= STATE_4;
+                    end else begin
+                        state_reg <= STATE_0;
+                    end
+                end
+                STATE_4: begin
+                    state_reg <= STATE_0;
+                end
+                default: begin
+                    state_reg <= STATE_0;
+                end
+            endcase
+        end
+    end
+    
+    // Output assignments
+    assign current_state = state_reg;
+    assign error = (state_reg == STATE_4) & Din;
+
+endmodule

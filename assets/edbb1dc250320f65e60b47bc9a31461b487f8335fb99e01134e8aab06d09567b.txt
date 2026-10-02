@@ -1,0 +1,8 @@
+This module is a synchronous state machine with four states. It has a single-bit input B, a single-bit output X, a clock (Clk), and an asynchronous reset (Rst). The reset forces the system into the initial "Off" state.
+
+The machine's behavior is defined as follows:
+- In the "Off" state, output X is 0. If input B is 0, it remains in "Off". If B is 1, it transitions to the first "On" state.
+- Upon entering the first "On" state, output X becomes 1. It then automatically sequences through two more "On" states (X remains 1 in both), spending one clock cycle in each.
+- After the third consecutive "On" state, it unconditionally returns to the "Off" state on the next clock cycle.
+
+In summary, a pulse on input B (a transition from 0 to 1) triggers the output X to go high and remain high for exactly three clock cycles before returning low. The system then waits for the next B pulse.

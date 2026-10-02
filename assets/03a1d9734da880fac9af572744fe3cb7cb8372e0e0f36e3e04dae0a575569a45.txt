@@ -1,0 +1,9 @@
+always @(posedge clk or negedge reset_n)
+    begin
+      if (!reset_n)
+	data_out <= RESET_DEFAULT;
+      else if (cpu_we & cpu_req) // Set on CPU Request
+	 data_out <= 1'b1;
+      else if (hware_ack)  // Reset the flag on Hardware ack
+	 data_out <= 1'b0;
+    end

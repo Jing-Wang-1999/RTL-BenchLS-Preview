@@ -1,0 +1,98 @@
+`timescale 1ns/1ps
+module tb;reg clk=0,rst=0;always #5 clk=~clk;
+task tick;begin @(posedge clk);#2;end endtask
+task reset;begin @(negedge clk);rst=1;repeat(3)tick;@(negedge clk);rst=0;end endtask
+initial begin #100000000;$fatal(1,"timeout");end
+reg cyc=0,stb=0,we=0;reg [7:0] adr=0;reg [31:0] di=0;reg [3:0] sel=15;
+wire [31:0] data;wire ack,err,irq;reg [30:0] aux=0,pins=0;reg eclk=0;wire [30:0] outputs,oe;
+gpio_top dut(clk,rst,cyc,adr,di,sel,we,stb,data,ack,err,irq,aux,pins,outputs,oe,eclk);
+task wr;input [7:0] a;input [31:0] d;input [3:0] mask;begin
+@(negedge clk);adr=a;di=d;sel=mask;cyc=1;stb=1;we=1;tick;
+if(ack!==1 || err!==0)$fatal(1,"write ack");
+@(negedge clk);cyc=0;stb=0;we=0;repeat(3)tick;end endtask
+task rd;input [7:0] a;input [31:0] expected;begin
+@(negedge clk);adr=a;sel=15;cyc=1;stb=1;we=0;tick;
+if(ack!==1 || err!==0 || data!==expected)$fatal(1,"read %h: %h != %h",a,data,expected);
+@(negedge clk);cyc=0;stb=0;repeat(3)tick;end endtask
+initial begin reset;repeat(5)tick;
+wr(4,31'h6a43bee4,15);wr(8,31'h68ad7582,15);wr(20,31'h266e9ddb,15);@(negedge clk);aux=31'h1539d73f;tick;if(outputs!==31'h4c29b73f || oe!==31'h68ad7582)$fatal(1,"pin outputs");
+wr(4,31'h60ce3c3,15);wr(8,31'h8e6f96d,15);wr(20,31'h78a701fc,15);@(negedge clk);aux=31'h6c4aad33;tick;if(outputs!==31'h6e0ae333 || oe!==31'h8e6f96d)$fatal(1,"pin outputs");
+wr(4,31'h5278d494,15);wr(8,31'h7b4c8429,15);wr(20,31'h7b19c694,15);@(negedge clk);aux=31'h6f38fc35;tick;if(outputs!==31'h6b78d414 || oe!==31'h7b4c8429)$fatal(1,"pin outputs");
+wr(4,31'h61ec0789,15);wr(8,31'h6d85b4f9,15);wr(20,31'hc338d1c,15);@(negedge clk);aux=31'h61f817c1;tick;if(outputs!==31'h61fc0781 || oe!==31'h6d85b4f9)$fatal(1,"pin outputs");
+wr(4,31'h23589945,15);wr(8,31'h7b130ea4,15);wr(20,31'h5ad97740,15);@(negedge clk);aux=31'h44171f19;tick;if(outputs!==31'h61119f05 || oe!==31'h7b130ea4)$fatal(1,"pin outputs");
+wr(4,31'h651f8c72,15);wr(8,31'h70e3bdcb,15);wr(20,31'h2a40c1b4,15);@(negedge clk);aux=31'h61fb183c;tick;if(outputs!==31'h655f0c76 || oe!==31'h70e3bdcb)$fatal(1,"pin outputs");
+wr(4,31'h71ed4d3b,15);wr(8,31'h455795a6,15);wr(20,31'h4341e51d,15);@(negedge clk);aux=31'h4ffffc3;tick;if(outputs!==31'h30eded23 || oe!==31'h455795a6)$fatal(1,"pin outputs");
+wr(4,31'h15c4fc03,15);wr(8,31'h3bb2bd73,15);wr(20,31'h2ad9b004,15);@(negedge clk);aux=31'h6c8ff373;tick;if(outputs!==31'h3d8dfc03 || oe!==31'h3bb2bd73)$fatal(1,"pin outputs");
+wr(4,31'h31d42f08,15);wr(8,31'h129f0905,15);wr(20,31'h32a275c0,15);@(negedge clk);aux=31'h4a01d775;tick;if(outputs!==31'h3545f48 || oe!==31'h129f0905)$fatal(1,"pin outputs");
+wr(4,31'h675a6c92,15);wr(8,31'h14d595a7,15);wr(20,31'h557e43ec,15);@(negedge clk);aux=31'h6926c93b;tick;if(outputs!==31'h63266d3a || oe!==31'h14d595a7)$fatal(1,"pin outputs");
+wr(4,31'h2145f1f0,15);wr(8,31'h5a2e2a42,15);wr(20,31'h74cff7b2,15);@(negedge clk);aux=31'h1192aaa2;tick;if(outputs!==31'h1182a2e2 || oe!==31'h5a2e2a42)$fatal(1,"pin outputs");
+wr(4,31'h42fce829,15);wr(8,31'h45e70e28,15);wr(20,31'h33b02b3a,15);@(negedge clk);aux=31'h781e7da9;tick;if(outputs!==31'h705ce929 || oe!==31'h45e70e28)$fatal(1,"pin outputs");
+wr(4,31'h559f5ef,15);wr(8,31'h1af9392,15);wr(20,31'h54326035,15);@(negedge clk);aux=31'hf661db1;tick;if(outputs!==31'h56b95fb || oe!==31'h1af9392)$fatal(1,"pin outputs");
+wr(4,31'h327c0826,15);wr(8,31'h6d13c963,15);wr(20,31'h184a25e8,15);@(negedge clk);aux=31'h649c904f;tick;if(outputs!==31'h223c084e || oe!==31'h6d13c963)$fatal(1,"pin outputs");
+wr(4,31'h57354c0d,15);wr(8,31'h69ba9395,15);wr(20,31'h460ad6ba,15);@(negedge clk);aux=31'h778cf85b;tick;if(outputs!==31'h573dd81f || oe!==31'h69ba9395)$fatal(1,"pin outputs");
+wr(4,31'h5002d844,15);wr(8,31'h68d61289,15);wr(20,31'h1daeea4d,15);@(negedge clk);aux=31'h7d87d56a;tick;if(outputs!==31'h5d86d048 || oe!==31'h68d61289)$fatal(1,"pin outputs");
+wr(4,31'h1196743b,15);wr(8,31'h42dfc3d1,15);wr(20,31'h2a5b81e1,15);@(negedge clk);aux=31'h49ab9fc;tick;if(outputs!==31'h119ef5fa || oe!==31'h42dfc3d1)$fatal(1,"pin outputs");
+wr(4,31'h1c20bd5a,15);wr(8,31'h62ce6e28,15);wr(20,31'h10b16611,15);@(negedge clk);aux=31'h788b02ae;tick;if(outputs!==31'h1c819b4a || oe!==31'h62ce6e28)$fatal(1,"pin outputs");
+wr(4,31'h3040ef50,15);wr(8,31'h1eedf1d5,15);wr(20,31'hfbc2c5f,15);@(negedge clk);aux=31'h7cfbc8b;tick;if(outputs!==31'h37ccef0b || oe!==31'h1eedf1d5)$fatal(1,"pin outputs");
+wr(4,31'h4206afb9,15);wr(8,31'h463cc67,15);wr(20,31'h41d396b,15);@(negedge clk);aux=31'h4c78510a;tick;if(outputs!==31'h461a979a || oe!==31'h463cc67)$fatal(1,"pin outputs");
+wr(4,31'h4a956fd9,15);wr(8,31'h3289018f,15);wr(20,31'h10b70357,15);@(negedge clk);aux=31'h77be2ef8;tick;if(outputs!==31'h5ab66ed8 || oe!==31'h3289018f)$fatal(1,"pin outputs");
+wr(4,31'h1fae6e29,15);wr(8,31'h2a0857e,15);wr(20,31'h4aba6f57,15);@(negedge clk);aux=31'h4f385bb7;tick;if(outputs!==31'h5f3c4b3f || oe!==31'h2a0857e)$fatal(1,"pin outputs");
+wr(4,31'h4e483841,15);wr(8,31'h6ba0e4c8,15);wr(20,31'h460ff396,15);@(negedge clk);aux=31'h37264c5b;tick;if(outputs!==31'he464853 || oe!==31'h6ba0e4c8)$fatal(1,"pin outputs");
+wr(4,31'h7b4c49a4,15);wr(8,31'h37707bdc,15);wr(20,31'h662da5b0,15);@(negedge clk);aux=31'h4024cb2d;tick;if(outputs!==31'h5964c924 || oe!==31'h37707bdc)$fatal(1,"pin outputs");
+wr(4,31'h48c5e6fa,15);wr(8,31'h46693c45,15);wr(20,31'h58dee4c1,15);@(negedge clk);aux=31'h2e343280;tick;if(outputs!==31'h81522ba || oe!==31'h46693c45)$fatal(1,"pin outputs");
+wr(4,31'h6ad5f38d,15);wr(8,31'h6eafea89,15);wr(20,31'h790fc37d,15);@(negedge clk);aux=31'h6b13ef83;tick;if(outputs!==31'h6bd3f381 || oe!==31'h6eafea89)$fatal(1,"pin outputs");
+wr(4,31'h1925359b,15);wr(8,31'h419fc4cd,15);wr(20,31'hd7ed078,15);@(negedge clk);aux=31'habdd251;tick;if(outputs!==31'h183df5d3 || oe!==31'h419fc4cd)$fatal(1,"pin outputs");
+wr(4,31'h486e4ae1,15);wr(8,31'h21e0e027,15);wr(20,31'h6380f889,15);@(negedge clk);aux=31'h16a65294;tick;if(outputs!==31'haee52e0 || oe!==31'h21e0e027)$fatal(1,"pin outputs");
+wr(4,31'h49b85903,15);wr(8,31'h488c639d,15);wr(20,31'h71fc4a77,15);@(negedge clk);aux=31'h7ee33664;tick;if(outputs!==31'h78e01364 || oe!==31'h488c639d)$fatal(1,"pin outputs");
+wr(4,31'h5b479c35,15);wr(8,31'h54f76c39,15);wr(20,31'h2da9cff9,15);@(negedge clk);aux=31'h3e240dc7;tick;if(outputs!==31'h7e661dc5 || oe!==31'h54f76c39)$fatal(1,"pin outputs");
+wr(4,31'h5b6bcfd5,15);wr(8,31'h28550a73,15);wr(20,31'h4f52a619,15);@(negedge clk);aux=31'h103ac579;tick;if(outputs!==31'h103bcddd || oe!==31'h28550a73)$fatal(1,"pin outputs");
+wr(4,31'h56cf5a60,15);wr(8,31'h73df1d9b,15);wr(20,31'h1e86e024,15);@(negedge clk);aux=31'h1277ab5f;tick;if(outputs!==31'h524fba44 || oe!==31'h73df1d9b)$fatal(1,"pin outputs");
+wr(4,31'h1e82d8a1,15);wr(8,31'h6d211473,15);wr(20,31'h1ea5a9d3,15);@(negedge clk);aux=31'h59e853f2;tick;if(outputs!==31'h18a251f2 || oe!==31'h6d211473)$fatal(1,"pin outputs");
+wr(4,31'h48a8f52,15);wr(8,31'h1fa9e40a,15);wr(20,31'h67575d3a,15);@(negedge clk);aux=31'h5eb2f70b;tick;if(outputs!==31'h469ad74a || oe!==31'h1fa9e40a)$fatal(1,"pin outputs");
+wr(4,31'h3e7b32b,15);wr(8,31'h689ba8c1,15);wr(20,31'h4e8f5fb2,15);@(negedge clk);aux=31'he7d2ce9;tick;if(outputs!==31'hf6daca9 || oe!==31'h689ba8c1)$fatal(1,"pin outputs");
+wr(4,31'h717fe1f5,15);wr(8,31'h3fe52314,15);wr(20,31'h7b87d166,15);@(negedge clk);aux=31'h775cbcbe;tick;if(outputs!==31'h737cb0b7 || oe!==31'h3fe52314)$fatal(1,"pin outputs");
+wr(4,31'h7b7f1787,15);wr(8,31'h6fc47ea2,15);wr(20,31'h59d0421,15);@(negedge clk);aux=31'h6ad397f1;tick;if(outputs!==31'h7af317a7 || oe!==31'h6fc47ea2)$fatal(1,"pin outputs");
+wr(4,31'h633335e8,15);wr(8,31'h63cfa75b,15);wr(20,31'h837bf05,15);@(negedge clk);aux=31'h3916749a;tick;if(outputs!==31'h6b1634e8 || oe!==31'h63cfa75b)$fatal(1,"pin outputs");
+wr(4,31'h7b7fe266,15);wr(8,31'h6fcabbc1,15);wr(20,31'h7c095536,15);@(negedge clk);aux=31'h483eb2c6;tick;if(outputs!==31'h4b7eb246 || oe!==31'h6fcabbc1)$fatal(1,"pin outputs");
+wr(4,31'h2f63b94f,15);wr(8,31'h3a5d4c3f,15);wr(20,31'h3ba60a38,15);@(negedge clk);aux=31'h2d050366;tick;if(outputs!==31'h2d45b367 || oe!==31'h3a5d4c3f)$fatal(1,"pin outputs");
+wr(4,31'h107edc1c,15);wr(8,31'h15387821,15);wr(20,31'h5b519f52,15);@(negedge clk);aux=31'h1cde4cae;tick;if(outputs!==31'h187e4c0e || oe!==31'h15387821)$fatal(1,"pin outputs");
+wr(4,31'h6d27353b,15);wr(8,31'h7e6de2a8,15);wr(20,31'h16e87433,15);@(negedge clk);aux=31'h10d46be5;tick;if(outputs!==31'h79c76129 || oe!==31'h7e6de2a8)$fatal(1,"pin outputs");
+wr(4,31'h161ca7a4,15);wr(8,31'h5cfd8024,15);wr(20,31'h5b316e43,15);@(negedge clk);aux=31'h151adc18;tick;if(outputs!==31'h151ccda4 || oe!==31'h5cfd8024)$fatal(1,"pin outputs");
+wr(4,31'h76f1c9fb,15);wr(8,31'h5503f90b,15);wr(20,31'h564ca939,15);@(negedge clk);aux=31'h709c83b0;tick;if(outputs!==31'h70bdc1f2 || oe!==31'h5503f90b)$fatal(1,"pin outputs");
+wr(4,31'h187abc9d,15);wr(8,31'h1056c3b9,15);wr(20,31'h73a1eb2f,15);@(negedge clk);aux=31'h7a506425;tick;if(outputs!==31'h7a5a74b5 || oe!==31'h1056c3b9)$fatal(1,"pin outputs");
+wr(4,31'h5cebb882,15);wr(8,31'h1e6e794e,15);wr(20,31'h3c56a2a5,15);@(negedge clk);aux=31'h114cf926;tick;if(outputs!==31'h50edb826 || oe!==31'h1e6e794e)$fatal(1,"pin outputs");
+wr(4,31'h7d2cfdc9,15);wr(8,31'h7ef38e2f,15);wr(20,31'h6b2e508d,15);@(negedge clk);aux=31'h2fcf612c;tick;if(outputs!==31'h3f0eed4c || oe!==31'h7ef38e2f)$fatal(1,"pin outputs");
+wr(4,31'h4c0347ad,15);wr(8,31'h198594cc,15);wr(20,31'h61d22281,15);@(negedge clk);aux=31'h1faf741f;tick;if(outputs!==31'hd83652d || oe!==31'h198594cc)$fatal(1,"pin outputs");
+wr(4,31'h117e11fc,15);wr(8,31'h62109637,15);wr(20,31'h624ff416,15);@(negedge clk);aux=31'h1f98ad5b;tick;if(outputs!==31'h1338a5fa || oe!==31'h62109637)$fatal(1,"pin outputs");
+wr(4,31'h1c4029ed,15);wr(8,31'h876b153,15);wr(20,31'h1906cec7,15);@(negedge clk);aux=31'h719d66e3;tick;if(outputs!==31'h154467eb || oe!==31'h876b153)$fatal(1,"pin outputs");
+wr(4,31'h478599b9,15);wr(8,31'h39c0d48c,15);wr(20,31'h5d57851f,15);@(negedge clk);aux=31'h4b890a92;tick;if(outputs!==31'h4b8118b2 || oe!==31'h39c0d48c)$fatal(1,"pin outputs");
+wr(4,31'h6481665,15);wr(8,31'h2a63d644,15);wr(20,31'h151b1a98,15);@(negedge clk);aux=31'h31dcb411;tick;if(outputs!==31'h13581475 || oe!==31'h2a63d644)$fatal(1,"pin outputs");
+wr(4,31'h624a405,15);wr(8,31'h415decc2,15);wr(20,31'h79e11e35,15);@(negedge clk);aux=31'h3b14c433;tick;if(outputs!==31'h3f04a431 || oe!==31'h415decc2)$fatal(1,"pin outputs");
+wr(4,31'h7535cc2e,15);wr(8,31'h1b2c411e,15);wr(20,31'h1dd30c48,15);@(negedge clk);aux=31'h7eaf0b34;tick;if(outputs!==31'h7ca7c826 || oe!==31'h1b2c411e)$fatal(1,"pin outputs");
+wr(4,31'h419628ea,15);wr(8,31'h7b5b1f49,15);wr(20,31'h65bb6be9,15);@(negedge clk);aux=31'h3944ef3e;tick;if(outputs!==31'h21046b2a || oe!==31'h7b5b1f49)$fatal(1,"pin outputs");
+wr(4,31'h855220f,15);wr(8,31'h729e90f3,15);wr(20,31'h15ef93b9,15);@(negedge clk);aux=31'h60a900b9;tick;if(outputs!==31'h8b920bf || oe!==31'h729e90f3)$fatal(1,"pin outputs");
+wr(4,31'h6a961c13,15);wr(8,31'h733e446d,15);wr(20,31'h79f74995,15);@(negedge clk);aux=31'h181ed1f7;tick;if(outputs!==31'h1a165597 || oe!==31'h733e446d)$fatal(1,"pin outputs");
+wr(4,31'h70345f1c,15);wr(8,31'h783371d6,15);wr(20,31'h44d861ab,15);@(negedge clk);aux=31'h11608231;tick;if(outputs!==31'h30641e35 || oe!==31'h783371d6)$fatal(1,"pin outputs");
+wr(4,31'h44b125e,15);wr(8,31'ha780fc6,15);wr(20,31'h222c6cba,15);@(negedge clk);aux=31'h36559a2b;tick;if(outputs!==31'h26471a6e || oe!==31'ha780fc6)$fatal(1,"pin outputs");
+wr(4,31'hc5f80b8,15);wr(8,31'h368c70da,15);wr(20,31'h283cfba9,15);@(negedge clk);aux=31'h1ecafee2;tick;if(outputs!==31'hc4bfab0 || oe!==31'h368c70da)$fatal(1,"pin outputs");
+wr(4,31'h10f19fff,15);wr(8,31'h3f216e0a,15);wr(20,31'h57b7d2ae,15);@(negedge clk);aux=31'h649b0409;tick;if(outputs!==31'h44d30d59 || oe!==31'h3f216e0a)$fatal(1,"pin outputs");
+wr(4,31'h7edac64,15);wr(8,31'h99a5de1,15);wr(20,31'h1ba8075,15);@(negedge clk);aux=31'h7ae73fb8;tick;if(outputs!==31'h6e72c30 || oe!==31'h99a5de1)$fatal(1,"pin outputs");
+wr(4,31'h7552725a,15);wr(8,31'h45fac5ec,15);wr(20,31'h7aae8ebc,15);@(negedge clk);aux=31'h9ab6f72;tick;if(outputs!==31'hdfa7e72 || oe!==31'h45fac5ec)$fatal(1,"pin outputs");
+wr(4,31'h287d2af4,15);wr(8,31'h55b865a9,15);wr(20,31'h33a5303e,15);@(negedge clk);aux=31'h4f3dc34b;tick;if(outputs!==31'hb7d0aca || oe!==31'h55b865a9)$fatal(1,"pin outputs");
+wr(4,31'h4eb297b4,15);wr(8,31'h6095b985,15);wr(20,31'h6e80023,15);@(negedge clk);aux=31'h39ec72a3;tick;if(outputs!==31'h48fa97b7 || oe!==31'h6095b985)$fatal(1,"pin outputs");
+wr(4,31'h236b715f,15);wr(8,31'h6e4cc0b0,15);wr(20,31'h5162793e,15);@(negedge clk);aux=31'h72d23b6e;tick;if(outputs!==31'h724b396f || oe!==31'h6e4cc0b0)$fatal(1,"pin outputs");
+wr(4,31'hf0a5e61,15);wr(8,31'h679c5fdd,15);wr(20,31'h3dd1f6a1,15);@(negedge clk);aux=31'h4b1d0249;tick;if(outputs!==31'hb1b0a41 || oe!==31'h679c5fdd)$fatal(1,"pin outputs");
+wr(4,31'h1ddce7b,15);wr(8,31'h161a6b38,15);wr(20,31'hba576c3,15);@(negedge clk);aux=31'h4c80c3b2;tick;if(outputs!==31'h8d8caba || oe!==31'h161a6b38)$fatal(1,"pin outputs");
+wr(4,31'h7231b0e4,15);wr(8,31'h54b47544,15);wr(20,31'h49f1be4b,15);@(negedge clk);aux=31'h1f94e152;tick;if(outputs!==31'h3b90a0e6 || oe!==31'h54b47544)$fatal(1,"pin outputs");
+wr(4,31'h34bc3acb,15);wr(8,31'h4af3225e,15);wr(20,31'h79889b2b,15);@(negedge clk);aux=31'h2c00e4e;tick;if(outputs!==31'h4b42aca || oe!==31'h4af3225e)$fatal(1,"pin outputs");
+wr(4,31'h39fa402d,15);wr(8,31'h7371a55b,15);wr(20,31'h6e51e9d9,15);@(negedge clk);aux=31'h3ee0bcd5;tick;if(outputs!==31'h3feaa8f5 || oe!==31'h7371a55b)$fatal(1,"pin outputs");
+wr(4,31'h7d203c0f,15);wr(8,31'h44ed41d1,15);wr(20,31'h503b4b52,15);@(negedge clk);aux=31'h1964dcbc;tick;if(outputs!==31'h3d207c1d || oe!==31'h44ed41d1)$fatal(1,"pin outputs");
+wr(4,31'h5ed7da7b,15);wr(8,31'h3e341e7d,15);wr(20,31'h476f078b,15);@(negedge clk);aux=31'h6aa6524e;tick;if(outputs!==31'h5ab6da7a || oe!==31'h3e341e7d)$fatal(1,"pin outputs");
+wr(4,31'h782c6268,15);wr(8,31'h6a3519d1,15);wr(20,31'h52d83c42,15);@(negedge clk);aux=31'h35840684;tick;if(outputs!==31'h38a44628 || oe!==31'h6a3519d1)$fatal(1,"pin outputs");
+wr(4,31'h73371672,15);wr(8,31'h5bc0db01,15);wr(20,31'h72ecf8f4,15);@(negedge clk);aux=31'h2a8c02a7;tick;if(outputs!==31'h239f06a6 || oe!==31'h5bc0db01)$fatal(1,"pin outputs");
+wr(4,31'h7e5a7404,15);wr(8,31'h7d5f549b,15);wr(20,31'h30492bf4,15);@(negedge clk);aux=31'h7b1b4cfd;tick;if(outputs!==31'h7e1b5cf4 || oe!==31'h7d5f549b)$fatal(1,"pin outputs");
+wr(4,31'h63e7c476,15);wr(8,31'h748ef323,15);wr(20,31'h45c90ee8,15);@(negedge clk);aux=31'hb4f1aed;tick;if(outputs!==31'h236fcafe || oe!==31'h748ef323)$fatal(1,"pin outputs");
+wr(4,31'h783ced1f,15);wr(8,31'h3b8b61d8,15);wr(20,31'h61f04c4d,15);@(negedge clk);aux=31'h45937c37;tick;if(outputs!==31'h599ced17 || oe!==31'h3b8b61d8)$fatal(1,"pin outputs");
+wr(4,31'h51a1e401,15);wr(8,31'h41879aed,15);wr(20,31'h36e5c7d3,15);@(negedge clk);aux=31'h555a816f;tick;if(outputs!==31'h5540a143 || oe!==31'h41879aed)$fatal(1,"pin outputs");
+wr(4,31'h5d088307,15);wr(8,31'h63370246,15);wr(20,31'h2dc49fd5,15);@(negedge clk);aux=31'h6989ca15;tick;if(outputs!==31'h79888a17 || oe!==31'h63370246)$fatal(1,"pin outputs");
+$display("RTL_BENCHLS_PASS");$finish(0);end endmodule

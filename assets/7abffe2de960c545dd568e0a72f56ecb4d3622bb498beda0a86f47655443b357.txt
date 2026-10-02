@@ -1,0 +1,104 @@
+module mg_01093(clock, reset,pixCellIx, cellData1, cellData2,busAddr, busData, busOE, busWR, busHold);
+input clock; 
+ input reset; 
+ input[13:0] pixCellIx; 
+ output[31:0] cellData1; 
+ output[31:0] cellData2; 
+ input[39:0] busAddr; 
+ inout[31:0] busData; 
+ input busOE; 
+ input busWR; 
+ output busHold; 
+ reg tBusHold; 
+ reg[31:0] tBusData; 
+ wire tBusCSel; 
+ assign busHold = (busOE && tBusCSel) ? tBusHold : 1'bZ; 
+ assign busData = (busOE && tBusCSel) ? tBusData : 32'hZZZZ_ZZZZ; 
+ assign tBusCSel = (busAddr[39:16]==24'hA0_A000); 
+ wire[13:0] tReadAddr; 
+ assign tReadAddr = (busOE && tBusCSel) ? busAddr[15:2] : pixCellIx; 
+ reg[13:0] tPixCellIx; 
+ (* ram_style="block" *) reg[31:0] scrCell1A[0:2047]; 
+ (* ram_style="block" *) reg[31:0] scrCell1B[0:2047]; 
+ (* ram_style="block" *) reg[31:0] scrCell2A[0:511]; 
+ (* ram_style="block" *) reg[31:0] scrCell2B[0:511]; 
+ reg[31:0] scrRegCtrl[7:0]; 
+ reg scrIs320; 
+ reg scrCellNoRead; 
+ reg[31:0] tCell1; 
+ reg[31:0] tCell2; 
+ reg[31:0] tNextCell1; 
+ reg[31:0] tNextCell2; 
+ assign cellData1 = tCell1; 
+ assign cellData2 = tCell2; 
+ always @ (clock) 
+ begin 
+  tBusHold = 1; 
+  tBusData = 0; 
+  if(busOE && tBusCSel) 
+  begin 
+  tBusHold = tPixCellIx != busAddr[15:2]; 
+  tBusData = busAddr[2] ? tCell2 : tCell1; 
+  end 
+ end 
+ always @ (posedge clock) 
+ begin 
+  tCell1 <= tNextCell1; 
+  tCell2 <= tNextCell2; 
+  if(tBusCSel && busOE && !busWR) 
+  begin 
+  tPixCellIx <= busAddr[15:2]; 
+  end 
+  else 
+  begin 
+  tPixCellIx <= pixCellIx; 
+  end 
+  if(tBusCSel && busWR && !busOE) 
+  begin 
+  scrCellNoRead <= 1; 
+  if(busAddr[15:8]==255) 
+  begin 
+  scrRegCtrl[busAddr[4:2]] <= busData; 
+  end 
+  else if(busAddr[14]) 
+  begin 
+  if(busAddr[2]) 
+  begin 
+  scrCell2B[busAddr[11:3]] <= busData; 
+  end 
+  else 
+  begin 
+  scrCell2A[busAddr[11:3]] <= busData; 
+  end 
+  end 
+  else 
+  begin 
+  if(busAddr[2]) 
+  begin 
+  scrCell1B[busAddr[13:3]] <= busData; 
+  end 
+  else 
+  begin 
+  scrCell1A[busAddr[13:3]] <= busData; 
+  end 
+  end 
+  end 
+ end 
+ always @ (posedge clock) 
+ begin 
+  if(!busWR) 
+  begin 
+  scrCellNoRead <= 0; 
+  if(tReadAddr[12]) 
+  begin 
+  tNextCell1 <= scrCell2A[tReadAddr[9:1]]; 
+  tNextCell2 <= scrCell2B[tReadAddr[9:1]]; 
+  end 
+  else 
+  begin 
+  tNextCell1 <= scrCell1A[tReadAddr[11:1]]; 
+  tNextCell2 <= scrCell1B[tReadAddr[11:1]]; 
+  end 
+  end 
+ end 
+ endmodule

@@ -1,0 +1,51 @@
+{
+  "additions": 2,
+  "base_commit": "accc359bc60a87e16ebd5ae09d59423124a5edee",
+  "base_ref": "master",
+  "deletions": 1,
+  "head_commit": "da7e83d06e44a8c79017b45445db8655782085cf",
+  "issue_info": {
+    "body": "Synopsys dc_compiler reports:\r\n\r\nCompiling source file ../../ips/cv32e40p/./rtl/cv32e40p_prefetch_buffer.sv\r\nWarning:  ../../ips/cv32e40p/./rtl/cv32e40p_prefetch_buffer.sv:120: the undeclared symbol 'fifo_empty' assumed to have the default net type, which is 'wire'. (VER-936)\r\nWarning:  ../../ips/cv32e40p/./rtl/cv32e40p_prefetch_buffer.sv:140: the undeclared symbol 'fifo_full' assumed to have the default net type, which is 'wire'. (VER-936)\r\nPresto compilation completed successfully.\r\n\r\nI don;t know if this conforms to the style guide,  but explicit type declaration is preferable.",
+    "created_at": "2021-01-20T03:30:42Z",
+    "labels": [
+      "Type:Enhancement",
+      "Status:Resolved",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "title": "Missing type declaration prefetch_buffer.sv",
+    "updated_at": "2024-05-16T16:08:31Z"
+  },
+  "issue_number": 605,
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/605",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 2,
+      "changes": 3,
+      "deletions": 1,
+      "filename": "rtl/cv32e40p_prefetch_buffer.sv",
+      "patch": "@@ -74,6 +74,7 @@ module cv32e40p_prefetch_buffer\n   logic [31:0] fifo_rdata;\n   logic        fifo_push;\n   logic        fifo_pop;\n+  logic        fifo_empty;\n \n   // Transaction response interface (between cv32e40p_obi_interface and cv32e40p_fetch_fifo)\n   logic        resp_valid;\n@@ -137,7 +138,7 @@ module cv32e40p_prefetch_buffer\n       .flush_i           ( fifo_flush           ),\n       .flush_but_first_i ( fifo_flush_but_first ),\n       .testmode_i        ( 1'b0                 ),\n-      .full_o            ( fifo_full            ),\n+      .full_o            (                      ),\n       .empty_o           ( fifo_empty           ),\n       .cnt_o             ( fifo_cnt             ),\n       .data_i            ( resp_rdata           ),"
+    }
+  ],
+  "pr_info": {
+    "body": "I ran the LEC script before submitting this PR\r\n\r\nTo be merged after #633 \r\n\r\nSigned-off-by: Pasquale Davide Schiavone",
+    "created_at": "2021-04-12T15:49:11Z",
+    "merged_at": "2021-04-19T10:28:04Z",
+    "state": "closed",
+    "title": "fix #605",
+    "updated_at": "2021-04-19T10:28:04Z",
+    "user": "davideschiavone"
+  },
+  "pr_number": 634,
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/634",
+  "repository": "openhwgroup/cv32e40p",
+  "source_info": {
+    "line_number": 56,
+    "source_file": "18.txt"
+  },
+  "task_id": "openhwgroup_cv32e40p_634_605",
+  "verilog_files": [
+    "rtl/cv32e40p_prefetch_buffer.sv"
+  ]
+}

@@ -1,0 +1,20 @@
+module Emodule (
+    input [3:0] A,
+    input [3:0] B,
+    input [3:0] S,
+    output [3:0] Bb,
+    output [3:0] E
+);
+    wire [3:0] ABS3;
+    wire [3:0] ABbS2;
+    
+    // Generate Bb (bitwise NOT of B)
+    assign Bb = ~B;
+    
+    // Generate intermediate signals
+    assign ABS3 = A & B & {4{S[3]}};
+    assign ABbS2 = A & Bb & {4{S[2]}};
+    
+    // Generate E as NOR of the two intermediate signals
+    assign E = ~(ABS3 | ABbS2);
+endmodule

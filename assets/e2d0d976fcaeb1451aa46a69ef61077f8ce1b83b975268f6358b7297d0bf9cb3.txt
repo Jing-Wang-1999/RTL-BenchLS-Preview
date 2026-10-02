@@ -1,0 +1,50 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/22232",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/22234",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 22232,
+  "issue_number": 22234,
+  "verilog_files": [
+    "hw/ip/i2c/rtl/i2c_fifos.sv"
+  ],
+  "deletions": 1,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "hw/ip/i2c/rtl/i2c_fifos.sv",
+      "patch": "@@ -62,7 +62,7 @@ import i2c_reg_pkg::AcqFifoDepth;\n );\n \n   // RAM synthesis parameters\n-  localparam int unsigned RamDepth = 472;\n+  localparam int unsigned RamDepth = 464;\n   `ASSERT_INIT(RamDepthSuffices_A, RamDepth >= 3 * FifoDepth + AcqFifoDepth)\n   localparam int unsigned RamAw = prim_util_pkg::vbits(RamDepth);\n   localparam int unsigned RamWidth = 13;",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "[i2c/rtl] Change depth of RAM for FIFOs to 464 entries",
+    "body": "This is needed to match the SRAM macro.  The minimum depth needed by the RTL is 460 entries (which gets checked by assertions).\r\n\r\nThis resolves #22234.\r\n\r\nCC @meisnere @OTshimeon ",
+    "state": "closed",
+    "created_at": "2024-03-25T17:05:17Z",
+    "updated_at": "2024-03-26T11:28:49Z",
+    "merged_at": "2024-03-26T11:28:46Z",
+    "user": "andreaskurth"
+  },
+  "issue_info": {
+    "title": "[i2c] Converge on depth of SRAM for FIFOs",
+    "body": null,
+    "labels": [
+      "Component:RTL",
+      "IP:i2c"
+    ],
+    "state": "closed",
+    "created_at": "2024-03-25T17:42:24Z",
+    "updated_at": "2024-03-26T11:28:47Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 649
+  },
+  "base_commit": "d62dd200daa5ee8d1115af69aa6d02d30c117eea",
+  "head_commit": "6e66eed1647516d0fa3e0f4a3ef847b43776dc80",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_22232_22234",
+  "lec_status": "useful_pass"
+}

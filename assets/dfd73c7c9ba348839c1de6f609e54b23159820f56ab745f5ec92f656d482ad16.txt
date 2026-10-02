@@ -1,0 +1,15 @@
+always @(posedge clk)
+   if(wr_cycle ? wb_ack_o : wb_stb_i)	
+	casex({bus_width, mem_size})		// synopsys full_case parallel_case
+	   {2'h0, 2'h0}:		col_adr <=  {1'h0, wb_addr_i[10:2]};
+	   {2'h0, 2'h1}:	col_adr <=         wb_addr_i[11:2];
+	   {2'h0, 2'h2}:	col_adr <=         wb_addr_i[11:2];
+
+	   {2'h1, 2'h0}:	col_adr <=  {2'h0, wb_addr_i[09:2]};
+	   {2'h1, 2'h1}:	col_adr <=  {1'h0, wb_addr_i[10:2]};
+	   {2'h1, 2'h2}:	col_adr <=  {1'h0, wb_addr_i[10:2]};
+
+	   {2'h2, 2'h0}:	col_adr <=  {2'h0, wb_addr_i[09:2]};
+	   {2'h2, 2'h1}:	col_adr <=  {2'h0, wb_addr_i[09:2]};
+	   {2'h2, 2'h2}:	col_adr <=  {2'h0, wb_addr_i[09:2]};
+	endcase

@@ -1,0 +1,109 @@
+module origen_138040 (
+    input wire clk,
+    input wire rst_n,
+    input wire [7:0] data_in,
+    input wire data_valid,
+    output wire data_ready,
+    output wire [9:0] result,
+    output wire result_valid,
+    input wire result_ready
+);
+
+    wire [15:0] bcd_count;
+    wire [7:0] reg_out;
+    reg [2:0] counter;
+    wire counter_en, counter_reset, reg_reset;
+    wire accumulate, output_result;
+
+    // Counter for tracking input data
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            counter <= 3'b000;
+        else if (counter_reset)
+            counter <= 3'b000;
+        else if (counter_en)
+            counter <= counter + 1;
+    end
+
+    assign counter_en = data_valid & data_ready;
+    assign counter_reset = (counter == 3'b111) & counter_en;
+    assign accumulate = counter_en;
+    assign output_result = counter_reset;
+
+    // 4-digit BCD counter
+    bcd_counter bcd_counter_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .enable(accumulate),
+        .count(bcd_count)
+    );
+
+    // 8-bit register
+    register_8bit reg_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .reset(reg_reset),
+        .d(data_in),
+        .q(reg_out)
+    );
+
+    assign reg_reset = ~rst_n | output_result;
+
+    // Accumulator module
+    accumulator accum_inst (
+        .bcd_count(bcd_count),
+        .reg_data(reg_out),
+        .result(result)
+    );
+
+    // Control logic
+    reg result_valid_reg;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            result_valid_reg <= 1'b0;
+        else if (output_result)
+            result_valid_reg <= 1'b1;
+        else if (result_ready)
+            result_valid_reg <= 1'b0;
+    end
+
+    assign result_valid = result_valid_reg;
+    assign data_ready = ~result_valid_reg;
+
+endmodule
+
+module bcd_counter (
+    input wire clk,
+    input wire rst_n,
+    input wire enable,
+    output reg [15:0] count
+);
+    // BCD counter implementation
+    // ...
+endmodule
+
+module register_8bit (
+    input wire clk,
+    input wire rst_n,
+    input wire reset,
+    input wire [7:0] d,
+    output reg [7:0] q
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            q <= 8'h34;
+        else if (reset)
+            q <= 8'h34;
+        else
+            q <= d;
+    end
+endmodule
+
+module accumulator (
+    input wire [15:0] bcd_count,
+    input wire [7:0] reg_data,
+    output wire [9:0] result
+);
+    // Accumulator implementation
+    // ...
+endmodule

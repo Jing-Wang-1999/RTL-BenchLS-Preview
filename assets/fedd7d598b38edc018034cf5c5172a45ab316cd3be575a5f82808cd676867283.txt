@@ -1,0 +1,53 @@
+**Module Specification: rtlpp_05913**
+
+**Overview**  
+This module is a placeholder or stub for a processor core with instruction and data interfaces, an AXI4-Lite master port for data transactions, and a debug interface. All functional outputs are tied to inactive states, effectively disabling the core’s external activity.
+
+**Clock and Reset**  
+- **Clk**: System clock input.  
+- **Reset**: Active-high reset signal.  
+
+**Interrupt Interface**  
+- **Interrupt**: External interrupt request input.  
+- **Interrupt_Address**: 32-bit vector specifying the interrupt handler address.  
+- **Interrupt_Ack**: 2-bit output acknowledging interrupts; always driven to 0 (no acknowledgment).  
+
+**Instruction Memory Interface**  
+- **Instr_Addr**: 32-bit instruction address output; always 0.  
+- **Instr**: 32-bit instruction input from memory.  
+- **IFetch**: Instruction fetch strobe; always 0 (inactive).  
+- **I_AS**: Instruction address strobe; always 0.  
+- **IReady, IWAIT, ICE, IUE**: Inputs for memory handshake and error conditions; ignored.  
+
+**Data Memory Interface**  
+- **Data_Addr**: 32-bit data address output; always 0.  
+- **Data_Read**: 32-bit data input from memory.  
+- **Data_Write**: 32-bit data output to memory; always 0.  
+- **D_AS**: Data address strobe; always 0.  
+- **Read_Strobe, Write_Strobe**: Data read/write control signals; always 0.  
+- **Byte_Enable**: 4-bit byte-wise write enable; always 0.  
+- **DReady, DWait, DCE, DUE**: Inputs for data memory handshake and errors; ignored.  
+
+**AXI4-Lite Data Port (Master)**  
+All AXI control and data outputs are driven inactive:  
+- Write address channel (**AWADDR**, **AWPROT**, **AWVALID**) set to 0.  
+- Write data channel (**WDATA**, **WSTRB**, **WVALID**) set to 0.  
+- Write response channel (**BREADY**) set to 0.  
+- Read address channel (**ARADDR**, **ARPROT**, **ARVALID**) set to 0.  
+- Read data channel (**RREADY**) set to 0.  
+All AXI input signals (**AWREADY**, **WREADY**, **BRESP**, **BVALID**, **ARREADY**, **RDATA**, **RRESP**, **RVALID**) are ignored.
+
+**Debug Interface (JTAG-like)**  
+- **Dbg_Clk**: Debug clock input.  
+- **Dbg_TDI**: Debug serial data input.  
+- **Dbg_TDO**: Debug serial data output; always 0.  
+- **Dbg_Reg_En**: 8-bit register enable input.  
+- **Dbg_Shift, Dbg_Capture, Dbg_Update**: Debug state control inputs.  
+- **Debug_Rst, Dbg_Disable**: Debug reset and disable inputs.  
+All debug inputs are ignored; no debug functionality is implemented.
+
+**Behavior**  
+The module asserts constant zero values on all outputs, rendering the core inert. No instruction fetches, data accesses, AXI transactions, or interrupt acknowledgments occur. The design may serve as a template, a simulation stub, or a bypass component.
+
+**Allowed Sub-modules**  
+None required; internal logic is minimal and non-functional.

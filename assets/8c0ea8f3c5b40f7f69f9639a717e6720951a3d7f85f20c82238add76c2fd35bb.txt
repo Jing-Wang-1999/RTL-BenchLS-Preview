@@ -1,0 +1,56 @@
+module origen_026272 (
+    input wire btn,
+    input wire end_,
+    output reg running,
+    output reg ended
+);
+
+    // State encoding
+    localparam IDLE = 2'b00;
+    localparam RUNNING = 2'b10;
+    localparam ENDED = 2'b01;
+
+    reg [1:0] state, next_state;
+
+    // State register
+    always @(posedge btn, negedge end_) begin
+        if (!end_)
+            state <= (running) ? ENDED : state;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        next_state = state; // Default: stay in current state
+        case (state)
+            IDLE: next_state = RUNNING;
+            RUNNING: next_state = IDLE;
+            ENDED: next_state = IDLE;
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Output logic
+    always @(*) begin
+        case (state)
+            IDLE: begin
+                running = 1'b0;
+                ended = 1'b0;
+            end
+            RUNNING: begin
+                running = 1'b1;
+                ended = 1'b0;
+            end
+            ENDED: begin
+                running = 1'b0;
+                ended = 1'b1;
+            end
+            default: begin
+                running = 1'b0;
+                ended = 1'b0;
+            end
+        endcase
+    end
+
+endmodule

@@ -1,0 +1,46 @@
+# Hardware Specification: rtlpp_11426
+
+## Overview
+This module implements a finite impulse response (FIR) filter with a 21-tap architecture. It processes signed 8-bit input samples and produces signed 20-bit output results. The design uses a systolic array structure with cascaded multiply-accumulate (MAC) operations.
+
+## Inputs and Outputs
+
+**Inputs:**
+- `clk`: Clock signal for synchronous operation
+- `reset`: Active-low asynchronous reset signal
+- `X`: Signed 8-bit input sample
+
+**Outputs:**
+- `Y`: Signed 20-bit filtered output result
+
+## Functional Description
+
+### Coefficient Generation
+The module generates 21 filter coefficients from the input sample through shift and addition operations. These coefficients are derived from the input value using various bit-shift combinations:
+- Basic shifts of the input (1x, 2x, 4x, 8x, 16x, 32x, 64x, 256x)
+- Combined shifts (3x, 5x, 9x, 17x, 49x, 65x, 192x, 260x)
+- Both positive and negative coefficient values
+
+### Systolic Array Architecture
+The filter employs a 21-stage systolic pipeline where:
+- Each stage contains a MAC (multiply-accumulate) register
+- Each stage adds a coefficient to the accumulated result from the previous stage
+- Data flows through the pipeline in a cascading manner
+- The pipeline depth is 21 clock cycles
+
+### Data Flow
+On each clock cycle:
+1. The newest coefficient enters stage 20 (MAC_20)
+2. Each intermediate stage adds its coefficient to the value from the next stage
+3. The accumulated result propagates from stage 0 to the output
+4. The final output Y is updated with the result from MAC_0
+
+### Reset Behavior
+When reset is asserted (active-low), all MAC registers and the output register are cleared to zero, initializing the filter state.
+
+## Parameters
+- `word_size_in`: Input word width (8 bits)
+- `word_size_out`: Output word width (20 bits)
+
+## Timing
+The filter operates synchronously on clock edges. Output results are available after 21 clock cycles from input application, representing the latency of the systolic pipeline.

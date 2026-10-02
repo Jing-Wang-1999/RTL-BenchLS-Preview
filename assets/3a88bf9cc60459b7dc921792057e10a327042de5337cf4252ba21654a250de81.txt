@@ -1,0 +1,58 @@
+# Implement the VGA/LCD controller project
+Implement the complete required VGA enhanced-controller hierarchy: Wishbone
+register slave and frame-buffer read master, timing and pixel generation,
+color conversion/lookup, line FIFOs, cursor logic, generic RAMs and vga_enh_top.
+Read the original specification. The fixed configuration uses RGB888 parallel
+outputs (no optional DVI or BIST), generic RAMs, ARST_LVL=0 and LINE_FIFO_AWIDTH=7.
+Keep parameterized port declarations; tests instantiate that stated configuration.
+
+The reference uses old Verilog RAM port name `do`; interfaces express it as
+escaped identifier `\do ` for SystemVerilog compatibility. Preserve that name,
+including required escaping, in module declarations and named connections.
+Generic RAM diagnostic print_ram tasks and explicitly marked simulation-only
+regions are removed; #1 assignment annotations are removed. Functional RAM,
+FIFO and controller logic is unchanged by this normalization.
+
+rst_i is active low in this configuration; wb_rst_i is held0. Wishbone clock
+period4.8ns, pixel clock30ns. Slave addresses are byte offsets: CTRL0, STAT4,
+HTIM8, VTIM0xc, HVLEN0x10, VBARA0x14, VBARB0x18; color lookup table occupies
+0x800..0xfff. Slave writes and returned data follow the document's byte ordering.
+Base addresses are word-aligned. Register reads are checked with the documented
+masks; hardware-managed CTRL buffer-switch bits need not echo software writes.
+
+CTRL fields: enable[0], VIE[1], HIE[2], video-switch-interrupt[3],
+color-switch-interrupt[4], video-buffer-switch[5], color-buffer-switch[6],
+burst-length[8:7], color-depth[10:9],
+pseudo-color[11], HSYNC/VSYNC/CSYNC/BLANK polarities[12..15]. HTIM/VTIM pack
+sync-width[31:24], gate-delay[23:16], gate-length[15:0]; HVLEN packs horizontal
+and vertical totals. Follow the original count-minus-one convention. Tests use
+multiple programmed porches/polarities with compact160-by16 active frames and
+actual frame-buffer traffic. Blank is checked at settled pixel half-cycles.
+
+For true-color32-bit pixels use the low24 bits as RGB. RGB565 expands five/six
+bit components with low zero bits, as documented. Packed pixels appear most
+significant first within a32-bit fetched word. Pseudo-color uses programmed CLUT
+entries. Preserve burst and address behavior while the frame-buffer slave delays
+ACK (all four format/burst combinations, distributed delays0..5; not every
+delay crossed with every combination). The pinned master can drop CYC at image completion or video disable
+without an end-of-burst CTI, including partial bursts. The external memory
+accepts that termination; stable controls while stalled are still checked.
+This compatibility case does not claim full Wishbone-B3 conformance.
+A FIFO underrun sets STAT[1] and raises interrupt. No reset/startup memory
+contents may be assumed; the evaluator initializes its external frame buffer.
+
+Private points are independent executions of upstream register, timing, pixel,
+buffer-switch and underrun scoreboards, with a clocked Wishbone sanity checker
+(the legacy event-based checker races delayed snapshots). Every ERROR becomes a
+fatal failure and strict pass termination. The old testbench buffer-switch
+control packing is corrected to bits6/5, matching the pinned register map.
+Public checks compile only. These
+finite configurations do not establish all optional cursor/DVI/BIST behavior.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

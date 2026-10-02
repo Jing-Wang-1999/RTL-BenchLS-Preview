@@ -1,0 +1,26 @@
+The Verilog module describes a Mealy Finite State Machine (FSM) with two states, represented by the registers `PR_STATE_B` and `PR_STATE_C`. The module's primary function is to implement a state transition based on the input signal `X` and produce an output `y`.
+
+1. **Primary Function:** The FSM transitions between states and computes the output `y` based on the current state and input signal `X`.
+
+2. **Control Flow:** The FSM updates states on the rising edge of the clock signal `CLK`. If the reset signal `RST` is asserted, the state registers are reset to zero. Otherwise, the next states are determined by combinational logic:
+   - `Selector1_0_combout` is computed as the logical AND of `PR_STATE_C` and `X`.
+   - `NX_STATE_C_0_combout` is determined by the negation of `Selector1_0_combout` ANDed with `PR_STATE_B`.
+
+3. **Data Processing:**
+   - `PR_STATE_B` is updated to the value of `Selector1_0_combout`.
+   - `PR_STATE_C` transitions to the value computed by `NX_STATE_C_0_combout`.
+   - The output `y` is driven by the combination logic `y_1_combout`, which is the negation of the logical AND of `PR_STATE_C` and `X`.
+
+Essentially, the FSM transitions state based on the combination of its current state and input `X`, while the output `y` is generated from the current state and input. Reset logic ensures that the FSM can return to a known state whenever required.
+
+Module Interface:
+module two_state_mealy_fsm (
+    input wire X,
+    input wire RST,
+    input wire CLK,
+    output reg y
+);
+
+Behavioral Clarifications:
+- The output y is a registered output (output reg), updated in a separate always block on posedge CLK (no reset on y). Thus y is clocked one cycle after the combinational y_1_combout is computed, making this a registered Mealy output.
+- RST is active-high and synchronous to CLK for the state registers only.

@@ -1,0 +1,108 @@
+module origen_064026(
+    input clk_50M,
+    input reset_n,
+    input write,
+    input [7:0] write_control,
+    input [15:0] write_addr,
+    input [7:0] write_value,
+    output reg write_complete,
+    inout i2c_sda,
+    output reg i2c_scl
+);
+
+    reg [31:0] data;
+    reg [5:0] cnt;
+    reg [2:0] i;
+    reg [1:0] ii;
+    reg [4:0] state;
+    reg sda_out;
+
+    assign i2c_sda = sda_out ? 1'bz : 1'b0;
+
+    always @(posedge clk_50M or negedge reset_n) begin
+        if (!reset_n) begin
+            state <= 0;
+            cnt <= 0;
+            i <= 0;
+            ii <= 0;
+            i2c_scl <= 1;
+            sda_out <= 1;
+            write_complete <= 0;
+        end else begin
+            case (state)
+                0: begin // Idle/Initialization
+                    if (write) begin
+                        data <= {write_control, write_addr, write_value};
+                        state <= 1;
+                        cnt <= 0;
+                    end
+                end
+                1: begin // Start Condition
+                    if (cnt == 10) begin
+                        sda_out <= 0;
+                        cnt <= cnt + 1;
+                    end else if (cnt == 20) begin
+                        i2c_scl <= 0;
+                        state <= 2;
+                        cnt <= 0;
+                        i <= 0;
+                        ii <= 0;
+                    end else begin
+                        cnt <= cnt + 1;
+                    end
+                end
+                2: begin // Data Transmission
+                    if (cnt == 10) begin
+                        i2c_scl <= 1;
+                        cnt <= cnt + 1;
+                    end else if (cnt == 20) begin
+                        i2c_scl <= 0;
+                        i <= i + 1;
+                        if (i == 7) begin
+                            state <= 3;
+                            sda_out <= 1;
+                        end
+                        cnt <= 0;
+                    end else if (cnt == 0) begin
+                        sda_out <= data[31-i-ii*8];
+                        cnt <= cnt + 1;
+                    end else begin
+                        cnt <= cnt + 1;
+                    end
+                end
+                3: begin // ACK
+                    if (cnt == 10) begin
+                        i2c_scl <= 1;
+                        cnt <= cnt + 1;
+                    end else if (cnt == 20) begin
+                        i2c_scl <= 0;
+                        ii <= ii + 1;
+                        if (ii == 3) begin
+                            state <= 4;
+                        end else begin
+                            state <= 2;
+                            i <= 0;
+                        end
+                        cnt <= 0;
+                    end else begin
+                        cnt <= cnt + 1;
+                    end
+                end
+                4: begin // Stop Condition
+                    if (cnt == 10) begin
+                        i2c_scl <= 1;
+                        cnt <= cnt + 1;
+                    end else if (cnt == 20) begin
+                        sda_out <= 1;
+                        state <= 0;
+                        write_complete <= 1;
+                        cnt <= 0;
+                    end else begin
+                        cnt <= cnt + 1;
+                    end
+                end
+            endcase
+        end
+    end
+
+endmodule

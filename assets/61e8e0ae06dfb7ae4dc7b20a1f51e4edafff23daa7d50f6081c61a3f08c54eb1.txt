@@ -1,0 +1,93 @@
+{
+  "case_id": "s1derived.0e498950355c2c931244.3c345182700c",
+  "compile_check": {
+    "case_id": "s1derived.0e498950355c2c931244.3c345182700c",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "zet_othop",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0e498950355c2c931244.3c345182700c/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "0e498950355c2c931244f5728614647267b26f0d437e785bfd6ebeb5b8efa72b",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0e498950355c2c931244.3c345182700c",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.0e498950355c2c931244",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "zet_othop"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0e498950355c2c931244.3c345182700c",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All ports, eight mux inputs, flag mutations, upper out selection, and 16-bit wrap arithmetic agree.",
+        "rtl_excerpt": "`assign clcm = y[2] ? ...; assign oflags = word_op ? {out[11:6],out[4],out[2],out[0]} : ...;`",
+        "spec_excerpt": "\u201cclcm selects by {y[2],y[1]} ... oflags=...\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0e498950355c2c931244",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "0eb887bf6bdc9305dbcc5dd7adaa2cb0bb7e78f260f9f96c0d80caf8969ae24f",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0e498950355c2c931244f5728614647267b26f0d437e785bfd6ebeb5b8efa72b",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.0e498950355c2c931244",
+  "primary_review": {
+    "case_id": "s1derived.0e498950355c2c931244.3c345182700c",
+    "checks": {
+      "behavior": "High-level address and flag descriptions agree but are insufficient to determine outputs for each func and y selector.",
+      "boundaries": "Sixteen-bit sums wrap while dcmp/dcmp2 are 20-bit; the original prose does not specify these widths precisely.",
+      "interface": "The listed top inputs and outputs match, and the required zet_mux8_16 helper is included in the RTL.",
+      "rtl_reasonableness": "RTL compiles, has a complete mux selection domain, and contains no unresolved helper.",
+      "sequential_and_reset": "Both modules are purely combinational, with no clock or reset, as implied by the equations."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The specification truncates before stating the observable bit mapping.",
+        "rtl_excerpt": "assign oflags = word_op ? { out[11:6], out[4], out[2], out[0] }",
+        "specification_excerpt": "If word_op is true, specific bits from out are used"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends mid-sentence and never gives the exact func mapping, flag bit transformations, upper out bits, or oflags concatenations.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.0e498950355c2c931244",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.0e498950355c2c931244.3c345182700c.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0e498950355c2c931244f5728614647267b26f0d437e785bfd6ebeb5b8efa72b",
+    "source_group": "S1",
+    "specification_sha256": "3c345182700cac78c3ebbf16d09f96d7f6fa00aca86035cff3f3547d10a133cc",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.0e498950355c2c931244.3c345182700c.md",
+  "qualified_specification_sha256": "0eb887bf6bdc9305dbcc5dd7adaa2cb0bb7e78f260f9f96c0d80caf8969ae24f",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0e498950355c2c931244.3c345182700c/private/golden_design.v",
+  "rtl_sha256": "0e498950355c2c931244f5728614647267b26f0d437e785bfd6ebeb5b8efa72b",
+  "source_corpus": "SEC-Flow-Star-repos-15.zet",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0e498950355c2c931244.3c345182700c/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "3c345182700cac78c3ebbf16d09f96d7f6fa00aca86035cff3f3547d10a133cc",
+  "top_module": "zet_othop"
+}

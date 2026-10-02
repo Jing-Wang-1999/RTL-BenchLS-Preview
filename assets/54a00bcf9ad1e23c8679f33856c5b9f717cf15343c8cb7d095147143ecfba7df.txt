@@ -1,0 +1,51 @@
+module autovcoder_012241 (
+    C,
+    J,
+    K,
+    Q,
+    QN,
+    SN
+);
+
+  output Q, QN;
+  input C, J, K, SN;
+
+`ifdef functional
+  U_FJK_P_SB_NO(
+      buf_Q, J, K, C, SN, 1'b1
+  );
+`else
+  reg notifier;
+  U_FJK_P_SB_NO(
+      buf_Q, J, K, C, SN, notifier
+  );
+`endif
+
+  buf (Q, buf_Q);
+  not (QN, buf_Q);
+
+`ifdef functional
+`else
+  specify
+    (C => Q) = (1, 1);
+    (C => QN) = (1, 1);
+    (SN => Q) = (0, 0);
+    (SN => QN) = (0, 0);
+    $setup(posedge J, posedge C, 0, notifier);
+    $setup(negedge J, posedge C, 0, notifier);
+    $setup(posedge K, posedge C, 0, notifier);
+    $setup(negedge K, posedge C, 0, notifier);
+    $recovery(posedge SN, posedge C, 0, notifier);
+    $hold(posedge C, negedge J, 0, notifier);
+    $hold(posedge C, posedge J, 0, notifier);
+    $hold(posedge C, negedge K, 0, notifier);
+    $hold(posedge C, posedge K, 0, notifier);
+    $hold(posedge C, posedge SN, 0, notifier);
+    $width(posedge C, 1, 0, notifier);
+    $width(negedge C, 1, 0, notifier);
+    $width(negedge SN, 1, 0, notifier);
+  endspecify
+`endif
+
+endmodule
+

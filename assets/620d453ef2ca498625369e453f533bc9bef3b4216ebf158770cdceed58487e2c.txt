@@ -1,0 +1,56 @@
+module origen_031131 #(
+    parameter WIDTH = 8,
+    parameter DEPTH = 4,
+    parameter OFLOW = "REPLACE"
+) (
+    input wire reset,
+    input wire clk,
+    input wire [WIDTH-1:0] wdata,
+    input wire store,
+    input wire read,
+    output reg [WIDTH-1:0] rdata,
+    output wire empty,
+    output wire full,
+    output reg overflow
+);
+
+    localparam NELEM = 2**DEPTH;
+
+    reg [WIDTH-1:0] buffer [0:NELEM-1];
+    reg [DEPTH-1:0] rpos, wpos;
+    wire [DEPTH-1:0] wpos_next;
+    wire dostore;
+
+    assign empty = (rpos == wpos);
+    assign full = (wpos_next == rpos);
+    assign wpos_next = wpos + 1'b1;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            rpos <= {DEPTH{1'b0}};
+            wpos <= {DEPTH{1'b0}};
+            overflow <= 1'b0;
+        end else begin
+            if (read && !empty) begin
+                rdata <= buffer[rpos];
+                rpos <= rpos + 1'b1;
+            end
+            if (dostore) begin
+                buffer[wpos] <= wdata;
+                wpos <= wpos_next;
+            end
+            overflow <= (store && full);
+        end
+    end
+
+    generate
+        if (OFLOW == "REPLACE") begin : gen_replace
+            assign dostore = store;
+        end else if (OFLOW == "IGNORE") begin : gen_ignore
+            assign dostore = store && !full;
+        end else begin : gen_error
+            OFLOW_value_not_valid error_here();
+        end
+    endgenerate
+
+endmodule

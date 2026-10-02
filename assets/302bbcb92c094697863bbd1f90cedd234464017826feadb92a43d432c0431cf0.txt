@@ -1,0 +1,105 @@
+module origen_107657(
+    input [1:0] sel,
+    input [3:0] in,
+    output reg out
+);
+    always @(*) begin
+        case(sel)
+            2'b00: out = in[0];
+            2'b01: out = in[1];
+            2'b10: out = in[2];
+            2'b11: out = in[3];
+        endcase
+    end
+endmodule
+
+module arith_add(
+    input [31:0] a, b,
+    input sel,
+    output [31:0] out,
+    output Z, V, N
+);
+    wire [31:0] b_xor = b ^ {32{sel}};
+    wire [32:0] sum = a + b_xor + sel;
+    
+    assign out = sum[31:0];
+    assign Z = (out == 32'b0);
+    assign V = (a[31] ^ b_xor[31] ^ sum[31] ^ sum[32]);
+    assign N = out[31];
+endmodule
+
+module cmp(
+    input [31:0] a, b,
+    input [1:0] sel,
+    output reg out
+);
+    wire [31:0] diff;
+    wire Z, V, N;
+    
+    arith_add adder(.a(a), .b(b), .sel(1'b1), .out(diff), .Z(Z), .V(V), .N(N));
+    
+    always @(*) begin
+        case(sel)
+            2'b00: out = Z;          // Equal
+            2'b01: out = N ^ V;      // Less than
+            2'b10: out = (N ^ V) | Z; // Less than or equal
+            default: out = 1'b0;
+        endcase
+    end
+endmodule
+
+module bitwise_bool(
+    input [31:0] a, b,
+    input [1:0] sel,
+    output [31:0] out
+);
+    genvar i;
+    generate
+        for(i = 0; i < 32; i = i + 1) begin : bool_ops
+            mux4_1 mux(
+                .sel(sel),
+                .in({a[i] ^ b[i], a[i] | b[i], a[i] & b[i], a[i] & ~b[i]}),
+                .out(out[i])
+            );
+        end
+    endgenerate
+endmodule
+
+module shift(
+    input [31:0] a,
+    input [4:0] shamt,
+    input [1:0] sel,
+    output reg [31:0] out
+);
+    always @(*) begin
+        case(sel)
+            2'b00: out = a << shamt;                     // Logical left shift
+            2'b01: out = a >> shamt;                     // Logical right shift
+            2'b10: out = $signed(a) >>> shamt;           // Arithmetic right shift
+            default: out = a;
+        endcase
+    end
+endmodule
+
+module ALU(
+    input [31:0] a, b,
+    input [5:0] fn,
+    output reg [31:0] out
+);
+    wire [31:0] arith_out, bool_out, shift_out;
+    wire cmp_out;
+    
+    arith_add arith(.a(a), .b(b), .sel(fn[0]), .out(arith_out));
+    cmp compare(.a(a), .b(b), .sel(fn[1:0]), .out(cmp_out));
+    bitwise_bool bool(.a(a), .b(b), .sel(fn[1:0]), .out(bool_out));
+    shift shifter(.a(a), .shamt(b[4:0]), .sel(fn[1:0]), .out(shift_out));
+    
+    always @(*) begin
+        case(fn[5:4])
+            2'b00: out = {31'b0, cmp_out};
+            2'b01: out = arith_out;
+            2'b10: out = bool_out;
+            2'b11: out = shift_out;
+        endcase
+    end
+endmodule

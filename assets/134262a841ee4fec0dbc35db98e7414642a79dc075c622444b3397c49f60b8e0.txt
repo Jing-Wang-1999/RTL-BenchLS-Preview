@@ -1,0 +1,660 @@
+// Required path: rtl/core/sdrc_bank_ctl.v
+module sdrc_bank_ctl (clk,
+		     reset_n,
+		     a2b_req_depth,  
+
+		     
+		     r2b_req,	   
+		     r2b_req_id,   
+		     r2b_start,	   
+		     r2b_last,	   
+		     r2b_wrap,
+		     r2b_ba,	   
+		     r2b_raddr,	   
+		     r2b_caddr,	   
+		     r2b_len,	   
+		     r2b_write,	   
+		     b2r_arb_ok,   
+		     b2r_ack,
+
+		     
+		     b2x_idle,	   
+		     b2x_req,	   
+		     b2x_start,	   
+		     b2x_last,	   
+		     b2x_wrap,
+		     b2x_id,	   
+		     b2x_ba,	   
+		     b2x_addr,	   
+		     b2x_len,	   
+		     b2x_cmd,	   
+		     x2b_ack,	   
+		     
+		     
+		     b2x_tras_ok,  
+		     x2b_refresh,  
+		     x2b_pre_ok,   
+		     x2b_act_ok,   
+		     x2b_rdok,	   
+		     x2b_wrok,	   
+
+		     
+		     xfr_bank_sel,
+                     sdr_req_norm_dma_last,
+
+		     
+		     tras_delay,   
+		     trp_delay,	   
+		     trcd_delay);
+parameter  SDR_DW   = 16;
+parameter  SDR_BW   = 2;
+input                        clk, reset_n;
+input [1:0] 			a2b_req_depth;
+input 			r2b_req, r2b_start, r2b_last,
+				r2b_write, r2b_wrap;
+input [4-1:0] 	r2b_req_id;
+input [1:0] 			r2b_ba;
+input [12:0] 		r2b_raddr;
+input [12:0] 		r2b_caddr;
+input [(1'b0 == 1'b0) ? 6 : 12-1:0] 	        r2b_len;
+output 			b2r_arb_ok, b2r_ack;
+input                        sdr_req_norm_dma_last;
+output 			b2x_idle, b2x_req, b2x_start, b2x_last,
+				b2x_tras_ok, b2x_wrap;
+output [4-1:0] 	b2x_id;
+output [1:0] 		b2x_ba;
+output [12:0] 		b2x_addr;
+output [(1'b0 == 1'b0) ? 6 : 12-1:0] 	b2x_len;
+output [1:0] 		b2x_cmd;
+input 			x2b_ack;
+input [3:0] 			x2b_pre_ok;
+input 			x2b_refresh, x2b_act_ok, x2b_rdok,
+				x2b_wrok;
+input [3:0] 			tras_delay, trp_delay, trcd_delay;
+input [1:0] xfr_bank_sel;
+endmodule
+
+// Required path: rtl/core/sdrc_bank_fsm.v
+module sdrc_bank_fsm (clk,
+		     reset_n,
+
+		     
+		     r2b_req,	   
+		     r2b_req_id,   
+		     r2b_start,	   
+		     r2b_last,	   
+		     r2b_wrap,
+		     r2b_raddr,	   
+		     r2b_caddr,	   
+		     r2b_len,	   
+		     r2b_write,	   
+		     b2r_ack,
+                     sdr_dma_last,
+
+		     
+		     b2x_req,	   
+		     b2x_start,	   
+		     b2x_last,	   
+		     b2x_wrap,
+		     b2x_id,	   
+		     b2x_addr,	   
+		     b2x_len,	   
+		     b2x_cmd,	   
+		     x2b_ack,	   
+		     
+		     
+		     tras_ok,      
+		     xfr_ok,
+		     x2b_refresh,  
+		     x2b_pre_ok,   
+		     x2b_act_ok,   
+		     x2b_rdok,	   
+		     x2b_wrok,	   
+
+		     
+		     bank_row,
+
+		     
+		     tras_delay,   
+		     trp_delay,	   
+		     trcd_delay);
+parameter  SDR_DW   = 16;
+parameter  SDR_BW   = 2;
+input                        clk, reset_n;
+input 			r2b_req, r2b_start, r2b_last,
+				r2b_write, r2b_wrap;
+input [4-1:0] 	r2b_req_id;
+input [12:0] 		r2b_raddr;
+input [12:0] 		r2b_caddr;
+input [(1'b0 == 1'b0) ? 6 : 12-1:0] 	r2b_len;
+output 			b2r_ack;
+input                        sdr_dma_last;
+output 			b2x_req, b2x_start, b2x_last,
+				tras_ok, b2x_wrap;
+output [4-1:0] 	b2x_id;
+output [12:0] 		b2x_addr;
+output [(1'b0 == 1'b0) ? 6 : 12-1:0] 	b2x_len;
+output [1:0] 		b2x_cmd;
+input 			x2b_ack;
+input 			x2b_refresh, x2b_act_ok, x2b_rdok,
+				x2b_wrok, x2b_pre_ok, xfr_ok;
+input [3:0] 			tras_delay, trp_delay, trcd_delay;
+output [12:0] 			bank_row;
+endmodule
+
+// Required path: rtl/core/sdrc_bs_convert.v
+module sdrc_bs_convert (
+                    clk                 ,
+                    reset_n             ,
+                    sdr_width           ,
+
+        
+                    x2a_rdstart         ,
+                    x2a_wrstart         ,
+                    x2a_rdlast          ,
+                    x2a_wrlast          ,
+                    x2a_rddt            ,
+                    x2a_rdok            ,
+                    a2x_wrdt            ,
+                    a2x_wren_n          ,
+                    x2a_wrnext          ,
+
+   
+                    app_wr_data         ,
+                    app_wr_en_n         ,
+                    app_wr_next         ,
+                    app_last_wr         ,
+                    app_rd_data         ,
+                    app_rd_valid        ,
+		    app_last_rd
+		);
+parameter  APP_AW   = 30;
+parameter  APP_DW   = 32;
+parameter  APP_BW   = 4;
+parameter  SDR_DW   = 16;
+parameter  SDR_BW   = 2;
+input                    clk              ;
+input                    reset_n          ;
+input [1:0]              sdr_width        ;
+input                    x2a_rdstart      ;
+input                    x2a_rdlast       ;
+input [SDR_DW-1:0]       x2a_rddt         ;
+input                    x2a_rdok         ;
+input                    x2a_wrstart      ;
+input                    x2a_wrlast       ;
+input                    x2a_wrnext       ;
+output [SDR_DW-1:0]      a2x_wrdt         ;
+output [SDR_BW-1:0]      a2x_wren_n       ;
+input  [APP_DW-1:0]      app_wr_data      ;
+input  [APP_BW-1:0]      app_wr_en_n      ;
+output                   app_wr_next      ;
+output                   app_last_wr      ;
+output [APP_DW-1:0]      app_rd_data      ;
+output                   app_rd_valid     ;
+output                   app_last_rd      ;
+endmodule
+
+// Required path: rtl/core/sdrc_core.v
+module sdrc_core 
+           (
+		clk,
+                pad_clk,
+		reset_n,
+                sdr_width,
+		cfg_colbits,
+
+		
+		app_req,	        
+		app_req_addr,	        
+		app_req_len,	        
+		app_req_wrap,	        
+		app_req_wr_n,	        
+		app_req_ack,	        
+		cfg_req_depth,	        
+		
+		app_wr_data,
+                app_wr_en_n,
+		app_last_wr,
+
+		app_rd_data,
+		app_rd_valid,
+		app_last_rd,
+		app_wr_next_req,
+		sdr_init_done,
+		app_req_dma_last,
+
+		
+		sdr_cs_n,
+		sdr_cke,
+		sdr_ras_n,
+		sdr_cas_n,
+		sdr_we_n,
+		sdr_dqm,
+		sdr_ba,
+		sdr_addr, 
+		pad_sdr_din,
+		sdr_dout,
+		sdr_den_n,
+
+		
+		cfg_sdr_en,
+		cfg_sdr_mode_reg,
+		cfg_sdr_tras_d,
+		cfg_sdr_trp_d,
+		cfg_sdr_trcd_d,
+		cfg_sdr_cas,
+		cfg_sdr_trcar_d,
+		cfg_sdr_twr_d,
+		cfg_sdr_rfsh,
+		cfg_sdr_rfmax);
+parameter  APP_AW   = 26;
+parameter  APP_DW   = 32;
+parameter  APP_BW   = 4;
+parameter  APP_RW   = 9;
+parameter  SDR_DW   = 16;
+parameter  SDR_BW   = 2;
+input                   clk                 ;
+input                   pad_clk             ;
+input                   reset_n             ;
+input [1:0]             sdr_width           ;
+input [1:0]             cfg_colbits         ;
+input 			app_req             ;
+input [APP_AW-1:0] 	app_req_addr        ;
+input 			app_req_wr_n        ;
+input                   app_req_wrap        ;
+output                  app_req_ack         ;
+input [APP_DW-1:0] 	app_wr_data         ;
+output 		        app_wr_next_req     ;
+input [APP_BW-1:0] 	app_wr_en_n         ;
+output                  app_last_wr         ;
+output [APP_DW-1:0] 	app_rd_data         ;
+output                  app_rd_valid        ;
+output                  app_last_rd         ;
+output                  sdr_cke             ;
+output 			sdr_cs_n            ;
+output                  sdr_ras_n           ;
+output                  sdr_cas_n           ;
+output			sdr_we_n            ;
+output [SDR_BW-1:0] 	sdr_dqm             ;
+output [1:0] 		sdr_ba              ;
+output [12:0] 		sdr_addr            ;
+input [SDR_DW-1:0] 	pad_sdr_din         ;
+output [SDR_DW-1:0] 	sdr_dout            ;
+output [SDR_BW-1:0] 	sdr_den_n           ;
+output                  sdr_init_done       ;
+input [3:0] 		cfg_sdr_tras_d      ;
+input [3:0]             cfg_sdr_trp_d       ;
+input [3:0]             cfg_sdr_trcd_d      ;
+input 			cfg_sdr_en          ;
+input [1:0] 		cfg_req_depth       ;
+input [APP_RW-1:0]	app_req_len         ;
+input [12:0] 		cfg_sdr_mode_reg    ;
+input [2:0] 		cfg_sdr_cas         ;
+input [3:0] 		cfg_sdr_trcar_d     ;
+input [3:0]             cfg_sdr_twr_d       ;
+input [12-1 : 0] cfg_sdr_rfsh;
+input [3 -1 : 0] cfg_sdr_rfmax;
+input                   app_req_dma_last;
+endmodule
+
+// Required path: rtl/core/sdrc_req_gen.v
+module sdrc_req_gen (clk,
+		    reset_n,
+		    cfg_colbits,
+		    sdr_width,
+
+		    
+		    req,	        
+		    req_id,	        
+		    req_addr,	        
+		    req_len,	        
+		    req_wrap,	        
+		    req_wr_n,	        
+		    req_ack,	        
+		    
+		    
+		    r2x_idle,
+
+		    
+		    r2b_req,	        
+		    r2b_req_id,	        
+		    r2b_start,	        
+		    r2b_last,	        
+		    r2b_wrap,	        
+		    r2b_ba,	        
+		    r2b_raddr,	        
+		    r2b_caddr,	        
+		    r2b_len,	        
+		    r2b_write,	        
+		    b2r_ack,
+		    b2r_arb_ok
+		    );
+parameter  APP_AW   = 26;
+parameter  APP_DW   = 32;
+parameter  APP_BW   = 4;
+parameter  APP_RW   = 9;
+parameter  SDR_DW   = 16;
+parameter  SDR_BW   = 2;
+input                   clk           ;
+input                   reset_n       ;
+input [1:0]             cfg_colbits   ;
+input 			req           ;
+input [4-1:0] req_id      ;
+input [APP_AW-1:0] 	req_addr      ;
+input [APP_RW-1:0] 	req_len       ;
+input 			req_wr_n      ;
+input                   req_wrap      ;
+output 			req_ack       ;
+output 			r2x_idle      ;
+output                  r2b_req       ;
+output                  r2b_start     ;
+output                  r2b_last      ;
+output                  r2b_write     ;
+output                  r2b_wrap      ;
+output [4-1:0] 	r2b_req_id;
+output [1:0] 		r2b_ba        ;
+output [12:0] 		r2b_raddr     ;
+output [12:0] 		r2b_caddr     ;
+output [(1'b0 == 1'b0) ? 6 : 12-1:0] 	r2b_len       ;
+input 			b2r_ack       ;
+input                   b2r_arb_ok    ;
+input [1:0] 	        sdr_width;
+endmodule
+
+// Required path: rtl/core/sdrc_xfr_ctl.v
+module sdrc_xfr_ctl (clk,
+		    reset_n,
+		    
+		    
+		    r2x_idle,	   
+		    b2x_idle,      
+		    b2x_req,	   
+		    b2x_start,	   
+		    b2x_last,	   
+		    b2x_id,	   
+		    b2x_ba,	   
+		    b2x_addr,	   
+		    b2x_len,	   
+		    b2x_cmd,	   
+		    b2x_wrap,	   
+		    x2b_ack,	   
+		     
+		    
+		    b2x_tras_ok,   
+		    x2b_refresh,   
+		    x2b_pre_ok,	   
+		    x2b_act_ok,	   
+		    x2b_rdok,	   
+		    x2b_wrok,	   
+		    
+		    
+		    sdr_cs_n,
+		    sdr_cke,
+		    sdr_ras_n,
+		    sdr_cas_n,
+		    sdr_we_n,
+		    sdr_dqm,
+		    sdr_ba,
+		    sdr_addr, 
+		    sdr_din,
+		    sdr_dout,
+		    sdr_den_n,
+		    
+		    
+		    x2a_rdstart,
+		    x2a_wrstart,
+		    x2a_rdlast,
+		    x2a_wrlast,
+		    x2a_id,
+		    a2x_wrdt,
+		    a2x_wren_n,
+		    x2a_wrnext,
+		    x2a_rddt,
+		    x2a_rdok,
+		    sdr_init_done,
+		    
+		    
+		    sdram_enable,
+		    sdram_mode_reg,
+		    
+		    
+		    xfr_bank_sel,
+
+		    
+		    cas_latency,
+		    trp_delay,	   
+		    trcar_delay,   
+		    twr_delay,	   
+		    rfsh_time,	   
+		    rfsh_rmax);
+parameter  SDR_DW   = 16;
+parameter  SDR_BW   = 2;
+input            clk, reset_n;
+input 			b2x_req, b2x_start, b2x_last, b2x_tras_ok,
+				b2x_wrap, r2x_idle, b2x_idle;
+input [4-1:0] 	b2x_id;
+input [1:0] 			b2x_ba;
+input [12:0] 		b2x_addr;
+input [(1'b0 == 1'b0) ? 6 : 12-1:0] 	b2x_len;
+input [1:0] 			b2x_cmd;
+output 			x2b_ack;
+output [3:0] 		x2b_pre_ok;
+output 			x2b_refresh, x2b_act_ok, x2b_rdok,
+				x2b_wrok;
+output 			x2a_rdstart, x2a_wrstart, x2a_rdlast, x2a_wrlast;
+output [4-1:0] 	x2a_id;
+input [SDR_DW-1:0] 	a2x_wrdt;
+input [SDR_BW-1:0] 	a2x_wren_n;
+output [SDR_DW-1:0] 	x2a_rddt;
+output 			x2a_wrnext, x2a_rdok, sdr_init_done;
+output 			sdr_cs_n, sdr_cke, sdr_ras_n, sdr_cas_n,
+				sdr_we_n;
+output [SDR_BW-1:0] 	sdr_dqm;
+output [1:0] 		sdr_ba;
+output [12:0] 		sdr_addr;
+input [SDR_DW-1:0] 	sdr_din;
+output [SDR_DW-1:0] 	sdr_dout;
+output [SDR_BW-1:0] 	sdr_den_n;
+output [1:0]			xfr_bank_sel;
+input 			sdram_enable;
+input [12:0] 		sdram_mode_reg;
+input [2:0] 			cas_latency;
+input [3:0] 			trp_delay, trcar_delay, twr_delay;
+input [12-1 : 0] rfsh_time;
+input [3-1:0] rfsh_rmax;
+endmodule
+
+// Required path: rtl/lib/async_fifo.v
+module async_fifo (wr_clk,
+                   wr_reset_n,
+                   wr_en,
+                   wr_data,
+                   full,                 
+                   afull,                 
+                   rd_clk,
+                   rd_reset_n,
+                   rd_en,
+                   empty,                
+                   aempty,                
+                   rd_data);
+parameter W = 4'd8;
+parameter DP = 3'd4;
+parameter WR_FAST = 1'b1;
+parameter RD_FAST = 1'b1;
+parameter FULL_DP = DP;
+parameter EMPTY_DP = 1'b0;
+parameter AW = (DP == 2)   ? 1 : 
+		  (DP == 4)   ? 2 :
+                  (DP == 8)   ? 3 :
+                  (DP == 16)  ? 4 :
+                  (DP == 32)  ? 5 :
+                  (DP == 64)  ? 6 :
+                  (DP == 128) ? 7 :
+                  (DP == 256) ? 8 : 0;
+output [W-1 : 0]  rd_data;
+input [W-1 : 0]   wr_data;
+input             wr_clk, wr_reset_n, wr_en, rd_clk, rd_reset_n,
+                     rd_en;
+output            full, empty;
+output            afull, aempty;
+endmodule
+
+// Required path: rtl/top/sdrc_top.v
+module sdrc_top 
+           (
+                    cfg_sdr_width       ,
+                    cfg_colbits         ,
+                    
+                
+                    wb_rst_i            ,
+                    wb_clk_i            ,
+                    
+                    wb_stb_i            ,
+                    wb_ack_o            ,
+                    wb_addr_i           ,
+                    wb_we_i             ,
+                    wb_dat_i            ,
+                    wb_sel_i            ,
+                    wb_dat_o            ,
+                    wb_cyc_i            ,
+                    wb_cti_i            , 
+
+		
+		
+                    sdram_clk           ,
+                    sdram_resetn        ,
+                    sdr_cs_n            ,
+                    sdr_cke             ,
+                    sdr_ras_n           ,
+                    sdr_cas_n           ,
+                    sdr_we_n            ,
+                    sdr_dqm             ,
+                    sdr_ba              ,
+                    sdr_addr            , 
+                    sdr_dq              ,
+                    
+		
+                    sdr_init_done       ,
+                    cfg_req_depth       ,	        
+                    cfg_sdr_en          ,
+                    cfg_sdr_mode_reg    ,
+                    cfg_sdr_tras_d      ,
+                    cfg_sdr_trp_d       ,
+                    cfg_sdr_trcd_d      ,
+                    cfg_sdr_cas         ,
+                    cfg_sdr_trcar_d     ,
+                    cfg_sdr_twr_d       ,
+                    cfg_sdr_rfsh        ,
+	            cfg_sdr_rfmax
+	    );
+parameter      APP_AW   = 26;
+parameter      APP_DW   = 32;
+parameter      APP_BW   = 4;
+parameter      APP_RW   = 9;
+parameter      SDR_DW   = 16;
+parameter      SDR_BW   = 2;
+parameter      dw       = 32;
+parameter      tw       = 8;
+parameter      bl       = 9;
+input                   sdram_clk          ;
+input                   sdram_resetn       ;
+input [1:0]             cfg_sdr_width      ;
+input [1:0]             cfg_colbits        ;
+input                   wb_rst_i           ;
+input                   wb_clk_i           ;
+input                   wb_stb_i           ;
+output                  wb_ack_o           ;
+input [APP_AW-1:0]            wb_addr_i          ;
+input                   wb_we_i            ;
+input [dw-1:0]          wb_dat_i           ;
+input [dw/8-1:0]        wb_sel_i           ;
+output [dw-1:0]         wb_dat_o           ;
+input                   wb_cyc_i           ;
+input  [2:0]            wb_cti_i           ;
+output                  sdr_cke             ;
+output 			sdr_cs_n            ;
+output                  sdr_ras_n           ;
+output                  sdr_cas_n           ;
+output			sdr_we_n            ;
+output [SDR_BW-1:0] 	sdr_dqm             ;
+output [1:0] 		sdr_ba              ;
+output [12:0] 		sdr_addr            ;
+inout [SDR_DW-1:0] 	sdr_dq              ;
+output                  sdr_init_done       ;
+input [3:0] 		cfg_sdr_tras_d      ;
+input [3:0]             cfg_sdr_trp_d       ;
+input [3:0]             cfg_sdr_trcd_d      ;
+input 			cfg_sdr_en          ;
+input [1:0] 		cfg_req_depth       ;
+input [12:0] 		cfg_sdr_mode_reg    ;
+input [2:0] 		cfg_sdr_cas         ;
+input [3:0] 		cfg_sdr_trcar_d     ;
+input [3:0]             cfg_sdr_twr_d       ;
+input [12-1 : 0] cfg_sdr_rfsh;
+input [3 -1 : 0] cfg_sdr_rfmax;
+endmodule
+
+// Required path: rtl/wb2sdrc/wb2sdrc.v
+module wb2sdrc (
+      
+                    wb_rst_i            ,
+                    wb_clk_i            ,
+
+                    wb_stb_i            ,
+                    wb_ack_o            ,
+                    wb_addr_i           ,
+                    wb_we_i             ,
+                    wb_dat_i            ,
+                    wb_sel_i            ,
+                    wb_dat_o            ,
+                    wb_cyc_i            ,
+                    wb_cti_i            , 
+
+
+      
+                    sdram_clk           ,
+                    sdram_resetn        ,
+                    sdr_req             ,
+                    sdr_req_addr        ,
+                    sdr_req_len         ,
+                    sdr_req_wr_n        ,
+                    sdr_req_ack         ,
+                    sdr_busy_n          ,
+                    sdr_wr_en_n         ,
+                    sdr_wr_next         ,
+                    sdr_rd_valid        ,
+                    sdr_last_rd         ,
+                    sdr_wr_data         ,
+                    sdr_rd_data        
+
+      );
+parameter      dw              = 32;
+parameter      tw              = 8;
+parameter      bl              = 9;
+parameter      APP_AW          = 26;
+input                   wb_rst_i           ;
+input                   wb_clk_i           ;
+input                   wb_stb_i           ;
+output                  wb_ack_o           ;
+input [APP_AW-1:0]      wb_addr_i          ;
+input                   wb_we_i            ;
+input [dw-1:0]          wb_dat_i           ;
+input [dw/8-1:0]        wb_sel_i           ;
+output [dw-1:0]         wb_dat_o           ;
+input                   wb_cyc_i           ;
+input  [2:0]            wb_cti_i           ;
+input                   sdram_clk          ;
+input                   sdram_resetn       ;
+output                  sdr_req            ;
+output [APP_AW-1:0]           sdr_req_addr       ;
+output [bl-1:0]         sdr_req_len        ;
+output                  sdr_req_wr_n       ;
+input                   sdr_req_ack        ;
+input                   sdr_busy_n         ;
+output [dw/8-1:0]       sdr_wr_en_n        ;
+input                   sdr_wr_next        ;
+input                   sdr_rd_valid       ;
+input                   sdr_last_rd        ;
+output [dw-1:0]         sdr_wr_data        ;
+input  [dw-1:0]         sdr_rd_data        ;
+endmodule

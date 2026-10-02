@@ -1,0 +1,47 @@
+always @(posedge CLK or posedge RST) begin
+		if(RST) begin
+			send_read_flag <= 0;
+			send_read_data_buf <= 0;
+			send_status <= STATUS_IDLE;
+			send_bit <= 0;
+			send_parity <= 0;
+			tosend <= 0;
+			Tx <= 1;
+		end else begin
+			send_read_flag <= 0;
+			
+			if(counter == 0) begin
+				case(send_status)
+				STATUS_IDLE:begin
+					if(!send_empty) begin
+						send_read_data_buf <= send_read_data;
+						send_read_flag <= 1;
+						Tx <= 0;
+						send_status <= STATUS_DATA;
+						send_bit <= 0;
+						send_parity <= 0;
+					end
+				end
+				
+				STATUS_DATA:begin
+					Tx <= send_read_data_buf[send_bit];
+					send_parity <= send_parity ^ send_read_data_buf[send_bit];
+					send_bit <= send_bit + 1;
+					if(send_bit == 7)
+						send_status <= STATUS_VALID;
+				end
+				
+				STATUS_VALID:begin
+					Tx <= send_parity;
+					send_status <= STATUS_END;
+				end
+				
+				STATUS_END:begin
+					Tx <= 1;
+					send_status <= STATUS_IDLE;
+					tosend = 0;
+				end
+				endcase
+			end
+		end
+	end

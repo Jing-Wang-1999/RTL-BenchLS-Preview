@@ -1,0 +1,128 @@
+module origen_147727 #(
+    parameter n = 8,
+    parameter algorithm = 2'b00
+)(
+    input [n-1:0] a,
+    input [n-1:0] b,
+    input [1:0] mode,
+    output reg [2*n-1:0] result,
+    output reg overflow
+);
+
+    reg signed [n-1:0] a_signed, b_signed;
+    wire [2*n-1:0] booth_result, wallace_result, array_result, pipelined_result;
+    wire booth_overflow, wallace_overflow, array_overflow, pipelined_overflow;
+
+    always @(*) begin
+        case (mode)
+            2'b00: begin // Unsigned multiplication
+                a_signed = a;
+                b_signed = b;
+            end
+            2'b01: begin // Signed multiplication
+                a_signed = $signed(a);
+                b_signed = $signed(b);
+            end
+            2'b10: begin // Unsigned * Signed multiplication
+                a_signed = a;
+                b_signed = $signed(b);
+            end
+            default: begin
+                a_signed = 'bx;
+                b_signed = 'bx;
+            end
+        endcase
+
+        case (algorithm)
+            2'b00: begin // Booth algorithm
+                result = booth_result;
+                overflow = booth_overflow;
+            end
+            2'b01: begin // Wallace algorithm
+                result = wallace_result;
+                overflow = wallace_overflow;
+            end
+            2'b10: begin // Array multiplier
+                result = array_result;
+                overflow = array_overflow;
+            end
+            2'b11: begin // Pipelined multiplier
+                result = pipelined_result;
+                overflow = pipelined_overflow;
+            end
+        endcase
+    end
+
+    booth_multiplier #(n) booth_mult (
+        .a(a_signed),
+        .b(b_signed),
+        .result(booth_result),
+        .overflow(booth_overflow)
+    );
+
+    wallace_multiplier #(n) wallace_mult (
+        .a(a_signed),
+        .b(b_signed),
+        .result(wallace_result),
+        .overflow(wallace_overflow)
+    );
+
+    array_multiplier #(n) array_mult (
+        .a(a_signed),
+        .b(b_signed),
+        .result(array_result),
+        .overflow(array_overflow)
+    );
+
+    pipelined_multiplier #(n) pipelined_mult (
+        .a(a_signed),
+        .b(b_signed),
+        .result(pipelined_result),
+        .overflow(pipelined_overflow)
+    );
+
+endmodule
+
+// Booth Multiplier
+module booth_multiplier #(parameter n = 8)(
+    input signed [n-1:0] a,
+    input signed [n-1:0] b,
+    output reg [2*n-1:0] result,
+    output reg overflow
+);
+    // Booth algorithm implementation
+    // ...
+endmodule
+
+// Wallace Multiplier
+module wallace_multiplier #(parameter n = 8)(
+    input signed [n-1:0] a,
+    input signed [n-1:0] b,
+    output reg [2*n-1:0] result,
+    output reg overflow
+);
+    // Wallace tree implementation
+    // ...
+endmodule
+
+// Array Multiplier
+module array_multiplier #(parameter n = 8)(
+    input signed [n-1:0] a,
+    input signed [n-1:0] b,
+    output reg [2*n-1:0] result,
+    output reg overflow
+);
+    // Array multiplier implementation
+    // ...
+endmodule
+
+// Pipelined Multiplier
+module pipelined_multiplier #(parameter n = 8)(
+    input signed [n-1:0] a,
+    input signed [n-1:0] b,
+    output reg [2*n-1:0] result,
+    output reg overflow
+);
+    // Pipelined multiplier implementation
+    // ...
+endmodule

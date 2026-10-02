@@ -1,0 +1,49 @@
+module autovcoder_005293 (
+    a,
+    b,
+    cin,
+    sel,
+    cout,
+    ov,
+    s
+);
+  input [3:0] a, b;
+  input cin, sel;
+  output cout, ov;
+  output [3:0] s;
+
+  wire c1, c2, c3;
+
+  fa1 sa1 (
+      a[0],
+      b[0] ^ sel,
+      cin,
+      c1,
+      s[0]
+  );
+  fa1 sa2 (
+      a[1],
+      b[1] ^ sel,
+      c1,
+      c2,
+      s[1]
+  );
+  fa1 sa3 (
+      a[2],
+      b[2] ^ sel,
+      c2,
+      c3,
+      s[2]
+  );
+  fa1 sa4 (
+      a[3],
+      b[3] ^ sel,
+      c3,
+      cout,
+      s[3]
+  );
+
+  xor ov2 (ov, cout, c3);
+
+endmodule
+

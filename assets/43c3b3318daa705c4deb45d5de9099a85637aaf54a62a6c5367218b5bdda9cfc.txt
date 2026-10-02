@@ -1,0 +1,5 @@
+# autovcoder_021611 configurable left shifter
+
+Parameters are width_a=4, signd_a=1, width_s=2, and width_z=8. Ports are unsigned bit-vector input a[width_a-1:0], unsigned shift amount s[width_s-1:0], and output z[width_z-1:0]. Use positive widths. This is combinational logic without clock, reset or state.
+
+When signd_a is nonzero, let the extension bit be the most significant bit of a; otherwise let it be zero. Form a working bit-vector of length max(width_a+1,width_z) by copying a into its least-significant width_a bits and filling every remaining high bit with the extension bit. Shift that entire working bit-vector left by the unsigned amount s, filling vacated low bits with zeros. Output only the least-significant width_z bits of the shifted value, discarding high overflow bits. Shifts at least as large as the working width yield zero for binary operands. Thus signed mode fully sign-extends before shifting; it does not merely prepend a single bit and then zero-extend.

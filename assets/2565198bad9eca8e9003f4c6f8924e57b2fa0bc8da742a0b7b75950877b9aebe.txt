@@ -1,0 +1,18 @@
+always @(posedge req_aclk) begin
+    if (req_aresetn == 1'b0) begin
+      req_id <= 2'b0;
+      eot_id <= 2'b0;
+      req_eot <= 1'b0;
+    end else begin
+      if (out_req_valid == 1'b1 && out_req_ready == 1'b1) begin
+        req_id <= req_id + 1'b1;
+      end
+
+      if (out_eot == 1'b1 && out_response_valid == 1'b1 && out_response_ready == 1'b1) begin
+        eot_id <= eot_id + 1'b1;
+        req_eot <= last_req[eot_id];
+      end else begin
+        req_eot <= 1'b0;
+      end
+    end
+  end

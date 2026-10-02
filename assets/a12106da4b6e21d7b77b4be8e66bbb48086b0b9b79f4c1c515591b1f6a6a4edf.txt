@@ -1,0 +1,54 @@
+module origen_028865 (
+    input wire clock,
+    input wire vsync,
+    input wire href,
+    input wire [7:0] data,
+    output reg p_valid,
+    output reg [23:0] p_data,
+    output reg f_done
+);
+
+    reg [1:0] state;
+    reg [1:0] axis;
+    reg [7:0] u, v, y0, y1;
+
+    always @(posedge clock) begin
+        case (state)
+            2'b00: begin // Idle state
+                f_done <= 1'b0;
+                p_valid <= 1'b0;
+                axis <= 2'b00;
+                if (!vsync) state <= 2'b01;
+            end
+            2'b01: begin // Active state
+                if (vsync) begin
+                    f_done <= 1'b1;
+                    state <= 2'b00;
+                end else begin
+                    f_done <= 1'b0;
+                    if (href) begin
+                        case (axis)
+                            2'b00: u <= data;
+                            2'b01: y0 <= data;
+                            2'b10: v <= data;
+                            2'b11: y1 <= data;
+                        endcase
+                        axis <= axis + 1'b1;
+                        p_valid <= axis[0];
+                    end else begin
+                        p_valid <= 1'b0;
+                    end
+                end
+            end
+        endcase
+    end
+
+    always @(*) begin
+        if (axis[0]) begin
+            p_data = {y1, u, v};
+        end else begin
+            p_data = {y0, u, v};
+        end
+    end
+
+endmodule

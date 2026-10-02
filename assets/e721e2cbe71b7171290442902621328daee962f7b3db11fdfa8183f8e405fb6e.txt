@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+import argparse,json,shutil,subprocess,os,re,signal,xml.etree.ElementTree as ET
+from pathlib import Path
+p=argparse.ArgumentParser();p.add_argument('--candidate-dir',type=Path);p.add_argument('--output',type=Path,required=True);a=p.parse_args();base=Path(__file__).resolve().parent;cfg=json.loads((base/'case.json').read_text());a.output=a.output.resolve();a.output.mkdir(parents=True,exist_ok=True);stage=a.output/'source';shutil.copytree(base/'source',stage,dirs_exist_ok=True)
+if a.candidate_dir:
+ for f in cfg['rtl_files']:
+  c=a.candidate_dir/f
+  if not c.is_file():raise SystemExit('Missing candidate RTL: '+str(c))
+  shutil.copy2(c,stage/f)
+bindir=a.output/'bin';bindir.mkdir(exist_ok=True);vvp=bindir/'vvp';vvp.write_text('#!/bin/sh\nexec '+cfg['tools']['vvp']+' -M '+cfg['tools']['vpi_directory']+' "$@"\n');vvp.chmod(0o755);env={**os.environ,'PATH':str(bindir)+':'+str(Path(cfg['tools']['python']).parent)+':'+str(Path(cfg['tools']['iverilog']).parent)+':'+os.environ['PATH'],'IVERILOG_DUMPER':'none','PYTHONDONTWRITEBYTECODE':'1','RANDOM_SEED':'1'};results=[]
+for tp in cfg['testpoints']:
+ if tp['framework']=='myhdl':cmd=[cfg['tools']['python'],'-m','pytest','-q',Path(tp['testbench']).name];cwd=stage/'tb'
+ else:cmd=['make','SIM=icarus','WAVES=0'];cwd=stage/Path(tp['testbench']).parent
+ log=a.output/(tp['id']+'.log')
+ with log.open('w') as fh:
+  q=subprocess.Popen(cmd,cwd=cwd,stdout=fh,stderr=subprocess.STDOUT,env=env,start_new_session=True)
+  try:rc=q.wait(timeout=180)
+  except subprocess.TimeoutExpired:os.killpg(q.pid,signal.SIGKILL);q.wait();rc=None
+ if tp['framework']=='myhdl':passed=rc==0 and bool(re.search(r'\b1 passed\b',log.read_text()))
+ else:
+  passed=False
+  if (cwd/'results.xml').exists():
+   try:
+    cases=ET.parse(cwd/'results.xml').getroot().findall('.//testcase');passed=rc==0 and bool(cases) and not any(c.find('failure') is not None or c.find('error') is not None for c in cases)
+   except ET.ParseError:pass
+ results.append({'id':tp['id'],'passed':passed,'exit_code':rc,'command':cmd,'log':str(log)})
+summary={'parent_case_id':cfg['case_id'],'passed_testpoints':sum(x['passed'] for x in results),'total_testpoints':len(results),'testpoints':results};summary['score']=summary['passed_testpoints']/summary['total_testpoints'];(a.output/'result.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2))

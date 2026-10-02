@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.a61660a3a7006f508667.e804019d5fd9",
+  "compile_check": {
+    "case_id": "s1derived.a61660a3a7006f508667.e804019d5fd9",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_101196",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.autovcoder_101196.e99e83053a460759/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.a61660a3a7006f508667",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "a61660a3a7006f508667b1481aca03b32e951ac8edc755db37c723208d59174a",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.a61660a3a7006f508667.e804019d5fd9",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.autovcoder_101196.e99e83053a460759/private/commercial_positive.log",
+    "commercial_log_sha256": "3c15409dedb58a19e3bc3b87497fc0fead7dfc290abc90bc73a139c087ec8438",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.autovcoder_101196.e99e83053a460759/private/historical_harness/00_sec_autovcoder_101196.tcl",
+    "executed_script_sha256": "27f46b99504afc0afdb0b74d81d32527439b4cf2afcfd9945246c1ce34752078",
+    "golden_tops": [
+      "autovcoder_101196"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_20.autovcoder_101196.e99e83053a460759",
+    "parent_id": "s1p.a61660a3a7006f508667",
+    "revised_tops": [
+      "autovcoder_101196"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_101196",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.a61660a3a7006f508667.e804019d5fd9",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Re-read corrected four named output interfaces and old-stage snapshot mapping. Enabled shift chain, counter3 snapshot, holds and asynchronous clear are complete.",
+        "rtl_excerpt": "data_out3 <= data3;",
+        "specification_excerpt": "`data_out3` captures the pre-edge `data3`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.a61660a3a7006f508667",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "c85dde1a5f398f423045dcfe44134bd677d76d826da74d494464fc482e70f3a3",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "a61660a3a7006f508667b1481aca03b32e951ac8edc755db37c723208d59174a",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.autovcoder_101196.e99e83053a460759/private/historical_harness/00_sec_autovcoder_101196.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.autovcoder_101196.e99e83053a460759/private/historical_harness/01_sec_autovcoder_101196.tcl"
+  ],
+  "parent_id": "s1p.a61660a3a7006f508667",
+  "primary_review": {
+    "case_id": "s1derived.a61660a3a7006f508667.e804019d5fd9",
+    "checks": {
+      "behavior": "Checked shift order and parallel snapshot.",
+      "boundaries": "Checked disabled holds and simultaneous shift/snapshot pre-edge values.",
+      "interface": "Ports match at default width; RTL is parameterized.",
+      "rtl_reasonableness": "Reasonable shift and snapshot register.",
+      "sequential_and_reset": "Both processes use active-low asynchronous reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Nonblocking assignments make the snapshot capture the pre-shift values, which should be explicit.",
+        "rtl_excerpt": "data_out0 <= data0; ... data0 <= data_in;",
+        "spec_excerpt": "current values ... copied in parallel"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose omits hold behavior, pre-edge snapshot timing, and the configurable WORDLENGTH interface.",
+        "rtl_evidence": "parameter WORDLENGTH = 16; ... else if (enable == 1'b1 && counter == 3)",
+        "spec_evidence": "operates on 16-bit data words",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.a61660a3a7006f508667",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.a61660a3a7006f508667.e804019d5fd9.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "a61660a3a7006f508667b1481aca03b32e951ac8edc755db37c723208d59174a",
+    "source_group": "S3",
+    "specification_sha256": "e804019d5fd9e14b3ba22ab4ae1255fb9ce8cc78483671293a2456698d0e8b66",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.a61660a3a7006f508667.e804019d5fd9.md",
+  "qualified_specification_sha256": "c85dde1a5f398f423045dcfe44134bd677d76d826da74d494464fc482e70f3a3",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.autovcoder_101196.e99e83053a460759/private/golden_design.v",
+  "rtl_sha256": "a61660a3a7006f508667b1481aca03b32e951ac8edc755db37c723208d59174a",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.autovcoder_101196.e99e83053a460759/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "e804019d5fd9e14b3ba22ab4ae1255fb9ce8cc78483671293a2456698d0e8b66",
+  "top_module": "autovcoder_101196"
+}

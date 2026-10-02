@@ -1,0 +1,141 @@
+   Present Cipher Encryption IP Core
+
+Author: Reza Ameli
+
+       Digital Systems Lab
+
+       Ferdowsi University of Mashhad, Iran
+
+       http://commeng.um.ac.ir/dslab
+   1. Introduction
+Present is a lightweight block cipher designed for hardware constrained applications
+such as RFID tags and Smart Cards.
+
+This cipher is a true example of SPN ciphers. The block size is 64 bits, key size can
+be either 80 or 128 bits and the number of rounds is 31.
+
+The S-Box used in Present is a 4-bit to 4-bit S-Box which is invoked both in the
+substitution layer and in the key scheduling routine.
+
+This project entails an encryption-only implementation of Present cipher with key
+size equal to 80 bits.
+
+Although an encryption-only implementation of a cipher may seem insufficient for
+devising a complete security scheme but that is not the case. Many modes of
+incorporating block ciphers depend only on the encryption algorithm. Examples of
+such modes of operation are CBF, OFB, CTR, SCFB and … .
+
+The presented design is iterative that is the same module of one encryption round
+will be used 31 times. This resource reuse also applies to the key scheduling
+routine.
+
+In each round of encryption, all 64 bits of state are passed through 16 S-Boxes
+(each having a width of 4). Implementation of these 16 S-Boxes can either direct
+(instantiating all 16 S-Boxes in parallel) or iterative (instantiating less than 16 S-
+Boxes and using them taking turns).
+
+This design directly instantiates all of the 16 S-Boxes and another single S-Box for
+the key scheduling section.
+2. Architecture & IOs
+Inputs and Outputs of the design are:
+
+ Name        Direction    Width (bits)                         Description
+ data_o       Output            64                        Ciphertext will appear here
+ data_i       Input             80                 Key and plaintext must be applied here
+data_load     Input             1                          ‘1’ when loading the key
+key_load      Input             1                       ‘1’ when loading the plaintext
+  clk_i       Input             1                   Clock signal (operates at rising edge)
+
+
+Internal signals and registers of design top (present_encryptor_top):
+
+     Name              Width (bits)       Type                    Description
+      State                64            Register            Current state of cipher
+  round_counter            5             Register          5-bit counter (from 1 to 31)
+                                                      Register that holds the 80-bit key and
+       Key                 80            Register
+                                                                 later its updates
+                                                       Round key that is 64 leftmost bits of
+    round_key              64             Signal      key register and will be XORed by the
+                                                                        state
+                                                        Input to Substitution-Permutation
+  sub_per_input            64             Signal
+                                                                      network
+                                                       Output of Substitution-Permutation
+ sub_per_output            64             Signal
+                                                                      network
+                                                      Value that will replace the content of
+key_update_output          80             Signal
+                                                                    key register
+
+
+This figure shows the architecture of design (inputs are blue, outputs are purple
+and internals are orange):
+
+
+
+
+                                data_load
+                                                    XOR
+                                 State                            SPN
+
+  data_i                                                                         data_o
+
+                                                                 Key
+                                 Key
+                                                                Update
+
+                                key_load
+3. Operation
+This design has two control inputs namely key_load and data_load. When either
+of these inputs is high, at the rising edge of the clock signal (clk_i) the (required
+number of) bits present at data_i are copied to the corresponding register.
+
+In case of key_load all bits of data_i (which is 80 bits wide) are copied to key
+register (which is also 80 bits wide).
+
+In case of data_load, 64 rightmost bits (data_i[63:0]) of data_i are copied to
+state register.
+
+One other event that happens when data is loaded (i.e. data_load = ‘1’) is that
+round_counter is set to ‘1’ (0b00001) i.e. loading a new plaintext into the state
+register also resets the state machine, that is why this design does not have a
+reset signal.
+
+After loading the key and the plaintext, both key_load and data_load must be
+‘0’. After setting the control inputs to ‘0’, 30 clocks must be applied in order to
+data_o contain a valid ciphertext. That is after the rising edge of the 30th clock
+signal, data_o has the correct ciphertext.
+
+So the complete encryption of plaintext requires 32 clocks.
+
+After encrypting one plaintext and in order to encrypt another, all of the steps
+explained above must be done again.
+
+Following steps briefly summarize the operation of this design:
+
+1) Load the key (key_load = ‘1’, data_load = ‘0’)
+2) Load the plaintext (key_load = ‘0’, data_load = ‘1’)
+3) Set control inputs to ‘0’ (key_load = ‘0’, data_load = ‘0’)
+4) Apply 30 clocks
+4. Design Hierarchy
+This figure shows the design hierarchy:
+
+
+                                          present_encryptor_top
+
+
+
+
+                            sub_per                          key_update
+
+
+
+
+             substitution             permutation          sbox
+
+
+
+
+      sbox
+

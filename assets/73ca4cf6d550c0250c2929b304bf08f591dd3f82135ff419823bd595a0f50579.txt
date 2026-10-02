@@ -1,0 +1,39 @@
+always @(posedge clk )
+     if (rst)
+       begin
+	  decode_insn_o <= {{2'b00, 4'h5},26'd0};
+	  fetched_pc_o  <= 0;
+       end
+     else if (sleep | (du_stall_i & !execute_waiting_i))
+       begin
+	  decode_insn_o <= {{2'b00, 4'h5},26'd0};
+       end
+     else if (fetch_take_exception_branch_i & !du_stall_i)
+       begin
+	  decode_insn_o <= {{2'b00, 4'h5},26'd0};
+       end
+     else if ((padv_i | stepping_i) & ibus_ack_i & (ibus_req_o | stepping_i) &
+	      ((!jump_insn_in_decode & !just_took_branch_addr) |
+	       (insn_from_branch_on_input))
+	      & !(execute_waited_single_cycle | just_waited_single_cycle))
+       begin
+	  decode_insn_o <= ibus_dat_i;
+	  fetched_pc_o  <= current_bus_pc;
+       end
+     else if (just_waited_single_cycle_r & !execute_waiting_i)
+       begin
+	  decode_insn_o <= ibus_dat_i;
+	  fetched_pc_o  <= current_bus_pc;
+       end
+     else if (execute_waiting_deasserted & insn_buffered)
+       begin
+	  decode_insn_o <= insn_buffer;
+	  fetched_pc_o  <= fetched_pc_o + 4;
+       end
+     else if ((jump_insn_in_decode | branch_occur_i) & padv_i)
+       // About to jump - remove this instruction from the pipeline
+       decode_insn_o <= {{2'b00, 4'h5},26'd0};
+     else if (fetch_take_exception_branch_i)
+       decode_insn_o <= {{2'b00, 4'h5},26'd0};
+     else if (push_buffered_jump_through_pipeline)
+       decode_insn_o <= {{2'b00, 4'h5},26'd0};

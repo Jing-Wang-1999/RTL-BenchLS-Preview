@@ -1,0 +1,3 @@
+# `pulse_sync`
+
+`pulse_sync` has scalar inputs `inclk`, active-high synchronous `rst_inclk`, `outclk`, active-high synchronous `rst_outclk`, and `din`, plus output `dout`. In the input domain, each rising edge samples `din` into `din_d1`; a sampled 0-to-1 transition toggles `t`. Reset clears both. In the output domain, each rising edge shifts `t` through three bits and registers `dout=t_d[2]^t_d[1]`; reset clears the pipeline and output. `dout` is therefore a one-outclk-cycle pulse after a synchronized toggle change. Input pulses must contain a sampled rising edge and distinct events must not toggle twice before the output domain observes them. Independent reset assertion/deassertion can discard an in-flight event. No submodule is used.

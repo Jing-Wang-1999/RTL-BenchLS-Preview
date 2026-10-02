@@ -1,0 +1,70 @@
+module origen_067028 (
+    input clk,
+    input rst_n,
+    input [1:0] key_data,
+    output reg key_flag,
+    output reg [1:0] key_value
+);
+
+    // Synchronized input register
+    reg [1:0] key_data_r;
+    
+    // Debounce counter and control signals
+    reg [19:0] debounce_counter;
+    wire counter_max = (debounce_counter == 20'd999_999);
+    wire keys_active = (key_data_r != 2'b11);
+    wire keys_released = (key_data_r == 2'b11);
+    
+    // Trigger register
+    reg key_trigger;
+    
+    // Input synchronization
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            key_data_r <= 2'b11;
+        end else begin
+            key_data_r <= key_data;
+        end
+    end
+    
+    // Debounce counter logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            debounce_counter <= 20'd0;
+        end else begin
+            if (keys_released) begin
+                debounce_counter <= 20'd0;
+            end else if (keys_active && !counter_max) begin
+                debounce_counter <= debounce_counter + 20'd1;
+            end
+        end
+    end
+    
+    // Trigger generation
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            key_trigger <= 1'b0;
+        end else begin
+            key_trigger <= counter_max;
+        end
+    end
+    
+    // Output value capture
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            key_value <= 2'b00;
+        end else if (key_trigger) begin
+            key_value <= ~key_data_r;
+        end
+    end
+    
+    // Flag output (direct copy of trigger)
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            key_flag <= 1'b0;
+        end else begin
+            key_flag <= key_trigger;
+        end
+    end
+
+endmodule

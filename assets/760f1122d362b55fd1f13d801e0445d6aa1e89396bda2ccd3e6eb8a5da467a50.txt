@@ -1,0 +1,42 @@
+always @ *
+begin
+    opcode_issue_r     = 1'b0;
+    opcode_accept_r    = 1'b0;
+    scoreboard_r       = 32'b0;
+
+    // Execution units with >= 2 cycle latency
+    if (SUPPORT_LOAD_BYPASS == 0)
+    begin
+        if (pipe_load_e2_w)
+            scoreboard_r[pipe_rd_e2_w] = 1'b1;
+    end
+    if (SUPPORT_MUL_BYPASS == 0)
+    begin
+        if (pipe_mul_e2_w)
+            scoreboard_r[pipe_rd_e2_w] = 1'b1;
+    end
+
+    // Execution units with >= 1 cycle latency (loads / multiply)
+    if (pipe_load_e1_w || pipe_mul_e1_w)
+        scoreboard_r[pipe_rd_e1_w] = 1'b1;
+
+    // Do not start multiply, division or CSR operation in the cycle after a load (leaving only ALU operations and branches)
+    if ((pipe_load_e1_w || pipe_store_e1_w) && (issue_mul_w || issue_div_w || issue_csr_w))
+        scoreboard_r = 32'hFFFFFFFF;
+
+    // Stall - no issues...
+    if (lsu_stall_i || stall_w || div_pending_q || csr_pending_q)
+        ;
+    // Primary slot (lsu, branch, alu, mul, div, csr)
+    else if (opcode_valid_w &&
+        !(scoreboard_r[issue_ra_idx_w] || 
+          scoreboard_r[issue_rb_idx_w] ||
+          scoreboard_r[issue_rd_idx_w]))
+    begin
+        opcode_issue_r  = 1'b1;
+        opcode_accept_r = 1'b1;
+
+        if (opcode_accept_r && issue_sb_alloc_w && (|issue_rd_idx_w))
+            scoreboard_r[issue_rd_idx_w] = 1'b1;
+    end 
+end

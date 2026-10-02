@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.3c2f25f19850a9405536.92c3b67e8e0d",
+  "compile_check": {
+    "case_id": "s1derived.3c2f25f19850a9405536.92c3b67e8e0d",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_005670",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_005670.78012be6020b10f4/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.3c2f25f19850a9405536",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "3c2f25f19850a9405536205020abc30b79e17bbcc9129525435297cf244dd506",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.3c2f25f19850a9405536.92c3b67e8e0d",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_005670.78012be6020b10f4/private/commercial_positive.log",
+    "commercial_log_sha256": "dcb25da4f61ed94d566b5716cc93b18dc70fc9de146a09a97e05292343a8ca36",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_005670.78012be6020b10f4/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "autovcoder_005670"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.autovcoder_005670.78012be6020b10f4",
+    "parent_id": "s1p.3c2f25f19850a9405536",
+    "revised_tops": [
+      "autovcoder_005670"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_005670",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.3c2f25f19850a9405536.92c3b67e8e0d",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All seventeen scalar assignments are exact name-preserving control passthroughs, including lq and uppercase R/V/S signals.",
+        "rtl_excerpt": "assign alu_op2_sel_lq = ctl_alu_op2_sel_lq;",
+        "specification_excerpt": "17 corresponding one-bit outputs"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.3c2f25f19850a9405536",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "4bc459083a6dba18621352dabc0e71db5e3443009f3290abd308812af5ce8f9b",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3c2f25f19850a9405536205020abc30b79e17bbcc9129525435297cf244dd506",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_005670.78012be6020b10f4/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_005670.78012be6020b10f4/private/historical_harness/01_conformal_rtl_autovcoder_005670.do"
+  ],
+  "parent_id": "s1p.3c2f25f19850a9405536",
+  "primary_review": {
+    "case_id": "s1derived.3c2f25f19850a9405536.92c3b67e8e0d",
+    "checks": {
+      "behavior": "Every output directly mirrors its same-suffix ctl input.",
+      "boundaries": "There is no gating or transformation for any of the 17 paths.",
+      "interface": "All signals are scalar, but four output mappings are absent from prose.",
+      "rtl_reasonableness": "Direct control wiring is reasonable.",
+      "sequential_and_reset": "Purely combinational."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Every output directly mirrors its same-suffix ctl input. Purely combinational.",
+        "rtl_excerpt": "RTL contains 17 direct assignments, including alu_sel_op2_high and alu_core_R/V/S.",
+        "spec_excerpt": "The final listed output is alu_sel_op2_neg."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The output list stops after 13 of 17 mappings, omitting alu_sel_op2_high and all three core outputs.",
+        "rtl_evidence": "RTL contains 17 direct assignments, including alu_sel_op2_high and alu_core_R/V/S.",
+        "spec_evidence": "The final listed output is alu_sel_op2_neg.",
+        "type": "truncated_interface_behavior"
+      }
+    ],
+    "parent_id": "s1p.3c2f25f19850a9405536",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.3c2f25f19850a9405536.92c3b67e8e0d.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3c2f25f19850a9405536205020abc30b79e17bbcc9129525435297cf244dd506",
+    "source_group": "S3",
+    "specification_sha256": "92c3b67e8e0d0d70275800dcaa64dacba72bcaef06b09dab2b3e684cd510db04",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.3c2f25f19850a9405536.92c3b67e8e0d.md",
+  "qualified_specification_sha256": "4bc459083a6dba18621352dabc0e71db5e3443009f3290abd308812af5ce8f9b",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_005670.78012be6020b10f4/private/golden_design.v",
+  "rtl_sha256": "3c2f25f19850a9405536205020abc30b79e17bbcc9129525435297cf244dd506",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.autovcoder_005670.78012be6020b10f4/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "92c3b67e8e0d0d70275800dcaa64dacba72bcaef06b09dab2b3e684cd510db04",
+  "top_module": "autovcoder_005670"
+}

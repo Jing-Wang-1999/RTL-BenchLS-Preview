@@ -1,0 +1,21 @@
+always @ (posedge clk) begin
+
+      page_ovflw_r   <= (req_ack) ? page_ovflw: 'h0;
+
+      max_r2b_len_r  <= (req_ack) ? max_r2b_len: 'h0;
+      r2b_start      <= (req_ack) ? 1'b1 :
+		        (b2r_ack) ? 1'b0 : r2b_start;
+
+      r2b_write      <= (req_ack) ? ~req_wr_n : r2b_write;
+
+      r2b_req_id     <= (req_ack) ? req_id : r2b_req_id;
+
+      lcl_wrap       <= (req_ack) ? req_wrap : lcl_wrap;
+	     
+      lcl_req_len    <= (req_ack) ? req_len_int  :
+		        (req_ld) ? next_req_len : lcl_req_len;
+
+      curr_sdr_addr  <= (req_ack) ? req_addr_int :
+		        (req_ld) ? next_sdr_addr : curr_sdr_addr;
+
+   end

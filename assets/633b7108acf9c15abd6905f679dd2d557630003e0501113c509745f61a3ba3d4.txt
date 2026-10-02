@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.6584b360c8a2cb193a6c.76f3c82ff386",
+  "compile_check": {
+    "case_id": "s1derived.6584b360c8a2cb193a6c.76f3c82ff386",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_08290",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_08290.c5cf0698d483feb3/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.6584b360c8a2cb193a6c",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "6584b360c8a2cb193a6cbf6d28e1b2e1fac5674a04914ef5a577d01501132659",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.6584b360c8a2cb193a6c.76f3c82ff386",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_08290.c5cf0698d483feb3/private/commercial_positive.log",
+    "commercial_log_sha256": "17ca3993956c9d82a6bb213314f716b36db220b4e4f962e7d9e26ba0f179500b",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_08290.c5cf0698d483feb3/private/historical_harness/00_sec_mg_08290.tcl",
+    "executed_script_sha256": "eb5615dc9d77d76b6c1a0d1402af1fdd26b9c8e06d8c5aa01901252c872b7d0d",
+    "golden_tops": [
+      "mg_08290"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.mg_08290.c5cf0698d483feb3",
+    "parent_id": "s1p.6584b360c8a2cb193a6c",
+    "revised_tops": [
+      "mg_08290"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_08290",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.6584b360c8a2cb193a6c.76f3c82ff386",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The defaults, parameterized widths, latency, lack of reset, startup uncertainty, and bypass boundary match.",
+        "rtl_excerpt": "The generate `if (pipe_steps>0)` clocks `pipes[0]` and subsequent stages, else assigns `piped_data = data`.",
+        "spec_excerpt": "`data_width=32`, `pipe_steps=0`; zero/nonpositive steps bypass, positive steps form an unreset `pipe_steps`-register chain."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.6584b360c8a2cb193a6c",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "6e976220696e4d90dbf12f01f127c91343066186a2e15dff6d980b2a20438365",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6584b360c8a2cb193a6cbf6d28e1b2e1fac5674a04914ef5a577d01501132659",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_08290.c5cf0698d483feb3/private/historical_harness/00_sec_mg_08290.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_08290.c5cf0698d483feb3/private/historical_harness/01_sec_mg_08290.tcl"
+  ],
+  "parent_id": "s1p.6584b360c8a2cb193a6c",
+  "primary_review": {
+    "case_id": "s1derived.6584b360c8a2cb193a6c.76f3c82ff386",
+    "checks": {
+      "behavior": "Specification truncates before defining pipe_steps=0 bypass and exact N-cycle delay.",
+      "boundaries": "Checked defaults, widths, zero/default cases, and latency.",
+      "interface": "Compared all named ports and widths.",
+      "rtl_reasonableness": "Reasonable hardware.",
+      "sequential_and_reset": "Checked clock, reset, enable, priority, hold, and combinational behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Specification truncates before defining pipe_steps=0 bypass and exact N-cycle delay.",
+        "rtl_excerpt": "if(pipe_steps>0) ... else assign piped_data=data",
+        "spec_excerpt": "pipe_steps: ... default: 0"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "Specification truncates before defining pipe_steps=0 bypass and exact N-cycle delay.",
+        "rtl_evidence": "if(pipe_steps>0) ... else assign piped_data=data",
+        "spec_evidence": "pipe_steps: ... default: 0",
+        "type": "truncated_behavior"
+      }
+    ],
+    "parent_id": "s1p.6584b360c8a2cb193a6c",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_05/s1derived.6584b360c8a2cb193a6c.76f3c82ff386.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "6584b360c8a2cb193a6cbf6d28e1b2e1fac5674a04914ef5a577d01501132659",
+    "source_group": "S5",
+    "specification_sha256": "76f3c82ff386df9dc6e3d5f8f8be12634a38553e7395e0893f204248f31f5808",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_05/s1derived.6584b360c8a2cb193a6c.76f3c82ff386.md",
+  "qualified_specification_sha256": "6e976220696e4d90dbf12f01f127c91343066186a2e15dff6d980b2a20438365",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_08290.c5cf0698d483feb3/private/golden_design.v",
+  "rtl_sha256": "6584b360c8a2cb193a6cbf6d28e1b2e1fac5674a04914ef5a577d01501132659",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_08290.c5cf0698d483feb3/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "76f3c82ff386df9dc6e3d5f8f8be12634a38553e7395e0893f204248f31f5808",
+  "top_module": "mg_08290"
+}

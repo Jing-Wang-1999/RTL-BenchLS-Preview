@@ -1,0 +1,49 @@
+module autovcoder_099207 (
+    sum,
+    c_out,
+    a,
+    b,
+    c_in
+);
+
+  //Defining i/p and o/p variables
+  output [3:0] sum;
+  output c_out;
+  input [3:0] a, b;
+  input c_in;
+
+  //Defining wires for internal signal transfers
+  wire w1, w2, w3;
+
+  //Using 1-bit Full Adders to define the logic for a 4-bit Full Adder
+  Full_1bit_Adder fa_0 (
+      sum[0],
+      w1,
+      a[0],
+      b[0],
+      c_in
+  );
+  Full_1bit_Adder fa_1 (
+      sum[1],
+      w2,
+      a[1],
+      b[1],
+      w1
+  );
+  Full_1bit_Adder fa_2 (
+      sum[2],
+      w3,
+      a[2],
+      b[2],
+      w2
+  );
+  Full_1bit_Adder fa_3 (
+      sum[3],
+      c_out,
+      a[3],
+      b[3],
+      w3
+  );
+
+endmodule
+

@@ -1,0 +1,103 @@
+The Verilog module facilitates communication between an AXI slave interface and an AXI master interface. It handles read and write transactions, including address, data, and respective handshake signals.
+
+1. **Summary**:
+   The primary function of the module is to translate AXI transactions from the slave side (`s_axi_*` signals) to the master side (`m_axi_*` signals) and manage the corresponding data flow and control signals for read and write operations.
+
+2. **Control Flow/Decision Points**:
+   - The module monitors various `valid` and `ready` signals to ensure proper handshaking.
+   - For write operations (`s_axi_awvalid`, `s_axi_wvalid"), it checks if the master is ready (`m_axi_awready`, `m_axi_wready`).
+   - For read operations (`s_axi_arvalid`), it ensures the master is prepared to receive the address (`m_axi_arready`).
+   - The module handles responses for write (`s_axi_bvalid`, `s_axi_bready`) and read (`s_axi_rvalid`, `s_axi_rready`) transactions.
+
+3. **Data Processing/Signal Interactions**:
+   - For write transactions, the module receives write address (`s_axi_awaddr`), data (`s_axi_wdata`), and control signals from the slave interface and passes them to the corresponding master interface signals (`m_axi_awaddr`, `m_axi_wdata`).
+   - For read transactions, it receives the read address (`s_axi_araddr`) and transfers it to the master interface (`m_axi_araddr`), then captures the master's read data (`m_axi_rdata`) and returns it to the slave (`s_axi_rdata`).
+   - The module ensures proper forwarding and reception of response signals for both read and write operations, translating the master's response to the slave interface.
+
+By managing these transactions, the module maintains synchronization and data integrity between the AXI interfaces.
+
+Module Interface:
+module dual_slave_axi_interconnect(
+  input aclk,
+  input aresetn,
+  input [1:0] s_axi_awid,
+  input [63:0] s_axi_awaddr,
+  input [15:0] s_axi_awlen,
+  input [5:0] s_axi_awsize,
+  input [3:0] s_axi_awburst,
+  input [1:0] s_axi_awlock,
+  input [7:0] s_axi_awcache,
+  input [5:0] s_axi_awprot,
+  input [7:0] s_axi_awqos,
+  input [1:0] s_axi_awvalid,
+  output [1:0] s_axi_awready,
+  input [255:0] s_axi_wdata,
+  input [31:0] s_axi_wstrb,
+  input [1:0] s_axi_wlast,
+  input [1:0] s_axi_wvalid,
+  output [1:0] s_axi_wready,
+  output [1:0] s_axi_bid,
+  output [3:0] s_axi_bresp,
+  output [1:0] s_axi_bvalid,
+  input [1:0] s_axi_bready,
+  input [1:0] s_axi_arid,
+  input [63:0] s_axi_araddr,
+  input [15:0] s_axi_arlen,
+  input [5:0] s_axi_arsize,
+  input [3:0] s_axi_arburst,
+  input [1:0] s_axi_arlock,
+  input [7:0] s_axi_arcache,
+  input [5:0] s_axi_arprot,
+  input [7:0] s_axi_arqos,
+  input [1:0] s_axi_arvalid,
+  output [1:0] s_axi_arready,
+  output [1:0] s_axi_rid,
+  output [255:0] s_axi_rdata,
+  output [3:0] s_axi_rresp,
+  output [1:0] s_axi_rlast,
+  output [1:0] s_axi_rvalid,
+  input [1:0] s_axi_rready,
+  output [0:0] m_axi_awid,
+  output [31:0] m_axi_awaddr,
+  output [7:0] m_axi_awlen,
+  output [2:0] m_axi_awsize,
+  output [1:0] m_axi_awburst,
+  output [0:0] m_axi_awlock,
+  output [3:0] m_axi_awcache,
+  output [2:0] m_axi_awprot,
+  output [3:0] m_axi_awregion,
+  output [3:0] m_axi_awqos,
+  output [0:0] m_axi_awvalid,
+  input [0:0] m_axi_awready,
+  output [127:0] m_axi_wdata,
+  output [15:0] m_axi_wstrb,
+  output [0:0] m_axi_wlast,
+  output [0:0] m_axi_wvalid,
+  input [0:0] m_axi_wready,
+  input [0:0] m_axi_bid,
+  input [1:0] m_axi_bresp,
+  input [0:0] m_axi_bvalid,
+  output [0:0] m_axi_bready,
+  output [0:0] m_axi_arid,
+  output [31:0] m_axi_araddr,
+  output [7:0] m_axi_arlen,
+  output [2:0] m_axi_arsize,
+  output [1:0] m_axi_arburst,
+  output [0:0] m_axi_arlock,
+  output [3:0] m_axi_arcache,
+  output [2:0] m_axi_arprot,
+  output [3:0] m_axi_arregion,
+  output [3:0] m_axi_arqos,
+  output [0:0] m_axi_arvalid,
+  input [0:0] m_axi_arready,
+  input [0:0] m_axi_rid,
+  input [127:0] m_axi_rdata,
+  input [1:0] m_axi_rresp,
+  input [0:0] m_axi_rlast,
+  input [0:0] m_axi_rvalid,
+  output [0:0] m_axi_rready
+);
+
+Behavioral Clarifications:
+- The golden RTL is an empty stub: all ports are declared but the module body contains no logic (no assign statements or always blocks). All output ports are wire type (not reg).
+- Implement as a port-declaration-only stub; all outputs default to 0 with no functional routing logic needed to match the golden.

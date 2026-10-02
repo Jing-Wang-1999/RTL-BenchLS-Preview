@@ -1,0 +1,15 @@
+always @ (posedge clk)
+begin
+	if (rst) begin
+		dividend_reg <= 0;
+		divisor_reg <= 0;
+		end
+	else if (enable_reg_e) begin
+		dividend_reg <= dividend_1;
+		divisor_reg <= divisor_1;
+		end
+	else if (count_nonzero_reg)
+		dividend_reg <= (divisor_reg > dividend_reg) ? dividend_reg << 1 : 
+						(dividend_reg - divisor_reg) << 1; 
+		// divisor doesn't change for the divide
+end

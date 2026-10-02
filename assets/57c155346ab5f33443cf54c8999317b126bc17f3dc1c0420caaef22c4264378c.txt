@@ -1,0 +1,137 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module vga_tgen(
+	clk, clk_ena, rst,
+	Thsync, Thgdel, Thgate, Thlen, Tvsync, Tvgdel, Tvgate, Tvlen,
+	eol, eof, gate, hsync, vsync, csync, blank
+	);
+
+	
+	input clk;
+	input clk_ena;
+	input rst;
+
+	
+	input [ 7:0] Thsync; 
+	input [ 7:0] Thgdel; 
+	input [15:0] Thgate; 
+	input [15:0] Thlen;  
+
+	
+	input [ 7:0] Tvsync; 
+	input [ 7:0] Tvgdel; 
+	input [15:0] Tvgate; 
+	input [15:0] Tvlen;  
+
+	
+	output eol;  
+	output eof;  
+	output gate; 
+
+	output hsync; 
+	output vsync; 
+	output csync; 
+	output blank; 
+
+	
+	
+	
+	wire Hgate, Vgate;
+	wire Hdone;
+
+	
+	
+	
+
+	
+	vga_vtim hor_gen(
+		.clk(clk),
+		.ena(clk_ena),
+		.rst(rst),
+		.Tsync(Thsync),
+		.Tgdel(Thgdel),
+		.Tgate(Thgate),
+		.Tlen(Thlen),
+		.Sync(hsync),
+		.Gate(Hgate),
+		.Done(Hdone)
+	);
+
+
+	
+	wire vclk_ena = Hdone & clk_ena;
+
+	vga_vtim ver_gen(
+		.clk(clk),
+		.ena(vclk_ena),
+		.rst(rst),
+		.Tsync(Tvsync),
+		.Tgdel(Tvgdel),
+		.Tgate(Tvgate),
+		.Tlen(Tvlen),
+		.Sync(vsync),
+		.Gate(Vgate),
+		.Done(eof)
+	);
+
+	
+	assign eol  = Hdone;
+	assign gate = Hgate & Vgate;
+	assign csync = hsync | vsync;
+	assign blank = ~gate;
+endmodule

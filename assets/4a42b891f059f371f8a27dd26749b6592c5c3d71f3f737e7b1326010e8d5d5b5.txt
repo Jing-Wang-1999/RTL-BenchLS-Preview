@@ -1,0 +1,5 @@
+# `origen_097092`
+
+This stateless combinational control decoder has inputs `opcode[6:0]`, active-high `reset`, unused `invert`, and `funct[2:0]`. Outputs are `im_sel[1:0]`, `jump`, `branch`, `Alusrc1`, `Alusrc2`, `regWrite`, `MemRead`, `MemWrite`, `jal`, `csr`, `wr_sel[1:0]`, `ALUop[2:0]`, and `fence`.
+
+Reset forces every registered-style control output to zero, but does not mask `fence`, which is always one exactly for opcode `0001111`. With reset low, all controls default to zero. Opcodes decode as follows: `0110011` sets `regWrite` and `ALUop={0,funct[2:1]}`; `0010011` additionally sets `Alusrc2`; `0100011` sets `Alusrc2`, `MemWrite`, and `im_sel=01`; `1100011` sets `branch`, `im_sel=10`, and `ALUop=001`; `0110111` or `0010111` sets `regWrite`, both ALU source selects, and `im_sel=11`; `1101111` sets `regWrite`, `jump`, `jal`, `im_sel=11`, and `wr_sel=10`; `1110011` sets `regWrite`, `csr`, and `wr_sel=01`; `0000011` sets `regWrite`, `Alusrc2`, `MemRead`, and `wr_sel=01`. Other opcodes retain all-zero defaults. There is no clock, state, or latency.

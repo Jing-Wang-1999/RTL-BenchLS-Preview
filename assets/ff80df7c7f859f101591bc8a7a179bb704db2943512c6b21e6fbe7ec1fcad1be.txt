@@ -1,0 +1,25 @@
+The module `autovcoder_021611` is designed to perform a left shift operation on an input signal, with configurable parameters for input and output widths and signedness. It has three main ports: two inputs and one output.
+
+### Parameters:
+- **width_a**: Defines the bit-width of the input signal `a`. Default is 4 bits.
+- **signd_a**: Indicates whether the input signal `a` is signed (1) or unsigned (0). Default is signed.
+- **width_s**: Specifies the bit-width of the shift amount `s`. Default is 2 bits.
+- **width_z**: Sets the bit-width of the output signal `z`. Default is 8 bits.
+
+### Inputs:
+- **a**: A signal with a width defined by `width_a`. It is the primary data input to be shifted.
+- **s**: A signal with a width defined by `width_s`. It represents the number of positions to shift the input `a`.
+
+### Output:
+- **z**: A signal with a width defined by `width_z`. It is the result of the shift operation performed on `a`.
+
+### Behavior:
+The module performs a left shift operation on the input signal `a` by the amount specified in `s`. The shifting behavior depends on whether `a` is signed or unsigned, as determined by the `signd_a` parameter:
+
+- If `a` is signed (`signd_a` is 1), the most significant bit of `a` is used as the sign bit during the shift operation.
+- If `a` is unsigned (`signd_a` is 0), a zero is used as the sign bit during the shift operation.
+
+The shifting operation is executed using two internal functions: `fshl_u_1` and `fshl_u`. These functions handle the shift operation by first extending the input `a` with the sign bit and then performing the left shift by the specified amount `s`.
+
+### Internal Functions:
+- **fshl_u_1**: This function takes an extended version of `a`

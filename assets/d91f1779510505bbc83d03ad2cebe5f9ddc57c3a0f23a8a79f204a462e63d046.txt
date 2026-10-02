@@ -1,0 +1,64 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+begin
+    mem_addr_q         <= 32'b0;
+    mem_data_wr_q      <= 32'b0;
+    mem_rd_q           <= 1'b0;
+    mem_wr_q           <= 4'b0;
+    mem_cacheable_q    <= 1'b0;
+    mem_invalidate_q   <= 1'b0;
+    mem_writeback_q    <= 1'b0;
+    mem_flush_q        <= 1'b0;
+    mem_unaligned_e1_q <= 1'b0;
+    mem_load_q         <= 1'b0;
+    mem_xb_q           <= 1'b0;
+    mem_xh_q           <= 1'b0;
+    mem_ls_q           <= 1'b0;
+end
+// Memory access fault - squash next operation (exception coming...)
+else if (complete_err_e2_w || mem_unaligned_e2_q)
+begin
+    mem_addr_q         <= 32'b0;
+    mem_data_wr_q      <= 32'b0;
+    mem_rd_q           <= 1'b0;
+    mem_wr_q           <= 4'b0;
+    mem_cacheable_q    <= 1'b0;
+    mem_invalidate_q   <= 1'b0;
+    mem_writeback_q    <= 1'b0;
+    mem_flush_q        <= 1'b0;
+    mem_unaligned_e1_q <= 1'b0;
+    mem_load_q         <= 1'b0;
+    mem_xb_q           <= 1'b0;
+    mem_xh_q           <= 1'b0;
+    mem_ls_q           <= 1'b0;
+end
+else if ((mem_rd_q || (|mem_wr_q) || mem_unaligned_e1_q) && delay_lsu_e2_w)
+    ;
+else if (!((mem_writeback_o || mem_invalidate_o || mem_flush_o || mem_rd_o || mem_wr_o != 4'b0) && !mem_accept_i))
+begin
+    mem_addr_q         <= 32'b0;
+    mem_data_wr_q      <= mem_data_r;
+    mem_rd_q           <= mem_rd_r;
+    mem_wr_q           <= mem_wr_r;
+    mem_cacheable_q    <= 1'b0;
+    mem_invalidate_q   <= 1'b0;
+    mem_writeback_q    <= 1'b0;
+    mem_flush_q        <= 1'b0;
+    mem_unaligned_e1_q <= mem_unaligned_r;
+    mem_load_q         <= opcode_valid_i && load_inst_w;
+    mem_xb_q           <= req_lb_w | req_sb_w;
+    mem_xh_q           <= req_lh_w | req_sh_w;
+    mem_ls_q           <= load_signed_inst_w;
+
+/* verilator lint_off UNSIGNED */
+/* verilator lint_off CMPCONST */
+    mem_cacheable_q  <= (mem_addr_r >= MEM_CACHE_ADDR_MIN && mem_addr_r <= MEM_CACHE_ADDR_MAX) ||
+                        (opcode_valid_i && (dcache_invalidate_w || dcache_writeback_w || dcache_flush_w));
+/* verilator lint_on CMPCONST */
+/* verilator lint_on UNSIGNED */
+
+    mem_invalidate_q <= opcode_valid_i & dcache_invalidate_w;
+    mem_writeback_q  <= opcode_valid_i & dcache_writeback_w;
+    mem_flush_q      <= opcode_valid_i & dcache_flush_w;
+    mem_addr_q       <= mem_addr_r;
+end

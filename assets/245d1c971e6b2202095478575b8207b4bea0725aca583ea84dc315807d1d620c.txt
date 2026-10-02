@@ -1,0 +1,22 @@
+This module implements a 4x4 keypad decoder. It takes two 4-bit inputs representing row and column scans and outputs a 4-bit code corresponding to the pressed key.
+
+**Inputs:**
+- `kpr` (4-bit): A one-hot active-low signal indicating which keypad row is currently being scanned. Only one bit is low (0) at a time.
+- `kpc` (4-bit): A one-hot active-low signal indicating which keypad column is currently being sensed. Only one bit is low (0) at a time.
+
+**Output:**
+- `buttons` (4-bit): The numeric value (0-15) of the detected key press. If no key is pressed, or if the inputs are invalid, the output is 0.
+
+**Function:**
+The module decodes the intersection of the active row and active column. The keypad is mapped as follows:
+- Row `1110` (row 0): Columns map to keys 3, 2, 1, 0.
+- Row `1101` (row 1): Columns map to keys 7, 6, 5, 4.
+- Row `1011` (row 2): Columns map to keys 11, 10, 9, 8.
+- Row `0111` (row 3): Columns map to keys 15, 14, 13, 12.
+
+The column patterns `0111`, `1011`, `1101`, `1110` correspond to columns 3, 2, 1, 0, respectively.
+
+**Behavior:**
+The output is combinational, updating immediately based on the inputs. A valid key press is detected only when exactly one bit in `kpr` is low and exactly one bit in `kpc` is low, and their combination matches the predefined map. All other input combinations result in an output of 0.
+
+**Allowed Sub-modules:** None. This is a purely combinational logic block.

@@ -1,0 +1,53 @@
+module origen_202272 (
+    input clk,
+    input valid,
+    input [7:0] data,
+    input parity,
+    output reg tx,
+    output reg busy
+);
+
+    parameter NCO = 7549747/2; // 115.2 kbps baud rate
+
+    reg [10:0] phase;
+    reg [10:0] prephase;
+    reg [3:0] count;
+    reg [7:0] tx_data;
+    reg [1:0] state;
+
+    parameter IDLE = 2'b00;
+    parameter TRANSMIT = 2'b01;
+
+    always @(posedge clk) begin
+        if (state == IDLE) begin
+            tx <= 1'b1;
+            busy <= 1'b0;
+            if (valid) begin
+                tx_data <= data;
+                state <= TRANSMIT;
+                busy <= 1'b1;
+            end
+        end else if (state == TRANSMIT) begin
+            phase <= (phase + 1'b1) % NCO;
+            prephase <= (prephase + 1'b1) % NCO;
+            if (prephase == 0) begin
+                if (count == 0) begin
+                    tx <= 1'b0; // Start bit
+                end else if (count < 9) begin
+                    tx <= tx_data[count-1];
+                end else begin
+                    tx <= 1'b1; // Stop bit
+                end
+                if (phase == 0) begin
+                    count <= count + 1'b1;
+                    if (count == 10) begin
+                        state <= IDLE;
+                        busy <= 1'b0;
+                        count <= 0;
+                    end
+                end
+            end
+        end
+    end
+
+endmodule

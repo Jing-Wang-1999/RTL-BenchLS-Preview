@@ -1,0 +1,96 @@
+module origen_168778(
+    input clk,
+    input key0,
+    input key1,
+    output reg [12:0] seg,
+    output reg [5:0] minu,
+    output reg [4:0] h
+);
+
+reg [1:0] key1_state, key0_state;
+reg [15:0] counter;
+reg [5:0] estado;
+
+parameter UPDATE_SEC = 6'd0,
+          UPDATE_MINU = 6'd1,
+          UPDATE_H = 6'd2,
+          ZERAR_H = 6'd3,
+          PAUSE = 6'd4,
+          RESET = 6'd5;
+
+always @(posedge clk) begin
+    key1_state <= {key1_state[0], key1};
+    key0_state <= {key0_state[0], key0};
+    counter <= counter + 16'd1;
+end
+
+always @(posedge clk) begin
+    case (estado)
+        RESET: begin
+            seg <= 13'b0000000000000;
+            minu <= 6'b000000;
+            h <= 5'b00000;
+            if (key0_state == 2'b01) begin
+                estado <= UPDATE_SEC;
+            end
+        end
+        UPDATE_SEC: begin
+            if (counter == 50000) begin
+                counter <= 16'b0;
+                seg[6:0] <= seg[6:0] + 7'b0000001;
+                if (seg[6:0] == 7'b1100010) begin
+                    seg[6:0] <= 7'b0000000;
+                    estado <= UPDATE_MINU;
+                end
+            end
+            if (key1_state == 2'b01) begin
+                estado <= PAUSE;
+            end
+            if (key0_state == 2'b01) begin
+                estado <= RESET;
+            end
+        end
+        UPDATE_MINU: begin
+            seg[6:0] <= 7'b0000000;
+            minu <= minu + 6'b000001;
+            if (minu == 6'b111100) begin
+                minu <= 6'b000000;
+                estado <= UPDATE_H;
+            end
+            if (key1_state == 2'b01) begin
+                estado <= PAUSE;
+            end
+            if (key0_state == 2'b01) begin
+                estado <= RESET;
+            end
+        end
+        UPDATE_H: begin
+            minu <= 6'b000000;
+            h <= h + 5'b00001;
+            if (h == 5'b11000) begin
+                h <= 5'b00000;
+                estado <= ZERAR_H;
+            end
+            if (key1_state == 2'b01) begin
+                estado <= PAUSE;
+            end
+            if (key0_state == 2'b01) begin
+                estado <= RESET;
+            end
+        end
+        ZERAR_H: begin
+            h <= 5'b00000;
+            estado <= UPDATE_SEC;
+        end
+        PAUSE: begin
+            if (key1_state == 2'b01) begin
+                estado <= UPDATE_SEC;
+            end
+            if (key0_state == 2'b01) begin
+                estado <= RESET;
+            end
+        end
+    endcase
+end
+
+endmodule

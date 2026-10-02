@@ -1,0 +1,116 @@
+module origen_019987 (
+    input CLOCK_50,
+    output [7:0] LED,
+    input [1:0] KEY,
+    input [3:0] SW,
+    
+    // DRAM interface
+    output [12:0] DRAM_ADDR,
+    inout [15:0] DRAM_DQ,
+    output DRAM_CLK, DRAM_CKE, DRAM_CS_N, DRAM_RAS_N, DRAM_CAS_N, DRAM_WE_N,
+    output [1:0] DRAM_BA,
+    output [1:0] DRAM_DQM,
+    
+    // EPCS interface
+    output EPCS_DCLK, EPCS_NCSO,
+    inout EPCS_DATA0,
+    
+    // G-Sensor and I2C
+    output G_SENSOR_CS_N,
+    inout G_SENSOR_INT,
+    
+    // ADC interface
+    output ADC_CS_N, ADC_SADDR, ADC_SCLK,
+    input ADC_SDAT,
+    
+    // GPIO
+    inout [33:0] GPIO_0, GPIO_1,
+    inout [12:0] GPIO_2
+);
+
+    // Internal memory
+    reg [15:0] SRAM [0:15];
+    reg [15:0] DRAM [0:15];
+
+    // Processor state
+    reg [23:0] cycle_counter;
+    wire execute_instruction = (cycle_counter == 24'hFFFFFF);
+
+    // Instruction fetch and decode
+    wire [15:0] instruction = DRAM[SRAM[15][3:0]];
+    wire [3:0] opcode = instruction[15:12];
+    wire [3:0] rd = instruction[11:8];
+    wire [3:0] rs = instruction[7:4];
+    wire [3:0] rt = instruction[3:0];
+
+    // ALU operations
+    reg [15:0] alu_result;
+
+    always @(posedge CLOCK_50) begin
+        cycle_counter <= cycle_counter + 1;
+
+        if (execute_instruction) begin
+            case (opcode)
+                4'h0: SRAM[rd] <= {8'b0, instruction[7:0]}; // Load immediate
+                4'h1: SRAM[rd] <= DRAM[rs]; // Load from memory
+                4'h2: DRAM[rd] <= SRAM[rs]; // Store to memory
+                4'h3: SRAM[rd] <= SRAM[rs]; // Move
+                4'h4: alu_result <= SRAM[rs] + SRAM[rt]; // Add
+                4'h5: alu_result <= SRAM[rs] - SRAM[rt]; // Subtract
+                4'h6: alu_result <= SRAM[rs] * SRAM[rt]; // Multiply
+                4'h7: alu_result <= SRAM[rs] / SRAM[rt]; // Divide
+                4'h8: alu_result <= SRAM[rs] % SRAM[rt]; // Modulo
+                4'h9: alu_result <= ~SRAM[rs]; // NOT
+                4'hA: alu_result <= SRAM[rs] | SRAM[rt]; // OR
+                4'hB: alu_result <= SRAM[rs] & SRAM[rt]; // AND
+                4'hC: alu_result <= SRAM[rs] ^ SRAM[rt]; // XOR
+                4'hD: alu_result <= SRAM[rs] << SRAM[rt][3:0]; // Shift left
+                4'hE: alu_result <= {15'b0, SRAM[rs] == SRAM[rt]}; // Equality
+                4'hF: alu_result <= {15'b0, SRAM[rs] < SRAM[rt]}; // Less than
+            endcase
+
+            if (opcode >= 4'h4) begin
+                SRAM[rd] <= alu_result;
+            end
+
+            SRAM[15] <= SRAM[15] + 1; // Increment PC
+        end
+    end
+
+    // Output to LEDs
+    assign LED = SRAM[0][7:0];
+
+    // Initialize memories
+    initial begin
+        // Initialize SRAM
+        SRAM[15] = 16'h0000; // PC starts at 0
+        
+        // Initialize DRAM with a sample program
+        DRAM[0] = 16'h0101; // Load immediate 1 into R1
+        DRAM[1] = 16'h0202; // Load immediate 2 into R2
+        DRAM[2] = 16'h4301; // Add R1 and R2, store in R3
+        DRAM[3] = 16'h2003; // Store R3 to memory address 0 (which outputs to LEDs)
+        DRAM[4] = 16'hF000; // Halt (invalid opcode)
+    end
+
+    // Dummy assignments for unused interfaces
+    assign DRAM_ADDR = 13'b0;
+    assign DRAM_CLK = 1'b0;
+    assign DRAM_CKE = 1'b0;
+    assign DRAM_CS_N = 1'b1;
+    assign DRAM_RAS_N = 1'b1;
+    assign DRAM_CAS_N = 1'b1;
+    assign DRAM_WE_N = 1'b1;
+    assign DRAM_BA = 2'b0;
+    assign DRAM_DQM = 2'b0;
+
+    assign EPCS_DCLK = 1'b0;
+    assign EPCS_NCSO = 1'b1;
+
+    assign G_SENSOR_CS_N = 1'b1;
+
+    assign ADC_CS_N = 1'b1;
+    assign ADC_SADDR = 1'b0;
+    assign ADC_SCLK = 1'b0;
+
+endmodule

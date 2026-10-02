@@ -1,0 +1,36 @@
+# cache — default configuration specification
+
+Implement a four-way set-associative, write-through, read-allocate cache. Defaults WORD_SELECT_BIT=3, INDEX_BIT=2,NASSOC=4: four sets per way, eight32-bit words per line. Address fields are tag[31:7], set[6:5], word[4:2]; low two bits ignored. clk rising edge; high rst asynchronously resets busy and its pending request, while state, done, valid bits, recency bookkeeping and RAM read outputs reset synchronously. Hold reset across a clock. Data RAM/tag/current-tag are not reset; invalid entries must not constitute hits. Data RAM is four independent32-word banks with synchronous reads and masked byte writes, read-before-write on a same-edge collision; its output is zero each edge without a read enable.
+
+The CPU interface rw_flag_ uses bit0=read and bit1=write, with read taking priority if both set. Requests use addr_, write_data_, write_mask_; read_data is selected bank's registered read output. In a cycle with busy=0, live request fields feed the controller. If a nonzero live request cannot produce next_done on that edge, busy becomes1 and all request fields are captured; while busy they replace live inputs, until next_done clears busy. done registers next_done each clock, normally0. An immediate hit or accepted write can therefore assert done without busy. CPU requests while busy are not separately queued.
+
+Each set has a modulo4 recency counter and per-way recency stamps. A lookup compares all valid tags. For a one-hot hit the selected way is its bit position. The generic lookup uses ceil(log2(mask)), truncated to2bits; zero maps to3. Victim selection maximizes modulo4(counter-stamp), with low-index tie preference; the MRU selection minimizes it with high-index ties. On an enabled RAM read, if selected way is not current MRU, increment counter and set that way's stamp to the incremented value. This is modulo recency, not unbounded perfect LRU. Writes do not update recency. A flush invalidates the lookup-selected way at flush_addr's set; a miss therefore invalidates way3. Flush is independent of CPU state and overrides a same-edge valid allocation. It does not write back data, which are already write-through.
+
+Four controller states are idle, refill-first, refill-rest and write-wait. All outputs to memory default tozero each combinational cycle unless stated. Idle read hit: select bank/set/word for synchronous read and set next_done1. Idle read miss: emit mem_rw_flag=1 and the aligned requested word address; select victim, immediately mark its tag/valid and capture line and critical word, enter refill-first. On mem_done in refill-first, write mem_read_data into the critical word with mask15. Next refill word is1 if critical word0, otherwise0; issue its read address and enter refill-rest. In refill-rest each mem_done writes the current refill word, advances through increasing indices while skipping the critical word, modulo8, and emits the next request until the next index wraps0, then returns idle. While refill-rest, reads hitting another line complete immediately; reads matching the line under refill complete only when requested word index is strictly less than current refill word. Remaining reads stay pending until the line finishes. The critical word at the end of a line may therefore wait for full refill despite being fetched first.
+
+Idle write: update the matching cache bank if present, applying write_mask_ byte enables; on a miss do not allocate. Emit mem_rw_flag=2, aligned address, write data/mask, set next_done1 and enter write-wait. In write-wait ignore CPU operations in the controller until mem_done returns idle, while the separate pending latch may capture one next request. mem_busy is an unused input: this is a request-pulse/response memory interface whose receiver must accept an emitted command. On refill mem_done, the following read command is emitted in that same combinational cycle. A simultaneous flush can invalidate a refill line; it is not canceled. No dirty data or memory-error signal exists.
+
+Every cycle saves controller-next state and refill bookkeeping; RAM read selection changes only for an enabled read. Reset returns controller toidle, done0, all valid/stamp/counter fields0, current way/set/word/criticalword0, selected read bank0. Flush and memory transactions are not combinationally gated by rst. Arbitrary requests and mem_done remain unconstrained in formal comparison; the pulses described above, including unused mem_busy and miss-flush replacement behavior, must match. Only default parameters and bundled utility.v/simple_ram.v semantics are qualified; no power-up RAM contents are promised.
+
+Public interface declarations:
+
+```text
+input             clk           
+input             rst           
+input      [ 1:0] rw_flag_      
+input      [31:0] addr_         
+output     [31:0] read_data     
+input      [31:0] write_data_   
+input      [ 3:0] write_mask_   
+output reg        busy          
+output reg        done          
+input             flush_flag    
+input      [31:0] flush_addr    
+output reg [ 1:0] mem_rw_flag   
+output reg [31:0] mem_addr      
+input      [31:0] mem_read_data 
+output reg [31:0] mem_write_data
+output reg [ 3:0] mem_write_mask
+input             mem_busy      
+input             mem_done
+```

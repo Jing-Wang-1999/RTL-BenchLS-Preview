@@ -1,0 +1,50 @@
+**Module: origen_099109**  
+This module implements a traffic light controller with two roads (A and B). It is a synchronous sequential circuit driven by a clock and reset signal.
+
+**Inputs:**  
+- `clk`: System clock.  
+- `rst`: Active-high reset (returns system to initial state).  
+- `TA`: Sensor input for road A (1 = traffic present, 0 = no traffic).  
+- `TB`: Sensor input for road B (1 = traffic present, 0 = no traffic).  
+
+**Outputs:**  
+Each road has three light outputs:  
+- `RA`, `RB`: Red lights.  
+- `YA`, `YB`: Yellow lights.  
+- `GA`, `GB`: Green lights.  
+Outputs are active-high (1 = light ON).
+
+**Behavior:**  
+The controller operates as a finite state machine with four states (S0–S3).  
+- **S0**: Road A green (`GA=1`), Road B red (`RB=1`).  
+  - Transition: if `TA=0` (no traffic on A) → move to S1; else remain in S0.  
+- **S1**: Road A yellow (`YA=1`), Road B red (`RB=1`).  
+  - Always moves to S2 after one cycle.  
+- **S2**: Road A red (`RA=1`), Road B green (`GB=1`).  
+  - Transition: if `TB=0` (no traffic on B) → move to S3; else remain in S2.  
+- **S3**: Road A red (`RA=1`), Road B yellow (`YB=1`).  
+  - Always moves back to S0 after one cycle.  
+
+On reset, the system enters S0. Outputs for undefined states default to red on both roads with one yellow light (safe fallback).
+
+---
+
+**Module: Traffic_sensor**  
+This module generates pseudo-random 5-bit traffic sensor patterns for testing the controller.
+
+**Inputs:**  
+- `clk`: System clock.  
+- `rst`: Active-high reset (initializes patterns).  
+
+**Outputs:**  
+- `T1[4:0]`, `T2[4:0]`: 5-bit sensor values representing traffic conditions for roads A and B, respectively. `TA` and `TB` in the main controller are derived from the least significant bits or entire patterns of these outputs.
+
+**Behavior:**  
+Two independent 5-bit linear feedback shift registers (LFSRs) generate the patterns.  
+- Each LFSR shifts left by one bit each clock cycle.  
+- The new least significant bit is a feedback function of specific register bits (XOR-based).  
+- On reset, `T1` initializes to `01101`, `T2` to `10110`.  
+- The sequences simulate varying traffic inputs over time.
+
+**Allowed Sub-modules:**  
+Only the above two modules may be instantiated. No other logic or arithmetic units are permitted.

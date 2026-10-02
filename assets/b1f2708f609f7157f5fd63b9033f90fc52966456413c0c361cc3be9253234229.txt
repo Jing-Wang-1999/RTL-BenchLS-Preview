@@ -1,0 +1,38 @@
+always @ (posedge clk or negedge rstn)
+    if(~rstn) begin
+        itoa_cnt <= 3'd0;
+        {itoa_sign, itoa_abs, itoa_zero, itoa_rem} <= 0;
+        itoa_oen <= 1'b0;
+        itoa_str[0] <= 0;
+        itoa_str[1] <= 0;
+        itoa_str[2] <= 0;
+        itoa_str[3] <= 0;
+        itoa_str[4] <= 0;
+        itoa_str[5] <= 0;
+    end else begin
+        if(itoa_cnt==3'd0) begin
+            if(itoa_en)
+                itoa_cnt <= 3'd1;
+            itoa_sign <= itoa_val[15];
+            itoa_abs  <= itoa_val[15] ? $unsigned(-itoa_val) : $unsigned(itoa_val);
+        end else begin
+            itoa_cnt  <= (itoa_cnt + 3'd1);
+            itoa_abs  <= (itoa_abs / 16'd10);
+            itoa_rem  <= itoa_rem_w[3:0];
+            itoa_zero <= (itoa_abs == 16'd0);
+            if(itoa_cnt>3'd1) begin
+                itoa_str[5] <= itoa_str[4];
+                itoa_str[4] <= itoa_str[3];
+                itoa_str[3] <= itoa_str[2];
+                itoa_str[2] <= itoa_str[1];
+                itoa_str[1] <= itoa_str[0];
+                if(itoa_cnt>3'd2 && itoa_zero) begin
+                    itoa_str[0] <= itoa_sign ? 8'h2D : 8'h20;
+                    itoa_sign <= 1'b0;
+                end else begin
+                    itoa_str[0] <= {4'h3, itoa_rem};
+                end
+            end
+        end
+        itoa_oen <= itoa_cnt == 3'd7;
+    end

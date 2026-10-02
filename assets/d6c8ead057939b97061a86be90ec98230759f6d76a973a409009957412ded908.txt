@@ -1,0 +1,15 @@
+always @(posedge clk or posedge rst)
+begin
+  if (rst) begin
+    tc2_event <= #1 1'b0;
+    t2_r <= #1 1'b0;
+  end else if (t2) begin
+    tc2_event <= #1 1'b0;
+    t2_r <= #1 1'b1;
+  end else if (!t2 & t2_r) begin
+    tc2_event <= #1 1'b1;
+    t2_r <= #1 1'b0;
+  end else begin
+    tc2_event <= #1 1'b0;
+  end
+end

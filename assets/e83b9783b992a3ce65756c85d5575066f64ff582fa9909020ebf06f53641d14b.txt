@@ -1,0 +1,13 @@
+This module is a hexadecimal-to-seven-segment decoder with an active-low output for a common-anode display. It converts a 4-bit binary input representing numbers 0 through 15 into the corresponding 8-bit pattern to illuminate the correct segments (including a decimal point).
+
+**Inputs:**
+- `HEXnumber`: A 4-bit unsigned input. Valid values are 0 to 15, representing the hexadecimal digits 0-9 and A-F.
+
+**Outputs:**
+- `Segments`: An 8-bit registered output. Each bit corresponds to a specific segment (typically segments a through g and the decimal point, dp). A logic '0' at a bit position turns the corresponding segment ON (active-low logic). The mapping for digits 0-15 is defined in a lookup table. For any input value outside 0-15, all segments are turned OFF (output is 0x00).
+
+**Function:**
+The module uses combinatorial logic to immediately set the `Segments` output based on the current `HEXnumber` input. The output patterns are predefined constants that correctly form the hexadecimal characters on a standard seven-segment display.
+
+**Allowed Sub-modules:**
+Only basic combinational logic gates and a multiplexer or lookup table are permitted to implement the decoding function. No sequential elements other than the output register are allowed.

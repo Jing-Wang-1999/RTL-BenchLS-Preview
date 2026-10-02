@@ -1,0 +1,117 @@
+module origen_033684(
+    input wire clk,
+    input wire [31:0] instruction,
+    output reg [5:0] op,
+    output reg [3:0] opr_alu,
+    output reg [4:0] shamt,
+    output reg [4:0] rs,
+    output reg [4:0] rt,
+    output reg [4:0] rd,
+    output reg [4:0] wa,
+    output reg wa_flag,
+    output reg [31:0] imm,
+    output reg [31:0] imm_0,
+    output reg [25:0] jump_addr,
+    output reg stop
+);
+
+    reg [3:0] clk_counter;
+    reg [5:0] op_reg;
+    reg [3:0] opr_alu_reg;
+    reg [4:0] wa_reg;
+    reg wa_flag_reg;
+    reg [31:0] imm_reg, imm_0_reg;
+    reg stop_reg;
+
+    always @(posedge clk) begin
+        if (clk_counter == 4'b0000) begin
+            clk_counter <= clk_counter + 1;
+        end else if (clk_counter == 4'b0001) begin
+            op_reg <= instruction[31:26];
+            rs <= instruction[25:21];
+            rt <= instruction[20:16];
+            rd <= instruction[15:11];
+            shamt <= instruction[10:6];
+            jump_addr <= instruction[25:0];
+
+            case (instruction[31:26])
+                6'b000000: begin // R-type
+                    case (instruction[5:0])
+                        6'b100000: opr_alu_reg <= 4'b0000; // ADD
+                        6'b100010: opr_alu_reg <= 4'b0001; // SUB
+                        6'b100100: opr_alu_reg <= 4'b0010; // AND
+                        6'b100101: opr_alu_reg <= 4'b0011; // OR
+                        6'b101010: opr_alu_reg <= 4'b0100; // SLT
+                        default: opr_alu_reg <= 4'b1111;   // Invalid
+                    endcase
+                    wa_reg <= instruction[15:11];
+                    wa_flag_reg <= 1'b1;
+                end
+                6'b001000: begin // ADDI
+                    opr_alu_reg <= 4'b0000;
+                    wa_reg <= instruction[20:16];
+                    wa_flag_reg <= 1'b1;
+                    imm_reg <= {{16{instruction[15]}}, instruction[15:0]};
+                    imm_0_reg <= {16'b0, instruction[15:0]};
+                end
+                6'b000100: begin // BEQ
+                    opr_alu_reg <= 4'b0001;
+                    wa_flag_reg <= 1'b0;
+                    imm_reg <= {{16{instruction[15]}}, instruction[15:0]};
+                end
+                6'b000010: begin // J
+                    wa_flag_reg <= 1'b0;
+                end
+                6'b101011: begin // SW
+                    opr_alu_reg <= 4'b0000;
+                    wa_flag_reg <= 1'b0;
+                    imm_reg <= {{16{instruction[15]}}, instruction[15:0]};
+                end
+                6'b100011: begin // LW
+                    opr_alu_reg <= 4'b0000;
+                    wa_reg <= instruction[20:16];
+                    wa_flag_reg <= 1'b1;
+                    imm_reg <= {{16{instruction[15]}}, instruction[15:0]};
+                end
+                6'b001010: begin // SLTI
+                    opr_alu_reg <= 4'b0100;
+                    wa_reg <= instruction[20:16];
+                    wa_flag_reg <= 1'b1;
+                    imm_reg <= {{16{instruction[15]}}, instruction[15:0]};
+                    imm_0_reg <= {16'b0, instruction[15:0]};
+                end
+                6'b000101: begin // BNE
+                    opr_alu_reg <= 4'b0001;
+                    wa_flag_reg <= 1'b0;
+                    imm_reg <= {{16{instruction[15]}}, instruction[15:0]};
+                end
+                6'b101001: begin // Opcode 41 (Jump and Link)
+                    wa_reg <= 5'b11111; // $ra (register 31)
+                    wa_flag_reg <= 1'b1;
+                end
+                6'b111111: begin // Stop condition
+                    stop_reg <= 1'b1;
+                end
+                default: begin
+                    opr_alu_reg <= 4'b1111; // Invalid operation
+                    wa_flag_reg <= 1'b0;
+                end
+            endcase
+
+            clk_counter <= clk_counter + 1;
+        end else if (clk_counter == 4'b0010) begin
+            op <= op_reg;
+            opr_alu <= opr_alu_reg;
+            wa <= wa_reg;
+            wa_flag <= wa_flag_reg;
+            imm <= imm_reg;
+            imm_0 <= imm_0_reg;
+            stop <= stop_reg;
+
+            clk_counter <= 4'b0000;
+        end else begin
+            clk_counter <= clk_counter + 1;
+        end
+    end
+
+endmodule

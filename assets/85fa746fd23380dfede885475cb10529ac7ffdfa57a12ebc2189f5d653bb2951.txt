@@ -1,0 +1,118 @@
+module origen_166778(
+    input  wire        pixelClock,
+    output reg         h_sync_signal,
+    output reg         v_sync_signal,
+    output reg         draw
+);
+
+localparam H_WIDTH      = 640;
+localparam H_FRONT_PORCH = 16;
+localparam H_BACK_PORCH  = 96;
+localparam H_SYNC_PULSE  = 48;
+localparam V_WIDTH       = 480;
+localparam V_FRONT_PORCH = 10;
+localparam V_BACK_PORCH  = 33;
+localparam V_SYNC_PULSE  = 2;
+
+reg [9:0] h_count;
+reg [9:0] v_count;
+
+localparam ST_PRINTING_LINE = 3'b000;
+localparam ST_H_FP          = 3'b001;
+localparam ST_H_SYNC        = 3'b010;
+localparam ST_H_BP          = 3'b011;
+localparam ST_V_FP          = 3'b100;
+localparam ST_V_SYNC        = 3'b101;
+localparam ST_V_BP          = 3'b110;
+
+reg [2:0] state;
+
+always @(posedge pixelClock) begin
+    case (state)
+        ST_PRINTING_LINE: begin
+            h_count <= (h_count == H_WIDTH - 1) ? 0 : h_count + 1;
+            v_count <= (h_count == H_WIDTH - 1) ? ((v_count == V_WIDTH - 1) ? 0 : v_count + 1) : v_count;
+            h_sync_signal <= 1'b0;
+            v_sync_signal <= 1'b0;
+            draw <= 1'b1;
+
+            if (h_count == H_WIDTH - 1) begin
+                state <= ST_H_FP;
+            end
+        end
+
+        ST_H_FP: begin
+            h_count <= (h_count == H_FRONT_PORCH - 1) ? 0 : h_count + 1;
+            v_count <= v_count;
+            h_sync_signal <= 1'b0;
+            v_sync_signal <= 1'b0;
+            draw <= 1'b0;
+
+            if (h_count == H_FRONT_PORCH - 1) begin
+                state <= ST_H_SYNC;
+            end
+        end
+
+        ST_H_SYNC: begin
+            h_count <= (h_count == H_SYNC_PULSE - 1) ? 0 : h_count + 1;
+            v_count <= v_count;
+            h_sync_signal <= 1'b1;
+            v_sync_signal <= 1'b0;
+            draw <= 1'b0;
+
+            if (h_count == H_SYNC_PULSE - 1) begin
+                state <= ST_H_BP;
+            end
+        end
+
+        ST_H_BP: begin
+            h_count <= (h_count == H_BACK_PORCH - 1) ? 0 : h_count + 1;
+            v_count <= v_count;
+            h_sync_signal <= 1'b0;
+            v_sync_signal <= 1'b0;
+            draw <= 1'b0;
+
+            if (h_count == H_BACK_PORCH - 1) begin
+                state <= ST_V_FP;
+            end
+        end
+
+        ST_V_FP: begin
+            h_count <= 0;
+            v_count <= (v_count == V_FRONT_PORCH - 1) ? 0 : v_count + 1;
+            h_sync_signal <= 1'b0;
+            v_sync_signal <= 1'b1;
+            draw <= 1'b0;
+
+            if (v_count == V_FRONT_PORCH - 1) begin
+                state <= ST_V_SYNC;
+            end
+        end
+
+        ST_V_SYNC: begin
+            h_count <= 0;
+            v_count <= (v_count == V_SYNC_PULSE - 1) ? 0 : v_count + 1;
+            h_sync_signal <= 1'b0;
+            v_sync_signal <= 1'b1;
+            draw <= 1'b0;
+
+            if (v_count == V_SYNC_PULSE - 1) begin
+                state <= ST_V_BP;
+            end
+        end
+
+        ST_V_BP: begin
+            h_count <= 0;
+            v_count <= (v_count == V_BACK_PORCH - 1) ? 0 : v_count + 1;
+            h_sync_signal <= 1'b0;
+            v_sync_signal <= 1'b0;
+            draw <= 1'b1;
+
+            if (v_count == V_BACK_PORCH - 1) begin
+                state <= ST_PRINTING_LINE;
+            end
+        end
+    endcase
+end
+
+endmodule

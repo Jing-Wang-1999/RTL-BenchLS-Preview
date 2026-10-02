@@ -1,0 +1,62 @@
+module origen_147786 (
+    input A, B, C, D,
+    input VPWR, VGND, VPB, VNB,
+    output Y
+);
+
+    wire nor_out, pwrgood_out;
+
+    // Instantiate 4-input NOR gate
+    assign nor_out = ~(A | B | C | D);
+
+    // Instantiate power good module
+    assign pwrgood_out = (VPWR & VPB & ~VGND & ~VNB) ? nor_out : 1'bz;
+
+    // Buffer the power good output
+    buf buffer (Y, pwrgood_out);
+
+endmodule
+
+// Testbench
+module tb_nor4_with_pwrgood;
+    reg A, B, C, D;
+    reg VPWR, VGND, VPB, VNB;
+    wire Y;
+
+    // Instantiate the module under test
+    nor4_with_pwrgood dut (
+        .A(A),
+        .B(B),
+        .C(C),
+        .D(D),
+        .VPWR(VPWR),
+        .VGND(VGND),
+        .VPB(VPB),
+        .VNB(VNB),
+        .Y(Y)
+    );
+
+    // Test stimulus
+    initial begin
+        // Initialize inputs
+        A = 0; B = 0; C = 0; D = 0;
+        VPWR = 1; VGND = 0; VPB = 1; VNB = 0;
+
+        // Test cases
+        #10 A = 1; B = 0; C = 0; D = 0;
+        #10 A = 0; B = 1; C = 0; D = 0;
+        #10 A = 0; B = 0; C = 1; D = 0;
+        #10 A = 0; B = 0; C = 0; D = 1;
+        #10 A = 1; B = 1; C = 1; D = 1;
+        #10 A = 0; B = 0; C = 0; D = 0;
+
+        // End simulation
+        #10 $finish;
+    end
+
+    // Monitor output
+    initial begin
+        $monitor("Time=%0t A=%b B=%b C=%b D=%b Y=%b", $time, A, B, C, D, Y);
+    end
+
+endmodule

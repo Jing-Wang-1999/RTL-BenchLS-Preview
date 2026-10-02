@@ -1,0 +1,52 @@
+// Required path: rtl/f_permutation.v
+module f_permutation(clk, reset, in, in_ready, ack, out, out_ready);
+input               clk, reset;
+input      [575:0]  in;
+input               in_ready;
+output              ack;
+output reg [1599:0] out;
+output reg          out_ready;
+endmodule
+
+// Required path: rtl/keccak.v
+module keccak(clk, reset, in, in_ready, is_last, byte_num, buffer_full, out, out_ready);
+input              clk, reset;
+input      [63:0]  in;
+input              in_ready, is_last;
+input      [2:0]   byte_num;
+output             buffer_full;
+output     [511:0] out;
+output reg         out_ready;
+endmodule
+
+// Required path: rtl/padder.v
+module padder(clk, reset, in, in_ready, is_last, byte_num, buffer_full, out, out_ready, f_ack);
+input              clk, reset;
+input      [63:0]  in;
+input              in_ready, is_last;
+input      [2:0]   byte_num;
+output             buffer_full;
+output reg [575:0] out;
+output             out_ready;
+input              f_ack;
+endmodule
+
+// Required path: rtl/padder1.v
+module padder1(in, byte_num, out);
+input      [63:0] in;
+input      [2:0]  byte_num;
+output reg [63:0] out;
+endmodule
+
+// Required path: rtl/rconst2in1.v
+module rconst2in1(i, rc1, rc2);
+input  [11:0] i;
+output [63:0] rc1, rc2;
+endmodule
+
+// Required path: rtl/round2in1.v
+module round2in1(in, round_const_1, round_const_2, out);
+input  [1599:0] in;
+input  [63:0]   round_const_1, round_const_2;
+output [1599:0] out;
+endmodule

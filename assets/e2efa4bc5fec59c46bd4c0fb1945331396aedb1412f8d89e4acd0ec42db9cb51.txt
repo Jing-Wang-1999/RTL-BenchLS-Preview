@@ -1,0 +1,61 @@
+module origen_101785 (
+    input wire in_clk,
+    input wire in_pulse,
+    input wire out_clk,
+    output wire out_pulse
+);
+
+    reg rIn_Toggle;
+    reg [2:0] rOut_Sync;
+
+    always @(posedge in_clk) begin
+        rIn_Toggle <= rIn_Toggle ^ in_pulse;
+    end
+
+    always @(posedge out_clk) begin
+        rOut_Sync <= {rOut_Sync[1:0], rIn_Toggle};
+    end
+
+    assign out_pulse = rOut_Sync[2] ^ rOut_Sync[1];
+
+endmodule
+
+module hdmi_acr_lib_data_clkcross #(
+    parameter pDATA_WIDTH = 32
+) (
+    input wire in_clk,
+    input wire [pDATA_WIDTH-1:0] in_data,
+    input wire out_clk,
+    output reg [pDATA_WIDTH-1:0] out_data
+);
+
+    reg rIn_DValid;
+    reg [pDATA_WIDTH-1:0] rIn_Data;
+    reg [1:0] rIn_ACK_Sync;
+    
+    reg rOut_ACK;
+    reg [1:0] rOut_DValid_Sync;
+    reg [pDATA_WIDTH-1:0] rOut_Data;
+
+    always @(posedge in_clk) begin
+        if (!rIn_DValid && !rIn_ACK_Sync[1]) begin
+            rIn_Data <= in_data;
+            rIn_DValid <= 1'b1;
+        end else if (rIn_ACK_Sync[1]) begin
+            rIn_DValid <= 1'b0;
+        end
+        rIn_ACK_Sync <= {rIn_ACK_Sync[0], rOut_ACK};
+    end
+
+    always @(posedge out_clk) begin
+        rOut_DValid_Sync <= {rOut_DValid_Sync[0], rIn_DValid};
+        if (rOut_DValid_Sync[1] && !rOut_ACK) begin
+            rOut_Data <= rIn_Data;
+            rOut_ACK <= 1'b1;
+        end else if (!rOut_DValid_Sync[1]) begin
+            rOut_ACK <= 1'b0;
+        end
+        out_data <= rOut_Data;
+    end
+
+endmodule

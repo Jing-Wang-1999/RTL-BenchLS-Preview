@@ -1,0 +1,31 @@
+The Verilog module named `bcd_time_converter` is designed to convert binary-coded decimal (BCD) values for hours, minutes, and seconds from an external source into a specific BCD format for internal use. It operates on clock signals and includes reset functionality to initialize the time values. The module also passes a selection input directly to an output.
+
+1. Primary Function:
+   - The module performs BCD conversion and latches hours, minutes, and seconds based on the clock signal and resets if needed.
+   - It also directly transfers a 6-bit selection input to the output.
+
+2. Key Control Flow/Decision Points:
+   - Upon a reset signal (active low), the hours, minutes, and seconds as well as their latches are initialized to specific BCD values.
+   - For each BCD conversion (hours, minutes, seconds), if their respective latch values differ from the input values, it triggers a process to update the latched and output values.
+   - This process is governed by the clock's positive edge and involves checking and updating internal registers.
+
+3. Important Data Processing/Signal Interactions:
+   - The module ensures that hours, minutes, and seconds are converted correctly by adjusting the individual bits of these values.
+   - It involves repetitive bit comparisons and conditional incrementing to maintain correct BCD format.
+   - The `sel_in` signal is directly assigned to `sel_out` on each clock cycle, reflecting the selection input without alteration.
+
+In summary, this module integrates clock and reset functionalities to manage time values in BCD format and facilitates proper data flow and control mechanisms for accurate time representation and signal handling.
+
+Module Interface:
+module bcd_time_converter (
+    input clk,
+    input rst_n,
+    input [7:0] hours,
+    input [7:0] minutes,
+    input [7:0] seconds,
+    input [5:0] sel_in,
+    output reg [7:0] hour,
+    output reg [7:0] minute,
+    output reg [7:0] second,
+    output reg [5:0] sel_out
+);

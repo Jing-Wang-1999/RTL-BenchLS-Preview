@@ -1,0 +1,93 @@
+{
+  "case_id": "s1derived.2fbf1149c5fc76b5489c.a6d005743053",
+  "compile_check": {
+    "case_id": "s1derived.2fbf1149c5fc76b5489c.a6d005743053",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "SDP_Y_CORE_Y_mul_core_chn_mul_op_rsci_chn_mul_op_wait_dp",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.2fbf1149c5fc76b5489c.a6d005743053/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "2fbf1149c5fc76b5489c168fec7709d258666b3f0bd1283fa49287f0883dddf8",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.2fbf1149c5fc76b5489c.a6d005743053",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.2fbf1149c5fc76b5489c",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "SDP_Y_CORE_Y_mul_core_chn_mul_op_rsci_chn_mul_op_wait_dp"
+  },
+  "independent_review": {
+    "case_id": "s1derived.2fbf1149c5fc76b5489c.a6d005743053",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The 128-bit mux, buffer hold, handshake equations, asynchronous reset, and clear priority match.",
+        "rtl_excerpt": "`MUX_v_128_2_2(d,d_bfwt,bcwt); bcwt <= ~((~(bcwt|biwt))|bdwt);`",
+        "spec_excerpt": "\u201cd_mxwt selects current d when bcwt=0 and buffered ... when bcwt=1\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.2fbf1149c5fc76b5489c",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "0d0e4446b41ddd2473a5d773201d269744030c036ef12e9a6d115d9242c92994",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "2fbf1149c5fc76b5489c168fec7709d258666b3f0bd1283fa49287f0883dddf8",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.2fbf1149c5fc76b5489c",
+  "primary_review": {
+    "case_id": "s1derived.2fbf1149c5fc76b5489c.a6d005743053",
+    "checks": {
+      "behavior": "bawt and wen_comp are described, but exact next-state and data-selection semantics are not fully stated.",
+      "boundaries": "The data path is exactly 128 bits and the buffer feeds itself while bcwt is set.",
+      "interface": "All scalar and 128-bit ports match RTL.",
+      "rtl_reasonableness": "RTL compiles and its internal function supplies the complete mux implementation.",
+      "sequential_and_reset": "RTL asynchronously clears state and buffer on reset; the prose merely says active-low reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The prose does not define the operators or priority needed to reproduce this recurrence.",
+        "rtl_excerpt": "bcwt <= ~((~(bcwt | biwt)) | bdwt);",
+        "specification_excerpt": "state bcwt is updated based on the negation of its current value combined with biwt and bdwt"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose is vague about the exact bcwt recurrence, mux polarity, asynchronous reset, and cycle-level buffer hold behavior, then ends mid-sentence.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.2fbf1149c5fc76b5489c",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.2fbf1149c5fc76b5489c.a6d005743053.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "2fbf1149c5fc76b5489c168fec7709d258666b3f0bd1283fa49287f0883dddf8",
+    "source_group": "S1",
+    "specification_sha256": "a6d005743053606f51eac8b49154d6efd64a8256e8a086605b421d2fe35c1096",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.2fbf1149c5fc76b5489c.a6d005743053.md",
+  "qualified_specification_sha256": "0d0e4446b41ddd2473a5d773201d269744030c036ef12e9a6d115d9242c92994",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.2fbf1149c5fc76b5489c.a6d005743053/private/golden_design.v",
+  "rtl_sha256": "2fbf1149c5fc76b5489c168fec7709d258666b3f0bd1283fa49287f0883dddf8",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.2fbf1149c5fc76b5489c.a6d005743053/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "a6d005743053606f51eac8b49154d6efd64a8256e8a086605b421d2fe35c1096",
+  "top_module": "SDP_Y_CORE_Y_mul_core_chn_mul_op_rsci_chn_mul_op_wait_dp"
+}

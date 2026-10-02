@@ -1,0 +1,94 @@
+module origen_222953(
+    input clk,
+    input rst,
+    inout sda,
+    input scl,
+    output reg [7:0] myReg0
+);
+
+    reg [6:0] address;
+    reg [7:0] data;
+    reg [2:0] bitCount;
+    reg [2:0] state;
+
+    localparam IDLE = 3'b000;
+    localparam ADDRESS = 3'b001;
+    localparam WRITE = 3'b010;
+    localparam READ = 3'b011;
+    localparam ACK = 3'b100;
+
+    reg sda_out, sda_en;
+    assign sda = sda_en ? sda_out : 1'bz;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            address <= 7'b0;
+            data <= 8'b0;
+            bitCount <= 3'b0;
+            state <= IDLE;
+            myReg0 <= 8'b0;
+        end
+        else begin
+            case (state)
+                IDLE: begin
+                    if (!scl & sda) begin
+                        state <= ADDRESS;
+                        bitCount <= 3'b0;
+                    end
+                end
+                ADDRESS: begin
+                    if (scl) begin
+                        address[6 - bitCount] <= sda;
+                        bitCount <= bitCount + 1;
+                        if (bitCount == 3'b110) begin
+                            state <= ACK;
+                            sda_out <= 1'b0;
+                            sda_en <= 1'b1;
+                        end
+                    end
+                end
+                ACK: begin
+                    if (!scl) begin
+                        sda_en <= 1'b0;
+                        if (address[0]) begin
+                            state <= READ;
+                            data <= myReg0;
+                            bitCount <= 3'b0;
+                        end
+                        else begin
+                            state <= WRITE;
+                            bitCount <= 3'b0;
+                        end
+                    end
+                end
+                WRITE: begin
+                    if (scl) begin
+                        data[7 - bitCount] <= sda;
+                        bitCount <= bitCount + 1;
+                        if (bitCount == 3'b111) begin
+                            state <= ACK;
+                            sda_out <= 1'b0;
+                            sda_en <= 1'b1;
+                            myReg0 <= data;
+                        end
+                    end
+                end
+                READ: begin
+                    if (!scl) begin
+                        sda_out <= data[7 - bitCount];
+                        sda_en <= 1'b1;
+                        bitCount <= bitCount + 1;
+                        if (bitCount == 3'b111) begin
+                            state <= ACK;
+                            sda_en <= 1'b0;
+                        end
+                    end
+                    else begin
+                        sda_en <= 1'b0;
+                    end
+                end
+            endcase
+        end
+    end
+
+endmodule

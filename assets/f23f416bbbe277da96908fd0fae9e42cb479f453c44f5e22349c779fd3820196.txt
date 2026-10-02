@@ -1,0 +1,24 @@
+module mg_03996 #(parameter LUTMASK = 16'h0000) (
+    input wire I0,
+    input wire I1,
+    input wire I2,
+    input wire I3,
+    output wire O
+);
+    wire [7:0] selected_mask;
+    wire [3:0] selected_segment;
+    wire [1:0] selected_bits;
+
+    // Select between the upper and lower 8 bits of LUTMASK based on I3
+    assign selected_mask = I3 ? LUTMASK[15:8] : LUTMASK[7:0];
+
+    // Select between 4-bit segments based on I2
+    assign selected_segment = I2 ? selected_mask[7:4] : selected_mask[3:0];
+
+    // Select between 2-bit segments based on I1
+    assign selected_bits = I1 ? selected_segment[3:2] : selected_segment[1:0];
+
+    // Select the final bit based on I0
+    assign O = I0 ? selected_bits[1] : selected_bits[0];
+
+endmodule

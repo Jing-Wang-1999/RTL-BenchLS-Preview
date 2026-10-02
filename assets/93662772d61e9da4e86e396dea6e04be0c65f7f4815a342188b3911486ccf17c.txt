@@ -1,0 +1,54 @@
+module origen_031388(
+  input        clk,
+  input        reset,
+  input        io_in,
+  output       io_out
+);
+  reg r;
+
+  assign io_out = r;
+
+  always @(posedge clk or posedge reset) begin
+    if (reset) begin
+      r <= 1'b1;
+    end else begin
+      r <= io_in;
+    end
+  end
+
+  // Non-synthesis initial block for random initialization
+  initial begin
+    r = {1{$random}};
+  end
+endmodule
+
+module ConnectSuite_UnconnectedResets_1(
+  input        clk,
+  input        reset,
+  input        io_in,
+  output       io_out
+);
+  reg  regs_0;
+  reg  regs_1;
+  reg  regs_2;
+
+  ConnectSuite_SubModule_1 sub (
+    .clk(clk),
+    .reset(regs_2),
+    .io_in(io_in),
+    .io_out(io_out)
+  );
+
+  always @(posedge clk) begin
+    regs_0 <= reset;
+    regs_1 <= regs_0;
+    regs_2 <= regs_1;
+  end
+
+  // Non-synthesis initial block for random initialization
+  initial begin
+    regs_0 = {1{$random}};
+    regs_1 = {1{$random}};
+    regs_2 = {1{$random}};
+  end
+endmodule

@@ -1,0 +1,62 @@
+The module named "origen_046133" is a control unit designed to interpret a 6-bit instruction input and generate various control signals required for the operation of a processor. This module primarily serves to decode instructions and set control signals that dictate the behavior of other components in a processor, such as the Arithmetic Logic Unit (ALU), memory, and registers.
+
+### Inputs:
+- **instruction**: A 6-bit input representing the operation code (opcode) of the instruction to be executed. This input determines which control signals will be activated.
+
+### Outputs:
+- **ALUOp**: A 2-bit output that specifies the operation to be performed by the ALU. Different values correspond to different types of operations, such as arithmetic or logical operations.
+- **MemRead**: A 1-bit signal indicating whether data should be read from memory.
+- **MemtoReg**: A 1-bit signal that determines if the data from memory should be written to a register.
+- **RegDst**: A 1-bit signal that selects the destination register for the result of an operation.
+- **Branch**: A 1-bit signal used to control branching operations, specifically for branch if equal (beq) instructions.
+- **BNE**: A 1-bit signal used for branch if not equal (bne) instructions.
+- **ALUSrc**: A 1-bit signal that selects the second operand for the ALU operation, either from a register or an immediate value.
+- **MemWrite**: A 1-bit signal indicating whether data should be written to memory.
+- **Jump**: A 1-bit signal that controls jump operations, allowing the program counter to be set to a new address.
+- **RegWrite**: A 1-bit signal that enables writing data to a register.
+
+### Behavior:
+The module operates by continuously monitoring the instruction input and using a case-based approach to determine the appropriate control signals. Each instruction corresponds to a specific set of control signals:
+
+1. **R-type Instructions (opcode: 000000)**:
+   - ALUOp is set to perform ALU operations.
+   - RegDst is enabled to select the destination register.
+   - RegWrite is enabled to allow writing to a register.
+
+2. **Branch if Equal (beq, opcode: 000100)**:
+   - ALUOp is set for comparison.
+   - Branch is enabled to control branching.
+
+3. **Store Word (sw, opcode: 101011)**:
+   - ALUSrc is set to use an immediate value.
+   - MemWrite is enabled to write data to memory.
+
+4. **Load Word (lw, opcode: 100011)**:
+   - MemRead is enabled to read data from memory.
+   - MemtoReg is enabled to write the memory data to a register.
+   - ALUSrc is set to use an immediate value.
+   - RegWrite is enabled.
+
+5. **Add Immediate (addi, opcode: 001000)**:
+   - ALUSrc is set to use an immediate value.
+   - RegWrite is enabled.
+
+6. **Jump (j, opcode: 000010)**:
+   - Jump is enabled to change the program counter.
+
+7. **Branch if Not Equal (bne, opcode: 000101)**:
+   - ALUOp is set for comparison.
+   - BNE is enabled for branching.
+
+8. **Load Upper Immediate (lui, opcode: 001111)**:
+   - ALUSrc is set to use an immediate value.
+   - RegWrite is enabled.
+
+9. **Default Case**:
+   - All control signals are disabled, indicating no operation.
+
+### Allowed Sub-modules:
+This module does not explicitly instantiate or require any sub-modules. It functions independently by generating control signals based on the instruction input.
+
+### Summary:
+The "origen_046133" module is a crucial component in a processor's control unit, responsible for decoding instructions and generating control signals that guide the execution of operations. It supports various instruction types, including arithmetic, memory access, and control flow instructions, by setting the appropriate signals for each operation.

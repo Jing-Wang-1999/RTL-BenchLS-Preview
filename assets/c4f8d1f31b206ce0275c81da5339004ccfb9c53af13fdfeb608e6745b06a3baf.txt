@@ -1,0 +1,93 @@
+{
+  "case_id": "s1derived.3f2fbfe98f3faee235a6.7fdcdf861505",
+  "compile_check": {
+    "case_id": "s1derived.3f2fbfe98f3faee235a6.7fdcdf861505",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "jtag_io_mm_interconnect_0_rsp_demux",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.3f2fbfe98f3faee235a6.7fdcdf861505/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "3f2fbfe98f3faee235a6093029ae38f374183d7814d388ae5b7522e7e57fae1e",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.3f2fbfe98f3faee235a6.7fdcdf861505",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.3f2fbfe98f3faee235a6",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "jtag_io_mm_interconnect_0_rsp_demux"
+  },
+  "independent_review": {
+    "case_id": "s1derived.3f2fbfe98f3faee235a6.7fdcdf861505",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Payload pass-through, shifted channel, selection/backpressure gating, and unused compatibility clock/reset match.",
+        "rtl_excerpt": "`src0_valid=sink_channel[0]&&sink_valid; assign sink_ready=|(sink_channel & ...ready_vector);`",
+        "spec_excerpt": "\u201csrc0_valid=sink_channel[0]&sink_valid ... sink_ready=...&src0_ready\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.3f2fbfe98f3faee235a6",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "3f09ccd3e83d9490f4467ca5e9792fed925c3f5c774fd50c3baa6adb75454751",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3f2fbfe98f3faee235a6093029ae38f374183d7814d388ae5b7522e7e57fae1e",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.3f2fbfe98f3faee235a6",
+  "primary_review": {
+    "case_id": "s1derived.3f2fbfe98f3faee235a6.7fdcdf861505",
+    "checks": {
+      "behavior": "Payload forwarding is suggested, but sole-output selection and handshake behavior are absent.",
+      "boundaries": "Only sink_channel[0] selects output zero; src0_channel shifts the four-bit channel right by one.",
+      "interface": "All listed stream, channel, clock, and reset ports match widths.",
+      "rtl_reasonableness": "RTL compiles and assigns every output with no latch or dependency.",
+      "sequential_and_reset": "RTL is entirely combinational; clk and reset have no effect, which the specification fails to disclose."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The file truncates before defining the exact route predicate.",
+        "rtl_excerpt": "src0_valid = sink_channel[0] && sink_valid;",
+        "specification_excerpt": "routes data from the sink to the source based on the sink_channel"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends before defining selection, ready/valid equations, channel shifting, and the fact that clk/reset are unused.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.3f2fbfe98f3faee235a6",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.3f2fbfe98f3faee235a6.7fdcdf861505.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3f2fbfe98f3faee235a6093029ae38f374183d7814d388ae5b7522e7e57fae1e",
+    "source_group": "S1",
+    "specification_sha256": "7fdcdf861505c5026ced81ecacdddc6fc7983c6b9386897007326e45f26bba5b",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.3f2fbfe98f3faee235a6.7fdcdf861505.md",
+  "qualified_specification_sha256": "3f09ccd3e83d9490f4467ca5e9792fed925c3f5c774fd50c3baa6adb75454751",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.3f2fbfe98f3faee235a6.7fdcdf861505/private/golden_design.v",
+  "rtl_sha256": "3f2fbfe98f3faee235a6093029ae38f374183d7814d388ae5b7522e7e57fae1e",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.3f2fbfe98f3faee235a6.7fdcdf861505/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "7fdcdf861505c5026ced81ecacdddc6fc7983c6b9386897007326e45f26bba5b",
+  "top_module": "jtag_io_mm_interconnect_0_rsp_demux"
+}

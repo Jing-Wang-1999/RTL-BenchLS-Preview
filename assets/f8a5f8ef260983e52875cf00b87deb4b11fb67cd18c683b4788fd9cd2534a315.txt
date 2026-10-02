@@ -1,0 +1,53 @@
+module origen_141649 (
+    input clk,
+    input reset,
+    input enable_1,
+    input enable_2,
+    input enable_3,
+    output reg [15:0] count,
+    output reg [3:0] overflow_count
+);
+
+    // Internal signals for nibble rollover detection
+    wire nibble0_rollover;
+    wire nibble1_rollover;
+    wire nibble2_rollover;
+    wire nibble3_rollover;
+
+    // Rollover detection: when a nibble is at 15 and will increment
+    assign nibble0_rollover = (count[3:0] == 4'd15);
+    assign nibble1_rollover = (count[7:4] == 4'd15) && nibble0_rollover && enable_1;
+    assign nibble2_rollover = (count[11:8] == 4'd15) && nibble1_rollover && enable_2;
+    assign nibble3_rollover = (count[15:12] == 4'd15) && nibble2_rollover && enable_3;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            count <= 16'd0;
+            overflow_count <= 4'd0;
+        end else begin
+            // Always increment the least significant nibble
+            count[3:0] <= count[3:0] + 1'b1;
+
+            // Increment nibble1 (bits 7:4) if enabled and nibble0 rolls over
+            if (nibble0_rollover && enable_1) begin
+                count[7:4] <= count[7:4] + 1'b1;
+            end
+
+            // Increment nibble2 (bits 11:8) if enabled and nibble1 rolls over
+            if (nibble1_rollover && enable_2) begin
+                count[11:8] <= count[11:8] + 1'b1;
+            end
+
+            // Increment nibble3 (bits 15:12) if enabled and nibble2 rolls over
+            if (nibble2_rollover && enable_3) begin
+                count[15:12] <= count[15:12] + 1'b1;
+            end
+
+            // Increment overflow_count if nibble3 rolls over
+            if (nibble3_rollover) begin
+                overflow_count <= overflow_count + 1'b1;
+            end
+        end
+    end
+
+endmodule

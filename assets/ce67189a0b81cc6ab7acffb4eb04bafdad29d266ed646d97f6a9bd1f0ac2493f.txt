@@ -1,0 +1,29 @@
+`timescale 1ns/1ps
+module tb;
+reg clk=0,rst=1; always #5 clk=~clk;
+task tick; begin @(posedge clk); #2; end endtask
+task reset; begin @(negedge clk);rst=0;repeat(4)tick;@(negedge clk);rst=1;end endtask
+initial begin #20000000;$fatal(1,"timeout");end
+reg cyc=0,stb=0,we=0;reg [1:0] adr=0;reg [7:0] di=0;wire [7:0] dout;
+wire ack,irq,sck,mosi;wire miso=~mosi;
+simple_spi_top dut(clk,rst,cyc,stb,adr,we,di,dout,ack,irq,sck,mosi,miso);
+task wr;input [1:0] a;input [7:0] d;begin
+@(negedge clk);cyc=1;stb=1;we=1;adr=a;di=d;tick;if(ack!==1)$fatal(1,"ack");
+tick;if(ack!==0)$fatal(1,"alternating ack");@(negedge clk);cyc=0;stb=0;we=0;tick;end endtask
+task rd;input [1:0] a;input [7:0] expected;begin
+@(negedge clk);cyc=1;stb=1;we=0;adr=a;tick;
+if(ack!==1 || dout!==expected)$fatal(1,"read %d %h != %h",a,dout,expected);
+tick;@(negedge clk);cyc=0;stb=0;tick;end endtask
+initial begin reset;repeat(3)tick;rd(0,8'h10);rd(3,0);rd(1,5);
+wr(0,8'h00);rd(0,8'h10);
+wr(0,8'h10);rd(0,8'h10);
+wr(0,8'h20);rd(0,8'h30);
+wr(0,8'h80);rd(0,8'h90);
+wr(0,8'h0f);rd(0,8'h1f);
+wr(0,8'h91);rd(0,8'h91);
+wr(3,8'h00);rd(3,8'h00);
+wr(3,8'h55);rd(3,8'h55);
+wr(3,8'haa);rd(3,8'haa);
+wr(3,8'hff);rd(3,8'hff);
+$display("RTL_BENCHLS_PASS");$finish(0);end
+endmodule

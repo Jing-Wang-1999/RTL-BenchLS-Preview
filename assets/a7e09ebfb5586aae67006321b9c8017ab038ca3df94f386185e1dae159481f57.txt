@@ -1,0 +1,23 @@
+{
+  "case_id": "t1.1.module.30a93f6a00f0320edb39",
+  "decision": "revise",
+  "reviewer": "primary_codex_agent",
+  "reviewer_model": "Current session; exact model identifier not exposed",
+  "specification_sha256": "829794d714da2a7f712df9ed5e501554fdb3338b9b5bcfa182b13490c46b1bd0",
+  "rtl_sha256": "98c791cc313272022e729818c255625d43593ef605466018e3b96600c9a2f879",
+  "evidence": [
+    {
+      "explanation": "The width clarification says half=1/2 and word=4+, but the reference uses width bit 1 to select a full word and width bit 2 to disable sign extension. Codes 4 and 5 are unsigned byte/halfword, not words.",
+      "rtl_excerpt": "st_be                              <= ld_store_width[1] ? 4'b1111 :"
+    },
+    {
+      "explanation": "The description does not specify the register-update priority among extension writeback, pending load, arithmetic, logic, compare, shift and jump; those priorities are observable under the current unconstrained formal input domain.",
+      "rtl_excerpt": "else if (load)"
+    }
+  ],
+  "flaws": [
+    "The width clarification says half=1/2 and word=4+, but the reference uses width bit 1 to select a full word and width bit 2 to disable sign extension. Codes 4 and 5 are unsigned byte/halfword, not words.",
+    "The description does not specify the register-update priority among extension writeback, pending load, arithmetic, logic, compare, shift and jump; those priorities are observable under the current unconstrained formal input domain."
+  ],
+  "qualification": "Not admitted; repair and independent recheck required"
+}

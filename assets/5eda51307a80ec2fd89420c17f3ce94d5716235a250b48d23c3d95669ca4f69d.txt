@@ -1,0 +1,93 @@
+module rtlpp_04825(
+    output  wire            ss,         
+    output  wire            sck,        
+    output  wire            mosi,       
+    input   wire            miso,       
+    input   wire            clk,        
+    input   wire            rst,        
+    input   wire            en,         
+    input   wire            oe,         
+    input   wire            we,         
+    input   wire            cpol,       
+    input   wire            cpha,       
+    input   wire    [ 3:0]  xfer_len,   
+    output  wire            busy,       
+    output  wire            done,       
+    inout   wire    [15:0]  data        
+    );
+
+    wire                    i_load, i_en, tbuf_mosi_oe;
+
+    // Internal signal declarations
+    reg     [15:0]  data_reg;    // Data register
+    reg             done_reg;    // Done signal register
+
+    // Data path logic
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            data_reg <= 16'b0;
+            done_reg <= 1'b0;
+        end else if (en) begin
+            if (we) begin
+                data_reg <= data;
+                done_reg <= 1'b1;
+            end else if (oe) begin
+                data_reg <= data_reg;
+                done_reg <= 1'b1;
+            end else begin
+                done_reg <= 1'b0;
+            end
+        end else begin
+            done_reg <= 1'b0;
+        end
+    end
+
+    assign mosi = data_reg[15];
+    assign done = done_reg;
+    assign data = (oe) ? data_reg : 16'bz;
+    assign i_load = we;
+    assign i_en = en;
+    assign tbuf_mosi_oe = oe;
+
+    // Controller logic
+    reg [3:0] xfer_count;
+    wire spi_clk;
+    reg sck_reg, sck_next, ss_reg, ss_next;
+    reg [3:0] bit_count;
+    reg busy_reg;
+
+    // Clock generation based on CPHA and CPOL
+    assign spi_clk = (cpol ^ cpha) ? ~clk : clk;
+
+    always @(posedge spi_clk or posedge rst) begin
+        if (rst) begin
+            sck_reg <= cpol;
+            ss_reg <= 1'b1;
+            bit_count <= 4'd0;
+            busy_reg <= 1'b0;
+        end else if (en) begin
+            if (i_load) begin
+                ss_reg <= 1'b0;
+                busy_reg <= 1'b1;
+                bit_count <= xfer_len;
+            end else if (busy_reg) begin
+                if (bit_count > 4'd0) begin
+                    sck_reg <= ~sck_reg;
+                    if (sck_reg == cpol) begin
+                        bit_count <= bit_count - 4'd1;
+                    end
+                end else begin
+                    busy_reg <= 1'b0;
+                    ss_reg <= 1'b1;
+                end
+            end
+        end else begin
+            ss_reg <= 1'b1;
+        end
+    end
+
+    assign ss = ss_reg;
+    assign sck = sck_reg;
+    assign busy = busy_reg;
+
+endmodule

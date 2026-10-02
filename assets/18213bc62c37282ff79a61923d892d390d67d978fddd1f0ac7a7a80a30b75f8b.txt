@@ -1,0 +1,93 @@
+module origen_169795(
+    input PCLK,
+    input RESET,
+    input PushButton,
+    input DMA0_Ready,
+    input DMA0_Watermark,
+    input DMA1_Ready,
+    input DMA1_Watermark,
+    input Select,
+    output reg WR,
+    output reg RD,
+    output reg LastWRData,
+    output [7:0] LED,
+    output User,
+    inout [31:0] DQ
+);
+
+reg RUN_Sync0, RUN_Sync;
+reg [31:0] Counter;
+reg [2:0] state;
+
+localparam IDLE = 3'b000,
+          WAIT4DMA = 3'b001,
+          DRIVE = 3'b010,
+          WRITE = 3'b011,
+          PAUSE_W = 3'b100,
+          READ = 3'b101,
+          PAUSE_R = 3'b110,
+          STOP = 3'b111;
+
+always @(posedge PCLK or negedge RESET) begin
+    if (~RESET) begin
+        RUN_Sync0 <= 0;
+        RUN_Sync <= 0;
+        state <= IDLE;
+        Counter <= 0;
+        WR <= 0;
+        RD <= 0;
+        LastWRData <= 0;
+    end
+    else begin
+        RUN_Sync0 <= PushButton;
+        RUN_Sync <= RUN_Sync0;
+
+        case (state)
+            IDLE: begin
+                if (RUN_Sync) state <= WAIT4DMA;
+            end
+            WAIT4DMA: begin
+                if (Select ? DMA1_Ready : DMA0_Ready) begin
+                    if (Select) state <= READ;
+                    else state <= DRIVE;
+                end
+            end
+            DRIVE: begin
+                WR <= 1;
+                if (DMA0_Watermark) state <= PAUSE_W;
+                else if (Counter == 32'hFFFFFFFF) state <= STOP;
+                else Counter <= Counter + 1;
+            end
+            WRITE: begin
+                WR <= 0;
+                LastWRData <= 1;
+                state <= IDLE;
+            end
+            PAUSE_W: begin
+                WR <= 0;
+                if (!DMA0_Watermark) state <= DRIVE;
+            end
+            READ: begin
+                RD <= 1;
+                if (DMA1_Watermark) state <= PAUSE_R;
+                else if (RUN_Sync == 0) state <= STOP;
+            end
+            PAUSE_R: begin
+                RD <= 0;
+                if (!DMA1_Watermark) state <= READ;
+            end
+            STOP: begin
+                WR <= 0;
+                RD <= 0;
+                LastWRData <= 0;
+                state <= IDLE;
+            end
+        endcase
+    end
+end
+
+assign DQ = (state == DRIVE) ? Counter : 32'bz;
+assign LED = Counter[31:24];
+assign User = {state, RUN_Sync};
+
+endmodule

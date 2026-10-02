@@ -1,0 +1,75 @@
+module rtlpp_06397 (
+    input wire inp_bit,
+    input wire reset,
+    input wire clk,
+    output reg seq_seen
+);
+
+    // Define states for the sequence detector
+    localparam IDLE  = 3'b000;
+    localparam S1    = 3'b001;  // Received '1'
+    localparam S10   = 3'b010;  // Received '10'
+    localparam S101  = 3'b011;  // Received '101'
+    localparam S1011 = 3'b100;  // Received '1011' (detection complete)
+
+    reg [2:0] current_state, next_state;
+
+    // State register with asynchronous reset
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            current_state <= IDLE;
+        end else begin
+            current_state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (current_state)
+            IDLE: begin
+                if (inp_bit == 1'b1) begin
+                    next_state = S1;
+                end else begin
+                    next_state = IDLE;
+                end
+            end
+            S1: begin
+                if (inp_bit == 1'b0) begin
+                    next_state = S10;
+                end else begin
+                    next_state = IDLE;
+                end
+            end
+            S10: begin
+                if (inp_bit == 1'b1) begin
+                    next_state = S101;
+                end else begin
+                    next_state = IDLE;
+                end
+            end
+            S101: begin
+                if (inp_bit == 1'b1) begin
+                    next_state = S1011;
+                end else begin
+                    next_state = IDLE;
+                end
+            end
+            S1011: begin
+                next_state = IDLE;  // Always return to idle after detection
+            end
+            default: begin
+                next_state = IDLE;
+            end
+        endcase
+    end
+
+    // Output logic: seq_seen is high only in S1011 state
+    always @(*) begin
+        if (current_state == S1011) begin
+            seq_seen = 1'b1;
+        end else begin
+            seq_seen = 1'b0;
+        end
+    end
+
+endmodule

@@ -1,0 +1,25 @@
+The module `FP17_ADD_mgc_shift_l_v4` is designed to perform a left shift operation on an input signal, with configurable parameters for input and output widths. It includes the following key components:
+
+### Parameters:
+- **width_a**: Specifies the bit-width of the input signal `a`. Default is 4 bits.
+- **signd_a**: Indicates whether the input signal `a` is signed (1) or unsigned (0).
+- **width_s**: Specifies the bit-width of the shift amount `s`. Default is 2 bits.
+- **width_z**: Specifies the bit-width of the output signal `z`. Default is 8 bits.
+
+### Inputs:
+- **a**: An input signal whose width is defined by `width_a`. It is the data to be shifted.
+- **s**: An input signal whose width is defined by `width_s`. It represents the number of positions to shift the input signal `a`.
+
+### Output:
+- **z**: The result of the left shift operation, with a width defined by `width_z`.
+
+### Behavior:
+The module performs a left shift operation on the input signal `a` by the number of positions specified by `s`. The behavior of the shift operation depends on whether the input signal `a` is signed or unsigned, as determined by the `signd_a` parameter.
+
+- **Signed Input (`signd_a = 1`)**: The most significant bit of `a` is used as the sign bit during the shift operation. This means that the sign bit is extended during the shift, preserving the sign of the original input.
+- **Unsigned Input (`signd_a = 0`)**: A zero is used as the sign bit during the shift operation, effectively treating the input as an unsigned value.
+
+### Internal Functions:
+The module uses two internal functions to perform the shift operation:
+
+1. **fshl_u_1**: This function takes an extended version of the input signal `a` (including the sign bit), the shift amount `s`, and the sign bit

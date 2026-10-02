@@ -1,0 +1,31 @@
+module uart_txfsm (
+             reset_n        ,
+             baud_clk_16x   ,
+
+             cfg_tx_enable  ,
+             cfg_stop_bit   ,
+             cfg_pri_mod    ,
+
+       
+             fifo_empty     ,
+             fifo_rd        ,
+             fifo_data      ,
+
+          
+             so  
+          );
+parameter idle_st      = 3'b000;
+parameter xfr_data_st  = 3'b001;
+parameter xfr_pri_st   = 3'b010;
+parameter xfr_stop_st1 = 3'b011;
+parameter xfr_stop_st2 = 3'b100;
+input             reset_n        ;
+input             baud_clk_16x   ;
+input             cfg_tx_enable  ;
+input             cfg_stop_bit   ;
+input   [1:0]     cfg_pri_mod    ;
+input             fifo_empty     ;
+output            fifo_rd        ;
+input  [7:0]      fifo_data      ;
+output            so             ;
+endmodule

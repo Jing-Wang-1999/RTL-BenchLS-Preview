@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.f6900e0bcf33c35cc8e0.3faf2a53a113",
+  "compile_check": {
+    "case_id": "s1derived.f6900e0bcf33c35cc8e0.3faf2a53a113",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "compress_32",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.compress_32.4c9517a84e66ee43/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.f6900e0bcf33c35cc8e0",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "f6900e0bcf33c35cc8e03050690d652bf646dacfba9136dbd7e58c77cfe0fa3a",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.f6900e0bcf33c35cc8e0.3faf2a53a113",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.compress_32.4c9517a84e66ee43/private/commercial_positive.log",
+    "commercial_log_sha256": "06b6d9b175a82658c25c89a19830c4c2b42d0370aaa413a3e16ec2ca1b735872",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.compress_32.4c9517a84e66ee43/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "compress_32"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.compress_32.4c9517a84e66ee43",
+    "parent_id": "s1p.f6900e0bcf33c35cc8e0",
+    "revised_tops": [
+      "compress_32"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "compress_32",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.f6900e0bcf33c35cc8e0.3faf2a53a113",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Each WIDTH16-default bit independently generates parity oo and majority ot. The repaired contract correctly leaves carries unshifted and does not imply inter-bit propagation; all3 inputs and2 outputs match.",
+        "rtl_excerpt": "assign ot[i] = (a[i] & b[i]) | (a[i] & c[i]) | (b[i] & c[i]);",
+        "specification_excerpt": "`ot` is the unshifted majority/carry bit"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.f6900e0bcf33c35cc8e0",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "99c7e84de88fa8d29c0afb508d47e82b50ff242a85c9dc7d2fe2bc31c114de91",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "f6900e0bcf33c35cc8e03050690d652bf646dacfba9136dbd7e58c77cfe0fa3a",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.compress_32.4c9517a84e66ee43/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.compress_32.4c9517a84e66ee43/private/historical_harness/01_conformal_rtl_compress_32.do"
+  ],
+  "parent_id": "s1p.f6900e0bcf33c35cc8e0",
+  "primary_review": {
+    "case_id": "s1derived.f6900e0bcf33c35cc8e0.3faf2a53a113",
+    "checks": {
+      "behavior": "The default behavior agrees, but the parameterized interface is incomplete.",
+      "boundaries": "checked parameter defaults, widths, truth/arithmetic boundaries and priority",
+      "interface": "checked complete RTL interface against prose",
+      "rtl_reasonableness": "reasonable hardware for the stated function",
+      "sequential_and_reset": "checked state, clock, reset and hold behavior; combinational where stated"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The default behavior agrees, but the parameterized interface is incomplete.",
+        "rtl_excerpt": "parameter WIDTH=16; generate loop implements XOR and pairwise-AND majority for WIDTH bits",
+        "spec_excerpt": "At every bit, oo is three-input XOR and ot is the majority carry."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose presents a fixed 16-bit interface but omits that WIDTH is configurable with default 16.",
+        "rtl_evidence": "parameter WIDTH=16; generate loop implements XOR and pairwise-AND majority for WIDTH bits",
+        "spec_evidence": "At every bit, oo is three-input XOR and ot is the majority carry.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.f6900e0bcf33c35cc8e0",
+    "proposed_specification_path": "proposed_repairs_3_sol_02/s1derived.f6900e0bcf33c35cc8e0.3faf2a53a113.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "f6900e0bcf33c35cc8e03050690d652bf646dacfba9136dbd7e58c77cfe0fa3a",
+    "source_group": "S1",
+    "specification_sha256": "3faf2a53a1132e52d35fe2eb82106572ef23f3321511df05cef5a06c4991e892",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_02/s1derived.f6900e0bcf33c35cc8e0.3faf2a53a113.md",
+  "qualified_specification_sha256": "99c7e84de88fa8d29c0afb508d47e82b50ff242a85c9dc7d2fe2bc31c114de91",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.compress_32.4c9517a84e66ee43/private/golden_design.v",
+  "rtl_sha256": "f6900e0bcf33c35cc8e03050690d652bf646dacfba9136dbd7e58c77cfe0fa3a",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.compress_32.4c9517a84e66ee43/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "3faf2a53a1132e52d35fe2eb82106572ef23f3321511df05cef5a06c4991e892",
+  "top_module": "compress_32"
+}

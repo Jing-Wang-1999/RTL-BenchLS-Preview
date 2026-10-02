@@ -1,0 +1,17 @@
+always @(*) begin 
+        if (param_reson_sharp_en)
+            if (event_tref && ~&state_dapdel_cnt)
+                state_dapdel_cnt_next = state_dapdel_cnt + 3'b1;
+            else if (ovfl_exc)
+                state_dapdel_cnt_next = 3'b0;
+            else 
+                state_dapdel_cnt_next = state_dapdel_cnt;
+        else
+            if (dap_event || spklat_event)
+                state_dapdel_cnt_next = param_dapdel;
+            else
+                if (event_tref && |state_dapdel_cnt)
+                    state_dapdel_cnt_next = state_dapdel_cnt - 3'b1;
+                else 
+                    state_dapdel_cnt_next = state_dapdel_cnt;
+    end

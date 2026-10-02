@@ -1,0 +1,17 @@
+The module "origen_098224" is designed to generate a Pulse Width Modulation (PWM) signal based on a given speed input. It operates with a clock signal and an active-low reset signal. The module has four main inputs: a clock signal (`clk`), an active-low reset (`rst_n`), a write enable signal (`wrt`), and an 11-bit speed input (`SPEED`). It produces one output, a PWM signal (`PWM`).
+
+### Inputs:
+1. **clk**: A clock signal that drives the timing of the module.
+2. **rst_n**: An active-low reset signal that initializes or resets the module's state.
+3. **wrt**: A write enable signal that triggers the loading of the speed value into the internal logic.
+4. **SPEED**: An 11-bit input that specifies the desired speed, which influences the PWM signal's duty cycle.
+
+### Output:
+- **PWM**: A digital signal that represents the PWM output, which is controlled by the speed input and the internal logic of the module.
+
+### Internal Behavior:
+1. **Input Synchronization**: The module synchronizes the `SPEED` and `wrt` inputs with the clock signal. When the reset is active, these inputs are initialized to zero.
+
+2. **PWM Period Calculation**: The module calculates the number of clock ticks required for the PWM period based on the `SPEED` input. This calculation involves multiplying the `SPEED` value by a constant factor and adding an offset.
+
+3. **Down Counter**: The module uses a 14-bit down counter (`q1`) to manage the timing of the PWM signal. When the `wrt` signal is active, the counter is loaded with the calculated number of ticks. The counter decrements with each clock cycle until it reaches zero

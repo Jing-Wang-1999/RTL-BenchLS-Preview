@@ -1,0 +1,11 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/harder2_56c904088246e0de5820_negative.v0.v
+check_sec -analyze -imp -sv ./input/rtl/harder2_56c904088246e0de5820_negative.negative.v
+check_sec -elaborate -spec -top ppu_bg -disable_auto_bbox
+check_sec -elaborate -imp -top ppu_bg -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clk_in
+reset -expression {rst_in}
+check_sec -gen
+check_sec -prove -strategy proof

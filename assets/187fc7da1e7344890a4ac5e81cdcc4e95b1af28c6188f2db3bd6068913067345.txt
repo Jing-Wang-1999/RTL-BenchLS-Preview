@@ -1,0 +1,177 @@
+module origen_024102 (
+    input CLK,
+    input RST_N,
+    input START,
+    input STOP,
+    input FRAME,
+    output reg STARTED,
+    output reg STOPPED,
+    output reg [1:0] STATE,
+    output reg FETCH_EN,
+    output reg LCD_ENABLE,
+    output reg SYNC_ENABLE,
+    output reg BL_ENABLE
+);
+
+    // State encoding
+    localparam [2:0] IDLE           = 3'b000;
+    localparam [2:0] LCD_POWERUP1   = 3'b001;
+    localparam [2:0] LCD_POWERUP2   = 3'b010;
+    localparam [2:0] RUNNING        = 3'b011;
+    localparam [2:0] LCD_POWERDOWN1 = 3'b100;
+    localparam [2:0] LCD_POWERDOWN2 = 3'b101;
+    localparam [2:0] FIFO_RUNDOWN   = 3'b110;
+
+    reg [2:0] current_state, next_state;
+    reg frame_pulse_delayed;
+    reg frame_edge_detected;
+
+    // Frame pulse edge detection
+    always @(posedge CLK or negedge RST_N) begin
+        if (!RST_N) begin
+            frame_pulse_delayed <= 1'b0;
+        end else begin
+            frame_pulse_delayed <= FRAME;
+        end
+    end
+
+    assign frame_edge_detected = FRAME && !frame_pulse_delayed;
+
+    // State register
+    always @(posedge CLK or negedge RST_N) begin
+        if (!RST_N) begin
+            current_state <= IDLE;
+        end else begin
+            current_state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        next_state = current_state;
+        
+        case (current_state)
+            IDLE: begin
+                if (START) begin
+                    next_state = LCD_POWERUP1;
+                end
+            end
+            
+            LCD_POWERUP1: begin
+                if (frame_edge_detected) begin
+                    next_state = LCD_POWERUP2;
+                end
+            end
+            
+            LCD_POWERUP2: begin
+                if (frame_edge_detected) begin
+                    next_state = RUNNING;
+                end
+            end
+            
+            RUNNING: begin
+                if (STOP) begin
+                    next_state = LCD_POWERDOWN1;
+                end
+            end
+            
+            LCD_POWERDOWN1: begin
+                if (frame_edge_detected) begin
+                    next_state = LCD_POWERDOWN2;
+                end
+            end
+            
+            LCD_POWERDOWN2: begin
+                if (frame_edge_detected) begin
+                    next_state = FIFO_RUNDOWN;
+                end
+            end
+            
+            FIFO_RUNDOWN: begin
+                next_state = IDLE;
+            end
+            
+            default: begin
+                next_state = IDLE;
+            end
+        endcase
+    end
+
+    // Output logic
+    always @(posedge CLK or negedge RST_N) begin
+        if (!RST_N) begin
+            STARTED <= 1'b0;
+            STOPPED <= 1'b0;
+            STATE <= 2'b00;
+            FETCH_EN <= 1'b0;
+            LCD_ENABLE <= 1'b0;
+            SYNC_ENABLE <= 1'b0;
+            BL_ENABLE <= 1'b0;
+        end else begin
+            // Default outputs
+            STARTED <= 1'b0;
+            STOPPED <= 1'b0;
+            STATE <= 2'b00;
+            FETCH_EN <= 1'b0;
+            LCD_ENABLE <= 1'b0;
+            SYNC_ENABLE <= 1'b0;
+            BL_ENABLE <= 1'b0;
+            
+            case (current_state)
+                IDLE: begin
+                    STATE <= 2'b00;  // Stopped
+                    STOPPED <= 1'b1;
+                end
+                
+                LCD_POWERUP1: begin
+                    STATE <= 2'b01;  // Starting
+                    FETCH_EN <= 1'b1;
+                    LCD_ENABLE <= 1'b1;
+                    SYNC_ENABLE <= 1'b1;
+                end
+                
+                LCD_POWERUP2: begin
+                    STATE <= 2'b01;  // Starting
+                    FETCH_EN <= 1'b1;
+                    LCD_ENABLE <= 1'b1;
+                    SYNC_ENABLE <= 1'b1;
+                    BL_ENABLE <= 1'b1;
+                end
+                
+                RUNNING: begin
+                    STATE <= 2'b10;  // Started
+                    STARTED <= 1'b1;
+                    FETCH_EN <= 1'b1;
+                    LCD_ENABLE <= 1'b1;
+                    SYNC_ENABLE <= 1'b1;
+                    BL_ENABLE <= 1'b1;
+                end
+                
+                LCD_POWERDOWN1: begin
+                    STATE <= 2'b11;  // Stopping
+                    FETCH_EN <= 1'b1;
+                    LCD_ENABLE <= 1'b1;
+                    SYNC_ENABLE <= 1'b1;
+                    // BL_ENABLE deasserted immediately
+                end
+                
+                LCD_POWERDOWN2: begin
+                    STATE <= 2'b11;  // Stopping
+                    FETCH_EN <= 1'b1;
+                    LCD_ENABLE <= 1'b1;
+                    SYNC_ENABLE <= 1'b1;
+                end
+                
+                FIFO_RUNDOWN: begin
+                    STATE <= 2'b11;  // Stopping
+                    // All enables deasserted to drain FIFO
+                end
+                
+                default: begin
+                    STATE <= 2'b00;
+                end
+            endcase
+        end
+    end
+
+endmodule

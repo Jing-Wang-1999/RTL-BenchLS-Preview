@@ -1,0 +1,53 @@
+module origen_220792 (
+    input CS,
+    input RD,
+    input WR,
+    input [1:0] A,
+    input reset,
+    inout [7:0] PORT_A,
+    inout [7:0] PORT_B,
+    inout [7:0] PORT_C,
+    inout [7:0] Buffer_D
+);
+
+    reg [7:0] port_a, port_b, port_c;
+    reg [7:0] data_bus;
+    reg [1:0] port;
+    reg case_A, case_B, case_Cu, case_Cl;
+
+    always @(posedge reset or negedge CS) begin
+        if (reset) begin
+            case_A <= 1'b1;
+            case_B <= 1'b1;
+            case_Cu <= 1'b1;
+            case_Cl <= 1'b1;
+        end else begin
+            if (RD) begin
+                case (A)
+                    2'b00: data_bus <= port_a;
+                    2'b01: data_bus <= port_b;
+                    2'b10: data_bus <= port_c;
+                    2'b11: data_bus <= Buffer_D;
+                endcase
+                port <= A;
+            end else if (WR) begin
+                case (A)
+                    2'b00: port_a <= Buffer_D;
+                    2'b01: port_b <= Buffer_D;
+                    2'b10: begin
+                        port_c[7:4] <= Buffer_D[7:4];
+                        port_c[3:0] <= Buffer_D[3:0];
+                    end
+                    2'b11: data_bus <= Buffer_D;
+                endcase
+                port <= A;
+            end
+        end
+    end
+
+    assign PORT_A = case_A ? 8'bz : port_a;
+    assign PORT_B = case_B ? 8'bz : port_b;
+    assign PORT_C = (case_Cu & case_Cl) ? 8'bz : {port_c[7:4], port_c[3:0]};
+    assign Buffer_D = data_bus;
+
+endmodule

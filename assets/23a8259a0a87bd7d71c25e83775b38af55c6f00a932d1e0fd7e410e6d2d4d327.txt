@@ -1,0 +1,73 @@
+# NV_NVDLA_RT_cmac_b2cacc: default-configuration specification
+
+Implement a three-stage retiming pipeline with eight independent176-bit data lanes,8-bit mask,8-bit mode,9-bit PD and a scalar PVLD. There are no parameters. All captures use rising nvdla_core_clk. Active-low asynchronous nvdla_core_rstn resets each stage PVLD and MASK to0; all stage PD, MODE and DATA are unreset, with no invalid-data zero or power-up guarantee.
+
+Number source as stage0 and internal stages1..3. The public destination is stage3. On each nonreset edge, every stage captures the preceding stage PVLD and MASK unconditionally, including MASK when PVLD0. At every clock edge, including reset edges, each stage captures predecessor PD and MODE only when predecessor PVLD1, otherwise holds. For each lane i=0..7, stage DATA[i][43:0] captures predecessor DATA[i][43:0] only when predecessor MASK[i]1. DATA[i][175:44] captures predecessor upper bits only when predecessor MASK[i] AND predecessor MODE[i] are both1. These data enables do not include PVLD or reset. Disabled fields retain prior content even as mask/valid pipeline advances; there is no global stall or ready port.
+
+All stages use preedge predecessor values, so a source word presented with PVLD and appropriate MASK/MODE reaches destination after three rising edges. A mask-active lane can update despite PVLD0; its upper-lane gating uses mode retained under the PVLD-qualified mode pipeline. Preserve this exact behavior instead of treating PVLD as a universal gate. For four-state simulation an unknown capture enable explicitly makes the corresponding captured field unknown; normal synthesized equivalence uses binary inputs and does not require resolving unknown payload. No arithmetic or computation is performed on the data. Raw601 lines represent repeated lane/stage capture logic, so this is a wide retimer rather than601 lines of independent algorithmic complexity.
+
+Public interface declarations (parameter values and behavior are specified above):
+
+```verilog
+module NV_NVDLA_RT_cmac_b2cacc (
+   nvdla_core_clk
+  ,nvdla_core_rstn
+  ,mac2accu_src_pvld
+  ,mac2accu_src_mask
+  ,mac2accu_src_mode
+  ,mac2accu_src_data0
+  ,mac2accu_src_data1
+  ,mac2accu_src_data2
+  ,mac2accu_src_data3
+  ,mac2accu_src_data4
+  ,mac2accu_src_data5
+  ,mac2accu_src_data6
+  ,mac2accu_src_data7
+  ,mac2accu_src_pd
+  ,mac2accu_dst_pvld
+  ,mac2accu_dst_mask
+  ,mac2accu_dst_mode
+  ,mac2accu_dst_data0
+  ,mac2accu_dst_data1
+  ,mac2accu_dst_data2
+  ,mac2accu_dst_data3
+  ,mac2accu_dst_data4
+  ,mac2accu_dst_data5
+  ,mac2accu_dst_data6
+  ,mac2accu_dst_data7
+  ,mac2accu_dst_pd
+  );
+
+
+
+
+
+input  nvdla_core_clk;
+input  nvdla_core_rstn;
+
+input         mac2accu_src_pvld;
+input   [7:0] mac2accu_src_mask;
+input   [7:0] mac2accu_src_mode;
+input [175:0] mac2accu_src_data0;
+input [175:0] mac2accu_src_data1;
+input [175:0] mac2accu_src_data2;
+input [175:0] mac2accu_src_data3;
+input [175:0] mac2accu_src_data4;
+input [175:0] mac2accu_src_data5;
+input [175:0] mac2accu_src_data6;
+input [175:0] mac2accu_src_data7;
+input   [8:0] mac2accu_src_pd;
+
+output         mac2accu_dst_pvld;
+output   [7:0] mac2accu_dst_mask;
+output   [7:0] mac2accu_dst_mode;
+output [175:0] mac2accu_dst_data0;
+output [175:0] mac2accu_dst_data1;
+output [175:0] mac2accu_dst_data2;
+output [175:0] mac2accu_dst_data3;
+output [175:0] mac2accu_dst_data4;
+output [175:0] mac2accu_dst_data5;
+output [175:0] mac2accu_dst_data6;
+output [175:0] mac2accu_dst_data7;
+output   [8:0] mac2accu_dst_pd;
+```

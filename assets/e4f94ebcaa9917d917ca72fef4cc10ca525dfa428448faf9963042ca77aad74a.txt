@@ -1,0 +1,34 @@
+{
+  "candidate_id": "large_module.97bf7f779ce73a1ededc",
+  "reviewer_identity": "/root/screen_memory_v2",
+  "independent_of_primary_author": "/root/screen_protocol_v2",
+  "decision": "pass",
+  "rtl_sha256": "64ccaaeaa7020f5bea35ac7d5b8e646496c488cbe63be87e471cc7942b79b021",
+  "specification_sha256": "2189c016001d2ca8c227711ca00614e6265335f3bcdd57ce28904928aacff7ed",
+  "rtl_reasonable": true,
+  "blocking_findings": [],
+  "evidence": [
+    {
+      "kind": "independent_full_specification_and_rtl_review",
+      "findings": [
+        "Independently inspected every process and default preprocessor branch. Without USB_ASYNC_REST all reset-bearing processes are synchronous active-low; fs_ce is a clock enable, not a clock.",
+        "Checked unreset LD/H/HD/raw/F/FD pipelines, pre-edge byte capture, all bit-counter and stuffing priorities, shift-done edge detection without fs_ce gate, and packet-live drop retention.",
+        "Checked NRZI reset/idle priorities, fs_ce-driven enable pipeline, phy_mode output mapping and old-Z/old-phase usage; EOP P3 extension agrees with the exact recurrence. Source and specification describe a TX PHY, not CRC/PID generation."
+      ]
+    },
+    {
+      "kind": "reviewed_primary_local_probe",
+      "path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/complexity_admission_20260913_v2/reviews/large_module.97bf7f779ce73a1ededc/directed_smoke.log",
+      "sha256": "f373656b245d9db96c2e0f115d4ac3651756c8f25432004a9861610343ab357e",
+      "result": "PASS one-byte packet ack and two enabled-bit EOP duration with fs_ce every4 clocks",
+      "note": "Existing bounded local evidence read; no redundant rerun needed after independent source/contract inspection."
+    }
+  ],
+  "formal_scope_review": {
+    "configuration": "Declared defaults only; preprocessor_defines empty",
+    "clock": "clk",
+    "reset_expression": "!rst",
+    "input_assumptions": "None beyond reset-first qualification; intended external timing advice does not constrain equivalence histories.",
+    "qualification": "Positive/negative formal control and complete output coverage remain separately required; this review does not claim model evaluation or freeze."
+  }
+}

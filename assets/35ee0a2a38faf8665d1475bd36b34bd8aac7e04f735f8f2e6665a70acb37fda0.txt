@@ -1,0 +1,61 @@
+`timescale 1ns / 1ps
+
+module origen_126725(
+    output X,
+    input A,
+    input SLEEP
+);
+    wire sleepn;
+    not (sleepn, SLEEP);
+    and (X, A, sleepn);
+endmodule
+
+module sky130_fd_sc_lp__inputiso0p_tb;
+
+  // Inputs
+  reg A;
+  reg SLEEP;
+
+  // Outputs
+  wire X;
+
+  // Instantiate the Unit Under Test (UUT)
+  sky130_fd_sc_lp__inputiso0p uut (
+    .X(X),
+    .A(A),
+    .SLEEP(SLEEP)
+  );
+
+  // Clock generation
+  reg clk = 0;
+  always #5 clk = ~clk;
+
+  // Stimulus generation
+  initial begin
+    // Initialize inputs
+    A = 0;
+    SLEEP = 0;
+
+    // Wait for global reset
+    #100;
+
+    // Test for 1000 clock cycles
+    repeat(1000) begin
+      @(posedge clk);
+      A = $random;
+      SLEEP = $random;
+
+      // Check output
+      #1; // Wait for combinational logic to settle
+      if (SLEEP == 1'b1) begin
+        if (X !== 1'b0) $display("Error: X should be 0 when SLEEP is 1");
+      end else begin
+        if (X !== A) $display("Error: X should equal A when SLEEP is 0");
+      end
+    end
+
+    $display("Testbench completed");
+    $finish;
+  end
+
+endmodule

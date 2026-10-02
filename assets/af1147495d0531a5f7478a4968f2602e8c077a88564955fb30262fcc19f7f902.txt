@@ -1,0 +1,19 @@
+The autovcoder_084686 module is a 16-to-1 digital multiplexer with four select lines. It selects one of sixteen input data lines and routes it to a single output based on the binary value of the four-bit select signal.
+
+**Inputs:**
+*   Sixteen data inputs: i0 through i15.
+*   Four select inputs: s3, s2, s1, s0, forming a 4-bit select code (s3 is the most significant bit).
+
+**Output:**
+*   A single data output: `out`.
+
+**Behavior:**
+The module functions as a combinatorial selector. The output `out` directly reflects the logic level of the one input line selected by the four-bit combination of `s3, s2, s1, s0`. For example:
+*   If `{s3,s2,s1,s0}` is `4'b0000`, the output `out` equals input `i0`.
+*   If `{s3,s2,s1,s0}` is `4'b0001`, the output `out` equals input `i1`.
+*   This pattern continues, where the binary value of the select lines corresponds directly to the index of the selected input. If the select code is `4'b1111`, the output `out` equals input `i15`.
+
+The operation is purely combinatorial; there are no clocks, registers, or internal state. The output updates immediately whenever any input or select signal changes.
+
+**Allowed Sub-Modules:**
+The implementation may be constructed from standard combinational logic gates: NOT gates (inverters), AND gates, and a multi-input OR gate. No other modules or sequential elements (like flip-flops) are permitted.

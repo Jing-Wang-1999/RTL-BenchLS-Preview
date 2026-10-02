@@ -1,0 +1,35 @@
+The Verilog module, `streaming_to_mm_adapter_b`, interfaces between a FIFO and memory-mapped (MM) write operations, management control signals, and processing data transfer, ensuring efficient data handling during buffered writes.
+
+1. **Primary Function Summary**:
+   - The module adapts data from a FIFO to memory-mapped writes by managing alignment and data combining, adhering to enabled control signals and conditions.
+
+2. **Key Control Flow/Decision Points**:
+   - On every positive clock edge, if a reset signal is active, the combined data logic resets.
+   - When the `start` signal is high, it initializes the data boundary handling.
+   - Data from the FIFO is fetched and processed for writes when `fifo_readack` is active, which depends on several conditions, including `fifo_empty`, `stall`, `waitrequest`, and `enable` signals.
+
+3. **Data Processing and Signal Interactions**:
+   - Barrel shifters adjust the data from the FIFO to align it correctly for memory writes, using combinational logic to handle byte shifts.
+   - Data alignment is managed through a combination of shifted FIFO input data (`barrelshifter_input_A` and `barrelshifter_input_B`) and the final combined word (`combined_word`).
+   - The module handles unaligned access scenarios by setting control for `fifo_readack` and selecting the correct data (`fifo_data` or `combined_word`) to write based on the configuration `UNALIGNED_ACCESS_ENABLE`.
+   - Registers `barrelshifter_B_d1` and `bytes_to_next_boundary_minus_one_d1` track state changes over clock cycles to handle data continuity and proper shift adjustments.
+
+4. **Clear and Concise Instruction**:
+   - Design a Verilog module, `streaming_to_mm_adapter_b`, that interfaces a FIFO with a memory-mapped write system. It synchronizes data transfer based on control signals (`enable`, `start`, `waitrequest`, `stall`, `fifo_empty`) and clock edges. The module processes and aligns FIFO data using barrel shifters that handle data shifts and alignments for unaligned memory writes. It manages data boundary calculations and combines or transfers data for memory writes, depending on configuration and signal conditions. Ensure the output signals (`fifo_readack` and `write_data`) are appropriately managed based on enabling conditions, FIFO status, and alignment settings.
+
+Module Interface:
+module streaming_to_mm_adapter_b (
+  clk,
+  reset,
+
+  enable,
+  address,
+  start,
+  waitrequest,
+  stall,
+  write_data,
+  
+  fifo_data,
+  fifo_empty,
+  fifo_readack
+);

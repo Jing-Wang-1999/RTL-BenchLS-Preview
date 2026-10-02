@@ -1,0 +1,47 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cvfpu/pull/116",
+  "issue_url": "https://github.com/openhwgroup/cvfpu/issues/115",
+  "repository": "openhwgroup/cvfpu",
+  "pr_number": 116,
+  "issue_number": 115,
+  "verilog_files": [
+    "src/fpnew_noncomp.sv"
+  ],
+  "deletions": 3,
+  "additions": 5,
+  "patches": [
+    {
+      "filename": "src/fpnew_noncomp.sv",
+      "patch": "@@ -260,10 +260,12 @@ module fpnew_noncomp #(\n     cmp_result = '0; // false\n     cmp_status = '0; // no flags\n \n-    // Signalling NaNs always compare as false and are illegal\n-    if (signalling_nan) cmp_status.NV = 1'b1; // invalid operation\n+    // Signalling NaNs always compare as false (except for \"not equal\" compares) and are illegal\n+    if (signalling_nan) begin\n+      cmp_status.NV = 1'b1; // invalid operation\n+      cmp_result    = inp_pipe_rnd_mode_q[NUM_INP_REGS] == fpnew_pkg::RDN && inp_pipe_op_mod_q[NUM_INP_REGS];\n     // Otherwise do comparisons\n-    else begin\n+    end else begin\n       unique case (inp_pipe_rnd_mode_q[NUM_INP_REGS])\n         fpnew_pkg::RNE: begin // Less than or equal\n           if (any_operand_nan) cmp_status.NV = 1'b1; // Signalling comparison: NaNs are invalid",
+      "additions": 5,
+      "deletions": 3,
+      "changes": 8
+    }
+  ],
+  "pr_info": {
+    "title": "\ud83e\ude79 Fix result of not equal compare w signaling NaNs",
+    "body": "Currently the NONCOMP block sets the result bit when either operand of a \"not equal\" comparison is a quiet NaN but not for signaling NaNs. In order to treat quiet and signaling NaNs consistently and to be in line with the RISC-V spec, this PR modifies the NONCOMP compare logic to set the result bit when either of the operands of a \"not equal\" compare is a signaling NaN as well.\r\n\r\nFixes #115.",
+    "state": "closed",
+    "created_at": "2024-05-08T09:55:49Z",
+    "updated_at": "2024-05-26T08:30:31Z",
+    "merged_at": "2024-05-23T09:51:02Z",
+    "user": "michael-platzer"
+  },
+  "issue_info": {
+    "title": "NONCOMP clears the result bit for signaling NaNs in \"not equal\" compare",
+    "body": "The NONCOMP block sets the result bit when either operand of a \"not equal\" comparison is a NaN:\r\n\r\nhttps://github.com/openhwgroup/cvfpu/blob/4aac6b3e87a30c8567dbe7401eba3274eea18afc/src/fpnew_noncomp.sv#L276-L279\r\n\r\nHowever, it does so only for quiet NaNs, not for signaling NaNs.\r\n\r\nWhile the effect of the modifier bit on comparisons is not documented, a comment in the source code indicates that its effect should be to invert the boolean result of comparisons. If either operand is a NaN, the result bit is cleared, except for a \"not equal\" comparison, which sets the result bit when encountering a NaN. This is in line with the way NaN values are handled in compare instructions in the RISC-V spec.\r\n\r\nHence, in order to treat quiet and signaling NaNs consistently and to be in line with the RISC-V spec, I suggest to modify the NONCOMP compare logic to set the result bit when either of the operands of a \"not equal\" compare is a signaling NaN.",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2024-05-08T09:47:53Z",
+    "updated_at": "2024-05-23T09:51:03Z"
+  },
+  "source_info": {
+    "source_file": "23.txt",
+    "line_number": 4
+  },
+  "base_commit": "4aac6b3e87a30c8567dbe7401eba3274eea18afc",
+  "head_commit": "d7a39ed0d52dc79f0ad746cf20985a26ba354de2",
+  "base_ref": "develop",
+  "task_id": "openhwgroup_cvfpu_116_115",
+  "lec_status": "useful_pass"
+}

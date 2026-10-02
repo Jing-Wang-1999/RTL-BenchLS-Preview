@@ -1,0 +1,22 @@
+always @(negedge clk_i)
+  begin
+    if (rst_i)
+    begin
+      tod_latch_e <= 1'b0;
+      tod_count_e <= 1'b0; // tod is not running after reset
+    end
+    else if (sel_i)
+    begin
+      if (~we_i)
+      begin
+        // latch register when reading tod_hi
+        // unlatch register when reading tod low
+        tod_latch_e <= (tod_latch_e | sel_todhi_i) & ~sel_todlo_i;
+      end
+      else if (~sel_alrm_i)
+      begin
+        // Write to TOD: any write stops, LSB write restarts
+        tod_count_e <= sel_todlo_i;  // 1 if writing lo, 0 otherwise
+      end
+    end
+  end

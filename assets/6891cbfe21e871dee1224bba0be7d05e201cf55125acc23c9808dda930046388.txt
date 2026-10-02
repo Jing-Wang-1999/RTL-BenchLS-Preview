@@ -1,0 +1,207 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module uart_rxfsm (
+             reset_n        ,
+             baud_clk_16x   ,
+
+             cfg_rx_enable  ,
+             cfg_stop_bit   ,
+             cfg_pri_mod    ,
+
+             error_ind      ,
+
+       
+             fifo_aval      ,
+             fifo_wr        ,
+             fifo_data      ,
+
+          
+             si  
+          );
+
+
+input             reset_n        ; 
+input             baud_clk_16x   ; 
+
+input             cfg_rx_enable  ; 
+input             cfg_stop_bit   ; 
+                                   
+input   [1:0]     cfg_pri_mod    ;
+                                   
+                                   
+                                   
+
+output [1:0]      error_ind     ; 
+                                  
+                                  
+                                  
+
+
+
+input             fifo_aval      ; 
+output            fifo_wr        ; 
+output  [7:0]     fifo_data      ; 
+
+
+input             si             ;  
+
+
+
+reg     [7:0]    fifo_data       ; 
+reg              fifo_wr         ; 
+reg    [1:0]     error_ind       ; 
+reg    [2:0]     cnt             ;
+reg    [3:0]     offset          ; 
+reg    [3:0]     rxpos           ; 
+reg    [2:0]     rxstate         ;
+reg              si_d            ; 
+reg              si_2d           ; 
+
+parameter idle_st      = 3'b000;
+parameter xfr_start    = 3'b001;
+parameter xfr_data_st  = 3'b010;
+parameter xfr_pri_st   = 3'b011;
+parameter xfr_stop_st1 = 3'b100;
+parameter xfr_stop_st2 = 3'b101;
+
+
+always @(negedge reset_n or posedge baud_clk_16x) begin
+   if(reset_n == 0) begin
+      rxstate   <= 3'b0;
+      offset    <= 4'b0;
+      rxpos     <= 4'b0;
+      cnt       <= 3'b0;
+      error_ind <= 2'b0;
+      fifo_wr   <= 1'b0;
+      fifo_data <= 8'h0;
+      si_d      <= 1'b1;
+      si_2d     <= 1'b1;
+   end
+   else begin
+      
+      si_d      <= si;
+      si_2d     <= si_d;
+      offset     <= offset + 1;
+      case(rxstate)
+       idle_st   : begin
+            if(!si_2d) begin 
+               if(fifo_aval && cfg_rx_enable) begin
+                 rxstate   <=   xfr_start;
+                 cnt       <=   0;
+                 rxpos     <=   offset + 8; 
+                 error_ind <= 2'b00;
+               end
+               else begin
+                  error_ind <= 2'b11; 
+               end
+            end else begin
+               error_ind <= 2'b00; 
+            end
+         end
+      xfr_start : begin
+            
+            if(cnt < 7 && si_2d) begin 
+               rxstate <=   idle_st;
+            end
+            else if(cnt == 7 && !si_2d) begin 
+                rxstate <=   xfr_data_st;
+                cnt     <=   0;
+            end else begin
+              cnt  <= cnt +1;
+            end
+         end
+      xfr_data_st : begin
+             if(rxpos == offset) begin
+                fifo_data[cnt] <= si_2d;
+                cnt            <= cnt+1;
+                if(cnt == 7) begin
+                   fifo_wr <= 1;
+                   if(cfg_pri_mod == 2'b00)  
+                       rxstate <=   xfr_stop_st1;
+                   else rxstate <= xfr_pri_st;  
+                end
+             end
+          end
+       xfr_pri_st   : begin
+            fifo_wr <= 0;
+            if(rxpos == offset) begin
+               if(cfg_pri_mod == 2'b10)  
+                  if( si_2d != ^fifo_data) error_ind <= 2'b10;
+               else  
+                  if( si_2d != ~(^fifo_data)) error_ind <= 2'b10;
+               rxstate <=   xfr_stop_st1;
+            end
+         end
+       xfr_stop_st1  : begin
+          fifo_wr <= 0;
+          if(rxpos == offset) begin
+             if(si_2d) begin
+               if(cfg_stop_bit) 
+                  rxstate <=   xfr_stop_st2;
+               else   
+                  rxstate <=   idle_st;
+             end else begin 
+                error_ind <= 2'b01;
+                rxstate   <=   idle_st;
+             end
+          end
+       end
+       xfr_stop_st2  : begin
+          if(rxpos == offset) begin
+             if(si_2d) begin
+                rxstate <=   idle_st;
+             end else begin 
+                error_ind <= 2'b01;
+                rxstate   <=   idle_st;
+             end
+          end
+       end
+    endcase
+   end
+end
+
+
+endmodule

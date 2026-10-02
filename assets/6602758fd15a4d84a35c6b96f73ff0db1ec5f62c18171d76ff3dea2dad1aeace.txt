@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   or1k_data_cache_controller_a.v0, or1k_data_cache_controller_a.v1, or1k_data_cache_controller_a, clk, rst
+set DESIGN_NAME_GOLDEN "or1k_data_cache_controller_a.v0"
+set DESIGN_NAME "or1k_data_cache_controller_a.v1"
+set TOP_NAME "or1k_data_cache_controller_a"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_9406a80af29d7148.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_9406a80af29d7148.negative.v
+check_sec -elaborate -spec -top or1k_data_cache_controller_a -disable_auto_bbox
+check_sec -elaborate -imp -top or1k_data_cache_controller_a -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clk 
+reset rst
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

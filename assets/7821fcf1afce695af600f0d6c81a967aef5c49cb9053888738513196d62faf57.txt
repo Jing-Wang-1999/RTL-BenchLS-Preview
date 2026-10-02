@@ -1,0 +1,44 @@
+always @(posedge m_clk) begin
+    m_axil_awvalid_reg <= m_axil_awvalid_reg && !m_axil_awready;
+    m_axil_wvalid_reg <= m_axil_wvalid_reg && !m_axil_wready;
+
+    if (!m_axil_bvalid_reg) begin
+        m_axil_bresp_reg <= m_axil_bresp;
+        m_axil_bvalid_reg <= m_axil_bvalid;
+    end
+
+    case (m_state_reg)
+        2'd0: begin
+            if (s_flag_sync_reg_2) begin
+                m_state_reg <= 2'd1;
+                m_axil_awaddr_reg <= s_axil_awaddr_reg;
+                m_axil_awprot_reg <= s_axil_awprot_reg;
+                m_axil_awvalid_reg <= 1'b1;
+                m_axil_wdata_reg <= s_axil_wdata_reg;
+                m_axil_wstrb_reg <= s_axil_wstrb_reg;
+                m_axil_wvalid_reg <= 1'b1;
+                m_axil_bvalid_reg <= 1'b0;
+            end
+        end
+        2'd1: begin
+            if (m_axil_bvalid_reg) begin
+                m_flag_reg <= 1'b1;
+                m_state_reg <= 2'd2;
+            end
+        end
+        2'd2: begin
+            if (!s_flag_sync_reg_2) begin
+                m_state_reg <= 2'd0;
+                m_flag_reg <= 1'b0;
+            end
+        end
+    endcase
+
+    if (m_rst) begin
+        m_state_reg <= 2'd0;
+        m_flag_reg <= 1'b0;
+        m_axil_awvalid_reg <= 1'b0;
+        m_axil_wvalid_reg <= 1'b0;
+        m_axil_bvalid_reg <= 1'b1;
+    end
+end

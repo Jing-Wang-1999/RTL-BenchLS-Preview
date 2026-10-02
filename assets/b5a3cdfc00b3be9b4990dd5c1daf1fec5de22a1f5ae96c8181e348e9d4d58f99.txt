@@ -1,0 +1,11 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/harder2_1b3a82be3b3a460ebd0f_positive.v0.v
+check_sec -analyze -imp -sv ./input/rtl/harder2_1b3a82be3b3a460ebd0f_positive.negative.v
+check_sec -elaborate -spec -top altera_avalon_sc_fifo -disable_auto_bbox
+check_sec -elaborate -imp -top altera_avalon_sc_fifo -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clk
+reset -expression {reset}
+check_sec -gen
+check_sec -prove -strategy proof

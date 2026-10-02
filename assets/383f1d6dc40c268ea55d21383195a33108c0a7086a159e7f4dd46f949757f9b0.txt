@@ -1,0 +1,25 @@
+The module is a 16-bit arithmetic logic unit (ALU) that performs operations on two 16-bit inputs based on a 3-bit control signal. It outputs a 16-bit result and a carry flag.
+
+Inputs:
+- PORT1 and PORT2: 16-bit data inputs.
+- ALUCON: 3-bit control input selecting the operation.
+
+Outputs:
+- ALUOUT: 16-bit result of the operation.
+- carry: 1-bit flag indicating a carry-out condition for arithmetic operations; it is zero for logical and shift operations.
+
+Operations (selected by ALUCON):
+- 000: Addition. The sum of PORT1 and PORT2 is computed. The carry flag is set based on overflow detection for signed 16-bit numbers.
+- 001: Subtraction. PORT1 minus PORT2 is computed. The carry flag is set based on overflow detection for signed subtraction.
+- 010: Bitwise AND.
+- 011: Bitwise OR.
+- 100: Bitwise XOR.
+- 101: Bitwise NOT (applied only to PORT1; PORT2 is ignored).
+- 110: Left shift by one bit (PORT1 is shifted; PORT2 is ignored).
+- 111: Right shift by one bit (PORT1 is shifted; PORT2 is ignored).
+
+For addition and subtraction, the module uses an internal 17-bit temporary calculation to detect overflow. The carry flag is derived from specific sign-bit patterns of the inputs and result to indicate signed overflow. For logical and shift operations, the carry flag is always cleared.
+
+If ALUCON is any value not explicitly defined (though all 3-bit combinations are covered), the output defaults to zero and carry is zero.
+
+The module is purely combinational; outputs update immediately based on input changes. No sub-modules are used; all operations are implemented directly.

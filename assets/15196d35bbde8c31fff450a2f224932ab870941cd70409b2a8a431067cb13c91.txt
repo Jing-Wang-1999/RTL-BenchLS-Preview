@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.2a7623111bb7665e7ad0.654983682765",
+  "compile_check": {
+    "case_id": "s1derived.2a7623111bb7665e7ad0.654983682765",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "HLS_fp17_add_core_chn_a_rsci_chn_a_wait_ctrl",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.2a7623111bb7665e7ad0.654983682765/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "2a7623111bb7665e7ad0152fc0963073698337249e7a8269cd0d5e779ee421cb",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.2a7623111bb7665e7ad0.654983682765",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.2a7623111bb7665e7ad0",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "HLS_fp17_add_core_chn_a_rsci_chn_a_wait_ctrl"
+  },
+  "independent_review": {
+    "case_id": "s1derived.2a7623111bb7665e7ad0.654983682765",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "De Morgan expansion is identical; all port names, equations, and asynchronous reset are complete.",
+        "rtl_excerpt": "`icwt <= ~((~(icwt | pdswt0)) | biwt);`",
+        "spec_excerpt": "\u201cicwt=(icwt|pdswt0)&~biwt\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.2a7623111bb7665e7ad0",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "bd11e8dbf0bf7a7f0c7bf306d618bf533983bd4ba0c8f94fa9b8f034986ad649",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "2a7623111bb7665e7ad0152fc0963073698337249e7a8269cd0d5e779ee421cb",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.2a7623111bb7665e7ad0",
+  "primary_review": {
+    "case_id": "s1derived.2a7623111bb7665e7ad0.654983682765",
+    "checks": {
+      "behavior": "Behavior incomplete.",
+      "boundaries": "biwt feedback clears wait.",
+      "interface": "Ports match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Reset is asynchronous."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Behavior incomplete. Reset is asynchronous.",
+        "rtl_excerpt": "always @(posedge clk or negedge rstn); pdswt/ogwt/biwt/icwt equations",
+        "spec_excerpt": "\u201cActive-low synchronous reset\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "Reset is called synchronous despite negedge reset, and prose stops before exact equations.",
+        "rtl_evidence": "always @(posedge clk or negedge rstn); pdswt/ogwt/biwt/icwt equations",
+        "spec_evidence": "\u201cActive-low synchronous reset\u201d",
+        "type": "reset_and_truncated_equations"
+      }
+    ],
+    "parent_id": "s1p.2a7623111bb7665e7ad0",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.2a7623111bb7665e7ad0.654983682765.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "2a7623111bb7665e7ad0152fc0963073698337249e7a8269cd0d5e779ee421cb",
+    "source_group": "S1",
+    "specification_sha256": "6549836827657522e86615bf2498d0d541153e8ddbde6d6968a563f691203b45",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.2a7623111bb7665e7ad0.654983682765.md",
+  "qualified_specification_sha256": "bd11e8dbf0bf7a7f0c7bf306d618bf533983bd4ba0c8f94fa9b8f034986ad649",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.2a7623111bb7665e7ad0.654983682765/private/golden_design.v",
+  "rtl_sha256": "2a7623111bb7665e7ad0152fc0963073698337249e7a8269cd0d5e779ee421cb",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.2a7623111bb7665e7ad0.654983682765/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "6549836827657522e86615bf2498d0d541153e8ddbde6d6968a563f691203b45",
+  "top_module": "HLS_fp17_add_core_chn_a_rsci_chn_a_wait_ctrl"
+}

@@ -1,0 +1,52 @@
+module origen_062017 (
+    input wire clk,
+    output reg sync,
+    output reg din,
+    input wire [11:0] rom_data,
+    output reg rom_en,
+    output reg [8:0] rom_addr,
+    input wire [8:0] freq
+);
+
+    reg [4:0] cnt;
+    reg [11:0] shift_reg;
+    reg [8:0] addr;
+
+    always @(posedge clk) begin
+        case (cnt)
+            5'd0: begin
+                rom_en <= 1'b0;
+                shift_reg <= rom_data;
+                din <= shift_reg[11];
+                sync <= 1'b0;
+                cnt <= cnt + 1'b1;
+            end
+            5'd1, 5'd2, 5'd3, 5'd4, 5'd5, 5'd6, 5'd7, 5'd8, 5'd9, 5'd10, 5'd11: begin
+                shift_reg <= {shift_reg[10:0], 1'b0};
+                din <= shift_reg[11];
+                cnt <= cnt + 1'b1;
+            end
+            5'd12, 5'd13: begin
+                din <= 1'b0;
+                cnt <= cnt + 1'b1;
+            end
+            5'd14: begin
+                din <= 1'b0;
+                sync <= 1'b1;
+                cnt <= cnt + 1'b1;
+            end
+            5'd15: begin
+                sync <= 1'b0;
+                addr <= addr + freq;
+                cnt <= cnt + 1'b1;
+            end
+            5'd16: begin
+                rom_en <= 1'b1;
+                rom_addr <= addr;
+                cnt <= 5'd0;
+            end
+            default: cnt <= 5'd0;
+        endcase
+    end
+
+endmodule

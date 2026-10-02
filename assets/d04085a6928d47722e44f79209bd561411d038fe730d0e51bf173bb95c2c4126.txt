@@ -1,0 +1,5 @@
+# autovcoder_024618
+
+Parameter `WIDTH=1` sets the widths of input `d` and output `q`; `clk` and `sync` are scalar inputs.
+
+Without `ARM_CDC_CHECK`, `q` continuously equals `d`, and `clk` and `sync` have no effect. With `ARM_CDC_CHECK`, `sync=1` also makes `q=d`. When `sync=0`, any change of `d` creates a simulation-oriented asynchronous `change` event that sets both pipeline flags. While the second flag `p2` is one, every bit of `q` is high impedance; on destination-clock rising edges with no new change, `p1` clears and `p2` receives the old `p1`, so corruption persists through the first such edge and clears after the second. Outside that interval, `q=d`. There is no explicit reset. This checker models a CDC corruption window; it does not sample or register the data bus as a conventional synchronizer.

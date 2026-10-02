@@ -1,0 +1,119 @@
+{
+  "case_id": "s1derived.23c18106620501b5354e.7d9b7c9a9ea0",
+  "compile_check": {
+    "case_id": "s1derived.23c18106620501b5354e.7d9b7c9a9ea0",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "OBUF",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.OBUF.78c0eca95f9a7d7e/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.23c18106620501b5354e",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "23c18106620501b5354e524fe296a7c3ca52ef7174fd49813be6f485678692a0",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.23c18106620501b5354e.7d9b7c9a9ea0",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.OBUF.78c0eca95f9a7d7e/private/commercial_positive.log",
+    "commercial_log_sha256": "d2084296f745b48234e15b01a690f187845c42411ec7db108995bf5128b853de",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.OBUF.78c0eca95f9a7d7e/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "OBUF"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.OBUF.78c0eca95f9a7d7e",
+    "parent_id": "s1p.23c18106620501b5354e",
+    "revised_tops": [
+      "OBUF"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "OBUF",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.23c18106620501b5354e.7d9b7c9a9ea0",
+    "checks": {
+      "behavior": "Low-enabled buffer continuously drives I.",
+      "boundaries": "GTS is constant low, so no Z behavior.",
+      "interface": "Interface and conditional LOC match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "No state/reset."
+    },
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Low-enabled buffer continuously drives I. No state/reset. GTS is constant low, so no Z behavior.",
+        "rtl_excerpt": "parameter defaults match; wire GTS=0; bufif0 B1(O,I,GTS)",
+        "spec_excerpt": "\u201cCAPACITANCE=... DRIVE=12 ... GTS tied low ... drives O with I\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.23c18106620501b5354e",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "f0977d51445e0982e9443dd046f1860903dc9c6eb0d51e904546f7f43edbacc8",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "23c18106620501b5354e524fe296a7c3ca52ef7174fd49813be6f485678692a0",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.OBUF.78c0eca95f9a7d7e/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.OBUF.78c0eca95f9a7d7e/private/historical_harness/01_conformal_rtl_OBUF.do"
+  ],
+  "parent_id": "s1p.23c18106620501b5354e",
+  "primary_review": {
+    "case_id": "s1derived.23c18106620501b5354e.7d9b7c9a9ea0",
+    "checks": {
+      "behavior": "Compared the observable mapping: The RTL ties GTS low and uses bufif0, with CAPACITANCE=\"DONT_CARE\", IOSTANDARD=\"DEFAULT\", and conditional LOC=\" UNPLACED\".",
+      "boundaries": "Checked parameter defaults, simultaneous controls, shift/count limits, arithmetic truncation, lookup coverage, or Boolean truth boundaries as applicable.",
+      "interface": "Compared declared ports/widths/parameters: The prose gives pass-through behavior and only some parameter defaults, omitting CAPACITANCE, IOSTANDARD, and conditional LOC defaults.",
+      "rtl_reasonableness": "RTL implements a coherent synthesizable combinational or sequential hardware function for the reviewed configuration contract.",
+      "sequential_and_reset": "No sequential behavior is present unless described in the evidence; for sequential cases, clock edge, reset level/timing, hold, enable, and priority were compared explicitly."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The complete prose and RTL were compared for interface, defaults, function, timing, control priority, and relevant boundaries; this supports decision=revise.",
+        "rtl_excerpt": "The RTL ties GTS low and uses bufif0, with CAPACITANCE=\"DONT_CARE\", IOSTANDARD=\"DEFAULT\", and conditional LOC=\" UNPLACED\".",
+        "spec_excerpt": "The prose gives pass-through behavior and only some parameter defaults, omitting CAPACITANCE, IOSTANDARD, and conditional LOC defaults."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose gives pass-through behavior and only some parameter defaults, omitting CAPACITANCE, IOSTANDARD, and conditional LOC defaults.",
+        "rtl_evidence": "The RTL ties GTS low and uses bufif0, with CAPACITANCE=\"DONT_CARE\", IOSTANDARD=\"DEFAULT\", and conditional LOC=\" UNPLACED\".",
+        "spec_evidence": "The prose gives pass-through behavior and only some parameter defaults, omitting CAPACITANCE, IOSTANDARD, and conditional LOC defaults.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.23c18106620501b5354e",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_01/s1derived.23c18106620501b5354e.7d9b7c9a9ea0.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "23c18106620501b5354e524fe296a7c3ca52ef7174fd49813be6f485678692a0",
+    "source_group": "S1",
+    "specification_sha256": "7d9b7c9a9ea0df6436cf8de62b380e1140d55602d7e014afcdec0b7301c93351",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_01/s1derived.23c18106620501b5354e.7d9b7c9a9ea0.md",
+  "qualified_specification_sha256": "f0977d51445e0982e9443dd046f1860903dc9c6eb0d51e904546f7f43edbacc8",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.OBUF.78c0eca95f9a7d7e/private/golden_design.v",
+  "rtl_sha256": "23c18106620501b5354e524fe296a7c3ca52ef7174fd49813be6f485678692a0",
+  "source_corpus": "SEC-Flow-Star-repos-31.oh",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.OBUF.78c0eca95f9a7d7e/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "7d9b7c9a9ea0df6436cf8de62b380e1140d55602d7e014afcdec0b7301c93351",
+  "top_module": "OBUF"
+}

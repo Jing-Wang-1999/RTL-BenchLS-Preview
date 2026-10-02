@@ -1,0 +1,51 @@
+module origen_166168(
+    input clk,
+    output cclk,
+    output vclk,
+    output reg iclk
+);
+
+`ifdef SYNTHESIS
+    // Use Xilinx DCM to generate cclk and vclk
+    DCM #(
+        .CLKDV_DIVIDE(4.0),
+        .CLKFX_DIVIDE(4),
+        .CLKFX_MULTIPLY(2),
+        .CLKIN_DIVIDE_BY_2("FALSE"),
+        .CLKIN_PERIOD(10.0),
+        .CLKOUT_PHASE_SHIFT("NONE"),
+        .CLK_FEEDBACK("1X"),
+        .DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
+        .DUTY_CYCLE_CORRECTION("TRUE"),
+        .PHASE_SHIFT(0),
+        .STARTUP_WAIT("FALSE")
+    ) dcm_inst (
+        .CLKIN(clk),
+        .CLKFB(cclk),
+        .RST(1'b0),
+        .DSSEN(1'b0),
+        .PSINCDEC(1'b0),
+        .PSEN(1'b0),
+        .CLKDV(vclk),
+        .CLKFX(cclk),
+        .CLKFX180(),
+        .CLK0(),
+        .CLK2X(),
+        .CLK2X180(),
+        .LOCKED()
+    );
+`else
+    // Assign clk directly to cclk and vclk
+    assign cclk = clk;
+    assign vclk = clk;
+`endif
+
+    // Generate iclk
+    initial begin
+        iclk = 1'b0;
+    end
+    always @(posedge cclk) begin
+        iclk <= ~iclk;
+    end
+
+endmodule

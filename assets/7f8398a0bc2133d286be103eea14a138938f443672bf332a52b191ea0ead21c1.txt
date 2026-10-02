@@ -1,0 +1,17 @@
+module mg_01719 (
+    input [63:0] A,
+    input [1:0] factor,
+    output reg [63:0] B
+);
+
+    always @(*) begin
+        case (factor)
+            2'b00:   B = A;
+            2'b01:   B = {4'b0, A[63:4]};
+            2'b10:   B = {8'b0, A[63:8]};
+            2'b11:   B = {12'b0, A[63:12]};
+            default: B = A;
+        endcase
+    end
+
+endmodule

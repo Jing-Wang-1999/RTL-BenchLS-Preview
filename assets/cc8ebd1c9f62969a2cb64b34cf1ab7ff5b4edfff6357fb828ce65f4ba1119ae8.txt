@@ -1,0 +1,107 @@
+module autovcoder_019463 #(
+    parameter TCQ = 100,
+    parameter BUF_DEPTH = 5,  // valid values are 5, 6, 7, and 8
+    parameter DATA_WIDTH = 1
+) (
+    output [DATA_WIDTH-1:0] rdata,
+    input  [DATA_WIDTH-1:0] wdata,
+    input                   rclk,
+    input                   wclk,
+    input                   rst
+);
+
+  //***************************************************************************
+  // Local parameters
+  //***************************************************************************
+
+  localparam SHFTR_MSB = (BUF_DEPTH - 1) / 2;
+
+  //***************************************************************************
+  // Internal signals
+  //***************************************************************************
+
+  reg               SyncResetRd;
+  reg [SHFTR_MSB:0] RdCEshftr;
+  reg [        2:0] RdAdrsCntr;
+
+  reg               SyncResetWt;
+  reg               WtAdrsCntr_ce;
+  reg [        2:0] WtAdrsCntr;
+
+  //***************************************************************************
+  // read domain registers
+  //***************************************************************************
+
+  always @(posedge rclk or posedge rst)
+    if (rst) SyncResetRd <= #TCQ 1'b1;
+    else SyncResetRd <= #TCQ 1'b0;
+
+  always @(posedge rclk or posedge SyncResetRd) begin
+    if (SyncResetRd) begin
+      RdCEshftr  <= #TCQ 'b0;
+      RdAdrsCntr <= #TCQ 'b0;
+    end else begin
+      RdCEshftr <= #TCQ{RdCEshftr[SHFTR_MSB-1:0], WtAdrsCntr_ce};
+
+      if (RdCEshftr[SHFTR_MSB]) begin
+        if (RdAdrsCntr == (BUF_DEPTH - 1)) RdAdrsCntr <= #TCQ 'b0;
+        else RdAdrsCntr <= #TCQ RdAdrsCntr + 1;
+      end
+    end
+  end
+
+  //***************************************************************************
+  // write domain registers
+  //***************************************************************************
+
+  always @(posedge wclk or posedge SyncResetRd)
+    if (SyncResetRd) SyncResetWt <= #TCQ 1'b1;
+    else SyncResetWt <= #TCQ 1'b0;
+
+  always @(posedge wclk or posedge SyncResetWt) begin
+    if (SyncResetWt) begin
+      WtAdrsCntr_ce <= #TCQ 1'b0;
+      WtAdrsCntr    <= #TCQ  'b0;
+    end else begin
+      WtAdrsCntr_ce <= #TCQ 1'b1;
+
+      if (WtAdrsCntr_ce) begin
+        if (WtAdrsCntr == (BUF_DEPTH - 1)) WtAdrsCntr <= #TCQ 'b0;
+        else WtAdrsCntr <= #TCQ WtAdrsCntr + 1;
+      end
+    end
+  end
+
+  //***************************************************************************
+  // instantiate one RAM64X1D for each data bit
+  //***************************************************************************
+
+  genvar i;
+  generate
+    for (i = 0; i < DATA_WIDTH; i = i + 1) begin : gen_ram
+      RAM64X1D #(
+          .INIT(64'h0000000000000000)
+      ) u_RAM64X1D (
+          .DPO  (rdata[i]),
+          .SPO  (),
+          .A0   (WtAdrsCntr[0]),
+          .A1   (WtAdrsCntr[1]),
+          .A2   (WtAdrsCntr[2]),
+          .A3   (1'b0),
+          .A4   (1'b0),
+          .A5   (1'b0),
+          .D    (wdata[i]),
+          .DPRA0(RdAdrsCntr[0]),
+          .DPRA1(RdAdrsCntr[1]),
+          .DPRA2(RdAdrsCntr[2]),
+          .DPRA3(1'b0),
+          .DPRA4(1'b0),
+          .DPRA5(1'b0),
+          .WCLK (wclk),
+          .WE   (1'b1)
+      );
+    end
+  endgenerate
+
+endmodule
+

@@ -1,0 +1,166 @@
+#!/usr/bin/env python3
+"""Replay a sealed native project evaluator after enforcing the Direct file contract.
+
+This adapter is a benchmark contract checker, not a hostile-code security sandbox.
+Only public RTL files are accepted; golden implementation files in the temporary
+native payload are all replaced before the private evaluator is launched.
+"""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import tempfile
+
+
+def write_json(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + '\n')
+
+
+def safe_file(root, relative):
+    p = root / relative
+    if Path(relative).is_absolute() or '..' in Path(relative).parts:
+        raise ValueError('unsafe relative path: ' + relative)
+    if not p.is_file() or p.is_symlink() or not p.resolve().is_relative_to(root.resolve()):
+        raise ValueError('missing/unsafe file: ' + relative)
+    return p
+
+
+def evaluate(case_path, submission, output):
+    case_path, submission, output = map(lambda x: Path(x).resolve(), (case_path, submission, output))
+    output.mkdir(parents=True, exist_ok=True)
+    case = json.loads((case_path / 'case.json').read_text())
+    cfg = json.loads((case_path / 'private/direct_adapter.json').read_text())
+    contract = json.loads((case_path / 'public/output_contract.json').read_text())
+    scoring = json.loads((case_path / 'private/scoring.json').read_text())
+    result = dict(project_id=case['project_id'], contract_pass=False, compile_pass=False,
+                  errors=[], points=[], evaluator='sealed_native_direct_adapter_v1')
+    code_files = {}
+    expected_modules = []
+    for item in contract['required_files']:
+        try:
+            p = safe_file(submission, item['path'])
+            code = p.read_text(errors='strict')
+            clean = re.sub(r'/\*.*?\*/|//[^\n]*', '', code, flags=re.S)
+            declared = re.findall(r'\bmodule\s+(?:automatic\s+)?([A-Za-z_]\w*)', clean)
+            expected = item.get('modules', [item['module']])
+            if sorted(declared) != sorted(expected):
+                raise ValueError('declared modules differ from contract: ' + item['path'])
+            expected_modules += expected
+            calls = set(re.findall(r'\$[A-Za-z_]\w*', clean))
+            allowed = set(cfg.get('allowed_system_functions', ['$clog2', '$signed', '$unsigned', '$bits']))
+            if calls - allowed:
+                raise ValueError('unsupported simulator call in ' + item['path'] + ': ' + ', '.join(sorted(calls-allowed)))
+            if re.search(r'\b(?:force|release|final)\b|`(?:line|pragma)\b', clean):
+                raise ValueError('unsupported simulation construct: ' + item['path'])
+            includes = re.findall(r'`include\s+"([^"]+)"', clean)
+            if clean.count('`include') != len(includes) or any(x not in cfg.get('allowed_includes', []) for x in includes):
+                raise ValueError('unapproved include: ' + item['path'])
+            code_files[item['path']] = code
+        except (ValueError, UnicodeError) as exc:
+            result['errors'].append(str(exc))
+    if len(expected_modules) != len(set(expected_modules)):
+        result['errors'].append('duplicate declared module contract')
+    result['contract_pass'] = not result['errors']
+    raw = {}
+    if result['contract_pass']:
+        upstream = case_path / cfg['upstream_case']
+        with tempfile.TemporaryDirectory(prefix='rtlbenchls-direct-native-') as tmp:
+            work = Path(tmp)
+            private_case = work / 'upstream'
+            shutil.copytree(upstream, private_case)
+            payload = private_case / 'payload'
+            candidate = work / 'candidate'
+            candidate.mkdir()
+            # Replace every implementation file, including copies the upstream
+            # compiler might select through a local include path.
+            for name, text in code_files.items():
+                target = candidate / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(text)
+                target = payload / 'source' / name
+                if not target.is_file():
+                    raise ValueError('contract/payload source closure mismatch: ' + name)
+                target.write_text(text)
+            compile_argv = [cfg.get('iverilog', '/home/jwangjw/anaconda3/bin/iverilog'),
+                            cfg.get('language_flag','-g2012'), '-s', contract['top_module'], '-o', str(work / 'project.vvp')]
+            for directory in sorted({str((payload / 'source' / name).parent) for name in code_files}):
+                compile_argv += ['-I', directory]
+            compile_argv += cfg.get('compile_flags', [])
+            compile_argv += [str(candidate / name) for name in cfg.get('compile_files',code_files)]
+            # Fixed board clock primitives / protocol definitions are support,
+            # and are explicitly listed in the public environment contract.
+            compile_argv += [str(safe_file(payload/'source',name)) for name in cfg.get('compile_support_files',[])]
+            write_json(output / 'project_compile.command.json', {'argv': compile_argv})
+            try:
+                compile_run = subprocess.run(compile_argv, cwd=work, capture_output=True, timeout=60)
+                (output / 'project_compile.stdout.log').write_bytes(compile_run.stdout)
+                (output / 'project_compile.stderr.log').write_bytes(compile_run.stderr)
+                result['compile_pass'] = compile_run.returncode == 0
+                result['compile_returncode'] = compile_run.returncode
+            except subprocess.TimeoutExpired:
+                result['compile_pass'] = False
+                result['errors'].append('project compilation timeout')
+            replacements = {'{python}': cfg.get('python', '/home/jwangjw/anaconda3/bin/python3'),
+                            '{entrypoint}': str(safe_file(case_path, cfg['entrypoint'])),
+                            '{case}': str(private_case), '{payload}': str(payload),
+                            '{candidate}': str(candidate), '{output}': str(output / 'native')}
+            argv = cfg['argv'][:]
+            for token, value in replacements.items():
+                argv = [arg.replace(token, value) for arg in argv]
+            write_json(output / 'command.json', {'argv': argv, 'source_sha256': {
+                name: hashlib.sha256(text.encode()).hexdigest() for name, text in code_files.items()}})
+            try:
+                run = subprocess.run(argv, cwd=work, capture_output=True, timeout=cfg.get('timeout_seconds', 600),
+                                     env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'})
+                (output / 'runner.stdout.log').write_bytes(run.stdout)
+                (output / 'runner.stderr.log').write_bytes(run.stderr)
+                result['runner_returncode'] = run.returncode
+                raw_path = output / 'native' / cfg.get('result_file', 'result.json')
+                if run.returncode == 0 and raw_path.is_file():
+                    raw = json.loads(raw_path.read_text())
+                else:
+                    result['errors'].append('native evaluator did not complete successfully')
+            except subprocess.TimeoutExpired as exc:
+                (output / 'runner.stdout.log').write_bytes(exc.stdout or b'')
+                (output / 'runner.stderr.log').write_bytes(exc.stderr or b'')
+                result['errors'].append('native evaluator timeout')
+    raw_points = raw.get(cfg.get('points_key', 'points'), [])
+    passed = raw.get(cfg['passed_count_key'], 0)
+    total = raw.get(cfg['total_count_key'], len(scoring['points']))
+    if raw and total != len(scoring['points']):
+        raise ValueError('native result denominator differs from frozen scoring contract')
+    if raw and not raw_points and total > 1:
+        raise ValueError('multi-point native result requires per-point records')
+    if raw_points and len(raw_points) != len(scoring['points']):
+        raise ValueError('native point count differs from frozen scoring contract')
+    if raw_points and sum(bool(p.get('passed')) for p in raw_points) != passed:
+        raise ValueError('native per-point results disagree with passed count')
+    for i, point in enumerate(scoring['points']):
+        if i < len(raw_points):
+            native_id = raw_points[i].get('id', raw_points[i].get('testbench'))
+            if native_id is not None and native_id != point.get('native_id', point['id']):
+                raise ValueError('native point ID/order differs from frozen scoring contract')
+        point_pass = bool(raw_points[i].get('passed')) if i < len(raw_points) else bool(total == 1 and passed == 1)
+        point_pass = bool(point_pass and result['contract_pass'] and result['compile_pass'] and not result['errors'])
+        result['points'].append({**point, 'passed': point_pass})
+    result['passed_points'] = sum(p['passed'] for p in result['points'])
+    result['total_points'] = len(result['points'])
+    result['score'] = result['passed_points'] / result['total_points']
+    result['full_project_pass'] = bool(result['contract_pass'] and result['compile_pass'] and not result['errors']
+                                       and result['passed_points'] == result['total_points'])
+    write_json(output / 'score.json', result)
+    return result
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--case', type=Path, required=True)
+    parser.add_argument('--submission', type=Path, required=True)
+    parser.add_argument('--output', type=Path, required=True)
+    args = parser.parse_args()
+    print(json.dumps(evaluate(args.case, args.submission, args.output), indent=2))

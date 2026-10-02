@@ -1,0 +1,31 @@
+module mg_04052 (
+    input  wire [31:0] iSRC_DATA,
+    input  wire [3:0]  iSRC_MASK,
+    output wire [31:0] oDEST_DATA,
+    output wire [3:0]  oDEST_MASK
+);
+
+    assign oDEST_MASK = iSRC_MASK;
+
+    wire [7:0] byte0 = iSRC_DATA[7:0];
+    wire [7:0] byte1 = iSRC_DATA[15:8];
+    wire [7:0] byte2 = iSRC_DATA[23:16];
+    wire [7:0] byte3 = iSRC_DATA[31:24];
+
+    reg [31:0] dest_data;
+
+    always @(*) begin
+        case (iSRC_MASK)
+            4'hF: dest_data = {byte0, byte1, byte2, byte3};
+            4'h3: dest_data = {16'b0, byte0, byte1};
+            4'hC: dest_data = {byte2, byte3, 16'b0};
+            4'h1: dest_data = {24'b0, byte0};
+            4'h2: dest_data = {16'b0, byte1, 8'b0};
+            4'h4: dest_data = {8'b0, byte2, 16'b0};
+            default: dest_data = {byte3, 24'b0};
+        endcase
+    end
+
+    assign oDEST_DATA = dest_data;
+
+endmodule

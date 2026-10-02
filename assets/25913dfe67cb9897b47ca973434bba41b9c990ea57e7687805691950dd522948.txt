@@ -1,0 +1,51 @@
+module autovcoder_004138 (
+    // [BEGIN USER PORTS]
+    // [END USER PORTS]
+
+    input  [8:1] SBoxAddress,
+    input  [8:1] RBoxAddress,
+    input  [8:1] RConAddress,
+    output [8:1] SBox,
+    output [8:1] RBox,
+    output [8:1] RCon
+);
+
+  // [BEGIN USER SIGNALS]
+  // [END USER SIGNALS]
+  localparam HiSignal = 1'b1;
+  localparam LoSignal = 1'b0;
+  wire Zero = 1'b0;
+  wire One = 1'b1;
+  wire true = 1'b1;
+  wire false = 1'b0;
+  wire [8:1] Inputs_SBoxAddress;
+  wire [8:1] Inputs_RBoxAddress;
+  wire [8:1] Inputs_RConAddress;
+  wire [8:1] BoxModule_L62F29T57_Index;
+  wire [8:1] BoxModule_L63F29T57_Index;
+  wire [8:1] BoxModule_L64F29T57_Index;
+  reg [8:1] sboxData[0 : 255];
+  initial begin
+    $readmemh("AESModule_TopLevel_AESModule_box_sboxData.hex", sboxData);
+  end
+  reg [8:1] rboxData[0 : 255];
+  initial begin
+    $readmemh("AESModule_TopLevel_AESModule_box_rboxData.hex", rboxData);
+  end
+  reg [8:1] rconData[0 : 10];
+  initial begin
+    $readmemh("AESModule_TopLevel_AESModule_box_rconData.hex", rconData);
+  end
+  assign Inputs_SBoxAddress = SBoxAddress;
+  assign Inputs_RBoxAddress = RBoxAddress;
+  assign Inputs_RConAddress = RConAddress;
+  assign SBox = BoxModule_L62F29T57_Index;
+  assign RBox = BoxModule_L63F29T57_Index;
+  assign RCon = BoxModule_L64F29T57_Index;
+  assign BoxModule_L62F29T57_Index = sboxData[Inputs_SBoxAddress];
+  assign BoxModule_L63F29T57_Index = rboxData[Inputs_RBoxAddress];
+  assign BoxModule_L64F29T57_Index = rconData[Inputs_RConAddress];
+  // [BEGIN USER ARCHITECTURE]
+  // [END USER ARCHITECTURE]
+endmodule
+

@@ -1,0 +1,61 @@
+module origen_132651 #(
+    parameter F_REF = 10_000_000,  // 10 MHz reference clock
+    parameter F_OUT = 100_000_000  // 100 MHz output clock
+)(
+    input wire ref_clk,
+    input wire [31:0] ctrl,
+    output wire synth_clk
+);
+
+    // DDS Parameters
+    localparam PHASE_WIDTH = 32;
+    localparam LUT_WIDTH = 12;
+    localparam LUT_DEPTH = 4096;
+
+    // Phase accumulator
+    reg [PHASE_WIDTH-1:0] phase_acc;
+    wire [PHASE_WIDTH-1:0] phase_inc;
+
+    // Lookup table
+    reg [LUT_WIDTH-1:0] sine_lut [0:LUT_DEPTH-1];
+
+    // Output
+    reg [LUT_WIDTH-1:0] dds_out;
+
+    // Calculate phase increment
+    assign phase_inc = (F_OUT * 2**PHASE_WIDTH) / F_REF;
+
+    // Initialize sine lookup table
+    initial begin
+        integer i;
+        for (i = 0; i < LUT_DEPTH; i = i + 1) begin
+            sine_lut[i] = $rtoi($sin(2.0 * 3.14159 * i / LUT_DEPTH) * ((2**LUT_WIDTH)/2-1)) + (2**LUT_WIDTH)/2;
+        end
+    end
+
+    // Phase accumulator
+    always @(posedge ref_clk) begin
+        phase_acc <= phase_acc + phase_inc + ctrl;
+    end
+
+    // Lookup table
+    always @(posedge ref_clk) begin
+        dds_out <= sine_lut[phase_acc[PHASE_WIDTH-1:PHASE_WIDTH-LUT_WIDTH]];
+    end
+
+    // Simple DAC (PWM)
+    reg pwm_out;
+    reg [LUT_WIDTH-1:0] pwm_counter;
+
+    always @(posedge ref_clk) begin
+        if (pwm_counter < dds_out) begin
+            pwm_out <= 1'b1;
+        end else begin
+            pwm_out <= 1'b0;
+        end
+        pwm_counter <= pwm_counter + 1'b1;
+    end
+
+    assign synth_clk = pwm_out;
+
+endmodule

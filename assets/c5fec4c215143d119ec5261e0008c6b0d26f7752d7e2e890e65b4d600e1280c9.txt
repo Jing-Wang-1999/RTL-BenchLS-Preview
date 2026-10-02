@@ -1,0 +1,54 @@
+module origen_086052 (
+    input wire clk,
+    input wire din,
+    output reg dout,
+    output reg [11:0] res,
+    output reg cs,
+    output reg valid
+);
+
+    reg [11:0] cmd = 12'b100000110000;
+    reg [15:0] shftin;
+    reg [15:0] shftout;
+    reg [7:0] cnt;
+    reg [11:0] rtmp;
+    reg cstmp, vtmp, outtmp;
+
+    always @(posedge clk) begin
+        cnt <= (cnt == 8'd249) ? 8'd0 : cnt + 8'd1;
+
+        case (cnt)
+            8'd0: begin
+                shftout <= {cmd, 4'b0000};
+                cstmp <= 1'b0;
+                vtmp <= 1'b0;
+            end
+            8'd1, 8'd2, 8'd3, 8'd4, 8'd5, 8'd6, 8'd7, 8'd8,
+            8'd9, 8'd10, 8'd11, 8'd12, 8'd13, 8'd14, 8'd15: begin
+                shftin <= {shftin[14:0], din};
+                shftout <= {shftout[14:0], 1'b0};
+                outtmp <= shftout[15];
+            end
+            8'd16: begin
+                cstmp <= 1'b1;
+                outtmp <= shftout[15];
+            end
+            8'd17: rtmp <= shftin[11:0];
+            8'd18: vtmp <= 1'b1;
+            8'd19: vtmp <= 1'b0;
+            default: begin
+                cstmp <= 1'b1;
+                vtmp <= 1'b0;
+                outtmp <= 1'b1;
+            end
+        endcase
+    end
+
+    always @(posedge clk) begin
+        cs <= cstmp;
+        valid <= vtmp;
+        dout <= outtmp;
+        res <= rtmp;
+    end
+
+endmodule

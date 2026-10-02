@@ -1,0 +1,14 @@
+always @(posedge clk) begin
+    if (reset) begin
+      shift_reg <= 0;
+      count <= 32;  // Empty (read to trigger auto-pull)
+    end else if (penable && !stalled) begin
+       if (set) begin
+         shift_reg <= din;
+         count <= 0;
+       end else if (do_shift) begin
+         shift_reg <= new_shift;
+         count <= count + shift_val > 32 ? 32 : count + shift_val;
+       end
+    end
+  end

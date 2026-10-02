@@ -1,0 +1,105 @@
+always @* begin
+    axis_state_next = AXIS_STATE_IDLE;
+
+    m_axis_read_desc_status_tag_next = m_axis_read_desc_status_tag_reg;
+    m_axis_read_desc_status_valid_next = 1'b0;
+
+    if (PART_COUNT > 1) begin
+        m_axis_read_data_tdata_int = ram_rd_resp_data >> (((addr_reg >> PART_OFFSET_WIDTH) & {PART_COUNT_WIDTH{1'b1}}) * AXIS_DATA_WIDTH);
+    end else begin
+        m_axis_read_data_tdata_int = ram_rd_resp_data;
+    end
+    m_axis_read_data_tkeep_int = {AXIS_KEEP_WIDTH{1'b1}};
+    m_axis_read_data_tlast_int = 1'b0;
+    m_axis_read_data_tvalid_int = 1'b0;
+    m_axis_read_data_tid_int = axis_id_reg;
+    m_axis_read_data_tdest_int = axis_dest_reg;
+    m_axis_read_data_tuser_int = axis_user_reg;
+
+    ram_rd_resp_ready_cmb = {SEG_COUNT{1'b0}};
+
+    axis_cmd_ready = 1'b0;
+
+    addr_next = addr_reg;
+    ram_mask_next = ram_mask_reg;
+    last_cycle_offset_next = last_cycle_offset_reg;
+    cycle_count_next = cycle_count_reg;
+    last_cycle_next = last_cycle_reg;
+
+    axis_id_next = axis_id_reg;
+    axis_dest_next = axis_dest_reg;
+    axis_user_next = axis_user_reg;
+
+    case (axis_state_reg)
+        AXIS_STATE_IDLE: begin
+            // idle state - load new descriptor to start operation
+
+            // store transfer parameters
+            addr_next = axis_cmd_addr_reg;
+            last_cycle_offset_next = axis_cmd_last_cycle_offset_reg;
+            cycle_count_next = axis_cmd_cycle_count_reg;
+            last_cycle_next = axis_cmd_cycle_count_reg == 0;
+
+            if (PART_COUNT > 1) begin
+                ram_mask_next = {SEGS_PER_PART{1'b1}} << ((((addr_next >> PART_OFFSET_WIDTH) & ({PART_COUNT_WIDTH{1'b1}})) / PARTS_PER_SEG) * SEGS_PER_PART);
+            end else begin
+                ram_mask_next = {SEG_COUNT{1'b1}};
+            end
+            
+            m_axis_read_desc_status_tag_next = axis_cmd_tag_reg;
+            axis_id_next = axis_cmd_axis_id_reg;
+            axis_dest_next = axis_cmd_axis_dest_reg;
+            axis_user_next = axis_cmd_axis_user_reg;
+
+            if (axis_cmd_valid_reg) begin
+                axis_cmd_ready = 1'b1;
+                axis_state_next = AXIS_STATE_READ;
+            end
+        end
+        AXIS_STATE_READ: begin
+            // handle read data
+            ram_rd_resp_ready_cmb = {SEG_COUNT{1'b0}};
+
+            if (!(ram_mask_reg & ~ram_rd_resp_valid) && m_axis_read_data_tready_int) begin
+                // transfer in read data
+                ram_rd_resp_ready_cmb = ram_mask_reg;
+
+                // update counters
+                addr_next = addr_reg + AXIS_KEEP_WIDTH_INT;
+                cycle_count_next = cycle_count_reg - 1;
+                last_cycle_next = cycle_count_next == 0;
+
+                if (PART_COUNT > 1) begin
+                    ram_mask_next = {SEGS_PER_PART{1'b1}} << ((((addr_next >> PART_OFFSET_WIDTH) & ({PART_COUNT_WIDTH{1'b1}})) / PARTS_PER_SEG) * SEGS_PER_PART);
+                end else begin
+                    ram_mask_next = {SEG_COUNT{1'b1}};
+                end
+
+                if (PART_COUNT > 1) begin
+                    m_axis_read_data_tdata_int = ram_rd_resp_data >> (((addr_reg >> PART_OFFSET_WIDTH) & {PART_COUNT_WIDTH{1'b1}}) * AXIS_DATA_WIDTH);
+                end else begin
+                    m_axis_read_data_tdata_int = ram_rd_resp_data;
+                end
+                m_axis_read_data_tkeep_int = {AXIS_KEEP_WIDTH_INT{1'b1}};
+                m_axis_read_data_tvalid_int = 1'b1;
+
+                if (last_cycle_reg) begin
+                    // no more data to transfer, finish operation
+                    if (last_cycle_offset_reg > 0) begin
+                        m_axis_read_data_tkeep_int = {AXIS_KEEP_WIDTH_INT{1'b1}} >> (AXIS_KEEP_WIDTH_INT - last_cycle_offset_reg);
+                    end
+                    m_axis_read_data_tlast_int = 1'b1;
+
+                    m_axis_read_desc_status_valid_next = 1'b1;
+
+                    axis_state_next = AXIS_STATE_IDLE;
+                end else begin
+                    // more cycles in AXI transfer
+                    axis_state_next = AXIS_STATE_READ;
+                end
+            end else begin
+                axis_state_next = AXIS_STATE_READ;
+            end
+        end
+    endcase
+end

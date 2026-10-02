@@ -1,0 +1,75 @@
+{
+  "gate_failure_score": 0,
+  "limitations": "Sampled full/lite UART traffic and explicit Wishbone top transactions, not exhaustive equivalence.",
+  "oracle": "Four whole testbenches; finite behavioral simulation",
+  "points": [
+    {
+      "command": [
+        "python3",
+        "private/verification/replay_wbuart_direct.py",
+        "--payload",
+        "<private_payload>",
+        "--candidate",
+        "<submission>",
+        "--output",
+        "<output>"
+      ],
+      "id": "wishbone_uart",
+      "pass_criterion": "all checks/configurations of the whole bench pass; nonzero exits/timeouts fail",
+      "target": "wbuart",
+      "timeout_seconds": 600,
+      "weight": 1
+    },
+    {
+      "command": [
+        "python3",
+        "private/verification/replay_wbuart_direct.py",
+        "--payload",
+        "<private_payload>",
+        "--candidate",
+        "<submission>",
+        "--output",
+        "<output>"
+      ],
+      "id": "bench/cpp/linetest.cpp",
+      "pass_criterion": "all checks/configurations of the whole bench pass; nonzero exits/timeouts fail",
+      "target": "txuart/rxuart/txuartlite/rxuartlite/ufifo",
+      "timeout_seconds": 600,
+      "weight": 1
+    },
+    {
+      "command": [
+        "python3",
+        "private/verification/replay_wbuart_direct.py",
+        "--payload",
+        "<private_payload>",
+        "--candidate",
+        "<submission>",
+        "--output",
+        "<output>"
+      ],
+      "id": "bench/cpp/speechtest.cpp",
+      "pass_criterion": "all checks/configurations of the whole bench pass; nonzero exits/timeouts fail",
+      "target": "txuart/rxuart/txuartlite/rxuartlite/ufifo",
+      "timeout_seconds": 600,
+      "weight": 1
+    },
+    {
+      "command": [
+        "python3",
+        "private/verification/replay_wbuart_direct.py",
+        "--payload",
+        "<private_payload>",
+        "--candidate",
+        "<submission>",
+        "--output",
+        "<output>"
+      ],
+      "id": "bench/cpp/helloworld.cpp",
+      "pass_criterion": "all checks/configurations of the whole bench pass; nonzero exits/timeouts fail",
+      "target": "txuart/rxuart/txuartlite/rxuartlite/ufifo",
+      "timeout_seconds": 600,
+      "weight": 1
+    }
+  ]
+}

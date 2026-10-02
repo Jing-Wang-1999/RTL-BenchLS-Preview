@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   ethernet_receive_synchronizer_b.v0, ethernet_receive_synchronizer_b.v1, ethernet_receive_synchronizer_b, clk, reset
+set DESIGN_NAME_GOLDEN "ethernet_receive_synchronizer_b.v0"
+set DESIGN_NAME "ethernet_receive_synchronizer_b.v1"
+set TOP_NAME "ethernet_receive_synchronizer_b"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_fbe4d1a8d2e48f6f.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_fbe4d1a8d2e48f6f.negative.v
+check_sec -elaborate -spec -top ethernet_receive_synchronizer_b -disable_auto_bbox
+check_sec -elaborate -imp -top ethernet_receive_synchronizer_b -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clk 
+reset reset
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

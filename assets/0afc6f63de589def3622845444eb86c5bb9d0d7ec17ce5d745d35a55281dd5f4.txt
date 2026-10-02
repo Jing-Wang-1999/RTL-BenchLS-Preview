@@ -1,0 +1,24 @@
+module Summodule(
+    input [3:0] E,
+    input [3:0] D,
+    input [3:0] C,
+    input M,
+    output [3:0] F,
+    output AEB
+);
+    wire [3:0] EXD;
+    wire [3:0] CM;
+
+    // Calculate EXD as bitwise XOR of E and D
+    assign EXD = E ^ D;
+
+    // Calculate CM as bitwise OR of C and M
+    assign CM = C | {4{M}};
+
+    // Calculate F as bitwise XOR of EXD and CM
+    assign F = EXD ^ CM;
+
+    // Calculate AEB as logical AND of all bits in F
+    assign AEB = F[0] & F[1] & F[2] & F[3];
+
+endmodule

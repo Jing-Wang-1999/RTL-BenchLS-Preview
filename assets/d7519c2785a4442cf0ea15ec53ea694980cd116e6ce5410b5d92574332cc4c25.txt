@@ -1,0 +1,55 @@
+module origen_183468(
+    input clk,
+    input rst,
+    input rda,
+    input tbr,
+    input iocs,
+    input [1:0] ioaddr,
+    input iorw,
+    input [7:0] rx_data,
+    output reg [7:0] tx_data,
+    output reg [7:0] br_data,
+    inout [7:0] databus,
+    output [7:0] bus_capture
+);
+
+reg [7:0] bus_capture_reg;
+
+always @(posedge clk) begin
+    if (rst) begin
+        bus_capture_reg <= 8'h00;
+    end
+    else if (databus == rx_data) begin
+        bus_capture_reg <= databus;
+    end
+end
+
+assign bus_capture = bus_capture_reg;
+
+always @(*) begin
+    if (iocs && iorw) begin
+        case (ioaddr)
+            2'b00: tx_data = rx_data;
+            2'b01: tx_data = {6'b000000, tbr, rda};
+            default: tx_data = 8'b0;
+        endcase
+    end
+    else if (iocs && !iorw) begin
+        tx_data = databus;
+        br_data = databus;
+    end
+    else if (iocs && ioaddr[1]) begin
+        br_data = databus;
+    end
+    else begin
+        tx_data = 8'b0;
+        br_data = 8'b0;
+    end
+end
+
+assign databus = (iocs && iorw) ? 
+                 (ioaddr == 2'b00) ? rx_data :
+                 (ioaddr == 2'b01) ? {6'b000000, tbr, rda} : 8'bZ :
+                 8'bZ;
+
+endmodule

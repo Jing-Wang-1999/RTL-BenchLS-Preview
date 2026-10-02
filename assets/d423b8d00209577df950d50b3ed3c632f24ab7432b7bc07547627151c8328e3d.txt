@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.e0a59f6e504abf1aca07.fe1c95043a61",
+  "compile_check": {
+    "case_id": "s1derived.e0a59f6e504abf1aca07.fe1c95043a61",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_099616",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_099616.f418e0b7d447ddab/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.e0a59f6e504abf1aca07",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "e0a59f6e504abf1aca07d6e9ffb66194a8626966b1148eb09c8c79a9d5dd78b6",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.e0a59f6e504abf1aca07.fe1c95043a61",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_099616.f418e0b7d447ddab/private/commercial_positive.log",
+    "commercial_log_sha256": "e1e1b079deb1635ced7d74ae30d61256012d748bcd40ef32db4b0666487bd1ce",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_099616.f418e0b7d447ddab/private/historical_harness/00_sec_origen_099616.tcl",
+    "executed_script_sha256": "a222c1005e314c3b06a1c09a8c7d564d6175a0e507a7b127e9f68a0cf268762b",
+    "golden_tops": [
+      "origen_099616"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.origen_099616.f418e0b7d447ddab",
+    "parent_id": "s1p.e0a59f6e504abf1aca07",
+    "revised_tops": [
+      "origen_099616"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_099616",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.e0a59f6e504abf1aca07.fe1c95043a61",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The independent rollover-state register adds exactly the stated flag delay. Disabled counting holds curr_rollover, and clear propagates rather than immediately clearing the visible flag.",
+        "rtl_excerpt": "rollover_flag <= curr_rollover;",
+        "specification_excerpt": "Clear affects the visible flag through this pipeline"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.e0a59f6e504abf1aca07",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "8bbd626d7754020f95659af7724192bd691570de7ddd993786aa6c47260d6ed0",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e0a59f6e504abf1aca07d6e9ffb66194a8626966b1148eb09c8c79a9d5dd78b6",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_099616.f418e0b7d447ddab/private/historical_harness/00_sec_origen_099616.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_099616.f418e0b7d447ddab/private/historical_harness/01_sec_origen_099616.tcl"
+  ],
+  "parent_id": "s1p.e0a59f6e504abf1aca07",
+  "primary_review": {
+    "case_id": "s1derived.e0a59f6e504abf1aca07.fe1c95043a61",
+    "checks": {
+      "behavior": "The visible rollover flag is delayed one additional register stage from the counter reset.",
+      "boundaries": "Repair covers delayed flags, FIFO full, pulse length, and priority.",
+      "interface": "Repair supplies full interface and defaults.",
+      "rtl_reasonableness": "Circuit is coherent hardware.",
+      "sequential_and_reset": "Repair states pre-edge timing, reset, hold, and latency."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The visible rollover flag is delayed one additional register stage from the counter reset.",
+        "rtl_excerpt": "count_out<=count and rollover_flag<=curr_rollover while curr_rollover<=next_rollover; the flag sees the prior rollover state.",
+        "spec_excerpt": "The prose says the flag asserts when the counter resets after reaching rollover."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The visible rollover flag is delayed one additional register stage from the counter reset.",
+        "rtl_evidence": "count_out<=count and rollover_flag<=curr_rollover while curr_rollover<=next_rollover; the flag sees the prior rollover state.",
+        "spec_evidence": "The prose says the flag asserts when the counter resets after reaching rollover.",
+        "type": "latency_mismatch"
+      }
+    ],
+    "parent_id": "s1p.e0a59f6e504abf1aca07",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_10/s1derived.e0a59f6e504abf1aca07.fe1c95043a61.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e0a59f6e504abf1aca07d6e9ffb66194a8626966b1148eb09c8c79a9d5dd78b6",
+    "source_group": "S2",
+    "specification_sha256": "fe1c95043a610f670df5bde28020c4ce09f9c01b6f0fc9085781d9f84c20bf8a",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_10/s1derived.e0a59f6e504abf1aca07.fe1c95043a61.md",
+  "qualified_specification_sha256": "8bbd626d7754020f95659af7724192bd691570de7ddd993786aa6c47260d6ed0",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_099616.f418e0b7d447ddab/private/golden_design.v",
+  "rtl_sha256": "e0a59f6e504abf1aca07d6e9ffb66194a8626966b1148eb09c8c79a9d5dd78b6",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_099616.f418e0b7d447ddab/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "fe1c95043a610f670df5bde28020c4ce09f9c01b6f0fc9085781d9f84c20bf8a",
+  "top_module": "origen_099616"
+}

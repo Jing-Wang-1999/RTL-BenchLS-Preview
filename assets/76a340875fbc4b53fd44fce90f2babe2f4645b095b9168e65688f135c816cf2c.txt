@@ -1,0 +1,123 @@
+module origen_130702 (
+    input [31:0] dataa,
+    input [31:0] datab,
+    output reg [31:0] result
+);
+
+    reg sign;
+    reg [7:0] exponent;
+    reg [47:0] mantissa;
+    reg [23:0] mant_a, mant_b;
+    reg [8:0] exp_a, exp_b;
+
+    always @(*) begin
+        // Extract sign, exponent, and mantissa
+        sign = dataa[31] ^ datab[31];
+        exp_a = {1'b0, dataa[30:23]};
+        exp_b = {1'b0, datab[30:23]};
+        mant_a = (|dataa[30:23]) ? {1'b1, dataa[22:0]} : {1'b0, dataa[22:0]};
+        mant_b = (|datab[30:23]) ? {1'b1, datab[22:0]} : {1'b0, datab[22:0]};
+
+        // Multiply mantissas
+        mantissa = mant_a * mant_b;
+
+        // Adjust exponent
+        exponent = exp_a + exp_b - 127;
+
+        // Normalize result
+        if (mantissa[47]) begin
+            mantissa = mantissa >> 1;
+            exponent = exponent + 1;
+        end
+
+        // Handle special cases
+        if ((dataa[30:23] == 8'hFF && dataa[22:0] != 0) || (datab[30:23] == 8'hFF && datab[22:0] != 0)) begin
+            // NaN
+            result = {1'b1, 8'hFF, 23'h400000};
+        end else if ((dataa[30:23] == 8'hFF) || (datab[30:23] == 8'hFF)) begin
+            // Infinity
+            result = {sign, 8'hFF, 23'h000000};
+        end else if ((dataa[30:23] == 0 && dataa[22:0] == 0) || (datab[30:23] == 0 && datab[22:0] == 0)) begin
+            // Zero
+            result = {sign, 31'h00000000};
+        end else begin
+            // Normal case
+            result = {sign, exponent[7:0], mantissa[46:24]};
+        end
+    end
+endmodule
+
+module fpoint_qsys_addsub_single (
+    input [31:0] dataa,
+    input [31:0] datab,
+    input add_sub,
+    output reg [31:0] result
+);
+
+    reg sign_a, sign_b, sign_result;
+    reg [8:0] exp_a, exp_b, exp_result;
+    reg [24:0] mant_a, mant_b, mant_result;
+    reg [7:0] shift;
+
+    always @(*) begin
+        // Extract sign, exponent, and mantissa
+        sign_a = dataa[31];
+        sign_b = datab[31] ^ add_sub;
+        exp_a = {1'b0, dataa[30:23]};
+        exp_b = {1'b0, datab[30:23]};
+        mant_a = (|dataa[30:23]) ? {2'b01, dataa[22:0]} : {2'b00, dataa[22:0]};
+        mant_b = (|datab[30:23]) ? {2'b01, datab[22:0]} : {2'b00, datab[22:0]};
+
+        // Align mantissas
+        if (exp_a > exp_b) begin
+            shift = exp_a - exp_b;
+            mant_b = mant_b >> shift;
+            exp_result = exp_a;
+        end else begin
+            shift = exp_b - exp_a;
+            mant_a = mant_a >> shift;
+            exp_result = exp_b;
+        end
+
+        // Add or subtract mantissas
+        if (sign_a == sign_b) begin
+            mant_result = mant_a + mant_b;
+            sign_result = sign_a;
+        end else if (mant_a > mant_b) begin
+            mant_result = mant_a - mant_b;
+            sign_result = sign_a;
+        end else begin
+            mant_result = mant_b - mant_a;
+            sign_result = sign_b;
+        end
+
+        // Normalize result
+        if (mant_result[24]) begin
+            mant_result = mant_result >> 1;
+            exp_result = exp_result + 1;
+        end else begin
+            while (!mant_result[23] && exp_result > 0) begin
+                mant_result = mant_result << 1;
+                exp_result = exp_result - 1;
+            end
+        end
+
+        // Handle special cases
+        if ((dataa[30:23] == 8'hFF && dataa[22:0] != 0) || (datab[30:23] == 8'hFF && datab[22:0] != 0)) begin
+            // NaN
+            result = {1'b1, 8'hFF, 23'h400000};
+        end else if (dataa[30:23] == 8'hFF) begin
+            // Infinity
+            result = {sign_a, 8'hFF, 23'h000000};
+        end else if (datab[30:23] == 8'hFF) begin
+            // Infinity
+            result = {sign_b, 8'hFF, 23'h000000};
+        end else if (mant_result == 0) begin
+            // Zero
+            result = 32'h00000000;
+        end else begin
+            // Normal case
+            result = {sign_result, exp_result[7:0], mant_result[22:0]};
+        end
+    end
+endmodule

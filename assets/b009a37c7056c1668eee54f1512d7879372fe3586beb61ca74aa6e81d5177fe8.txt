@@ -1,0 +1,71 @@
+The Verilog module "Computer_System_Interval_Timer" primarily functions as an interval timer with capabilities to start, stop, and reload a countdown timer. It includes functionality for generating interrupts upon timer timeout and reading/writing control and timer values.
+
+Here is a detailed instruction to generate the Verilog code:
+
+1. **Primary Function:** This module acts as an interval timer capable of counting down from a specified value, triggering an interrupt when the counter reaches zero, and allowing for control and monitoring via specific input signals.
+
+2. **Key Control Flow:**
+   - The counter loads values from `period_h_register` and `period_l_register` upon reset or when a reload is forced.
+   - The timer starts when `start_strobe` is asserted and stops when `stop_strobe` is asserted.
+   - Writing to control and period registers happens based on the `address` input and data writing signals `write_n` and `chipselect`.
+   - The interrupt enable and continuous mode settings are controlled via `control_register`.
+
+3. **Important Data Processing:**
+   - The primary data interaction involves loading a 32-bit counter value split into high (`period_h_register`) and low (`period_l_register`) parts.
+   - The counter decrements with each clock cycle if running and triggers a timeout event when it hits zero.
+   - On timeout, the module sets the `timeout_occurred` flag and generates an interrupt (`irq`) if enabled.
+   - Reading from the module provides current register or snapshot values of the counter based on the `address`.
+
+Based on this understanding, here is the instruction to generate Verilog code:
+
+---
+
+### Verilog Code Description for Interval Timer Module
+
+1. **Module Definition and IO Ports:**
+   - The module `interval_timer` takes several inputs including `address`, `chipselect`, `clk`, `reset_n`, `write_n`, and `writedata`, and it outputs `irq` and `readdata`.
+
+2. **Registers and Wires:**
+   - Internal registers include `control_register`, `counter_is_running`, `delayed_unxcounter_is_zeroxx0`, `force_reload`, `internal_counter`, `period_h_register`, `period_l_register`, `timeout_occurred`, and `counter_snapshot`.
+   - Wires such as `control_wr_strobe`, `do_start_counter`, `do_stop_counter`, `period_l_wr_strobe`, `period_h_wr_strobe`, `snap_l_wr_strobe`, `snap_h_wr_strobe`, `snap_strobe`, and `status_wr_strobe` facilitate the control operations.
+   - Derived signals like `counter_is_zero`, `counter_load_value`, `timeout_event`, and `snap_read_value` are used for intermediate processing.
+
+3. **Clock-Enabled Operations:**
+   - The counter (`internal_counter`) decrements on each positive clock edge if running, and reloads when zero or a reload is forced.
+   - Control and period registers get updated based on write strobes corresponding to the address input.
+   - Period registers are concatenated to form the `counter_load_value`.
+
+4. **Control Logic:**
+   - The module checks for zero-valued counter, generating `timeout_event` if conditions are met.
+   - The `timeout_occurred` flag toggles based on the timeout event and control strobe writes.
+   - The `irq` output is asserted when `timeout_occurred` meets the interrupt enable criteria.
+
+5. **Read and Write Operations:**
+   - Multiplexes read data based on the `address` input to return appropriate register values.
+   - Write strobes trigger updates to respective period, control, and snapshot registers.
+
+6. **Data Path Summary:**
+   - Upon reset, the module initializes critical registers.
+   - Writes to specific registers drive control states and period values.
+   - Counter operation governed by start/stop controls and automatic decrement logic.
+   - Interrupt generated on timeout when enabled, with counters and status available for external reads.
+
+### Model the Detailed Verilog Code following the above Outline
+
+This instruction provides the necessary details to generate a functional interval timer module in Verilog, incorporating the control flow for start/stop logic, data path for counter operation, and interaction through read/write operations.
+
+Module Interface:
+module interval_timer (
+    address,
+    chipselect,
+    clk,
+    reset_n,
+    write_n,
+    writedata,
+    irq,
+    readdata
+);
+
+Behavioral Clarifications:
+- On reset, `internal_counter` initializes to 32'h63 (99 decimal). `period_l_register` initializes to 99 and `period_h_register` initializes to 0, giving a default 32-bit load value of 99.
+- The 4-bit `control_register` bit 0 is interrupt enable, bit 1 is continuous mode; writedata[2] and writedata[3] are start and stop strobes on control address writes.

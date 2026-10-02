@@ -1,0 +1,17 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Auto-generated for design i3c_controller_unpack
+set DESIGN_NAME_GOLDEN "i3c_controller_unpack.v0"
+set DESIGN_NAME "i3c_controller_unpack.v1"
+set TOP_NAME "i3c_controller_unpack"
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/${DESIGN_NAME_GOLDEN}.v
+check_sec -analyze -imp -sv ./input/rtl/${DESIGN_NAME}.v
+check_sec -elaborate -spec -top ${TOP_NAME} -disable_auto_bbox
+check_sec -elaborate -imp -top ${TOP_NAME} -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clk
+reset -none
+check_sec -gen
+check_sec -prove -strategy proof

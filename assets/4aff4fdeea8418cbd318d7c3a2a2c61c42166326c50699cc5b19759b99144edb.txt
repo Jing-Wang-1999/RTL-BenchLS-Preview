@@ -1,0 +1,23 @@
+**Module Specification: autovcoder_104339**
+
+**Overview**  
+This module performs a right-shift operation on a 32-bit input value, padding the vacated most-significant bits with zeros. The shift amount is configurable via a 5-bit control signal.
+
+**Inputs**  
+- **A** (32 bits): The input data to be shifted.  
+- **cnt** (5 bits): Specifies the number of positions to shift right, ranging from 0 to 31.
+
+**Output**  
+- **B** (32 bits): The shifted result.
+
+**Function**  
+The module shifts the input **A** right by the number of positions given by **cnt**. Bits shifted out from the least-significant side are discarded. The most-significant bits are filled with zeros.  
+- When **cnt** is 0, **B** equals **A** (no shift).  
+- When **cnt** is *n* (1 to 31), **B** consists of *n* zeros in the most-significant positions, followed by the (32−*n*) most-significant bits of **A**.  
+- The shift amount is interpreted as an unsigned integer.
+
+**Timing and Updates**  
+The output **B** updates whenever **cnt** changes. The input **A** is sampled at the time of the update.
+
+**Allowed Implementation**  
+The function may be implemented using combinational logic (e.g., a multiplexer or a barrel shifter) or synchronous logic (e.g., a register updated on changes of **cnt**). No sub-modules are required.

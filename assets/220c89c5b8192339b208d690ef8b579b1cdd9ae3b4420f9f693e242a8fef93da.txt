@@ -1,0 +1,129 @@
+module origen_127767 (
+    input wire clk,
+    input wire resetq,
+    input wire RXD,
+    input wire uart0_valid,
+    input wire [7:0] uart0_data_in,
+    input wire uart0_busy,
+    output wire TXD,
+    output reg uart0_wr,
+    output reg uart0_rd,
+    output reg [7:0] uart0_data_out
+);
+
+    // Registers and memory
+    reg [7:0] registers [0:3];
+    reg [7:0] memory [0:255];
+    reg [7:0] pc;
+    reg [7:0] instruction;
+
+    // Instruction opcodes
+    localparam MOV_IMM = 4'b0000;
+    localparam JUMP    = 4'b0001;
+    localparam JNZ     = 4'b0010;
+    localparam ADD     = 4'b0011;
+    localparam DEC     = 4'b0100;
+    localparam INC     = 4'b0101;
+    localparam LD      = 4'b0110;
+    localparam SEND    = 4'b0111;
+
+    // CPU states
+    localparam FETCH   = 2'b00;
+    localparam DECODE  = 2'b01;
+    localparam EXECUTE = 2'b10;
+    localparam WAIT    = 2'b11;
+
+    reg [1:0] state;
+    reg [7:0] operand;
+    reg [1:0] reg_sel;
+
+    always @(posedge clk or negedge resetq) begin
+        if (!resetq) begin
+            pc <= 8'b0;
+            state <= FETCH;
+            uart0_wr <= 1'b0;
+            uart0_rd <= 1'b0;
+        end else begin
+            case (state)
+                FETCH: begin
+                    instruction <= memory[pc];
+                    pc <= pc + 1;
+                    state <= DECODE;
+                end
+
+                DECODE: begin
+                    operand <= memory[pc];
+                    pc <= pc + 1;
+                    reg_sel <= instruction[1:0];
+                    state <= EXECUTE;
+                end
+
+                EXECUTE: begin
+                    case (instruction[7:4])
+                        MOV_IMM: begin
+                            registers[reg_sel] <= operand;
+                            state <= FETCH;
+                        end
+
+                        JUMP: begin
+                            pc <= operand;
+                            state <= FETCH;
+                        end
+
+                        JNZ: begin
+                            if (registers[reg_sel] != 8'b0) begin
+                                pc <= operand;
+                            end
+                            state <= FETCH;
+                        end
+
+                        ADD: begin
+                            registers[reg_sel] <= registers[reg_sel] + registers[instruction[3:2]];
+                            state <= FETCH;
+                        end
+
+                        DEC: begin
+                            registers[reg_sel] <= registers[reg_sel] - 1;
+                            state <= FETCH;
+                        end
+
+                        INC: begin
+                            registers[reg_sel] <= registers[reg_sel] + 1;
+                            state <= FETCH;
+                        end
+
+                        LD: begin
+                            registers[reg_sel] <= memory[operand];
+                            state <= FETCH;
+                        end
+
+                        SEND: begin
+                            if (!uart0_busy) begin
+                                uart0_data_out <= registers[reg_sel];
+                                uart0_wr <= 1'b1;
+                                state <= WAIT;
+                            end
+                        end
+
+                        default: state <= FETCH;
+                    endcase
+                end
+
+                WAIT: begin
+                    uart0_wr <= 1'b0;
+                    state <= FETCH;
+                end
+            endcase
+
+            // UART receive
+            if (uart0_valid && !uart0_rd) begin
+                uart0_rd <= 1'b1;
+            end else if (uart0_rd) begin
+                memory[pc] <= uart0_data_in;
+                pc <= pc + 1;
+                uart0_rd <= 1'b0;
+            end
+        end
+    end
+
+endmodule

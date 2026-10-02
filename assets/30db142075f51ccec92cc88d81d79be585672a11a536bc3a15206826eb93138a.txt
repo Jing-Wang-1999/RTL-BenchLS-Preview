@@ -1,0 +1,54 @@
+typedef struct packed {
+    logic WAIT;
+    logic [31:0] RD;
+} res_t;
+
+typedef struct packed {
+    logic valid;
+    logic [31:0] A;
+} req_t;
+
+module origen_142912 #(
+    parameter name = 0
+) (
+    input wire clk,
+    input wire rst,
+    input res_t res,
+    output req_t req
+);
+
+    reg [31:0] counter;
+    reg [31:0] dataExpect;
+    reg dataValid;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            counter <= name;
+            req.valid <= 0;
+            req.A <= 0;
+            dataValid <= 0;
+        end else begin
+            if (!res.WAIT) begin
+                if (dataValid) begin
+                    if (res.RD != dataExpect) begin
+                        $display("init%0d got %0d, expected %0d !!! BAD!", name, res.RD, dataExpect);
+                    end else begin
+                        $display("init%0d got %0d as expected", name, res.RD);
+                    end
+                    dataValid <= 0;
+                end
+
+                if (counter[1:0] != 2'b11) begin
+                    counter <= counter + 1;
+                    req.valid <= 1;
+                    req.A <= counter;
+                    dataExpect <= counter;
+                    dataValid <= 1;
+                end else begin
+                    req.valid <= 0;
+                end
+            end
+        end
+    end
+
+endmodule

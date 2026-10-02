@@ -1,0 +1,42 @@
+module rtlpp_04090 (
+    input d,
+    input clk,
+    output q
+);
+
+wire gnd;
+wire vcc;
+wire unknown;
+
+assign gnd = 1'b0;
+assign vcc = 1'b1;
+assign unknown = 1'bx;
+
+tri1 devclrn;
+tri1 devpor;
+tri1 devoe;
+
+// Intermediate signals
+wire d_combout;
+wire q_reg0feeder_combout;
+reg q_reg0_regout;
+
+// Flip-flop logic for 'd'
+assign d_combout = d;
+
+// LUT logic (equivalent to cycloneii_lcell_comb \q~reg0feeder)
+assign q_reg0feeder_combout = d_combout;
+
+// D flip-flop (equivalent to cycloneii_lcell_ff \q~reg0)
+always @(posedge clk or negedge devclrn or negedge devpor)
+begin
+    if (!devclrn || !devpor)
+        q_reg0_regout <= 1'b0; // Asynchronous clear
+    else
+        q_reg0_regout <= q_reg0feeder_combout;
+end
+
+// Output assignment (equivalent to cycloneii_io \q~I with output mode)
+assign q = q_reg0_regout;
+
+endmodule

@@ -1,0 +1,93 @@
+module origen_025333 (
+    input wire IwClk,
+    input wire IwCSn,
+    input wire IwSCLK,
+    input wire IwSDI,
+    input wire IwDC,
+    output reg [15:0] ObFrameMemWriteAddr,
+    output reg [15:0] ObFrameMemWriteData,
+    output reg OwFrameMemWE
+);
+
+    // Parameters
+    localparam CAS = 8'h2A;
+    localparam RAS = 8'h2B;
+    localparam MWR = 8'h2C;
+
+    // Registers
+    reg [7:0] rCurrentCommand;
+    reg [15:0] rColumnStart, rColumnEnd, rRowStart, rRowEnd;
+    reg [15:0] rPixelData0, rPixelData1;
+    reg [7:0] rCounter;
+    reg [15:0] rCounter2;
+    reg rPixelSelect;
+    reg [2:0] rWriteCount;
+
+    // State management
+    always @(posedge IwClk or posedge IwCSn) begin
+        if (IwCSn) begin
+            rCounter <= 8'd0;
+            rCurrentCommand <= 8'd0;
+            rPixelSelect <= 1'b0;
+            rWriteCount <= 3'd0;
+            OwFrameMemWE <= 1'b0;
+        end else if (IwSCLK) begin
+            if (!IwDC) begin
+                // Command reception
+                rCurrentCommand <= {rCurrentCommand[6:0], IwSDI};
+                rCounter <= rCounter + 1'b1;
+            end else begin
+                // Data reception
+                case (rCurrentCommand)
+                    CAS: begin
+                        if (rCounter < 16)
+                            rColumnStart <= {rColumnStart[14:0], IwSDI};
+                        else if (rCounter < 32)
+                            rColumnEnd <= {rColumnEnd[14:0], IwSDI};
+                        rCounter <= rCounter + 1'b1;
+                    end
+                    RAS: begin
+                        if (rCounter < 16)
+                            rRowStart <= {rRowStart[14:0], IwSDI};
+                        else if (rCounter < 32)
+                            rRowEnd <= {rRowEnd[14:0], IwSDI};
+                        rCounter <= rCounter + 1'b1;
+                    end
+                    MWR: begin
+                        if (rPixelSelect)
+                            rPixelData1 <= {rPixelData1[14:0], IwSDI};
+                        else
+                            rPixelData0 <= {rPixelData0[14:0], IwSDI};
+                        
+                        if (rCounter == 15) begin
+                            rPixelSelect <= ~rPixelSelect;
+                            rCounter <= 8'd0;
+                            rWriteCount <= 3'd4; // Start write process
+                        end else begin
+                            rCounter <= rCounter + 1'b1;
+                        end
+                    end
+                endcase
+            end
+        end
+    end
+
+    // Frame memory write control
+    always @(posedge IwClk) begin
+        if (rWriteCount > 0) begin
+            OwFrameMemWE <= 1'b1;
+            rWriteCount <= rWriteCount - 1'b1;
+            
+            if (rWriteCount == 4) begin
+                ObFrameMemWriteAddr <= rRowStart * 240 + rColumnStart + rCounter2;
+                ObFrameMemWriteData <= rPixelSelect ? 
+                    {1'b0, rPixelData1[15:11], rPixelData1[10:5], rPixelData1[4:0]} :
+                    {1'b0, rPixelData0[15:11], rPixelData0[10:5], rPixelData0[4:0]};
+                rCounter2 <= rCounter2 + 1'b1;
+            end
+        end else begin
+            OwFrameMemWE <= 1'b0;
+        end
+    end
+
+endmodule

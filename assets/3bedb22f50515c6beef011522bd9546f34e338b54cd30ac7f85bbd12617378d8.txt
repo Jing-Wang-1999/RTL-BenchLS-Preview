@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.f49d181bde7ef0fbc1e5.1b0c0b0180f9",
+  "compile_check": {
+    "case_id": "s1derived.f49d181bde7ef0fbc1e5.1b0c0b0180f9",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_016634",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_016634.434b5d149c930fe3/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.f49d181bde7ef0fbc1e5",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "f49d181bde7ef0fbc1e52a9c10e2c1687ff8fcecc692c86c23069bd96ca7d28f",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.f49d181bde7ef0fbc1e5.1b0c0b0180f9",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_016634.434b5d149c930fe3/private/commercial_positive.log",
+    "commercial_log_sha256": "1dd6fb77d07fcfee62be4a41bedccf3c227888367ae7ff053d33fcc898576b0d",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_016634.434b5d149c930fe3/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "origen_016634"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.origen_016634.434b5d149c930fe3",
+    "parent_id": "s1p.f49d181bde7ef0fbc1e5",
+    "revised_tops": [
+      "origen_016634"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_016634",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.f49d181bde7ef0fbc1e5.1b0c0b0180f9",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The repair completely specifies all four module interfaces and every combinational selection path, including the generated 32-bit mux.",
+        "rtl_excerpt": "2'b00: out = A; 2'b01: out = B; 2'b10, 2'b11: out = C;",
+        "specification_excerpt": "Select `A` for `sel=00`, `B` for `sel=01`, and `C` for `sel=10` or `11`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.f49d181bde7ef0fbc1e5",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "b708b6e92b0c742ae6cc4ccd97906eae5fff93e0d56ca1cd9246442482785581",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "f49d181bde7ef0fbc1e52a9c10e2c1687ff8fcecc692c86c23069bd96ca7d28f",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_016634.434b5d149c930fe3/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_016634.434b5d149c930fe3/private/historical_harness/01_conformal_rtl_origen_016634.do"
+  ],
+  "parent_id": "s1p.f49d181bde7ef0fbc1e5",
+  "primary_review": {
+    "case_id": "s1derived.f49d181bde7ef0fbc1e5.1b0c0b0180f9",
+    "checks": {
+      "behavior": "All implemented mux mappings are coherent, but the original contract is incomplete for two modules.",
+      "boundaries": "Checked both values of one-bit selects and all four values of the top-level two-bit select.",
+      "interface": "The visible interfaces for the first three modules match; the fourth interface is absent from the truncated prose.",
+      "rtl_reasonableness": "Straightforward synthesizable mux hierarchy.",
+      "sequential_and_reset": "Confirmed all four modules are combinational with no reset, storage, or latency."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The source ends before finishing module three and provides no contract for the implemented fourth module.",
+        "rtl_excerpt": "module mux2_32bit ... for (i = 0; i < 32; i = i + 1) begin ... mux2to1 mux_inst",
+        "specification_excerpt": "3. Module `mux2to1`: ... Behavior: This module performs"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification stops midway through mux2to1 and entirely omits mux2_32bit behavior.",
+        "rtl_evidence": "mux2to1 implements gate-level selection and mux2_32bit generates 32 mux2to1 instances",
+        "spec_evidence": "This module performs",
+        "type": "truncated_specification"
+      }
+    ],
+    "parent_id": "s1p.f49d181bde7ef0fbc1e5",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_10/s1derived.f49d181bde7ef0fbc1e5.1b0c0b0180f9.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "last_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "f49d181bde7ef0fbc1e52a9c10e2c1687ff8fcecc692c86c23069bd96ca7d28f",
+    "source_group": "S2",
+    "specification_sha256": "1b0c0b0180f96f47e675b94e5ef4ed795b048f723afb96e815be093be677cb67",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_10/s1derived.f49d181bde7ef0fbc1e5.1b0c0b0180f9.md",
+  "qualified_specification_sha256": "b708b6e92b0c742ae6cc4ccd97906eae5fff93e0d56ca1cd9246442482785581",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_016634.434b5d149c930fe3/private/golden_design.v",
+  "rtl_sha256": "f49d181bde7ef0fbc1e52a9c10e2c1687ff8fcecc692c86c23069bd96ca7d28f",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_016634.434b5d149c930fe3/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "1b0c0b0180f96f47e675b94e5ef4ed795b048f723afb96e815be093be677cb67",
+  "top_module": "origen_016634"
+}

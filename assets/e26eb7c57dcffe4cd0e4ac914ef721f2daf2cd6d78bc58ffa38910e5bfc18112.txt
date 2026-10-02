@@ -1,0 +1,52 @@
+`timescale 1ns/1ps
+module tb;reg clk=0,rst=0;always #5 clk=~clk;
+task tick;begin @(posedge clk);#2;end endtask
+task reset;begin @(negedge clk);rst=1;repeat(3)tick;@(negedge clk);rst=0;end endtask
+initial begin #100000000;$fatal(1,"timeout");end
+reg cyc=0,stb=0,we=0;reg [7:0] adr=0;reg [31:0] di=0;reg [3:0] sel=15;
+wire [31:0] data;wire ack,err,irq;reg [30:0] aux=0,pins=0;reg eclk=0;wire [30:0] outputs,oe;
+gpio_top dut(clk,rst,cyc,adr,di,sel,we,stb,data,ack,err,irq,aux,pins,outputs,oe,eclk);
+task wr;input [7:0] a;input [31:0] d;input [3:0] mask;begin
+@(negedge clk);adr=a;di=d;sel=mask;cyc=1;stb=1;we=1;tick;
+if(ack!==1 || err!==0)$fatal(1,"write ack");
+@(negedge clk);cyc=0;stb=0;we=0;repeat(3)tick;end endtask
+task rd;input [7:0] a;input [31:0] expected;begin
+@(negedge clk);adr=a;sel=15;cyc=1;stb=1;we=0;tick;
+if(ack!==1 || err!==0 || data!==expected)$fatal(1,"read %h: %h != %h",a,data,expected);
+@(negedge clk);cyc=0;stb=0;repeat(3)tick;end endtask
+initial begin reset;repeat(5)tick;wr(32,32'h7fffffff,15);
+wr(36,31'h0,15);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h59d959d6;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h59d959d6);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h59d959d6);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h5bc15a78;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h5bc15a78);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h5bc15a78);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'hd50b348;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'hd50b348);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'hd50b348);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h5b59953b;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h5b59953b);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h5b59953b);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h3c726020;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h3c726020);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h3c726020);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h1a441edb;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h1a441edb);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h1a441edb);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h469b79be;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h469b79be);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h469b79be);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h33c3ecd8;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h33c3ecd8);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h33c3ecd8);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h1ad7a8a3;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h1ad7a8a3);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h1ad7a8a3);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h5a3fc316;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h5a3fc316);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h5a3fc316);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h22b3efed;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h22b3efed);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h22b3efed);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h3ed41b95;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h3ed41b95);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h3ed41b95);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h49bf7d3;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h49bf7d3);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h49bf7d3);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h27ff4d59;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h27ff4d59);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h27ff4d59);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h4cbbb162;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h4cbbb162);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h4cbbb162);
+@(negedge clk);eclk=0;repeat(8)tick;@(negedge clk);pins=31'h3c538786;repeat(8)tick;@(negedge clk);eclk=1;repeat(8)tick;rd(0,31'h3c538786);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h3c538786);
+wr(36,31'h7fffffff,15);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h7825ff94;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h7825ff94);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h7825ff94);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h347a5edb;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h347a5edb);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h347a5edb);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h2dcf3146;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h2dcf3146);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h2dcf3146);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h2580f98f;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h2580f98f);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h2580f98f);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h7973b1e3;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h7973b1e3);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h7973b1e3);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h719ede96;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h719ede96);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h719ede96);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h1e491ae;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h1e491ae);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h1e491ae);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h6ee097e2;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h6ee097e2);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h6ee097e2);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h33de1d9b;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h33de1d9b);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h33de1d9b);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h47cb4b62;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h47cb4b62);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h47cb4b62);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h43b4c233;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h43b4c233);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h43b4c233);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h1b7415e5;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h1b7415e5);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h1b7415e5);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h2efc3a10;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h2efc3a10);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h2efc3a10);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h72889697;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h72889697);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h72889697);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h3f019b94;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h3f019b94);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h3f019b94);
+@(negedge clk);eclk=1;repeat(8)tick;@(negedge clk);pins=31'h35dffa30;repeat(8)tick;@(negedge clk);eclk=0;repeat(8)tick;rd(0,31'h35dffa30);@(negedge clk);pins=~pins;repeat(8)tick;rd(0,31'h35dffa30);
+$display("RTL_BENCHLS_PASS");$finish(0);end endmodule

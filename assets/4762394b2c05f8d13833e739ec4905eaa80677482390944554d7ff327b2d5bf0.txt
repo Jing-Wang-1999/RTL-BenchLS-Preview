@@ -1,0 +1,48 @@
+{
+  "configuration_id": "upstream_softfloat_first_occurrence_complete_tuples_16512_v1",
+  "parent_source_root": "opencores/arithmetic_core_fpu",
+  "selected_top": "fpu",
+  "upstream_testbench": "test_bench/tb_fpu.vhd",
+  "scored_testpoints": 1,
+  "transformation": "Stream original six-line records; compare all five nonempty fields after trimming surrounding ASCII whitespace; retain first occurrence/order of each full tuple and copy its six original physical lines byte-for-byte, including the consumed blank separator.",
+  "tuple_fields": [
+    "operand_a",
+    "operand_b",
+    "operation",
+    "rounding_mode",
+    "expected_result"
+  ],
+  "source_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/opencores/arithmetic_core_fpu/source/test_bench/testcases.txt",
+  "source_sha256": "449e861765063744e95f4621484b510788f0b966e0477110f7dbbb3a93056cfe",
+  "source_bytes": 111595812,
+  "source_records": 2000000,
+  "output_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/opencores/followup_20260909_v3/fpu_unique_tuples_16512/inputs/testcases.txt",
+  "output_sha256": "744bd46a75937750efb6434959ef17d6ff2325e211b397b55c7199cb1005758e",
+  "output_bytes": 922272,
+  "output_records": 16512,
+  "removed_exact_duplicate_records": 1983488,
+  "upstream_rtl_modified": false,
+  "upstream_testbench_modified": false,
+  "source_full_suite_passed": false,
+  "full_suite_evidence": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/opencores/followup_20260909_v2/fpu_full/result.json",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope2/task2_3_specification_round_trip/results/qualification_172_20260909_v1/opencores/arithmetic_core_fpu/full_upstream_vectors/golden.log"
+  ],
+  "independence_review": {
+    "testbench_lines": "tb_fpu.vhd:154-186 reads until EOF, reloads operands/operation/rounding/expected value, pulses start, waits for ready, asserts this operation result before advancing. No hard-coded record count or cumulative checker.",
+    "rtl_lines": "fpu.vhd:88 calls start_i a restart signal; lines338-349 register current inputs; lines367-398 restart FSM and counter for each start.",
+    "reset_note": "No explicit reset between vectors; transaction restart and ready handshake provide per-operation sequencing.",
+    "boundary_tests": "The unchanged five hard-coded boundary tests after EOF still execute."
+  },
+  "limitations": [
+    "This is a distinct input configuration, not a claimed pass of the original two-million-record sequence.",
+    "Duplicate frequency and some inter-record transitions change; repetition-dependent and long-history bugs can differ.",
+    "All distinct complete operand/operation/rounding/expected tuples remain, in first-occurrence order."
+  ],
+  "admission": "pending_parent_review",
+  "unchanged_source_hashes": {
+    "fpu.vhd": "bfaf5f02209762b3f611610cf47d69b72a3109dda3b614b8d7a8db17bb56325a",
+    "test_bench/tb_fpu.vhd": "14e51c03b609d85f9938914236f86e7fca233d56073ae41134bc0bf2b26730b0",
+    "test_bench/txt_util.vhd": "093e5a571a99bbe1a12eecd0215520f4632a9af23bbf6148d0f8ad7428d2e74e"
+  }
+}

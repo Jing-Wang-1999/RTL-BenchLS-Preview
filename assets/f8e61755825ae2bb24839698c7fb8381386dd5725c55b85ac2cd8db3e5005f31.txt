@@ -1,0 +1,120 @@
+module origen_144050 (
+    input wire clk,
+    input wire resetn,
+    input wire wen,
+    input wire [1:0] input_sel,
+    input wire input_valid,
+    input wire [31:0] input_value,
+    
+    output reg led_wen,
+    output reg [4:0] led_waddr,
+    output reg [31:0] led_wdata,
+    output reg [4:0] led_raddr1,
+    output reg [4:0] led_raddr2,
+    output reg lcd_rst,
+    output reg lcd_cs,
+    output reg lcd_rs,
+    output reg lcd_wr,
+    output reg lcd_rd,
+    inout wire [15:0] lcd_data_io,
+    output reg lcd_bl_ctr,
+    input wire ct_int,
+    inout wire ct_sda,
+    output reg ct_scl,
+    output reg ct_rstn
+);
+
+    reg [31:0] registers [0:31];
+    reg [4:0] read_addr1, read_addr2, write_addr;
+    reg [31:0] write_data;
+    reg [2:0] lcd_state;
+    reg [5:0] reg_index;
+    reg [15:0] lcd_data_out;
+    reg lcd_data_dir;
+
+    always @(posedge clk or negedge resetn) begin
+        if (!resetn) begin
+            read_addr1 <= 5'b0;
+            read_addr2 <= 5'b0;
+            write_addr <= 5'b0;
+            write_data <= 32'b0;
+            led_wen <= 1'b0;
+            led_waddr <= 5'b0;
+            led_wdata <= 32'b0;
+            led_raddr1 <= 5'b0;
+            led_raddr2 <= 5'b0;
+            lcd_state <= 3'b0;
+            reg_index <= 6'b0;
+            lcd_rst <= 1'b1;
+            lcd_cs <= 1'b1;
+            lcd_rs <= 1'b0;
+            lcd_wr <= 1'b1;
+            lcd_rd <= 1'b1;
+            lcd_bl_ctr <= 1'b0;
+            ct_scl <= 1'b1;
+            ct_rstn <= 1'b0;
+        end else begin
+            if (input_valid) begin
+                case (input_sel)
+                    2'b00: read_addr1 <= input_value[4:0];
+                    2'b01: read_addr2 <= input_value[4:0];
+                    2'b10: write_addr <= input_value[4:0];
+                    2'b11: write_data <= input_value;
+                endcase
+            end
+
+            if (wen) begin
+                registers[write_addr] <= write_data;
+                led_wen <= 1'b1;
+                led_waddr <= write_addr;
+                led_wdata <= write_data;
+            end else begin
+                led_wen <= 1'b0;
+            end
+
+            led_raddr1 <= read_addr1;
+            led_raddr2 <= read_addr2;
+
+            case (lcd_state)
+                3'b000: begin // Initialize LCD
+                    lcd_rst <= 1'b0;
+                    lcd_cs <= 1'b0;
+                    lcd_state <= 3'b001;
+                end
+                3'b001: begin // Write command
+                    lcd_rs <= 1'b0;
+                    lcd_wr <= 1'b0;
+                    lcd_data_dir <= 1'b1;
+                    lcd_data_out <= 16'h0001; // Clear display
+                    lcd_state <= 3'b010;
+                end
+                3'b010: begin // Write data
+                    lcd_rs <= 1'b1;
+                    lcd_wr <= 1'b0;
+                    lcd_data_out <= registers[reg_index][31:16];
+                    lcd_state <= 3'b011;
+                end
+                3'b011: begin // Write data
+                    lcd_data_out <= registers[reg_index][15:0];
+                    reg_index <= reg_index + 1;
+                    if (reg_index == 6'b111111) begin
+                        lcd_state <= 3'b100;
+                    end else begin
+                        lcd_state <= 3'b010;
+                    end
+                end
+                3'b100: begin // Finish
+                    lcd_cs <= 1'b1;
+                    lcd_bl_ctr <= 1'b1;
+                    lcd_state <= 3'b101;
+                end
+                default: lcd_state <= 3'b101;
+            endcase
+
+            ct_rstn <= 1'b1;
+        end
+    end
+
+    assign lcd_data_io = lcd_data_dir ? lcd_data_out : 16'bz;
+
+endmodule

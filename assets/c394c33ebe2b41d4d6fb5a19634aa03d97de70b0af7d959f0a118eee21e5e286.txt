@@ -1,0 +1,71 @@
+module rtlpp_08972 (
+    address,
+    address2,
+    byteenable,
+    byteenable2,
+    chipselect,
+    chipselect2,
+    clk,
+    clk2,
+    clken,
+    clken2,
+    write,
+    write2,
+    writedata,
+    writedata2,
+    readdata,
+    readdata2
+);
+
+  output [31:0] readdata;
+  output [31:0] readdata2;
+  input  [11:0] address;
+  input  [11:0] address2;
+  input  [3:0] byteenable;
+  input  [3:0] byteenable2;
+  input        chipselect;
+  input        chipselect2;
+  input        clk;
+  input        clk2;
+  input        clken;
+  input        clken2;
+  input        write;
+  input        write2;
+  input  [31:0] writedata;
+  input  [31:0] writedata2;
+
+  reg   [31:0] mem_a [0:4095];
+  reg   [31:0] mem_b [0:4095];
+  reg   [31:0] readdata;
+  reg   [31:0] readdata2;
+  wire         wren;
+  wire         wren2;
+
+  assign wren = chipselect & write;
+  assign wren2 = chipselect2 & write2;
+
+  always @(posedge clk) begin
+    if (clken) begin
+      if (wren) begin
+        if (byteenable[0]) mem_a[address][7:0] <= writedata[7:0];
+        if (byteenable[1]) mem_a[address][15:8] <= writedata[15:8];
+        if (byteenable[2]) mem_a[address][23:16] <= writedata[23:16];
+        if (byteenable[3]) mem_a[address][31:24] <= writedata[31:24];
+      end
+      readdata <= mem_a[address];
+    end
+  end
+
+  always @(posedge clk2) begin
+    if (clken2) begin
+      if (wren2) begin
+        if (byteenable2[0]) mem_b[address2][7:0] <= writedata2[7:0];
+        if (byteenable2[1]) mem_b[address2][15:8] <= writedata2[15:8];
+        if (byteenable2[2]) mem_b[address2][23:16] <= writedata2[23:16];
+        if (byteenable2[3]) mem_b[address2][31:24] <= writedata2[31:24];
+      end
+      readdata2 <= mem_b[address2];
+    end
+  end
+
+endmodule

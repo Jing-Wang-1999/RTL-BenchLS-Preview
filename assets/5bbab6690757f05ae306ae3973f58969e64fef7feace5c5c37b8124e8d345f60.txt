@@ -1,0 +1,485 @@
+LPC Bridge Core
+   Specification
+        Author: Howard M. Harte
+           hharte@opencores.org
+
+
+             Document rev. 0.4
+                 July 26, 2008
+This page left intentionally blank
+ OpenCores                 LPC Bridge Core Datasheet                 7/26/2008
+
+
+                                                          Revision History
+
+Rev.   Date         Author                Description
+0.1    03/01/2008   Howard M. Harte       First Draft
+0.2    03/05/2008   Howard M. Harte       Corrected some mistakes.
+0.3    03/08/2008   Howard M. Harte       Added SERIRQ Information
+0.4    07/26/2008   Howard M. Harte       Added Wishbone error reporting
+
+
+
+
+www.opencores.org                     Rev 0.4
+  OpenCores                                LPC Bridge Core Datasheet                                       7/26/2008
+
+
+                                                                                         Table of contents
+INTRODUCTION........................................................................................................2
+
+LPC HOST IO PORTS ...............................................................................................2
+
+LPC PERIPHERAL IO PORTS ................................................................................2
+
+SERIRQ HOST IO PORTS ........................................................................................2
+
+SERIRQ SLAVE IO PORTS ......................................................................................2
+
+OPERATION ...............................................................................................................2
+
+ARCHITECTURE .......................................................................................................2
+
+
+
+
+www.opencores.org                                         Rev 0.4
+  OpenCores                    LPC Bridge Core Datasheet              7/26/2008
+
+
+
+
+                                                                           1
+                                             Introduction
+The core features a 32-bit wishbone interface.
+
+FEATURES:
+    Compliant to Intel(r) Low Pin Count (LPC) Interface Specification Revision
+     1.1
+
+    Wishbone Slave to LPC Host Module
+
+           o   Memory Read and Write (1-byte)
+
+           o   I/O Read and Write (1-byte)
+
+           o   Firmware Memory Read and Write (1-, 2- and 4-byte)
+
+           o   DMA
+
+    Wishbone Master to LPC Peripheral Module
+
+           o   Memory Read and Write (1-byte)
+
+           o   I/O Read and Write (1-byte)
+
+           o   Firmware Memory Read and Write (1-, 2- and 4-byte)
+
+           o   DMA
+
+    Serial IRQ Host Module
+
+           o   Serial IRQ for PCI Systems 6.0 Compliant.
+
+           o   Supports 32 serialized IRQ lines.
+
+           o   Continuous and Quiet Modes.
+
+    Serial IRQ Slave Module
+
+           o   Serial IRQ for PCI Systems 6.0 Compliant.
+
+           o   Supports 32 serialized IRQ lines.
+
+           o   Continuous and Quiet Modes.
+
+    Fully static synchronous design with one clock domain
+
+    Technology independent Verilog
+
+    Fully synthesizable
+
+
+
+
+www.opencores.org                        Rev 0.4                         1 of 12
+  OpenCores                     LPC Bridge Core Datasheet                      7/26/2008
+
+
+
+
+                                                                                     2
+                          LPC Host IO ports
+2.1 WISHBONE Slave to LPC Host Interface Connections
+Port           Width     Direction     Description
+clk_i            1       Input         Master clock input
+nrst_i           1       Input         Asynchronous active low reset
+wbs_inta_o       1       Output        Interrupt request signal
+wbs_cyc_i        1       Input         Valid bus cycle
+wbs_stb_i        1       Input         Strobe/Core select
+wbs_adr_i       32       Input         Wishbone address bus bits
+wbs_tga_i        2       Input         Determines LPC access type (I/O, Mem, FW,
+                                       DMA)
+wbs_sel_i         4      Input         Byte enables
+wbs_we_i          1      Input         Write enable
+wbs_dat_i        32      Input         Data input
+wbs_dat_o        32      Output        Data output
+wbs_ack_o         1      Output        Normal bus termination
+wbs_err_o         1      Output        Wishbone error indication
+
+2.1.1 clk_i
+All internal WISHBONE logic is registered to the rising edge of the [clk_i] clock
+input.
+
+2.1.2 rst_i
+The active low asynchronous reset input [rst_i] forces the core to restart. All internal
+registers are preset and all state-machines are set to an initial state.
+
+2.1.3 wbs_inta_o
+The interrupt request output is asserted when the core needs service from the host
+system.
+
+2.1.4 wbs_cyc_i
+When asserted, the cycle input [cyc_i] indicates that a valid bus cycle is in progress.
+The logical AND function of [cyc_i] and [stb_i] indicates a valid transfer cycle
+to/from the core.
+
+2.1.5 wbs_stb_i
+The strobe input [stb_i] is asserted when the core is being addressed. The core only
+responds to WISHBONE cycles when [stb_i] is asserted, except for the [rst_i], which
+always receive a response.
+
+
+
+www.opencores.org                         Rev 0.4                                 2 of 12
+  OpenCores                    LPC Bridge Core Datasheet                     7/26/2008
+
+
+2.1.6 wbs_adr_i
+The address array input [adr_i] is used to pass a binary coded address to the core. The
+most significant bit is at the higher number of the array.
+
+2.1.7 wbs_tga_i
+The address tag input, defines transfer type on LPC Bus (I/O, Memory, DMA,
+Firmware.
+
+WB_TGA_MEM                    Memory Cycle                  2’b00
+WB_TGA_IO                     I/O Cycle                     2’b01
+WB_TGA_FW                     Firmware Memory Cycle         2’b10
+WB_TGA_DMA                    DMA Cycle                     2’b11
+
+2.1.8 wbs_sel_i
+Select lines that determine the access size and byte lanes on the Wishbone backplane.
+
+2.1.9 wbs_we_i
+When asserted, the write enable input [we_i] indicates that the current bus cycle is a
+write cycle. When negated, it indicates that the current bus cycle is a read cycle.
+
+2.1.10 wbs_dat_i
+The data array input [dat_i] is used to pass binary data from the current WISHBONE
+Master to the core. All data transfers are 8 bit wide.
+
+2.1.11 wbs_dat_o
+The data array output [dat_o] is used to pass binary data from the core to the current
+WISHBONE Master. All data transfers are 8 bit wide.
+
+2.1.12 wbs_ack_o
+When asserted, the acknowledge output [ack_o] indicates the normal termination of a
+valid bus cycle.
+
+2.1.13 wbs_err_o
+When asserted, the error output [err_o] indicates that an error occurred during the
+LPC bus transfer. Errors can happen in all cases, except for Firmware Memory
+cycles, where errors are forbidden by the LPC Specification.
+
+
+
+
+www.opencores.org                         Rev 0.4                               3 of 12
+  OpenCores                               LPC Bridge Core Datasheet                     7/26/2008
+
+
+2.2 External (LPC Host Port) Connections
+Port                   Width         Direction         Description
+lpc_clk_o                1           Output            LPC clock
+lframe_o                 1           Output            LPC LFRAME Signal
+lad_o                    4           Output            LPC Address/Data Bus Out
+lad_i                    4           Input             LPC Address/Data Bus In
+lad_oe                   1           Output            LPC Address/Data Output Enable
+
+2.2.1 lpc_clk_o
+Lpc_clk_o is generated by the master device and synchronizes data movement on the
+LPC Bus.
+
+2.2.2 lframe_o
+Frame: Indicates start of a new cycle, termination of broken cycle.
+
+
+2.2.3 lad_o
+The multiplexed LPC Command, Address, and Data Bus output.
+
+2.2.4 lad_i
+The multiplexed LPC Command, Address, and Data Bus input.
+
+2.2.5 lad_oe
+The multiplexed LPC Command, Address, and Data Bus output enable.
+
+
+
+
+www.opencores.org                                       Rev 0.4                           4 of 12
+  OpenCores                     LPC Bridge Core Datasheet                      7/26/2008
+
+
+
+
+3
+      LPC Peripheral IO ports
+3.1 WISHBONE Master to LPC Peripheral Interface
+Connections
+Port           Width     Direction     Description
+clk_i            1       Input         Master clock input
+rst_i            1       Input         Asynchronous active low reset
+wbm_inta_i       1       Input         Interrupt request signal
+wbm_cyc_o        1       Output        Valid bus cycle
+wbm_stb_o        1       Output        Strobe/Core select
+wbm_adr_o       32       Output        Wishbone address bus bits
+wbm_tga_o        2       Output         LPC access type (I/O, Mem, FW, DMA)
+wbm_sel_o        4       Output        Byte enables
+wbm_we_o         1       Output        Write enable
+wbm_dat_i       32       Input         Data input
+wbm_dat_o       32       Output        Data output
+wbm_ack_i        1       Input         Normal bus termination
+Wbm_err_i        1       Input         Wishbone Error input.
+
+3.1.1 clk_i
+All internal WISHBONE logic is registered to the rising edge of the [clk_i] clock
+input.
+
+3.1.2 rst_i
+The active low asynchronous reset input [rst_i] forces the core to restart. All internal
+registers are preset and all state-machines are set to an initial state.
+
+3.1.3 inta_i
+The interrupt request output is asserted when the core needs service from the host
+system.
+
+3.1.4 cyc_o
+When asserted, the cycle input [cyc_i] indicates that a valid bus cycle is in progress.
+The logical AND function of [cyc_i] and [stb_i] indicates a valid transfer cycle
+to/from the core.
+
+3.1.5 stb_o
+The strobe input [stb_i] is asserted when the core is being addressed. The core only
+responds to WISHBONE cycles when [stb_i] is asserted, except for the [rst_i], which
+always receive a response.
+
+
+
+www.opencores.org                         Rev 0.4                                 5 of 12
+  OpenCores                    LPC Bridge Core Datasheet                     7/26/2008
+
+
+3.1.6 adr_o
+The address array input [adr_i] is used to pass a binary coded address to the core. The
+most significant bit is at the higher number of the array.
+
+3.1.7 wbm_tga_o
+The address tag output, indicates transfer type on LPC Bus (I/O, Memory, DMA,
+Firmware.
+
+WB_TGA_MEM                    Memory Cycle                  2’b00
+WB_TGA_IO                     I/O Cycle                     2’b01
+WB_TGA_FW                     Firmware Memory Cycle         2’b10
+WB_TGA_DMA                    DMA Cycle                     2’b11
+
+3.1.8 wbm_sel_o
+Select lines that determine the access size and byte lanes on the Wishbone backplane.
+
+3.1.9 wbm_we_o
+When asserted, the write enable input [we_i] indicates that the current bus cycle is a
+write cycle. When negated, it indicates that the current bus cycle is a read cycle.
+
+3.1.10 wbm_dat_i
+The data array input [dat_i] is used to pass binary data from the current WISHBONE
+Master to the core. All data transfers are 8 bit wide.
+
+3.1.11 wbm_dat_o
+The data array output [dat_o] is used to pass binary data from the core to the current
+WISHBONE Master. All data transfers are 8 bit wide.
+
+3.1.12 wbm_ack_i
+When asserted, the acknowledge input [ack_i] indicates the normal termination of a
+valid bus cycle.
+
+3.1.13 wbs_err_i
+When asserted, the error input [err_i] indicates that an error occurred during the
+Wishbone master cycle. This error will be propagated to the LPC host in all cases,
+except for Firmware Memory cycles, where errors are forbidden by the LPC
+Specification.
+
+
+
+
+www.opencores.org                         Rev 0.4                               6 of 12
+  OpenCores                               LPC Bridge Core Datasheet                     7/26/2008
+
+
+3.2 External (LPC Peripheral Port) Connections
+Port                   Width         Direction         Description
+lpc_clk_i                1           Input             LPC Clock
+lframe_i                 1           Input             LPC LFRAME Signal
+lad_o                    4           Output            LPC Address/Data Bus Out
+lad_i                    4           Input             LPC Address/Data Bus In
+lad_oe                   1           Output            LPC Address/Data Output Enable
+
+3.2.1 lpc_clk_i
+Lpc_clk_o is generated by the master device and synchronizes data movement on the
+LPC Bus.
+
+3.2.2 lframe_i
+Frame: Indicates start of a new cycle, termination of broken cycle.
+
+
+3.2.3 lad_o
+The multiplexed LPC Command, Address, and Data Bus output.
+
+3.2.4 lad_i
+The multiplexed LPC Command, Address, and Data Bus input.
+
+3.2.5 lad_oe
+The multiplexed LPC Command, Address, and Data Bus output enable.
+
+
+
+
+www.opencores.org                                       Rev 0.4                           7 of 12
+  OpenCores                     LPC Bridge Core Datasheet                      7/26/2008
+
+
+
+
+                                                                                     4
+            SERIRQ Host IO ports
+4.1 SERIRQ Host Interface Connections
+Port             Width     Direction     Description
+clk_i              1       Input         Master clock input
+nrst_i             1       Input         Active-low reset
+serirq_mode_i      1       Input         SERIRQ Mode Control
+irq_o             32       Output        Interrupt request bit vector.
+serirq_o           1       Output        SERIRQ serial output.
+serirq_i           2       Input         SERIRQ serial input
+serirq_oe          1       Output        SERIRQ output enable
+
+4.1.1 clk_i
+All internal WISHBONE logic is registered to the rising edge of the [clk_i] clock
+input.
+
+4.1.2 rst_i
+The active low asynchronous reset input [rst_i] forces the core to restart. All internal
+registers are preset and all state-machines are set to an initial state.
+
+4.1.3 serirq_mode_i
+This input sets the Serial IRQ mode. When 0, the SERIRQ Host transitions to
+“continuous mode.” In this mode, the host continually generates SERIRQ frames to
+check for device interrupts. When 1, the SERIRQ Host transitions to “quiet mode.” In
+this mode, the SERIRQ Host waits for a SERIRQ slave to generate a request by
+driving the serirq_i line low. When the host detects this condition, it completes the
+SERIRQ Start Cycle, and SERIRQ frame to check for device interrupts. The SERIRQ
+Host will generate a SERIRQ frame when transitioning from Continuous mode to
+Quiet mode, and vice-versa. This is required because SERIRQ Slaves count the
+number of bits in the SERIRQ Stop cycle to determine the mode. All SERIRQ Slaves
+are required to default to “Continuous Mode.”
+
+4.1.4 irq_o
+The irq_o output contains the current interrupt request lines as determined by the
+previous SERIRQ Cycle.
+
+4.1.5 serirq_o
+The serirq_o output is the serialized SERIRQ output stream.
+
+4.1.6 serirq_i
+The serirq_i input is the serialized SERIRQ input stream.
+
+
+
+www.opencores.org                         Rev 0.4                                 8 of 12
+  OpenCores                   LPC Bridge Core Datasheet                    7/26/2008
+
+
+4.1.7 serirq_oe
+The serirq_oe output is the output enable for serirq_o. When high, serirq_o should be
+driven onto the serirq line. When 0, serirq should be tri-stated.
+
+
+
+
+www.opencores.org                        Rev 0.4                              9 of 12
+  OpenCores                     LPC Bridge Core Datasheet                     7/26/2008
+
+
+
+
+                                                                                    5
+            SERIRQ Slave IO ports
+5.1 SERIRQ Slave Interface Connections
+Port             Width     Direction    Description
+clk_i              1       Input        LPC_CLK, clock input
+nrst_i             1       Input        LPC_RST, Active-low reset
+irq_i             32       Input        Interrupt request bit vector.
+serirq_o           1       Output       SERIRQ serial output.
+serirq_i           2       Input        SERIRQ serial input
+serirq_oe          1       Output       SERIRQ output enable
+
+5.1.1 clk_i
+This is the LPC_CLK input, all internal logic is registered to the rising edge of the
+[clk_i] clock input.
+
+5.1.2 rst_i
+The active low LPC_RST input [rst_i] forces the core to restart. All internal registers
+are preset and all state-machines are set to an initial state.
+
+5.1.3 irq_i
+The irq_i input contains the current interrupt request lines to be transmitted over the
+SERIRQ interface.
+
+5.1.4 serirq_o
+The serirq_o output is the serialized SERIRQ output stream.
+
+5.1.5 serirq_i
+The serirq_i input is the serialized SERIRQ input stream.
+
+5.1.6 serirq_oe
+The serirq_oe output is the output enable for serirq_o. When high, serirq_o should be
+driven onto the serirq line. When 0, serirq should be tri-stated.
+
+
+
+
+www.opencores.org                         Rev 0.4                               10 of 12
+ OpenCores          LPC Bridge Core Datasheet   7/26/2008
+
+
+
+
+                                                    6
+                                        Operation
+6.1 LPC Transfers
+
+
+
+
+www.opencores.org            Rev 0.4             11 of 12
+ OpenCores          LPC Bridge Core Datasheet   7/26/2008
+
+
+
+
+                                                    7
+                                 Architecture
+
+
+
+
+www.opencores.org            Rev 0.4             12 of 12
+

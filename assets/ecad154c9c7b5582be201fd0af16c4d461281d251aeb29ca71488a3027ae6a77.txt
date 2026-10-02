@@ -1,0 +1,150 @@
+module autovcoder_024462 (
+    a,
+    b,
+    gr
+);
+
+  input [5:0] a;
+  input [5:0] b;
+  output gr;  // carry out
+
+
+  // -------------------- carry tree level 1 ----------------------------
+  // produce the generate for the least significant bit (sch: glsbs)
+
+  wire g0_l = !((a[0] & b[0]));
+
+  // produce the propagates and generates for the other bits
+
+  wire gen0_l, p0_l, g1_l, p1_l, g2_l, p2_l, g3_l, p3_l, g4_l, p4_l, g5_l, p5_l;
+
+  pgnx_gr6 pgnx0 (
+      a[0],
+      b[0],
+      gen0_l,
+      p0_l
+  );  // gen0_l is used only for sum[0] calc.
+  pgnx_gr6 pgnx1 (
+      a[1],
+      b[1],
+      g1_l,
+      p1_l
+  );
+  pgnx_gr6 pgnx2 (
+      a[2],
+      b[2],
+      g2_l,
+      p2_l
+  );
+  pgnx_gr6 pgnx3 (
+      a[3],
+      b[3],
+      g3_l,
+      p3_l
+  );
+  pgnx_gr6 pgnx4 (
+      a[4],
+      b[4],
+      g4_l,
+      p4_l
+  );
+  pgnx_gr6 pgnx5 (
+      a[5],
+      b[5],
+      g5_l,
+      p5_l
+  );
+
+
+  // -------------------- carry tree level 2 ----------------------------
+  // produce group propagates/generates for sets of 2 bits
+  // this stage contains the ling modification, which simplifies
+  //      this stage, but the outputs are Pseudo-generates, which
+  //      later need to be recovered by anding
+
+  wire g0to1, g1to2, g2to3, g4to5, p0to1, p1to2, p3to4;
+
+  pg2lg_gr6 pg2lg (
+      .gd_l(g0_l),
+      .gu_l(g1_l),
+      .g(g0to1)
+  );  //assign g0to1 =  !(g0_l & g1_l);
+
+  pg2l_gr6 p2gl0 (
+      .gd_l(g1_l),
+      .gu_l(g2_l),
+      .pd_l(p0_l),
+      .pu_l(p1_l),
+      .g(g1to2),  //assign g1to2 =  !(g1_l & g2_l);
+      .p(p0to1)
+  );  //assign p0to1 =  !(p0_l | p1_l);
+
+  pg2l_gr6 p2gl1 (
+      .gd_l(g2_l),
+      .gu_l(g3_l),
+      .pd_l(p1_l),
+      .pu_l(p2_l),
+      .g(g2to3),  //assign g2to3 =  !(g2_l & g3_l);
+      .p(p1to2)
+  );  //assign p1to2 =  !(p1_l | p2_l);
+
+  pg2l_gr6 p2gl2 (
+      .gd_l(g4_l),
+      .gu_l(g5_l),
+      .pd_l(p3_l),
+      .pu_l(p4_l),
+      .g(g4to5),  //assign g4to5 =  !(g4_l & g5_l);
+      .p(p3to4)
+  );  //assign p3to4 =  !(p3_l | p4_l);
+
+
+
+  // -------------------- carry tree level 3 ----------------------------
+  // use aoi to make group generates
+
+  wire g0to2_l, g0to3_l, g2to5_l, p1to4_l;
+
+  aoig_gr6 aoig0 (
+      .gd (~g0_l),
+      .gu (g1to2),
+      .pu (p0to1),
+      .g_l(g0to2_l)
+  );  //assign g0to2_l = !((!g0_l & p0to1) | g1to2);
+
+  aoig_gr6 aoig1 (
+      .gd (g0to1),
+      .gu (g2to3),
+      .pu (p1to2),
+      .g_l(g0to3_l)
+  );  //assign g0to3_l = !((g0to1 & p1to2) | g2to3);
+
+  baoi_gr6 baoi0 (
+      .gd (g2to3),
+      .gu (g4to5),
+      .pd (p1to2),
+      .pu (p3to4),
+      .g_l(g2to5_l),  //assign g2to5_l = !((g2to3 & p3to4) | g4to5);
+      .p_l(p1to4_l)
+  );  //assign p1to4_l = !(p1to2 & p3to4);	
+
+
+
+  // -------------------- carry tree level 4 ----------------------------
+  // use oai's since the inputs are active-low.
+  wire g0to5;
+
+  oaig_gr6 oaig0 (
+      .gd_l(~g0to1),
+      .gu_l(g2to5_l),
+      .pu_l(p1to4_l),
+      .g(g0to5)
+  );
+
+  //assign g0to5 = !((!g0to1 | p1to4_l) & g2to5_l);
+
+  // -------------------- cout ----------------------------
+
+  assign gr = g0to5 & !p5_l;  // recover gr by anding p5 with the pseudo-generate
+
+endmodule
+

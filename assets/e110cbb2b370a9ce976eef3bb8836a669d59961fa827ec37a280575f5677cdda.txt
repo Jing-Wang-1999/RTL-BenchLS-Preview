@@ -1,0 +1,16 @@
+read_verilog -sv golden.v
+hierarchy -check -top CDMA_mgc_out_stdreg_wait_v1
+proc; opt; memory; opt; flatten; opt; check -assert
+select -assert-none t:$*ff* t:$*latch*
+design -stash gold
+read_verilog -sv revised.v
+hierarchy -check -top CDMA_mgc_out_stdreg_wait_v1
+proc; opt; memory; opt; flatten; opt; check -assert
+select -assert-none t:$*ff* t:$*latch*
+design -stash gate
+design -copy-from gold -as gold CDMA_mgc_out_stdreg_wait_v1
+design -copy-from gate -as gate CDMA_mgc_out_stdreg_wait_v1
+miter -equiv -flatten gold gate miter
+hierarchy -check -top miter
+prep -top miter; check -assert
+sat -set-def-inputs -prove trigger 0 -verify -show-ports -dump_json witness.json

@@ -1,0 +1,31 @@
+# busdelay — default configuration specification
+
+Implement a pipelined Wishbone delay with a one-entry skid buffer. Defaults AW=32, DW=32, DELAY_STALL=1, OPT_LOWPOWER=0; only this default configuration is qualified and FORMAL is undefined. Inputs i_wb_* are the upstream request; outputs o_dly_* are the downstream request. i_dly_* supplies downstream stall/response; o_wb_* is the upstream response. Address is opaque, with no byte-address transformation. All registers update on rising i_clk. The transaction contract begins with synchronous high i_reset; declaration initializers need not be used as power-up guarantees. Data/address/select/write registers are not reset in the default low-power-disabled mode and can retain or update invalid values.
+
+Define pending as a skid-buffer valid bit and saved={we,addr,data,sel}. o_wb_stall is pending. On each edge, clear downstream CYC when reset or upstream CYC=0, otherwise set it to NOT old o_wb_err AND (NOT i_dly_err OR NOT old downstream CYC). Clear downstream STB on reset, upstream CYC=0, old upstream ERR, or old downstream CYC with downstream ERR; otherwise, if downstream STB=0 or downstream STALL=0, replace STB with upstream STB OR pending; otherwise hold.
+
+Clear pending when reset, upstream CYC=0, old upstream ERR, downstream ERR, downstream STALL=0, or downstream STB=0. Otherwise set pending if upstream STB and NOT o_wb_stall; otherwise hold. Capture saved payload whenever upstream STB AND NOT o_wb_stall (including idle/reset edges; no low-power gating). Whenever downstream STB=0 OR downstream STALL=0, update downstream payload from saved when old pending is set, otherwise directly from upstream payload. Otherwise hold downstream payload. The skid entry absorbs the extra accepted request before registered backpressure reaches the master.
+
+Clear o_wb_ack when reset, upstream CYC=0, old o_wb_err or downstream CYC=0; otherwise capture i_dly_ack. Clear o_wb_err when reset, upstream CYC=0 or downstream CYC=0; otherwise capture i_dly_err. o_wb_data captures i_dly_data every edge, even reset and invalid cycles. All predicates use preedge register values. Thus response latency is one clock and ordinary unstalled requests have one-clock outward latency, while the skid entry adds buffering on stalls. No response qualification by a hidden outstanding counter exists. Standard Wishbone stability under stall is the intended usage; arbitrary inputs remain unconstrained for equivalence. Optional alternate generate branches and embedded verification code are outside this default configuration. Default active complexity is smaller than raw file length because FORMAL properties and DELAY_STALL=0 are inactive, but the skid/error/abort protocol behavior remains substantive.
+
+Public interface declarations (widths above resolve the parameter expressions):
+
+```text
+input	wire			i_clk, i_reset
+input	wire			i_wb_cyc, i_wb_stb, i_wb_we
+input	wire	[(AW-1):0]	i_wb_addr
+input	wire	[(DW-1):0]	i_wb_data
+input	wire	[(DW/8-1):0]	i_wb_sel
+output	wire			o_wb_stall
+output	reg			o_wb_ack
+output	reg	[(DW-1):0]	o_wb_data
+output	reg			o_wb_err
+output	reg			o_dly_cyc, o_dly_stb, o_dly_we
+output	reg	[(AW-1):0]	o_dly_addr
+output	reg	[(DW-1):0]	o_dly_data
+output	reg	[(DW/8-1):0]	o_dly_sel
+input	wire			i_dly_stall
+input	wire			i_dly_ack
+input	wire	[(DW-1):0]	i_dly_data
+input	wire			i_dly_err
+```

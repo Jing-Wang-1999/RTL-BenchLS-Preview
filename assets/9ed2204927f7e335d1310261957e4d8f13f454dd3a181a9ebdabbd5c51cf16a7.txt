@@ -1,0 +1,152 @@
+module origen_145021 #(
+    parameter TYPE = "DEFAULT",
+    parameter DIR = "NO",
+    parameter NGPIO = 32,
+    parameter NVDDIO = 4,
+    parameter NVSSIO = 4,
+    parameter NVDD = 4,
+    parameter NVSS = 4,
+    parameter POC = 1,
+    parameter LEFTCUT = 1,
+    parameter RIGHTCUT = 1
+) (
+    inout [NGPIO-1:0] pad,
+    inout [NVDDIO-1:0] vddio,
+    inout [NVSSIO-1:0] vssio,
+    inout [NVDD-1:0] vdd,
+    inout [NVSS-1:0] vss,
+    inout poc,
+    input [NGPIO-1:0] dout,
+    output [NGPIO-1:0] din,
+    input [NGPIO-1:0] oen,
+    input [NGPIO-1:0] ie,
+    input [NGPIO*8-1:0] cfg
+);
+
+    // IO buffers
+    genvar i;
+    generate
+        for (i = 0; i < NGPIO; i = i + 1) begin : io_buffers
+            io_buffer #(
+                .TYPE(TYPE),
+                .DIR(DIR)
+            ) io_buf (
+                .pad(pad[i]),
+                .dout(dout[i]),
+                .din(din[i]),
+                .oen(oen[i]),
+                .ie(ie[i]),
+                .cfg(cfg[i*8 +: 8])
+            );
+        end
+    endgenerate
+
+    // IO supply pads
+    generate
+        for (i = 0; i < NVDDIO; i = i + 1) begin : vddio_pads
+            io_supply_pad vddio_pad (
+                .pad(vddio[i])
+            );
+        end
+    endgenerate
+
+    // IO ground pads
+    generate
+        for (i = 0; i < NVSSIO; i = i + 1) begin : vssio_pads
+            io_ground_pad vssio_pad (
+                .pad(vssio[i])
+            );
+        end
+    endgenerate
+
+    // Core supply pads
+    generate
+        for (i = 0; i < NVDD; i = i + 1) begin : vdd_pads
+            core_supply_pad vdd_pad (
+                .pad(vdd[i])
+            );
+        end
+    endgenerate
+
+    // Core ground pads
+    generate
+        for (i = 0; i < NVSS; i = i + 1) begin : vss_pads
+            core_ground_pad vss_pad (
+                .pad(vss[i])
+            );
+        end
+    endgenerate
+
+    // Left cut cell
+    if (LEFTCUT) begin : left_cut
+        cut_cell left_cut_cell();
+    end
+
+    // Right cut cell
+    if (RIGHTCUT) begin : right_cut
+        cut_cell right_cut_cell();
+    end
+
+    // Power-on control cell
+    if (POC) begin : poc_cell
+        power_on_control poc_inst (
+            .pad(poc)
+        );
+    end
+
+endmodule
+
+// IO buffer module (placeholder)
+module io_buffer #(
+    parameter TYPE = "DEFAULT",
+    parameter DIR = "NO"
+) (
+    inout pad,
+    input dout,
+    output din,
+    input oen,
+    input ie,
+    input [7:0] cfg
+);
+    // Implementation details omitted
+endmodule
+
+// IO supply pad module (placeholder)
+module io_supply_pad (
+    inout pad
+);
+    // Implementation details omitted
+endmodule
+
+// IO ground pad module (placeholder)
+module io_ground_pad (
+    inout pad
+);
+    // Implementation details omitted
+endmodule
+
+// Core supply pad module (placeholder)
+module core_supply_pad (
+    inout pad
+);
+    // Implementation details omitted
+endmodule
+
+// Core ground pad module (placeholder)
+module core_ground_pad (
+    inout pad
+);
+    // Implementation details omitted
+endmodule
+
+// Cut cell module (placeholder)
+module cut_cell ();
+    // Implementation details omitted
+endmodule
+
+// Power-on control module (placeholder)
+module power_on_control (
+    inout pad
+);
+    // Implementation details omitted
+endmodule

@@ -1,0 +1,53 @@
+`timescale 1ns/1ps
+module tb;
+reg clk=0,reset_n=1; always #5 clk=~clk;
+task tick; begin @(posedge clk); #1; end endtask
+task reset; begin @(negedge clk); reset_n=0; repeat(4) tick; @(negedge clk); reset_n=1; end endtask
+initial begin #10000000; $fatal(1,"timeout"); end
+reg en=0,empty=1;reg [7:0] data=0;wire rd,so;integer n,j,k;
+uart_txfsm dut(reset_n,clk,en,1'b0,2'b00,empty,rd,data,so);
+task frame;input [7:0] value;begin
+@(negedge clk); data=value;empty=0;en=1;
+k=0;while(so!==0 && k<40) begin tick;k=k+1;end
+if(so!==0 || rd!==1) $fatal(1,"start/handshake");
+@(negedge clk);empty=1;
+repeat(8) tick; if(so!==0) $fatal(1,"start duration");
+for(j=0;j<8;j=j+1) begin repeat(16) tick;if(so!==value[j]) $fatal(1,"TX bit %d",j);end
+repeat(16) tick;if(so!==1) $fatal(1,"stop");repeat(32) tick;end endtask
+initial begin reset;repeat(32) tick;if(so!==1) $fatal(1,"idle");
+empty=0;repeat(32) tick;if(rd!==0 || so!==1) $fatal(1,"disabled");empty=1;
+frame(8'h00);
+frame(8'hff);
+frame(8'h55);
+frame(8'haa);
+frame(8'h39);
+frame(8'hc5);
+frame(8'hd2);
+frame(8'hcf);
+frame(8'hbb);
+frame(8'h76);
+frame(8'h31);
+frame(8'h83);
+frame(8'h35);
+frame(8'hd3);
+frame(8'h0d);
+frame(8'hb6);
+frame(8'h94);
+frame(8'h13);
+frame(8'h6c);
+frame(8'h41);
+frame(8'h92);
+frame(8'he3);
+frame(8'hf0);
+frame(8'h8d);
+frame(8'hcd);
+frame(8'h45);
+frame(8'h9c);
+frame(8'h70);
+frame(8'h37);
+frame(8'h48);
+frame(8'h00);
+frame(8'hfc);
+
+$display("RTL_BENCHLS_PASS"); $finish(0); end
+endmodule

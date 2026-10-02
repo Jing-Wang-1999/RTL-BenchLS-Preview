@@ -1,0 +1,59 @@
+module rtlpp_10534(
+    input clk, 
+    input flash, 
+    input [31:0] Hexs, 
+    input [7:0] LES, 
+    input [7:0] point, 
+    input rst, 
+    input Start, 
+    input SW0, 
+    output seg_clk, 
+    output seg_clrn, 
+    output SEG_PEN, 
+    output seg_sout
+);
+
+    wire [63:0] XLXN_14;
+    wire [63:0] XLXN_15;
+    wire [63:0] XLXN_16;
+
+    // Embedded logic for P2S module
+    reg [63:0] shift_reg;
+    reg [5:0] bit_cnt;
+
+    assign seg_sout = shift_reg[63];
+    assign seg_clk = clk;
+    assign seg_clrn = ~rst;
+    assign SEG_PEN = Start;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            shift_reg <= 64'b0;
+            bit_cnt <= 6'b0;
+        end else if (Start) begin
+            shift_reg <= XLXN_14;
+            bit_cnt <= 6'b0;
+        end else if (SEG_PEN) begin
+            shift_reg <= {shift_reg[62:0], 1'b0};
+            bit_cnt <= bit_cnt + 1;
+        end
+    end
+
+    // Embedded logic for HexTo8SEG8 module
+    reg [7:0] segs[7:0];
+    integer i;
+
+    always @* begin
+        for (i = 0; i < 8; i = i + 1) begin
+            segs[i] = (flash) ? 8'b0 : Hexs[i*4 +: 4]; // Simplified conversion logic
+        end
+    end
+    assign XLXN_16 = {segs[7], segs[6], segs[5], segs[4], segs[3], segs[2], segs[1], segs[0]};
+
+    // Embedded logic for MUX2T1_64 module
+    assign XLXN_14 = (SW0) ? XLXN_16 : XLXN_15;
+
+    // Embedded logic for SSeg_map module
+    assign XLXN_15 = {Hexs, Hexs};
+
+endmodule

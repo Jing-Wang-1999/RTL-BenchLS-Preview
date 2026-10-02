@@ -1,0 +1,113 @@
+{
+  "case_id": "s1derived.25f68daabab368f7e17e.8340a9fae400",
+  "compile_check": {
+    "case_id": "s1derived.25f68daabab368f7e17e.8340a9fae400",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_07572",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_07572.8a5275510bf470ae/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.25f68daabab368f7e17e",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "25f68daabab368f7e17e7a3993a8aece94ae30110fcb205f786f974963f535b1",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.25f68daabab368f7e17e.8340a9fae400",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_07572.8a5275510bf470ae/private/commercial_positive.log",
+    "commercial_log_sha256": "0cb56b7169812373807a36a7dd7a7a632888c584c876f7f894d64ad2cd094fa4",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_07572.8a5275510bf470ae/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mg_07572"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.mg_07572.8a5275510bf470ae",
+    "parent_id": "s1p.25f68daabab368f7e17e",
+    "revised_tops": [
+      "mg_07572"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_07572",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.25f68daabab368f7e17e.8340a9fae400",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The three-bit index order and8-bit INITdefaultzero exactly match. A configurable LUT remains reasonable although its default truth table is constantzero.",
+        "rtl_excerpt": "assign OUT = INIT[{IN2, IN1, IN0}];",
+        "specification_excerpt": "Scalar output `OUT` continuously equals `INIT[{IN2,IN1,IN0}]`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.25f68daabab368f7e17e",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "5b5d392a4657f3aac554766a6ba342e326127b9138cfcfe59a0c269a0146764e",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "25f68daabab368f7e17e7a3993a8aece94ae30110fcb205f786f974963f535b1",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_07572.8a5275510bf470ae/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_07572.8a5275510bf470ae/private/historical_harness/01_conformal_rtl_mg_07572.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_07572.8a5275510bf470ae/private/historical_harness/02_fm_rtl_mg_07572.tcl"
+  ],
+  "parent_id": "s1p.25f68daabab368f7e17e",
+  "primary_review": {
+    "case_id": "s1derived.25f68daabab368f7e17e.8340a9fae400",
+    "checks": {
+      "behavior": "Core LUT behavior agrees, but default truth table and index ordering are required.",
+      "boundaries": "checked selector/opcode ranges, widths, arithmetic and state/default paths",
+      "interface": "checked complete RTL port names, directions and widths against prose",
+      "rtl_reasonableness": "reasonable hardware for stated behavior",
+      "sequential_and_reset": "checked clock/reset edges, initialization, update, hold, priority and latency"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Core LUT behavior agrees, but default truth table and index ordering are required.",
+        "rtl_excerpt": "parameter [7:0] INIT=0; OUT=INIT[{IN2,IN1,IN0}]",
+        "spec_excerpt": "Three inputs index an 8-bit parameter to produce one output."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "INIT's default value and exact index bit ordering are omitted.",
+        "rtl_evidence": "parameter [7:0] INIT=0; OUT=INIT[{IN2,IN1,IN0}]",
+        "spec_evidence": "Three inputs index an 8-bit parameter to produce one output.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.25f68daabab368f7e17e",
+    "proposed_specification_path": "proposed_repairs_3_sol_03/s1derived.25f68daabab368f7e17e.8340a9fae400.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "25f68daabab368f7e17e7a3993a8aece94ae30110fcb205f786f974963f535b1",
+    "source_group": "S5",
+    "specification_sha256": "8340a9fae4002985a726a4f196cea6eb77a58697f3f1b2948c9800d6b3955523",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_03/s1derived.25f68daabab368f7e17e.8340a9fae400.md",
+  "qualified_specification_sha256": "5b5d392a4657f3aac554766a6ba342e326127b9138cfcfe59a0c269a0146764e",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_07572.8a5275510bf470ae/private/golden_design.v",
+  "rtl_sha256": "25f68daabab368f7e17e7a3993a8aece94ae30110fcb205f786f974963f535b1",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_07572.8a5275510bf470ae/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "8340a9fae4002985a726a4f196cea6eb77a58697f3f1b2948c9800d6b3955523",
+  "top_module": "mg_07572"
+}

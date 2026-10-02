@@ -1,0 +1,58 @@
+module origen_037305 #(
+    parameter dsize = 8,
+    parameter rowsA = 10,
+    parameter colsA = 10,
+    parameter rowsB = 10,
+    parameter colsB = 10
+) (
+    input wire clk,
+    input wire rst,
+    input wire vin,
+    output reg vout,
+    input wire [rowsA*colsA*dsize-1:0] A,
+    input wire [rowsB*colsB*dsize-1:0] B,
+    output wire [rowsA*colsB*dsize-1:0] C
+);
+
+    reg [rowsA*colsA*dsize-1:0] Atmp [0:colsB];
+    reg [rowsB*colsB*dsize-1:0] Btmp [0:rowsA];
+    reg [rowsA*colsB*dsize-1:0] Ctmp [0:rowsB];
+    reg [rowsB:0] v;
+
+    integer i, j, k;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            for (i = 0; i <= colsB; i = i + 1) Atmp[i] <= 0;
+            for (i = 0; i <= rowsA; i = i + 1) Btmp[i] <= 0;
+            for (i = 0; i <= rowsB; i = i + 1) Ctmp[i] <= 0;
+            v <= 0;
+            vout <= 0;
+        end else begin
+            v <= {v[rowsB-1:0], vin};
+            vout <= v[rowsB];
+
+            if (vin) begin
+                Atmp[0] <= A;
+                Btmp[0] <= B;
+            end
+
+            for (i = 1; i <= colsB; i = i + 1) Atmp[i] <= Atmp[i-1];
+            for (i = 1; i <= rowsA; i = i + 1) Btmp[i] <= Btmp[i-1];
+
+            for (i = 1; i <= rowsB; i = i + 1) begin
+                for (j = 0; j < rowsA; j = j + 1) begin
+                    for (k = 0; k < colsB; k = k + 1) begin
+                        Ctmp[i][j*colsB*dsize+k*dsize +: dsize] <=
+                            Ctmp[i-1][j*colsB*dsize+k*dsize +: dsize] +
+                            Atmp[i-1][j*colsA*dsize+(i-1)*dsize +: dsize] *
+                            Btmp[j][(i-1)*colsB*dsize+k*dsize +: dsize];
+                    end
+                end
+            end
+        end
+    end
+
+    assign C = Ctmp[rowsB];
+
+endmodule

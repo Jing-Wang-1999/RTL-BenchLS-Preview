@@ -1,0 +1,25 @@
+always @(posedge clk or negedge nReset)
+      if (~nReset)
+      begin
+          sSCL <=  1'b1;
+          sSDA <=  1'b1;
+
+          dSCL <=  1'b1;
+          dSDA <=  1'b1;
+      end
+      else if (rst)
+      begin
+          sSCL <=  1'b1;
+          sSDA <=  1'b1;
+
+          dSCL <=  1'b1;
+          dSDA <=  1'b1;
+      end
+      else
+      begin
+          sSCL <=  &fSCL[2:1] | &fSCL[1:0] | (fSCL[2] & fSCL[0]);
+          sSDA <=  &fSDA[2:1] | &fSDA[1:0] | (fSDA[2] & fSDA[0]);
+
+          dSCL <=  sSCL;
+          dSDA <=  sSDA;
+      end

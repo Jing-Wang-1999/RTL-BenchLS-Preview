@@ -1,0 +1,45 @@
+# Implement the AES Rijndael cipher and inverse-cipher project
+
+Read specification/project.txt and the unchanged original aes.pdf by Rudolf
+Usselmann, revision 1.1. Implement BOTH independent top interfaces aes_cipher_top
+and aes_inv_cipher_top and their shared key-expansion/S-box closure: six required
+files and six modules. This is one project with two public engines, as drawn in
+the original architecture; no reference cipher engine is supplied during scoring.
+aes_cipher_top is the primary build top, and the system bench instantiates both.
+
+Curator clarifications from the pinned RTL:
+- This release supports AES-128 only. All blocks/keys are 128 bits with the
+  standard AES byte ordering. aes_cipher_top accepts key and plaintext on a
+  rising clock with ld=1 and pulses done when text_out is the completed standard
+  AES ciphertext. Key expansion is started on every cipher ld. Do not overlap
+  encryption requests. Use done to observe completion; the manual describes a
+  twelve-clock sequence including load and output stage.
+- aes_inv_cipher_top first requires a rising-edge kld pulse with a stable key.
+  Allow twelve clocks for the forward round keys to be generated and stored in
+  reverse order, then pulse ld with the ciphertext. The input key need not remain
+  driven after its load edge. Subsequent decryptions may reuse the expanded key;
+  do not overlap key expansion and decryption. done pulses for the completed
+  plaintext. The manual lists an output kdone, but this pinned RTL does NOT expose
+  that port: it is internal and is not an externally usable handshake. Do not add
+  a kdone port to the required interface. Use the documented finite key-load wait.
+- rst is synchronous active LOW for both engines. Assert reset over several clk
+  rising edges, then release before operation. Reset initializes control counters;
+  idle/unloaded data registers are not all reset and their contents are unspecified.
+  Sample result data only with the corresponding done signal. The input must be
+  stable across the accepted rising edge; testbench drives change after that edge.
+- aes_key_expand_128 produces four 32-bit round-key words, most significant first.
+  kld loads the input key; subsequent clocks advance the standard AES-128 schedule
+  using RotWord, SubWord and Rcon. aes_rcon resets its sequence on kld to
+  0x01000000 and advances the AES round constant. aes_sbox/aes_inv_sbox are
+  combinational forward/inverse 8-bit AES substitutions. The cipher engines
+  implement the standard initial, iterative and final round transforms.
+- The supplied reference retains original #1 simulation annotations and the
+  harmless timescale.v include; these are not extra functionality to reproduce.
+  Generated RTL may be ordinary synthesizable RTL with the same clock behavior.
+  Only the fixed timescale.v support header may be included; no implementation
+  is provided through an include or through a golden companion engine.
+
+The single original bench compares fixed ciphertext answers and decrypts each
+result back to the known plaintext. It is one Boolean testpoint, not one point
+per vector. Implement both engines correctly; each engine has its own retained
+compile-valid corruption control demonstrating detection in the shared bench.

@@ -1,0 +1,22 @@
+always @ (posedge clk) begin
+    g_sof <= f_sof & rstn;
+    if(~rstn | f_sof) begin
+        {g_e, g_eof, g_runi, g_on, g_cb, g_cn, g_zn, g_db, g_dn} <= 0;
+    end else begin
+        g_e <= f_e;
+        g_eof <= f_eof;
+        g_runi <= f_runi;
+        g_on <= f_on;
+        g_cb <= f_rune ? f_cb : 16'd0;
+        g_cn <= f_rune ? f_cn : 5'd0;
+        if(f_w_merr_sk < f_limit) begin 
+            g_zn <= f_w_merr_sk[4:0];
+            g_db <= f_merr & ~(10'h3ff<<f_k);
+            g_dn <= f_k;
+        end else begin
+            g_zn <= f_limit[4:0];
+            g_db <= (f_merr-10'd1) & ~(10'h3ff<<P_QBPP);
+            g_dn <= P_QBPP;
+        end
+    end
+end

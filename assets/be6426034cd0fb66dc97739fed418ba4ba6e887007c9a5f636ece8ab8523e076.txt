@@ -1,0 +1,102 @@
+module autovcoder_024809 #(
+    parameter num_ch0_atoms = 0,
+    parameter num_ch1_atoms = 0,
+    parameter num_ch2_atoms = 0
+) (
+    //input and output port declaration
+    input wire              avmmrstn,
+    input wire              avmmclk,
+    input wire              avmmwrite,
+    input wire              avmmread,
+    input wire [       1:0] avmmbyteen,
+    input wire [      10:0] avmmaddress,
+    input wire [      15:0] avmmwritedata,
+    input wire [    90-1:0] blockselect,
+    input wire [90*16 -1:0] readdatachnl,
+
+    output wire [15:0] avmmreaddata,
+
+    output wire        clkchnl,
+    output wire        rstnchnl,
+    output wire [15:0] writedatachnl,
+    output wire [10:0] regaddrchnl,
+    output wire        writechnl,
+    output wire        readchnl,
+    output wire [ 1:0] byteenchnl,
+
+    //The following ports are not modelled. They exist to match the avmm interface atom interface
+    input wire refclkdig,
+    input wire avmmreservedin,
+
+    output wire       avmmreservedout,
+    output wire       dpriorstntop,
+    output wire       dprioclktop,
+    output wire       mdiodistopchnl,
+    output wire       dpriorstnmid,
+    output wire       dprioclkmid,
+    output wire       mdiodismidchnl,
+    output wire       dpriorstnbot,
+    output wire       dprioclkbot,
+    output wire       mdiodisbotchnl,
+    output wire [3:0] dpriotestsitopchnl,
+    output wire [3:0] dpriotestsimidchnl,
+    output wire [3:0] dpriotestsibotchnl,
+
+    //The following ports belong to pm_adce and pm_tst_mux blocks in the PMA
+    input  wire [11:0] pmatestbussel,
+    output wire [23:0] pmatestbus,
+
+    //
+    input wire scanmoden,
+    input wire scanshiftn,
+    input wire interfacesel,
+    input wire sershiftload
+);
+
+  cyclonev_hssi_avmm_interface_encrypted #(
+      .num_ch0_atoms(num_ch0_atoms),
+      .num_ch1_atoms(num_ch1_atoms),
+      .num_ch2_atoms(num_ch2_atoms)
+  ) stratixv_hssi_avmm_interface_encrypted_inst (
+      .avmmrstn          (avmmrstn),
+      .avmmclk           (avmmclk),
+      .avmmwrite         (avmmwrite),
+      .avmmread          (avmmread),
+      .avmmbyteen        (avmmbyteen),
+      .avmmaddress       (avmmaddress),
+      .avmmwritedata     (avmmwritedata),
+      .blockselect       (blockselect),
+      .readdatachnl      (readdatachnl),
+      .avmmreaddata      (avmmreaddata),
+      .clkchnl           (clkchnl),
+      .rstnchnl          (rstnchnl),
+      .writedatachnl     (writedatachnl),
+      .regaddrchnl       (regaddrchnl),
+      .writechnl         (writechnl),
+      .readchnl          (readchnl),
+      .byteenchnl        (byteenchnl),
+      .refclkdig         (refclkdig),
+      .avmmreservedin    (avmmreservedin),
+      .avmmreservedout   (avmmreservedout),
+      .dpriorstntop      (dpriorstntop),
+      .dprioclktop       (dprioclktop),
+      .mdiodistopchnl    (mdiodistopchnl),
+      .dpriorstnmid      (dpriorstnmid),
+      .dprioclkmid       (dprioclkmid),
+      .mdiodismidchnl    (mdiodismidchnl),
+      .dpriorstnbot      (dpriorstnbot),
+      .dprioclkbot       (dprioclkbot),
+      .mdiodisbotchnl    (mdiodisbotchnl),
+      .dpriotestsitopchnl(dpriotestsitopchnl),
+      .dpriotestsimidchnl(dpriotestsimidchnl),
+      .dpriotestsibotchnl(dpriotestsibotchnl),
+      .pmatestbus        (pmatestbus),
+      .pmatestbussel     (pmatestbussel),
+      .scanmoden         (scanmoden),
+      .scanshiftn        (scanshiftn),
+      .interfacesel      (interfacesel),
+      .sershiftload      (sershiftload)
+  );
+
+endmodule
+

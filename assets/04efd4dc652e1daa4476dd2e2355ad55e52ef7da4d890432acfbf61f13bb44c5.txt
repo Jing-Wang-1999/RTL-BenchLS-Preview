@@ -1,0 +1,94 @@
+module autovcoder_009061 (
+    out,
+    a,
+    b,
+    c,
+    d,
+    e,
+    f,
+    g,
+    h,
+    i,
+    j,
+    k,
+    l,
+    m,
+    n,
+    o,
+    p,
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    sel
+);
+
+  parameter width = 32;
+
+  output [width-1:0] out;
+  input [width-1:0] a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p;
+  input [width-1:0] A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P;
+  input [4:0] sel;
+  wire [width-1:0] wUPPER, wlower;
+
+  mux16v #(width) m0 (
+      wlower,
+      a,
+      b,
+      c,
+      d,
+      e,
+      f,
+      g,
+      h,
+      i,
+      j,
+      k,
+      l,
+      m,
+      n,
+      o,
+      p,
+      sel[3:0]
+  );
+  mux16v #(width) m1 (
+      wUPPER,
+      A,
+      B,
+      C,
+      D,
+      E,
+      F,
+      G,
+      H,
+      I,
+      J,
+      K,
+      L,
+      M,
+      N,
+      O,
+      P,
+      sel[3:0]
+  );
+  mux2v #(width) mfinal (
+      out,
+      wlower,
+      wUPPER,
+      sel[4]
+  );
+
+endmodule
+

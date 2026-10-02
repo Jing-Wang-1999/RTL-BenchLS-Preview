@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+import json,sys,shutil,re
+from pathlib import Path
+OUT=Path(__file__).resolve().parent
+sys.path.insert(0,str(OUT.parent/'direct50_axi_20260911_v1'))
+import build_packages as b
+b.OUT=OUT
+TEXT={
+'axi_fifo':'''# AXI transaction FIFO project
+Implement axi_fifo integrating axi_fifo_rd and axi_fifo_wr. This complete independent IP buffers AXI write data and read responses; it does not implement a RAM or perform AXI width conversion.
+
+- Preserve AXI payload fields, byte strobes, IDs, burst types/lengths, last flags and responses, including narrow and all burst types; do not alter addresses or data. Write-data FIFO moves S->M and read-data FIFO M->S, independently. Reads/writes may proceed simultaneously. AXI valid/ready are channel-local and all payload stays stable while valid is stalled. Enabled user sidebands propagate; disabled user outputs are zero.
+- FIFO depths are selected by WRITE_FIFO_DEPTH and READ_FIFO_DEPTH (scored native defaults 32); empty after synchronous reset. Backpressure prevents overwriting unread entries. The FIFO contents when invalid are unspecified.
+- With WRITE_FIFO_DELAY=0, forward the write address channel and use the data FIFO directly; with it 1, withhold a burst's AW until either the complete burst is buffered or the FIFO has filled with that burst. This allows bursts larger than the FIFO to make progress. B channel passes through.
+- With READ_FIFO_DELAY=0, AR passes through. With it 1, delay a read address until the reserved outstanding read data plus the new burst fits, or no earlier read data is outstanding. Thus a burst larger than the FIFO is allowed when empty. Release reservations as source-side R beats are consumed.
+- Include all three native integration benches: cocotb, MyHDL default delay-disabled and MyHDL delay-enabled. They are separate verification points of this one independent design; the read/write RTL halves are not additional cases. Configurations differing only in delay/depth never add project cases.
+''',
+'axi_register':'''# AXI register-slice project
+Implement axi_register integrating axi_register_rd and axi_register_wr. This is a complete AXI register-slice IP, independently usable between any compatible AXI endpoints.
+
+- Forward all five AXI channels without changing addresses, data, strobes, IDs, burst metadata, last flags or responses. AW/W/AR travel S->M; B/R travel M->S. Each channel is independent and must retain payload until a valid/ready handshake. Enabled user fields propagate and disabled user outputs are zero. All burst types are transported transparently.
+- Each channel *_REG_TYPE independently selects 0 combinational bypass, 1 simple register (one entry, may insert bubbles), or 2 skid buffer (two entries allowing full throughput and registered backpressure). Preserve these public timing modes; arbitrary transparent wiring is not a substitute for a requested register. Defaults are AW/B/AR type1 and W/R type2.
+- Reset clears the buffered valid state synchronously. Bypass channels remain direct wires and are not independently reset-gated. Empty payload values are unspecified. No transaction is created or duplicated during stalls or reset release.
+- Both usable original integration benches are retained: cocotb and MyHDL. There is no independent scored submodule bench in this closure; the read and write halves are evaluated through the complete wrapper. Register-mode parameter variations remain within this single case.
+''',
+'axil_adapter':'''# AXI-Lite width-adapter project
+Implement axil_adapter integrating axil_adapter_rd and axil_adapter_wr. The README wrapper names for this module accidentally omit the l; the required actual children are axil_adapter_rd/wr, as the declaration-only contract shows.
+
+- Convert between S_DATA_WIDTH and M_DATA_WIDTH while preserving byte-addressed memory semantics, protection bits and ready/valid backpressure. Eight-bit bytes, power-of-two word byte counts, common address width, and an integral power-of-two width ratio are required. Read and write paths operate independently. Reset clears transaction/response valids synchronously.
+- Equal widths: relay transactions and responses with handshaking. S narrower than M: perform one wide downstream access, position data/strobes in the destination lane selected by the address, and select that lane for the upstream read data. Repeated narrow writes must preserve adjacent lanes using strobes.
+- S wider than M: split a source word into successive narrow accesses in increasing byte-address order, starting at the addressed narrow segment. Collect read segments into the corresponding source word lanes; divide write data/strobes correspondingly. Return one upstream response only after all required segments complete. The source master issues legal word accesses; AXI-Lite has no burst-length signal.
+- Propagate downstream response codes. For narrowed multiple-access transfers, initialize aggregate response to OKAY and retain a non-OKAY downstream response (a later non-OKAY response replaces the previous error). Do not treat a partial transfer as a completed source request.
+- Preserve all four usable upstream benches: cocotb plus MyHDL 16->32, 32->16 and 32->32. These width configurations are verification points of one adapter design, not four project cases. Golden qualification covers normal read/write byte preservation and stalls; not every downstream-error race is independently covered.
+''',
+'axil_cdc':'''# AXI-Lite clock-domain crossing project
+Implement axil_cdc integrating axil_cdc_rd and axil_cdc_wr. The README child names accidentally omit the l; the actual required children are axil_cdc_rd/wr.
+
+- Bridge AXI-Lite S and M interfaces with identical widths across unrelated s_clk and m_clk. There is no frequency/phase relationship. s_rst and m_rst are synchronous active-high resets in their respective domains; assert both before traffic and allow synchronization after release. Reset in the middle of a transaction is outside the scored envelope.
+- Retain source AW, W and AR requests until accepted. AW and W may arrive independently; issue one destination write only once both are captured. Keep destination payload stable until its corresponding handshake. Transfer the B response back and retain it until source BREADY. Capture one read request, transfer AR to the destination, then return RDATA/RRESP stably until source RREADY. Reads and writes have independent state and may overlap.
+- Transfer every accepted address, protection field, write byte strobe and data byte without loss, duplication or reordering. Synchronize control handshakes across clock domains while holding multibit payload stable; directly sampling a changing bus across domains is not a valid implementation. Only one outstanding transaction per direction is required, and admission may stall until response consumption.
+- Both original integration benches (cocotb and MyHDL) are retained with independent clocks and traffic stalls. The two RTL halves are not counted separately. Clock ratios and resets are configurations of this one project.
+''',
+'axil_reg_if':'''# AXI-Lite register-interface project
+Implement axil_reg_if integrating axil_reg_if_rd and axil_reg_if_wr. This is a complete adapter from AXI-Lite to the simpler downstream register read/write interfaces documented in the README. The external register bank is an endpoint, not missing required RTL.
+
+- Capture AW and W independently; assert reg_wr_en only after both are present and no preceding B response blocks issue. Present their unmodified byte address, data and byte strobes on reg_wr_*. Hold the register request until ack or timeout, then generate one B response. A read captures AR and asserts reg_rd_en with its address; on ack or timeout, capture reg_rd_data and emit a stable R response.
+- reg_*_wait pauses timeout countdown; it does not override an asserted ack. Timeout is a finite fallback for an unacknowledged register address. Reload the timer to TIMEOUT-1, decrement on enabled non-waiting cycles while nonzero, and complete an already-enabled request when ack is high or the counter is zero. Default TIMEOUT=4. On timeout the read still samples reg_rd_data; it does not manufacture a zero value.
+- Both AXI response codes are always OKAY, including timeout. This is a curator clarification of the pinned RTL, not an implied AXI error on timeout. AWPROT/ARPROT are ignored because the simple register interface has no protection ports. Reg read and write channels proceed independently; ready/valid outputs tolerate backpressure. Reset clears pending/response-valid and reg enable state synchronously.
+- The complete original cocotb integration bench is the one usable testpoint. It covers the register interface through its Python endpoint; no additional native submodule benches exist. Multiple internal read/write transactions are not separate points.
+''',
+'axil_register':'''# AXI-Lite register-slice project
+Implement axil_register integrating axil_register_rd and axil_register_wr. This is an independent AXI-Lite register-slice design, not a width/clock converter and not a configuration of the full-AXI register project, whose burst/ID/last payload contract differs.
+
+- Transparently convey AXI-Lite AW, W, B, AR and R payloads in their natural directions, preserving addresses, protection, data, byte strobes and response codes. Read and write paths and their component channels have independent valid/ready handshakes; retain valid payload during backpressure and never couple AW acceptance to W being simultaneously present.
+- Each channel REG_TYPE=0 bypasses, REG_TYPE=1 is a single simple register with possible bubbles, and REG_TYPE=2 is a skid buffer with two entries/full-throughput capability. All five default to1. The README says skid buffers generally, but the pinned default is type1; this explicit curator clarification takes precedence. Implement parameter behavior rather than hardwiring a single default mode.
+- Synchronous active-high reset clears buffered valid states; combinational bypass remains direct. Values of payload when valid is low are unspecified. Do not introduce a memory, change transaction data or synthesize responses.
+- Preserve both usable original integration benches (cocotb and MyHDL) as two points for this one project. Parameterized channel mode tests remain within the case; no additional project count is assigned for changing register depth/type.
+'''}
+for top,t in TEXT.items():
+ common=b.COMMON
+ if top=='axil_cdc':common=common.replace('Rising clk edges and synchronous active-high rst apply throughout. Assert reset initially for several clocks.','Both clock domains use rising edges and their own synchronous active-high reset. Assert both resets initially for several local clock cycles.')
+ b.CONTRACTS[top]=t.split('\n',1)[0]+'\n'+common+'\n'+t.split('\n',1)[1]+'\nOriginal-document scope: the unchanged README identifies this project, its split read/write architecture and public capabilities. The detailed handshake/reset/corner-case descriptions above are labeled curator clarifications reviewed against the pinned RTL before any model evaluation. Initial blocks containing only parameter diagnostic calls are removed in normalized reference; all functional storage/control remains unchanged.\n'
+for n,top in enumerate(TEXT,3):
+ b.build(top,f'upstream172_20260909_v1/cases/{n:03}*')
+ p=OUT/'packages'/('github_alexforencich_'+top+'_direct_v1');shutil.copyfile(__file__,p/'private/verification/build_wave2.py')
+ score=json.loads((p/'private/scoring.json').read_text())
+ for x in score['points']:x['target']=top
+ (p/'private/scoring.json').write_text(json.dumps(score,indent=2)+'\n')

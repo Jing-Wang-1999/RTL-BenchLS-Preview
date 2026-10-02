@@ -1,0 +1,85 @@
+module MatchTemplateBin(
+	clk, 
+	rst_n, 
+	template, 
+	in_enable, 
+	in_data, 
+	out_ready, 
+	out_data);
+	/*
+	::description
+	This module's working mode.
+	::range
+	0 for Pipeline, 1 for Req-ack
+	*/
+	parameter[0 : 0] work_mode = 0;
+	/*
+	::description
+	The width(and height) of window.
+	::range
+	2 - 15
+	*/
+	parameter[3 : 0] window_width = 3;
+
+	/*
+	::description
+	Clock.
+	*/
+	input clk;
+	/*
+	::description
+	Reset, active low.
+	*/
+	input rst_n;
+	/*
+	::description
+	Reset, active low.
+	*/
+	input[window_width * window_width - 1 : 0] template;
+	/*
+	::description
+	Input data enable, in pipeline mode, it works as another rst_n, in req-ack mode, only it is high will in_data can be really changes.
+	*/
+	input in_enable;
+	/*
+	::description
+	Input data, it must be synchronous with in_enable.
+	*/
+	input [window_width * window_width - 1 : 0] in_data;
+	/*
+	::description
+	Output data ready, in both two mode, it will be high while the out_data can be read.
+	*/
+	output out_ready;
+	/*
+	::description
+	Output data, it will be synchronous with out_ready.
+	*/
+	output out_data;
+
+	reg reg_out_data;
+	reg reg_out_ready;
+
+	generate
+
+		always @(posedge clk or negedge rst_n or negedge in_enable) begin
+			if(~rst_n || ~in_enable) begin
+				reg_out_ready <= 0;
+			end else begin
+				reg_out_ready <= 1;
+			end
+		end
+		assign out_ready = reg_out_ready;
+
+		if(work_mode == 0) begin
+			always @(posedge clk)
+				reg_out_data <= in_data == template ? 1 : 0;
+		end else begin 
+			always @(posedge in_enable)
+				reg_out_data <= in_data == template ? 1 : 0;
+		end
+		assign out_data = out_ready ? reg_out_data : 0;
+
+	endgenerate
+
+endmodule

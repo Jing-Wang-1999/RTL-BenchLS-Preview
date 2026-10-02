@@ -1,0 +1,50 @@
+module mix_one_column (
+    input wire [31:0] in,
+    output wire [31:0] out
+);
+    // Extract input bytes
+    wire [7:0] s0_i = in[31:24];
+    wire [7:0] s1_i = in[23:16];
+    wire [7:0] s2_i = in[15:8];
+    wire [7:0] s3_i = in[7:0];
+
+    // Internal signals for transformed values
+    wire [7:0] mult2_s0, mult2_s1, mult2_s2, mult2_s3;
+    wire [7:0] mult3_s0, mult3_s1, mult3_s2, mult3_s3;
+
+    // Define mult2 function (doubling in GF(2^8) with irreducible polynomial x^8 + x^4 + x^3 + x + 1)
+    function [7:0] mult2;
+        input [7:0] n;
+        begin
+            mult2 = {n[6:0], 1'b0} ^ (8'h1b & {8{n[7]}});
+        end
+    endfunction
+
+    // Define mult3 function (tripling = mult2 XOR n)
+    function [7:0] mult3;
+        input [7:0] n;
+        begin
+            mult3 = mult2(n) ^ n;
+        end
+    endfunction
+
+    // Apply transformations
+    assign mult2_s0 = mult2(s0_i);
+    assign mult2_s1 = mult2(s1_i);
+    assign mult2_s2 = mult2(s2_i);
+    assign mult2_s3 = mult2(s3_i);
+
+    assign mult3_s0 = mult3(s0_i);
+    assign mult3_s1 = mult3(s1_i);
+    assign mult3_s2 = mult3(s2_i);
+    assign mult3_s3 = mult3(s3_i);
+
+    // Compute output bytes according to the specification
+    wire [7:0] s0_o = mult2_s0 ^ mult3_s1 ^ s2_i ^ s3_i;
+    wire [7:0] s1_o = s0_i ^ mult2_s1 ^ mult3_s2 ^ s3_i;
+    wire [7:0] s2_o = s0_i ^ s1_i ^ mult2_s2 ^ mult3_s3;
+    wire [7:0] s3_o = mult3_s0 ^ s1_i ^ s2_i ^ mult2_s3;
+
+    // Concatenate output bytes
+    assign out = {s0_o, s1_o, s2_o, s3_o};
+endmodule

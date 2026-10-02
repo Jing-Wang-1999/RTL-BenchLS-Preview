@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.0640ae3792b4c370f776.60e09b06fa29",
+  "compile_check": {
+    "case_id": "s1derived.0640ae3792b4c370f776.60e09b06fa29",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "HLS_fp32_sub_core_chn_a_rsci_chn_a_wait_dp",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0640ae3792b4c370f776.60e09b06fa29/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "0640ae3792b4c370f7762a37616f6f0b0c4981605f1ea2a838391f9f3b0ab0ee",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0640ae3792b4c370f776.60e09b06fa29",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.0640ae3792b4c370f776",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "HLS_fp32_sub_core_chn_a_rsci_chn_a_wait_dp"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0640ae3792b4c370f776.60e09b06fa29",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The exact handshake equations, mux polarity, asynchronous reset, and bdwt-clear priority agree.",
+        "rtl_excerpt": "`assign chn_a_rsci_bawt = ...biwt | ...bcwt; ... MUX_v_32_2_2(..., ...bcwt);`",
+        "spec_excerpt": "\u201cbawt=biwt|bcwt, wen_comp=~oswt|bawt, and data output selects buffered data when bcwt is one\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0640ae3792b4c370f776",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "633922158d5be86641bb4af9fef254552fabdd01c2a80a4d5052ef235a688809",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0640ae3792b4c370f7762a37616f6f0b0c4981605f1ea2a838391f9f3b0ab0ee",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.0640ae3792b4c370f776",
+  "primary_review": {
+    "case_id": "s1derived.0640ae3792b4c370f776.60e09b06fa29",
+    "checks": {
+      "behavior": "Mux and wait equations match the intended description.",
+      "boundaries": "bdwt clears with priority.",
+      "interface": "Widths are broadly correct but exact names are needed.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Active-low asynchronous reset clears flag and buffer."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Mux and wait equations match the intended description. Active-low asynchronous reset clears flag and buffer.",
+        "rtl_excerpt": "RTL exposes chn_a_rsci_* ports and exact bcwt update equation",
+        "spec_excerpt": "\u201cReset is asynchronous and\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose ends mid-sentence and uses descriptive aliases instead of the required exact port names.",
+        "rtl_evidence": "RTL exposes chn_a_rsci_* ports and exact bcwt update equation",
+        "spec_evidence": "\u201cReset is asynchronous and\u201d",
+        "type": "truncated_and_nonliteral_interface"
+      }
+    ],
+    "parent_id": "s1p.0640ae3792b4c370f776",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.0640ae3792b4c370f776.60e09b06fa29.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0640ae3792b4c370f7762a37616f6f0b0c4981605f1ea2a838391f9f3b0ab0ee",
+    "source_group": "S1",
+    "specification_sha256": "60e09b06fa29e5b65c3e2b96fb352cb9f53c3a087a8c958cec16e50abd0862c9",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.0640ae3792b4c370f776.60e09b06fa29.md",
+  "qualified_specification_sha256": "633922158d5be86641bb4af9fef254552fabdd01c2a80a4d5052ef235a688809",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0640ae3792b4c370f776.60e09b06fa29/private/golden_design.v",
+  "rtl_sha256": "0640ae3792b4c370f7762a37616f6f0b0c4981605f1ea2a838391f9f3b0ab0ee",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0640ae3792b4c370f776.60e09b06fa29/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "60e09b06fa29e5b65c3e2b96fb352cb9f53c3a087a8c958cec16e50abd0862c9",
+  "top_module": "HLS_fp32_sub_core_chn_a_rsci_chn_a_wait_dp"
+}

@@ -1,0 +1,68 @@
+always @(posedge clk) begin
+    ctrl_reg_wr_ack_reg <= 1'b0;
+    ctrl_reg_rd_data_reg <= {AXIL_CTRL_DATA_WIDTH{1'b0}};
+    ctrl_reg_rd_ack_reg <= 1'b0;
+
+    if (ctrl_reg_wr_en && !ctrl_reg_wr_ack_reg) begin
+        // write operation
+        ctrl_reg_wr_ack_reg <= 1'b0;
+        case ({ctrl_reg_wr_addr >> 2, 2'b00})
+            // IRQ configuration
+            8'h4C: irq_rate_limit_min_interval_reg <= ctrl_reg_wr_data;  // IRQ config: Min interval
+            default: ctrl_reg_wr_ack_reg <= 1'b0;
+        endcase
+    end
+
+    if (ctrl_reg_rd_en && !ctrl_reg_rd_ack_reg) begin
+        // read operation
+        ctrl_reg_rd_ack_reg <= 1'b1;
+        case ({ctrl_reg_rd_addr >> 2, 2'b00})
+            // FW ID
+            8'h00: ctrl_reg_rd_data_reg <= 32'hffffffff;  // FW ID: Type
+            8'h04: ctrl_reg_rd_data_reg <= 32'h00000100;  // FW ID: Version
+            8'h08: ctrl_reg_rd_data_reg <= 32'h40;        // FW ID: Next header
+            8'h0C: ctrl_reg_rd_data_reg <= FPGA_ID;       // FW ID: FPGA JTAG ID
+            8'h10: ctrl_reg_rd_data_reg <= FW_ID;         // FW ID: Firmware ID
+            8'h14: ctrl_reg_rd_data_reg <= FW_VER;        // FW ID: Firmware version
+            8'h18: ctrl_reg_rd_data_reg <= BOARD_ID;      // FW ID: Board ID
+            8'h1C: ctrl_reg_rd_data_reg <= BOARD_VER;     // FW ID: Board version
+            8'h20: ctrl_reg_rd_data_reg <= BUILD_DATE;    // FW ID: Build date
+            8'h24: ctrl_reg_rd_data_reg <= GIT_HASH;      // FW ID: Git commit hash
+            8'h28: ctrl_reg_rd_data_reg <= RELEASE_INFO;  // FW ID: Release info
+            // IRQ configuration
+            8'h40: ctrl_reg_rd_data_reg <= 32'h0000C007;  // IRQ config: Type
+            8'h44: ctrl_reg_rd_data_reg <= 32'h00000100;  // IRQ config: Version
+            8'h48: ctrl_reg_rd_data_reg <= 32'h50;        // IRQ config: Next header
+            8'h4C: ctrl_reg_rd_data_reg <= irq_rate_limit_min_interval_reg;  // IRQ config: Min interval
+            // Interface
+            8'h50: ctrl_reg_rd_data_reg <= 32'h0000C000;  // Interface: Type
+            8'h54: ctrl_reg_rd_data_reg <= 32'h00000100;  // Interface: Version
+            8'h58: ctrl_reg_rd_data_reg <= 32'h70;        // Interface: Next header
+            8'h5C: ctrl_reg_rd_data_reg <= 32'h0;         // Interface: Offset
+            8'h60: ctrl_reg_rd_data_reg <= IF_COUNT;      // Interface: Count
+            8'h64: ctrl_reg_rd_data_reg <= 2**AXIL_IF_CTRL_ADDR_WIDTH;  // Interface: Stride
+            8'h68: ctrl_reg_rd_data_reg <= 2**AXIL_CSR_ADDR_WIDTH;      // Interface: CSR offset
+            // App info
+            8'h70: ctrl_reg_rd_data_reg <= APP_ENABLE ? 32'h0000C005 : 0;  // App info: Type
+            8'h74: ctrl_reg_rd_data_reg <= APP_ENABLE ? 32'h00000200 : 0;  // App info: Version
+            8'h78: ctrl_reg_rd_data_reg <= 32'h80;                         // App info: Next header
+            8'h7C: ctrl_reg_rd_data_reg <= APP_ENABLE ? APP_ID : 0;        // App info: ID
+            // Stats
+            8'h80: ctrl_reg_rd_data_reg <= STAT_ENABLE ? 32'h0000C006 : 0;      // Stats: Type
+            8'h84: ctrl_reg_rd_data_reg <= STAT_ENABLE ? 32'h00000100 : 0;      // Stats: Version
+            8'h88: ctrl_reg_rd_data_reg <= PHC_RB_BASE_ADDR;                    // Stats: Next header
+            8'h8C: ctrl_reg_rd_data_reg <= STAT_ENABLE ? (MSIX_ENABLE ? 2 : 1)*2**16 : 0;  // Stats: Offset
+            8'h90: ctrl_reg_rd_data_reg <= STAT_ENABLE ? 2**STAT_ID_WIDTH : 0;  // Stats: Count
+            8'h94: ctrl_reg_rd_data_reg <= STAT_ENABLE ? 8 : 0;                 // Stats: Stride
+            8'h98: ctrl_reg_rd_data_reg <= STAT_ENABLE ? 32'h00000000 : 0;      // Stats: Flags
+            default: ctrl_reg_rd_ack_reg <= 1'b0;
+        endcase
+    end
+
+    if (rst) begin
+        ctrl_reg_wr_ack_reg <= 1'b0;
+        ctrl_reg_rd_ack_reg <= 1'b0;
+
+        irq_rate_limit_min_interval_reg <= 10;
+    end
+end

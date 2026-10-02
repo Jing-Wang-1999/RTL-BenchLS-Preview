@@ -1,0 +1,36 @@
+**Module Overview**
+
+This module operates as a data path pipeline stage for handling load/store operations and write-back forwarding. It synchronizes data from ALU results, memory accesses, and write-back control.
+
+**Inputs**
+
+*   Clock (`clk_i`) and asynchronous active-high reset (`rst_i`).
+*   32-bit ALU result (`alu_i`).
+*   Control signals:
+    *   `control_load_i`: Indicates a load (read from memory) operation.
+    *   `control_store_i`: Indicates a store (write to memory) operation.
+    *   `control_take_branch_i`: Indicates a taken branch (unused but passed through).
+    *   `do_wb_i`: Enables write-back for the current data.
+    *   5-bit destination register address (`wb_reg_i`).
+
+**Outputs**
+
+*   `stall_o`: Stalls the pipeline (always held low; no stalling implemented).
+*   Write-back signals:
+    *   `do_wb_o`: Valid write-back request.
+    *   `wb_reg_o`: 5-bit destination register address.
+    *   `wb_val_o`: 32-bit write-back value.
+
+**Behavior**
+
+On each rising clock edge (after a reset clears all outputs and internal registers), the module:
+1.  **Defaults**: Sets all outputs to zero (`stall_o`, `do_wb_o`, `wb_reg_o`, `wb_val_o`).
+2.  **Data Selection**:
+    *   If `control_load_i` is high, an internal `mem_data` register is set to a fixed value of 99 (simulating a loaded memory value).
+    *   If `control_store_i` is high, no action is taken on `mem_data`.
+    *   If neither load nor store is active, `mem_data` is updated with the current ALU result (`alu_i`).
+3.  **Write-back**: If `do_wb_i` is high, the write-back outputs are driven. `do_wb_o` is asserted, `wb_reg_o` receives `wb_reg_i`, and `wb_val_o` outputs the current `mem_data` value.
+
+**Allowed Sub-modules**
+
+None. The design is a purely sequential state machine with no instantiated sub-modules.

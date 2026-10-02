@@ -1,0 +1,112 @@
+module origen_148265 (
+    input wire clk,
+    input wire reset,
+    inout wire ps2_clk,
+    inout wire ps2_dat,
+    input wire [7:0] the_command,
+    input wire send_command,
+    output reg command_was_sent,
+    output reg error_communication_timed_out,
+    output reg [7:0] received_data,
+    output reg received_data_en,
+    output reg start_receiving_data,
+    output reg wait_for_incoming_data
+);
+
+    // State machine parameters
+    localparam PS2_STATE_0_IDLE = 3'd0,
+               PS2_STATE_1_DATA_IN = 3'd1,
+               PS2_STATE_2_COMMAND_OUT = 3'd2,
+               PS2_STATE_3_END_TRANSFER = 3'd3,
+               PS2_STATE_4_END_DELAYED = 3'd4;
+
+    // Internal wires and registers
+    wire ps2_clk_posedge, ps2_clk_negedge;
+    reg [13:0] idle_counter;
+    reg ps2_clk_reg, ps2_data_reg;
+    reg last_ps2_clk;
+    reg [2:0] ns_ps2_transceiver, s_ps2_transceiver;
+
+    // Bidirectional control
+    assign ps2_clk = (s_ps2_transceiver == PS2_STATE_2_COMMAND_OUT) ? 1'b0 : 1'bz;
+    assign ps2_dat = (s_ps2_transceiver == PS2_STATE_2_COMMAND_OUT) ? ps2_data_reg : 1'bz;
+
+    // Edge detection
+    assign ps2_clk_posedge = ~last_ps2_clk & ps2_clk;
+    assign ps2_clk_negedge = last_ps2_clk & ~ps2_clk;
+
+    // State machine
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            s_ps2_transceiver <= PS2_STATE_0_IDLE;
+            idle_counter <= 0;
+            command_was_sent <= 1'b0;
+            error_communication_timed_out <= 1'b0;
+            received_data <= 8'h00;
+            received_data_en <= 1'b0;
+            start_receiving_data <= 1'b0;
+            wait_for_incoming_data <= 1'b0;
+            ps2_clk_reg <= 1'b1;
+            ps2_data_reg <= 1'b1;
+            last_ps2_clk <= 1'b1;
+        end else begin
+            s_ps2_transceiver <= ns_ps2_transceiver;
+            last_ps2_clk <= ps2_clk;
+
+            case (s_ps2_transceiver)
+                PS2_STATE_0_IDLE: begin
+                    idle_counter <= idle_counter + 1'b1;
+                    if (send_command) begin
+                        idle_counter <= 0;
+                        ns_ps2_transceiver <= PS2_STATE_2_COMMAND_OUT;
+                        command_was_sent <= 1'b0;
+                    end else if (ps2_clk_negedge) begin
+                        idle_counter <= 0;
+                        ns_ps2_transceiver <= PS2_STATE_1_DATA_IN;
+                        start_receiving_data <= 1'b1;
+                    end else if (idle_counter[13]) begin
+                        error_communication_timed_out <= 1'b1;
+                    end
+                end
+
+                PS2_STATE_1_DATA_IN: begin
+                    if (ps2_clk_negedge) begin
+                        received_data <= {ps2_dat, received_data[7:1]};
+                        if (received_data[0] == 1'b1) begin
+                            received_data_en <= 1'b1;
+                            ns_ps2_transceiver <= PS2_STATE_0_IDLE;
+                        end
+                    end
+                end
+
+                PS2_STATE_2_COMMAND_OUT: begin
+                    if (ps2_clk_posedge) begin
+                        if (ps2_data_reg == 1'b0) begin
+                            ps2_data_reg <= the_command[0];
+                            command_was_sent <= 1'b1;
+                        end else begin
+                            ps2_data_reg <= the_command[1];
+                        end
+                        ns_ps2_transceiver <= PS2_STATE_3_END_TRANSFER;
+                    end
+                end
+
+                PS2_STATE_3_END_TRANSFER: begin
+                    wait_for_incoming_data <= 1'b1;
+                    if (ps2_clk_posedge) begin
+                        ns_ps2_transceiver <= PS2_STATE_0_IDLE;
+                    end
+                end
+
+                PS2_STATE_4_END_DELAYED: begin
+                    if (ps2_clk_posedge) begin
+                        ns_ps2_transceiver <= PS2_STATE_0_IDLE;
+                    end
+                end
+
+                default: ns_ps2_transceiver <= PS2_STATE_0_IDLE;
+            endcase
+        end
+    end
+
+endmodule

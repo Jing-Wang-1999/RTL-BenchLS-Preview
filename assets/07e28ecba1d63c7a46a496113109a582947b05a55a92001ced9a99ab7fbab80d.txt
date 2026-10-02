@@ -1,0 +1,23 @@
+module rtlpp_02448(
+    input wire [31:0] data,
+    output wire parity
+);
+
+    wire [3:0] partParity;
+
+    // Logic from Helper module
+    assign partParity[0] = ~(^data[7:0]);
+
+    // Logic from Helper module for bottomMid
+    assign partParity[1] = ^data[15:8];
+
+    // Logic from Wrapper1 module which uses Helper internally
+    assign partParity[2] = ^data[23:16];
+
+    // Logic from Wrapper2 module which uses Helper internally
+    assign partParity[3] = ^data[31:24];
+
+    // Parity computation
+    assign parity = ^partParity;
+
+endmodule

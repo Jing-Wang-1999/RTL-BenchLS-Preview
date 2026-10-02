@@ -1,0 +1,43 @@
+always @(posedge clk or negedge reset_n) begin
+     if(!reset_n) begin
+        sck_ne   <= 1'b0;
+        clk_cnt  <= 6'h1;
+        sck_pe   <= 1'b0;
+        sck_int  <= 1'b0;
+     end // if (!reset_n)
+     else 
+     begin
+        if(cfg_op_req) 
+        begin
+           if(clk_cnt == sck_half_period) 
+           begin
+              sck_ne <= 1'b1;
+              sck_pe <= 1'b0;
+              if(sck_out_en) sck_int <= 0;
+              clk_cnt <= clk_cnt + 1'b1;
+           end // if (clk_cnt == sck_half_period)
+           else 
+           begin
+              if(clk_cnt == cfg_sck_period) 
+              begin
+                 sck_ne <= 1'b0;
+                 sck_pe <= 1'b1;
+                 if(sck_out_en) sck_int <= 1;
+                 clk_cnt <= 6'h1;
+              end // if (clk_cnt == cfg_sck_period)
+              else 
+              begin
+                 clk_cnt <= clk_cnt + 1'b1;
+                 sck_pe <= 1'b0;
+                 sck_ne <= 1'b0;
+              end // else: !if(clk_cnt == cfg_sck_period)
+           end // else: !if(clk_cnt == sck_half_period)
+        end // if (op_en)
+        else 
+        begin
+           clk_cnt    <= 6'h1;
+           sck_pe     <= 1'b0;
+           sck_ne     <= 1'b0;
+        end // else: !if(op_en)
+     end // else: !if(!reset_n)
+  end

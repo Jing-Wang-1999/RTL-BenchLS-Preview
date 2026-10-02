@@ -1,0 +1,12 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/pcf_24a124db3414d7f422.v0.v
+check_sec -analyze -imp -sv ./input/rtl/pcf_24a124db3414d7f422.negative.v
+check_sec -elaborate -spec -top cache -disable_auto_bbox
+check_sec -elaborate -imp -top cache -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clk
+reset -expression {rst}
+check_sec -gen
+check_sec -prove -strategy proof
+exit

@@ -1,0 +1,19 @@
+The mix_one_column module transforms a 4-byte input column into a 4-byte output column using a linear mixing operation. It is designed for cryptographic diffusion.
+
+Inputs and Outputs:
+- Input: A 32-bit signal 'in', interpreted as four consecutive 8-bit bytes (s0_i, s1_i, s2_i, s3_i).
+- Output: A 32-bit signal 'out', interpreted as four consecutive 8-bit result bytes (s0_o, s1_o, s2_o, s3_o).
+
+Internal Functions:
+The module uses two predefined mathematical functions over 8-bit values:
+1. mult2(n): Performs a doubling (multiplication by 2) in a finite field.
+2. mult3(n): Performs a tripling (multiplication by 3) in the same finite field, implemented as mult2(n) XOR n.
+
+Column Transformation:
+Each output byte is a linear combination (using bitwise XOR) of the four input bytes, where specific inputs are transformed by the mult2 or mult3 functions. The transformation is defined as:
+- s0_o = mult2(s0_i) XOR mult3(s1_i) XOR s2_i XOR s3_i
+- s1_o = s0_i XOR mult2(s1_i) XOR mult3(s2_i) XOR s3_i
+- s2_o = s0_i XOR s1_i XOR mult2(s2_i) XOR mult3(s3_i)
+- s3_o = mult3(s0_i) XOR s1_i XOR s2_i XOR mult2(s3_i)
+
+Allowed sub-mod

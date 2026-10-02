@@ -1,0 +1,11 @@
+--- golden/aes_1cycle_1stage/aes_cipher_top.v
++++ mutant/aes_1cycle_1stage/aes_cipher_top.v
+@@ -1055,7 +1055,7 @@
+  begin 
+ 		/*  $strobe($time,": round_key2 is %h\n",{w4,w5,w6,w7});
+ 		  $strobe($time,": roundkeyeven = %h, text_out_even is %h\n",{w4,w5,w6,w7},text_out);*/
+-		  text_out[127:120] <=  sa00_sr_round10 ^ w40[31:24];	 
++		  text_out[127:120] <=  (sa00_sr_round10 ^ w40[31:24]) ^ 8'h01;	 
+ 		  text_out[095:088] <=  sa01_sr_round10 ^ w41[31:24];	 
+ 		  text_out[063:056] <=  sa02_sr_round10 ^ w42[31:24];	 
+ 		  text_out[031:024] <=  sa03_sr_round10 ^ w43[31:24];	 

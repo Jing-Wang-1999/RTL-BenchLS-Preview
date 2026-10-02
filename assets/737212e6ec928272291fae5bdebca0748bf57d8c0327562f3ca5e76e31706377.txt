@@ -1,0 +1,105 @@
+### JESD204B/C Initial Lane Alignment Sequence (ILAS) Configuration Memory Module
+
+**Overview**
+This module generates and stores the static configuration data for the Initial Lane Alignment Sequence (ILAS) in a JESD204B/C-compliant serial interface system. It provides a memory-based interface for reading ILAS configuration words per lane, supporting multiple lanes and configurable data path widths.
+
+**Key Features**
+- Generates ILAS configuration data based on static parameter settings
+- Supports multiple lanes with lane-specific adjustments
+- Configurable data path width (4-byte or 8-byte output)
+- Synchronous read interface
+- Includes checksum calculation for data integrity
+
+**Parameters**
+- **DID**: Device Identification (8-bit)
+- **BID**: Bank Identification (4-bit)
+- **L**: Number of lanes per link (5-bit)
+- **SCR**: Scrambling enable (1-bit)
+- **F**: Number of octets per frame (8-bit)
+- **K**: Number of frames per multiframe (5-bit)
+- **M**: Number of converters per device (8-bit)
+- **N**: Converter resolution (5-bit)
+- **CS**: Control bits per sample (2-bit)
+- **NP**: Bits per sample (5-bit)
+- **SUBCLASSV**: Subclass version (3-bit)
+- **S**: Number of samples per converter per frame cycle (5-bit)
+- **JESDV**: JESD version (3-bit)
+- **CF**: Checksum field (5-bit)
+- **HD**: High-density format (1-bit)
+- **NUM_LANES**: Number of lanes supported (≥1)
+- **DATA_PATH_WIDTH**: Output width selector (4 or 8 bytes per lane)
+
+**Inputs**
+- **clk**: System clock for synchronous operation
+- **ilas_config_addr**: 2-bit address selecting which ILAS word to read (0-3)
+- **ilas_config_rd**: Read enable signal (active high)
+
+**Outputs**
+- **ilas_config_data**: Configuration data output with width dependent on NUM_LANES and DATA_PATH_WIDTH:
+  - When DATA_PATH_WIDTH=4: Output is NUM_LANES × 32 bits
+  - When DATA_PATH_WIDTH=8: Output is NUM_LANES × 64 bits
+  Data is organized with lane 0 in the least significant bits, lane 1 in the next segment, etc.
+
+**ILAS Memory Structure**
+The module maintains four 32-bit configuration words per lane:
+
+**Word 0 (Address 0)**
+- Bits 15:0: Fixed to 0x00
+- Bits 23:16: DID parameter
+- Bits 27:24: BID parameter
+- Bits 31:28: ADJCNT (fixed to 0)
+
+**Word 1 (Address 1)**
+- Bits 4:0: Lane ID (set to lane index 0 to NUM_LANES-1)
+- Bits 5: PHADJ (fixed to 0)
+- Bits 6: ADJDIR (fixed to 0)
+- Bits 7: Reserved (0)
+- Bits 12:8: L parameter
+- Bits 14:13: Reserved (00)
+- Bit 15: SCR parameter
+- Bits 23:16: F parameter
+- Bits 28:24: K parameter
+- Bits 31:29: Reserved (000)
+
+**Word 2 (Address 2)**
+- Bits 7:0: M parameter
+- Bits 12:8: N parameter
+- Bit 13: Reserved (0)
+- Bits 15:14: CS parameter
+- Bits 20:16: NP parameter
+- Bits 23:21: SUBCLASSV parameter
+- Bits 28:24: S parameter
+- Bits 31:29: JESDV parameter
+
+**Word 3 (Address 3)**
+- Bits 4:0: CF parameter
+- Bits 6:5: Reserved (00)
+- Bit 7: HD parameter
+- Bits 23:8: Reserved (0x0000)
+- Bits 31:24: Checksum calculated as the 8-bit sum of all relevant configuration fields plus lane index
+
+**Checksum Calculation**
+The checksum in Word 3 bits 31:24 is computed as the sum of:
+- DID, ADJCNT, Lane ID, PHADJ, ADJDIR, L, SCR, F, K, M, N, CS, NP, SUBCLASSV, S, JESDV, CF, HD
+- Plus the lane index (0 to NUM_LANES-1) for lane-specific checksums
+
+**Operation**
+1. **Initialization**: At power-up/reset, the module builds the four ILAS configuration words for each lane based on parameter values, inserting lane-specific information (Lane ID and checksum adjustment).
+
+2. **Read Operation**: When ilas_config_rd is asserted on a clock edge:
+   - For DATA_PATH_WIDTH=4: Outputs the 32-bit word from ilas_lane_mem[lane][address] for each lane
+   - For DATA_PATH_WIDTH=8: Outputs two consecutive 32-bit words (address concatenated with address+1) for each lane
+   - The output is registered and remains stable until the next read operation
+
+3. **Lane-Specific Adaptation**: Each lane's memory contains:
+   - Word 1 bits 4:0: Unique lane identifier (0 to NUM_LANES-1)
+   - Word 3 bits 31:24: Lane-specific checksum (base checksum + lane index)
+
+**Data Organization**
+The output ilas_config_data is organized as:
+- Lane 0 data occupies bits [31:0] (for DATA_PATH_WIDTH=4) or [63:0] (for DATA_PATH_WIDTH=8)
+- Lane 1 data occupies the next 32 or 64 bits, and so on
+- Higher lane indices occupy more significant bit positions
+
+**Timing**
+All operations are synchronous to the rising edge of clk. The read operation completes in

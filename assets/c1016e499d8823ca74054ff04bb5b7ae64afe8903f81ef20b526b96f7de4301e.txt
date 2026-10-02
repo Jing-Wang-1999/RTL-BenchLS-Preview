@@ -1,0 +1,11 @@
+always @(posedge src_clk) begin
+    if (src_resetn == 1'b0) begin
+      src_throttled_request_id <= 'h00;
+    end else if (rewind_req_valid) begin
+      src_throttled_request_id <= rewind_req_data[ID_WIDTH-1:0];
+    end else if (src_throttled_request_id != src_request_id &&
+                 compare_id(src_throttled_request_id, src_data_request_id) &&
+                 src_throttler_enabled) begin
+      src_throttled_request_id <= inc_id(src_throttled_request_id);
+    end
+  end

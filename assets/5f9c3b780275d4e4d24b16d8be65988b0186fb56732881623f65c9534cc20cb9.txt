@@ -1,0 +1,101 @@
+`timescale 1ns / 1ps
+
+module origen_131206 #(
+    parameter S = 4,
+    parameter DIFF_TERM = "TRUE"
+) (
+    input wire clkin_p,
+    input wire clkin_n,
+    output wire ioclkap,
+    output wire ioclkan,
+    output wire serdesstrobea,
+    output wire ioclkbp,
+    output wire ioclkbn,
+    output wire serdesstrobeb,
+    output wire gclk
+);
+
+    wire clkin_buf;
+
+    // Differential input buffer
+    IBUFDS #(
+        .DIFF_TERM(DIFF_TERM)
+    ) ibufds_inst (
+        .I(clkin_p),
+        .IB(clkin_n),
+        .O(clkin_buf)
+    );
+
+    // BUFIO2 instance 1
+    wire bufio2_1_divclk;
+    BUFIO2 #(
+        .DIVIDE(S),
+        .DIVIDE_BYPASS("FALSE"),
+        .I_INVERT("FALSE"),
+        .USE_DOUBLER("TRUE")
+    ) bufio2_1 (
+        .I(clkin_buf),
+        .IOCLK(ioclkap),
+        .DIVCLK(bufio2_1_divclk),
+        .SERDESSTROBE(serdesstrobea)
+    );
+
+    // BUFIO2 instance 2
+    BUFIO2 #(
+        .DIVIDE(1),
+        .DIVIDE_BYPASS("TRUE"),
+        .I_INVERT("FALSE"),
+        .USE_DOUBLER("FALSE")
+    ) bufio2_2 (
+        .I(clkin_buf),
+        .IOCLK(ioclkan),
+        .DIVCLK(),
+        .SERDESSTROBE()
+    );
+
+    // BUFIO2 instance 3
+    BUFIO2 #(
+        .DIVIDE(S),
+        .DIVIDE_BYPASS("FALSE"),
+        .I_INVERT("FALSE"),
+        .USE_DOUBLER("TRUE")
+    ) bufio2_3 (
+        .I(clkin_buf),
+        .IOCLK(ioclkbp),
+        .DIVCLK(),
+        .SERDESSTROBE(serdesstrobeb)
+    );
+
+    // BUFIO2 instance 4
+    BUFIO2 #(
+        .DIVIDE(1),
+        .DIVIDE_BYPASS("TRUE"),
+        .I_INVERT("FALSE"),
+        .USE_DOUBLER("FALSE")
+    ) bufio2_4 (
+        .I(clkin_buf),
+        .IOCLK(ioclkbn),
+        .DIVCLK(),
+        .SERDESSTROBE()
+    );
+
+    // Global clock buffer
+    BUFG bufg_inst (
+        .I(bufio2_1_divclk),
+        .O(gclk)
+    );
+
+    // Xilinx primitive instantiations
+    (* __KEEP = "TRUE" *)
+    (* __XIL_PRIMITIVE = "IBUFDS" *)
+    wire ibufds_primitive;
+
+    (* __KEEP = "TRUE" *)
+    (* __XIL_PRIMITIVE = "BUFIO2" *)
+    wire bufio2_primitive;
+
+    (* __KEEP = "TRUE" *)
+    (* __XIL_PRIMITIVE = "BUFG" *)
+    wire bufg_primitive;
+
+endmodule

@@ -1,0 +1,11 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/harder2_cb6cbe024502357177ca_negative.v0.v
+check_sec -analyze -imp -sv ./input/rtl/harder2_cb6cbe024502357177ca_negative.negative.v
+check_sec -elaborate -spec -top sha1 -disable_auto_bbox
+check_sec -elaborate -imp -top sha1 -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clk_i
+reset -expression {rst_i}
+check_sec -gen
+check_sec -prove -strategy proof

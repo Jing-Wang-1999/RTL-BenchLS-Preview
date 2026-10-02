@@ -1,0 +1,100 @@
+module rtlpp_09435 ( 
+    input  wire       clk,            
+    input  wire       rxd,            
+    output reg        rx_rdy,         
+    output reg  [7:0] rx_data,        
+    
+    input  wire       ena_tx,         
+    input  wire [7:0] tx_data,        
+    output reg        txd,            
+    output reg        tx_busy,        
+    
+    output reg        rx_sample_pulse 
+) ;
+
+parameter CLK_IN_HZ    = 50000000;    
+parameter BAUD_RATE    = 921600;      
+
+localparam RX_PERIOD    = (CLK_IN_HZ / BAUD_RATE) - 1; 
+localparam TX_PERIOD    = (CLK_IN_HZ / BAUD_RATE) - 1;
+
+reg     [15:0]     rx_period ;
+reg     [3:0]      rx_position ;
+reg     [9:0]      rx_byte ;
+reg                rxd_reg, last_rxd ;
+reg		           rx_busy, rx_last_busy ;
+
+reg     [15:0]     tx_period   = 16'h0 ;
+reg     [3:0]      tx_position = 4'h0 ;
+reg     [9:0]      tx_byte     = 10'b1111111111 ;
+reg     [7:0]      tx_data_reg = 8'b11111111 ;
+reg                tx_run      = 1'b0 ;
+
+wire    rx_trigger ;
+assign  rx_trigger = (~rxd_reg && last_rxd && ~rx_busy);
+
+always @ (posedge clk) begin
+    rxd_reg      <= rxd;
+    last_rxd     <= rxd_reg;                  
+
+    rx_last_busy <= rx_busy;                  
+    rx_rdy       <= rx_last_busy && ~rx_busy; 
+
+    if (rx_trigger) begin                             
+        rx_period      <= (RX_PERIOD[15:0] >> 1); 
+        rx_busy        <= 1'd1;               
+        rx_position    <= 4'h9;               
+    end else begin
+        if (rx_period == 0) begin					  
+            rx_period	    <= RX_PERIOD[15:0]; 
+            rx_sample_pulse <= rx_busy;
+            
+            if (rx_position != 0) begin                  
+                rx_position   <= rx_position - 1'd1;  
+                rx_byte[9]    <= rxd_reg;             
+                rx_byte[8:0]  <= rx_byte[9:1];        
+            end else begin                         
+                rx_data       <= rx_byte[9:2]; 
+                rx_busy       <= 1'b0;         
+            end
+        end else begin                                 
+            rx_period <= rx_period - 1'b1; 
+            rx_sample_pulse <=  1'b0;           
+            end
+    end 
+
+    if (ena_tx) begin                    
+        tx_data_reg <= tx_data;     
+        tx_busy     <= 1;        
+    end
+
+    if (tx_period == (TX_PERIOD[15:0] >> 1)) begin    
+        if (tx_position == 1) begin      
+            tx_run  <= 0;    
+            if (tx_busy) begin                         
+                tx_byte[8:1] <= tx_data_reg[7:0]; 
+                tx_byte[9]   <= 1'b1;             
+                tx_byte[0]   <= 1'b0;             
+                tx_busy      <= 1'b0;             
+            end                                   
+        end else begin
+            tx_byte[8:0] <= tx_byte[9:1];   
+            tx_byte[9]   <= 1'b1;           
+            if (tx_position == 0) tx_run  <= ~txd;  
+        end
+    end
+
+    if (rx_trigger && ~tx_run) begin
+        tx_period      <= TX_PERIOD[15:0];           
+        tx_position    <= 1'b0;                      
+        txd            <= tx_byte[0];                
+    end else if (tx_period == 0) begin
+        tx_period      <= TX_PERIOD[15:0];          
+        txd            <= tx_byte[0];                
+
+        if (tx_position == 0) tx_position <= 4'h9; 
+        else tx_position  <= tx_position - 1'b1;     
+    end else tx_period <= tx_period - 1'b1;          
+end 
+
+endmodule

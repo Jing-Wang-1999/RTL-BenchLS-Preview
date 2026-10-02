@@ -1,0 +1,3 @@
+# NV_NVDLA_SDP_CORE_Y_idx_core_chn_lut_out_rsci_chn_lut_out_wait_ctrl
+
+All ports are scalar and use the exact names in the RTL. Define `pdswt0=~core_wten & chn_lut_out_rsci_iswt0`, `ogwt=pdswt0|icwt`, `biwt=ogwt&chn_lut_out_rsci_vd`, `bdwt=chn_lut_out_rsci_oswt&core_wen`, and `ld_core_sct=chn_lut_out_rsci_ld_core_psct&ogwt`. Active-low asynchronous reset clears icwt; each rising edge otherwise sets `icwt=(icwt|pdswt0)&~biwt`. Outputs are combinational and may remain asserted as long as their conditions remain true; ld_core_sct is not inherently a one-cycle pulse. There are no submodules.

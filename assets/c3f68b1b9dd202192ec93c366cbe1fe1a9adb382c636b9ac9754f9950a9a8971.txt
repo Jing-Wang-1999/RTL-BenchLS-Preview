@@ -1,0 +1,84 @@
+module rtlpp_03839(
+    input reset,
+    input clk0,
+    input nop,
+    input reada,
+    input writea,
+    input refresh,
+    input preacharge,
+    input load_mod,
+    input [31:0] caddr,
+    input [2:0] cas_lat,
+    input [2:0] ras_cas,
+    input [2:0] ref_dur,
+    input page_mod,
+    input [2:0] bur_len,
+    input ref_req,
+    
+    output [31:0] sadd,
+    output [3:0] cs,
+    output ras,
+    output cas,
+    output we,
+    output cke,
+    output [2:0] ba,
+    output oe,
+    output ref_ack,
+    output cmack
+);
+
+wire do_nop;
+wire do_reada;
+wire do_writea;
+wire do_writea1;
+wire do_refresh;
+wire do_preacharge;
+wire do_load_mod;
+wire command_done;
+wire [7:0] command_delay;
+wire do_act;
+wire rw_flag;
+wire [3:0] rp_shift;
+wire rp_done;
+wire [15:0] rowaddr;
+wire [10:0] coladdr;
+wire [2:0] bankaddr;
+wire [2:0] cas_lat;
+wire oe4;
+
+assign rowaddr   = caddr[25:10];         
+assign coladdr   = caddr[9:0];        
+assign bankaddr  = caddr[28:26];    
+
+// Embedded logic for ras_cas_delay
+assign do_rw = (ras_cas == 3'b001) ? do_reada : 
+               (ras_cas == 3'b010) ? do_writea : 
+               1'b0;
+
+// Embedded logic for ref_ack
+assign cmack = (do_refresh || do_reada || do_writea || do_preacharge || do_load_mod) && ref_req;
+assign ref_ack = cmack;
+
+// Embedded logic for oe_generator
+assign oe = (page_mod && do_writea1) ? 1 : 0;
+
+// Embedded logic for cmd_generator
+assign sadd = (rw_flag) ? {16{do_reada | do_writea, rowaddr, coladdr, bankaddr}} : 32'b0;
+assign ba = bankaddr;
+assign cs = (do_load_mod) ? 4'b0010 : (do_preacharge) ? 4'b0001 : 4'b0000;
+assign ras = (do_load_mod | do_preacharge) ? ~do_rw : 1'b0;
+assign cas = do_rw;
+assign we = (do_load_mod | do_preacharge) ? ~do_rw : 1'b0;
+assign cke = (do_load_mod) ? 1'b0 : 1'b1;
+
+// Embedded logic for cmd_detector
+assign do_nop = nop;
+assign do_reada = reada;
+assign do_writea = writea;
+assign do_writea1 = (writea && !do_reada) ? 1'b1 : 1'b0;
+assign do_refresh = refresh;
+assign do_preacharge = preacharge;
+assign do_load_mod = load_mod;
+assign rw_flag = (do_reada || do_writea) ? 1'b1 : 1'b0;
+
+endmodule

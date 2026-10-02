@@ -1,0 +1,50 @@
+always @* begin
+    state_next = STATE_IDLE;
+
+    arp_request_valid_next = arp_request_valid_reg && !arp_request_ready;
+    arp_response_ready_next = 1'b0;
+    drop_packet_next = 1'b0;
+
+    s_ip_hdr_ready_next = 1'b0;
+
+    outgoing_ip_hdr_valid_next = outgoing_ip_hdr_valid_reg && !outgoing_ip_hdr_ready;
+    outgoing_eth_dest_mac_next = outgoing_eth_dest_mac_reg;
+
+    case (state_reg)
+        STATE_IDLE: begin
+            if (s_ip_hdr_valid) begin
+                arp_request_valid_next = 1'b1;
+                arp_response_ready_next = 1'b1;
+                state_next = STATE_ARP_QUERY;
+            end else begin
+                state_next = STATE_IDLE;
+            end
+        end
+        STATE_ARP_QUERY: begin
+            arp_response_ready_next = 1'b1;
+            if (arp_response_valid) begin
+                if (arp_response_error) begin
+                    s_ip_hdr_ready_next = 1'b1;
+                    drop_packet_next = 1'b1;
+                    state_next = STATE_WAIT_PACKET;
+                end else begin
+                    s_ip_hdr_ready_next = 1'b1;
+                    outgoing_ip_hdr_valid_next = 1'b1;
+                    outgoing_eth_dest_mac_next = arp_response_mac;
+                    state_next = STATE_WAIT_PACKET;
+                end
+            end else begin
+                state_next = STATE_ARP_QUERY;
+            end
+        end
+        STATE_WAIT_PACKET: begin
+            drop_packet_next = drop_packet_reg;
+
+            if (s_ip_payload_axis_tlast && s_ip_payload_axis_tready && s_ip_payload_axis_tvalid) begin
+                state_next = STATE_IDLE;
+            end else begin
+                state_next = STATE_WAIT_PACKET;
+            end
+        end
+    endcase
+end

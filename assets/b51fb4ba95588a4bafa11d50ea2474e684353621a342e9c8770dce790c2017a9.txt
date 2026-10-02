@@ -1,0 +1,44 @@
+**Instruction:**
+
+Develop a Verilog module named `mt19937_axi_stream_rng` that implements the MT19937 Mersenne Twister pseudorandom number generator. The module interfaces with an Advanced eXtensible Interface (AXI) Stream and includes functionality for seeding and generating the pseudorandom numbers.
+
+1. **Primary Function:**
+   The module generates a 32-bit pseudorandom number stream based on the MT19937 algorithm. It seeds the generator either via an input seed value or defaults to a predefined seed. The output is synchronized with the AXI stream protocol.
+
+2. **Control Flow:**
+   - **IDLE State (`STATE_IDLE`):**
+     - If `seed_start` is asserted, the module takes in the seed value (`seed_val`) to initialize the generator and transitions to the SEED state.
+     - If `output_axis_tready` is asserted and the internal state index (`mti_reg`) indicates initial seeding (625), the default seed is used to transition to the SEED state.
+     - Otherwise, outputs the next pseudorandom value, updates the internal state, and remains in the IDLE state.
+   - **SEED State (`STATE_SEED`):**
+     - Performs necessary computations to mix the seed value into the state vector. It involves a series of multiplication and bitwise operations.
+     - Continues the seeding process until all state vector entries are initialized, then transitions back to the IDLE state for normal number generation.
+
+3. **Data Processing and Signal Interactions:**
+   - **Seeding Mechanism:**
+     - Initiated by the `seed_start` signal, mixes the seed value (`seed_val`) into the internal state array (`mt`), using bitwise operations and multiplications based on the constants provided in the MT19937 algorithm.
+   - **Generation of Random Numbers:**
+     - Combines values from the internal state array predictably to produce new pseudorandom numbers.
+     - Each new number is generated through a series of bitwise transformations and stored in `output_axis_tdata`, with validity indicated by `output_axis_tvalid`.
+   - **Internal State Management:**
+     - The state index (`mti_reg`) is managed to track the position in the state vector.
+     - Read and write pointers (`mt_rd_a_ptr_reg`, `mt_rd_b_ptr_reg`, `mt_wr_ptr`) handle access to the array.
+     - Signal `busy` indicates the module is in the process of generating or seeding numbers.
+
+Ensure the module supports reset (`rst`) and synchronous clocking (`clk`) for all sequential logic. Use efficient register controls and combinational logic to maintain the pseudorandom number generation rate per the AXI stream protocol requirements.
+
+Module Interface:
+module mt19937_axi_stream_rng
+(
+    input  wire         clk,
+    input  wire         rst,
+    output wire [31:0]  output_axis_tdata,
+    output wire         output_axis_tvalid,
+    input  wire         output_axis_tready,
+    output wire         busy,
+    input  wire [31:0]  seed_val,
+    input  wire         seed_start
+);
+
+Behavioral Clarifications:
+- Two states: STATE_IDLE=0, STATE_SEED=1. mti_reg initializes to 625 (indicating uninitialized). Default seed is 32'd5489; seeding constant is 32'd1812433253. State array mt has 624 entries (mt[623:0]); read pointer mt_rd_b_ptr starts at offset 397 after seeding completes. Multiplication is performed via a 32-cycle shift-and-add loop using mul_cnt_reg (5 bits). The tempering transform uses MT19937 standard constants (0x9908b0df, 0x9d2c5680, 0xefc60000).

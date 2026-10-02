@@ -1,0 +1,38 @@
+### Module Specification: rtlpp_01153
+
+**Overview**  
+This module transforms a 60-bit input into a 68-bit output by appending an 8-bit error-checking code derived from the input data. The output consists of the original data bits followed by computed check bits.
+
+**Interface**  
+- **Input:** `din` – A 60-bit data input bus (bits 59 down to 0).  
+- **Output:** `dout` – A 68-bit output bus (bits 67 down to 0).
+
+**Behavior**  
+1. **Data Forwarding:**  
+   The higher 60 bits of the output (bits 67 down to 8) directly mirror the 60 input bits in order, with `din[59]` mapped to `dout[67]`, `din[58]` to `dout[66]`, and so on down to `din[0]` mapped to `dout[8]`.
+
+2. **Check Bit Generation:**  
+   The lower 8 bits of the output (bits 7 down to 0) are computed as an 8-bit check value (`chk`). Each check bit is calculated as the XOR (parity) of a specific subset of input bits. The subsets are defined as follows:  
+   - `chk[7]`: XOR of input bits at indices 57, 54, 52, 49, 47, 44, 41, 38, 35, 33, 31, 27, 25, 23, 19, 18, 14, 11, 10, 6, 5, 2, 0.  
+   - `chk[6]`: XOR of input bits at indices 57, 55, 52, 49, 46, 44, 42, 39, 36, 34, 30, 28, 26, 22, 20, 17, 14, 13, 9, 6, 4, 2, 1.  
+   - `chk[5]`: XOR of input bits at indices 58, 55, 52, 50, 47, 45, 41, 39, 36, 33, 31, 29, 25, 24, 21, 17, 16, 12, 9, 8, 7, 2, 1.  
+   - `chk[4]`: XOR of input bits at indices 58, 55, 53, 50, 47, 44, 43, 40, 37, 34, 32, 28, 26, 23, 20, 18, 15, 12, 11, 7, 5, 3, 1.  
+   - `chk[3]`: XOR of input bits at indices 58, 56, 53, 51, 48, 45, 42, 39, 37, 34, 31, 29, 27, 23, 22, 19, 15, 13, 10, 8, 6, 3, 1, 0.  
+   - `chk[2]`: XOR of input bits at indices 59, 56, 53, 50, 48, 45, 42, 40, 38, 35, 32, 30, 26, 25, 21, 18, 16, 14, 10, 9, 4, 3, 1, 0.  
+   - `chk[1]`: XOR of input bits at indices 59, 56, 54, 51, 49, 46, 43, 40, 37, 35, 33, 29, 27, 24, 21, 20, 17, 13, 11, 7, 4, 3, 2, 0.  
+   - `chk[0]`: XOR of input bits at indices 59, 57, 54, 51, 48, 46, 43, 41, 38, 36, 32, 30, 28, 24, 22, 19, 16, 15, 12, 8, 5, 3, 2, 0.
+
+3. **Output Composition:**  
+   The final output is formed by concatenating the forwarded input data (60 bits) with the computed check bits (8 bits), resulting in a 68-bit word.
+
+**Functional Properties**  
+- The module is purely combinational: outputs update immediately based on input changes without any internal state or clocking.  
+- The check bits provide a form of error detection, likely implementing a linear code (e.g., a parity-check code) capable of identifying certain bit errors in the data.  
+- Each check bit is an independent parity function over a distinct, overlapping set of data bits.
+
+**Allowed Sub-modules**  
+Only basic logic primitives (e.g., XOR gates) are permitted; no complex sub-modules or memory elements are required.
+
+**Notes**  
+- The specific selection of input bits for each check bit suggests a custom error-control coding scheme, potentially optimized for a particular application or fault model.  
+- The module operates at the bit level and is suitable for integration into larger digital systems requiring data integrity checks.

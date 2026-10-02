@@ -1,0 +1,5 @@
+# RX loopback and host-send bridge (`origen_006784`)
+
+Inputs are scalar `clk`, active-low asynchronous `rst_n`, `send_en`, RX flags `rx_fifo_full`, `rx_fifo_dvalid`, `rx_fifo_overrun`, `rx_fifo_underrun`, TX flags `tx_fifo_full`, `tx_fifo_overrun`, `tx_fifo_underrun`, plus `send_char[7:0]` and `rx_rdata[7:0]`. Outputs are registered-style combinational `rout[7:0]`, `rout_en`, `tx_wdata[7:0]`, `tx_wten`, and wire `rx_rden`. The full/overrun/underrun flags other than `tx_fifo_full` are unused.
+
+`rx_rden` continuously equals `rx_fifo_dvalid`. On each rising edge with valid RX data, an internal register captures rx_rdata; reset clears it. A second register captures rx_fifo_dvalid each edge and clears on reset. `rout` exposes the captured byte and `rout_en` exposes that one-cycle-delayed valid, regardless of TX fullness. Normally that delayed valid writes the captured byte to TX only when TX is not full. `send_en` has priority for tx_wdata and asserts tx_wten regardless of tx_fifo_full, so a host send can request a write even when full.

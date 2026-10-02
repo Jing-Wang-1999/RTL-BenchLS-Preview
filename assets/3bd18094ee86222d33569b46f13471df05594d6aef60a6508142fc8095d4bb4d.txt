@@ -1,0 +1,135 @@
+module autovcoder_090106 (
+    input clk,
+    input io_superMode,
+    input [2:0] io_ocp_M_Cmd,
+    input [31:0] io_ocp_M_Addr,
+    input [31:0] io_ocp_M_Data,
+    input [3:0] io_ocp_M_ByteEn,
+    output [1:0] io_ocp_S_Resp,
+    output [31:0] io_ocp_S_Data,
+    input [31:0] io_cpuInfoPins_id,
+    input [31:0] io_cpuInfoPins_cnt
+);
+
+  wire [31:0] data;
+  wire [31:0] T0;
+  wire [31:0] T1;
+  wire [31:0] T2;
+  wire [31:0] T3;
+  wire [31:0] T4;
+  wire [31:0] T5;
+  wire [31:0] T6;
+  wire [31:0] T7;
+  wire [31:0] T8;
+  wire [31:0] T9;
+  wire [31:0] T10;
+  wire [31:0] T11;
+  wire [31:0] T12;
+  wire [31:0] T13;
+  wire [31:0] T14;
+  wire T15;
+  wire [3:0] T16;
+  reg [31:0] masterReg_Addr;
+  wire T17;
+  wire T18;
+  wire T19;
+  wire T20;
+  wire T21;
+  wire T22;
+  wire T23;
+  wire T24;
+  wire T25;
+  wire T26;
+  wire T27;
+  wire T28;
+  wire T29;
+  reg [31:0] romData;
+  wire [3:0] T31;
+  wire T32;
+  wire T33;
+  wire [1:0] resp;
+  wire [1:0] T34;
+  wire [1:0] T35;
+  wire T36;
+  reg [2:0] masterReg_Cmd;
+  wire T37;
+
+`ifndef SYNTHESIS
+  // synthesis translate_off
+  integer initvar;
+  initial begin
+    #0.002;
+    masterReg_Addr = {1{$random}};
+    masterReg_Cmd  = {1{$random}};
+  end
+  // synthesis translate_on
+`endif
+
+  assign io_ocp_S_Data = data;
+  assign data = T0;
+  assign T0 = T32 ? romData : T1;
+  assign T1 = T29 ? 32'h800 : T2;
+  assign T2 = T28 ? 32'h400 : T3;
+  assign T3 = T27 ? 32'h0 : T4;
+  assign T4 = T26 ? 32'h800 : T5;
+  assign T5 = T25 ? 32'h1000001 : T6;
+  assign T6 = T24 ? 32'h800 : T7;
+  assign T7 = T23 ? 32'h1020010 : T8;
+  assign T8 = T22 ? 32'h1000 : T9;
+  assign T9 = T21 ? 32'h400 : T10;
+  assign T10 = T20 ? 32'h8000000 : T11;
+  assign T11 = T19 ? 32'h1 : T12;
+  assign T12 = T18 ? io_cpuInfoPins_cnt : T13;
+  assign T13 = T17 ? 32'h2faf080 : T14;
+  assign T14 = T15 ? io_cpuInfoPins_id : 32'h0;
+  assign T15 = 4'h0 == T16;
+  assign T16 = masterReg_Addr[3'h5:2'h2];
+  assign T17 = 4'h1 == T16;
+  assign T18 = 4'h2 == T16;
+  assign T19 = 4'h3 == T16;
+  assign T20 = 4'h4 == T16;
+  assign T21 = 4'h5 == T16;
+  assign T22 = 4'h6 == T16;
+  assign T23 = 4'h7 == T16;
+  assign T24 = 4'h8 == T16;
+  assign T25 = 4'h9 == T16;
+  assign T26 = 4'ha == T16;
+  assign T27 = 4'hb == T16;
+  assign T28 = 4'hc == T16;
+  assign T29 = 4'hd == T16;
+  always @(*)
+    case (T31)
+      0: romData = 32'hf0008024;
+      1: romData = 32'h0;
+      2: romData = 32'h20000;
+      3: romData = 32'h410;
+      4: romData = 32'h404;
+      5: romData = 32'h3b4;
+      6: romData = 32'h3e8;
+      7: romData = 32'h3f0;
+      8: romData = 32'h3f8;
+      default: begin
+        romData = 32'bx;
+`ifndef SYNTHESIS
+        // synthesis translate_off
+        romData = {1{$random}};
+        // synthesis translate_on
+`endif
+      end
+    endcase
+  assign T31 = masterReg_Addr[3'h5:2'h2];
+  assign T32 = T33 == 1'h1;
+  assign T33 = masterReg_Addr[4'hf:4'hf];
+  assign io_ocp_S_Resp = resp;
+  assign resp = T34;
+  assign T34 = T37 ? 2'h1 : T35;
+  assign T35 = T36 ? 2'h1 : 2'h0;
+  assign T36 = masterReg_Cmd == 3'h1;
+  assign T37 = masterReg_Cmd == 3'h2;
+
+  always @(posedge clk) begin
+    masterReg_Addr <= io_ocp_M_Addr;
+    masterReg_Cmd  <= io_ocp_M_Cmd;
+  end
+endmodule
+

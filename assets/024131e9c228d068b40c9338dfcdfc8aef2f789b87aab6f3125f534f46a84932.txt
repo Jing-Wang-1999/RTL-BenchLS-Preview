@@ -1,0 +1,39 @@
+module rtlpp_03888
+    ( 
+    datain,
+    dataout,
+    dataout_b
+    ) ;
+    input   [0:0]  datain;
+    output  [0:0]  dataout;
+    output  [0:0]  dataout_b;
+
+    wire    [0:0]   wire_obuf_ba_o;
+    wire    [0:0]   wire_obuf_ba_oe;
+    wire    [0:0]   wire_obufa_o;
+    wire    [0:0]   wire_obufa_oe;
+    wire    [0:0]   wire_pseudo_diffa_o;
+    wire    [0:0]   wire_pseudo_diffa_obar;
+    wire    [0:0]   wire_pseudo_diffa_oebout;
+    wire    [0:0]   wire_pseudo_diffa_oein;
+    wire    [0:0]   wire_pseudo_diffa_oeout;
+    wire    [0:0]   oe_w;
+
+    // Logic to replace cyclonev_io_obuf obuf_ba_0
+    assign wire_obuf_ba_o[0] = (wire_pseudo_diffa_obar[0] & wire_obuf_ba_oe[0]);
+
+    // Logic to replace cyclonev_io_obuf obufa_0
+    assign wire_obufa_o[0] = (wire_pseudo_diffa_o[0] & wire_obufa_oe[0]);
+
+    // Logic to replace cyclonev_pseudo_diff_out pseudo_diffa_0
+    assign wire_pseudo_diffa_o = datain;
+    assign wire_pseudo_diffa_obar = ~datain;
+    assign wire_pseudo_diffa_oebout = wire_pseudo_diffa_oein;
+    assign wire_pseudo_diffa_oeout = wire_pseudo_diffa_oein;
+
+    assign wire_pseudo_diffa_oein = (~ oe_w[0]);
+
+    assign dataout = wire_obufa_o;
+    assign dataout_b = wire_obuf_ba_o;
+    assign oe_w = 1'b1;
+endmodule

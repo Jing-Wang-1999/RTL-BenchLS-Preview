@@ -1,0 +1,8 @@
+always @(posedge wb_clk_i)
+    if( tip_addr_ack )
+      if(i2c_r_w_bit)
+        i2c_offset_r <= 8'h00;
+      else
+        i2c_offset_r <= 8'hff;
+    else if( i2c_ack_done )
+      i2c_offset_r <= i2c_offset_r + 1;

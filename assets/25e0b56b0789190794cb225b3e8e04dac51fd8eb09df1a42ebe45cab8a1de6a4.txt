@@ -1,0 +1,48 @@
+module autovcoder_126446 (  
+    input wire [15:0] plaintext,  
+    input wire [15:0] exponent,  
+    input wire [15:0] modulus,  
+    input wire clk,  
+    input wire start,  
+    output reg [15:0] ciphertext,  
+    output reg done  
+);  
+    reg [15:0] base;  
+    reg [15:0] result;  
+    reg [15:0] exp;  
+    reg [3:0] state;  
+
+    parameter IDLE = 4'b0000,  
+              COMPUTE = 4'b0001,  
+              DONE = 4'b0010;  
+
+    always @(posedge clk) begin  
+        case (state)  
+            IDLE: begin  
+                if (start) begin  
+                    base <= plaintext;  
+                    result <= 16'd1;  
+                    exp <= exponent;  
+                    state <= COMPUTE;  
+                    done <= 0;  
+                end  
+            end  
+            COMPUTE: begin  
+                if (exp > 0) begin  
+                    if (exp[0] == 1) begin  
+                        result <= (result * base) % modulus;  
+                    end  
+                    base <= (base * base) % modulus;  
+                    exp <= exp >> 1;  
+                end else begin  
+                    ciphertext <= result;  
+                    state <= DONE;  
+                end  
+            end  
+            DONE: begin  
+                done <= 1;  
+                state <= IDLE;  
+            end  
+        endcase  
+    end  
+endmodule

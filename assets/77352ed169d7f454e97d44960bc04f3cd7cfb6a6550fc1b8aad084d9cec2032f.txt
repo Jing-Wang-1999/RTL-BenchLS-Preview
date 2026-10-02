@@ -1,0 +1,61 @@
+module origen_131310 (
+    input  wire clk_in,
+    input  wire rst,
+    output wire clk_out,
+    output wire locked
+);
+
+    wire pll_refclk;
+    wire pll_outclk;
+
+    // Instantiate the PLL module
+    pll pll_inst (
+        .refclk   (pll_refclk),
+        .rst      (rst),
+        .outclk_0 (pll_outclk),
+        .locked   (locked)
+    );
+
+    // Connect the input clock to the PLL reference clock
+    assign pll_refclk = clk_in;
+
+    // Connect the PLL output clock to the module output
+    assign clk_out = pll_outclk;
+
+endmodule
+
+// PLL module (provided as reference)
+module pll (
+    input  wire refclk,
+    input  wire rst,
+    output reg outclk_0,
+    output wire locked
+);
+
+    // PLL instance
+    // Replace altera_pll with a generic PLL implementation
+    reg pll_locked;
+    reg [31:0] counter;
+    
+    always @(posedge refclk or posedge rst) begin
+        if (rst) begin
+            counter <= 0;
+            pll_locked <= 0;
+            outclk_0 <= 0;
+        end else begin
+            if (counter == 32'd130_000_000 / 32'd50_000_000 - 1) begin
+                counter <= 0;
+                outclk_0 <= ~outclk_0;
+            end else begin
+                counter <= counter + 1;
+            end
+            
+            if (counter > 100) begin
+                pll_locked <= 1;
+            end
+        end
+    end
+
+    assign locked = pll_locked;
+
+endmodule

@@ -1,0 +1,19 @@
+always @(posedge clk) begin
+    // register inputs
+    for (i = 0; i < PORTS; i = i + 1) begin
+        if (s_axis_desc_ready[i]) begin
+            s_axis_desc_dma_addr_reg[i*DMA_ADDR_WIDTH +: DMA_ADDR_WIDTH] <= s_axis_desc_dma_addr[i*DMA_ADDR_WIDTH +: DMA_ADDR_WIDTH];
+            s_axis_desc_ram_sel_reg[i*S_RAM_SEL_WIDTH +: S_RAM_SEL_WIDTH_INT] <= s_axis_desc_ram_sel[i*S_RAM_SEL_WIDTH +: S_RAM_SEL_WIDTH_INT];
+            s_axis_desc_ram_addr_reg[i*RAM_ADDR_WIDTH +: RAM_ADDR_WIDTH] <= s_axis_desc_ram_addr[i*RAM_ADDR_WIDTH +: RAM_ADDR_WIDTH];
+            s_axis_desc_imm_reg[i*IMM_WIDTH +: IMM_WIDTH] <= s_axis_desc_imm[i*IMM_WIDTH +: IMM_WIDTH];
+            s_axis_desc_imm_en_reg[i] <= s_axis_desc_imm_en[i];
+            s_axis_desc_len_reg[i*LEN_WIDTH +: LEN_WIDTH] <= s_axis_desc_len[i*LEN_WIDTH +: LEN_WIDTH];
+            s_axis_desc_tag_reg[i*S_TAG_WIDTH +: S_TAG_WIDTH] <= s_axis_desc_tag[i*S_TAG_WIDTH +: S_TAG_WIDTH];
+            s_axis_desc_valid_reg[i] <= s_axis_desc_valid[i];
+       end
+    end
+
+    if (rst) begin
+        s_axis_desc_valid_reg <= 0;
+    end
+end

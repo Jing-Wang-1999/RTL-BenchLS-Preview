@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e",
+  "compile_check": {
+    "case_id": "s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "FP17_TO_FP16_mgc_shift_r_v4",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "20b2f5b4043c4e5dd013270e37eceef71cfe8dbf0641d7b6392fbb90e62b2709",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.20b2f5b4043c4e5dd013",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "FP17_TO_FP16_mgc_shift_r_v4"
+  },
+  "independent_review": {
+    "case_id": "s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The repaired width explicitly reserves an extra zero signbit forunsignedmode. It matches fullsign/zeroextension, signed arithmeticrightshift and lowoutputtruncation with the fourdefaults4/1/2/8. This avoids the unsignedwidth defect found in the earlier sistermodule.",
+        "rtl_excerpt": "parameter ilen = signd_a ? width_a : width_a+1;",
+        "specification_excerpt": "`max(signd_a?width_a:width_a+1,width_z)`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.20b2f5b4043c4e5dd013",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "d713ca257213d44d308132ea4752cdec5a38357a78207cba4bcfa3396da77cfb",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "20b2f5b4043c4e5dd013270e37eceef71cfe8dbf0641d7b6392fbb90e62b2709",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.20b2f5b4043c4e5dd013",
+  "primary_review": {
+    "case_id": "s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e",
+    "checks": {
+      "behavior": "Compared full equations, lookup transforms, state transitions, handshakes, and dataflow.",
+      "boundaries": "Checked default/disabled cases, simultaneous controls, saturation, arithmetic widths, invalid addresses, and startup state.",
+      "interface": "Compared complete ports, widths, parameters, and defaults.",
+      "rtl_reasonableness": "The preserved repository RTL implements a coherent hardware function.",
+      "sequential_and_reset": "Checked reset polarity/timing, priority, enables, holds, initialization, and latency."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file semantic comparison supports revise.",
+        "rtl_excerpt": "RTL defaults 4/1/2/8, extends to its computed len, arithmetic-shifts right, and truncates to width_z.",
+        "spec_excerpt": "The prose omits all four parameter defaults and truncates before working-width boundaries."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose omits all four parameter defaults and truncates before working-width boundaries.",
+        "rtl_evidence": "RTL defaults 4/1/2/8, extends to its computed len, arithmetic-shifts right, and truncates to width_z.",
+        "spec_evidence": "The prose omits all four parameter defaults and truncates before working-width boundaries.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.20b2f5b4043c4e5dd013",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "20b2f5b4043c4e5dd013270e37eceef71cfe8dbf0641d7b6392fbb90e62b2709",
+    "source_group": "S1",
+    "specification_sha256": "ee7f62e07e9e31f854fe7014cc46c93cfef8026a32f809d3c7244a2f276e9882",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e.md",
+  "qualified_specification_sha256": "d713ca257213d44d308132ea4752cdec5a38357a78207cba4bcfa3396da77cfb",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e/private/golden_design.v",
+  "rtl_sha256": "20b2f5b4043c4e5dd013270e37eceef71cfe8dbf0641d7b6392fbb90e62b2709",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.20b2f5b4043c4e5dd013.ee7f62e07e9e/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "ee7f62e07e9e31f854fe7014cc46c93cfef8026a32f809d3c7244a2f276e9882",
+  "top_module": "FP17_TO_FP16_mgc_shift_r_v4"
+}

@@ -1,0 +1,54 @@
+module origen_099915(
+    input wire clock,
+    input wire data_in,
+    output reg [2:0] data
+);
+
+reg [10:0] current;
+reg [7:0] stored;
+reg [7:0] prev;
+reg [3:0] count;
+reg started;
+reg parity;
+
+always @(negedge clock) begin
+    if (!data_in && !started) begin
+        started <= 1;
+        count <= 0;
+        parity <= 0;
+    end
+    else if (started) begin
+        current[count] <= data_in;
+        if (count > 0 && count <= 8)
+            parity <= parity ^ data_in;
+        count <= count + 1;
+
+        if (count == 11) begin
+            if (parity == current[9]) begin
+                prev <= stored;
+                stored <= current[8:1];
+            end
+            current <= 0;
+            count <= 0;
+            started <= 0;
+            parity <= 0;
+        end
+    end
+end
+
+always @(*) begin
+    if (prev != 8'hF0) begin
+        case (stored)
+            8'h1D: data = 3'd3;
+            8'h1C: data = 3'd1;
+            8'h1B: data = 3'd4;
+            8'h23: data = 3'd2;
+            default: data = 3'd0;
+        endcase
+    end
+    else begin
+        data = 3'd0;
+    end
+end
+
+endmodule

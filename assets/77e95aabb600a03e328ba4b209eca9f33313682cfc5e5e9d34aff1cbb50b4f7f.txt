@@ -1,0 +1,165 @@
+module __formal113_core_081f9919eef7 (
+   ADDRESS, BEGINTRANSFER, BYTE_ENABLE, READ, WRITE, WRITEDATA, LOCK,
+   BURSTCOUNT, done, data_read,
+   CLK, RESET, READDATA, WAITREQUEST, READDATAVALID, data_to_write,
+   rnw, start, bytes, address_to_access
+) ;
+
+   input CLK;
+   input RESET;
+
+   output [31:0] ADDRESS;
+   output BEGINTRANSFER;
+   output [3:0] BYTE_ENABLE;
+   output READ;
+   input [31:0] READDATA;
+   output WRITE;
+   output [31:0] WRITEDATA;
+   output LOCK;
+   input WAITREQUEST;
+   input READDATAVALID;
+   output BURSTCOUNT;
+   input [31:0] data_to_write;
+   input rnw;
+   input start;
+   input [3:0] bytes;   
+   input [31:0] address_to_access;
+   output done;
+   output [31:0] data_read;
+   
+   reg [31:0] ADDRESS_REG;
+   reg BEGINTRANSFER_REG;
+   reg BURSTCOUNT_REG;
+   reg [3:0] BYTE_ENABLE_REG;
+   reg LOCK_REG;
+   reg READ_REG;
+   reg WRITE_REG;
+   reg [31:0] WRITEDATA_REG;
+   reg [31:0] data_read_REG;
+   
+   reg [1:0] state;
+   reg [1:0] next_state;
+   
+   parameter STATE_IDLE = 2'b00;
+   parameter STATE_WAIT = 2'b01;
+   parameter STATE_DONE = 2'b10;
+
+   assign ADDRESS = ADDRESS_REG;
+   assign BEGINTRANSFER = BEGINTRANSFER_REG;
+   assign BYTE_ENABLE = BYTE_ENABLE_REG;
+   assign BURSTCOUNT = BURSTCOUNT_REG;
+   assign LOCK = LOCK_REG;
+   assign READ = READ_REG;
+   assign WRITE = WRITE_REG;
+   assign WRITEDATA = WRITEDATA_REG;
+   assign data_read = data_read_REG;
+   assign done = (state == STATE_DONE);
+   
+   always @(posedge CLK or posedge RESET) begin
+      if (RESET) begin
+         state <= STATE_IDLE;
+      end else begin
+         state <= next_state;
+      end
+   end
+
+   always @(*) begin
+      if (RESET) begin
+         next_state = STATE_IDLE;
+         ADDRESS_REG = 0;
+         READ_REG = 0;
+         WRITE_REG = 0;
+         WRITEDATA_REG = 0;
+         data_read_REG = 0;
+         LOCK_REG = 0;
+         BEGINTRANSFER_REG = 0;
+         BURSTCOUNT_REG = 0;
+      end else begin
+         case (state)
+            STATE_IDLE: begin
+               if (start) begin
+                  ADDRESS_REG = address_to_access;
+                  BYTE_ENABLE_REG = bytes;
+                  if (!rnw) begin
+                     WRITE_REG = 1'b1;
+                     READ_REG = 1'b0;
+                     WRITEDATA_REG = data_to_write;
+                  end else begin
+                     READ_REG = 1'b1;
+                     WRITE_REG = 1'b0;
+                  end
+                  if (WAITREQUEST) begin
+                     next_state = STATE_WAIT;
+                  end else begin
+                     next_state = STATE_DONE;
+                  end
+               end else begin 
+                  next_state = STATE_IDLE;
+                  ADDRESS_REG = 0;
+                  READ_REG = 0;
+                  WRITE_REG = 0;
+                  WRITEDATA_REG = 0;
+                  data_read_REG = 0;
+                  LOCK_REG = 0;
+                  BEGINTRANSFER_REG = 0;
+                  BURSTCOUNT_REG = 0;
+               end
+            end 
+            
+            STATE_WAIT: begin
+               if (WAITREQUEST) begin
+                  next_state = STATE_WAIT;
+               end else begin
+                  next_state = STATE_DONE;
+               end
+            end
+
+            STATE_DONE: begin
+               if (rnw) begin
+                  data_read_REG = READDATA;
+               end
+               next_state = STATE_IDLE;
+            end
+
+            default: begin
+               next_state = STATE_IDLE;
+               ADDRESS_REG = 0;
+               READ_REG = 0;
+               WRITE_REG = 0;
+               WRITEDATA_REG = 0;
+               data_read_REG = 0;
+               LOCK_REG = 0;
+               BEGINTRANSFER_REG = 0;
+               BURSTCOUNT_REG = 0;
+            end
+         endcase
+      end
+   end
+
+endmodule
+module avalon_memory_mapped_master(
+  output wire [31:0] ADDRESS,
+  output wire [0:0] BEGINTRANSFER,
+  output wire [3:0] BYTE_ENABLE,
+  output wire [0:0] READ,
+  output wire [0:0] WRITE,
+  output wire [31:0] WRITEDATA,
+  output wire [0:0] LOCK,
+  output wire [0:0] BURSTCOUNT,
+  output wire [0:0] done,
+  output wire [31:0] data_read,
+  input wire [0:0] CLK,
+  input wire [0:0] RESET,
+  input wire [31:0] READDATA,
+  input wire [0:0] WAITREQUEST,
+  input wire [0:0] READDATAVALID,
+  input wire [31:0] data_to_write,
+  input wire [0:0] rnw,
+  input wire [0:0] start,
+  input wire [3:0] bytes,
+  input wire [31:0] address_to_access
+);
+wire [31:0] __negative_output;
+__formal113_core_081f9919eef7 dut(.ADDRESS(__negative_output), .BEGINTRANSFER(BEGINTRANSFER), .BYTE_ENABLE(BYTE_ENABLE), .READ(READ), .WRITE(WRITE), .WRITEDATA(WRITEDATA), .LOCK(LOCK), .BURSTCOUNT(BURSTCOUNT), .done(done), .data_read(data_read), .CLK(CLK), .RESET(RESET), .READDATA(READDATA), .WAITREQUEST(WAITREQUEST), .READDATAVALID(READDATAVALID), .data_to_write(data_to_write), .rnw(rnw), .start(start), .bytes(bytes), .address_to_access(address_to_access));
+assign ADDRESS = __negative_output ^ 32'd1;
+endmodule

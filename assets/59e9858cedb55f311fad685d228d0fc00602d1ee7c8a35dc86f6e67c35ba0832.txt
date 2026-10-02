@@ -1,0 +1,113 @@
+{
+  "case_id": "s1derived.4d15b15ad9e444ff9ee9.8652365f5e42",
+  "compile_check": {
+    "case_id": "s1derived.4d15b15ad9e444ff9ee9.8652365f5e42",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_04091",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04091.3a17a55a0df27a9a/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.4d15b15ad9e444ff9ee9",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "4d15b15ad9e444ff9ee911ea709518580ef403a6dc7014f8264836e147cb171d",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.4d15b15ad9e444ff9ee9.8652365f5e42",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04091.3a17a55a0df27a9a/private/commercial_positive.log",
+    "commercial_log_sha256": "36e1065d255e9f3ed09fe8af729f3119dcd1ed927b6488dd99284f8f2b2029ca",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04091.3a17a55a0df27a9a/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mg_04091"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.mg_04091.3a17a55a0df27a9a",
+    "parent_id": "s1p.4d15b15ad9e444ff9ee9",
+    "revised_tops": [
+      "mg_04091"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_04091",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.4d15b15ad9e444ff9ee9.8652365f5e42",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All handshake directions, widths, and the exact 16-bit slice match; the circuit is combinational.",
+        "rtl_excerpt": "Individual assignments connect `out_0d[0]` to `inp_0d[1]` through `out_0d[15]` to `inp_0d[16]`.",
+        "spec_excerpt": "`inp_0r=out_0r`, `out_0a=inp_0a`, and `out_0d=inp_0d[16:1]`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.4d15b15ad9e444ff9ee9",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "35604f2fbc7e1a3388ab23a13fa07a66ca403e012636448b5329be5c1452ba1e",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "4d15b15ad9e444ff9ee911ea709518580ef403a6dc7014f8264836e147cb171d",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04091.3a17a55a0df27a9a/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04091.3a17a55a0df27a9a/private/historical_harness/01_conformal_rtl_mg_04091.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04091.3a17a55a0df27a9a/private/historical_harness/02_fm_rtl_mg_04091.tcl"
+  ],
+  "parent_id": "s1p.4d15b15ad9e444ff9ee9",
+  "primary_review": {
+    "case_id": "s1derived.4d15b15ad9e444ff9ee9.8652365f5e42",
+    "checks": {
+      "behavior": "Control pass-through and explicit data slice match.",
+      "boundaries": "Bits 17 and 0 discard; slice corresponds to right shift then truncation.",
+      "interface": "All ports and widths match.",
+      "rtl_reasonableness": "The fixed router is reasonable.",
+      "sequential_and_reset": "Combinational."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Control pass-through and explicit data slice match. Combinational.",
+        "rtl_excerpt": "assign out_0d=inp_0d[16:1]",
+        "spec_excerpt": "\u201cformed by shifting ... left by one bit. Specifically ... inp_0d[16:1]\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The explicit slice is correct, but calling inp_0d[16:1] a left shift is mathematically wrong.",
+        "rtl_evidence": "assign out_0d=inp_0d[16:1]",
+        "spec_evidence": "\u201cformed by shifting ... left by one bit. Specifically ... inp_0d[16:1]\u201d",
+        "type": "shift_direction_contradiction"
+      }
+    ],
+    "parent_id": "s1p.4d15b15ad9e444ff9ee9",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.4d15b15ad9e444ff9ee9.8652365f5e42.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "4d15b15ad9e444ff9ee911ea709518580ef403a6dc7014f8264836e147cb171d",
+    "source_group": "S5",
+    "specification_sha256": "8652365f5e4242d0fff313103ff5ff876f0401863219e280a6606f7cbef7cedb",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.4d15b15ad9e444ff9ee9.8652365f5e42.md",
+  "qualified_specification_sha256": "35604f2fbc7e1a3388ab23a13fa07a66ca403e012636448b5329be5c1452ba1e",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04091.3a17a55a0df27a9a/private/golden_design.v",
+  "rtl_sha256": "4d15b15ad9e444ff9ee911ea709518580ef403a6dc7014f8264836e147cb171d",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04091.3a17a55a0df27a9a/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "8652365f5e4242d0fff313103ff5ff876f0401863219e280a6606f7cbef7cedb",
+  "top_module": "mg_04091"
+}

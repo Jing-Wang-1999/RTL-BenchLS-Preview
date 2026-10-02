@@ -1,0 +1,103 @@
+module origen_222975 (
+    input sys_clk,
+    input sys_rst,
+    input [13:0] csr_a,
+    input csr_we,
+    input [31:0] csr_di,
+    inout [3:0] mc_d,
+    input mc_cmd,
+    output mc_clk,
+    output [31:0] csr_do
+);
+
+reg [3:0] mc_d_reg;
+reg mc_clk_reg;
+reg [31:0] csr_do_reg;
+
+reg [6:0] state;
+reg [31:0] cmd_reg;
+reg [31:0] data_reg;
+reg [31:0] csr_reg [0:63];
+
+parameter IDLE = 7'b0000001;
+parameter SEND_CMD = 7'b0000010;
+parameter RECEIVE_RESP = 7'b0000100;
+parameter SEND_DATA = 7'b0001000;
+parameter RECEIVE_DATA = 7'b0010000;
+parameter UPDATE_CSR = 7'b0100000;
+parameter ERROR = 7'b1000000;
+
+always @(posedge sys_clk or posedge sys_rst) begin
+    if (sys_rst) begin
+        state <= IDLE;
+        mc_d_reg <= 4'b0;
+        mc_clk_reg <= 1'b0;
+        cmd_reg <= 32'b0;
+        data_reg <= 32'b0;
+        csr_do_reg <= 32'b0;
+    end else begin
+        case (state)
+            IDLE: begin
+                if (csr_we) begin
+                    csr_reg[csr_a] <= csr_di;
+                    state <= UPDATE_CSR;
+                end else begin
+                    state <= SEND_CMD;
+                end
+            end
+            SEND_CMD: begin
+                if (cmd_reg[31:24] == 8'haa) begin
+                    mc_d_reg <= cmd_reg[7:4];
+                    mc_clk_reg <= 1'b1;
+                    cmd_reg <= {cmd_reg[23:0], 8'b0};
+                    if (cmd_reg[31:24] == 8'b0) begin
+                        state <= RECEIVE_RESP;
+                    end
+                end else begin
+                    state <= ERROR;
+                end
+            end
+            RECEIVE_RESP: begin
+                mc_d_reg <= 4'b0;
+                mc_clk_reg <= 1'b0;
+                data_reg <= {data_reg[27:0], mc_d};
+                if (data_reg[31:24] == 8'hbb) begin
+                    state <= SEND_DATA;
+                end else begin
+                    state <= ERROR;
+                end
+            end
+            SEND_DATA: begin
+                mc_d_reg <= data_reg[7:4];
+                mc_clk_reg <= 1'b1;
+                data_reg <= {data_reg[27:0], 4'b0};
+                if (data_reg[31:24] == 8'b0) begin
+                    state <= RECEIVE_DATA;
+                end
+            end
+            RECEIVE_DATA: begin
+                mc_d_reg <= 4'b0;
+                mc_clk_reg <= 1'b0;
+                data_reg <= {data_reg[27:0], mc_d};
+                if (data_reg[31:24] == 8'hcc) begin
+                    state <= IDLE;
+                end else begin
+                    state <= ERROR;
+                end
+            end
+            UPDATE_CSR: begin
+                csr_do_reg <= csr_reg[csr_a];
+                state <= IDLE;
+            end
+            ERROR: begin
+                state <= IDLE;
+            end
+        endcase
+    end
+end
+
+assign mc_d = (state == SEND_CMD || state == SEND_DATA) ? mc_d_reg : 4'bZ;
+assign mc_clk = mc_clk_reg;
+assign csr_do = csr_do_reg;
+
+endmodule

@@ -1,0 +1,13 @@
+# SDP_Y_INP_mgc_shift_r_v4
+
+## Interface
+
+Parameters `width_a=4`, `signd_a=1`, `width_s=2`, and `width_z=8` set the widths and signedness. Input `a[width_a-1:0]` is the value, input `s[width_s-1:0]` is an unsigned shift count, and output `z[width_z-1:0]` is combinational.
+
+## Behavior
+
+When `signd_a` is nonzero, form a signed working vector of width `max(width_a,width_z)` by copying `a` into the low `width_a` bits and filling higher bits with `a[width_a-1]`. Arithmetically shift this vector right by unsigned `s` and assign its low `width_z` bits to `z`.
+
+When `signd_a` is zero, form a signed working vector of width `max(width_a+1,width_z)` by copying `a` into the low `width_a` bits and filling every higher bit, including the reserved bit above `a`, with zero. Arithmetically shifting this nonnegative vector right is therefore a logical zero-filled right shift. Assign the low `width_z` bits to `z`.
+
+For either mode, a count at least as large as its working width produces all sign bits in signed mode or all zeros in unsigned mode. There is no clock, reset, storage, latency, or submodule.

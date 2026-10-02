@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/285",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/254",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 285,
+  "issue_number": 254,
+  "verilog_files": [
+    "rtl/riscv_cs_registers.sv"
+  ],
+  "deletions": 6,
+  "additions": 12,
+  "patches": [
+    {
+      "filename": "rtl/riscv_cs_registers.sv",
+      "patch": "@@ -899,6 +899,14 @@ end else begin //PULP_SECURE == 0\n       CSR_MIEX: if (csr_we_int) begin\n         miex_n = csr_wdata_int;\n       end\n+      // mtvec: machine trap-handler base address\n+      CSR_MTVEC: if (csr_we_int) begin\n+        mtvec_n    = csr_wdata_int[31:8];\n+      end\n+      // mtvecx: machine trap-handler base address for pulp specific fast irqs\n+      CSR_MTVECX: if (csr_we_int) begin\n+        mtvecx_n    = csr_wdata_int[31:8];\n+      end\n       // mscratch: machine scratch\n       CSR_MSCRATCH: if (csr_we_int) begin\n         mscratch_n = csr_wdata_int;\n@@ -1153,17 +1161,13 @@ end //PULP_SECURE\n           begin\n             uepc_q         <= '0;\n             ucause_q       <= '0;\n-            mtvec_q        <= '0;\n-            mtvecx_q       <= '0;\n             utvec_q        <= '0;\n             priv_lvl_q     <= PRIV_LVL_M;\n           end\n           else\n           begin\n             uepc_q         <= uepc_n;\n             ucause_q       <= ucause_n;\n-            mtvec_q        <= mtvec_n;\n-            mtvecx_q       <= mtvecx_n;\n             utvec_q        <= utvec_n;\n             priv_lvl_q     <= priv_lvl_n;\n           end\n@@ -1174,8 +1178,6 @@ end //PULP_SECURE\n \n         assign uepc_q       = '0;\n         assign ucause_q     = '0;\n-        assign mtvec_q      = boot_addr_i[30:7];\n-        assign mtvecx_q     = boot_addr_i[30:7];\n         assign utvec_q      = '0;\n         assign priv_lvl_q   = PRIV_LVL_M;\n \n@@ -1212,6 +1214,8 @@ end //PULP_SECURE\n       mscratch_q  <= '0;\n       mie_q       <= '0;\n       miex_q      <= '0;\n+      mtvec_q     <= '0;\n+      mtvecx_q    <= '0;\n     end\n     else\n     begin\n@@ -1243,6 +1247,8 @@ end //PULP_SECURE\n       mscratch_q <= mscratch_n;\n       mie_q      <= mie_n;\n       miex_q     <= miex_n;\n+      mtvec_q    <= mtvec_n;\n+      mtvecx_q   <= mtvecx_n;\n     end\n   end\n ",
+      "additions": 12,
+      "deletions": 6,
+      "changes": 18
+    }
+  ],
+  "pr_info": {
+    "title": ":sparkles: mtvec and mtvex writable when PULP_SECURE=0  #254",
+    "body": "Addressed issue at https://github.com/openhwgroup/cv32e40p/issues/254",
+    "state": "closed",
+    "created_at": "2020-03-31T12:29:39Z",
+    "updated_at": "2020-04-02T12:10:06Z",
+    "merged_at": "2020-04-02T12:10:06Z",
+    "user": "davideschiavone"
+  },
+  "issue_info": {
+    "title": "mtvec is tied to boot_addr_i when PULP_SECURE=0",
+    "body": "When user mode is not added to the core (PULP_SECURE=0) the mtvec CSR has a fixed value (boot_addr_i) that can't be changed. We would like the ability to change this address even if user mode is not enabled in the core.",
+    "labels": [
+      "Type:Question"
+    ],
+    "state": "closed",
+    "created_at": "2020-03-09T16:43:07Z",
+    "updated_at": "2020-04-02T12:10:55Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 154
+  },
+  "base_commit": "74262e8f1fde682c2db71e6ad7e7ed143b6409a0",
+  "head_commit": "44d4299daf97ab21e78b93048d94c351afe23ac9",
+  "base_ref": "master",
+  "task_id": "openhwgroup_cv32e40p_285_254",
+  "lec_status": "useful_pass"
+}

@@ -1,0 +1,58 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/1737",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/1736",
+  "repository": "lowRISC/ibex",
+  "pr_number": 1737,
+  "issue_number": 1736,
+  "verilog_files": [
+    "dv/uvm/core_ibex/fcov/core_ibex_pmp_fcov_if.sv",
+    "rtl/ibex_pmp.sv"
+  ],
+  "deletions": 2,
+  "additions": 9,
+  "patches": [
+    {
+      "filename": "dv/uvm/core_ibex/fcov/core_ibex_pmp_fcov_if.sv",
+      "patch": "@@ -416,6 +416,8 @@ interface core_ibex_pmp_fcov_if import ibex_pkg::*; #(\n     logic pmp_current_priv_req_err;\n     assign pmp_current_priv_req_err =\n       g_pmp.pmp_i.access_fault_check(csr_pmp_mseccfg.mmwp,\n+                                     csr_pmp_mseccfg.mml,\n+                                     g_pmp.pmp_i.pmp_req_type_i[PMP_D],\n                                      g_pmp.pmp_i.region_match_all[PMP_D],\n                                      cs_registers_i.priv_mode_id_o,\n                                      current_priv_perm_check);",
+      "additions": 2,
+      "deletions": 0,
+      "changes": 2
+    },
+    {
+      "filename": "rtl/ibex_pmp.sv",
+      "patch": "@@ -123,14 +123,17 @@ module ibex_pmp #(\n \n   // Access fault determination / prioritization\n   function automatic logic access_fault_check (logic                     csr_pmp_mseccfg_mmwp,\n+                                               logic                     csr_pmp_mseccfg_mml,\n+                                               ibex_pkg::pmp_req_e       pmp_req_type,\n                                                logic [PMPNumRegions-1:0] match_all,\n                                                ibex_pkg::priv_lvl_e      priv_mode,\n                                                logic [PMPNumRegions-1:0] final_perm_check);\n \n \n     // When MSECCFG.MMWP is set default deny always, otherwise allow for M-mode, deny for other\n-    // modes\n-    logic access_fail = csr_pmp_mseccfg_mmwp | (priv_mode != PRIV_LVL_M);\n+    // modes. Also deny unmatched for M-mode whe MSECCFG.MML is set and request type is EXEC.\n+    logic access_fail = csr_pmp_mseccfg_mmwp | (priv_mode != PRIV_LVL_M) |\n+                        (csr_pmp_mseccfg_mml && (pmp_req_type == PMP_ACC_EXEC));\n \n     // PMP entries are statically prioritized, from 0 to N-1\n     // The lowest-numbered PMP entry which matches an address determines accessibility\n@@ -222,6 +225,8 @@ module ibex_pmp #(\n     // Once the permission checks of the regions are done, decide if the access is\n     // denied by figuring out the matching region and its permission check.\n     assign pmp_req_err_o[c] = access_fault_check(csr_pmp_mseccfg_i.mmwp,\n+                                                 csr_pmp_mseccfg_i.mml,\n+                                                 pmp_req_type_i[c],\n                                                  region_match_all[c],\n                                                  priv_mode_i[c],\n                                                  region_perm_check[c]);",
+      "additions": 7,
+      "deletions": 2,
+      "changes": 9
+    }
+  ],
+  "pr_info": {
+    "title": "[rtl] Deny no-match X access in M-Mode while MML=1",
+    "body": "In ePMP spec, it specifies as:\r\n\r\n```\r\nExecuting code with Machine mode privileges is only possible from memory\r\nregions with a matching Mmode-only rule or a locked Shared-Region rule\r\nwith executable privileges. Executing code from a region without a\r\nmatching rule or with a matching S/U-mode-only rule is denied.\r\n```\r\n\r\nThis change provides that.\r\n\r\nResolves #1736 \r\n\r\nSigned-off-by: Canberk Topal <ctopal@lowrisc.org>",
+    "state": "closed",
+    "created_at": "2022-08-01T13:05:33Z",
+    "updated_at": "2022-08-03T09:59:41Z",
+    "merged_at": "2022-08-03T09:59:41Z",
+    "user": "ctopal"
+  },
+  "issue_info": {
+    "title": "[rtl,bug] Ibex allows execution in no-match case while MML=1",
+    "body": "Header explains the issue. According to Smepmp v1.0 in a no-match case we should block execution in machine mode. However, we are not currently doing that. It's a tricky thing to recreate it in our master branch for now but if you add #1695 and #1735 to master and run: `make ITERATIONS=1 TEST=riscv_pmp_full_random_test SEED=14910` you should be able to re-create the error.\r\n\r\n> estimate 4",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "created_at": "2022-08-01T11:29:19Z",
+    "updated_at": "2022-08-03T09:59:42Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 43
+  },
+  "base_commit": "6dc0683773635bfde3949c6fa7d9c3e7282ab916",
+  "head_commit": "ab4770eba455e26c71d88584b090c0490086122d",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_1737_1736",
+  "lec_status": "useful_pass"
+}

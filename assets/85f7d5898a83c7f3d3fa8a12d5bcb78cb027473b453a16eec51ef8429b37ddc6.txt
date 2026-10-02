@@ -1,0 +1,46 @@
+### Instruction for Generating Verilog Code:
+
+Create a Verilog module named `configurable_interrupt_timer` that functions as a timer with configurable period and interrupt capability. The module should handle address-based read/write operations from an external controller, using `address`, `chipselect`, `clk`, `reset_n`, `write_n`, and `writedata` as inputs, and provide `irq` and `readdata` as outputs.
+
+1. **Initialization and Counters**
+    - Initialize the internal counter to a default value upon reset (`reset_n` active low).
+    - Use `period_l_register` and `period_h_register` to set the initial countdown value (`counter_load_value`).
+
+2. **Control Logic**
+    - Start or stop the counter based on the `start_strobe` and `stop_strobe` signals, and control modes specified by `control_register`.
+    - Handle continuous counting or stop upon reaching zero based on `control_continuous`.
+
+3. **Force Reload and Timeout Handling**
+    - Implement a `force_reload` mechanism to reload the counter when either period registers are written.
+    - Detect timeout events when the counter reaches zero (`counter_is_zero`) and set the `timeout_occurred` flag accordingly. Clear this flag on a status write strobe.
+
+4. **Interrupt Generation**
+    - Generate an `irq` signal when a timeout occurs and interrupts are enabled (`control_interrupt_enable`).
+
+5. **Address-Based Reads and Writes**
+    - Implement read and write operations based on the incoming `address`, with different behaviors:
+        - Write `writedata` to `period_l_register` or `period_h_register` if the addresses match.
+        - Capture the internal counter value on snapshot request addresses, storing the value in `counter_snapshot`.
+        - Update the `control_register` based on writes to the control address, and manage starting and stopping the counter from control bits in `writedata`.
+        - Read data from either period registers, control register, or snapshot based on `address`, and output it via `readdata`.
+
+6. **Other Key Details**
+    - Ensure appropriate handling of clock enabling (`clk_en`), and manage a delayed zero flag to assist in churning the timeout event detection.
+    - Register assignments should be asynchronous on `reset_n` and synchronous on `clk`.
+
+### Example Output:
+
+Module Interface:
+module configurable_interrupt_timer (
+    address,
+    chipselect,
+    clk,
+    reset_n,
+    write_n,
+    writedata,
+    irq,
+    readdata
+);
+
+Behavioral Clarifications:
+- On reset, `internal_counter` initializes to 32'h270F (9999 decimal). `period_l_register` initializes to 9999 and `period_h_register` initializes to 0, giving a default 32-bit load value of 9999. This information is already present in the example code above.

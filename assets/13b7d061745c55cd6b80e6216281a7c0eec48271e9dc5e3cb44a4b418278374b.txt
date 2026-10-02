@@ -1,0 +1,52 @@
+module autovcoder_108862 (
+    input      SI_DEBOUNCE1_CLOCK_50,
+    SI_DEBOUNCE1_RESET_InLow,
+    SI_DEBOUNCE1_button_In,  // inputs
+    output reg SI_DEBOUNCE1_button_Out  // output
+);
+  //// ---------------- internal constants --------------
+  parameter N = 11;  // (2^ (21-1) )/ 38 MHz =  ms debounce time
+  ////---------------- internal variables ---------------
+  reg [N-1 : 0] q_reg;  // timing regs
+  reg [N-1 : 0] q_next;
+  reg DFF1, DFF2;  // input flip-flops
+  wire q_add;  // control flags
+  wire q_reset;
+  //// ------------------------------------------------------
+
+  ////contenious assignment for counter control
+  assign q_reset = (DFF1 ^ DFF2);  // xor input flip flops to look for level chage to reset counter
+  assign q_add   = ~(q_reg[N-1]);  // add to counter when q_reg msb is equal to 0
+
+  //// combo counter to manage q_next	
+  always @(q_reset, q_add, q_reg) begin
+    case ({
+      q_reset, q_add
+    })
+      2'b00:   q_next <= q_reg;
+      2'b01:   q_next <= q_reg + 1'b1;
+      default: q_next <= {N{1'b0}};
+    endcase
+  end
+
+  //// Flip flop inputs and q_reg update
+  always @(posedge SI_DEBOUNCE1_CLOCK_50) begin
+    if (SI_DEBOUNCE1_RESET_InLow == 1'b0) begin
+      DFF1  <= 1'b0;
+      DFF2  <= 1'b0;
+      q_reg <= {N{1'b0}};
+    end else begin
+      DFF1  <= SI_DEBOUNCE1_button_In;
+      DFF2  <= DFF1;
+      q_reg <= q_next;
+    end
+  end
+
+  //// counter control
+  always @(posedge SI_DEBOUNCE1_CLOCK_50) begin
+    if (q_reg[N-1] == 1'b1) SI_DEBOUNCE1_button_Out <= DFF2;
+    else SI_DEBOUNCE1_button_Out <= SI_DEBOUNCE1_button_Out;
+  end
+
+endmodule
+

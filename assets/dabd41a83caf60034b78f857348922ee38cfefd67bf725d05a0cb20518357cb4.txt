@@ -1,0 +1,13 @@
+always @(posedge oclk) begin
+		if (!oresetn) begin
+			p5_valid <= 0;
+		end else
+		if (pipeline_en) begin
+			if (32 <= p4_c && p4_c < 128)
+				p5_outval <= font(p4_c, p4_x, p4_y) ? 2'b10 : 2'b01;
+			else
+				p5_outval <= 0;
+			p5_start_of_frame <= p4_start_of_frame;
+			p5_valid <= p4_valid;
+		end
+	end

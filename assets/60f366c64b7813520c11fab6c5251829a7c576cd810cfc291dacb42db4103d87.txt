@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.1372ad5044b09ef1f7f3.cf37111bf280",
+  "compile_check": {
+    "case_id": "s1derived.1372ad5044b09ef1f7f3.cf37111bf280",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_02598",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_02598.50caf0b3e96d66fb/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.1372ad5044b09ef1f7f3",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "1372ad5044b09ef1f7f35c0012ed30e3763d40c36196b9587ad2ef47c91409d6",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.1372ad5044b09ef1f7f3.cf37111bf280",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_02598.50caf0b3e96d66fb/private/commercial_positive.log",
+    "commercial_log_sha256": "f99c2e0f692ae221b0f714d3b7b6456cfe761c794c6eb0421d5c3bd7ce9735a6",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_02598.50caf0b3e96d66fb/private/historical_harness/00_sec_mg_02598.tcl",
+    "executed_script_sha256": "4e78f67ebf826fb8f0e9b74d65a8e7ff0ac9e14e23ba9431e530282568e5aeb5",
+    "golden_tops": [
+      "mg_02598"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.mg_02598.50caf0b3e96d66fb",
+    "parent_id": "s1p.1372ad5044b09ef1f7f3",
+    "revised_tops": [
+      "mg_02598"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_02598",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.1372ad5044b09ef1f7f3.cf37111bf280",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "S0..S2holdonlowinput andadvanceonhigh; S3holdsonlowandgoestoS1onhigh. Thus the repaircorrectlydescribes accumulatedhighsamplesinstead ofaconsecutive-bitdetector. AsyncresettoS0andMooreoutputonlyS3match.",
+        "rtl_excerpt": "if(in) \n  nextstate = S2; \n  else \n  nextstate = S1;",
+        "specification_excerpt": "three high samples are required but they need not be consecutive."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.1372ad5044b09ef1f7f3",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "c935fb2eefd0cb5373c89a1b5c066316f9439352fadca6beb10979f3781d2edb",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "1372ad5044b09ef1f7f35c0012ed30e3763d40c36196b9587ad2ef47c91409d6",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_02598.50caf0b3e96d66fb/private/historical_harness/00_sec_mg_02598.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_02598.50caf0b3e96d66fb/private/historical_harness/01_sec_mg_02598.tcl"
+  ],
+  "parent_id": "s1p.1372ad5044b09ef1f7f3",
+  "primary_review": {
+    "case_id": "s1derived.1372ad5044b09ef1f7f3.cf37111bf280",
+    "checks": {
+      "behavior": "Compared observable equations/state transitions. RTL advances S0\u2192S1\u2192S2\u2192S3 on any three high samples, even with low samples between; S3 is sticky on low.",
+      "boundaries": "Checked unsupported selector/opcode/state cases, simultaneous controls, arithmetic flags, zero values, and compile completeness as applicable.",
+      "interface": "Compared exact ports, widths, parameters, and defaults. The prose says three consecutive highs but also says low inputs hold progress, which is contradictory.",
+      "rtl_reasonableness": "RTL describes a coherent hardware or deliberate simulation-checker function under the stated contract.",
+      "sequential_and_reset": "Compared edge sensitivity, reset polarity and synchrony, enables, holds, update ordering, and latency where sequential state exists; otherwise confirmed combinational behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file comparison supports decision=revise; the excerpts identify the decisive semantic agreement or discrepancy.",
+        "rtl_excerpt": "RTL advances S0\u2192S1\u2192S2\u2192S3 on any three high samples, even with low samples between; S3 is sticky on low.",
+        "spec_excerpt": "The prose says three consecutive highs but also says low inputs hold progress, which is contradictory."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose says three consecutive highs but also says low inputs hold progress, which is contradictory.",
+        "rtl_evidence": "RTL advances S0\u2192S1\u2192S2\u2192S3 on any three high samples, even with low samples between; S3 is sticky on low.",
+        "spec_evidence": "The prose says three consecutive highs but also says low inputs hold progress, which is contradictory.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.1372ad5044b09ef1f7f3",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.1372ad5044b09ef1f7f3.cf37111bf280.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "1372ad5044b09ef1f7f35c0012ed30e3763d40c36196b9587ad2ef47c91409d6",
+    "source_group": "S5",
+    "specification_sha256": "cf37111bf28056110d7bd8f85689b498202aa0cfd5e6c5a1c742753f7d80f6b4",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.1372ad5044b09ef1f7f3.cf37111bf280.md",
+  "qualified_specification_sha256": "c935fb2eefd0cb5373c89a1b5c066316f9439352fadca6beb10979f3781d2edb",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_02598.50caf0b3e96d66fb/private/golden_design.v",
+  "rtl_sha256": "1372ad5044b09ef1f7f35c0012ed30e3763d40c36196b9587ad2ef47c91409d6",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mg_02598.50caf0b3e96d66fb/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "cf37111bf28056110d7bd8f85689b498202aa0cfd5e6c5a1c742753f7d80f6b4",
+  "top_module": "mg_02598"
+}

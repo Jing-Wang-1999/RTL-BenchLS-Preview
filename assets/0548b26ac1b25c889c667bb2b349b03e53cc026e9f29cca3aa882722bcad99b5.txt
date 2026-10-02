@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "candidate_id": "large_module.4695f376e8c5f10d8377",
+  "reviewer": {
+    "identity": "/root/harder_specs_datapath",
+    "method": "manual RTL-to-specification review plus targeted local Icarus probes",
+    "independent_second_review_required": true
+  },
+  "decision": "pass",
+  "rtl_sha256": "0cd444cd873fda6068e2b91a92574679d61303aa75c025971a6d2ecb72c7980f",
+  "specification_sha256": "d914d62fb13bf9313795234a284855b51aff26986dfd7a9997575a491848636a",
+  "specification_file": "specification.md",
+  "evidence": {
+    "interface": {
+      "rtl_lines": [
+        5,
+        50,
+        286,
+        289
+      ],
+      "observation": "Binary32 operands/result, three registered handshake outputs, scalar clk/rst; default state parameters retained."
+    },
+    "behavior": {
+      "rtl_lines": [
+        96,
+        156,
+        159,
+        205,
+        209,
+        264
+      ],
+      "observation": "Priority-ordered special cases, gradual underflow, sticky-aware alignment, nearest-even rounding, infinity overflow, and exact-cancellation sign; opposite infinity NaN sign is operand-order-sensitive and specified explicitly."
+    },
+    "sequential_and_reset": {
+      "rtl_lines": [
+        60,
+        82,
+        85,
+        94,
+        266,
+        283
+      ],
+      "observation": "Single posedge process, registered ready/valid with pre-edge acceptance. Reset controls state/handshakes only; data registers not reset. Cycle-level latency derived and checked for 8 directed examples."
+    },
+    "boundaries": {
+      "rtl_lines": [
+        99,
+        141,
+        143,
+        154,
+        211,
+        241,
+        251,
+        261
+      ],
+      "observation": "NaNs/infinities/signed zero/subnormals, cancellation, tie-to-even rounding and overflow described; exact data-dependent timing retained."
+    },
+    "rtl_reasonableness": {
+      "rtl_lines": [
+        52,
+        60,
+        159,
+        264
+      ],
+      "observation": "Finite-width synchronous arithmetic, no initial blocks, delays, black boxes, memories, or simulation-only constructs. $signed is a synthesizable signed interpretation. No definite arithmetic bug found in this bounded review; not a full IEEE arithmetic proof."
+    }
+  },
+  "findings": [
+    {
+      "severity": "note",
+      "topic": "unreset_result_data",
+      "rtl_lines": [
+        268,
+        269,
+        278,
+        283
+      ],
+      "disposition": "Documented uninitialized/invalid result data and possible reset-edge update; formal tool must model both designs consistently."
+    },
+    {
+      "severity": "note",
+      "topic": "cycle_accuracy",
+      "rtl_lines": [
+        159,
+        171,
+        209,
+        233
+      ],
+      "disposition": "Variable exponent-alignment/cancellation latency is part of the public contract, not replaceable by transaction-only arithmetic equivalence."
+    }
+  ],
+  "local_validation": {
+    "tool": "Icarus Verilog/vvp",
+    "testbench": "timing_probe.v",
+    "log": "timing_probe.log",
+    "result": "PASS: 8/8 directed result and exact-latency checks; zero tool/model experiments",
+    "checked": [
+      "1+1,10 cycles",
+      "1+0.5,11 cycles",
+      "1+(-1),136 cycles",
+      "zero shortcut,3 cycles",
+      "both opposite infinity operand orders,3 cycles",
+      "two minimum positive subnormals,10 cycles",
+      "1.0 minus previous representable float,35 cycles (normalization into low rounding bit)"
+    ]
+  },
+  "formal_qualification": "not_run_by_this_reviewer",
+  "frozen_admission": false,
+  "decision_basis": "Specification/RTL agreement, meaningful behavior and synthesizable RTL; no model score or model-generated candidates used."
+}

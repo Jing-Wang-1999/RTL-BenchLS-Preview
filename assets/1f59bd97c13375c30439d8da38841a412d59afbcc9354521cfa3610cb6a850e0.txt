@@ -1,0 +1,47 @@
+# Module Specification: autovcoder_086108
+
+## Overview
+This module implements a directional state machine that tracks one of four cardinal directions (right, down, up, left) based on push button inputs. The state transitions follow a specific pattern that allows movement between adjacent directions.
+
+## Inputs
+- **RESET**: Asynchronous reset signal that initializes the state machine
+- **CLOCK**: Clock signal for synchronous state updates
+- **PUSH_BUTTONS[3:0]**: Four-bit input representing push button states
+  - Bit 0: Right button
+  - Bit 1: Down button
+  - Bit 2: Up button
+  - Bit 3: Left button
+
+## Outputs
+- **STATE_OUT[1:0]**: Two-bit output representing the current directional state
+  - 2'b00: Right direction
+  - 2'b01: Down direction
+  - 2'b10: Up direction
+  - 2'b11: Left direction
+
+## Behavior
+
+### Initialization
+Upon reset, the state machine initializes to the "right" state (2'b00).
+
+### State Transitions
+The module implements a finite state machine with four states representing cardinal directions. State transitions occur based on push button inputs, following these rules:
+
+**From Right State (2'b00):**
+- Pressing down button (bit 1) transitions to down state
+- Pressing up button (bit 2) transitions to up state
+- Otherwise, remains in right state
+
+**From Down State (2'b01):**
+- Pressing right button (bit 0) transitions to right state
+- Pressing left button (bit 3) transitions to left state
+- Otherwise, remains in down state
+
+**From Up State (2'b10):**
+- Pressing right button (bit 0) transitions to right state
+- Pressing left button (bit 3) transitions to left state
+- Otherwise, remains in up state
+
+**From Left State (2'b11):**
+- Pressing down button (bit 1) transitions to down state
+- Pressing up

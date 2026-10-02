@@ -1,0 +1,141 @@
+module origen_063764(
+    input wire clk,
+    input wire rst,
+    input wire [31:0] data_in,
+    output reg [31:0] data_out,
+    output reg done,
+    inout wire [31:0] base_ram_data_wire,
+    input wire base_oen,
+    input wire base_wen,
+    output reg base_ram_ce_n,
+    output reg base_ram_oe_n,
+    output reg base_ram_we_n
+);
+
+    // State encoding
+    localparam [3:0] STATE_IDLE = 4'd0,
+                     STATE_READ_BASE_0 = 4'd1,
+                     STATE_READ_BASE_1 = 4'd2,
+                     STATE_READ_BASE_2 = 4'd3,
+                     STATE_WRITE_BASE_0 = 4'd4,
+                     STATE_WRITE_BASE_1 = 4'd5,
+                     STATE_WRITE_BASE_2 = 4'd6,
+                     STATE_WRITE_BASE_3 = 4'd7,
+                     STATE_WRITE_BASE_4 = 4'd8,
+                     STATE_WRITE_BASE_5 = 4'd9,
+                     STATE_DONE = 4'd10,
+                     STATE_EMPTY = 4'd11;
+
+    reg [3:0] state, next_state;
+    reg [31:0] ram_data;
+    reg data_z;
+
+    // Tri-state buffer for bidirectional data bus
+    assign base_ram_data_wire = data_z ? 32'bz : ram_data;
+
+    // State register
+    always @(posedge clk or posedge rst) begin
+        if (rst)
+            state <= STATE_EMPTY;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic and output logic
+    always @(*) begin
+        next_state = state;
+        base_ram_ce_n = 1'b1;
+        base_ram_oe_n = 1'b1;
+        base_ram_we_n = 1'b1;
+        data_z = 1'b1;
+        done = 1'b0;
+        ram_data = 32'b0;
+
+        case (state)
+            STATE_IDLE: begin
+                if (!base_oen)
+                    next_state = STATE_READ_BASE_0;
+                else if (!base_wen)
+                    next_state = STATE_WRITE_BASE_0;
+            end
+
+            STATE_READ_BASE_0: begin
+                base_ram_ce_n = 1'b0;
+                base_ram_oe_n = 1'b0;
+                next_state = STATE_READ_BASE_1;
+            end
+
+            STATE_READ_BASE_1: begin
+                base_ram_ce_n = 1'b0;
+                base_ram_oe_n = 1'b0;
+                next_state = STATE_READ_BASE_2;
+            end
+
+            STATE_READ_BASE_2: begin
+                base_ram_ce_n = 1'b0;
+                base_ram_oe_n = 1'b0;
+                data_out = base_ram_data_wire;
+                next_state = STATE_DONE;
+            end
+
+            STATE_WRITE_BASE_0: begin
+                base_ram_ce_n = 1'b0;
+                data_z = 1'b0;
+                ram_data = data_in;
+                next_state = STATE_WRITE_BASE_1;
+            end
+
+            STATE_WRITE_BASE_1: begin
+                base_ram_ce_n = 1'b0;
+                data_z = 1'b0;
+                ram_data = data_in;
+                next_state = STATE_WRITE_BASE_2;
+            end
+
+            STATE_WRITE_BASE_2: begin
+                base_ram_ce_n = 1'b0;
+                base_ram_we_n = 1'b0;
+                data_z = 1'b0;
+                ram_data = data_in;
+                next_state = STATE_WRITE_BASE_3;
+            end
+
+            STATE_WRITE_BASE_3: begin
+                base_ram_ce_n = 1'b0;
+                base_ram_we_n = 1'b0;
+                data_z = 1'b0;
+                ram_data = data_in;
+                next_state = STATE_WRITE_BASE_4;
+            end
+
+            STATE_WRITE_BASE_4: begin
+                base_ram_ce_n = 1'b0;
+                data_z = 1'b0;
+                ram_data = data_in;
+                next_state = STATE_WRITE_BASE_5;
+            end
+
+            STATE_WRITE_BASE_5: begin
+                base_ram_ce_n = 1'b0;
+                data_z = 1'b0;
+                ram_data = data_in;
+                next_state = STATE_DONE;
+            end
+
+            STATE_DONE: begin
+                done = 1'b1;
+                if (base_oen && base_wen)
+                    next_state = STATE_IDLE;
+            end
+
+            STATE_EMPTY: begin
+                next_state = STATE_IDLE;
+            end
+
+            default: begin
+                next_state = STATE_IDLE;
+            end
+        endcase
+    end
+
+endmodule

@@ -1,0 +1,41 @@
+always @* begin
+        gra_still = 1'b1;
+        timer_start = 1'b0;
+        d_inc = 1'b0;
+        d_clr = 1'b0;
+        state_next = state_reg;
+        ball_next = ball_reg;
+
+        case (state_reg)
+            newgame: begin
+                ball_next = 2'b11;
+                d_clr = 1'b1;
+                if (btn != 2'b00) begin
+                    state_next = play;
+                    ball_next = ball_reg - 1;
+                end
+            end
+
+            play: begin
+                gra_still = 1'b0;
+                if (hit)
+                    d_inc = 1'b1;
+                else if (miss) begin
+                    if (ball_reg == 0)
+                        state_next = over;
+                    else
+                        state_next = newball;
+                    timer_start = 1'b1;
+                    ball_next = ball_reg - 1;
+                end
+            end
+
+            newball:
+                if (timer_up && (btn != 2'b00))
+                    state_next = play;
+
+            over:
+                if (timer_up)
+                    state_next = newgame;
+        endcase
+    end

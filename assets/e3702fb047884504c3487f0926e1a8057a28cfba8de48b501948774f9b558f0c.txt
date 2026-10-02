@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6",
+  "compile_check": {
+    "case_id": "s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "NV_NVDLA_SDP_CORE_Y_cvt_core_chn_in_rsci_chn_in_wait_ctrl",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "0f4fe154a17bb6b4fb27a905eb436eea6d11ba4fda4a8ba60f9c55a501f24467",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.0f4fe154a17bb6b4fb27",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "NV_NVDLA_SDP_CORE_Y_cvt_core_chn_in_rsci_chn_in_wait_ctrl"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All combinational equations and pending-wait state update match, including reset and valid clear.",
+        "rtl_excerpt": "`assign ...pdswt0=(~core_wten)&...iswt0; ...biwt=...ogwt & ...vd;`",
+        "spec_excerpt": "\u201cpdswt0=~core_wten & ...iswt0, ogwt=pdswt0|icwt, biwt=ogwt&vd\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0f4fe154a17bb6b4fb27",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "05fa6c50f3c8023f8a8fcb0d7a29e9995853014f289d58f1464906c9fdb02b6b",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0f4fe154a17bb6b4fb27a905eb436eea6d11ba4fda4a8ba60f9c55a501f24467",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.0f4fe154a17bb6b4fb27",
+  "primary_review": {
+    "case_id": "s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6",
+    "checks": {
+      "behavior": "Exact combinational/state equations are missing.",
+      "boundaries": "vd through biwt clears active wait at the next edge.",
+      "interface": "All ports are listed.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Active-low asynchronous reset clears icwt."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Exact combinational/state equations are missing. Active-low asynchronous reset clears icwt.",
+        "rtl_excerpt": "pdswt0=~core_wten&iswt0; ogwt=pdswt0|icwt; icwt<=(icwt|pdswt0)&~biwt",
+        "spec_excerpt": "The last sentence ends while naming outputs."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends before defining output and state equations, leaving the stateful wait behavior non-reproducible.",
+        "rtl_evidence": "pdswt0=~core_wten&iswt0; ogwt=pdswt0|icwt; icwt<=(icwt|pdswt0)&~biwt",
+        "spec_evidence": "The last sentence ends while naming outputs.",
+        "type": "truncated_state_equation"
+      }
+    ],
+    "parent_id": "s1p.0f4fe154a17bb6b4fb27",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0f4fe154a17bb6b4fb27a905eb436eea6d11ba4fda4a8ba60f9c55a501f24467",
+    "source_group": "S1",
+    "specification_sha256": "4ac5010ba9f6d96979b8282c8a7cdf448ded57191409c1d5800342a765d9c6e9",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6.md",
+  "qualified_specification_sha256": "05fa6c50f3c8023f8a8fcb0d7a29e9995853014f289d58f1464906c9fdb02b6b",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6/private/golden_design.v",
+  "rtl_sha256": "0f4fe154a17bb6b4fb27a905eb436eea6d11ba4fda4a8ba60f9c55a501f24467",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.0f4fe154a17bb6b4fb27.4ac5010ba9f6/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "4ac5010ba9f6d96979b8282c8a7cdf448ded57191409c1d5800342a765d9c6e9",
+  "top_module": "NV_NVDLA_SDP_CORE_Y_cvt_core_chn_in_rsci_chn_in_wait_ctrl"
+}

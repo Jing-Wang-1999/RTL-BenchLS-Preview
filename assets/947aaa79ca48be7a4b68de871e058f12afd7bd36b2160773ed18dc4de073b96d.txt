@@ -1,0 +1,41 @@
+always @(*)
+ begin
+  next_state_reset = state_reset;
+  case(state_reset)
+   NO_RESET:
+    begin
+     if((reset_chain && !has_data && state_byte != IDLE && !last_byte) || (reset_chain && has_data && last_byte))
+      next_state_reset = RESET;
+     if(reset_chain  && has_data && !last_byte)
+      next_state_reset = WAIT;
+    end
+   RESET:
+    begin
+     if(last_byte)
+      next_state_reset = NO_RESET;
+     else
+      next_state_reset = (write) ? WRITE : RESET;
+    end
+   WAIT:
+    begin
+     if(last_byte)
+      next_state_reset = (write) ? WRITE : RESET;
+     else
+      next_state_reset = WAIT;
+    end
+   WRITE:
+    begin
+     if(reset_chain)
+      next_state_reset = (last_byte) ? RESET : RESET_2;
+     else
+      next_state_reset = (last_byte) ? NO_RESET : WRITE;
+    end
+   RESET_2:
+    begin
+     if(last_byte)
+      next_state_reset = (write) ? WRITE : RESET;
+     else
+      next_state_reset = RESET_2;
+    end
+  endcase
+ end

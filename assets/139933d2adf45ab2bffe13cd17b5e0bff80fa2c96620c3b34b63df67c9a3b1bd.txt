@@ -1,0 +1,183 @@
+module rtlpp_00979(
+    input clk,  
+    input rst,
+    inout DS1,  
+    output drive,  
+    input run,
+    input [5:0] address,
+    output [8:0] result
+);
+
+parameter cnv_cnt = 19200;
+parameter tck_mask = 511;
+
+reg [7:0] divider = 0;
+reg tick = 0;
+always @(posedge clk or posedge rst)
+    if (rst) begin
+        divider <= 0;
+        tick <= 0;
+    end else begin
+        divider <= divider + 1;
+        tick <= (divider & tck_mask) == 0;
+    end
+
+reg drive_r = 0;
+assign drive = drive_r;
+assign DS1 = drive ? 1'b0 : 1'bz;
+
+reg owpd1 = 0;
+always @(posedge clk)
+    if (tick) begin
+        owpd1 <= DS1;
+    end
+
+`define ZZZ 0
+`define RST 1
+`define SIT 2
+`define RDR 3
+`define SKP 4
+`define RDS 5
+`define CVT 6
+`define DLY 7
+`define ZRO 8
+`define CVV 9
+`define RCL 10
+`define WRS 11
+`define CFG 12
+
+reg [3:0] command = 0;  
+wire [5:0] command_address;
+always @(command_address)
+    case (command_address)
+`ifndef REVC_1W
+         0: command = `RST;
+         1: command = `SIT;
+         2: command = `SKP;  
+         3: command = `RDS;  
+        16: command = `RST;
+        17: command = `SIT;
+        18: command = `RDR;  
+        27: command = `RST;
+        28: command = `SIT;
+        29: command = `SKP;  
+        30: command = `CVT;  
+`else
+         0: command = `RST;
+         1: command = `SIT;
+         2: command = `SKP;  
+         3: command = `RCL;  
+         4: command = `ZRO;  
+         5: command = `RST;
+         6: command = `SIT;
+         7: command = `SKP;  
+         8: command = `RDS;  
+         9: command = `ZRO;  
+        21: command = `RST;
+        22: command = `SIT;
+        23: command = `RDR;  
+        32: command = `RST;
+        33: command = `SIT;
+        34: command = `SKP;
+        35: command = `WRS;  
+        36: command = `ZRO;
+        37: command = `CFG;  
+        38: command = `SKP;  
+        39: command = `CVT;  
+        40: command = `RST;
+        41: command = `SIT;
+        42: command = `SKP;  
+        43: command = `CVV;  
+`endif
+        63: command = `DLY;
+    default: command = `ZZZ;
+    endcase
+
+reg [7:0] cmd_byte; 
+always @(command)
+    case(command)
+        `RST: cmd_byte = 8'h00;  
+        `SIT: cmd_byte = 8'h00;  
+        `RDR: cmd_byte = 8'h33;  
+        `SKP: cmd_byte = 8'hcc;  
+        `RDS: cmd_byte = 8'hbe;  
+        `CVT: cmd_byte = 8'h44;  
+        `DLY: cmd_byte = 8'h00;  
+        `ZZZ: cmd_byte = 8'hff;  
+        `ZRO: cmd_byte = 8'h00;  
+        `CVV: cmd_byte = 8'hb4;  
+        `RCL: cmd_byte = 8'hb8;  
+        `WRS: cmd_byte = 8'h4e;  
+        `CFG: cmd_byte = 8'h00;  
+    default: cmd_byte = 8'h00;
+    endcase
+
+reg [14:0] count = 0;      
+reg [8:0] bit_count = 0;  
+reg [7:0] shifter = 0;
+reg shift_in = 0, send_reset = 0, send_sit = 0, send_delay = 0;
+wire zero_count = (count == 0);
+wire indata_count = (count == 3);
+reg end_of_count = 0;
+wire byte_mark = (bit_count[2:0] == 7);
+wire reset_low = send_reset & run;
+wire reset_high = send_sit & run;
+assign command_address = bit_count[8:3];
+
+always @(posedge clk or posedge rst)
+    if (rst) begin
+        count <= 0;
+        bit_count <= 0;
+        end_of_count <= 0;
+        send_reset <= 0;
+        send_sit <= 0;
+        send_delay <= 0;
+    end else begin
+        if (tick) begin
+            count <= (~run | end_of_count) ? 0 : (count + 15'd1);
+            end_of_count <= send_delay ? (count == cnv_cnt) : (count == 14);
+        end
+        if (tick & end_of_count) begin
+            bit_count <= bit_count + 9'd1;
+        end
+        if (tick & end_of_count & byte_mark) begin
+            send_reset <= command == `RST;
+            send_sit <= command == `SIT;
+            send_delay <= command == `DLY;
+        end
+    end
+
+wire [7:0] next_shifter = {shift_in, shifter[7:1]};
+wire shift_out = shifter[0];
+always @(posedge clk or posedge rst)
+    if (rst) begin
+        drive_r <= 0;
+        shift_in <= 0;
+        shifter <= 0;
+    end else begin
+        if (tick) drive_r <= run & ~send_delay & ~reset_high & (reset_low |
+            ~end_of_count & (zero_count | ~shift_out));
+        if (tick & indata_count) shift_in <= owpd1;
+        if (tick & end_of_count) begin
+            shifter <= byte_mark ? cmd_byte : next_shifter;
+        end
+    end
+
+reg [7:0] mem [63:0];
+wire [5:0] write_addr = bit_count[8:3];
+reg [7:0] ram_out;
+always @(posedge clk) begin
+    if (tick & end_of_count & byte_mark) mem[write_addr] <= next_shifter;
+    ram_out <= mem[address];
+end
+
+reg consistent = 0;
+always @(posedge clk or posedge rst)
+    if (rst) begin
+        consistent <= 0;
+    end else begin
+        if (address == 0) consistent <= (command_address == 0);
+    end
+assign result = {~consistent, ram_out};
+
+endmodule

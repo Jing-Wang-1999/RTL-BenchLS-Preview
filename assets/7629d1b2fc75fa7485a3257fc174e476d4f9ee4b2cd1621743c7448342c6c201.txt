@@ -1,0 +1,133 @@
+module rtlpp_07059 (
+  input clk,
+  input reset,
+
+  output DALbe_L,
+  output DALtx,
+  output DALst,
+  inout [21:0] ZDAL,
+  inout ZBS7,
+  inout ZWTBT,
+
+  input RSYNC,
+  input RDIN,
+  input RDOUT,
+  output TRPLY,
+
+  input dma_assert_dal,
+  input [21:0] dma_dal,
+  input dma_twtbt,
+  input dma_dalbe,
+  input dma_daltx,
+  input dma_dalst,
+
+  input int_assert_vector,
+
+  output [21:0] reg_addr,
+  output reg_bs7,
+  output reg_read_cycle,
+  input reg_addr_match,
+  input [15:0] reg_rdata,
+  output [15:0] reg_wdata,
+  output reg_write
+);
+
+  wire [21:0] RDAL = ZDAL;
+  wire RBS7 = ZBS7;
+  wire RWTBT = ZWTBT;
+
+  reg [21:0] TDAL;
+  assign ZDAL = DALtx ? TDAL : 22'bz;
+  assign ZBS7 = DALtx ? 0 : 1'bz;
+  assign ZWTBT = DALtx ? dma_twtbt : 1'bz;
+
+  reg [21:0] addr_reg = 0;
+  reg bs7_reg = 0;
+  reg read_cycle = 0;
+  always @(posedge RSYNC) begin
+    addr_reg <= RDAL;
+    bs7_reg <= RBS7;
+    read_cycle <= ~RWTBT;
+  end
+  assign reg_addr = addr_reg;
+  assign reg_bs7 = bs7_reg;
+  assign reg_read_cycle = read_cycle;
+  assign reg_wdata = RDAL[15:0];
+
+  reg addr_match = 0;
+  reg assert_vector = 0;
+  always @(*) begin
+    addr_match = 0;
+    assert_vector = 0;
+    TDAL = 0;
+
+    if (dma_assert_dal)
+      TDAL = dma_dal;
+    else if (RSYNC) begin
+      if (reg_addr_match) begin
+        addr_match = 1;
+        TDAL = { 6'b0, reg_rdata };
+      end
+    end else if (int_assert_vector) begin
+      assert_vector = 1;
+      TDAL = { 6'b0, reg_rdata };
+    end
+  end
+
+  reg [1:0] addr_match_ra = 0;
+  always @(posedge clk) addr_match_ra <= { addr_match_ra[0], addr_match };
+  wire saddr_match = addr_match_ra[1];
+
+  reg [3:0] assert_vector_ra = 0;
+  always @(posedge clk) assert_vector_ra <= { assert_vector_ra[2:0], assert_vector };
+  wire sassert_vector = assert_vector_ra[1];
+
+  reg [2:0] RDOUTra = 0;
+  always @(posedge clk) RDOUTra <= { RDOUTra[1:0], RDOUT };
+  wire sRDOUT = RDOUTra[1];
+  wire sRDOUTpulse = RDOUTra[2:1] == 2'b01;
+  assign reg_write = sRDOUTpulse;
+
+  reg [3:0] RDINra = 0;
+  always @(posedge clk) RDINra <= { RDINra[2:0], RDIN };
+  wire sRDIN = RDINra[1];
+  wire sRDINpulse = RDINra[2:1] == 2'b01;
+
+  reg rwDALbe = 0;
+  reg rwDALst = 0;
+  reg rwDALtx = 0;
+  reg rwTRPLY = 0;
+  always @(posedge clk) begin
+    rwTRPLY <= 0;
+    rwDALst <= 0;
+    rwDALbe <= 0;
+    rwDALtx <= 0;
+
+    if (saddr_match) begin
+      if (sRDIN) begin
+        rwDALtx <= 1;
+
+        if (RDINra[3]) begin
+          rwTRPLY <= 1;
+          rwDALbe <= 1;
+          rwDALst <= 1;
+        end
+      end else if (sRDOUT) begin
+        rwTRPLY <= 1;
+      end
+    end else if (sassert_vector) begin
+      rwDALtx <= 1;
+      if (assert_vector_ra[3]) begin
+        rwTRPLY <= 1;
+        rwDALbe <= 1;
+        rwDALst <= 1;
+      end
+    end
+  end
+
+  assign DALbe_L = ~(rwDALbe | dma_dalbe);
+  assign DALst = rwDALst | dma_dalst;
+  assign DALtx = rwDALtx | dma_assert_dal;
+  assign TRPLY = rwTRPLY;
+
+endmodule

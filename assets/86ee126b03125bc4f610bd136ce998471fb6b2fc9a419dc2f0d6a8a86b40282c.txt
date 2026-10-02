@@ -1,0 +1,55 @@
+module origen_014679(
+    input wire clk,
+    input wire reset,
+    input wire startComp,
+    input wire [5:0] tpValor,
+    input wire [5:0] tpReferenciaC,
+    input wire [5:0] tpReferenciaF,
+    output reg tOut,
+    output reg alarmaVisualC,
+    output reg alarmaVisualF
+);
+
+    reg startC;
+    reg [5:0] tValor;
+
+    initial begin
+        tOut = 0;
+    end
+
+    always @(posedge clk or posedge startC or negedge reset) begin
+        if (reset == 1) begin
+            startC <= 0;
+            tValor <= 6'b0;
+            tOut <= 0;
+            alarmaVisualC <= 0;
+            alarmaVisualF <= 0;
+        end
+        else begin
+            startC <= startComp;
+            tValor <= tpValor;
+
+            if (tOut == 0) begin
+                if (tValor > tpReferenciaC) begin
+                    tOut <= 1;
+                    alarmaVisualC <= 1;
+                end
+                else if (tValor < tpReferenciaF) begin
+                    tOut <= 1;
+                    alarmaVisualF <= 1;
+                end
+            end
+            else begin
+                if (tValor < tpReferenciaC) begin
+                    tOut <= 0;
+                    alarmaVisualC <= 0;
+                end
+                else if (tValor > tpReferenciaF) begin
+                    tOut <= 0;
+                    alarmaVisualF <= 0;
+                end
+            end
+        end
+    end
+
+endmodule

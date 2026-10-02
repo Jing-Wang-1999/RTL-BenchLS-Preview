@@ -1,0 +1,23 @@
+# Autovcoder Module Specification
+
+This module implements a cryptographic round function, likely part of an MD5-style hash algorithm.
+
+## Inputs
+- Clock signal
+- Round index (i_input, 6 bits) determining which of four logical functions to apply
+- Four 32-bit operands: A_input, B_input, C_input, D_input
+- 32-bit value Xk_plus_Ti_input (message block plus constant)
+- 5-bit shift amount (s_input)
+- 32-bit shifter base for circular shift calculation
+
+## Output
+- 32-bit result (int_B_output)
+
+## Behavior
+The module selects one of four boolean functions based on the round index:
+- Rounds 0-15: (B AND C) OR (NOT B AND D)
+- Rounds 16-31: (B AND D) OR (C AND NOT D)
+- Rounds 32-47: B XOR C XOR D
+- Rounds 48-63: C XOR (B OR NOT D)
+
+The selected function output is added to A_

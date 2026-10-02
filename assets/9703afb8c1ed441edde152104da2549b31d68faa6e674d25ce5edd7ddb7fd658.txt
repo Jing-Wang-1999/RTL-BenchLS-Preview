@@ -1,0 +1,90 @@
+{
+  "admission_status": "admitted",
+  "after_commit": "c78fee0a64b2c34cccd026accb897d1e31d1142d",
+  "before_commit": "a2194a723bbd12166d0c6dc6e2974b0633b05e2b",
+  "case_id": "issue.lowRISC_ibex_969_30",
+  "difficulty": "reasoning_required",
+  "discussion_review": "Seven pre-fix comments reviewed. They confirm decoder localization and include proposed solution code; raw discussion retained privately and excluded from public input. Current case is limited to the decoder REG_* cleanup in PR969.",
+  "evaluation_readiness_reason": "Retained requested-edit controls pass; the release-specific automated scorer and model workspace/evaluator integration remain to be qualified. This does not block case admission.",
+  "evaluation_ready": false,
+  "fix_group": "lowrisc__ibex__pr969",
+  "frozen": true,
+  "legacy_case_id": "lowRISC_ibex_969_30",
+  "meaningful_change": true,
+  "meaningfulness_basis": "Coordinated register-field refactoring across decode and CSR uses; accept other issue-satisfying representations.",
+  "official_task": "3.2",
+  "package_audience": "Curator package; model input restricted to public/.",
+  "patch_sha256": "f32b29501aedcbf5f660021ca2eeb40e1723308d4df718048534ee44eda33c70",
+  "proofs": [
+    {
+      "configuration": "default",
+      "equivalent_points": 256,
+      "parameters": {
+        "BranchTargetALU": 0,
+        "RV32B": 0,
+        "RV32E": 0,
+        "RV32M": 1
+      },
+      "result": "private/evidence/formal/default/result.json"
+    },
+    {
+      "configuration": "rv32b1",
+      "equivalent_points": 256,
+      "parameters": {
+        "BranchTargetALU": 0,
+        "RV32B": 1,
+        "RV32E": 0,
+        "RV32M": 1
+      },
+      "result": "private/evidence/formal/rv32b1/result.json"
+    }
+  ],
+  "repository": "lowrisc/ibex",
+  "requested_change_review": "All four macros are removed and eight active expression sites use assigned five-bit instruction fields. Both default and RV32B-enabled outputs are formally preserved.",
+  "scope": {
+    "black_boxes": [],
+    "clock_reset_protocol": "Combinational output equivalence; no clock/reset/input constraints. Simulation assertions are outside hardware output proof.",
+    "configuration_rationale": "Default plus RV32B=1, which activates the REG_S3/use_rs3 path. RV32E=0, RV32M=1 and BranchTargetALU=0 remain fixed; no all-parameter claim.",
+    "configurations": {
+      "default": {
+        "BranchTargetALU": 0,
+        "RV32B": 0,
+        "RV32E": 0,
+        "RV32M": 1
+      },
+      "rv32b1": {
+        "BranchTargetALU": 0,
+        "RV32B": 1,
+        "RV32E": 0,
+        "RV32M": 1
+      }
+    },
+    "custom_cutpoints": [],
+    "defines": [],
+    "dependency_closure": [
+      "rtl/ibex_decoder.sv",
+      "vendor/lowrisc_ip/prim/rtl/prim_assert.sv",
+      "rtl/ibex_pkg.sv"
+    ],
+    "editable_paths": [
+      "rtl/ibex_decoder.sv"
+    ],
+    "include_directories": [
+      "rtl",
+      "vendor/lowrisc_ip/prim/rtl"
+    ],
+    "observable_outputs": "All output compare points; see per-configuration PO counts.",
+    "source_order": [
+      "rtl/ibex_pkg.sv",
+      "rtl/ibex_decoder.sv"
+    ],
+    "support_limit": "Only listed configurations; no claim for other parameters or macro environments.",
+    "top": "ibex_decoder"
+  },
+  "source_provenance": "Every source in both compiler closures matches the corrected upstream Git revision byte for byte.",
+  "tool_evidence": {
+    "compiler": "pyslang 11.0.0 retained compile reports",
+    "dc_diagnostic_replay": false,
+    "formal": "Conformal 24.10-s700"
+  }
+}

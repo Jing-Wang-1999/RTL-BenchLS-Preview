@@ -1,0 +1,50 @@
+{
+  "additions": 1,
+  "base_commit": "0cdf265eaa7d5a3eacb4252198064cb59f93196e",
+  "base_ref": "master",
+  "deletions": 1,
+  "head_commit": "59fa69d539e448636a7b9e11ff5392e8aa2da6c9",
+  "issue_info": {
+    "body": "### Description\n\nThis currently fails (e.g. https://reports.opentitan.org/hw/ip/usbdev/lint/verilator/2024.02.21_20.11.38/report.html)\r\n\r\nIt's just an example of Verilator's width inference inferring a 32-bit width that essentially comes from a literal `1`. Tweak (by casting?) to silence the warning.",
+    "created_at": "2024-02-29T15:20:25Z",
+    "labels": [
+      "Component:RTL",
+      "IP:usbdev"
+    ],
+    "state": "closed",
+    "title": "[usbdev,rtl] Get the verilator lint check passing again",
+    "updated_at": "2024-03-05T10:28:30Z"
+  },
+  "issue_number": 21761,
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/21761",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 1,
+      "changes": 2,
+      "deletions": 1,
+      "filename": "hw/ip/usbdev/rtl/usbdev.sv",
+      "patch": "@@ -313,7 +313,7 @@ module usbdev\n   assign rx_wready_setup = rx_wready;\n   // ... but regular OUT packets are not permitted to use the final entry; still qualified\n   // with 'rx_wready' for when reset is asserted.\n-  assign rx_wready_out   = rx_wready & (rx_depth < (RXFifoDepth - 1));\n+  assign rx_wready_out   = rx_wready & (rx_depth < RXFifoDepthW'(RXFifoDepth - 1));\n \n   // Received Buffer FIFO\n   prim_fifo_sync #("
+    }
+  ],
+  "pr_info": {
+    "body": "Fixes #21761",
+    "created_at": "2024-03-03T20:30:24Z",
+    "merged_at": "2024-03-05T10:28:29Z",
+    "state": "closed",
+    "title": "[lint,usbdev] Appease Verilator linting",
+    "updated_at": "2024-03-05T10:28:29Z",
+    "user": "alees24"
+  },
+  "pr_number": 21806,
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/21806",
+  "repository": "lowRISC/opentitan",
+  "source_info": {
+    "line_number": 714,
+    "source_file": "12.txt"
+  },
+  "task_id": "lowRISC_opentitan_21806_21761",
+  "verilog_files": [
+    "hw/ip/usbdev/rtl/usbdev.sv"
+  ]
+}

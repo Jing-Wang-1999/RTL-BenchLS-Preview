@@ -1,0 +1,553 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module vga_wb_slave(
+	clk_i, rst_i, arst_i, adr_i, dat_i, dat_o, sel_i, we_i, stb_i, cyc_i, ack_o, rty_o, err_o, inta_o,
+	wbm_busy, dvi_odf, bl, csl, vsl, hsl, pc, cd, vbl, cbsw, vbsw, ven, avmp, acmp,
+	cursor0_res, cursor0_en, cursor0_xy, cursor0_ba, cursor0_ld, cc0_adr_i, cc0_dat_o,
+	cursor1_res, cursor1_en, cursor1_xy, cursor1_ba, cursor1_ld, cc1_adr_i, cc1_dat_o,
+	vbsint_in, cbsint_in, hint_in, vint_in, luint_in, sint_in,
+	Thsync, Thgdel, Thgate, Thlen, Tvsync, Tvgdel, Tvgate, Tvlen, VBARa, VBARb,
+	clut_acc, clut_ack, clut_q
+	);
+
+	
+	
+	
+
+	
+	input         clk_i;
+	input         rst_i;
+	input         arst_i;
+	input  [11:2] adr_i;
+	input  [31:0] dat_i;
+	output [31:0] dat_o;
+	reg [31:0] dat_o;
+	input  [ 3:0] sel_i;
+	input         we_i;
+	input         stb_i;
+	input         cyc_i;
+	output        ack_o;
+	reg ack_o;
+	output        rty_o;
+	reg rty_o;
+	output        err_o;
+	reg err_o;
+	output        inta_o;
+	reg inta_o;
+
+	
+	input  wbm_busy;             
+
+	
+	output [1:0] dvi_odf;        
+	output bl;                   
+	output csl;                  
+	output vsl;                  
+	output hsl;                  
+	output pc;                   
+	output [1:0] cd;             
+	output [1:0] vbl;            
+	output cbsw;                 
+	output vbsw;                 
+	output ven;                  
+
+	
+	output         cursor0_res;  
+	output         cursor0_en;   
+	output [31: 0] cursor0_xy;   
+	output [31:11] cursor0_ba;   
+	output         cursor0_ld;   
+	input  [ 3: 0] cc0_adr_i;    
+	output [15: 0] cc0_dat_o;    
+	output         cursor1_res;  
+	output         cursor1_en;   
+	output [31: 0] cursor1_xy;   
+	output [31:11] cursor1_ba;   
+	output         cursor1_ld;   
+	input  [ 3: 0] cc1_adr_i;    
+	output [15: 0] cc1_dat_o;    
+
+	reg [31: 0] cursor0_xy;
+	reg [31:11] cursor0_ba;
+	reg         cursor0_ld;
+	reg [31: 0] cursor1_xy;
+	reg [31:11] cursor1_ba;
+	reg         cursor1_ld;
+
+	
+	input avmp;          
+	input acmp;          
+	input vbsint_in;     
+	input cbsint_in;     
+	input hint_in;       
+	input vint_in;       
+	input luint_in;      
+	input sint_in;       
+
+	
+	output [ 7:0] Thsync;
+	output [ 7:0] Thgdel;
+	output [15:0] Thgate;
+	output [15:0] Thlen;
+
+	
+	output [ 7:0] Tvsync;
+	output [ 7:0] Tvgdel;
+	output [15:0] Tvgate;
+	output [15:0] Tvlen;
+
+	
+	output [31:2] VBARa;
+	reg [31:2] VBARa;
+	output [31:2] VBARb;
+	reg [31:2] VBARb;
+
+	
+	output        clut_acc;
+	input         clut_ack;
+	input  [23:0] clut_q;
+
+
+	
+	
+	
+	parameter REG_ADR_HIBIT = 7;
+
+	wire [REG_ADR_HIBIT:0] REG_ADR  = adr_i[REG_ADR_HIBIT : 2];
+	wire                   CLUT_ADR = adr_i[11];
+
+	parameter [REG_ADR_HIBIT : 0] CTRL_ADR  = 6'b00_0000;
+	parameter [REG_ADR_HIBIT : 0] STAT_ADR  = 6'b00_0001;
+	parameter [REG_ADR_HIBIT : 0] HTIM_ADR  = 6'b00_0010;
+	parameter [REG_ADR_HIBIT : 0] VTIM_ADR  = 6'b00_0011;
+	parameter [REG_ADR_HIBIT : 0] HVLEN_ADR = 6'b00_0100;
+	parameter [REG_ADR_HIBIT : 0] VBARA_ADR = 6'b00_0101;
+	parameter [REG_ADR_HIBIT : 0] VBARB_ADR = 6'b00_0110;
+	parameter [REG_ADR_HIBIT : 0] C0XY_ADR  = 6'b00_1100;
+	parameter [REG_ADR_HIBIT : 0] C0BAR_ADR = 6'b00_1101;
+	parameter [REG_ADR_HIBIT : 0] CCR0_ADR  = 6'b01_0???;
+	parameter [REG_ADR_HIBIT : 0] C1XY_ADR  = 6'b01_1100;
+	parameter [REG_ADR_HIBIT : 0] C1BAR_ADR = 6'b01_1101;
+	parameter [REG_ADR_HIBIT : 0] CCR1_ADR  = 6'b10_0???;
+
+
+	reg [31:0] ctrl, stat, htim, vtim, hvlen;
+	wire hint, vint, vbsint, cbsint, luint, sint;
+	wire hie, vie, vbsie, cbsie;
+	wire acc, acc32, reg_acc, reg_wacc;
+	wire cc0_acc, cc1_acc;
+	wire [31:0] ccr0_dat_o, ccr1_dat_o;
+
+
+	reg [31:0] reg_dato; 
+
+	
+	
+	
+
+	assign acc      =  cyc_i & stb_i;
+	assign acc32    = (sel_i == 4'b1111);
+	assign clut_acc =  CLUT_ADR & acc & acc32;
+	assign reg_acc  = ~CLUT_ADR & acc & acc32;
+	assign reg_wacc =  reg_acc & we_i;
+
+	assign cc0_acc  = (REG_ADR == CCR0_ADR) & acc & acc32;
+	assign cc1_acc  = (REG_ADR == CCR1_ADR) & acc & acc32;
+
+	always @(posedge clk_i)
+	  ack_o <=  ((reg_acc & acc32) | clut_ack) & ~(wbm_busy & REG_ADR == CTRL_ADR) & ~ack_o ;
+
+	always @(posedge clk_i)
+	  rty_o <=  ((reg_acc & acc32) | clut_ack) & (wbm_busy & REG_ADR == CTRL_ADR) & ~rty_o ;
+
+	always @(posedge clk_i)
+	  err_o <=  acc & ~acc32 & ~err_o;
+
+
+	
+	always @(posedge clk_i or negedge arst_i)
+	begin : gen_regs
+	  if (!arst_i)
+	    begin
+	        htim       <=  0;
+	        vtim       <=  0;
+	        hvlen      <=  0;
+	        VBARa      <=  0;
+	        VBARb      <=  0;
+	        cursor0_xy <=  0;
+	        cursor0_ba <=  0;
+	        cursor1_xy <=  0;
+	        cursor1_ba <=  0;
+	    end
+	  else if (rst_i)
+	    begin
+	        htim       <=  0;
+	        vtim       <=  0;
+	        hvlen      <=  0;
+	        VBARa      <=  0;
+	        VBARb      <=  0;
+	        cursor0_xy <=  0;
+	        cursor0_ba <=  0;
+	        cursor1_xy <=  0;
+	        cursor1_ba <=  0;
+	    end
+	  else if (reg_wacc)
+	    case (adr_i) 
+	        HTIM_ADR  : htim       <=  dat_i;
+	        VTIM_ADR  : vtim       <=  dat_i;
+	        HVLEN_ADR : hvlen      <=  dat_i;
+	        VBARA_ADR : VBARa      <=  dat_i[31: 2];
+	        VBARB_ADR : VBARb      <=  dat_i[31: 2];
+	        C0XY_ADR  : cursor0_xy <=  dat_i[31: 0];
+	        C0BAR_ADR : cursor0_ba <=  dat_i[31:11];
+	        C1XY_ADR  : cursor1_xy <=  dat_i[31: 0];
+	        C1BAR_ADR : cursor1_ba <=  dat_i[31:11];
+	    endcase
+	end
+
+	always @(posedge clk_i)
+	  begin
+	     cursor0_ld <=  reg_wacc && (adr_i == C0BAR_ADR);
+	     cursor1_ld <=  reg_wacc && (adr_i == C1BAR_ADR);
+	  end
+
+	
+	always @(posedge clk_i or negedge arst_i)
+	  if (!arst_i)
+	    ctrl <=  0;
+	  else if (rst_i)
+	    ctrl <=  0;
+	  else if (reg_wacc & (REG_ADR == CTRL_ADR) & ~wbm_busy )
+	    ctrl <=  dat_i;
+	  else begin
+	    ctrl[6] <=  ctrl[6] & !cbsint_in;
+	    ctrl[5] <=  ctrl[5] & !vbsint_in;
+	  end
+
+
+	
+	always @(posedge clk_i or negedge arst_i)
+	  if (!arst_i)
+	    stat <=  0;
+	  else if (rst_i)
+	    stat <=  0;
+	  else begin
+	    
+
+
+	        stat[21] <=  1'b0;
+	    
+	    
+
+
+	        stat[20] <=  1'b0;
+	    
+
+	    stat[17] <=  acmp;
+	    stat[16] <=  avmp;
+
+	    if (reg_wacc & (REG_ADR == STAT_ADR) )
+	      begin
+	          stat[7] <=  cbsint_in | (stat[7] & !dat_i[7]);
+	          stat[6] <=  vbsint_in | (stat[6] & !dat_i[6]);
+	          stat[5] <=  hint_in   | (stat[5] & !dat_i[5]);
+	          stat[4] <=  vint_in   | (stat[4] & !dat_i[4]);
+	          stat[1] <=  luint_in  | (stat[3] & !dat_i[1]);
+	          stat[0] <=  sint_in   | (stat[0] & !dat_i[0]);
+	      end
+	    else
+	      begin
+	          stat[7] <=  stat[7] | cbsint_in;
+	          stat[6] <=  stat[6] | vbsint_in;
+	          stat[5] <=  stat[5] | hint_in;
+	          stat[4] <=  stat[4] | vint_in;
+	          stat[1] <=  stat[1] | luint_in;
+	          stat[0] <=  stat[0] | sint_in;
+	      end
+	  end
+
+
+	
+	assign dvi_odf     = ctrl[29:28];
+	assign cursor1_res = ctrl[25];
+	assign cursor1_en  = ctrl[24];
+	assign cursor0_res = ctrl[23];
+	assign cursor0_en  = ctrl[20];
+	assign bl          = ctrl[15];
+	assign csl         = ctrl[14];
+	assign vsl         = ctrl[13];
+	assign hsl         = ctrl[12];
+	assign pc          = ctrl[11];
+	assign cd          = ctrl[10:9];
+	assign vbl         = ctrl[8:7];
+	assign cbsw        = ctrl[6];
+	assign vbsw        = ctrl[5];
+	assign cbsie       = ctrl[4];
+	assign vbsie       = ctrl[3];
+	assign hie         = ctrl[2];
+	assign vie         = ctrl[1];
+	assign ven         = ctrl[0];
+
+	
+	assign cbsint = stat[7];
+	assign vbsint = stat[6];
+	assign hint   = stat[5];
+	assign vint   = stat[4];
+	assign luint  = stat[1];
+	assign sint   = stat[0];
+
+	
+	assign Thsync = htim[31:24];
+	assign Thgdel = htim[23:16];
+	assign Thgate = htim[15:0];
+	assign Thlen  = hvlen[31:16];
+
+	
+	assign Tvsync = vtim[31:24];
+	assign Tvgdel = vtim[23:16];
+	assign Tvgate = vtim[15:0];
+	assign Tvlen  = hvlen[15:0];
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		assign ccr0_dat_o = 32'h0;
+		assign cc0_dat_o = 32'h0;
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		assign ccr1_dat_o = 32'h0;
+		assign cc1_dat_o = 32'h0;
+	
+
+
+	
+	always @(REG_ADR or ctrl or stat or htim or vtim or hvlen or VBARa or VBARb or acmp or
+		cursor0_xy or cursor0_ba or cursor1_xy or cursor1_ba or ccr0_dat_o or ccr1_dat_o)
+	  casez (REG_ADR) 
+	      CTRL_ADR  : reg_dato = ctrl;
+	      STAT_ADR  : reg_dato = stat;
+	      HTIM_ADR  : reg_dato = htim;
+	      VTIM_ADR  : reg_dato = vtim;
+	      HVLEN_ADR : reg_dato = hvlen;
+	      VBARA_ADR : reg_dato = {VBARa, 2'b0};
+	      VBARB_ADR : reg_dato = {VBARb, 2'b0};
+	      C0XY_ADR  : reg_dato = cursor0_xy;
+	      C0BAR_ADR : reg_dato = {cursor0_ba, 11'h0};
+	      CCR0_ADR  : reg_dato = ccr0_dat_o;
+	      C1XY_ADR  : reg_dato = cursor1_xy;
+	      C1BAR_ADR : reg_dato = {cursor1_ba, 11'h0};
+	      CCR1_ADR  : reg_dato = ccr1_dat_o;
+	      default   : reg_dato = 32'h0000_0000;
+	  endcase
+
+	always @(posedge clk_i)
+	  dat_o <=  reg_acc ? reg_dato : {8'h0, clut_q};
+
+	
+	always @(posedge clk_i)
+	  inta_o <=  (hint & hie) | (vint & vie) | (vbsint & vbsie) | (cbsint & cbsie) | luint | sint;
+endmodule
+
+
+

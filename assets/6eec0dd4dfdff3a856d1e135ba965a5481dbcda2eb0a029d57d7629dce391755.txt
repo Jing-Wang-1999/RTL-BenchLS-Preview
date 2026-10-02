@@ -1,0 +1,51 @@
+module autovcoder_017920 (
+    IN1,
+    IN2,
+    IN3,
+    IN4,
+    IN5,
+    IN6,
+    OUT
+);
+  input IN1;
+  input IN2;
+  input IN3;
+  input IN4;
+  input IN5;
+  input IN6;
+  output OUT;
+
+  or (I0_out, IN5, IN6);
+  or (I1_out, IN3, IN4);
+  or (I3_out, IN1, IN2);
+  and (I4_out, I0_out, I1_out, I3_out);
+  not (OUT, I4_out);
+
+  specify
+    // delay parameters
+    specparam
+       tplhl$IN1$OUT = 0.27:0.27:0.27,
+       tphlh$IN1$OUT = 0.26:0.26:0.26,
+       tplhl$IN2$OUT = 0.28:0.28:0.28,
+       tphlh$IN2$OUT = 0.3:0.3:0.3,
+       tplhl$IN3$OUT = 0.37:0.37:0.37,
+       tphlh$IN3$OUT = 0.33:0.33:0.33,
+       tplhl$IN4$OUT = 0.37:0.37:0.37,
+       tphlh$IN4$OUT = 0.29:0.29:0.29,
+       tplhl$IN5$OUT = 0.41:0.41:0.41,
+       tphlh$IN5$OUT = 0.3:0.3:0.3,
+       tplhl$IN6$OUT = 0.41:0.41:0.41,
+       tphlh$IN6$OUT = 0.34:0.34:0.34;
+
+    // path delays
+    (IN1 *> OUT) = (tphlh$IN1$OUT, tplhl$IN1$OUT);
+    (IN2 *> OUT) = (tphlh$IN2$OUT, tplhl$IN2$OUT);
+    (IN3 *> OUT) = (tphlh$IN3$OUT, tplhl$IN3$OUT);
+    (IN4 *> OUT) = (tphlh$IN4$OUT, tplhl$IN4$OUT);
+    (IN5 *> OUT) = (tphlh$IN5$OUT, tplhl$IN5$OUT);
+    (IN6 *> OUT) = (tphlh$IN6$OUT, tplhl$IN6$OUT);
+
+  endspecify
+
+endmodule
+

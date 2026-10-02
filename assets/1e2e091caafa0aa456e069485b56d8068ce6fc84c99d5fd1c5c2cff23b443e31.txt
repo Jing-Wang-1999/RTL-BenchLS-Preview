@@ -1,0 +1,25 @@
+The module `NV_NVDLA_SDP_CORE_Y_cvt_core_chn_out_rsci_chn_out_wait_ctrl` is a control unit designed for managing the output channel wait states in a neural network accelerator. It operates within the context of the NVIDIA Deep Learning Accelerator (NVDLA) and is part of the data path control logic.
+
+### Inputs:
+1. **nvdla_core_clk**: This is the clock signal for the module, synchronizing its operations.
+2. **nvdla_core_rstn**: This is an active-low reset signal, used to initialize or reset the module's state.
+3. **chn_out_rsci_oswt**: This signal indicates the output switch state, controlling when the output can be enabled.
+4. **core_wen**: This is a write enable signal for the core, indicating when writing operations are allowed.
+5. **core_wten**: This is a write temporary enable signal, used to control temporary write operations.
+6. **chn_out_rsci_iswt0**: This input signal is used to indicate an initial switch state for the output channel.
+7. **chn_out_rsci_ld_core_psct**: This signal indicates the load condition for the core's primary state control.
+8. **chn_out_rsci_vd**: This is a valid data signal, indicating when the data on the channel is valid and can be processed.
+
+### Outputs:
+1. **chn_out_rsci_biwt**: This output signal indicates a wait condition for the output channel, based on the valid data signal and other internal conditions.
+2. **chn_out_rsci_bdwt**: This signal indicates a busy or done wait state, determined by the output switch state and core write enable.
+3. **chn_out_rsci_ld_core_sct**: This output indicates the load condition for the core's secondary state control, based on the primary state control and other internal conditions.
+
+### Internal Logic:
+- The module uses internal signals to manage the wait states and control logic. It includes a register (`chn_out_rsci_icwt`) that holds an internal control wait state.
+- The module evaluates conditions based on the combination of input signals to determine the state of its outputs.
+- The logic involves checking the write enable and switch states to control when the output channel can proceed or needs to wait.
+- The module uses combinational logic to derive intermediate signals that influence the final output states.
+
+### Behavior:
+- On each clock cycle,

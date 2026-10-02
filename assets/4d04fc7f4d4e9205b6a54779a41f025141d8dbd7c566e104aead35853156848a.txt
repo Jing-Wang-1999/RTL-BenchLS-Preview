@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   ultrasonic_sensor_controller.v0, ultrasonic_sensor_controller.v1, ultrasonic_sensor_controller, clock, reset
+set DESIGN_NAME_GOLDEN "ultrasonic_sensor_controller.v0"
+set DESIGN_NAME "ultrasonic_sensor_controller.v1"
+set TOP_NAME "ultrasonic_sensor_controller"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_5dc8d5e51730f57f.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_5dc8d5e51730f57f.negative.v
+check_sec -elaborate -spec -top ultrasonic_sensor_controller -disable_auto_bbox
+check_sec -elaborate -imp -top ultrasonic_sensor_controller -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clock 
+reset reset
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

@@ -1,0 +1,13 @@
+always @(posedge i_clk)
+	if (!o_busy)
+		calc_parity <= i_setup[24];
+	else if (fixd_parity)
+		calc_parity <= fixdp_value;
+	else if (zero_baud_counter)
+	begin
+		if (state[3] == 0) // First 8 bits of msg
+			calc_parity <= calc_parity ^ lcl_data[0];
+		else if (state == TXU_IDLE)
+			calc_parity <= parity_odd;
+	end else if (!r_busy)
+		calc_parity <= parity_odd;

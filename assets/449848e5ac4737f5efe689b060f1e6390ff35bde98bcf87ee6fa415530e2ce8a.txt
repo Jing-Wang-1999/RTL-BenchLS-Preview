@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/145",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/143",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 145,
+  "issue_number": 143,
+  "verilog_files": [
+    "rtl/riscv_cs_registers.sv"
+  ],
+  "deletions": 1,
+  "additions": 3,
+  "patches": [
+    {
+      "filename": "rtl/riscv_cs_registers.sv",
+      "patch": "@@ -538,11 +538,13 @@ if(PULP_SECURE==1) begin\n                begin\n                     depc_n = csr_wdata_int & ~32'b1; // force 16-bit alignment\n                end\n+\n       CSR_DSCRATCH0:\n                if (csr_we_int)\n                begin\n                     dscratch0_n = csr_wdata_int;\n                end\n+\n       CSR_DSCRATCH1:\n                if (csr_we_int)\n                begin\n@@ -789,7 +791,7 @@ end else begin //PULP_SECURE == 0\n       CSR_DPC:\n                if (csr_we_int)\n                begin\n-                    depc_n = csr_wdata_int;\n+                    depc_n = csr_wdata_int & ~32'b1; // force 16-bit alignment\n                end\n \n       CSR_DSCRATCH0:",
+      "additions": 3,
+      "deletions": 1,
+      "changes": 4
+    }
+  ],
+  "pr_info": {
+    "title": "Fix dpc alignment for PULP_SECURE=0",
+    "body": "Fixes #143 ",
+    "state": "closed",
+    "created_at": "2019-09-04T13:23:00Z",
+    "updated_at": "2019-11-07T14:04:29Z",
+    "merged_at": "2019-09-04T14:02:42Z",
+    "user": "bluewww"
+  },
+  "issue_info": {
+    "title": "DPC writes treated differently based on PULP_SECURE parameter",
+    "body": "The code for DPC writes are slightly different based on the PULP_SECURE parameter. This type of typo's likely derive from the high amount of code duplication in riscv_cs_registers.sv. \r\n\r\nPULP_SECURE==1 section:\r\n\r\n      CSR_DPC:\r\n               if (csr_we_int)\r\n               begin\r\n                    depc_n = csr_wdata_int & ~32'b1; // force 16-bit alignment\r\n               end\r\n\r\nPULP_SECURE == 0 section:\r\n\r\n      CSR_DPC:\r\n               if (csr_we_int)\r\n               begin\r\n                    depc_n = csr_wdata_int;\r\n               end\r\n\r\nIs it maybe an idea to restructure riscv_cs_registers.sv such that the duplicate code is avoided (and parameters are used inside the expressions in the read/write logic case statements to achieve the same effect as is now achieved with generate statements)?",
+    "labels": [
+      "Type:Bug"
+    ],
+    "state": "closed",
+    "created_at": "2019-09-04T09:51:56Z",
+    "updated_at": "2019-09-05T06:34:16Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 165
+  },
+  "base_commit": "a966f119efcaa9f9fc160a82f20d41155a173492",
+  "head_commit": "e3eea51f45492331c84ac8d778586d53f0e18f86",
+  "base_ref": "master",
+  "task_id": "openhwgroup_cv32e40p_145_143",
+  "lec_status": "useful_pass"
+}

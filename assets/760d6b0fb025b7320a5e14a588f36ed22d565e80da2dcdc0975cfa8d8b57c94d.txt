@@ -1,0 +1,54 @@
+module mg_02219(
+    input [7:0] Hmm,
+    input [7:0] Hmc,
+    input [7:0] Hcm,
+    input [7:0] Ecm,
+    input [7:0] Fmc,
+    input [1:0] select_ms,
+    output reg [7:0] Hcc,
+    output reg [7:0] Ecc,
+    output reg [7:0] Fcc
+);
+
+    reg [7:0] ms;
+    reg [7:0] Hcc0;
+    reg [7:0] Ecc0, Ecc1;
+    reg [7:0] Fcc0, Fcc1;
+
+    always @(*) begin
+        // Determine ms based on select_ms
+        case (select_ms)
+            2'b00: ms = -8'd4;
+            2'b01: ms = -8'd1;
+            default: ms = 8'd1;
+        endcase
+
+        // Calculate intermediate values
+        Hcc0 = Hmm + ms;
+        Ecc0 = Hcm - 8'd6;
+        Ecc1 = Ecm - 8'd1;
+        Fcc0 = Hmc - 8'd6;
+        Fcc1 = Fmc - 8'd1;
+
+        // Determine Ecc by comparing Ecc0 and Ecc1
+        if (Ecc0 > Ecc1)
+            Ecc = Ecc0;
+        else
+            Ecc = Ecc1;
+
+        // Determine Fcc by comparing Fcc0 and Fcc1
+        if (Fcc0 > Fcc1)
+            Fcc = Fcc0;
+        else
+            Fcc = Fcc1;
+
+        // Determine Hcc by comparing Hcc0, Ecc, and Fcc
+        if (Hcc0 > Ecc && Hcc0 > Fcc)
+            Hcc = Hcc0;
+        else if (Ecc > Fcc)
+            Hcc = Ecc;
+        else
+            Hcc = Fcc;
+    end
+
+endmodule

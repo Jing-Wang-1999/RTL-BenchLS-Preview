@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.d21679206b20f2fecb99.7926c17ca3a3",
+  "compile_check": {
+    "case_id": "s1derived.d21679206b20f2fecb99.7926c17ca3a3",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "ecc_correction_16bit",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.d21679206b20f2fecb99.7926c17ca3a3/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "d21679206b20f2fecb993b276164c27e64748bcbec7c64c259e02e7d8f5e31c3",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.d21679206b20f2fecb99.7926c17ca3a3",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.d21679206b20f2fecb99",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "ecc_correction_16bit"
+  },
+  "independent_review": {
+    "case_id": "s1derived.d21679206b20f2fecb99.7926c17ca3a3",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "One-hot decode, correction-bit ordering, fatal polarity, and unmapped-index zero behavior match.",
+        "rtl_excerpt": "`d[{!s[5],s[4:0]}]=1'b1; wire fatal=(|s[4:0])&!s[5];`",
+        "spec_excerpt": "\u201cdw[{~s[5],s[4:0]}]=1 ... fatal=(|s[4:0]) & ~s[5]\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.d21679206b20f2fecb99",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "63f5fd0a9ef37a0f5c702156cfc49eb29e839268501e8af9e46d0b37519b1851",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "d21679206b20f2fecb993b276164c27e64748bcbec7c64c259e02e7d8f5e31c3",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.d21679206b20f2fecb99",
+  "primary_review": {
+    "case_id": "s1derived.d21679206b20f2fecb99.7926c17ca3a3",
+    "checks": {
+      "behavior": "Exact indices and permutation are missing.",
+      "boundaries": "fatal excludes syndrome zero; other decode positions yield e=0.",
+      "interface": "Widths match, but e is a correction mask.",
+      "rtl_reasonableness": "RTL is a reasonable syndrome decoder.",
+      "sequential_and_reset": "Combinational."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Exact indices and permutation are missing. Combinational.",
+        "rtl_excerpt": "e concatenates selected one-hot dw bits; fatal=(|s[4:0])&!s[5]",
+        "spec_excerpt": "\u201ce: A 16-bit corrected data output\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose calls e corrected data although there is no data input, and it omits the exact decode mapping.",
+        "rtl_evidence": "e concatenates selected one-hot dw bits; fatal=(|s[4:0])&!s[5]",
+        "spec_evidence": "\u201ce: A 16-bit corrected data output\u201d",
+        "type": "incorrect_output_meaning_and_truncation"
+      }
+    ],
+    "parent_id": "s1p.d21679206b20f2fecb99",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.d21679206b20f2fecb99.7926c17ca3a3.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "d21679206b20f2fecb993b276164c27e64748bcbec7c64c259e02e7d8f5e31c3",
+    "source_group": "S1",
+    "specification_sha256": "7926c17ca3a358552bf2116424e34b3799a46ce5b94b3ff29009dd760645075a",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.d21679206b20f2fecb99.7926c17ca3a3.md",
+  "qualified_specification_sha256": "63f5fd0a9ef37a0f5c702156cfc49eb29e839268501e8af9e46d0b37519b1851",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.d21679206b20f2fecb99.7926c17ca3a3/private/golden_design.v",
+  "rtl_sha256": "d21679206b20f2fecb993b276164c27e64748bcbec7c64c259e02e7d8f5e31c3",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.d21679206b20f2fecb99.7926c17ca3a3/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "7926c17ca3a358552bf2116424e34b3799a46ce5b94b3ff29009dd760645075a",
+  "top_module": "ecc_correction_16bit"
+}

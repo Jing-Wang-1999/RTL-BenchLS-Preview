@@ -1,0 +1,53 @@
+module autovcoder_073487 (
+    a,
+    b,
+    out
+);
+  input [3:0] a, b;
+  output out;
+
+  wire q0, q1, q2, q3, q4, q5, q6;
+  XOR eq0 (
+      a[0],
+      b[0],
+      q0
+  );
+  XOR eq1 (
+      a[1],
+      b[1],
+      q1
+  );
+  XOR eq2 (
+      a[2],
+      b[2],
+      q2
+  );
+  XOR eq3 (
+      a[3],
+      b[3],
+      q3
+  );
+
+  OR eq4 (
+      q0,
+      q1,
+      q4
+  );
+  OR eq5 (
+      q2,
+      q3,
+      q5
+  );
+
+  OR eq6 (
+      q4,
+      q5,
+      q6
+  );
+
+  NOT n1 (
+      q6,
+      out
+  );
+endmodule
+

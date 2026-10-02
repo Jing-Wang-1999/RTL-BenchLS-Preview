@@ -1,0 +1,12 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/pcf_c49d1e993864a8c90f.v0.v
+check_sec -analyze -imp -sv ./input/rtl/pcf_c49d1e993864a8c90f.negative.v
+check_sec -elaborate -spec -top axicb_mst_switch_wr -disable_auto_bbox
+check_sec -elaborate -imp -top axicb_mst_switch_wr -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock aclk
+reset -expression {!aresetn}
+check_sec -gen
+check_sec -prove -strategy proof
+exit

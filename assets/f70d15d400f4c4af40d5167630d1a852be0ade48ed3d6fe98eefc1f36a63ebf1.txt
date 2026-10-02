@@ -1,0 +1,58 @@
+module origen_004297 (
+    input wire signed [3:0] a,
+    input wire signed [3:0] b,
+    input wire mode,
+    input wire clock,
+    output reg signed [5:0] q2,
+    output reg signed [5:0] q3
+);
+
+    reg signed [5:0] q1;
+
+    always @(posedge clock) begin : TEST_TB_DUT_RTL
+        q1 = mode ? a + b : a - b;
+        q2 <= q1 + (q2 >>> 2);
+    end
+
+    always @(posedge clock) begin : TEST_TB_DUT_RTL_PIPED
+        q3 <= q1 + (q2 >>> 2);
+    end
+
+endmodule
+
+module testbench;
+    reg signed [3:0] a, b;
+    reg mode, clock;
+    wire signed [5:0] q2, q3;
+
+    arithmetic_unit dut (
+        .a(a),
+        .b(b),
+        .mode(mode),
+        .clock(clock),
+        .q2(q2),
+        .q3(q3)
+    );
+
+    initial begin
+        clock = 0;
+        forever #3 clock = ~clock;
+    end
+
+    initial begin
+        for (mode = 0; mode <= 1; mode = mode + 1) begin
+            for (a = -8; a <= 7; a = a + 1) begin
+                for (b = -8; b <= 7; b = b + 1) begin
+                    #30;
+                    if (q3 !== q2) begin
+                        $display("Error: q3 (%d) != q2 (%d) at time %t", q3, q2, $time);
+                        $finish;
+                    end
+                end
+            end
+        end
+        $display("Test completed successfully");
+        $finish;
+    end
+
+endmodule

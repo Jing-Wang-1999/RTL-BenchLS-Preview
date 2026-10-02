@@ -1,0 +1,110 @@
+{
+  "case_id": "s1derived.9a878903668dca5c45a1.71a0d84d82c9",
+  "compile_check": {
+    "case_id": "s1derived.9a878903668dca5c45a1.71a0d84d82c9",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_04071",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04071.f57b3597d9054239/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.9a878903668dca5c45a1",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "9a878903668dca5c45a168fecc6e0f917b7ca9a1c43014d8b6b731930f89c349",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.9a878903668dca5c45a1.71a0d84d82c9",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04071.f57b3597d9054239/private/commercial_positive.log",
+    "commercial_log_sha256": "d739c4bf3d7195b524fae4ef15cb104d71d82d3b24a81cb0ab8bc3d45afcefcb",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04071.f57b3597d9054239/private/historical_harness/00_sec_mg_04071.tcl",
+    "executed_script_sha256": "668671510bb99545dd8a12ea3ed5ced8741ec163a238227eab4be740265295ba",
+    "golden_tops": [
+      "mg_04071"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.mg_04071.f57b3597d9054239",
+    "parent_id": "s1p.9a878903668dca5c45a1",
+    "revised_tops": [
+      "mg_04071"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_04071",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.9a878903668dca5c45a1.71a0d84d82c9",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The enabled7-bit shift history, current-input exclusion and combinational exact-pattern detector match; reset clears history.",
+        "rtl_excerpt": "data <= { data[5:0], j || se0 };",
+        "specification_excerpt": "`7'b0101010`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.9a878903668dca5c45a1",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "9149b37292fb07890d548c6df7151688528b49dcd595698ea7cb6d627b9b1f0e",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9a878903668dca5c45a168fecc6e0f917b7ca9a1c43014d8b6b731930f89c349",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04071.f57b3597d9054239/private/historical_harness/00_sec_mg_04071.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04071.f57b3597d9054239/private/historical_harness/01_sec_mg_04071.tcl"
+  ],
+  "parent_id": "s1p.9a878903668dca5c45a1",
+  "primary_review": {
+    "case_id": "s1derived.9a878903668dca5c45a1.71a0d84d82c9",
+    "checks": {
+      "behavior": "Shift behavior is stated, but the defining sync condition is cut off.",
+      "boundaries": "Address and data widths, disabled cycles, default/illegal cases, and simultaneous controls were checked for this module.",
+      "interface": "All named ports, directions, and widths match the complete RTL interface.",
+      "rtl_reasonableness": "RTL compiles and is a coherent standalone implementation with no missing dependency.",
+      "sequential_and_reset": "Clock edge, reset polarity/timing, enable, and hold behavior were compared directly."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Shift behavior is stated, but the defining sync condition is cut off.",
+        "rtl_excerpt": "assign sync = (data == 7'b0101010 && !j && !se0); \n always @(posedge clk or negedge rst_n) begin \n  if (!rst_n) begin \n  data <= 1'd0; \n  en",
+        "specification_excerpt": ".\n\nOutput: A synchronization pulse (sync) is asserted high only when the shift register contains the"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification truncates before completing the sync assertion condition and omits reset/hold observability.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.9a878903668dca5c45a1",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_08/s1derived.9a878903668dca5c45a1.71a0d84d82c9.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "9a878903668dca5c45a168fecc6e0f917b7ca9a1c43014d8b6b731930f89c349",
+    "source_group": "S5",
+    "specification_sha256": "71a0d84d82c99c1c864b0373b56b308beb32b4c7492c3b31bb0489149a59e761",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_08/s1derived.9a878903668dca5c45a1.71a0d84d82c9.md",
+  "qualified_specification_sha256": "9149b37292fb07890d548c6df7151688528b49dcd595698ea7cb6d627b9b1f0e",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04071.f57b3597d9054239/private/golden_design.v",
+  "rtl_sha256": "9a878903668dca5c45a168fecc6e0f917b7ca9a1c43014d8b6b731930f89c349",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_04071.f57b3597d9054239/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "71a0d84d82c99c1c864b0373b56b308beb32b4c7492c3b31bb0489149a59e761",
+  "top_module": "mg_04071"
+}

@@ -1,0 +1,97 @@
+module origen_005591 (
+    input wire clock_40MHz,
+    output reg clock_1MHz,
+    output reg clock_100KHz,
+    output reg clock_10KHz,
+    output reg clock_1KHz,
+    output reg clock_100Hz,
+    output reg clock_10Hz,
+    output reg clock_1Hz
+);
+
+    reg [4:0] count_1MHz;
+    reg [2:0] count_100KHz, count_10KHz, count_1KHz, count_100Hz, count_10Hz, count_1Hz;
+    reg clock_1MHz_int, clock_100KHz_int, clock_10KHz_int, clock_1KHz_int, clock_100Hz_int, clock_10Hz_int, clock_1Hz_int;
+
+    // 40MHz to 1MHz
+    always @(posedge clock_40MHz) begin
+        if (count_1MHz == 5'd19) begin
+            count_1MHz <= 5'd0;
+            clock_1MHz_int <= ~clock_1MHz_int;
+        end else begin
+            count_1MHz <= count_1MHz + 5'd1;
+        end
+    end
+
+    // 1MHz to 100KHz
+    always @(posedge clock_1MHz_int) begin
+        if (count_100KHz == 3'd4) begin
+            count_100KHz <= 3'd0;
+            clock_100KHz_int <= ~clock_100KHz_int;
+        end else begin
+            count_100KHz <= count_100KHz + 3'd1;
+        end
+    end
+
+    // 100KHz to 10KHz
+    always @(posedge clock_100KHz_int) begin
+        if (count_10KHz == 3'd4) begin
+            count_10KHz <= 3'd0;
+            clock_10KHz_int <= ~clock_10KHz_int;
+        end else begin
+            count_10KHz <= count_10KHz + 3'd1;
+        end
+    end
+
+    // 10KHz to 1KHz
+    always @(posedge clock_10KHz_int) begin
+        if (count_1KHz == 3'd4) begin
+            count_1KHz <= 3'd0;
+            clock_1KHz_int <= ~clock_1KHz_int;
+        end else begin
+            count_1KHz <= count_1KHz + 3'd1;
+        end
+    end
+
+    // 1KHz to 100Hz
+    always @(posedge clock_1KHz_int) begin
+        if (count_100Hz == 3'd4) begin
+            count_100Hz <= 3'd0;
+            clock_100Hz_int <= ~clock_100Hz_int;
+        end else begin
+            count_100Hz <= count_100Hz + 3'd1;
+        end
+    end
+
+    // 100Hz to 10Hz
+    always @(posedge clock_100Hz_int) begin
+        if (count_10Hz == 3'd4) begin
+            count_10Hz <= 3'd0;
+            clock_10Hz_int <= ~clock_10Hz_int;
+        end else begin
+            count_10Hz <= count_10Hz + 3'd1;
+        end
+    end
+
+    // 10Hz to 1Hz
+    always @(posedge clock_10Hz_int) begin
+        if (count_1Hz == 3'd4) begin
+            count_1Hz <= 3'd0;
+            clock_1Hz_int <= ~clock_1Hz_int;
+        end else begin
+            count_1Hz <= count_1Hz + 3'd1;
+        end
+    end
+
+    // Synchronize output clocks
+    always @(posedge clock_40MHz) begin
+        clock_1MHz <= clock_1MHz_int;
+        clock_100KHz <= clock_100KHz_int;
+        clock_10KHz <= clock_10KHz_int;
+        clock_1KHz <= clock_1KHz_int;
+        clock_100Hz <= clock_100Hz_int;
+        clock_10Hz <= clock_10Hz_int;
+        clock_1Hz <= clock_1Hz_int;
+    end
+
+endmodule

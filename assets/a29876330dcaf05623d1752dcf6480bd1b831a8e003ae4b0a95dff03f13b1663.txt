@@ -1,0 +1,62 @@
+module origen_110268 #(parameter N=64, L=128) (
+    input clk, reset,
+    input writereq, readreq, instrreq,
+    input [31:0] writeadr, instradr, readadr,
+    input [31:0] writedata,
+    input [7:0] checka,
+    output reg [31:0] instr, readdata,
+    output reg instrval, readval, writeval,
+    output [31:0] check
+);
+
+    reg [N-1:0] memory [0:L-1];
+    reg [3:0] instrcnt, readcnt, writecnt;
+    reg [31:0] instradr2, readadr2, writeadr2;
+
+    initial $readmemh("memfile.dat", memory);
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            instrcnt <= 0;
+            readcnt <= 0;
+            writecnt <= 0;
+            instrval <= 0;
+            readval <= 0;
+            writeval <= 0;
+        end else begin
+            if (instrreq) instrcnt <= 9;
+            else if (instrcnt > 0) instrcnt <= instrcnt - 1;
+
+            if (readreq) readcnt <= 9;
+            else if (readcnt > 0) readcnt <= readcnt - 1;
+
+            if (writereq) writecnt <= 9;
+            else if (writecnt > 0) writecnt <= writecnt - 1;
+
+            instrval <= (instrcnt > 0 && instrcnt < 9);
+            readval <= (readcnt > 0 && readcnt < 9);
+            writeval <= (writecnt > 0 && writecnt < 9);
+        end
+    end
+
+    always @(posedge clk) begin
+        instradr2 <= {instradr[31:2], 2'b00} + (instrcnt << 2);
+        readadr2 <= {readadr[31:2], 2'b00} + (readcnt << 2);
+        writeadr2 <= {writeadr[31:2], 2'b00} + (writecnt << 2);
+
+        if (instrcnt == 1)
+            instr <= instradr2[2] ? memory[instradr2[31:3]][63:32] : memory[instradr2[31:3]][31:0];
+
+        if (readcnt == 1)
+            readdata <= readadr2[2] ? memory[readadr2[31:3]][63:32] : memory[readadr2[31:3]][31:0];
+
+        if (writecnt == 1)
+            if (writeadr2[2])
+                memory[writeadr2[31:3]][63:32] <= writedata;
+            else
+                memory[writeadr2[31:3]][31:0] <= writedata;
+    end
+
+    assign check = 32'h0; // Placeholder for check functionality
+
+endmodule

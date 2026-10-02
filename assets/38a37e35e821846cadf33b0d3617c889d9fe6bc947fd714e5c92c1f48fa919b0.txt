@@ -1,0 +1,113 @@
+{
+  "already_frozen": false,
+  "always_blocks": 10,
+  "array_declarations": 0,
+  "balanced_slice": "slice_18",
+  "branch_keywords": 25,
+  "candidate_id": "large_module.4f70692f50b8356578d5",
+  "clock_edge_mentions": 20,
+  "code_lines": 153,
+  "compile_command": [
+    "iverilog",
+    "-g2012",
+    "-tnull",
+    "-s",
+    "rtlpp_10999",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/candidates/complexity_expansion_20260913_v1/payloads/large_module.4f70692f50b8356578d5/private/golden_design.v"
+  ],
+  "compile_is_not_synthesis_or_formal_qualification": true,
+  "compile_status": "standalone_compile_pass",
+  "formal_gate": "pending",
+  "formal_route_hint": "SEC_review",
+  "formal_script_retained": true,
+  "golden_sha256": "0022e156834a15b5b49974b42565abf1d1b54f09b67a5f5e790bb0d542236b5b",
+  "inventory_state": "candidate_not_frozen",
+  "module_names": [
+    "rtlpp_10999"
+  ],
+  "normalized_rtl_sha256": "4f70692f50b8356578d571d3988952ae8c656c3ad2c5c07351d0a588c3b08aef",
+  "operator_tokens": 1,
+  "paired_specification": true,
+  "parent_id": "s1p.0022e156834a15b5b499",
+  "parent_provenance": {
+    "manifest": "scope1/task1_3_round_trip_generation/cases/imports/legacy_slices_20/slice_01.jsonl",
+    "row_index": 310,
+    "rtl_key": "rtlpp_10999_combined.v"
+  },
+  "project_id": "RTL-Dataset-RTLPP",
+  "review_flags": {
+    "initial_blocks": 0,
+    "semantic_clone_review": "pending; token-distinct versions across repositories may share an implementation",
+    "simulation_time_types": false,
+    "specify_timing_blocks": false,
+    "system_tasks": []
+  },
+  "rtl_sha256": "0022e156834a15b5b49974b42565abf1d1b54f09b67a5f5e790bb0d542236b5b",
+  "rtl_tokens": 842,
+  "size_tier": "150\u2013399",
+  "source_group": "S4",
+  "specification_gate": "pending",
+  "specification_provenance": {
+    "candidate_id": "s1spec.0022e156834a15b5b499.28954712360e",
+    "design_type": "sequential",
+    "deterministic_gate": {
+      "checks": {
+        "minimum_length": true,
+        "no_exact_160_char_rtl_overlap": true,
+        "no_fenced_rtl": true,
+        "no_rtl_statement_block": true,
+        "public_interface_coverage": false
+      },
+      "named_public_ports": [
+        "irq",
+        "address",
+        "chipselect"
+      ],
+      "passed": false,
+      "public_interface_coverage": 0.375,
+      "public_ports": [
+        "irq",
+        "readdata",
+        "address",
+        "chipselect",
+        "clk",
+        "reset_n",
+        "write_n",
+        "writedata"
+      ],
+      "rtl_statement_hits": 0,
+      "spec_chars": 2576
+    },
+    "failed_checks": [
+      "public_interface_coverage"
+    ],
+    "loc": 176,
+    "normalization_transforms": [
+      "rename_top:nios_system_timer_system->rtlpp_10999"
+    ],
+    "normalized_specification_sha256": "28954712360eff16c5e5f680e6340fb298e5367e0284e4db0ea6992ac39f9239",
+    "pair_integrity_pass": true,
+    "parent_id": "s1p.0022e156834a15b5b499",
+    "parent_sha256": "0022e156834a15b5b49974b42565abf1d1b54f09b67a5f5e790bb0d542236b5b",
+    "prefilter_pass": false,
+    "primary_script_key": "sec_rtlpp_10999.tcl",
+    "raw_code_sha256": "e4d9128caf7f24303f6de93f1f2718a4755a2266577b5c146a8a83f2fb439b04",
+    "raw_specification_sha256": "2b11ba2f45674da24f0e5766a15c02baa2b2ce28229c47e70b60042804a757a2",
+    "repair_status": "requires_specification_repair",
+    "schema_version": "1.0",
+    "slice": "slice_01",
+    "slice_row_index": 310,
+    "source_corpus": "RTL-Dataset-RTLPP",
+    "source_path": "/home/jwangjw/project_3rd/Comprehensive-RTL-Bench/Universal-Datasets/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP/RTLPP.jsonl",
+    "source_row": 10999,
+    "source_subset": "RTLPP",
+    "specification": "The NIOS system timer is designed to generate a periodic interrupt signal and manage the timing operations within the system. The timer is controlled via a set of control, period, and snapshot registers, which can be read from or written to using an address bus. The module primarily includes the following features and operations:\n\n1. **Primary Function:**\n    The module functions as a timer that counts down from a preset value and generates an interrupt when it reaches zero. It supports both periodic and one-shot operations with the capability to start, stop, and reload the counter.\n\n2. **Key Control Flow:**\n    - The reset signal initializes several registers and control flags.\n    - The counter operates based on start, stop, and reload strobe signals.\n    - Control decisions include starting the counter (`start_strobe`), stopping the counter (`stop_strobe`), and forcing a reload (`force_reload`).\n    - The continuous operation mode is controlled by the `control_continuous` flag, determining whether the counter restarts automatically upon reaching zero.\n\n3. **Important Data Processing and Signal Interactions:**\n    - The main counter (`internal_counter`) is loaded with a value formed by combining the high and low period registers (`period_h_register` and `period_l_register`) when it is either initialized or reloaded.\n    - The `timeout_event` occurs when the counter reaches zero, and a delayed signal ensures it is a one-time event.\n    - The timer can operate in continuous mode or single-shot mode based on the control register.\n    - The interrupt request signal (`irq`) is triggered when a timeout occurs and the interrupt enable bit is set in the control register.\n    - Reading and writing to the timer\u2019s registers is handled via a multiplexer (`read_mux_out`), which serves the requested data based on the address.\n    - Period registers and control registers are written to when the corresponding address and write signals are active, managing the timer\u2019s configuration.\n\n```plaintext\n# Verilog code description\nCreate a Verilog module named 'rtlpp_10999' which includes:\n- Interface for address, chipselect, clock, reset, write enable, write data, interrupt request, and read data.\n- Registers and wires for various control and status flags, counters, periods, and snapshots.\n- Logic for initializing and updating the counter, control registers, period registers, and interrupt status.\n- Logic for generating strobe signals to start, stop, snap, and control the timer.\n- Logic for handling read/write operations based on address selection.\n```\n",
+    "split_group": "parent:0022e156834a15b5b49974b42565abf1d1b54f09b67a5f5e790bb0d542236b5b",
+    "top_module": "rtlpp_10999",
+    "verification_tool": "jaspergold",
+    "verification_type": "SEC"
+  },
+  "specification_sha256": "28954712360eff16c5e5f680e6340fb298e5367e0284e4db0ea6992ac39f9239",
+  "top_module": "rtlpp_10999",
+  "workspace": "payloads/large_module.4f70692f50b8356578d5"
+}

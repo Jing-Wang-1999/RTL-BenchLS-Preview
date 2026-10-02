@@ -1,0 +1,55 @@
+module __formal113_core_c05b43c94cae76e0d6a5 (
+  nvdla_core_clk, nvdla_core_rstn, chn_a_rsci_oswt, core_wen, chn_a_rsci_iswt0, chn_a_rsci_ld_core_psct,
+      core_wten, chn_a_rsci_biwt, chn_a_rsci_bdwt, chn_a_rsci_ld_core_sct, chn_a_rsci_vd
+);
+  input nvdla_core_clk;
+  input nvdla_core_rstn;
+  input chn_a_rsci_oswt;
+  input core_wen;
+  input chn_a_rsci_iswt0;
+  input chn_a_rsci_ld_core_psct;
+  input core_wten;
+  output chn_a_rsci_biwt;
+  output chn_a_rsci_bdwt;
+  output chn_a_rsci_ld_core_sct;
+  input chn_a_rsci_vd;
+
+
+  // Interconnect Declarations
+  wire chn_a_rsci_ogwt;
+  wire chn_a_rsci_pdswt0;
+  reg chn_a_rsci_icwt;
+
+
+  // Interconnect Declarations for Component Instantiations 
+  assign chn_a_rsci_pdswt0 = (~ core_wten) & chn_a_rsci_iswt0;
+  assign chn_a_rsci_biwt = chn_a_rsci_ogwt & chn_a_rsci_vd;
+  assign chn_a_rsci_ogwt = chn_a_rsci_pdswt0 | chn_a_rsci_icwt;
+  assign chn_a_rsci_bdwt = chn_a_rsci_oswt & core_wen;
+  assign chn_a_rsci_ld_core_sct = chn_a_rsci_ld_core_psct & chn_a_rsci_ogwt;
+  always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
+    if ( ~ nvdla_core_rstn ) begin
+      chn_a_rsci_icwt <= 1'b0;
+    end
+    else begin
+      chn_a_rsci_icwt <= ~((~(chn_a_rsci_icwt | chn_a_rsci_pdswt0)) | chn_a_rsci_biwt);
+    end
+  end
+endmodule
+module HLS_fp16_to_fp17_core_chn_a_rsci_chn_a_wait_ctrl(
+  input wire  nvdla_core_clk,
+  input wire  nvdla_core_rstn,
+  input wire  chn_a_rsci_oswt,
+  input wire  core_wen,
+  input wire  chn_a_rsci_iswt0,
+  input wire  chn_a_rsci_ld_core_psct,
+  input wire  core_wten,
+  output wire  chn_a_rsci_biwt,
+  output wire  chn_a_rsci_bdwt,
+  output wire  chn_a_rsci_ld_core_sct,
+  input wire  chn_a_rsci_vd
+);
+wire [0:0] __negative_output;
+__formal113_core_c05b43c94cae76e0d6a5 dut(.nvdla_core_clk(nvdla_core_clk), .nvdla_core_rstn(nvdla_core_rstn), .chn_a_rsci_oswt(chn_a_rsci_oswt), .core_wen(core_wen), .chn_a_rsci_iswt0(chn_a_rsci_iswt0), .chn_a_rsci_ld_core_psct(chn_a_rsci_ld_core_psct), .core_wten(core_wten), .chn_a_rsci_biwt(__negative_output), .chn_a_rsci_bdwt(chn_a_rsci_bdwt), .chn_a_rsci_ld_core_sct(chn_a_rsci_ld_core_sct), .chn_a_rsci_vd(chn_a_rsci_vd));
+assign chn_a_rsci_biwt = __negative_output ^ 1'd1;
+endmodule

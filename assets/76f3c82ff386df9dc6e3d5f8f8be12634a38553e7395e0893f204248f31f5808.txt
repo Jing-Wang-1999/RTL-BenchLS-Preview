@@ -1,0 +1,21 @@
+# Module Specification: mg_08290
+
+## Purpose
+This module implements a configurable pipeline register chain for delaying data signals by a specified number of clock cycles.
+
+## Parameters
+- **data_width**: Defines the bit-width of the data being pipelined (default: 32 bits)
+- **pipe_steps**: Specifies the number of pipeline stages/delay cycles (default: 0)
+- **keep_register_names**: Synthesis attribute to preserve register names during optimization (default: "YES")
+
+## Inputs
+- **CLK**: Clock signal that synchronizes all pipeline registers
+- **data**: Input data bus of width `data_width` to be pipelined
+
+## Outputs
+- **piped_data**: Output data bus of width `data_width` containing the delayed data
+
+## Behavior
+The module creates a chain of registers to delay the input data:
+
+- **When pipe_steps > 0**: Creates an array of `pipe_steps` registers. On each clock rising edge, data propag

@@ -1,0 +1,95 @@
+module origen_092256 (
+    input wire clk,
+    input wire reset,
+    input wire FlushE,
+    
+    // Control signals
+    input wire [1:0] RegDstD,
+    input wire MemtoRegD,
+    input wire MemWriteD,
+    input wire [1:0] ALUOpD,
+    input wire ALUsrcD,
+    input wire RegWriteD,
+    
+    // Register addresses
+    input wire [4:0] RsD,
+    input wire [4:0] RtD,
+    input wire [4:0] RdD,
+    
+    // Data values
+    input wire [31:0] PC8D,
+    input wire [31:0] RD1D,
+    input wire [31:0] RD2D,
+    input wire [31:0] extD,
+    
+    // Instruction type flags
+    input wire cal_rD,
+    input wire cal_iD,
+    input wire ldD,
+    input wire stD,
+    input wire jalD,
+    
+    // Output signals
+    output reg [1:0] RegDstE,
+    output reg MemtoRegE,
+    output reg MemWriteE,
+    output reg [1:0] ALUOpE,
+    output reg ALUsrcE,
+    output reg RegWriteE,
+    output reg [4:0] RsE,
+    output reg [4:0] RtE,
+    output reg [4:0] RdE,
+    output reg [31:0] PC8E,
+    output reg [31:0] RD1E,
+    output reg [31:0] RD2E,
+    output reg [31:0] extE,
+    output reg cal_rE,
+    output reg cal_iE,
+    output reg ldE,
+    output reg stE,
+    output reg jalE
+);
+
+    always @(posedge clk or posedge reset) begin
+        if (reset || FlushE) begin
+            RegDstE <= 2'b0;
+            MemtoRegE <= 1'b0;
+            MemWriteE <= 1'b0;
+            ALUOpE <= 2'b0;
+            ALUsrcE <= 1'b0;
+            RegWriteE <= 1'b0;
+            RsE <= 5'b0;
+            RtE <= 5'b0;
+            RdE <= 5'b0;
+            PC8E <= 32'b0;
+            RD1E <= 32'b0;
+            RD2E <= 32'b0;
+            extE <= 32'b0;
+            cal_rE <= 1'b0;
+            cal_iE <= 1'b0;
+            ldE <= 1'b0;
+            stE <= 1'b0;
+            jalE <= 1'b0;
+        end else begin
+            RegDstE <= RegDstD;
+            MemtoRegE <= MemtoRegD;
+            MemWriteE <= MemWriteD;
+            ALUOpE <= ALUOpD;
+            ALUsrcE <= ALUsrcD;
+            RegWriteE <= RegWriteD;
+            RsE <= RsD;
+            RtE <= RtD;
+            RdE <= RdD;
+            PC8E <= PC8D;
+            RD1E <= RD1D;
+            RD2E <= RD2D;
+            extE <= extD;
+            cal_rE <= cal_rD;
+            cal_iE <= cal_iD;
+            ldE <= ldD;
+            stE <= stD;
+            jalE <= jalD;
+        end
+    end
+
+endmodule

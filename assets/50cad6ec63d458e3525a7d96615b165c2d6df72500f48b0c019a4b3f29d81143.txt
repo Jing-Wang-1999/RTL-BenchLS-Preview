@@ -1,0 +1,59 @@
+module origen_143556 (
+    input wire clk,
+    input wire [15:0] angle,
+    input wire [15:0] scale,
+    output wire [15:0] dds_data
+);
+
+    wire [15:0] sine_wave;
+    wire [33:0] scaled_sine;
+
+    // Instantiate ad_dds_sine module
+    ad_dds_sine sine_gen (
+        .clk(clk),
+        .angle(angle),
+        .sine(sine_wave)
+    );
+
+    // Instantiate ad_mul module
+    ad_mul multiplier (
+        .clk(clk),
+        .data_a(sine_wave),
+        .data_b(scale),
+        .data_p(scaled_sine)
+    );
+
+    // Extract 16 most significant bits of scaled sine wave
+    assign dds_data = scaled_sine[33:18];
+
+endmodule
+
+// ad_dds_sine module
+module ad_dds_sine (
+    input wire clk,
+    input wire [15:0] angle,
+    output reg [15:0] sine
+);
+
+    // Sine wave generation logic (implementation details omitted)
+    always @(posedge clk) begin
+        // Generate sine wave based on angle
+        // (Actual implementation would use a lookup table or CORDIC algorithm)
+    end
+
+endmodule
+
+// ad_mul module
+module ad_mul (
+    input wire clk,
+    input wire [15:0] data_a,
+    input wire [15:0] data_b,
+    output reg [33:0] data_p
+);
+
+    // Multiplication logic
+    always @(posedge clk) begin
+        data_p <= data_a * data_b;
+    end
+
+endmodule

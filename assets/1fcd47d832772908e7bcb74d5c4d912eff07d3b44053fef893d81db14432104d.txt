@@ -1,0 +1,7 @@
+# autovcoder_097057
+
+This configurable dual-edge register has parameters `ActiveLevel = 1` and `NrOfBits = 1`. Inputs are `Clock`, `ClockEnable`, `D[NrOfBits-1:0]`, active-high asynchronous `Reset`, `Tick`, active-high output-disable `cs`, and active-high asynchronous preset `pre`. Output `Q` is `NrOfBits` bits.
+
+Two registers capture `D`: one on rising `Clock` edges and one on falling edges. For each register, `Reset` asynchronously clears all bits and has priority over `pre`; `pre` asynchronously sets all bits; otherwise `D` is captured on that register's clock edge only when both `ClockEnable` and `Tick` are high, and the register holds otherwise. The rising-edge register also initializes to zero in simulation; the falling-edge register has no initial assignment and requires reset or preset for a known initial value.
+
+When `cs=1`, `Q` is all high impedance. When `cs=0`, a nonzero `ActiveLevel` selects the rising-edge register and zero selects the falling-edge register. There are no submodules.

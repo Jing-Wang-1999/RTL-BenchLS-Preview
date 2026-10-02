@@ -1,0 +1,42 @@
+always @(*) begin
+    nx_state = state;
+    case (state)
+      STATE_IDLE: begin
+        if (response_dest_valid == 1'b1) begin
+          nx_state = STATE_ACC;
+        end else if (|to_complete_count) begin
+          if (transfer_id == completion_transfer_id)
+            nx_state = STATE_ZERO_COMPL;
+        end
+      end
+      STATE_ACC: begin
+        nx_state = STATE_WRITE_RESPR;
+      end
+      STATE_WRITE_RESPR: begin
+        if (response_ready == 1'b1) begin
+          if (|to_complete_count && transfer_id == completion_transfer_id) begin
+            nx_state = STATE_ZERO_COMPL;
+          end else begin
+            nx_state = STATE_IDLE;
+          end
+        end
+      end
+      STATE_ZERO_COMPL: begin
+        if (|to_complete_count) begin
+          nx_state = STATE_WRITE_ZRCMPL;
+        end else begin
+          if (completion_req_last_found == 1'b1) begin
+            nx_state = STATE_IDLE;
+          end
+        end
+      end
+      STATE_WRITE_ZRCMPL:begin
+        if (response_ready == 1'b1) begin
+          nx_state = STATE_ZERO_COMPL;
+        end
+      end
+      default: begin
+        nx_state = STATE_IDLE;
+      end
+    endcase
+  end

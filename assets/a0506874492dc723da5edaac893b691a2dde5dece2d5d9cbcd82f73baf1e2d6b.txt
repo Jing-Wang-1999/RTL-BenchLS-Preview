@@ -1,0 +1,105 @@
+module autovcoder_009662 #(
+    parameter DATA_WIDTH = 8,
+    parameter ADDRESS_WIDTH = 8,
+    parameter BUFFER_SIZE = 3,
+    parameter BUFFER_SIZE_WIDTH =	((BUFFER_SIZE+1) <= 2) ? 1 :	//wide enough to hold value BUFFER_SIZE + 1
+    ((BUFFER_SIZE+1) <= 4) ? 2 :
+									((BUFFER_SIZE+1) <= 8) ? 3 :
+									((BUFFER_SIZE+1) <= 16) ? 4 :
+									((BUFFER_SIZE+1) <= 32) ? 5 :
+									((BUFFER_SIZE+1) <= 64) ? 6 : 7
+) (
+    input wire clk,
+    input wire rst,
+    input wire advanceRead,  //Advance selected read RAM by one
+    input wire advanceWrite, //Advance selected write RAM by one	
+
+    input  wire [       DATA_WIDTH-1:0] writeData,
+    input  wire [    ADDRESS_WIDTH-1:0] writeAddress,
+    input  wire                         writeEnable,
+    output reg  [BUFFER_SIZE_WIDTH-1:0] fillCount,
+
+    output wire [DATA_WIDTH-1:0] readData0,  //Read from deepest RAM (earliest data), at readAddress
+    output wire [DATA_WIDTH-1:0]	readData1,		//Read from second deepest RAM (second earliest data), at readAddress
+    output wire [DATA_WIDTH-1:0]	readData2,		//Read from third deepest RAM (third earliest data), at readAddress
+    input wire [ADDRESS_WIDTH-1:0] readAddress
+);
+
+  reg [BUFFER_SIZE-1:0] writeSelect;
+  reg [BUFFER_SIZE-1:0] readSelect;
+
+  //Read select ring register
+  always @(posedge clk or posedge rst) begin
+    if (rst) readSelect <= {1'b1, {(BUFFER_SIZE - 1) {1'b0}}};  //Mod for demosaic, normally 1
+    else begin
+      if (advanceRead) begin
+        readSelect <= {readSelect[BUFFER_SIZE-2 : 0], readSelect[BUFFER_SIZE-1]};
+      end
+    end
+  end
+
+  //Write select ring register
+  always @(posedge clk or posedge rst) begin
+    if (rst) writeSelect <= 1;
+    else begin
+      if (advanceWrite) begin
+        writeSelect <= {writeSelect[BUFFER_SIZE-2 : 0], writeSelect[BUFFER_SIZE-1]};
+      end
+    end
+  end
+
+  wire [DATA_WIDTH-1:0] ramDataOut[2**BUFFER_SIZE-1:0];
+
+  //Generate to instantiate the RAMs
+  generate
+    genvar i;
+    for (i = 0; i < BUFFER_SIZE; i = i + 1) begin : ram_generate
+
+      ramDualPort #(
+          .DATA_WIDTH(DATA_WIDTH),
+          .ADDRESS_WIDTH(ADDRESS_WIDTH)
+      ) ram_inst_i (
+          .clk(clk),
+
+          //Port A is written to, port B is read from
+          .addrA(writeAddress),
+          .dataA(writeData),
+          .weA((writeSelect[i] == 1'b1) ? writeEnable : 1'b0),
+          .qA(),
+
+          .addrB(readAddress),
+          .dataB(0),
+          .weB(1'b0),
+          .qB(ramDataOut[2**i])
+      );
+    end
+  endgenerate
+
+  //Select which ram to read from
+  wire [BUFFER_SIZE-1:0] readSelect0 = readSelect;
+  wire [BUFFER_SIZE-1:0] readSelect1 = (readSelect << 1) | readSelect[BUFFER_SIZE-1];
+  wire [BUFFER_SIZE-1:0] readSelect2 = (readSelect << 2) | readSelect[BUFFER_SIZE-1:BUFFER_SIZE-2];
+
+  //Steer the output data to the right ports
+  assign readData0 = ramDataOut[readSelect0];
+  assign readData1 = ramDataOut[readSelect1];
+  assign readData2 = ramDataOut[readSelect2];
+
+
+  //Keep track of fill level
+  always @(posedge clk or posedge rst) begin
+    if (rst) begin
+      fillCount <= 1;		//Mod for demosaic, normally 0. The first line has to come out of readData1, the invalid data from readData0 will be masked
+    end else begin
+      if (advanceWrite) begin
+        if (advanceRead) fillCount <= fillCount;
+        else fillCount <= fillCount + 1;
+      end else begin
+        if (advanceRead) fillCount <= fillCount - 1;
+        else fillCount <= fillCount;
+      end
+    end
+  end
+
+endmodule
+

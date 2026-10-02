@@ -1,0 +1,10 @@
+always @(posedge clk) begin
+    if (reset)
+      index <= 0;
+    else if (penable && !stalled) begin
+      if (jmp)
+        index <= din;
+      else
+        index <= index == pend ? wrap_target : index + 1;
+    end
+  end

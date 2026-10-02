@@ -1,0 +1,27 @@
+**Instruction to Generate Verilog Code:**
+
+Design a Verilog module named `rtlpp_04539` that performs floating-point addition and subtraction. The module operates over multiple clock cycles and has inputs for clock (`clk`), reset (`rst`), flush signal (`flush_i`), advance signal (`adv_i`), start signal (`start_i`), and subtraction indication (`is_sub_i`). It processes two floating-point numbers given by their sign, exponent, and fractional parts. 
+
+The core logic includes:
+1. **Input Evaluation and Calculation:**
+    - Determine if the operation involves infinity (`infa_i`, `infb_i`).
+    - Calculate the signs for the potential subtraction (`is_sub_i`).
+    - Select larger and smaller fractional parts based on exponent comparison (`addsub_agtb_i`).
+    - Compute the exponent difference to align the fractions before addition or subtraction.
+    - Evaluate invalid or special cases like NaNs (`snan_i`, `qnan_i`).
+2. **State Register Updates:**
+    - If `adv_i` is asserted, update intermediate registers reflecting the control signals and aligned fractional parts.
+    - Maintain ready flags, reset with `rst` or `flush_i`.
+3. **Fraction Shifting:**
+    - Based on exponent difference, right-shift the smaller fraction for alignment.
+    - Compute sticky bit to include any bits lost during shifting.
+4. **Addition/Subtraction Logic:**
+    - Perform the arithmetic based on the operation type (addition or subtraction).
+    - Account for the result's sign and potential sticky bit.
+5. **Normalization and Leading Zero Count:**
+    - Normalize the result by counting leading zeros and adjust the exponent accordingly.
+
+Finally, update the output signals:
+- `add_rdy_o` for operation readiness.
+- `add_sign_o`, `add_sub_0_o`, `add_shr_o`, `add_shl_o`, `add_exp10sh0_o`, and `add_fract28_o` with computation results.
+- `add_inv_o`, `add_inf_o`, `add_snan_o`, `add_qnan_o`, and `add_anan_sign_o` for handling invalid or special cases.

@@ -1,0 +1,110 @@
+module altera_std_synchronizer (
+    input clk,
+    input din,
+    output dout,
+    input reset_n
+);
+  parameter depth = 2;
+  reg [depth-1:0] sync_reg;
+
+  always @(posedge clk or negedge reset_n)
+  begin
+      if (!reset_n)
+          sync_reg <= {depth{1'b0}};
+      else
+          sync_reg <= {sync_reg[depth-2:0], din};
+  end
+
+  assign dout = sync_reg[depth-1];
+endmodule
+
+module rtlpp_10856 (
+    input   clk,
+    input   [  1: 0] ir_in,
+    input   [ 37: 0] sr,
+    input   vs_udr,
+    input   vs_uir,
+
+    output  [ 37: 0] jdo,
+    output           take_action_break_a,
+    output           take_action_break_b,
+    output           take_action_break_c,
+    output           take_action_ocimem_a,
+    output           take_action_ocimem_b,
+    output           take_action_tracectrl,
+    output           take_no_action_break_a,
+    output           take_no_action_break_b,
+    output           take_no_action_break_c,
+    output           take_no_action_ocimem_a
+);
+
+reg              enable_action_strobe;
+reg     [  1: 0] ir;
+reg     [ 37: 0] jdo;
+reg              jxuir;
+reg              sync2_udr;
+reg              sync2_uir;
+wire             sync_udr;
+wire             sync_uir;
+wire             take_action_break_a;
+wire             take_action_break_b;
+wire             take_action_break_c;
+wire             take_action_ocimem_a;
+wire             take_action_ocimem_b;
+wire             take_action_tracectrl;
+wire             take_no_action_break_a;
+wire             take_no_action_break_b;
+wire             take_no_action_break_c;
+wire             take_no_action_ocimem_a;
+wire             unxunused_resetxx3;
+wire             unxunused_resetxx4;
+reg              update_jdo_strobe;
+
+assign unxunused_resetxx3 = 1'b1;
+assign unxunused_resetxx4 = 1'b1;
+
+altera_std_synchronizer the_altera_std_synchronizer3 (
+    .clk(clk),
+    .din(vs_udr),
+    .dout(sync_udr),
+    .reset_n(unxunused_resetxx3)
+);
+
+defparam the_altera_std_synchronizer3.depth = 2;
+
+altera_std_synchronizer the_altera_std_synchronizer4 (
+    .clk(clk),
+    .din(vs_uir),
+    .dout(sync_uir),
+    .reset_n(unxunused_resetxx4)
+);
+
+defparam the_altera_std_synchronizer4.depth = 2;
+
+always @(posedge clk) begin
+    sync2_udr <= sync_udr;
+    update_jdo_strobe <= sync_udr & ~sync2_udr;
+    enable_action_strobe <= update_jdo_strobe;
+    sync2_uir <= sync_uir;
+    jxuir <= sync_uir & ~sync2_uir;
+end
+
+assign take_action_ocimem_a = enable_action_strobe && (ir == 2'b00) && ~jdo[35] && jdo[34];
+assign take_no_action_ocimem_a = enable_action_strobe && (ir == 2'b00) && ~jdo[35] && ~jdo[34];
+assign take_action_ocimem_b = enable_action_strobe && (ir == 2'b00) && jdo[35];
+assign take_action_break_a = enable_action_strobe && (ir == 2'b10) && ~jdo[36] && jdo[37];
+assign take_no_action_break_a = enable_action_strobe && (ir == 2'b10) && ~jdo[36] && ~jdo[37];
+assign take_action_break_b = enable_action_strobe && (ir == 2'b10) && jdo[36] && ~jdo[35] && jdo[37];
+assign take_no_action_break_b = enable_action_strobe && (ir == 2'b10) && jdo[36] && ~jdo[35] && ~jdo[37];
+assign take_action_break_c = enable_action_strobe && (ir == 2'b10) && jdo[36] && jdo[35] && jdo[37];
+assign take_no_action_break_c = enable_action_strobe && (ir == 2'b10) && jdo[36] && jdo[35] && ~jdo[37];
+assign take_action_tracectrl = enable_action_strobe && (ir == 2'b11) && jdo[15];
+
+always @(posedge clk) begin
+    if (jxuir)
+        ir <= ir_in;
+    if (update_jdo_strobe)
+        jdo <= sr;
+end
+
+endmodule

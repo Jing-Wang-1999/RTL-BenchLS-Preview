@@ -1,0 +1,49 @@
+module autovcoder_102601 (
+    zn,
+    a1,
+    a2,
+    a3,
+    b1,
+    b2
+);
+  output zn;
+  input a1;
+  input a2;
+  input a3;
+  input b1;
+  input b2;
+  `protect
+  wire b2znstate0;
+
+  specify
+    // Pin-to-pin timing.
+    (a1 => zn) = (0, 0);
+    (a2 => zn) = (0, 0);
+    (a3 => zn) = (0, 0);
+    if ((!a1 & (!a2 & a3 | a2 & !a3) | a1 & !a3)) (b1 => zn) = (0, 0);
+    if ((!a1 & a2 & a3 | a1 & a3)) (b1 => zn) = (0, 0);
+    if (a1 & a2 & a3) (b2 => zn) = (0, 0);
+    if (b2znstate0) (b2 => zn) = (0, 0);
+    ifnone (b1 => zn) = (0, 0);
+    ifnone (b2 => zn) = (0, 0);
+  endspecify
+
+  // Gate-level description.
+  or _i0 (_n1, a3, a1, a2);
+  or _i1 (_n2, b1, b2);
+  nand _i2 (zn, _n1, _n2);
+
+  // Timing check and state logic.
+  not _wi0 (_wn2, a1);
+  not _wi1 (_wn5, a2);
+  and _wi2 (_wn4, _wn5, a3);
+  or _wi3 (_wn3, _wn4, a2);
+  and _wi4 (_wn1, _wn2, _wn3);
+  not _wi5 (_wn9, a3);
+  and _wi6 (_wn8, a2, _wn9);
+  or _wi8 (_wn7, _wn8, _wn5);
+  and _wi9 (_wn6, a1, _wn7);
+  or _wi10 (b2znstate0, _wn1, _wn6);
+  `endprotect
+endmodule
+

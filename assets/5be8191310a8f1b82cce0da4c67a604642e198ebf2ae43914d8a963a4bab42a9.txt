@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.ceb6ac3723365d2d3569.edbb1dc25032",
+  "compile_check": {
+    "case_id": "s1derived.ceb6ac3723365d2d3569.edbb1dc25032",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_06335",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_06335.e4635f6e57141f5b/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.ceb6ac3723365d2d3569",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "ceb6ac3723365d2d356964c9a422c36869a252e722d08f6798d8beee1a755a6a",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.ceb6ac3723365d2d3569.edbb1dc25032",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_06335.e4635f6e57141f5b/private/commercial_positive.log",
+    "commercial_log_sha256": "3793c943ec643906c10e72db06a29ac1b6fb891415ab6ac133f99e71671bd6d5",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_06335.e4635f6e57141f5b/private/historical_harness/00_sec_rtlpp_06335.tcl",
+    "executed_script_sha256": "e4480bfb2a0331054d54b298968b38ee22dc72fc7031e1ce654c33dd354f1a86",
+    "golden_tops": [
+      "rtlpp_06335"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.rtlpp_06335.e4635f6e57141f5b",
+    "parent_id": "s1p.ceb6ac3723365d2d3569",
+    "revised_tops": [
+      "rtlpp_06335"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_06335",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.ceb6ac3723365d2d3569.edbb1dc25032",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Default four-state one-shot machine samples B as level in Off, advances three asserted Moore states, and always includes an Off interval before retrigger. Asynchronous reset agrees.",
+        "rtl_excerpt": "S_On3: begin",
+        "specification_excerpt": "another three-cycle high interval"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.ceb6ac3723365d2d3569",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "865a80ad292b2dd462498c93d9ffaf9e3321fba6cf593a01b5ab018e6cd0eda6",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "ceb6ac3723365d2d356964c9a422c36869a252e722d08f6798d8beee1a755a6a",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_06335.e4635f6e57141f5b/private/historical_harness/00_sec_rtlpp_06335.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_06335.e4635f6e57141f5b/private/historical_harness/01_sec_rtlpp_06335.tcl"
+  ],
+  "parent_id": "s1p.ceb6ac3723365d2d3569",
+  "primary_review": {
+    "case_id": "s1derived.ceb6ac3723365d2d3569.edbb1dc25032",
+    "checks": {
+      "behavior": "B is level-sensitive in Off; a B held high retriggers after every three-cycle high interval, contrary to a transition/pulse requirement.",
+      "boundaries": "Checked defaults, rollover, handshake, initialization, and exhaustive cases as applicable.",
+      "interface": "Compared every top-level port, direction, width, and parameter default.",
+      "rtl_reasonableness": "Reasonable hardware.",
+      "sequential_and_reset": "Checked combinational or edge behavior, reset, priority, enable, and hold semantics."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "B is level-sensitive in Off; a B held high retriggers after every three-cycle high interval, contrary to a transition/pulse requirement.",
+        "rtl_excerpt": "S_Off tests B level; S_On3 returns S_Off",
+        "spec_excerpt": "a pulse on input B (a transition from 0 to 1)"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "B is level-sensitive in Off; a B held high retriggers after every three-cycle high interval, contrary to a transition/pulse requirement.",
+        "rtl_evidence": "S_Off tests B level; S_On3 returns S_Off",
+        "spec_evidence": "a pulse on input B (a transition from 0 to 1)",
+        "type": "level_vs_pulse"
+      }
+    ],
+    "parent_id": "s1p.ceb6ac3723365d2d3569",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_06/s1derived.ceb6ac3723365d2d3569.edbb1dc25032.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "ceb6ac3723365d2d356964c9a422c36869a252e722d08f6798d8beee1a755a6a",
+    "source_group": "S4",
+    "specification_sha256": "edbb1dc250320f65e60b47bc9a31461b487f8335fb99e01134e8aab06d09567b",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_06/s1derived.ceb6ac3723365d2d3569.edbb1dc25032.md",
+  "qualified_specification_sha256": "865a80ad292b2dd462498c93d9ffaf9e3321fba6cf593a01b5ab018e6cd0eda6",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_06335.e4635f6e57141f5b/private/golden_design.v",
+  "rtl_sha256": "ceb6ac3723365d2d356964c9a422c36869a252e722d08f6798d8beee1a755a6a",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_06335.e4635f6e57141f5b/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "edbb1dc250320f65e60b47bc9a31461b487f8335fb99e01134e8aab06d09567b",
+  "top_module": "rtlpp_06335"
+}

@@ -1,0 +1,57 @@
+module origen_146175(
+    input [3:0] a,
+    input [3:0] b,
+    output [4:0] sum
+);
+    assign sum = a + b;
+endmodule
+
+module multiplier_4bit(
+    input [3:0] a,
+    input [3:0] b,
+    output [7:0] product
+);
+    assign product = a * b;
+endmodule
+
+module functional_module(
+    input [4:0] adder_out,
+    input [7:0] multiplier_out,
+    output [8:0] final_out
+);
+    assign final_out = adder_out + multiplier_out;
+endmodule
+
+module top_module(
+    input [3:0] adder_in1,
+    input [3:0] adder_in2,
+    input [3:0] multiplier_in1,
+    input [3:0] multiplier_in2,
+    input select,
+    output [8:0] final_output
+);
+    wire [4:0] adder_result;
+    wire [7:0] multiplier_result;
+    wire [8:0] functional_result;
+
+    adder_4bit adder_inst(
+        .a(adder_in1),
+        .b(adder_in2),
+        .sum(adder_result)
+    );
+
+    multiplier_4bit multiplier_inst(
+        .a(multiplier_in1),
+        .b(multiplier_in2),
+        .product(multiplier_result)
+    );
+
+    functional_module func_mod_inst(
+        .adder_out(adder_result),
+        .multiplier_out(multiplier_result),
+        .final_out(functional_result)
+    );
+
+    assign final_output = select ? functional_result : {1'b0, multiplier_result};
+
+endmodule

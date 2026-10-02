@@ -1,0 +1,24 @@
+module mg_04071 (
+    input  wire rst_n,
+    input  wire clk,
+    input  wire clken,
+    input  wire j,
+    input  wire se0,
+    output reg  sync
+);
+
+    reg [6:0] shift_reg;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            shift_reg <= 7'b0;
+            sync      <= 1'b0;
+        end else if (clken) begin
+            shift_reg <= {shift_reg[5:0], (j | se0)};
+            sync      <= (shift_reg == 7'b0101010);
+        end else begin
+            sync <= 1'b0;
+        end
+    end
+
+endmodule

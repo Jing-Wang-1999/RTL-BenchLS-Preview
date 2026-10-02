@@ -1,0 +1,5 @@
+# `origen_067028`
+
+This keypad debouncer has `clk`, asynchronous active-low `rst_n`, raw active-low `key_data[1:0]`, registered pulse `key_flag`, and held decoded value `key_value[1:0]`. Reset asynchronously sets the synchronized input to `11` and clears the 20-bit counter, trigger, flag, and value.
+
+Each rising edge samples `key_data` into `key_data_r`. The counter clears while the prior synchronized value is `11`; otherwise it increments until 1,000,000 and then saturates. Internal `key_trigger` becomes one for the edge on which the pre-edge counter equals 999,999, then returns to zero. Because all assignments are nonblocking, `key_value` captures the inverted synchronized input and `key_flag` captures one on the following rising edge when the prior trigger is one. `key_value` holds between triggers, and `key_flag` returns low one edge later. Changes between non-release active key codes do not reset the counter; only synchronized `11` clears it.

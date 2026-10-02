@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   programmable_alarm_timer_50m.v0, programmable_alarm_timer_50m.v1, programmable_alarm_timer_50m, clk, -none
+set DESIGN_NAME_GOLDEN "programmable_alarm_timer_50m.v0"
+set DESIGN_NAME "programmable_alarm_timer_50m.v1"
+set TOP_NAME "programmable_alarm_timer_50m"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_e8f0e0c7d8d1935b.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_e8f0e0c7d8d1935b.negative.v
+check_sec -elaborate -spec -top programmable_alarm_timer_50m -disable_auto_bbox
+check_sec -elaborate -imp -top programmable_alarm_timer_50m -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clk 
+reset -none
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

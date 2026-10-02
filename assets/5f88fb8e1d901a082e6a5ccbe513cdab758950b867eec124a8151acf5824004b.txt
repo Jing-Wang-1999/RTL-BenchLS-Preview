@@ -1,0 +1,57 @@
+module origen_013881 #(
+    parameter DATA_WIDTH = 6,
+    parameter ADDR_WIDTH = 2
+)(
+    output reg clk,
+    output reg wr_enable,
+    output reg rd_enable,
+    output reg reset,
+    output reg [DATA_WIDTH-1:0] data_in,
+    input full_fifo,
+    input empty_fifo,
+    input error,
+    input almost_empty_fifo,
+    input almost_fifo_full,
+    input [DATA_WIDTH-1:0] data_out,
+    input [DATA_WIDTH-1:0] data_out_synth
+);
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #1 clk = ~clk;
+    end
+
+    // Testbench stimulus
+    initial begin
+        // Initialize all signals
+        wr_enable = 0;
+        rd_enable = 0;
+        reset = 0;
+        data_in = 0;
+
+        // Reset the FIFO
+        #2 reset = 1;
+        #2 reset = 0;
+
+        // Write operations
+        #2 wr_enable = 1;
+        #2 data_in = 1;
+        #2 data_in = 2;
+        #2 data_in = 3;
+        #2 data_in = 4;
+        #2 data_in = 4;
+        #2 data_in = 4;
+
+        // Switch to read mode
+        #2 wr_enable = 0;
+        rd_enable = 1;
+
+        // Wait for 7 clock cycles to read out all values
+        #14;
+
+        // End simulation
+        $finish;
+    end
+
+endmodule

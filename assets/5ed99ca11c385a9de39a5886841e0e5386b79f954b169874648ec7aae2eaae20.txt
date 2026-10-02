@@ -1,0 +1,12 @@
+module rtlpp_02402 (frequency, clock, SLOW_CLOCK);
+    input [32:0] frequency;
+    input clock;
+    output reg SLOW_CLOCK;
+    
+    reg [32:0] COUNT = 0;
+    
+    always @ (posedge clock) begin
+        COUNT <= (COUNT == 100000000 / frequency / 2 - 1) ? 0 : COUNT + 1;
+        SLOW_CLOCK <= (COUNT == 0) ? ~SLOW_CLOCK : SLOW_CLOCK;
+    end
+endmodule

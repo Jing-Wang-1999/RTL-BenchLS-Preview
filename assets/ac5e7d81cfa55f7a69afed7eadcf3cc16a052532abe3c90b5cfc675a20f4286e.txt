@@ -1,0 +1,119 @@
+module origen_119590 (
+    input wire clock_100,
+    input wire reset,
+    input wire read_enable,
+    input wire write_enable,
+    input wire [15:0] write_data,
+    input wire [19:0] write_addr,
+    input wire [19:0] read_addr,
+    output wire CE, UB, LB, OE,
+    output reg WE,
+    output reg [15:0] read_data,
+    output reg [19:0] ADDR,
+    inout wire [15:0] Data
+);
+
+    // FSM states
+    localparam WAITING = 3'd0, WRITE_1 = 3'd1, WRITE_2 = 3'd2, READ_1 = 3'd3, READ_2 = 3'd4;
+    reg [2:0] state, next_state;
+
+    // Internal registers
+    reg [19:0] prev_write_addr, prev_read_addr;
+    reg [15:0] prev_write_data;
+    reg prev_write_en, prev_read_en;
+    reg [15:0] data_bus;
+
+    // Tie control signals to 0
+    assign CE = 1'b0;
+    assign UB = 1'b0;
+    assign LB = 1'b0;
+    assign OE = 1'b0;
+
+    // Bidirectional data bus
+    assign Data = (state == WRITE_2 || (state == WAITING && prev_write_en)) ? data_bus : 16'bz;
+
+    // State transition
+    always @(posedge clock_100 or posedge reset) begin
+        if (reset)
+            state <= WAITING;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            WAITING: next_state = WRITE_1;
+            WRITE_1: next_state = WRITE_2;
+            WRITE_2: next_state = READ_1;
+            READ_1:  next_state = READ_2;
+            READ_2:  next_state = WAITING;
+            default: next_state = WAITING;
+        endcase
+    end
+
+    // Main control logic
+    always @(posedge clock_100 or posedge reset) begin
+        if (reset) begin
+            WE <= 1'b1;
+            read_data <= 16'b0;
+            ADDR <= 20'bz;
+            data_bus <= 16'bz;
+            prev_write_addr <= 20'b0;
+            prev_read_addr <= 20'b0;
+            prev_write_data <= 16'b0;
+            prev_write_en <= 1'b0;
+            prev_read_en <= 1'b0;
+        end else begin
+            case (state)
+                WAITING: begin
+                    WE <= 1'b1;
+                    ADDR <= 20'bz;
+                    data_bus <= 16'bz;
+                    if (prev_write_en) begin
+                        WE <= 1'b0;
+                        ADDR <= prev_write_addr;
+                        data_bus <= prev_write_data;
+                    end
+                end
+                WRITE_1: begin
+                    prev_write_addr <= write_addr;
+                    prev_write_data <= write_data;
+                    prev_write_en <= write_enable;
+                    WE <= 1'b1;
+                    ADDR <= 20'bz;
+                    data_bus <= 16'bz;
+                end
+                WRITE_2: begin
+                    if (prev_write_en) begin
+                        WE <= 1'b0;
+                        ADDR <= prev_write_addr;
+                        data_bus <= prev_write_data;
+                    end else begin
+                        WE <= 1'b1;
+                        ADDR <= 20'bz;
+                        data_bus <= 16'bz;
+                    end
+                end
+                READ_1: begin
+                    prev_read_addr <= read_addr;
+                    prev_read_en <= read_enable;
+                    WE <= 1'b1;
+                    ADDR <= 20'bz;
+                    data_bus <= 16'bz;
+                end
+                READ_2: begin
+                    if (prev_read_en) begin
+                        ADDR <= prev_read_addr;
+                        read_data <= Data;
+                    end else begin
+                        ADDR <= 20'bz;
+                    end
+                    WE <= 1'b1;
+                    data_bus <= 16'bz;
+                end
+            endcase
+        end
+    end
+
+endmodule

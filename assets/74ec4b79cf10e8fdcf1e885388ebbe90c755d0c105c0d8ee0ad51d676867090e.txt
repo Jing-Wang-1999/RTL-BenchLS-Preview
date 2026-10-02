@@ -1,0 +1,46 @@
+{
+  "candidate_target_id": "github_evensgn_riscv_cpu_direct_v1::src/cpu/mem_ctrl.v::mem_ctrl",
+  "construction_hold": false,
+  "file_path": "src/cpu/mem_ctrl.v",
+  "formal_contracts": [
+    {
+      "clock": "CLK",
+      "clock_edge": "posedge",
+      "compare": "all declared output ports",
+      "defines": [],
+      "includes": [],
+      "input_assumptions": [],
+      "mode": "sec",
+      "parameter_override_required": false,
+      "parameters": {},
+      "reset_expression": "RST",
+      "source_files": [
+        "src/cpu/mem_ctrl.v"
+      ],
+      "top": "mem_ctrl",
+      "unit_id": "mem_ctrl"
+    }
+  ],
+  "helper_files": [
+    {
+      "destination_path": "src/cpu/utility.v",
+      "sha256": "d2f8df2d29250fb7927060bde438d921216d28021910dbc7d67df60984b92433",
+      "source_path": "scope2/task2_1_spec_to_project/cases/github_evensgn_riscv_cpu_direct_v1/public/support/utility.v"
+    }
+  ],
+  "mask_granularity": "module",
+  "masked_modules": [
+    "mem_ctrl"
+  ],
+  "noncomment_lines": 171,
+  "parent_case_id": "github_evensgn_riscv_cpu_direct_v1",
+  "parent_manifest_sha256": "a2e6dc4f0d784f22c8a3b7d468d91c268094d443f142e059c6ab9d74e2431d9a",
+  "parent_path": "scope2/task2_1_spec_to_project/cases/github_evensgn_riscv_cpu_direct_v1",
+  "rank": 2,
+  "reference_path": "scope2/task2_1_spec_to_project/cases/github_evensgn_riscv_cpu_direct_v1/private/reference/src/cpu/mem_ctrl.v",
+  "reference_sha256": "9299260c8612928c2a5366654cdec39a806a7fef3cc61d48148a9a46ffad91e5",
+  "review_caveats": "Defaults are PORT_COUNT=2, DATA_WIDTH_BYTE=4, ADDR_WIDTH_BYTE=4; rising CLK and asynchronous active-high RST. Reset clears state, payload/read buffers, pending requests, busy/done and send/receive strobes; service port becomes the all-ones sentinel. Each edge clears send_flag, recv_flag and done unless an action sets them. Select the lowest port with a nonzero live or pending flag. Queue live nonzero requests for non-serviced ports only when that port is not already busy, preserving address/data/mask. Pending requests take priority over live requests. In idle, send only when sendable; otherwise queue the selected request. Flag1 sends a read packet {0,address}, length5; flag2 sends {1,write_mask,address,write_data}, length9 in the declared 72-bit send_data (leading padding zero). Writes clear pending/busy and pulse done immediately on send; reads retain service port and enter wait-for-receive. In that state, continue queueing other nonbusy requests and, on receivable, capture the low32 receive bits into the serviced read-data lane, pulse recv_flag/done, clear its busy/pending flag and return idle. Data/length hold when no send occurs; recv_length is unused. Reserved nonzero request flag3 emits no send strobe but follows the non-write read-wait path. No additional request-legality constraints are imposed.",
+  "reviewcontext": "Retained project specification, public interfaces and supporting implementation establish the component context; the public behavioral clarification pins edge cases used for formal comparison.",
+  "reviewimportance": "Fixed-priority multiport memory-request arbitration, pending request storage and serialized UART memory transactions.",
+  "semantic_review_approved": true
+}

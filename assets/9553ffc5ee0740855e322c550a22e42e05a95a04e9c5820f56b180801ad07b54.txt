@@ -1,0 +1,62 @@
+module mg_09438 (
+    input clock,
+    input reset,
+    input start,
+    input Nothing,
+    input Zero,
+    input Q0,
+    output Ready,
+    output Load_regs,
+    output Decr_P,
+    output Add_regs,
+    output Shift_regs
+);
+
+    // State encoding
+    localparam [1:0] IDLE  = 2'b00,
+                     ADD   = 2'b01,
+                     SHIFT = 2'b10;
+
+    reg [1:0] state, next_state;
+
+    // State register
+    always @(posedge clock) begin
+        if (reset)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            IDLE: begin
+                if (start)
+                    next_state = ADD;
+                else
+                    next_state = IDLE;
+            end
+
+            ADD: begin
+                next_state = SHIFT;
+            end
+
+            SHIFT: begin
+                if (Zero || Nothing)
+                    next_state = IDLE;
+                else
+                    next_state = ADD;
+            end
+
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Output logic
+    assign Ready = (state == IDLE);
+    assign Load_regs = (state == IDLE && start);
+    assign Decr_P = (state == ADD);
+    assign Add_regs = (state == ADD && Q0);
+    assign Shift_regs = (state == SHIFT);
+
+endmodule

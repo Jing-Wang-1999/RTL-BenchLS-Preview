@@ -1,0 +1,12 @@
+always @ (posedge clock or posedge reset)
+begin 
+	if (reset)
+		bin_byte_count <= 8'b0;
+	else if ((main_sm == 4'b1011) && new_rx_data)
+		bin_byte_count <= rx_data;
+	else if ((bin_write_op && (main_sm == 4'b1100) && new_rx_data) || 
+			 (bin_read_op && tx_end_p))
+		// byte counter is updated on every new data received in write operations and for every 
+		// byte transmitted for read operations.
+		bin_byte_count <= bin_byte_count - 1;
+end

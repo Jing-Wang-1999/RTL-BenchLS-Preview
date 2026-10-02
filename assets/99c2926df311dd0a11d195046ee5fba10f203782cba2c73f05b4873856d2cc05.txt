@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.455c944bdf9820ac5fc6.d533c84e0d13",
+  "compile_check": {
+    "case_id": "s1derived.455c944bdf9820ac5fc6.d533c84e0d13",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_00802",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_00802.f8bbfb545520cfa3/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.455c944bdf9820ac5fc6",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "455c944bdf9820ac5fc6b4fb3cfbb20982b121c7a5c20a11502baa73ace9170a",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.455c944bdf9820ac5fc6.d533c84e0d13",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_00802.f8bbfb545520cfa3/private/commercial_positive.log",
+    "commercial_log_sha256": "e35f4101096eee9a873f1463a3cb4f36b6464412e739512825c220de6590f7bb",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_00802.f8bbfb545520cfa3/private/historical_harness/00_sec_mg_00802.tcl",
+    "executed_script_sha256": "1e11fa4f10b42aa5695fa14e64feb6973436073c1edf530d0d7093a5994230fb",
+    "golden_tops": [
+      "mg_00802"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.mg_00802.f8bbfb545520cfa3",
+    "parent_id": "s1p.455c944bdf9820ac5fc6",
+    "revised_tops": [
+      "mg_00802"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_00802",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.455c944bdf9820ac5fc6.d533c84e0d13",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The complete transition table, visible two-bit state, clock edge, and lack of reset match.",
+        "rtl_excerpt": "`initial state = 2'b00;` and the `2'b10` arm maps the four states to `01,10,state,00`.",
+        "spec_excerpt": "For `{x,y}=10`, next states for 00,01,10,11 are 01,10,10,00; initialization sets `state=00`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.455c944bdf9820ac5fc6",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "a524775bb70c29fc36c88c8fdfe54227a371d6cbf028ab725d5ed1d32fe0fa83",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "455c944bdf9820ac5fc6b4fb3cfbb20982b121c7a5c20a11502baa73ace9170a",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_00802.f8bbfb545520cfa3/private/historical_harness/00_sec_mg_00802.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_00802.f8bbfb545520cfa3/private/historical_harness/01_sec_mg_00802.tcl"
+  ],
+  "parent_id": "s1p.455c944bdf9820ac5fc6",
+  "primary_review": {
+    "case_id": "s1derived.455c944bdf9820ac5fc6.d533c84e0d13",
+    "checks": {
+      "behavior": "All transition table entries match.",
+      "boundaries": "All four states and input pairs are covered.",
+      "interface": "Inputs/output match except claimed reset.",
+      "rtl_reasonableness": "The initialized FSM is reasonable in targets supporting initial state.",
+      "sequential_and_reset": "No reset; simulation initialization only."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "All transition table entries match. No reset; simulation initialization only.",
+        "rtl_excerpt": "ports are state,x,y,Clk; initial state=2'b00; only posedge Clk updates",
+        "spec_excerpt": "\u201cinitial state after reset is 00\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification says initial state is established after reset, but the module has no reset input and uses only a simulation initial assignment.",
+        "rtl_evidence": "ports are state,x,y,Clk; initial state=2'b00; only posedge Clk updates",
+        "spec_evidence": "\u201cinitial state after reset is 00\u201d",
+        "type": "nonexistent_reset"
+      }
+    ],
+    "parent_id": "s1p.455c944bdf9820ac5fc6",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.455c944bdf9820ac5fc6.d533c84e0d13.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "455c944bdf9820ac5fc6b4fb3cfbb20982b121c7a5c20a11502baa73ace9170a",
+    "source_group": "S5",
+    "specification_sha256": "d533c84e0d13e2f471ed9f05a6c3f2fe20a939bde3e826ec3838dfab522fd45b",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_04/s1derived.455c944bdf9820ac5fc6.d533c84e0d13.md",
+  "qualified_specification_sha256": "a524775bb70c29fc36c88c8fdfe54227a371d6cbf028ab725d5ed1d32fe0fa83",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_00802.f8bbfb545520cfa3/private/golden_design.v",
+  "rtl_sha256": "455c944bdf9820ac5fc6b4fb3cfbb20982b121c7a5c20a11502baa73ace9170a",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.mg_00802.f8bbfb545520cfa3/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "d533c84e0d13e2f471ed9f05a6c3f2fe20a939bde3e826ec3838dfab522fd45b",
+  "top_module": "mg_00802"
+}

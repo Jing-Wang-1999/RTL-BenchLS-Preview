@@ -1,0 +1,156 @@
+module FP_FORMAT_CVT_pipe_p1 (
+   nvdla_core_clk
+  ,nvdla_core_rstn
+  ,info_pipe_in_pd_d0
+  ,info_pipe_in_rdy_d1
+  ,info_pipe_in_vld_d0
+  ,info_pipe_in_pd_d1
+  ,info_pipe_in_rdy_d0
+  ,info_pipe_in_vld_d1
+  );
+input        nvdla_core_clk;
+input        nvdla_core_rstn;
+input  [5:0] info_pipe_in_pd_d0;
+input        info_pipe_in_rdy_d1;
+input        info_pipe_in_vld_d0;
+output [5:0] info_pipe_in_pd_d1;
+output       info_pipe_in_rdy_d0;
+output       info_pipe_in_vld_d1;
+reg    [5:0] info_pipe_in_pd_d1;
+reg          info_pipe_in_rdy_d0;
+reg          info_pipe_in_vld_d1;
+reg    [5:0] p1_pipe_data;
+reg          p1_pipe_ready;
+reg          p1_pipe_ready_bc;
+reg          p1_pipe_valid;
+//## pipe (1) valid-ready-bubble-collapse
+always @(
+  p1_pipe_ready
+  or p1_pipe_valid
+  ) begin
+  p1_pipe_ready_bc = p1_pipe_ready || !p1_pipe_valid;
+end
+always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
+  if (!nvdla_core_rstn) begin
+    p1_pipe_valid <= 1'b0;
+  end else begin
+  p1_pipe_valid <= (p1_pipe_ready_bc)? info_pipe_in_vld_d0 : 1'd1;
+  end
+end
+always @(posedge nvdla_core_clk) begin
+  // VCS sop_coverage_off start
+  p1_pipe_data <= (p1_pipe_ready_bc && info_pipe_in_vld_d0)? info_pipe_in_pd_d0[5:0] : p1_pipe_data;
+  // VCS sop_coverage_off end
+end
+always @(
+  p1_pipe_ready_bc
+  ) begin
+  info_pipe_in_rdy_d0 = p1_pipe_ready_bc;
+end
+//## pipe (1) output
+always @(
+  p1_pipe_valid
+  or info_pipe_in_rdy_d1
+  or p1_pipe_data
+  ) begin
+  info_pipe_in_vld_d1 = p1_pipe_valid;
+  p1_pipe_ready = info_pipe_in_rdy_d1;
+  info_pipe_in_pd_d1[5:0] = p1_pipe_data;
+end
+//## pipe (1) assertions/testpoints
+`ifndef VIVA_PLUGIN_PIPE_DISABLE_ASSERTIONS
+wire p1_assert_clk = nvdla_core_clk;
+`ifdef SPYGLASS_ASSERT_ON
+`else
+// spyglass disable_block NoWidthInBasedNum-ML 
+// spyglass disable_block STARC-2.10.3.2a 
+// spyglass disable_block STARC05-2.1.3.1 
+// spyglass disable_block STARC-2.1.4.6 
+// spyglass disable_block W116 
+// spyglass disable_block W154 
+// spyglass disable_block W239 
+// spyglass disable_block W362 
+// spyglass disable_block WRN_58 
+// spyglass disable_block WRN_61 
+`endif // SPYGLASS_ASSERT_ON
+`ifdef ASSERT_ON
+`ifdef FV_ASSERT_ON
+`define ASSERT_RESET nvdla_core_rstn
+`else
+`ifdef SYNTHESIS
+`define ASSERT_RESET nvdla_core_rstn
+`else
+`ifdef ASSERT_OFF_RESET_IS_X
+`define ASSERT_RESET ((1'bx === nvdla_core_rstn) ? 1'b0 : nvdla_core_rstn)
+`else
+`define ASSERT_RESET ((1'bx === nvdla_core_rstn) ? 1'b1 : nvdla_core_rstn)
+`endif // ASSERT_OFF_RESET_IS_X
+`endif // SYNTHESIS
+`endif // FV_ASSERT_ON
+`ifndef SYNTHESIS
+  // VCS coverage off 
+  nv_assert_no_x #(0,1,0,"No X's allowed on control signals")      zzz_assert_no_x_2x (nvdla_core_clk, `ASSERT_RESET, nvdla_core_rstn, (info_pipe_in_vld_d1^info_pipe_in_rdy_d1^info_pipe_in_vld_d0^info_pipe_in_rdy_d0)); // spyglass disable W504 SelfDeterminedExpr-ML 
+  // VCS coverage on
+`endif
+`undef ASSERT_RESET
+`endif // ASSERT_ON
+`ifdef SPYGLASS_ASSERT_ON
+`else
+// spyglass enable_block NoWidthInBasedNum-ML 
+// spyglass enable_block STARC-2.10.3.2a 
+// spyglass enable_block STARC05-2.1.3.1 
+// spyglass enable_block STARC-2.1.4.6 
+// spyglass enable_block W116 
+// spyglass enable_block W154 
+// spyglass enable_block W239 
+// spyglass enable_block W362 
+// spyglass enable_block WRN_58 
+// spyglass enable_block WRN_61 
+`endif // SPYGLASS_ASSERT_ON
+`ifdef SPYGLASS_ASSERT_ON
+`else
+// spyglass disable_block NoWidthInBasedNum-ML 
+// spyglass disable_block STARC-2.10.3.2a 
+// spyglass disable_block STARC05-2.1.3.1 
+// spyglass disable_block STARC-2.1.4.6 
+// spyglass disable_block W116 
+// spyglass disable_block W154 
+// spyglass disable_block W239 
+// spyglass disable_block W362 
+// spyglass disable_block WRN_58 
+// spyglass disable_block WRN_61 
+`endif // SPYGLASS_ASSERT_ON
+`ifdef ASSERT_ON
+`ifdef FV_ASSERT_ON
+`define ASSERT_RESET nvdla_core_rstn
+`else
+`ifdef SYNTHESIS
+`define ASSERT_RESET nvdla_core_rstn
+`else
+`ifdef ASSERT_OFF_RESET_IS_X
+`define ASSERT_RESET ((1'bx === nvdla_core_rstn) ? 1'b0 : nvdla_core_rstn)
+`else
+`define ASSERT_RESET ((1'bx === nvdla_core_rstn) ? 1'b1 : nvdla_core_rstn)
+`endif // ASSERT_OFF_RESET_IS_X
+`endif // SYNTHESIS
+`endif // FV_ASSERT_ON
+  // VCS coverage off 
+  nv_assert_hold_throughout_event_interval #(0,1,0,"valid removed before ready")      zzz_assert_hold_throughout_event_interval_3x (nvdla_core_clk, `ASSERT_RESET, (info_pipe_in_vld_d0 && !info_pipe_in_rdy_d0), (info_pipe_in_vld_d0), (info_pipe_in_rdy_d0)); // spyglass disable W504 SelfDeterminedExpr-ML 
+  // VCS coverage on
+`undef ASSERT_RESET
+`endif // ASSERT_ON
+`ifdef SPYGLASS_ASSERT_ON
+`else
+// spyglass enable_block NoWidthInBasedNum-ML 
+// spyglass enable_block STARC-2.10.3.2a 
+// spyglass enable_block STARC05-2.1.3.1 
+// spyglass enable_block STARC-2.1.4.6 
+// spyglass enable_block W116 
+// spyglass enable_block W154 
+// spyglass enable_block W239 
+// spyglass enable_block W362 
+// spyglass enable_block WRN_58 
+// spyglass enable_block WRN_61 
+`endif // SPYGLASS_ASSERT_ON
+`endif
+endmodule

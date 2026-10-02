@@ -1,0 +1,7 @@
+# rtlpp_07029
+
+This three-state FSM has one-bit inputs `x`, `clk`, and active-high asynchronous state reset `rst`, and one-bit registered output `y`. States are A (reset/default), B, and C.
+
+The next-state transitions are: A goes to B when `x=1` and otherwise stays A; B goes to C when `x=1` and to A when `x=0`; C stays C when `x=1` and goes to A when `x=0`. Any invalid state uses A's output and transition behavior. `rst` asynchronously puts the state register in A; otherwise the state changes on rising `clk` edges.
+
+Combinational state output is 1 only in B. On every rising edge of `clk`, registered output `y` captures that combinational value for the state that existed immediately before the edge. Consequently `y` reflects whether the pre-edge state was B, including one clock of latency relative to entering B. `rst` does not directly reset `y`, so `y` holds through an asynchronous reset and is unspecified before its first rising-edge update. There are no submodules.

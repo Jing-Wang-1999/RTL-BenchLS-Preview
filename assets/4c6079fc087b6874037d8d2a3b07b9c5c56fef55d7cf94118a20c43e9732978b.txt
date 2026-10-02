@@ -1,0 +1,66 @@
+{
+  "program_sha256": "90ba8627383842b904ab66e41f2eb76e63ccd456c7001f27e335fc42f492c3c3",
+  "program_bytes": 4320,
+  "string_address": "0x10c4",
+  "expected_string": "Hello World!\u0000",
+  "expected_uart_output": "Hello World!\n",
+  "main_instruction_review": [
+    {
+      "address": "0x1098",
+      "word": "000017b7",
+      "meaning": "lui a5,0x1"
+    },
+    {
+      "address": "0x109c",
+      "word": "0c478793",
+      "meaning": "addi a5,a5,196; string pointer0x10c4"
+    },
+    {
+      "address": "0x10a0",
+      "word": "04800713",
+      "meaning": "addi a4,zero,72; first character H"
+    },
+    {
+      "address": "0x10a4",
+      "word": "10e00223",
+      "meaning": "sb a4,260(zero); MMIO output0x104"
+    },
+    {
+      "address": "0x10a8",
+      "word": "00178793",
+      "meaning": "addi a5,a5,1"
+    },
+    {
+      "address": "0x10ac",
+      "word": "0007c703",
+      "meaning": "lbu a4,0(a5)"
+    },
+    {
+      "address": "0x10b0",
+      "word": "fe071ae3",
+      "meaning": "bne a4,zero,0x10a4; loop until null"
+    },
+    {
+      "address": "0x10b4",
+      "word": "00a00793",
+      "meaning": "addi a5,zero,10; newline"
+    },
+    {
+      "address": "0x10b8",
+      "word": "10f00223",
+      "meaning": "sb a5,260(zero)"
+    },
+    {
+      "address": "0x10bc",
+      "word": "00000513",
+      "meaning": "addi a0,zero,0"
+    },
+    {
+      "address": "0x10c0",
+      "word": "00008067",
+      "meaning": "jalr zero,0(ra); return"
+    }
+  ],
+  "bench_output_rule": "sim_mem.v line77 prints the character written to memory address0x104; one character per $display, including newline character.",
+  "derived_from_golden_transcript": false
+}

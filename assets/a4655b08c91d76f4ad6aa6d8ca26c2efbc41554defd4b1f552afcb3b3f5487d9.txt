@@ -1,0 +1,65 @@
+# i2c_master_bit_ctrl: default-configuration specification
+
+Implement the module interface below. All arithmetic is fixed-width unsigned unless explicitly stated. Sequential updates use pre-edge values and occur on the stated clock edge. Preserve externally observable cycle timing, including outputs outside valid transactions wherever defined. No golden RTL is provided to the implementation model.
+
+## Interface
+
+```verilog
+module i2c_master_bit_ctrl (
+    input             clk,      
+    input             rst,      
+    input             nReset,   
+    input             ena,      
+
+    input      [15:0] clk_cnt,  
+
+    input      [ 3:0] cmd,      
+    output reg        cmd_ack,  
+    output reg        busy,     
+    output reg        al,       
+
+    input             din,
+    output reg        dout,
+
+    input             scl_i,    
+    output            scl_o,    
+    output reg        scl_oen,  
+    input             sda_i,    
+    output            sda_o,    
+    output reg        sda_oen   
+);
+endmodule
+```
+
+## Purpose, interface and reset
+
+An open-drain I2C bit controller converts `cmd` into start, stop, read-bit and write-bit waveforms. Commands are NOP=0, START=1, STOP=2, WRITE=4, READ=8; other values act as NOP when idle. `scl_o=sda_o=0` permanently; each corresponding `_oen` is1 to release the line and0 to pull low. Inputs observe the external bus including other masters and slave clock stretching. `din` is the write-bit value; `dout` captures filtered SDA on every filtered SCL rising edge.
+
+Use rising `clk`, asynchronous low `nReset`, and synchronous high `rst`. Both resets clear command state, acknowledge, bus busy and arbitration flag; release SCL/SDA; clear arbitration checking; clear input capture registers; set filter history and filtered/delayed line values to1; clear start/stop detectors, filter counter and remembered stop command. Asynchronous reset sets divider count0 and clock enable1. Synchronous reset reloads divider from `clk_cnt` and sets enable1. The slave-wait latch has only asynchronous reset, so synchronous reset alone does not explicitly clear it. `dout` and the one-cycle delayed SCL release flag have no reset assignment: do not promise initial zeros.
+
+`ena` controls divider/filter operation; it is not a direct command-dispatch gate. In particular disabled `ena` reloads the divider with enable1 every clock; a nonzero command can still advance. Commands are accepted only when idle at a divider-enable edge; a held command can repeat after completion. Hold `din` over a normal write for the usual bus waveform, but dynamic changes are not silently constrained away.
+
+## Input filtering and divider
+
+Each bus input passes through two capture bits on every clock, then into a three-sample history when the old 14-bit filter count is zero. The filter count clears on reset or disabled ena, reloads with `clk_cnt >> 2` when zero, and otherwise decrements. History initializes111. On every nonreset clock compute each synchronized bus value as majority of its old three history bits, and delay it by one clock. Capture stages initialize00. All later detectors consume old filtered values.
+
+A registered start detector is `!SDA && delayed_SDA && SCL`; stop is `SDA && !delayed_SDA && SCL`. Busy's next value is `(start_detector || busy) && !stop_detector`.
+
+Delay the SCL release output one clock. Slave-wait next is `(release_SCL && !delayed_release_SCL && !filtered_SCL) || (slave_wait && !filtered_SCL)`. Clock-sync is delayed_filtered_SCL high, filtered_SCL low and release_SCL high. The 16-bit divider and registered enable update in this priority: asynchronous reset count0/enable1; then synchronous reset, zero count, disabled ena or clock-sync reload `clk_cnt`/enable1; then slave-wait holds count/enable0; otherwise decrement count/enable0. The state machine uses old enable, so count terminal recognition precedes a state advance by one system clock.
+
+## Command phases
+
+Each row below is one divider-enabled action after idle has decoded the command. Outputs hold between enabled actions. The notation H means release1, L pull-low0, keep means previous output. Acknowledgement is set on the final action for one system clock, even when divider enables are separated.
+
+| Command | Ordered actions `(SCL release, SDA release, SDA arbitration-check)` |
+|---|---|
+| START | `(keep,H,0)`, `(H,H,0)`, `(H,L,0)`, `(H,L,0)`, `(L,L,0)` then idle+ack |
+| STOP | `(L,L,0)`, `(H,L,0)`, `(H,L,0)`, `(H,H,0)` then idle+ack |
+| READ | `(L,H,0)`, `(H,H,0)`, `(H,H,0)`, `(L,H,0)` then idle+ack |
+| WRITE | `(L,din,0)`, `(H,din,0)`, `(H,din,1)`, `(L,din,0)` then idle+ack |
+
+Idle dispatch holds SCL/SDA and clears SDA checking. Reset or old arbitration-loss has priority over every command action and returns idle/releases both lines without ack.
+
+Remember whether `cmd==STOP` whenever old enable is1. Arbitration-loss next is `(SDA_check && !filtered_SDA && release_SDA) || (nonidle_state && stop_detector && !remembered_stop)`. This flag is recalculated every clock, not sticky; its old value aborts the state machine next edge. `dout` updates whenever filtered SCL=1 and delayed filtered SCL=0, independent of command, and otherwise holds. Verilog simulation `#1` delays are nonfunctional annotation; qualify sampled cycle behavior, not analog rise times.
+
+Only the declared default state encodings and included command constants are qualified. The module does not implement byte counting, ACK interpretation or an APB/Wishbone register bank.

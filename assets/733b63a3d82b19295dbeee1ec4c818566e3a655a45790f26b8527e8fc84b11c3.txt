@@ -1,0 +1,54 @@
+module origen_219346(
+    input CLK,
+    input CLR,
+    input RST,
+    input [8:0] Data9,
+    output OUT_ser,
+    output CLK_Baud
+);
+
+    reg [8:0] Data_Reg;
+    reg [3:0] counter;
+    reg State;
+    reg OUT_ser_reg;
+    reg [10:0] Count_Baud;
+    reg CLK_Baud_O;
+
+    always @(posedge CLK or posedge CLR) begin
+        if (CLR) begin
+            Data_Reg <= Data9;
+            State <= 1'b1;
+            counter <= 4'b1010;
+            OUT_ser_reg <= 1'b1;
+        end
+        else if (RST) begin
+            Count_Baud <= 11'd0;
+            CLK_Baud_O <= 1'b0;
+        end
+        else begin
+            if (Count_Baud == 11'd1302) begin
+                Count_Baud <= 11'd0;
+                CLK_Baud_O <= ~CLK_Baud_O;
+            end
+            else begin
+                Count_Baud <= Count_Baud + 1'b1;
+            end
+
+            if (State) begin
+                if (counter > 0) begin
+                    OUT_ser_reg <= Data_Reg[0];
+                    Data_Reg <= {1'b0, Data_Reg[8:1]};
+                    counter <= counter - 1'b1;
+                end
+                else begin
+                    State <= 1'b0;
+                    OUT_ser_reg <= 1'b1;
+                end
+            end
+        end
+    end
+
+    assign OUT_ser = OUT_ser_reg;
+    assign CLK_Baud = CLK_Baud_O;
+
+endmodule

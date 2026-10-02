@@ -1,0 +1,19 @@
+The module is a two-state finite state machine that controls the SPI_CMD_reading output signal based on the SPI_done input.
+
+**Inputs:**
+*   `clk`: System clock.
+*   `reset`: Active-high reset signal. When asserted, the state machine returns to its initial IDLE state.
+*   `SPI_done`: Input signal indicating completion of an SPI operation.
+
+**Outputs:**
+*   `SPI_CMD_reading`: The primary output, which directly reflects the current state. It is low (0) in the IDLE state and high (1) in the READING state.
+
+**Behavior:**
+The module operates synchronously to the positive edge of the clock. Upon reset, it initializes to the IDLE state (SPI_CMD_reading = 0). The state transitions are triggered by the `SPI_done` signal being asserted (logic high).
+
+1.  **IDLE State:** The output SPI_CMD_reading is low. The FSM remains in IDLE until `SPI_done` becomes high. When `SPI_done` is detected, the FSM transitions to the READING state on the next clock edge.
+2.  **READING State:** The output SPI_CMD_reading is high. The FSM remains in READING until `SPI_done` becomes high again. When `SPI_done` is detected, the FSM transitions back to the IDLE state on the next clock edge.
+
+In both states, if `SPI_done` is low, the FSM holds its current state. The state transition is edge-triggered on the clock; the `SPI_done` signal is only sampled at the rising clock edge.
+
+**Allowed Sub-modules:** None

@@ -1,0 +1,56 @@
+module origen_060182 (
+    input wire clk,
+    input wire f1,
+    input wire f2,
+    output reg [31:0] freqdiff,
+    output reg [31:0] fxout,
+    output reg start
+);
+
+reg f1_pre, f1_last, f2_pre, f2_last;
+reg en;
+reg [31:0] cnt_gate, fxcnt, h_time;
+
+always @(posedge clk) begin
+    // Double-flop synchronizer for edge detection
+    f1_pre <= f1;
+    f1_last <= f1_pre;
+    f2_pre <= f2;
+    f2_last <= f2_pre;
+
+    // Measurement initiation and control
+    if (!start && f1_pre && !f1_last) begin
+        start <= 1'b1;
+        cnt_gate <= 32'd0;
+        fxcnt <= 32'd0;
+        h_time <= 32'd0;
+        en <= 1'b1;
+    end else if (start) begin
+        cnt_gate <= cnt_gate + 1;
+
+        // f1 rising edge detection
+        if (f1_pre && !f1_last) begin
+            fxcnt <= fxcnt + 1;
+            en <= 1'b1;
+        end
+
+        // f2 rising edge detection
+        if (f2_pre && !f2_last) begin
+            en <= 1'b0;
+        end
+
+        // Time difference measurement
+        if (en) begin
+            h_time <= h_time + 1;
+        end
+
+        // Measurement termination conditions
+        if (cnt_gate >= 32'd100_000_000 || fxcnt >= 32'd1_000_000) begin
+            start <= 1'b0;
+            freqdiff <= h_time;
+            fxout <= fxcnt;
+        end
+    end
+end
+
+endmodule

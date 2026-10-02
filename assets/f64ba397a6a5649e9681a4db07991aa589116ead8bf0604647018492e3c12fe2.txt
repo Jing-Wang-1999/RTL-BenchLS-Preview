@@ -1,0 +1,18 @@
+This module converts an 8-bit ASCII-encoded hexadecimal character input into its corresponding 4-bit binary value (nybble). It is a combinational decoder with a default output.
+
+**Inputs**
+-   `charIn`: An 8-bit input representing an ASCII character code.
+
+**Outputs**
+-   `nybleOut`: A 4-bit output representing the decoded hexadecimal value.
+
+**Functional Description**
+The module examines the lower 7 bits of the input (`charIn[6:0]`). It performs a case-insensitive match against the ASCII codes for hexadecimal characters ('0' through '9' and 'A' through 'F').
+
+*   For the numeric characters '0' to '9', the module outputs the corresponding binary value (0 to 9).
+*   For the uppercase alphabetic characters 'A' through 'F', the module outputs the corresponding binary values 10 through 15.
+*   The parameter for 'A' through 'F' is defined with a "don't-care" (x) in the most significant bit, making the matching case-insensitive for the 7-bit pattern. This means both uppercase and lowercase letters ('a' through 'f') will be correctly mapped.
+*   If the input character does not match any of the defined hexadecimal patterns, the output defaults to binary 0.
+
+**Allowed Sub-modules**
+Only standard combinational logic gates (e.g., AND, OR, NOT, multiplexers) and lookup table structures are permitted to implement the decoding function. No sequential elements (flip-flops, latches) or clocked logic are allowed.

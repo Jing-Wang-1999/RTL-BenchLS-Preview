@@ -1,0 +1,59 @@
+module origen_005691 (
+    input wire [1:0] A,
+    input wire READ, WRITE, CS, RESET,
+    inout wire [7:0] DATA,
+    inout wire [7:0] PortA, PortB, PortC
+);
+
+    reg [7:0] PortC_BSR;
+    reg [7:0] Control_Register;
+    wire [13:0] MODE;
+
+    // PortC control
+    assign PortC = (READ && !WRITE && CS && !RESET) ? PortC_BSR : 8'bz;
+
+    // Bit Set/Reset operation for PortC
+    always @(posedge CS) begin
+        if (!RESET && !READ && WRITE) begin
+            if (!DATA[7]) begin
+                case (DATA[3:1])
+                    3'b000: PortC_BSR[0] <= DATA[0];
+                    3'b001: PortC_BSR[1] <= DATA[0];
+                    3'b010: PortC_BSR[2] <= DATA[0];
+                    3'b011: PortC_BSR[3] <= DATA[0];
+                    3'b100: PortC_BSR[4] <= DATA[0];
+                    3'b101: PortC_BSR[5] <= DATA[0];
+                    3'b110: PortC_BSR[6] <= DATA[0];
+                    3'b111: PortC_BSR[7] <= DATA[0];
+                endcase
+            end
+        end
+    end
+
+    // Control Register update
+    always @(posedge CS) begin
+        if (A == 2'b11 && READ && !WRITE && !RESET) begin
+            Control_Register <= DATA;
+        end
+    end
+
+    // Reset operation
+    always @(posedge RESET) begin
+        Control_Register <= 8'b10011011;
+    end
+
+    // Data bus control
+    assign DATA = (READ && !WRITE && CS && !RESET) ? 
+                  (A == 2'b00) ? PortA :
+                  (A == 2'b01) ? PortB :
+                  (A == 2'b10) ? PortC :
+                  Control_Register : 8'bz;
+
+    // PortA and PortB control (simplified, actual behavior may depend on Control_Register)
+    assign PortA = (!READ && WRITE && CS && !RESET && A == 2'b00) ? DATA : 8'bz;
+    assign PortB = (!READ && WRITE && CS && !RESET && A == 2'b01) ? DATA : 8'bz;
+
+    // MODE signal (not used in this implementation, but declared as per description)
+    assign MODE = {Control_Register[7:5], Control_Register[2:0], Control_Register[4:3], Control_Register[1:0]};
+
+endmodule

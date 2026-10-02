@@ -1,0 +1,21 @@
+module rtlpp_00240(
+    input [0:0] set,
+    input [0:0] reset,
+    input [0:0] clk,
+    input [0:0] ff_D,
+    output [0:0] ff_Q,
+    input [0:0] ff_clk
+);
+
+reg ff_Q;
+
+always @(posedge clk or posedge set or posedge reset) begin
+    if (reset)
+        ff_Q <= 1'b0;
+    else if (set)
+        ff_Q <= 1'b1;
+    else
+        ff_Q <= ff_D;
+end
+
+endmodule

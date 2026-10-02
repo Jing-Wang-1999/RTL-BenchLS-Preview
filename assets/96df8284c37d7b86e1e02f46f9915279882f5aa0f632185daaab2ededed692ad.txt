@@ -1,0 +1,76 @@
+# Packed-pixel color processor
+
+Implement `vga_colproc` with the declaration below. A32-bit video word is expanded to registered8-bit R/G/B pixels or used to address an external24-bit color lookup table. `ColorDepth=0,1,2,3` selects8,16,24,32bits per pixel; PseudoColor matters only when a word enters the8-bit mode. State encoding parameters retain their declared values: idle0, fill_buf1, bw_8bpp2, col_8bpp4, col_16bpp_a8, col_16bpp_b16, col_24bpp32, col_32bpp64. Only these defaults are qualified. All state changes occur at rising `clk`; source unit delays are simulation annotations, not extra clock cycles.
+
+Maintain a32-bit word D; RGB carry bytes CR,CG,CB; a two-bit pixel-phase counter C; and a state Q. A high synchronous `srst` sets Q=idle and C=3 and clears registered vdat_buffer_rreq, rgb_fifo_wreq, clut_req. D, carry bytes and registered R/G/B are not reset. D captures vdat_buffer_di on an edge whenever the **pre-edge registered** vdat_buffer_rreq is1, including reset edges. Do not capture data at the earlier request-decision edge.
+
+## State decisions
+
+For each cycle compute next-state and internal request/pixel signals from current Q, C, D and inputs. F means rgb_fifo_full and E means vdat_buffer_empty. Except as listed, hold Q.
+
+| Q | Next-state rule |
+|---|---|
+|idle|if NOT E and NOT F, fill_buf|
+|fill_buf|sample ColorDepth:0 chooses col_8bpp if PseudoColor else bw_8bpp;1 chooses col_16bpp_a;2 chooses col_24bpp;3 chooses col_32bpp|
+|bw_8bpp|if NOT F and C=0, choose fill_buf when NOT E, otherwise idle|
+|col_8bpp|if C=0, choose fill_buf when NOT E and NOT F, otherwise idle; no CLUT-ack prerequisite|
+|col_16bpp_a|if NOT F, col_16bpp_b|
+|col_16bpp_b|if NOT F, choose fill_buf when NOT E, otherwise idle|
+|col_24bpp|if NOT F and C is not1, choose fill_buf when NOT E, otherwise idle; C=1 stays in this state|
+|col_32bpp|if NOT F, choose fill_buf when NOT E, otherwise idle|
+
+A synchronous reset overrides next-state. ColorDepth/PseudoColor do not directly affect an already selected unpack state.
+
+## Decode and pipeline
+
+Each cycle defaults the internal read request Rq, pixel-write Wq and CLUT request Lq to0; candidate RGB bytes and carry-update bytes default0. Decode as follows. All byte slices below use the buffered D, and all carry references use pre-edge carries.
+
+| Q | Candidate RGB | Wq | Rq | Lq |
+|---|---|---|---|---|
+|idle|clut_q[23:16], [15:8], [7:0]|clut_ack|NOT E AND NOT F|0|
+|fill_buf|same CLUT RGB|clut_ack|0|0|
+|bw_8bpp|replicate selected byte D[8*C +:8] into all RGB|NOT F|NOT F AND NOT E AND C=0|0|
+|col_8bpp|CLUT RGB|clut_ack|C=0 AND NOT E AND NOT F|NOT F OR (C[1] XOR C[0])|
+|col_16bpp_a|R={D[31:27],3'b0};G={D[26:21],2'b0};B={D[20:16],3'b0}|NOT F|0|0|
+|col_16bpp_b|R={D[15:11],3'b0};G={D[10:5],2'b0};B={D[4:0],3'b0}|NOT F|NOT F AND NOT E|0|
+|col_24bpp|phase table below|NOT F|NOT F AND C!=1 AND NOT E|0|
+|col_32bpp|D[23:16],D[15:8],D[7:0]|NOT F|NOT F AND NOT E|0|
+
+The32-bit mode ignores D[31:24];16-bit mode zero-extends5/6-bit color components rather than repeating high bits.
+
+| C in24-bit mode | Candidate RGB | Candidate carry CR,CG,CB |
+|---|---|---|
+|3|D[31:24],D[23:16],D[15:8]|D[7:0],0,0|
+|2|CR,D[31:24],D[23:16]|D[15:8],D[7:0],0|
+|1|CR,CG,D[31:24]|D[23:16],D[15:8],D[7:0]|
+|0|CR,CG,CB|0,0,0|
+
+On every edge, registered r/g/b take candidate RGB even if Wq=0 or srst=1. If Wq=1, carry registers take the candidate carries, also on reset edges; therefore non24-bit pixels clear carries. Without reset, register the three request outputs from Rq/Wq/Lq and decrement C modulo4 whenever Wq=1. Reset instead clears those requests and sets C=3. C is not restarted by a new word or color-mode change. `clut_offs` is continuously D[8*C +:8], including outside pseudo-color mode.
+
+## Interface timing and limits
+
+Requests are registered. Source word data is captured one rising edge after the request output becomes asserted. RGB and its write request are registered together from the same decode. Pseudo-color responses are accepted in idle/fill_buf/col_8bpp whenever clut_ack is1, even if full, while direct modes ignore clut_ack. The CLUT requester can continue through middle phases despite full; this interface expects downstream storage sized for in-flight lookup responses. It is not an independently backpressured AXI-style channel. The equations remain defined for arbitrary input changes; no formal assumptions suppress full/ack combinations. Word storage and unused carry data have no power-up-value guarantee.
+
+## Public declaration
+
+```verilog
+module vga_colproc(clk, srst, vdat_buffer_di, ColorDepth, PseudoColor,
+	vdat_buffer_empty, vdat_buffer_rreq, rgb_fifo_full,
+	rgb_fifo_wreq, r, g, b,
+	clut_req, clut_ack, clut_offs, clut_q
+	);
+	input clk;
+	input srst;
+	input [31:0] vdat_buffer_di;
+	input [1:0] ColorDepth;
+	input       PseudoColor;
+	input  vdat_buffer_empty;
+	output vdat_buffer_rreq;
+	input  rgb_fifo_full;
+	output rgb_fifo_wreq;
+	output [7:0] r, g, b;
+	output        clut_req;
+	input         clut_ack;
+	output [ 7:0] clut_offs;
+	input  [23:0] clut_q;
+```

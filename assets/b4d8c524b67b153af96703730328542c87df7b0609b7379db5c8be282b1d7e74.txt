@@ -1,0 +1,195 @@
+
+
+
+
+
+
+
+
+`timescale 1ps/1ps
+
+module tb;
+
+
+
+
+
+initial begin repeat (1000000) @(posedge clk); begin if(chars!=43 || aw_count!=1 || ar_count!=1 || w_count!=3) $fatal(1,"incomplete UART/AXI transactions chars=%d aw=%d ar=%d w=%d",chars,aw_count,ar_count,w_count); $display("RTL_BENCHLS_PASS"); $finish(0); end  end            
+
+
+
+
+
+
+
+localparam CLK_FREQ            = 16000000;
+localparam UART_BAUD_RATE      = 115200;
+localparam UART_PARITY         = "NONE";
+
+
+
+
+
+reg rstn  = 1'b0;
+reg clk   = 1'b1;
+always #(1000000000000 / 2 / CLK_FREQ   ) clk   = ~clk;
+initial begin repeat(4) @(posedge clk); rstn<=1'b1; end
+
+
+
+
+
+integer chars=0,aw_count=0,ar_count=0,w_count=0;
+reg [8*43-1:0] response="okay12345678123456781234567812345678invalid";
+wire awvalid,arvalid,wvalid,wlast; wire [31:0] awaddr,araddr,wdata; wire [7:0] awlen,arlen;
+always @(posedge clk) if(rstn) begin
+ if(awvalid)begin if(awaddr!==32'h12f || awlen!==2)$fatal(1,"write address/length");aw_count=aw_count+1;end
+ if(arvalid)begin if(araddr!==32'h12f || arlen!==3)$fatal(1,"read address/length");ar_count=ar_count+1;end
+ if(wvalid)begin
+  case(w_count)
+   0:if(wdata!==32'habc || wlast!==0)$fatal(1,"write beat0");
+   1:if(wdata!==32'h32 || wlast!==0)$fatal(1,"write beat1");
+   2:if(wdata!==32'h9876 || wlast!==1)$fatal(1,"write beat2");
+   default:$fatal(1,"extra write");
+  endcase
+  w_count=w_count+1;
+ end
+end
+wire uart_from_dut;
+wire        uart_to_dut;
+
+wire        en_from_dut;
+wire [ 7:0] byte_from_dut;
+
+reg         en_to_dut   = 1'b0;
+reg  [ 7:0] byte_to_dut = 8'h0;
+
+
+always @ (posedge clk)
+    if (en_from_dut && byte_from_dut!=8'h20 && byte_from_dut!=8'h0a && byte_from_dut!=8'h0d)
+        begin if(chars>=43 || byte_from_dut !== response[8*(42-chars)+:8]) $fatal(1,"UART response byte %d",chars); chars=chars+1; end
+
+
+
+
+
+initial begin
+    while  (~rstn) @(posedge clk);
+    repeat (10000) @(posedge clk);
+    
+    @(posedge clk) en_to_dut   <= 1'b1;
+                   byte_to_dut <= "W";
+    @(posedge clk) byte_to_dut <= "1";
+    @(posedge clk) byte_to_dut <= "2";
+    @(posedge clk) byte_to_dut <= "F";
+    @(posedge clk) byte_to_dut <= " ";
+    @(posedge clk) byte_to_dut <= "A";
+    @(posedge clk) byte_to_dut <= "B";
+    @(posedge clk) byte_to_dut <= "C";
+    @(posedge clk) byte_to_dut <= " ";
+    @(posedge clk) byte_to_dut <= "3";
+    @(posedge clk) byte_to_dut <= "2";
+    @(posedge clk) byte_to_dut <= " ";
+    @(posedge clk) byte_to_dut <= "9";
+    @(posedge clk) byte_to_dut <= "8";
+    @(posedge clk) byte_to_dut <= "7";
+    @(posedge clk) byte_to_dut <= "6";
+    @(posedge clk) byte_to_dut <= "\n";
+    
+    @(posedge clk) byte_to_dut <= "R";
+    @(posedge clk) byte_to_dut <= "1";
+    @(posedge clk) byte_to_dut <= "2";
+    @(posedge clk) byte_to_dut <= "F";
+    @(posedge clk) byte_to_dut <= " ";
+    @(posedge clk) byte_to_dut <= "4";
+    @(posedge clk) byte_to_dut <= "\n";
+    
+    @(posedge clk) byte_to_dut <= "R";
+    @(posedge clk) byte_to_dut <= "1";
+    @(posedge clk) byte_to_dut <= "2";
+    @(posedge clk) byte_to_dut <= "0";
+    @(posedge clk) byte_to_dut <= "\n";
+    
+    @(posedge clk) en_to_dut   <= 1'b0;
+    
+    repeat (1000000) @(posedge clk);
+    $fatal(1,"upstream watchdog");
+end
+
+
+
+
+
+uart_tx #(
+    .CLK_FREQ                  ( CLK_FREQ             ),
+    .BAUD_RATE                 ( UART_BAUD_RATE       ),
+    .PARITY                    ( UART_PARITY          ),
+    .STOP_BITS                 ( 1                    ),
+    .BYTE_WIDTH                ( 1                    ),
+    .FIFO_EA                   ( 18                   ),
+    .EXTRA_BYTE_AFTER_TRANSFER ( ""                   ),
+    .EXTRA_BYTE_AFTER_PACKET   ( ""                   )
+) u_uart_tx (
+    .rstn                      ( rstn                 ),
+    .clk                       ( clk                  ),
+    .i_tready                  (                      ),
+    .i_tvalid                  ( en_to_dut            ),
+    .i_tdata                   ( byte_to_dut          ),
+    .i_tkeep                   ( 1'b1                 ),
+    .i_tlast                   ( 1'b0                 ),
+    .o_uart_tx                 ( uart_to_dut          )
+);
+
+uart_rx #(
+    .CLK_FREQ                  ( CLK_FREQ             ),
+    .BAUD_RATE                 ( UART_BAUD_RATE       ),
+    .PARITY                    ( UART_PARITY          ),
+    .FIFO_EA                   ( 0                    )
+) u_uart_rx (
+    .rstn                      ( rstn                 ),
+    .clk                       ( clk                  ),
+    .i_uart_rx                 ( uart_from_dut        ),
+    .o_tready                  ( 1'b1                 ),
+    .o_tvalid                  ( en_from_dut          ),
+    .o_tdata                   ( byte_from_dut        ),
+    .o_overflow                (                      )
+);
+
+
+
+
+
+uart2axi4 #(
+    .CLK_FREQ                  ( CLK_FREQ             ),
+    .BAUD_RATE                 ( UART_BAUD_RATE       ),
+    .PARITY                    ( UART_PARITY          ),
+    .BYTE_WIDTH                ( 4                    )
+) u_uart2axi4 (
+    .rstn                      ( rstn                 ),
+    .clk                       ( clk                  ),
+    
+    .awready                   ( 1'b1                 ),
+    .awvalid(awvalid),
+    .awaddr(awaddr),
+    .awlen(awlen),
+    .wready                    ( 1'b1                 ),
+    .wvalid(wvalid),
+    .wlast(wlast),
+    .wdata(wdata),
+    .bready                    (                      ),
+    .bvalid                    ( 1'b1                 ),
+    .arready                   ( 1'b1                 ),
+    .arvalid(arvalid),
+    .araddr(araddr),
+    .arlen(arlen),
+    .rready                    (                      ),
+    .rvalid                    ( 1'b1                 ),
+    .rlast                     ( 1'b0                 ),
+    .rdata                     ( 'h12345678           ),
+    
+    .i_uart_rx                 ( uart_to_dut          ),
+    .o_uart_tx                 ( uart_from_dut        )
+);
+
+
+endmodule

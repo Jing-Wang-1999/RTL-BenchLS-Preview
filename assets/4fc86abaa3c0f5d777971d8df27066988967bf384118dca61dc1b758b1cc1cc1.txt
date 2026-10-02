@@ -1,0 +1,59 @@
+module autovcoder_019518 (
+    sel,
+    a,
+    b,
+    result,
+    c_out
+);
+  input sel;
+  input [3:0] a, b;
+  output c_out;
+  output [3:0] result;
+
+  wire [3:0] b_bits;
+  wire [3:0] carry;
+
+  inverting_bit leaf_0 (
+      .data(b),
+      .sel (sel),
+      .out (b_bits)
+  );
+
+  clb block_0 (
+      .a(a),
+      .b(b_bits),
+      .c_in(sel),
+      .c_out(carry)
+  );
+
+  adder unit_0 (  //LSB
+      .a(a[0]),
+      .b(b_bits[0]),
+      .c_in(carry[0]),
+      .sum(result[0])
+  );
+
+  adder unit_1 (
+      .a(a[1]),
+      .b(b_bits[1]),
+      .c_in(carry[0]),
+      .sum(result[1])
+  );
+
+  adder unit_2 (
+      .a(a[2]),
+      .b(b_bits[2]),
+      .c_in(carry[1]),
+      .sum(result[2])
+  );
+
+  adder unit_3 (
+      .a(a[3]),
+      .b(b_bits[3]),
+      .c_in(carry[2]),
+      .sum(result[3])
+  );
+
+  assign c_out = carry[3];
+endmodule
+

@@ -1,0 +1,34 @@
+module autovcoder_010647 (
+    input wire Start,
+    input wire Done,
+    input wire state0,
+    input wire state1,
+    output wire nstate0,
+    output wire nstate1,
+    output wire accRst,
+    output wire accLd,
+    output wire Bld,
+    output wire Ald,
+    output wire biRst,
+    output wire Ready,
+    output wire Shift,
+    output wire CountRst,
+    output wire SubCount
+);
+
+    // Next state logic
+    assign nstate0 = (~state0 & ~state1 & Start) | (state1 & ~Done);
+    assign nstate1 = (state0 & ~Done);
+
+    // Control signals
+    assign accRst = ~state0 & ~state1 & Start;
+    assign accLd = state0 & ~Done;
+    assign Bld = ~state0 & ~state1 & Start;
+    assign Ald = ~state0 & ~state1 & Start;
+    assign biRst = ~state0 & ~state1 & Start;
+    assign Ready = (state0 | state1) & Done | (~state0 & ~state1 & ~Start);
+    assign Shift = state1 & ~Done;
+    assign CountRst = Done;
+    assign SubCount = state1 & ~Done;
+
+endmodule

@@ -1,0 +1,97 @@
+module autovcoder_011306 (
+    core_clk_i,
+    core_link_reset_i,
+    io_link_reset_i,
+    core_data_o,
+    core_valid_o,
+    core_yumi_i,
+    io_clk_i,
+    io_data_i,
+    io_valid_i,
+    core_token_r_o
+);
+
+  input io_link_reset_i;
+  output [63:0] core_data_o;
+  input io_clk_i;
+  input [15:0] io_data_i;
+  input io_valid_i;
+  output [1:0] core_token_r_o;
+  input core_clk_i;
+  input core_link_reset_i;
+  input core_yumi_i;
+  output core_valid_o;
+  wire [63:0] core_data_o;
+  wire [1:0] core_token_r_o, core_sipo_valid_li;
+  wire core_valid_o,core_sipo_ready_lo,core_sipo_yumi_lo,\ch_0_.io_iddr_v_lo ,
+  \ch_1_.io_iddr_v_lo ,_6_net_,N0;
+  wire [8:0] \ch_0_.io_iddr_data_top , \ch_1_.io_iddr_data_top ;
+  wire [7:0] \ch_0_.io_iddr_data_bottom , \ch_1_.io_iddr_data_bottom ;
+  wire [31:0] core_sipo_data_li;
+
+  bsg_link_iddr_phy_width_p9 ch_0_iddr_data (
+      .clk_i(io_clk_i),
+      .data_i({io_valid_i, io_data_i[7:0]}),
+      .data_r_o({\ch_0_.io_iddr_data_top , \ch_0_.io_iddr_v_lo , \ch_0_.io_iddr_data_bottom }),
+      .rst(io_link_reset_i)
+  );
+
+
+  bsg_link_source_sync_downstream_channel_width_p16_lg_fifo_depth_p6_lg_credit_to_token_decimation_p3
+  ch_0_downstream 
+  (
+      .core_clk_i(core_clk_i),
+      .core_link_reset_i(core_link_reset_i),
+      .io_link_reset_i(io_link_reset_i),
+      .io_clk_i(io_clk_i),
+      .io_data_i({\ch_0_.io_iddr_data_top [7:0], \ch_0_.io_iddr_data_bottom }),
+      .io_valid_i(\ch_0_.io_iddr_v_lo ),
+      .core_token_r_o(core_token_r_o[0]),
+      .core_data_o(core_sipo_data_li[15:0]),
+      .core_valid_o(core_sipo_valid_li[0]),
+      .core_yumi_i(core_sipo_yumi_lo)
+  );
+
+
+  bsg_link_iddr_phy_width_p9 ch_1_iddr_data (
+      .clk_i(io_clk_i),
+      .data_i({io_valid_i, io_data_i[15:8]}),
+      .data_r_o({\ch_1_.io_iddr_data_top , \ch_1_.io_iddr_v_lo , \ch_1_.io_iddr_data_bottom }),
+      .rst(io_link_reset_i)
+  );
+
+
+  bsg_link_source_sync_downstream_channel_width_p16_lg_fifo_depth_p6_lg_credit_to_token_decimation_p3
+  ch_1_downstream 
+  (
+      .core_clk_i(core_clk_i),
+      .core_link_reset_i(core_link_reset_i),
+      .io_link_reset_i(io_link_reset_i),
+      .io_clk_i(io_clk_i),
+      .io_data_i({\ch_1_.io_iddr_data_top [7:0], \ch_1_.io_iddr_data_bottom }),
+      .io_valid_i(\ch_1_.io_iddr_v_lo ),
+      .core_token_r_o(core_token_r_o[1]),
+      .core_data_o(core_sipo_data_li[31:16]),
+      .core_valid_o(core_sipo_valid_li[1]),
+      .core_yumi_i(core_sipo_yumi_lo)
+  );
+
+
+  bsg_serial_in_parallel_out_full_width_p32_els_p2 in_sipof (
+      .clk_i(core_clk_i),
+      .reset_i(core_link_reset_i),
+      .v_i(_6_net_),
+      .ready_o(core_sipo_ready_lo),
+      .data_i(core_sipo_data_li),
+      .data_o(core_data_o),
+      .v_o(core_valid_o),
+      .yumi_i(core_yumi_i)
+  );
+
+
+  assign core_sipo_yumi_lo = N0 & core_sipo_ready_lo;
+  assign N0 = core_sipo_valid_li[1] & core_sipo_valid_li[0];
+  assign _6_net_ = core_sipo_valid_li[1] & core_sipo_valid_li[0];
+
+endmodule
+

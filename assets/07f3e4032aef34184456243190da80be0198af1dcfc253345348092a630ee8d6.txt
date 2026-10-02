@@ -1,0 +1,17 @@
+always @ *
+begin
+    set_r           = csrrw_w | csrrs_w | csrrwi_w | csrrsi_w;
+    clr_r           = csrrw_w | csrrc_w | csrrwi_w | csrrci_w;
+
+    csr_priv_r      = opcode_opcode_i[29:28];
+    csr_readonly_r  = (opcode_opcode_i[31:30] == 2'd3);
+    csr_write_r     = (opcode_ra_idx_i != 5'b0) | csrrw_w | csrrwi_w;
+
+    data_r          = (csrrwi_w | 
+                       csrrsi_w | 
+                       csrrci_w) ?
+                            {27'b0, opcode_ra_idx_i} : opcode_ra_operand_i;
+
+    // Detect access fault on CSR access
+    csr_fault_r     = SUPPORT_SUPER ? (opcode_valid_i && (set_r | clr_r) && ((csr_write_r && csr_readonly_r) || (current_priv_w < csr_priv_r))) : 1'b0;
+end

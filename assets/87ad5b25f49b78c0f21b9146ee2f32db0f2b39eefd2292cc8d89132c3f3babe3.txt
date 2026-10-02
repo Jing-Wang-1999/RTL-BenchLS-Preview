@@ -1,0 +1,96 @@
+always @* begin
+    init_next = init_reg;
+    init_ptr_next = init_ptr_reg;
+
+    op_axil_read_pipe_next = {op_axil_read_pipe_reg, 1'b0};
+    op_acc_pipe_next = {op_acc_pipe_reg, 1'b0};
+
+    mem_addr_pipeline_next[0] = 0;
+    axil_shift_pipeline_next[0] = 0;
+    stat_inc_pipeline_next[0] = 0;
+    for (j = 1; j < PIPELINE; j = j + 1) begin
+        mem_addr_pipeline_next[j] = mem_addr_pipeline_reg[j-1];
+        axil_shift_pipeline_next[j] = axil_shift_pipeline_reg[j-1];
+        stat_inc_pipeline_next[j] = stat_inc_pipeline_reg[j-1];
+    end
+
+    s_axis_stat_tready_next = 1'b0;
+
+    s_axil_awready_next = 1'b0;
+    s_axil_wready_next = 1'b0;
+    s_axil_bvalid_next = s_axil_bvalid_reg && !s_axil_bready;
+
+    s_axil_arready_next = 1'b0;
+    s_axil_rdata_next = s_axil_rdata_reg;
+    s_axil_rvalid_next = s_axil_rvalid_reg && !s_axil_rready;
+
+    mem_rd_addr = 0;
+    mem_wr_addr = mem_addr_pipeline_reg[PIPELINE-1];
+    mem_wr_data = mem_read_data_pipeline_reg[PIPELINE-1] + stat_inc_pipeline_reg[PIPELINE-1];
+    mem_wr_en = 0;
+
+    op_acc_pipe_hazard = 1'b0;
+    stage_active = 1'b0;
+
+    for (j = 0; j < PIPELINE; j = j + 1) begin
+        stage_active = op_axil_read_pipe_reg[j] || op_acc_pipe_reg[j];
+        op_acc_pipe_hazard = op_acc_pipe_hazard || (stage_active && mem_addr_pipeline_reg[j] == s_axis_stat_tid);
+    end
+
+    // discard writes
+    if (s_axil_awvalid && s_axil_wvalid && (!s_axil_bvalid || s_axil_bready) && (!s_axil_awready && !s_axil_wready)) begin
+        s_axil_awready_next = 1'b1;
+        s_axil_wready_next = 1'b1;
+        s_axil_bvalid_next = 1'b1;
+    end
+
+    // pipeline stage 0 - accept request
+    if (init_reg) begin
+        init_ptr_next = init_ptr_reg + 1;
+
+        mem_wr_addr = init_ptr_reg;
+        mem_wr_data = 0;
+        mem_wr_en = 1'b1;
+
+        if (&init_ptr_reg) begin
+            init_next = 1'b0;
+        end
+    end else if (s_axil_arvalid && (!s_axil_rvalid || s_axil_rready) && !op_axil_read_pipe_reg) begin
+        // AXIL read
+        op_axil_read_pipe_next[0] = 1'b1;
+
+        s_axil_arready_next = 1'b1;
+
+        mem_rd_addr = s_axil_araddr_id;
+        mem_addr_pipeline_next[0] = s_axil_araddr_id;
+        axil_shift_pipeline_next[0] = s_axil_araddr_shift;
+    end else if (s_axis_stat_tvalid && !s_axis_stat_tready && !op_acc_pipe_hazard) begin
+        // accumulate
+        op_acc_pipe_next[0] = 1'b1;
+
+        s_axis_stat_tready_next = 1'b1;
+
+        stat_inc_pipeline_next[0] = s_axis_stat_tdata;
+
+        mem_rd_addr = s_axis_stat_tid;
+        mem_addr_pipeline_next[0] = s_axis_stat_tid;
+    end
+
+    // read complete, perform operation
+    if (op_acc_pipe_reg[PIPELINE-1]) begin
+        // accumulate
+        mem_wr_addr = mem_addr_pipeline_reg[PIPELINE-1];
+        mem_wr_data = mem_read_data_pipeline_reg[PIPELINE-1] + stat_inc_pipeline_reg[PIPELINE-1];
+        mem_wr_en = 1'b1;
+    end else if (op_axil_read_pipe_reg[PIPELINE-1]) begin
+        // AXIL read
+        s_axil_rvalid_next = 1'b1;
+        s_axil_rdata_next = 0;
+
+        if (STAT_COUNT_WIDTH > AXIL_DATA_WIDTH) begin
+            s_axil_rdata_next = mem_read_data_pipeline_reg[PIPELINE-1] >> axil_shift_pipeline_reg[PIPELINE-1]*AXIL_DATA_WIDTH;
+        end else begin
+            s_axil_rdata_next = mem_read_data_pipeline_reg[PIPELINE-1];
+        end
+    end
+end

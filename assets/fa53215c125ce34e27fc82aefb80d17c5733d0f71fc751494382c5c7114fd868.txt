@@ -1,0 +1,26 @@
+module mg_00975 (
+    input wire I3,
+    input wire I2,
+    input wire I1,
+    input wire I0,
+    output wire F
+);
+    parameter INIT = 16'h0000;
+
+    wire [7:0] selected_8bit;
+    wire [3:0] selected_4bit;
+    wire [1:0] selected_2bit;
+
+    // Select between upper and lower 8 bits of INIT
+    assign selected_8bit = I3 ? INIT[15:8] : INIT[7:0];
+
+    // Select between the 4-bit groups within the selected 8 bits
+    assign selected_4bit = I2 ? selected_8bit[7:4] : selected_8bit[3:0];
+
+    // Select between the 2-bit groups within the selected 4 bits
+    assign selected_2bit = I1 ? selected_4bit[3:2] : selected_4bit[1:0];
+
+    // Select the final bit
+    assign F = I0 ? selected_2bit[1] : selected_2bit[0];
+
+endmodule

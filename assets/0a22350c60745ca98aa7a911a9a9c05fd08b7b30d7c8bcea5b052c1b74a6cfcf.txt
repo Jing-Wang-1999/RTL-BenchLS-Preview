@@ -1,0 +1,108 @@
+module origen_146668 (
+    input wire BUS_CLK,
+    input wire BUS_RST,
+    input wire [31:0] BUS_ADD,
+    inout wire [31:0] BUS_DATA,
+    input wire BUS_RD,
+    input wire BUS_WR,
+    input wire SEQ_CLK,
+    input wire SEQ_IN,
+    input wire SEQ_EXT_START
+);
+
+    // Parameters
+    localparam IDLE = 2'b00;
+    localparam WRITE = 2'b01;
+    localparam READ = 2'b10;
+
+    // Internal registers
+    reg [1:0] state;
+    reg [31:0] mem_addr;
+    reg [31:0] data_reg;
+    reg [31:0] write_data;
+    reg write_enable;
+    reg read_enable;
+
+    // Bidirectional data bus
+    assign BUS_DATA = (state == READ && read_enable) ? data_reg : 32'bz;
+
+    // State machine
+    always @(posedge BUS_CLK or posedge BUS_RST) begin
+        if (BUS_RST) begin
+            state <= IDLE;
+            mem_addr <= 32'b0;
+            data_reg <= 32'b0;
+            write_enable <= 1'b0;
+            read_enable <= 1'b0;
+        end else begin
+            case (state)
+                IDLE: begin
+                    if (BUS_WR) begin
+                        state <= WRITE;
+                        mem_addr <= BUS_ADD;
+                        write_data <= BUS_DATA;
+                        write_enable <= 1'b1;
+                    end else if (BUS_RD) begin
+                        state <= READ;
+                        mem_addr <= BUS_ADD;
+                        read_enable <= 1'b1;
+                    end
+                end
+                WRITE: begin
+                    write_enable <= 1'b0;
+                    state <= IDLE;
+                end
+                READ: begin
+                    read_enable <= 1'b0;
+                    state <= IDLE;
+                end
+                default: state <= IDLE;
+            endcase
+        end
+    end
+
+    // Memory interface
+    reg [31:0] memory [0:1023];
+
+    always @(posedge BUS_CLK) begin
+        if (write_enable) begin
+            memory[mem_addr] <= write_data;
+        end
+        if (read_enable) begin
+            data_reg <= memory[mem_addr];
+        end
+    end
+
+    // Sequence recording logic
+    reg [31:0] seq_data;
+    reg [9:0] seq_addr;
+    reg seq_write_enable;
+
+    always @(posedge SEQ_CLK or posedge BUS_RST) begin
+        if (BUS_RST) begin
+            seq_data <= 32'b0;
+            seq_addr <= 10'b0;
+            seq_write_enable <= 1'b0;
+        end else begin
+            if (SEQ_EXT_START) begin
+                seq_addr <= 10'b0;
+                seq_write_enable <= 1'b1;
+            end
+
+            if (seq_write_enable) begin
+                seq_data <= {seq_data[30:0], SEQ_IN};
+                
+                if (seq_addr[4:0] == 5'b11111) begin
+                    memory[seq_addr[9:5]] <= seq_data;
+                end
+
+                seq_addr <= seq_addr + 1'b1;
+
+                if (seq_addr == 10'h3FF) begin
+                    seq_write_enable <= 1'b0;
+                end
+            end
+        end
+    end
+
+endmodule

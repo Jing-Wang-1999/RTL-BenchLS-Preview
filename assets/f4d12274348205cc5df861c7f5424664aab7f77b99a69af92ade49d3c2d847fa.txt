@@ -1,0 +1,149 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module vga_csm_pb (clk_i, req0_i, ack0_o, adr0_i, dat0_i, dat0_o, we0_i, req1_i, ack1_o, adr1_i, dat1_i, dat1_o, we1_i);
+		
+	
+	
+	
+	parameter DWIDTH = 32; 
+	parameter AWIDTH = 8;  
+
+	
+	
+	
+	
+	input clk_i;                    
+
+	
+	input  [ AWIDTH   -1:0] adr0_i; 
+	input  [ DWIDTH   -1:0] dat0_i; 
+	output [ DWIDTH   -1:0] dat0_o; 
+	input                   we0_i;  
+	input                   req0_i; 
+	output                  ack0_o; 
+
+	
+	input  [ AWIDTH   -1:0] adr1_i; 
+	input  [ DWIDTH   -1:0] dat1_i; 
+	output [ DWIDTH   -1:0] dat1_o; 
+	input                   we1_i;  
+	input                   req1_i; 
+	output                  ack1_o; 
+
+	
+	
+	
+
+	
+	wire acc0, acc1;
+	reg  dacc0, dacc1;
+	wire sel0, sel1;
+	reg  ack0, ack1;
+	
+	
+	wire [DWIDTH -1:0] mem_q;
+
+
+	
+	
+	
+
+	
+	assign acc0 = req0_i;
+	assign acc1 = req1_i && !sel0;
+
+	always@(posedge clk_i)
+		begin
+			dacc0 <=  acc0 & !ack0_o;
+			dacc1 <=  acc1 & !ack1_o;
+		end
+
+	assign sel0 = acc0 && !dacc0;
+	assign sel1 = acc1 && !dacc1;
+
+	always@(posedge clk_i)
+		begin
+			ack0 <=  sel0 && !ack0_o;
+			ack1 <=  sel1 && !ack1_o;
+		end
+
+	wire [AWIDTH -1:0] mem_adr = sel0 ? adr0_i : adr1_i;
+	wire [DWIDTH -1:0] mem_d   = sel0 ? dat0_i : dat1_i;
+	wire               mem_we  = sel0 ? req0_i && we0_i : req1_i && we1_i;
+
+	
+	generic_spram #(AWIDTH, DWIDTH) clut_mem(
+		.clk(clk_i),
+		.rst(1'b0),       
+		.ce(1'b1),        
+		.we(mem_we),
+		.oe(1'b1),        
+		.addr(mem_adr),
+		.di(mem_d),
+		.\do (mem_q)
+	);
+
+	
+	assign dat0_o = mem_q;
+	assign dat1_o = mem_q;
+
+	
+	assign ack0_o = ( (sel0 && we0_i) || ack0 );
+	assign ack1_o = ( (sel1 && we1_i) || ack1 );
+endmodule

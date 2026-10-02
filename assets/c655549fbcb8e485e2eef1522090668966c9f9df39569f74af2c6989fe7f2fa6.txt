@@ -1,0 +1,24 @@
+always @ (posedge clk)
+    if(~rstn) begin
+        {a_sof, a_e, a_x, a_w, a_h, a_wl, a_hl, a_ii, a_jj} <= 0;
+    end else begin
+        a_sof <= i_sof;
+        a_e <= i_e;
+        a_x <= i_x;
+        a_w <= i_w;
+        a_h <= i_h;
+        if(a_sof) begin
+            a_wl <= (a_w<14'd4 ? 14'd4 : a_w);
+            a_hl <= a_h;
+            a_ii <= 14'd0;
+            a_jj <= 15'd0;
+        end else if(a_e) begin
+            if(a_ii < a_wl)
+                a_ii <= a_ii + 14'd1;
+            else begin
+                a_ii <= 14'd0;
+                if(a_jj <= {1'b0,a_hl})
+                    a_jj <= a_jj + 15'd1;
+            end
+        end
+    end

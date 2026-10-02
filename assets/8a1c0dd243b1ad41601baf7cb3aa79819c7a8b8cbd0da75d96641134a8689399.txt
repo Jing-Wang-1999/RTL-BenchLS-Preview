@@ -1,0 +1,20 @@
+The `pulse_sync` module is designed to synchronize a pulse signal across two different clock domains. It takes in five inputs: `inclk`, `rst_inclk`, `outclk`, `rst_outclk`, and `din`. The module outputs a single signal, `dout`.
+
+### Inputs:
+- `inclk`: The clock signal for the input domain.
+- `rst_inclk`: A reset signal for the input clock domain, active high.
+- `outclk`: The clock signal for the output domain.
+- `rst_outclk`: A reset signal for the output clock domain, active high.
+- `din`: The input data signal, which is a pulse that needs synchronization.
+
+### Outputs:
+- `dout`: The synchronized pulse signal in the output clock domain.
+
+### Behavior:
+1. **Input Clock Domain:**
+   - On the rising edge of `inclk`, if `rst_inclk` is active, internal registers are reset.
+   - If `din` transitions from low to high, an internal toggle signal `t` is flipped.
+
+2. **Output Clock Domain:**
+   - On the rising edge of `outclk`, if `rst_outclk` is active, internal registers are reset.
+   -

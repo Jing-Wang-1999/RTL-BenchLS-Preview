@@ -1,0 +1,5 @@
+This module is a write request controller and data generator for a FIFO buffer, synchronized to a clock and active-low reset. The device has two states: idle and writing.
+
+When the FIFO is empty, the controller transitions from idle to writing, asserting a write request and sending data starting from zero. In the writing state, it continuously increments the output data and maintains the write request unless the FIFO becomes full. Upon a full condition, it stops the request, resets the data to zero, and returns to idle. The data is an 8-bit counter that increments with each clock cycle while writing is active, rolling over on overflow.
+
+Inputs include the clock, active-low reset, and status flags for the FIFO (empty and full). Outputs are an 8-bit data bus and the write request signal.

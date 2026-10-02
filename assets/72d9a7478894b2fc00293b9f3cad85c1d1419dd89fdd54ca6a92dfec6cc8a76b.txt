@@ -1,0 +1,107 @@
+module origen_115176 (
+    input wire clk_24,
+    input wire rx,
+    output reg [7:0] out,
+    output reg ready
+);
+
+    parameter DOWNSAMPLE_24MHZ_CLOCK = 20000;
+
+    reg [14:0] clk_counter;
+    reg clk;
+    reg [2:0] baud_count;
+    wire baud_clk;
+    reg [3:0] state;
+    reg [3:0] next_state;
+    reg [1:0] idle_counter;
+
+    // Clock divider
+    always @(posedge clk_24) begin
+        if (clk_counter == DOWNSAMPLE_24MHZ_CLOCK - 1) begin
+            clk_counter <= 0;
+            clk <= ~clk;
+        end else begin
+            clk_counter <= clk_counter + 1;
+        end
+    end
+
+    // Baud rate generator
+    always @(posedge clk) begin
+        if (baud_count == 0)
+            baud_count <= 7;
+        else
+            baud_count <= baud_count - 1;
+    end
+
+    assign baud_clk = (baud_count == 0);
+
+    // State definitions
+    localparam IDLE = 4'd0, START_BIT = 4'd1, BIT0 = 4'd2, BIT1 = 4'd3, BIT2 = 4'd4,
+               BIT3 = 4'd5, BIT4 = 4'd6, BIT5 = 4'd7, BIT6 = 4'd8, BIT7 = 4'd9,
+               STOP_BIT = 4'd10;
+
+    // State machine
+    always @(posedge clk) begin
+        if (baud_clk)
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            IDLE: next_state = (rx == 0 && idle_counter == 2) ? START_BIT : IDLE;
+            START_BIT: next_state = rx ? IDLE : BIT0;
+            BIT0: next_state = BIT1;
+            BIT1: next_state = BIT2;
+            BIT2: next_state = BIT3;
+            BIT3: next_state = BIT4;
+            BIT4: next_state = BIT5;
+            BIT5: next_state = BIT6;
+            BIT6: next_state = BIT7;
+            BIT7: next_state = STOP_BIT;
+            STOP_BIT: next_state = START_BIT;
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Idle counter
+    always @(posedge clk) begin
+        if (baud_clk) begin
+            if (state == IDLE) begin
+                if (rx == 1 && idle_counter < 2)
+                    idle_counter <= idle_counter + 1;
+                else if (rx == 0)
+                    idle_counter <= 0;
+            end else begin
+                idle_counter <= 0;
+            end
+        end
+    end
+
+    // Data reception
+    always @(posedge clk) begin
+        if (baud_clk) begin
+            case (state)
+                BIT0: out[0] <= rx;
+                BIT1: out[1] <= rx;
+                BIT2: out[2] <= rx;
+                BIT3: out[3] <= rx;
+                BIT4: out[4] <= rx;
+                BIT5: out[5] <= rx;
+                BIT6: out[6] <= rx;
+                BIT7: out[7] <= rx;
+            endcase
+        end
+    end
+
+    // Ready signal
+    always @(posedge clk) begin
+        if (baud_clk) begin
+            if (state == STOP_BIT)
+                ready <= 1;
+            else if (state == START_BIT)
+                ready <= 0;
+        end
+    end
+
+endmodule

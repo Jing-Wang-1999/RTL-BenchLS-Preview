@@ -1,0 +1,97 @@
+module autovcoder_025118 (
+    pdec0,
+    pdec3,
+    pdec12,
+    pdec15,
+    nando,
+    addr
+);
+  output pdec0, pdec3, pdec12, pdec15;
+  output [3:0] nando;  //the output of the 4 nand gates that you should be using
+
+  input [5:0] addr;
+
+  //
+  // vvv - Declare your wires here - vvv
+  //
+  wire a = addr[5];
+  wire b = addr[4];
+  wire c = addr[3];
+  wire d = addr[2];
+  wire notA;
+  wire notB;
+  wire notC;
+  wire notD;
+  wire ABnd;
+  wire CDnd;
+  wire ABd;
+  wire CDd;
+
+  //
+  // vvv - Your structural verilog code here - vvv
+  //
+  inv ay (
+      notA,
+      a
+  );
+  inv be (
+      notB,
+      b
+  );
+  inv se (
+      notC,
+      c
+  );
+  inv di (
+      notD,
+      d
+  );
+
+  nand2 une (
+      ABnd,
+      notA,
+      notB
+  );
+  nand2 too (
+      CDnd,
+      notC,
+      notD
+  );
+  nand2 tre (
+      ABd,
+      a,
+      b
+  );
+  nand2 fer (
+      CDd,
+      c,
+      d
+  );
+
+  nor2 un (
+      pdec0,
+      ABnd,
+      CDnd
+  );  //pdec[0]
+  nor2 to (
+      pdec3,
+      ABnd,
+      CDd
+  );  //pdec[3]
+  nor2 te (
+      pdec12,
+      ABd,
+      CDnd
+  );  //pdec[12]
+  nor2 fr (
+      pdec15,
+      ABd,
+      CDd
+  );  //pdec[15]
+
+  assign nando[0] = ABnd;
+  assign nando[1] = CDnd;
+  assign nando[2] = ABd;
+  assign nando[3] = CDd;
+endmodule
+

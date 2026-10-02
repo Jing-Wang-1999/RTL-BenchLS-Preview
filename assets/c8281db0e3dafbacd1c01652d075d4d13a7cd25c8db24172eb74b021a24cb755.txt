@@ -1,0 +1,68 @@
+# sirv_qspi_physical: default-configuration specification
+
+Implement the module interface below. All arithmetic is fixed-width unsigned unless explicitly stated. Sequential updates use pre-edge values and occur on the stated clock edge. Preserve externally observable cycle timing, including outputs outside valid transactions wherever defined. No golden RTL is provided to the implementation model.
+
+## Interface
+
+```verilog
+module sirv_qspi_physical(
+  input   clock,
+  input   reset,
+  output  io_port_sck,
+  input   io_port_dq_0_i,
+  output  io_port_dq_0_o,
+  output  io_port_dq_0_oe,
+  input   io_port_dq_1_i,
+  output  io_port_dq_1_o,
+  output  io_port_dq_1_oe,
+  input   io_port_dq_2_i,
+  output  io_port_dq_2_o,
+  output  io_port_dq_2_oe,
+  input   io_port_dq_3_i,
+  output  io_port_dq_3_o,
+  output  io_port_dq_3_oe,
+  output  io_port_cs_0,
+  input  [11:0] io_ctrl_sck_div,
+  input   io_ctrl_sck_pol,
+  input   io_ctrl_sck_pha,
+  input  [1:0] io_ctrl_fmt_proto,
+  input   io_ctrl_fmt_endian,
+  input   io_ctrl_fmt_iodir,
+  output  io_op_ready,
+  input   io_op_valid,
+  input   io_op_bits_fn,
+  input   io_op_bits_stb,
+  input  [7:0] io_op_bits_cnt,
+  input  [7:0] io_op_bits_data,
+  output  io_rx_valid,
+  output [7:0] io_rx_bits
+);
+endmodule
+```
+
+## Scope and reset
+
+A micro-operation driven physical SPI shifter supporting single/dual/quad data lanes. It does not own chip-select timing: `io_port_cs_0` is permanently1. All state uses rising `clock` and asynchronous high `reset`. Reset clears divider/polarity/phase/format registers, timing counter, bit counter, serial clock, shift buffer, output nibble, transfer flag, and delay pipelines. Reference-edge polarity starts1; completion starts1. Consequently `io_op_ready=io_rx_valid=1` immediately after reset; receive-valid is a completion *level*, not a pulse.
+
+All inputs are as declared, no parameters. Format protocol0=single,1=dual,2=quad; protocol3 yields zero shift/drive data. Single lane always drives DQ0, reads DQ1 and leaves DQ1..3 disabled. Dual drives DQ0/1 iff latched iodir=1; quad drives all lanes iff iodir=1. Disabled lanes still expose their registered output bits. Endian0 sends high bits first; endian1 bit-reverses the byte on load and reverses the receive buffer at the output. `io_rx_bits` continuously exposes that result.
+
+## Operation acceptance and exact scheduling
+
+The following recurrence specifies system-clock timing; all RHS values are old state. State consists of 8-bit remaining symbol count N, 12-bit timer T, reference half-cycle bit C, transfer-active X, completion D, latched divider V/polarity P/phase H/format, serial output S, shift buffer B and output nibble Q. Let `stop=(N==0)`, `beat=(T==0)`, `inv=H xor P`.
+
+Default scheduled events are:
+
+- If N>0 and beat: invert C; if X, set S to `C xor inv`, produce sample event when C=1 and setup event when C=0. If C=0, decrement N by1. If X=0 the count/reference still progress but no sample/setup or clock change occurs.
+- If N=1 and beat and C=0: force S=P and suppress the default setup event. The acceptance window A is true at this boundary or whenever N=0.
+- Last event is N=1 and beat and C=1 and X. Input ready is A && D. Acceptance of an operation requires ready && `io_op_valid`.
+- Timer reloads old V whenever stop or beat; otherwise decrements modulo4096. Reload uses old divider even on an operation that writes it.
+
+An accepted operation loads N=`io_op_bits_cnt`. It sets X to complement of `io_op_bits_fn`. With `stb=1` it captures format protocol/endian/iodir. Function1 is a delay/configure operation: with stb also latch divider, polarity and phase and set S to incoming polarity; otherwise retain the normal scheduled S. Function0 is a transfer: load B from incoming data, bit-reversed according to the *incoming* endian regardless of stb; set S to old inv; force setup event; set completion to `(incoming count==0)`. Function1 leaves completion on its normal progression. Other accepted fields do not change stored clock controls unless function1/stb. Back-to-back operation-ready timing therefore depends on both remaining count and the delayed completion.
+
+## Shift and sample pipeline
+
+Delay setup by one clock. Delay sample and last events through three registers each. Completion normally becomes old completion OR three-cycle-delayed last; an accepted transfer overrides it with count-is-zero. No receive-ready signal clears completion.
+
+Let k=1/2/4 for the latched protocol. A shift is requested by delayed_setup OR (delayed_sample AND N==0). Every clock compute the next buffer, even idle: its upper8-k bits are old low8-k bits when shifting, otherwise old bits7:k; low k bits are sampled DQ1 / DQ[1:0] / DQ[3:0] on delayed_sample, otherwise old low k bits. This leaves the buffer unchanged in ordinary idle. Invalid protocol3 makes it zero. An accepted transfer overrides this recurrence with the incoming (possibly reversed) byte.
+
+On a setup event update Q from the high nibble of the transfer-load byte when A is true, otherwise from old B[7:4]. Selection protocol is incoming protocol when A, otherwise stored protocol; protocol0 chooses nibble bit3 into Q0 and zeroes Q3:1, protocol1 chooses nibble bits3:2 into Q1:0 and zeroes Q3:2, protocol2 uses all four, protocol3 zeroes Q. Note that this mux uses the scheduling acceptance window A, while loading a new transfer requires ready && valid. Registered DQ output bits are Q0..3. Preserve this distinction and all register timing for arbitrary public inputs; do not replace the interface with a higher-level byte transaction abstraction.

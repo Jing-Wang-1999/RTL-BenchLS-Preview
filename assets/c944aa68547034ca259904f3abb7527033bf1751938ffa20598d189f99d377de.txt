@@ -1,0 +1,92 @@
+module autovcoder_112209 (
+    rst_b,
+    osc_clk,
+    cclk,
+    tck,
+    sample_mode_done,
+    md_spi,
+    md_jtag,
+    clkout,
+    clkout_b,
+    sample_mode_done_2,
+    spi_clk_in_2,
+    spi_clk_out_2,
+    tck_pad_2,
+    osc_clk_2,
+    sample_mode_done_1,
+    spi_clk_out_14,
+    tck_pad_8,
+    osc_clk_8,
+    spi_clk_in_6,
+    clk_b_1
+);
+  input rst_b, osc_clk, cclk, tck, sample_mode_done, md_spi, md_jtag, 
+     sample_mode_done_2, spi_clk_in_2, tck_pad_2, osc_clk_2, spi_clk_out_14, 
+     tck_pad_8, osc_clk_8, spi_clk_in_6;
+  output clkout, clkout_b, spi_clk_out_2, sample_mode_done_1, clk_b_1;
+  wire clksw1_out, sel_jtag_clk, sel_spi_clk, clksw1_out_1, clksw1_out_2, 
+     clksw1_out_3, clksw1_out_4, clksw1_out_5;
+  clk_gfsw_0 clksw2 (
+      .rst_b(rst_b),
+      .clka(),
+      .clkb(),
+      .sel(sel_jtag_clk),
+      .clkout(),
+      .spi_clk_out_2(spi_clk_out_2),
+      .tck_pad_2(tck_pad_2),
+      .clksw1_out_1(clksw1_out),
+      .tck_pad_8(tck_pad_8),
+      .clksw1_out_3(clksw1_out_3)
+  );
+  clk_gfsw_1 clksw1 (
+      .rst_b(rst_b),
+      .clka(),
+      .clkb(),
+      .sel(sel_spi_clk),
+      .clkout(),
+      .clksw1_out_1(clksw1_out),
+      .osc_clk_2(osc_clk_2),
+      .spi_clk_in_2(spi_clk_in_2),
+      .spi_clk_in_6(spi_clk_in_6),
+      .osc_clk_8(osc_clk_8)
+  );
+  CKAN2D1HVT U12_C1 (
+      .A1(sample_mode_done_2),
+      .A2(md_jtag),
+      .Z (sel_jtag_clk)
+  );
+  IND2D2HVT U11_C1 (
+      .A1(md_spi),
+      .B1(sample_mode_done_1),
+      .ZN(sel_spi_clk)
+  );
+  CKBD1HVT CLK_SYNC_SKEW_12 (
+      .I(clksw1_out_2),
+      .Z(clksw1_out_3)
+  );
+  CKBD1HVT CLK_SYNC_SKEW_14 (
+      .I(clksw1_out_4),
+      .Z(clksw1_out_5)
+  );
+  CKBD1HVT CLK_SYNC_SKEW_13 (
+      .I(clksw1_out_1),
+      .Z(clksw1_out_4)
+  );
+  CKBD1HVT CLK_SYNC_SKEW_11 (
+      .I(clksw1_out_5),
+      .Z(clksw1_out_2)
+  );
+  CKBD1HVT CLK_SYNC_SKEW_10 (
+      .I(clksw1_out),
+      .Z(clksw1_out_1)
+  );
+  CKND16HVT S_0_C1 (
+      .I (spi_clk_out_14),
+      .ZN(clk_b_1)
+  );
+  BUFFD2HVT OPTHOLD_G_70 (
+      .I(sample_mode_done_2),
+      .Z(sample_mode_done_1)
+  );
+endmodule
+

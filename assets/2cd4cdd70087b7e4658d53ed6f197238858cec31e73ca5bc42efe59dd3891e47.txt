@@ -1,0 +1,39 @@
+This Verilog module, `fpu_division_postnormalizer`, performs the post-normalization stage for floating-point division results, ensuring the output is correctly normalized, rounded, and flagged for any inaccuracies.
+
+### Primary Function:
+The module's primary function is to process the quotient and remainder from a floating-point division operation, normalize the result, apply the appropriate rounding, handle special cases (like zero, infinity, and NaN), and produce the final floating-point output while indicating if the result is inexact.
+
+### Key Control Flow and Decision Points:
+1. **Clocking and Input Latching**: The module captures all input signals on the rising edge of the clock, ensuring synchronized processing.
+2. **Special Case Handling**: It identifies special cases like zero, infinity, and NaN by checking the exponent and significand fields of the operands.
+3. **Normalization**: It adjusts for the normalization of the quotient, handling shifts left or right based on the quotient's leading zeros.
+4. **Rounding Decision**: Based on the rounding mode, the module determines if rounding up is necessary by evaluating the guard, round, and sticky bits.
+
+### Important Data Processing and Signal Interactions:
+1. **Input Processing**: Inputs are latched into respective registers for subsequent stages. The exponents of the operands are extracted and checked for denormalization.
+2. **Normalization**: The module shifts the quotient appropriately, considering leading zeros and the exponent adjustment, to achieve a normalized form.
+3. **Exponent Calculation**: The normalized quotient's shift amount affects the final exponent calculation, which is adjusted based on the rounding result.
+4. **Rounding**: The guard, round, and sticky bits are evaluated to decide if the fraction part should be incremented (rounded up).
+5. **Output Assignment**: The final floating-point result is constructed from the sign bit, adjusted exponent, and rounded fraction, accounting for special cases like zero, infinity, and NaN.
+6. **Inexact Flag**: The module sets the inexact flag if the result is inexact, due to non-zero remainder, lost bits, or a guard/round/sticky condition indicating a rounding adjustment.
+
+This concise instruction covers the operational essence of the module, ready to be translated into Verilog code that matches the provided implementation.
+
+Module Interface:
+module fpu_division_postnormalizer
+  (
+   input clk_i,
+   input [FP_WIDTH-1:0] opa_i,
+   input [FP_WIDTH-1:0] opb_i,
+   input [FRAC_WIDTH+3:0] qutnt_i,
+   input [FRAC_WIDTH+3:0] rmndr_i,
+   input [EXP_WIDTH+1:0] exp_10_i,
+   input sign_i,
+   input [1:0] rmode_i,
+   output reg [FP_WIDTH-1:0] output_o,
+   output reg ine_o
+   );
+
+Behavioral Clarifications:
+- Parameters: FP_WIDTH=32, FRAC_WIDTH=23, EXP_WIDTH=8. Special constants: INF=31'b1111111100000000000000000000000, QNAN=31'b1111111110000000000000000000000, SNAN=31'b1111111100000000000000000000001.
+- The pipeline has two registered stages: inputs are latched on the first clock edge; output_o and ine_o are registered on a subsequent clock edge from combinational results. Rounding mode 0 is round-to-nearest-even, modes 2 and 3 are round toward positive/negative infinity.

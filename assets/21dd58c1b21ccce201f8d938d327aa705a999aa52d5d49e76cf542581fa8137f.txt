@@ -1,0 +1,48 @@
+module autovcoder_141030(
+    input wire clk,
+    input wire reset,
+    input wire [7:0] start_x, start_y,
+    input wire [7:0] target_x, target_y,
+    input wire [3:0] iterations,
+    output reg [7:0] nearest_x, nearest_y,
+    output reg done
+);
+    reg [7:0] random_x, random_y;
+    reg [7:0] tree_x [0:15];
+    reg [7:0] tree_y [0:15];
+    reg [3:0] tree_size;
+    integer i;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            tree_size <= 0;
+            nearest_x <= start_x;
+            nearest_y <= start_y;
+            done <= 0;
+        end else if (tree_size < iterations) begin
+            // Generate random points within a predefined space
+            random_x <= $random % 256; // Assuming 8-bit space
+            random_y <= $random % 256;
+
+            // Store the random points in the tree
+            tree_x[tree_size] <= random_x;
+            tree_y[tree_size] <= random_y;
+            tree_size <= tree_size + 1;
+
+            // Find the nearest point to the target
+            nearest_x <= tree_x[0];
+            nearest_y <= tree_y[0];
+            for (i = 1; i < tree_size; i = i + 1) begin
+                if ((tree_x[i] - target_x) * (tree_x[i] - target_x) + 
+                    (tree_y[i] - target_y) * (tree_y[i] - target_y) <
+                    (nearest_x - target_x) * (nearest_x - target_x) + 
+                    (nearest_y - target_y) * (nearest_y - target_y)) begin
+                    nearest_x <= tree_x[i];
+                    nearest_y <= tree_y[i];
+                end
+            end
+        end else begin
+            done <= 1;
+        end
+    end
+endmodule

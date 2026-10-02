@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+"""Candidate evaluator: immutable upstream bench/support, replace only declared RTL."""
+import argparse,json,re,shutil,subprocess,time
+from pathlib import Path
+IVERILOG='/home/jwangjw/anaconda3/envs/securitylab/bin/iverilog'
+VVP='/home/jwangjw/anaconda3/envs/securitylab/bin/vvp'
+def evaluate(payload,candidate,output):
+    meta=json.loads((payload/'metadata.json').read_text());output.mkdir(parents=True,exist_ok=False); records=[]
+    staged=output/'source';shutil.copytree(payload/'source',staged)
+    for rel in meta['rtl_files']: shutil.copy2(candidate/rel,staged/rel)
+    for point in meta['testpoints']:
+        d=output/point['id'];d.mkdir(); records_config=[]
+        for cfg in point.get('configurations',[{}]):
+            work=d/cfg.get('id','default');work.mkdir()
+            for src,dst in cfg.get('assets',meta.get('assets',{})).items():
+                target=work/dst;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(staged/src,target)
+            cmd=[IVERILOG,'-g'+meta.get('language','2012'),'-s',point['bench_top'],'-o',str(work/'sim.vvp')]
+            cmd += ['-I'+str(staged/x) for x in meta.get('include_dirs',[])]+point.get('compile_flags',[])+cfg.get('compile_flags',[])
+            cmd += [str(staged/x) for x in meta['rtl_files']]+[str(staged/x) for x in point['bench_files']]
+            start=time.monotonic();p=subprocess.run(cmd,cwd=work,capture_output=True,text=True,timeout=120);(work/'compile.log').write_text(p.stdout+p.stderr)
+            row={'id':cfg.get('id','default'),'compile_pass':p.returncode==0,'compile_returncode':p.returncode,'compile_command':cmd,'passed':False}
+            if p.returncode==0:
+                try:
+                    p=subprocess.run([VVP,'-n',str(work/'sim.vvp')],cwd=work,capture_output=True,text=True,timeout=point.get('timeout',120));log=p.stdout+p.stderr;row['simulation_returncode']=p.returncode
+                except subprocess.TimeoutExpired as e:log=(e.stdout or b'').decode()+(e.stderr or b'').decode();row['timeout']=True
+                (work/'simulation.log').write_text(log)
+                row['passed']=not row.get('timeout') and row['simulation_returncode']==0 and all(re.search(x,log,re.M) for x in cfg.get('require_patterns',point['require_patterns'])) and not any(re.search(x,log,re.M|re.I) for x in point['reject_patterns'])
+            row['elapsed_seconds']=round(time.monotonic()-start,3);records_config.append(row)
+        records.append({'id':point['id'],'passed':all(x['passed'] for x in records_config),'compile_pass':all(x['compile_pass'] for x in records_config),'configurations':records_config})
+    result={'case_id':meta['case_id'],'testpoints':records,'passed_testpoints':sum(x['passed'] for x in records),'total_testpoints':len(records),'score':sum(x['passed'] for x in records)/len(records),'compile_pass':all(x['compile_pass'] for x in records),'passed':all(x['passed'] for x in records)}
+    (output/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result));return result
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--payload',type=Path,required=True);p.add_argument('--candidate-dir',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();evaluate(a.payload.resolve(),a.candidate_dir.resolve(),a.output.resolve())

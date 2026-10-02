@@ -1,0 +1,46 @@
+# Machine CSR register file and trap control
+
+Implement `riscv_csr_regfile`, default parameters SUPPORT_MTIMECMP=1,SUPPORT_SUPER=0, no simulator macros. Only this default configuration is qualified. Inputs: clk_i,rst_i,ext_intr_i,timer_intr_i,cpu_id_i[31:0],misa_i[31:0],exception_i[5:0],exception_pc_i[31:0],exception_addr_i[31:0],csr_ren_i,csr_raddr_i[11:0],csr_waddr_i[11:0],csr_wdata_i[31:0]. Outputs: csr_rdata_o[31:0],csr_branch_o,csr_target_o[31:0],priv_o[1:0],status_o[31:0],satp_o[31:0],interrupt_o[31:0]. State updates on rising clk_i with asynchronous active-high rst_i. Reset clears all storage except privilege=3(machine). All arithmetic wraps32 bits.
+
+This is an internal CSR storage component: there is **no write enable**. Any matching csr_waddr_i writes on each eligible edge; an unrecognized address means no write. Read data is combinational from address even when csr_ren_i=0. csr_ren_i affects only pending-interrupt buffering. Access permission checking and encoding instructions into the exception input occur outside this module.
+
+Default configuration keeps priv_o=3,satp_o=0 permanently. status_o is the full stored32-bit status word. All dedicated supervisor registers and delegation registers are pinned0, but writes to supervisor aliases SSTATUS,SIE,SIP can still modify their machine backing registers. Reset initializes all machine registers and the64-bit free-running cycle counter to0. The cycle counter increments on every nonreset edge regardless of trap or CSR address; no cycle write is implemented. High32 increments exactly when old low32=0xffffffff.
+
+Read/write register map (hex addresses and masks):
+
+|Address|Register/read result|Write behavior in ordinary branch|
+|---|---|---|
+|300|MSTATUS,full32|Replace full32|
+|301|Live misa_i|Ignored|
+|302,303|0 (delegations disabled)|Ignored in default configuration|
+|304|MIE AND0xaaa|Replace with data AND0xaaa|
+|305|MTVEC,full32|Replace full32, including low address bits|
+|340|MSCRATCH,full32|Replace full32|
+|341|MEPC,full32|Replace full32, including low bits|
+|342|MCAUSE AND0x8000000f|Replace with data AND0x8000000f|
+|343|MTVAL,full32|Replace full32|
+|344|MIP AND0xaaa|Replace with data AND0xaaa before pending events are ORed|
+|c00,c01|Cycle low32|Ignored|
+|c81|Cycle high32|Ignored|
+|f14|Live cpu_id_i|Ignored|
+|7c0|MTIMECMP,full32|Replace full32 and arm internal one-shot timer|
+|100|0 (SSTATUS read disabled)|Replace status bits selected by0x40133, preserving other status bits|
+|104|0 (SIE read disabled)|Replace MIE bits selected by0x222, preserving others|
+|144|0 (SIP read disabled)|Replace MIP bits selected by0x222, preserving others, before event OR|
+|105,140,141,142,143,180|0 (dedicated supervisor registers disabled)|No retained change|
+|All other addresses|0|Ignored|
+
+Interrupt output is `(MIP AND MIE)` when status bit3(MIE)=1, otherwise0. The mask includes supervisor bit positions as well as machine positions even though supervisor privilege support is disabled. External events are sticky: ext_intr_i sets pending bit11; timer_intr_i sets bit7. These are event latches, not direct live readouts. Software writes can clear latched MIP bits, subject to simultaneous events and buffering below.
+
+State priority on each edge after reset:
+
+1. If (exception_i AND0x30)=0x20, take machine interrupt. Copy status bit3 to bit7(MPIE), write bits12:11(MPP)=old privilege3, clear bit3. MEPC=exception_pc_i,MTVAL=0. Choose MCAUSE=0x80000003 if interrupt_o bit3, else0x80000007 if bit7, else0x8000000b if bit11; if none of these, MCAUSE holds. This type test accepts0x20..0x2f. Other status bits hold.
+2. Else if exception_i in0x30..0x33, return. For0x33, status bit3=old bit7,bit7=1,bits12:11=0. Other three return codes use supervisor return mechanics even in default configuration: status bit1=old bit5,bit5=1,bit8=0. Privilege output nevertheless stays3. No CSR write occurs.
+3. Else if (exception_i AND0x30)=0x10, take machine exception. Copy bit3->7,set12:11=3,clear3; MEPC=exception_pc_i; MCAUSE=zeroextended exception_i[3:0]. MTVAL=exception_pc_i for codes10,11,1c; exception_addr_i for12,14,15,16,17,1d,1f; otherwise0.
+4. Otherwise apply CSR write map. This includes unrecognized exception codes and FENCE0x34. Timer/counter/event behavior below occurs after these choices.
+
+A32-bit pending buffer P and one-bit read-in-progress B start0. Define freeze=(csr_ren_i AND csr_raddr_i in{344,144}) OR old B. Before the edge, copy old P to Pnext, then set bit11 on ext_intr_i and bit7 on timer_intr_i. If old cycle-low equals old MTIMECMP, **overwrite** Pnext bit7 with old timer-armed flag (possibly0) and clear the armed flag; this comparison runs every edge, takes precedence over timer_intr_i at bit7, and overrides a simultaneous timer-arm write. OR Pnext into the MIP value obtained above, even on traps. Store P=Pnext if freeze else0. Update B with priority: set if csr_ren_i reading344 or144; otherwise clear if csr_waddr_i is344 or144 or exception_i!=0; otherwise hold. Old P can therefore restore pending bits during a read-modify-write sequence. MTIMECMP write arms the timer only until the next equality. A compare event uses old counter/compare/arm values, not a new write's values.
+
+Combinational branch outputs use old stored CSR values, independent of reset input until reset changes storage. Default csr_branch_o=0,csr_target_o=0. If exception_i is exactly0x20, branch to MTVEC. Else if exception_i in0x30..0x33 branch to MEPC for0x33 or0 for other return codes (SEPC is pinned0). Else if exception type is0x10, branch to MTVEC. Else if exception_i=0x34(FENCE), branch to exception_pc_i+4. All these branches assert csr_branch_o. In particular0x21..0x2f update interrupt state on an edge but do not assert branch output. MTVEC is used as a raw address; no vectored interrupt offset is added.
+
+These rules cover all public input combinations, including simultaneous events/writes and noncanonical exception encodings. Do not add ideal architectural privilege filtering, vector mode behavior, CSR write-enable gating, or input assumptions absent from this component contract.

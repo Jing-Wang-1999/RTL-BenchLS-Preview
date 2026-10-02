@@ -1,0 +1,8 @@
+import json, subprocess, tempfile
+from pathlib import Path
+root = Path(__file__).resolve().parents[1]
+files = [str(root / f['path']) for f in json.loads((root/'output_contract.json').read_text())['required_files']]
+with tempfile.TemporaryDirectory() as tmp:
+    out = str(Path(tmp)/'example.vvp')
+    subprocess.run(['iverilog','-g2012','-s','tb','-o',out,*files,str(root/'checks/example.v')],check=True)
+    subprocess.run(['vvp',out],check=True)

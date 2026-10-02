@@ -1,0 +1,131 @@
+always @ *
+begin
+    next_state_r = state_q;
+
+    case (state_q)
+    //-----------------------------------------
+    // STATE_RESET
+    //-----------------------------------------
+    STATE_RESET :
+    begin
+        // Final line checked
+        if (flush_last_q)
+            next_state_r = STATE_LOOKUP;
+    end
+    //-----------------------------------------
+    // STATE_FLUSH_ADDR
+    //-----------------------------------------
+    STATE_FLUSH_ADDR : next_state_r = STATE_FLUSH;
+    //-----------------------------------------
+    // STATE_FLUSH
+    //-----------------------------------------
+    STATE_FLUSH :
+    begin
+        // Dirty line detected - evict unless initial cache reset cycle
+        if (tag_dirty_any_m_w)
+        begin
+            // Evict dirty line - else wait for dirty way to be selected
+            if (evict_way_w)
+                next_state_r = STATE_EVICT;
+        end
+        // Final line checked, nothing dirty
+        else if (flush_last_q)
+            next_state_r = STATE_LOOKUP;
+        else
+            next_state_r = STATE_FLUSH_ADDR;
+    end
+    //-----------------------------------------
+    // STATE_LOOKUP
+    //-----------------------------------------
+    STATE_LOOKUP :
+    begin
+        // Previous access missed in the cache
+        if ((mem_rd_m_q || (mem_wr_m_q != 4'b0)) && !tag_hit_any_m_w)
+        begin
+            // Evict dirty line first
+            if (evict_way_w)
+                next_state_r = STATE_EVICT;
+            // Allocate line and fill
+            else
+                next_state_r = STATE_REFILL;
+        end
+        // Writeback a single line
+        else if (mem_writeback_i && mem_accept_o)
+            next_state_r = STATE_WRITEBACK;
+        // Flush whole cache
+        else if (mem_flush_i && mem_accept_o)
+            next_state_r = STATE_FLUSH_ADDR;
+        // Invalidate line (even if dirty)
+        else if (mem_invalidate_i && mem_accept_o)
+            next_state_r = STATE_INVALIDATE;
+    end
+    //-----------------------------------------
+    // STATE_REFILL
+    //-----------------------------------------
+    STATE_REFILL :
+    begin
+        // End of refill
+        if (pmem_ack_w && pmem_last_w)
+        begin
+            // Refill reason was write
+            if (mem_wr_m_q != 4'b0)
+                next_state_r = STATE_WRITE;
+            // Refill reason was read
+            else
+                next_state_r = STATE_READ;
+        end
+    end
+    //-----------------------------------------
+    // STATE_WRITE/READ
+    //-----------------------------------------
+    STATE_WRITE, STATE_READ :
+    begin
+        next_state_r = STATE_LOOKUP;
+    end
+    //-----------------------------------------
+    // STATE_EVICT
+    //-----------------------------------------
+    STATE_EVICT :
+    begin
+        // End of evict, wait for write completion
+        if (pmem_accept_w && pmem_last_w)
+            next_state_r = STATE_EVICT_WAIT;
+    end
+    //-----------------------------------------
+    // STATE_EVICT_WAIT
+    //-----------------------------------------
+    STATE_EVICT_WAIT :
+    begin
+        // Single line writeback
+        if (pmem_ack_w && mem_writeback_m_q)
+            next_state_r = STATE_LOOKUP;
+        // Evict due to flush
+        else if (pmem_ack_w && flushing_q)
+            next_state_r = STATE_FLUSH_ADDR;
+        // Write ack, start re-fill now
+        else if (pmem_ack_w)
+            next_state_r = STATE_REFILL;
+    end
+    //-----------------------------------------
+    // STATE_WRITEBACK: Writeback a cache line
+    //-----------------------------------------
+    STATE_WRITEBACK:
+    begin
+        // Line is dirty - write back to memory
+        if (tag_hit_and_dirty_m_w)
+            next_state_r = STATE_EVICT;
+        // Line not dirty, carry on
+        else
+            next_state_r = STATE_LOOKUP;
+    end
+    //-----------------------------------------
+    // STATE_INVALIDATE: Invalidate a cache line
+    //-----------------------------------------
+    STATE_INVALIDATE:
+    begin
+        next_state_r = STATE_LOOKUP;
+    end
+    default:
+        ;
+   endcase
+end

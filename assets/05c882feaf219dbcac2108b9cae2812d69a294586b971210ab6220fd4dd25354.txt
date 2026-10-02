@@ -1,0 +1,57 @@
+always @(posedge i_clk)
+	if (i_reset)
+	begin
+		r_busy <= 1'b1;
+		state <= TXU_IDLE;
+	end else if (i_break)
+	begin
+		state <= TXU_BREAK;
+		r_busy <= 1'b1;
+	end else if (!zero_baud_counter)
+	begin // r_busy needs to be set coming into here
+		r_busy <= 1'b1;
+	end else if (state == TXU_BREAK)
+	begin
+		state <= TXU_IDLE;
+		r_busy <= !ck_cts;
+	end else if (state == TXU_IDLE)	// STATE_IDLE
+	begin
+		if ((i_wr)&&(!r_busy))
+		begin	// Immediately start us off with a start bit
+			r_busy <= 1'b1;
+			case(i_data_bits)
+			2'b00: state <= TXU_BIT_ZERO;
+			2'b01: state <= TXU_BIT_ONE;
+			2'b10: state <= TXU_BIT_TWO;
+			2'b11: state <= TXU_BIT_THREE;
+			endcase
+		end else begin // Stay in idle
+			r_busy <= !ck_cts;
+		end
+	end else begin
+		// One clock tick in each of these states ...
+		// baud_counter <= clocks_per_baud - 28'h01;
+		r_busy <= 1'b1;
+		if (state[3] == 0) // First 8 bits
+		begin
+			if (state == TXU_BIT_SEVEN)
+				state <= (use_parity)? TXU_PARITY:TXU_STOP;
+			else
+				state <= state + 1;
+		end else if (state == TXU_PARITY)
+		begin
+			state <= TXU_STOP;
+		end else if (state == TXU_STOP)
+		begin // two stop bit(s)
+			if (dblstop)
+				state <= TXU_SECOND_STOP;
+			else
+				state <= TXU_IDLE;
+		end else // `TXU_SECOND_STOP and default:
+		begin
+			state <= TXU_IDLE; // Go back to idle
+			// Still r_busy, since we need to wait
+			// for the baud clock to finish counting
+			// out this last bit.
+		end
+	end

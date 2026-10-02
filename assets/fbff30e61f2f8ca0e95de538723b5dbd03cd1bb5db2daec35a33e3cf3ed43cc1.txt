@@ -1,0 +1,48 @@
+module HLS_fp17_mul_core_chn_b_rsci_chn_b_wait_dp (
+  input nvdla_core_clk,
+  input nvdla_core_rstn,
+  input chn_b_rsci_oswt,
+  input chn_b_rsci_biwt,
+  input chn_b_rsci_bdwt,
+  input [16:0] chn_b_rsci_d,
+  output chn_b_rsci_bawt,
+  output chn_b_rsci_wen_comp,
+  output [16:0] chn_b_rsci_d_mxwt
+);
+
+  // Internal registers
+  reg [16:0] chn_b_rsci_d_bfwt;
+  reg chn_b_rsci_bcwt;
+
+  // Combinational logic for buffer availability
+  assign chn_b_rsci_bawt = chn_b_rsci_biwt | chn_b_rsci_bcwt;
+
+  // Combinational logic for write enable completion
+  assign chn_b_rsci_wen_comp = ~chn_b_rsci_oswt | chn_b_rsci_bawt;
+
+  // Multiplexer for output data selection
+  assign chn_b_rsci_d_mxwt = chn_b_rsci_bcwt ? chn_b_rsci_d_bfwt : chn_b_rsci_d;
+
+  // Sequential logic for buffer update
+  always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
+    if (~nvdla_core_rstn) begin
+      chn_b_rsci_d_bfwt <= 17'b0;
+      chn_b_rsci_bcwt <= 1'b0;
+    end else begin
+      // Update buffered data when buffer is being written
+      if (chn_b_rsci_biwt & chn_b_rsci_bdwt) begin
+        chn_b_rsci_d_bfwt <= chn_b_rsci_d;
+      end
+      
+      // Update buffered wait state
+      // Buffer holds data when: input is available and data wait is asserted
+      // Buffer releases data when: output stage is ready and no new input
+      if (chn_b_rsci_biwt & chn_b_rsci_bdwt) begin
+        chn_b_rsci_bcwt <= 1'b1;
+      end else if (~chn_b_rsci_oswt & ~chn_b_rsci_biwt) begin
+        chn_b_rsci_bcwt <= 1'b0;
+      end
+    end
+  end
+
+endmodule

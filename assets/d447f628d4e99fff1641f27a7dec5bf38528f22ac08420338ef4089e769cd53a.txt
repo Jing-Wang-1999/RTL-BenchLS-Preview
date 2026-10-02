@@ -1,0 +1,121 @@
+module autovcoder_082013 (
+    output [4:0] sum,
+    output cout,
+    input [4:0] in1,
+    input [4:0] in2
+);
+
+  assign cin = 0;
+  wire [4:0] G_0;
+  wire [4:0] P_0;
+  wire [4:0] G_1;
+  wire [4:0] P_1;
+  wire [4:0] G_2;
+  wire [4:0] P_2;
+  wire [4:0] G_3;
+  wire [4:0] P_3;
+
+  assign G_0[0] = in1[4] & in2[4];
+  assign P_0[0] = in1[4] ^ in2[4];
+  assign G_0[1] = in1[3] & in2[3];
+  assign P_0[1] = in1[3] ^ in2[3];
+  assign G_0[2] = in1[2] & in2[2];
+  assign P_0[2] = in1[2] ^ in2[2];
+  assign G_0[3] = in1[1] & in2[1];
+  assign P_0[3] = in1[1] ^ in2[1];
+  assign G_0[4] = in1[0] & in2[0];
+  assign P_0[4] = in1[0] ^ in2[0];
+
+
+
+  /*Stage 1*/
+  gray_cell level_1_0 (
+      cin,
+      P_0[0],
+      G_0[0],
+      G_1[0]
+  );
+  black_cell level_0_1 (
+      G_0[0],
+      P_0[1],
+      G_0[1],
+      P_0[0],
+      G_1[1],
+      P_1[1]
+  );
+  black_cell level_0_2 (
+      G_0[1],
+      P_0[2],
+      G_0[2],
+      P_0[1],
+      G_1[2],
+      P_1[2]
+  );
+  black_cell level_0_3 (
+      G_0[2],
+      P_0[3],
+      G_0[3],
+      P_0[2],
+      G_1[3],
+      P_1[3]
+  );
+  black_cell level_0_4 (
+      G_0[3],
+      P_0[4],
+      G_0[4],
+      P_0[3],
+      G_1[4],
+      P_1[4]
+  );
+
+  /*Stage 2*/
+  gray_cell level_2_1 (
+      cin,
+      P_1[1],
+      G_1[1],
+      G_2[1]
+  );
+  gray_cell level_2_2 (
+      G_1[0],
+      P_1[2],
+      G_1[2],
+      G_2[2]
+  );
+  black_cell level_1_3 (
+      G_1[1],
+      P_1[3],
+      G_1[3],
+      P_1[1],
+      G_2[3],
+      P_2[3]
+  );
+  black_cell level_1_4 (
+      G_1[2],
+      P_1[4],
+      G_1[4],
+      P_1[2],
+      G_2[4],
+      P_2[4]
+  );
+
+  /*Stage 3*/
+  gray_cell level_3_3 (
+      cin,
+      P_2[3],
+      G_2[3],
+      G_3[3]
+  );
+  gray_cell level_3_4 (
+      G_1[0],
+      P_2[4],
+      G_2[4],
+      cout
+  );
+
+  assign sum[0] = cin ^ P_0[0];
+  assign sum[1] = G_1[0] ^ P_0[1];
+  assign sum[2] = G_2[1] ^ P_0[2];
+  assign sum[3] = G_2[2] ^ P_0[3];
+  assign sum[4] = G_3[3] ^ P_0[4];
+endmodule
+

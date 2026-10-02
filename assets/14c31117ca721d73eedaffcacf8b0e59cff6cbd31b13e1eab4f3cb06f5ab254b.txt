@@ -1,0 +1,12 @@
+always @(posedge clk or negedge aclr)
+	  if (~aclr)
+	    nword <=  0;
+	  else if (sclr)
+	    nword <=  0;
+	  else
+	    begin
+	        if (wreq & !rreq)
+	          nword <=  nword +1;
+	        else if (rreq & !wreq)
+	          nword <=  nword -1;
+	    end

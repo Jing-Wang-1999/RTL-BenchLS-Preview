@@ -1,0 +1,128 @@
+module rtlpp_07661
+   (cts,
+    reset_n,
+    rts,
+    sys_clk,
+    tx_data,
+    tx_send_active,
+    tx_wr_en,
+    txd);
+  output cts;
+  input reset_n;
+  output rts;
+  input sys_clk;
+  input [7:0]tx_data;
+  output [0:0]tx_send_active;
+  input tx_wr_en;
+  output txd;
+
+  wire UART_FIFO_IO_cntl_pr_0_fifoM_rd_en;
+  wire UART_FIFO_IO_cntl_pr_0_uart_rx_rd_en;
+  wire UART_FIFO_IO_cntl_pr_0_uart_tx_wr_en;
+  wire UART_TX_0_o_TX_Active;
+  wire UART_TX_0_o_TX_Serial;
+  wire clk_0_1;
+  wire [7:0]din_0_1;
+  wire [7:0]fifo_generator_0_dout;
+  wire fifo_generator_0_full;
+  wire fifo_generator_0_valid;
+  wire fifo_generator_0_wr_ack;
+  wire rst_0_1;
+  wire [0:0]util_vector_logic_0_Res;
+  wire [0:0]util_vector_logic_1_Res;
+  wire wr_en_0_1;
+
+  assign clk_0_1 = sys_clk;
+  assign cts = UART_FIFO_IO_cntl_pr_0_uart_rx_rd_en;
+  assign din_0_1 = tx_data[7:0];
+  assign rst_0_1 = reset_n;
+  assign rts = UART_FIFO_IO_cntl_pr_0_uart_tx_wr_en;
+  assign tx_send_active[0] = util_vector_logic_0_Res;
+  assign txd = UART_TX_0_o_TX_Serial;
+  assign wr_en_0_1 = tx_wr_en;
+
+  // Embedded UART_FIFO_IO_cntl_pr_0 functionality
+  reg fifoM_rd_en;
+  reg uart_rx_rd_en;
+  reg uart_tx_wr_en;
+
+  always @(posedge clk_0_1 or negedge rst_0_1) begin
+    if (!rst_0_1) begin
+      fifoM_rd_en <= 0;
+      uart_rx_rd_en <= 0;
+      uart_tx_wr_en <= 0;
+    end else begin
+      // Add your UART_FIFO_IO_cntl_pr_0 logic here
+      // Example:
+      // uart_tx_wr_en <= /* logic */;
+      // uart_rx_rd_en <= /* logic */;
+      // fifoM_rd_en <= /* logic */;
+    end
+  end
+
+  assign UART_FIFO_IO_cntl_pr_0_fifoM_rd_en = fifoM_rd_en;
+  assign UART_FIFO_IO_cntl_pr_0_uart_rx_rd_en = uart_rx_rd_en;
+  assign UART_FIFO_IO_cntl_pr_0_uart_tx_wr_en = uart_tx_wr_en;
+
+  // Embedded UART_TX_0 functionality
+  reg [7:0] tx_byte;
+  reg tx_dv;
+  reg tx_active;
+  reg tx_serial;
+
+  always @(posedge clk_0_1) begin
+    // Add your UART_TX_0 logic here
+    // Example:
+    // tx_byte <= fifo_generator_0_dout;
+    // tx_dv <= fifo_generator_0_valid;
+    // tx_active <= /* logic */;
+    // tx_serial <= /* logic */;
+  end
+
+  assign UART_TX_0_o_TX_Active = tx_active;
+  assign UART_TX_0_o_TX_Serial = tx_serial;
+
+  // Embedded fifo_generator_0 functionality
+  reg [7:0] fifo [0:15];  // Simple FIFO with depth of 16
+  reg [3:0] rd_ptr, wr_ptr;
+  reg fifo_full, fifo_valid, fifo_wr_ack;
+  wire fifo_empty;
+
+  assign fifo_empty = (rd_ptr == wr_ptr);
+
+  always @(posedge clk_0_1 or negedge rst_0_1) begin
+    if (!rst_0_1) begin
+      rd_ptr <= 0;
+      wr_ptr <= 0;
+      fifo_full <= 0;
+      fifo_valid <= 0;
+      fifo_wr_ack <= 0;
+    end else begin
+      fifo_wr_ack <= 0;
+      fifo_valid <= 0;
+      if (wr_en_0_1 && !fifo_full) begin
+        fifo[wr_ptr] <= din_0_1;
+        wr_ptr <= wr_ptr + 1;
+        fifo_wr_ack <= 1;
+        fifo_full <= (rd_ptr == (wr_ptr + 1));
+      end
+      if (UART_FIFO_IO_cntl_pr_0_fifoM_rd_en && !fifo_empty) begin
+        rd_ptr <= rd_ptr + 1;
+        fifo_valid <= 1;
+        fifo_full <= 0;
+      end
+    end
+  end
+
+  assign fifo_generator_0_dout = fifo[rd_ptr];
+  assign fifo_generator_0_full = fifo_full;
+  assign fifo_generator_0_valid = fifo_valid;
+  assign fifo_generator_0_wr_ack = fifo_wr_ack;
+
+  // Embedded util_vector_logic_0 functionality
+  assign util_vector_logic_0_Res = fifo_full;
+
+  // Embedded util_vector_logic_1 functionality
+  assign util_vector_logic_1_Res = UART_TX_0_o_TX_Active;
+
+endmodule

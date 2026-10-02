@@ -1,0 +1,87 @@
+module rtlpp_11431 (
+    input        clk,
+    input        reset,
+    input  [31:2] pc_new,
+    input        take_branch,
+    input        pause_in,
+    input  [25:0] opcode25_0,
+    input  [ 1:0] pc_source,
+    output [31:0] pc_out,
+    output [31:0] pc_out_plus4,
+    input        context_save,
+    input        context_restore,
+    input  [1:0] thread_id
+);
+
+    reg [31:2] pc_next0;
+    reg [31:2] pc_next1;
+    reg [31:2] pc_next2;
+    reg [31:2] pc_next3;    
+    reg [31:2] pc_next;
+    reg [31:2] pc_reg;
+
+    wire [31:2] pc_inc = pc_reg + 1; 
+    wire [31:0] pc_out = {pc_reg, 2'b00};
+    wire [31:0] pc_out_plus4 = {pc_inc, 2'b00};
+
+    always @(posedge clk or posedge reset)
+    begin
+       if (reset)
+          pc_reg <= 30'b0; // Adjust this constant according to `PC_RESET
+       else
+          pc_reg <= pc_next;
+    end
+
+    always @(pc_source or pc_inc or pc_reg or opcode25_0 or
+             take_branch or pc_new or pause_in or reset or context_save or context_restore)
+    begin
+       case (pc_source)
+          2'b00: pc_next = pc_inc; // Adjust these cases according to `from_inc4
+          2'b01: pc_next = {pc_reg[31:28], opcode25_0}; // Adjust these cases according to `from_opcode25_0
+          default: begin
+             if (take_branch)  
+                pc_next = pc_new;
+             else
+                pc_next = pc_inc;
+          end
+       endcase
+
+       if (pause_in == 1'b1)
+          pc_next = pc_reg;
+
+       if(reset) begin
+          pc_next0 = 30'b0;
+          pc_next1 = 30'b0;
+          pc_next2 = 30'b0;
+          pc_next3 = 30'b0;
+       end else begin
+          case(thread_id)
+             2'b00: begin
+                if(context_save == 1'b1)
+                    pc_next0 = pc_next;
+                if(context_restore == 1'b1)
+                    pc_next = pc_next0;
+             end
+             2'b01: begin
+                if(context_save == 1'b1)
+                    pc_next1 = pc_next;
+                if(context_restore == 1'b1)
+                    pc_next = pc_next1;
+             end
+             2'b10: begin
+                if(context_save == 1'b1)
+                    pc_next2 = pc_next;
+                if(context_restore == 1'b1)
+                    pc_next = pc_next2;
+             end
+             2'b11: begin
+                if(context_save == 1'b1)
+                    pc_next3 = pc_next;
+                if(context_restore == 1'b1)
+                    pc_next = pc_next3;
+             end
+          endcase
+       end
+    end
+
+endmodule

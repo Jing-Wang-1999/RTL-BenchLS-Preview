@@ -1,0 +1,64 @@
+always @ (posedge clk) begin
+    e_sof <= d_sof & rstn;
+    e_2BleN <= 1'b0;
+    {e_write_C, e_Cn, e_write_en, e_Bn, e_Nn} <= 0;
+    if(~rstn | d_sof) begin
+        {e_e, e_fc, e_lc, e_eof, e_ii, e_runi, e_rune, e_x, e_q, e_rt, e_err, e_No} <= 0;
+    end else begin
+        rt = 1'b0;
+        rune = 1'b0;
+        No = 0;
+        err = 0;
+        {s, q} = func_get_q(d_qp1, d_c, d_w_a);
+        Co = (e_write_C & e_q==q) ? e_Cn : Cram[q];
+        runi = ~d_fc & e_runi | (q == 9'd0);
+        if(runi) begin
+            runi = func_is_near(d_x, d_w_a);
+            rune = ~runi;
+        end
+        if(d_e) begin
+            if(runi) begin
+                e_x <= P_LOSSY ? d_w_a : d_x;
+            end else begin
+                if(rune) begin
+                    rt = func_is_near(d_b, d_w_a);
+                    s = {1'b0,d_w_a} > ({1'b0,d_b} + {6'd0,NEAR}) ? 1'b1 : 1'b0;
+                    q = rt ? 9'd365 : 9'd0;
+                    px = rt ? d_w_a : d_b;
+                end else begin
+                    px[9:8] = 2'b00;
+                    px[7:0] = func_clip( $signed({2'h0, func_predictor(d_w_a, d_b, d_c)}) + ( s ? -$signed({Co[7],Co[7],Co}) : $signed({Co[7],Co[7],Co}) ) );
+                end
+                err = s ? px - $signed({2'd0, d_x}) : $signed({2'd0, d_x}) - px;
+                err = func_errval_quantize(err);
+                e_x <= P_LOSSY ? func_clip( px + ( s ? -(P_QUANT*err) : P_QUANT*err ) ) : d_x;
+                err = func_modrange(err);
+                No = ((e_write_en & e_q==q) ? e_Nn : Nram[q]) + 7'd1;
+                Nn = No;
+                if(No[6]) Nn = Nn >>> 1;
+                e_Nn <= Nn[5:0];
+                Bo = (e_write_en & e_q==q) ? e_Bn : Bram[q];
+                e_write_en <= 1'b1;
+                if(rune) begin
+                    e_Bn <= B_update(No[6], Bo, err<$signed(10'd0));
+                    e_2BleN <= $signed({Bo,1'b0}) < $signed({1'b0,No});
+                end else begin
+                    e_write_C <= 1'b1;
+                    {e_Cn, e_Bn} <= C_B_update(No[6], Nn+7'd1, Co, Bo, err);
+                    e_2BleN <= $signed({Bo,1'b0}) <= -$signed({1'b0,No});
+                end
+            end
+            e_runi <= runi;
+        end
+        e_e <= d_e;
+        e_fc <= d_fc;
+        e_lc <= d_lc;
+        e_eof <= d_eof;
+        e_ii <= d_ii;
+        e_rune <= d_e & rune;
+        e_q <= q;
+        e_rt <= rt;
+        e_err <= err;
+        e_No <= No;
+    end
+end

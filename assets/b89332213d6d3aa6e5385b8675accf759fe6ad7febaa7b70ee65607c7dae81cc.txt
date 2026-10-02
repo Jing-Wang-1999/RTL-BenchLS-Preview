@@ -1,0 +1,95 @@
+module origen_091845(
+    input CLOCK_50,
+    input ps2_key_pressed,
+    input [7:0] ps2_key_data,
+    input [8:0] xplay, yplay,
+    input [2:0] colorplay,
+    input [8:0] xstart, ystart,
+    input [2:0] colorstart,
+    input [8:0] xswipe, yswipe,
+    input [2:0] colorswipe,
+    input hit1, hit2,
+    input swipedone,
+    input enable, active,
+    output reg [8:0] x, y,
+    output reg [2:0] color,
+    output reg startstate, playstate, swipestate
+);
+
+    // State encoding
+    localparam START = 3'b000;
+    localparam PLAY = 3'b001;
+    localparam SWIPE = 3'b010;
+
+    reg [2:0] CS, NS;
+
+    // State transition logic
+    always @(*) begin
+        case(CS)
+            START: begin
+                if (startstate && ps2_key_pressed && ps2_key_data == 8'h5A)
+                    NS = SWIPE;
+                else
+                    NS = START;
+            end
+            PLAY: NS = PLAY;
+            SWIPE: begin
+                if (swipedone) begin
+                    if (playstate)
+                        NS = START;
+                    else if (startstate)
+                        NS = PLAY;
+                    else
+                        NS = SWIPE;
+                end
+                else
+                    NS = SWIPE;
+            end
+            default: NS = START;
+        endcase
+    end
+
+    // State register
+    always @(posedge CLOCK_50) begin
+        if (!enable)
+            CS <= START;
+        else
+            CS <= NS;
+    end
+
+    // Output logic
+    always @(posedge CLOCK_50) begin
+        case(CS)
+            START: begin
+                if (ps2_key_pressed && ps2_key_data == 8'h76)
+                    startstate <= 1'b1;
+                if (startstate) begin
+                    x <= xstart;
+                    y <= ystart;
+                    color <= colorstart;
+                end
+                playstate <= 1'b0;
+                swipestate <= 1'b0;
+            end
+            PLAY: begin
+                x <= xplay;
+                y <= yplay;
+                color <= colorplay;
+                startstate <= 1'b0;
+                playstate <= 1'b1;
+                swipestate <= 1'b0;
+            end
+            SWIPE: begin
+                if (!swipedone) begin
+                    x <= xswipe;
+                    y <= yswipe;
+                    color <= colorswipe;
+                end
+                startstate <= 1'b0;
+                playstate <= 1'b0;
+                swipestate <= 1'b1;
+            end
+        endcase
+    end
+
+endmodule

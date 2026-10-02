@@ -1,0 +1,43 @@
+### Module Specification: Origen 120742 Control Unit
+
+**Overview**
+The module is a synchronous finite state machine (FSM) that generates control signals for a multi-step arithmetic or data processing operation. It sequences through a fixed set of states to coordinate actions such as clearing, loading, shifting, and performing a function step.
+
+**Inputs**
+- `clk`: System clock (positive-edge triggered).
+- `reset`: Asynchronous reset; forces the FSM to its initial state.
+- `run`: Start signal; initiates the sequence when asserted.
+- `clearA_loadB`: Command signal; when active during initialization, loads register B while clearing others.
+- `M`: Mode or data valid indicator; controls whether loading operations occur in specific states.
+
+**Outputs (Control Signals)**
+All outputs are asserted for one clock cycle in their respective states unless otherwise noted.
+- `clr_A`: Clear register A.
+- `clr_X`: Clear register X.
+- `ld_A`: Load register A (enabled only when M is high).
+- `ld_B`: Load register B.
+- `shift`: Command a shift operation.
+- `ld_X`: Load register X (enabled only when M is high).
+- `fn`: Function select; triggers a special operation (e.g., subtraction) in one state.
+
+**Behavior**
+The FSM operates in the following sequence:
+1. **Initialization (START)**: On reset, the machine waits in START. When `run` is asserted, it proceeds. In this state, registers A and X are cleared. Register B is loaded only if `clearA_loadB` is high.
+2. **Execution Cycle**: The sequence consists of alternating "A" states (A0 through A6) and "S" states (S0 through S7), with a special SUB7 state inserted between S6 and S7.
+   - In each "A" state (including SUB7), registers A and X are conditionally loaded (only if M is high). In SUB7, the `fn` signal is also asserted to enable a distinct operation.
+   - In each "S" state, a shift operation is commanded.
+3. **Completion (FINISH)**: After S7, the FSM enters FINISH, clears register X, and remains there while `run` is held high. When `run` is deasserted, it returns to START.
+
+**State Transition Rules**
+Transitions occur sequentially from START through the predefined states (A0→S0→A1→S1→...→S6→SUB7→S7→FINISH). The only conditional transitions are:
+- From START: proceed to A0 only when `run` is high.
+- From FINISH: return to START only when `run` is low; otherwise, remain in FINISH.
+
+**Allowed Sub-modules**
+None; the design is a self-contained FSM with combinational next-state and output logic, and a synchronous state register.
+
+**Timing**
+All state transitions and output assertions are synchronized to the rising edge of the clock. The outputs are purely combinatorial based on the current state and input M.
+
+**Function**
+This controller is designed to orchestrate a multi-cycle process involving data loading (conditioned on M), arithmetic or logical steps (triggered by fn), and iterative shifting, typical of operations like multi-bit multiplication or division.

@@ -1,0 +1,51 @@
+module autovcoder_032806(
+    input clk,
+    input [5:0] i_input,
+    input [31:0] A_input,
+    input [31:0] B_input,
+    input [31:0] C_input,
+    input [31:0] D_input,
+    input [31:0] Xk_plus_Ti_input,
+    input [4:0] s_input,
+    input [31:0] shifter_base,
+    output [31:0] int_B_output
+);
+
+    wire [31:0] f_output;
+    wire [31:0] sum_result;
+    wire [31:0] rotated_result;
+    
+    // Select function based on round index
+    wire [31:0] f_round0_15;
+    wire [31:0] f_round16_31;
+    wire [31:0] f_round32_47;
+    wire [31:0] f_round48_63;
+    
+    // Round 0-15: (B AND C) OR (NOT B AND D)
+    assign f_round0_15 = (B_input & C_input) | ((~B_input) & D_input);
+    
+    // Round 16-31: (B AND D) OR (C AND NOT D)
+    assign f_round16_31 = (B_input & D_input) | (C_input & (~D_input));
+    
+    // Round 32-47: B XOR C XOR D
+    assign f_round32_47 = B_input ^ C_input ^ D_input;
+    
+    // Round 48-63: C XOR (B OR NOT D)
+    assign f_round48_63 = C_input ^ (B_input | (~D_input));
+    
+    // Multiplexer to select function based on round index
+    assign f_output = (i_input[5:4] == 2'b00) ? f_round0_15 :
+                      (i_input[5:4] == 2'b01) ? f_round16_31 :
+                      (i_input[5:4] == 2'b10) ? f_round32_47 :
+                      f_round48_63;
+    
+    // Add A_input + f_output + Xk_plus_Ti_input
+    assign sum_result = A_input + f_output + Xk_plus_Ti_input;
+    
+    // Circular left shift by s_input positions
+    assign rotated_result = (sum_result << s_input) | (sum_result >> (32 - s_input));
+    
+    // Add B_input to get final result
+    assign int_B_output = rotated_result + B_input;
+
+endmodule

@@ -1,0 +1,75 @@
+module rtlpp_11426 (
+    input clk,
+    input reset,
+    input signed [7:0] X,
+    output reg signed [19:0] Y
+);
+
+    // Coefficient generation from input X
+    wire signed [19:0] coeff[0:20];
+    
+    assign coeff[0] = {{12{X[7]}}, X};           // 1x
+    assign coeff[1] = {{11{X[7]}}, X, 1'b0};    // 2x
+    assign coeff[2] = {{11{X[7]}}, X} + {{12{X[7]}}, X};  // 3x
+    assign coeff[3] = {{10{X[7]}}, X, 2'b0};    // 4x
+    assign coeff[4] = {{10{X[7]}}, X, 2'b0} + {{12{X[7]}}, X};  // 5x
+    assign coeff[5] = {{9{X[7]}}, X, 3'b0};     // 8x
+    assign coeff[6] = {{9{X[7]}}, X, 3'b0} + {{12{X[7]}}, X};   // 9x
+    assign coeff[7] = {{8{X[7]}}, X, 4'b0};     // 16x
+    assign coeff[8] = {{8{X[7]}}, X, 4'b0} + {{12{X[7]}}, X};   // 17x
+    assign coeff[9] = {{7{X[7]}}, X, 5'b0};     // 32x
+    assign coeff[10] = {{7{X[7]}}, X, 5'b0} + {{9{X[7]}}, X, 3'b0} + {{12{X[7]}}, X};  // 49x
+    assign coeff[11] = {{7{X[7]}}, X, 5'b0} + {{8{X[7]}}, X, 4'b0};  // 65x
+    assign coeff[12] = {{6{X[7]}}, X, 6'b0};    // 64x
+    assign coeff[13] = {{6{X[7]}}, X, 6'b0} + {{9{X[7]}}, X, 3'b0} + {{11{X[7]}}, X, 1'b0};  // 192x
+    assign coeff[14] = {{6{X[7]}}, X, 6'b0} + {{8{X[7]}}, X, 4'b0} + {{12{X[7]}}, X};  // 260x
+    assign coeff[15] = -{{12{X[7]}}, X};        // -1x
+    assign coeff[16] = -{{11{X[7]}}, X, 1'b0}; // -2x
+    assign coeff[17] = -{{10{X[7]}}, X, 2'b0}; // -4x
+    assign coeff[18] = -{{9{X[7]}}, X, 3'b0};  // -8x
+    assign coeff[19] = -{{8{X[7]}}, X, 4'b0};  // -16x
+    assign coeff[20] = -{{7{X[7]}}, X, 5'b0};  // -32x
+
+    // MAC registers for systolic array
+    reg signed [19:0] MAC[0:20];
+    
+    integer i;
+    
+    always @(posedge clk or negedge reset) begin
+        if (!reset) begin
+            for (i = 0; i <= 20; i = i + 1) begin
+                MAC[i] <= 20'b0;
+            end
+            Y <= 20'b0;
+        end else begin
+            // Stage 20: receives new coefficient
+            MAC[20] <= coeff[20];
+            
+            // Stages 1-20: add coefficient and propagate from next stage
+            MAC[19] <= MAC[20] + coeff[19];
+            MAC[18] <= MAC[19] + coeff[18];
+            MAC[17] <= MAC[18] + coeff[17];
+            MAC[16] <= MAC[17] + coeff[16];
+            MAC[15] <= MAC[16] + coeff[15];
+            MAC[14] <= MAC[15] + coeff[14];
+            MAC[13] <= MAC[14] + coeff[13];
+            MAC[12] <= MAC[13] + coeff[12];
+            MAC[11] <= MAC[12] + coeff[11];
+            MAC[10] <= MAC[11] + coeff[10];
+            MAC[9] <= MAC[10] + coeff[9];
+            MAC[8] <= MAC[9] + coeff[8];
+            MAC[7] <= MAC[8] + coeff[7];
+            MAC[6] <= MAC[7] + coeff[6];
+            MAC[5] <= MAC[6] + coeff[5];
+            MAC[4] <= MAC[5] + coeff[4];
+            MAC[3] <= MAC[4] + coeff[3];
+            MAC[2] <= MAC[3] + coeff[2];
+            MAC[1] <= MAC[2] + coeff[1];
+            MAC[0] <= MAC[1] + coeff[0];
+            
+            // Output from stage 0
+            Y <= MAC[0];
+        end
+    end
+
+endmodule

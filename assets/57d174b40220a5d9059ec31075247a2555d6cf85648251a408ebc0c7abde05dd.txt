@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.3a92ba0a9211e717835c.684ae9af67ac",
+  "compile_check": {
+    "case_id": "s1derived.3a92ba0a9211e717835c.684ae9af67ac",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_10069",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_10069.52d1bc846ae611e7/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.3a92ba0a9211e717835c",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "3a92ba0a9211e717835c8024a58df6f19d1b64d99588d5efb3a5afc04535bbec",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.3a92ba0a9211e717835c.684ae9af67ac",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_10069.52d1bc846ae611e7/private/commercial_positive.log",
+    "commercial_log_sha256": "675da8cd29d795025aaa0586c220bb4b16aa9e5a458f05dc0299c8832af89f6c",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_10069.52d1bc846ae611e7/private/historical_harness/00_sec_mg_10069.tcl",
+    "executed_script_sha256": "f26826891fcaf016ec357ff41bb558897c77c578d4a5f2a45a1ab0e608580945",
+    "golden_tops": [
+      "mg_10069"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.mg_10069.52d1bc846ae611e7",
+    "parent_id": "s1p.3a92ba0a9211e717835c",
+    "revised_tops": [
+      "mg_10069"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_10069",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.3a92ba0a9211e717835c.684ae9af67ac",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The priority at idle, nonpreemptive grant retention, synchronous reset and one-hot outputs match all three states.",
+        "rtl_excerpt": "req_0 == 1'b1",
+        "specification_excerpt": "request 0 selects GNT0"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.3a92ba0a9211e717835c",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "c3551a50d515d7059f56fe8b9f49555da1ddfa87ea7d8304cd20364c7b1befc7",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3a92ba0a9211e717835c8024a58df6f19d1b64d99588d5efb3a5afc04535bbec",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_10069.52d1bc846ae611e7/private/historical_harness/00_sec_mg_10069.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_10069.52d1bc846ae611e7/private/historical_harness/01_sec_mg_10069.tcl"
+  ],
+  "parent_id": "s1p.3a92ba0a9211e717835c",
+  "primary_review": {
+    "case_id": "s1derived.3a92ba0a9211e717835c.684ae9af67ac",
+    "checks": {
+      "behavior": "req_0 has IDLE priority and grants persist only while their own request remains asserted.",
+      "boundaries": "Invalid state deasserts grants and transitions IDLE.",
+      "interface": "All four scalar inputs and two outputs match.",
+      "rtl_reasonableness": "The arbiter is reasonable.",
+      "sequential_and_reset": "reset is active-high synchronous."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "req_0 has IDLE priority and grants persist only while their own request remains asserted. reset is active-high synchronous.",
+        "rtl_excerpt": "SIZE=3; one-hot IDLE=001,GNT0=010,GNT1=100; combinational grants follow state.",
+        "spec_excerpt": "The final line ends \u201cIn the GNT0 state, gnt_0 is asserted\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends before completing GNT0/GNT1 output behavior and omits all parameter defaults.",
+        "rtl_evidence": "SIZE=3; one-hot IDLE=001,GNT0=010,GNT1=100; combinational grants follow state.",
+        "spec_evidence": "The final line ends \u201cIn the GNT0 state, gnt_0 is asserted\u201d.",
+        "type": "truncated_outputs_and_defaults"
+      }
+    ],
+    "parent_id": "s1p.3a92ba0a9211e717835c",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.3a92ba0a9211e717835c.684ae9af67ac.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3a92ba0a9211e717835c8024a58df6f19d1b64d99588d5efb3a5afc04535bbec",
+    "source_group": "S5",
+    "specification_sha256": "684ae9af67acac06dc156cd84aa0480074c9294581725c629a2628191230d34c",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.3a92ba0a9211e717835c.684ae9af67ac.md",
+  "qualified_specification_sha256": "c3551a50d515d7059f56fe8b9f49555da1ddfa87ea7d8304cd20364c7b1befc7",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_10069.52d1bc846ae611e7/private/golden_design.v",
+  "rtl_sha256": "3a92ba0a9211e717835c8024a58df6f19d1b64d99588d5efb3a5afc04535bbec",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_10069.52d1bc846ae611e7/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "684ae9af67acac06dc156cd84aa0480074c9294581725c629a2628191230d34c",
+  "top_module": "mg_10069"
+}

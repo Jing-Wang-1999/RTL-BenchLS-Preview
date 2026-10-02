@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.d1ce0975cc3785014f34.260318c5205a",
+  "compile_check": {
+    "case_id": "s1derived.d1ce0975cc3785014f34.260318c5205a",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "oh_aoi221",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_aoi221.1fe719e0a5a5734e/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.d1ce0975cc3785014f34",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "d1ce0975cc3785014f3472b62d7b2fa815e64f0b789b776e678104a3c18eb812",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.d1ce0975cc3785014f34.260318c5205a",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_aoi221.1fe719e0a5a5734e/private/commercial_positive.log",
+    "commercial_log_sha256": "f0a03e8c51516d5c0817e34981abf0250c72e64452dacc04976201dc355b7cc4",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_aoi221.1fe719e0a5a5734e/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "oh_aoi221"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_20.oh_aoi221.1fe719e0a5a5734e",
+    "parent_id": "s1p.d1ce0975cc3785014f34",
+    "revised_tops": [
+      "oh_aoi221"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "oh_aoi221",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.d1ce0975cc3785014f34.260318c5205a",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All five DW-bit inputs and output with default1 are complete. The two AND pairs and fifth OR input are inverted per bit, with no sequential state or omitted dependencies.",
+        "rtl_excerpt": "assign z = ~((a0 & a1) | (b0 & b1) | c0);",
+        "specification_excerpt": "`z = ~((a0 & a1) | (b0 & b1) | c0)`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.d1ce0975cc3785014f34",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "81c5b70402e9c7938b071be9b4b60d6f1b19966af3f91a75636e48590ad79ca7",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "d1ce0975cc3785014f3472b62d7b2fa815e64f0b789b776e678104a3c18eb812",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_aoi221.1fe719e0a5a5734e/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_aoi221.1fe719e0a5a5734e/private/historical_harness/01_conformal_rtl_oh_aoi221.do"
+  ],
+  "parent_id": "s1p.d1ce0975cc3785014f34",
+  "primary_review": {
+    "case_id": "s1derived.d1ce0975cc3785014f34.260318c5205a",
+    "checks": {
+      "behavior": "The bitwise AOI221 equation matches.",
+      "boundaries": "Each bit is independent; default width is one.",
+      "interface": "Five DW-bit inputs and DW-bit output match.",
+      "rtl_reasonableness": "The gate array is reasonable.",
+      "sequential_and_reset": "No clock, reset, or state."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The bitwise AOI221 equation matches. No clock, reset, or state.",
+        "rtl_excerpt": "parameter DW=1; z=~((a0&a1)|(b0&b1)|c0)",
+        "spec_excerpt": "\u201cwidth defined by the parameter DW\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The AOI221 equation is correct, but the specification omits DW=1.",
+        "rtl_evidence": "parameter DW=1; z=~((a0&a1)|(b0&b1)|c0)",
+        "spec_evidence": "\u201cwidth defined by the parameter DW\u201d",
+        "type": "missing_parameter_default"
+      }
+    ],
+    "parent_id": "s1p.d1ce0975cc3785014f34",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.d1ce0975cc3785014f34.260318c5205a.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "d1ce0975cc3785014f3472b62d7b2fa815e64f0b789b776e678104a3c18eb812",
+    "source_group": "S1",
+    "specification_sha256": "260318c5205a6ed1dd0f2382a512c6358e93417e69d626e37b7ea41cfd062479",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.d1ce0975cc3785014f34.260318c5205a.md",
+  "qualified_specification_sha256": "81c5b70402e9c7938b071be9b4b60d6f1b19966af3f91a75636e48590ad79ca7",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_aoi221.1fe719e0a5a5734e/private/golden_design.v",
+  "rtl_sha256": "d1ce0975cc3785014f3472b62d7b2fa815e64f0b789b776e678104a3c18eb812",
+  "source_corpus": "SEC-Flow-Star-repos-31.oh",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_20.oh_aoi221.1fe719e0a5a5734e/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "260318c5205a6ed1dd0f2382a512c6358e93417e69d626e37b7ea41cfd062479",
+  "top_module": "oh_aoi221"
+}

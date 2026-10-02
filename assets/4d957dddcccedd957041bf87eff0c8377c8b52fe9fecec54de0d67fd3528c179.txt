@@ -1,0 +1,55 @@
+module origen_115178(
+    input [4:0] count,
+    output reg [6:0] hex5, hex4, hex3, hex2
+);
+
+    always @(*) begin
+        case(count)
+            5'b00000: begin // CLEAR
+                hex5 = 7'b1000110; // C
+                hex4 = 7'b1000111; // L
+                hex3 = 7'b0000110; // E
+                hex2 = 7'b0101111; // A
+            end
+            5'b11001: begin // FULL
+                hex5 = 7'b0001110; // F
+                hex4 = 7'b1000001; // U
+                hex3 = 7'b1000111; // L
+                hex2 = 7'b1000111; // L
+            end
+            default: begin // OFF
+                hex5 = 7'b1111111;
+                hex4 = 7'b1111111;
+                hex3 = 7'b1111111;
+                hex2 = 7'b1111111;
+            end
+        endcase
+    end
+
+endmodule
+
+module clear_full_testbench();
+    reg [4:0] count;
+    wire [6:0] hex5, hex4, hex3, hex2;
+
+    clear_full dut(
+        .count(count),
+        .hex5(hex5),
+        .hex4(hex4),
+        .hex3(hex3),
+        .hex2(hex2)
+    );
+
+    initial begin
+        for(count = 0; count < 32; count = count + 1) begin
+            #10;
+        end
+        $finish;
+    end
+
+    initial begin
+        $monitor("Time=%0t count=%b hex5=%b hex4=%b hex3=%b hex2=%b",
+                 $time, count, hex5, hex4, hex3, hex2);
+    end
+
+endmodule

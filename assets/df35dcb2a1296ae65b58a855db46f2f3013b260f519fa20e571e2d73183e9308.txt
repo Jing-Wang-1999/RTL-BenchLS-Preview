@@ -1,0 +1,37 @@
+**Module Name:** origen_054985  
+
+**Purpose:**  
+This module serves as a pipeline register stage, specifically transferring data and control signals from the Memory (MEM) stage to the Write-Back (WB) stage in a processor pipeline. It synchronizes the flow of instruction results and associated metadata to ensure proper timing and data integrity.
+
+**Inputs:**  
+- **clk:** Clock signal for synchronization.  
+- **rst:** Reset signal; clears all outputs when asserted.  
+- **stall:** When asserted, holds current outputs, preventing updates.  
+- **flush:** When asserted, clears all outputs (similar to reset).  
+- **MEM_inst_en:** Indicates whether the current instruction in the MEM stage is valid.  
+- **MEM_ALU_Result (32 bits):** Result from the Arithmetic Logic Unit.  
+- **MEM_MEM_Result (32 bits):** Data read from memory (if applicable).  
+- **MEM_Rs, MEM_Rt, MEM_Rdst (5 bits each):** Source and destination register addresses.  
+- **MEM_RegW:** Signal to enable writing to the register file.  
+- **MEM_MemR:** Signal indicating a memory read operation.  
+- **MEM_MemW:** Signal indicating a memory write operation.  
+
+**Outputs:**  
+- **WB_inst_en:** Indicates whether the instruction in the WB stage is valid.  
+- **WB_ALU_Result (32 bits):** ALU result passed to the WB stage.  
+- **WB_MEM_Result (32 bits):** Memory result passed to the WB stage.  
+- **WB_Rs, WB_Rt, WB_Rdst (5 bits each):** Register addresses passed to the WB stage.  
+- **WB_RegW:** Register write enable signal for the WB stage.  
+- **WB_MemR:** Memory read signal for the WB stage.  
+- **WB_MemW:** Memory write signal for the WB stage.  
+
+**Behavior:**  
+On each rising clock edge:  
+- If reset or flush is active, all outputs are cleared to zero (or inactive).  
+- If stall is inactive, the module transfers all inputs directly to the corresponding outputs, advancing the pipeline data to the next stage.  
+- If stall is active, outputs remain unchanged, pausing the pipeline.  
+
+**Key Constraints:**  
+- No internal sub-modules are allowed; the design is purely sequential.  
+- All outputs are registered (updated only on clock edges).  
+- The module does not perform any computation; it only stores and forwards data.

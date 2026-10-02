@@ -1,0 +1,39 @@
+always @(posedge clk_i or negedge arst_i)
+	  if (!arst_i)
+	    stat <=  0;
+	  else if (rst_i)
+	    stat <=  0;
+	  else begin
+	    
+
+
+	        stat[21] <=  1'b0;
+	    
+	    
+
+
+	        stat[20] <=  1'b0;
+	    
+
+	    stat[17] <=  acmp;
+	    stat[16] <=  avmp;
+
+	    if (reg_wacc & (REG_ADR == STAT_ADR) )
+	      begin
+	          stat[7] <=  cbsint_in | (stat[7] & !dat_i[7]);
+	          stat[6] <=  vbsint_in | (stat[6] & !dat_i[6]);
+	          stat[5] <=  hint_in   | (stat[5] & !dat_i[5]);
+	          stat[4] <=  vint_in   | (stat[4] & !dat_i[4]);
+	          stat[1] <=  luint_in  | (stat[3] & !dat_i[1]);
+	          stat[0] <=  sint_in   | (stat[0] & !dat_i[0]);
+	      end
+	    else
+	      begin
+	          stat[7] <=  stat[7] | cbsint_in;
+	          stat[6] <=  stat[6] | vbsint_in;
+	          stat[5] <=  stat[5] | hint_in;
+	          stat[4] <=  stat[4] | vint_in;
+	          stat[1] <=  stat[1] | luint_in;
+	          stat[0] <=  stat[0] | sint_in;
+	      end
+	  end

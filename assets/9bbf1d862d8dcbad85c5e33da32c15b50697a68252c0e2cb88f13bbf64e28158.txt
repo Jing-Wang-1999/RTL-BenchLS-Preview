@@ -1,0 +1,1628 @@
+//-----------------------------------------------------------------
+//                         RISC-V Core
+//                            V1.0.1
+//                     Ultra-Embedded.com
+//                     Copyright 2014-2019
+//
+//                   admin@ultra-embedded.com
+//
+//                       License: BSD
+//-----------------------------------------------------------------
+//
+// Copyright (c) 2014-2019, Ultra-Embedded.com
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions 
+// are met:
+//   - Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//   - Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer 
+//     in the documentation and/or other materials provided with the 
+//     distribution.
+//   - Neither the name of the author nor the names of its contributors 
+//     may be used to endorse or promote products derived from this 
+//     software without specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE 
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR 
+// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF 
+// THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
+// SUCH DAMAGE.
+//-----------------------------------------------------------------
+//--------------------------------------------------------------------
+// ALU Operations
+//--------------------------------------------------------------------
+`define ALU_NONE                                4'b0000
+`define ALU_SHIFTL                              4'b0001
+`define ALU_SHIFTR                              4'b0010
+`define ALU_SHIFTR_ARITH                        4'b0011
+`define ALU_ADD                                 4'b0100
+`define ALU_SUB                                 4'b0110
+`define ALU_AND                                 4'b0111
+`define ALU_OR                                  4'b1000
+`define ALU_XOR                                 4'b1001
+`define ALU_LESS_THAN                           4'b1010
+`define ALU_LESS_THAN_SIGNED                    4'b1011
+
+//--------------------------------------------------------------------
+// Instructions Masks
+//--------------------------------------------------------------------
+// andi
+`define INST_ANDI 32'h7013
+`define INST_ANDI_MASK 32'h707f
+
+// addi
+`define INST_ADDI 32'h13
+`define INST_ADDI_MASK 32'h707f
+
+// slti
+`define INST_SLTI 32'h2013
+`define INST_SLTI_MASK 32'h707f
+
+// sltiu
+`define INST_SLTIU 32'h3013
+`define INST_SLTIU_MASK 32'h707f
+
+// ori
+`define INST_ORI 32'h6013
+`define INST_ORI_MASK 32'h707f
+
+// xori
+`define INST_XORI 32'h4013
+`define INST_XORI_MASK 32'h707f
+
+// slli
+`define INST_SLLI 32'h1013
+`define INST_SLLI_MASK 32'hfc00707f
+
+// srli
+`define INST_SRLI 32'h5013
+`define INST_SRLI_MASK 32'hfc00707f
+
+// srai
+`define INST_SRAI 32'h40005013
+`define INST_SRAI_MASK 32'hfc00707f
+
+// lui
+`define INST_LUI 32'h37
+`define INST_LUI_MASK 32'h7f
+
+// auipc
+`define INST_AUIPC 32'h17
+`define INST_AUIPC_MASK 32'h7f
+
+// add
+`define INST_ADD 32'h33
+`define INST_ADD_MASK 32'hfe00707f
+
+// sub
+`define INST_SUB 32'h40000033
+`define INST_SUB_MASK 32'hfe00707f
+
+// slt
+`define INST_SLT 32'h2033
+`define INST_SLT_MASK 32'hfe00707f
+
+// sltu
+`define INST_SLTU 32'h3033
+`define INST_SLTU_MASK 32'hfe00707f
+
+// xor
+`define INST_XOR 32'h4033
+`define INST_XOR_MASK 32'hfe00707f
+
+// or
+`define INST_OR 32'h6033
+`define INST_OR_MASK 32'hfe00707f
+
+// and
+`define INST_AND 32'h7033
+`define INST_AND_MASK 32'hfe00707f
+
+// sll
+`define INST_SLL 32'h1033
+`define INST_SLL_MASK 32'hfe00707f
+
+// srl
+`define INST_SRL 32'h5033
+`define INST_SRL_MASK 32'hfe00707f
+
+// sra
+`define INST_SRA 32'h40005033
+`define INST_SRA_MASK 32'hfe00707f
+
+// jal
+`define INST_JAL 32'h6f
+`define INST_JAL_MASK 32'h7f
+
+// jalr
+`define INST_JALR 32'h67
+`define INST_JALR_MASK 32'h707f
+
+// beq
+`define INST_BEQ 32'h63
+`define INST_BEQ_MASK 32'h707f
+
+// bne
+`define INST_BNE 32'h1063
+`define INST_BNE_MASK 32'h707f
+
+// blt
+`define INST_BLT 32'h4063
+`define INST_BLT_MASK 32'h707f
+
+// bge
+`define INST_BGE 32'h5063
+`define INST_BGE_MASK 32'h707f
+
+// bltu
+`define INST_BLTU 32'h6063
+`define INST_BLTU_MASK 32'h707f
+
+// bgeu
+`define INST_BGEU 32'h7063
+`define INST_BGEU_MASK 32'h707f
+
+// lb
+`define INST_LB 32'h3
+`define INST_LB_MASK 32'h707f
+
+// lh
+`define INST_LH 32'h1003
+`define INST_LH_MASK 32'h707f
+
+// lw
+`define INST_LW 32'h2003
+`define INST_LW_MASK 32'h707f
+
+// lbu
+`define INST_LBU 32'h4003
+`define INST_LBU_MASK 32'h707f
+
+// lhu
+`define INST_LHU 32'h5003
+`define INST_LHU_MASK 32'h707f
+
+// lwu
+`define INST_LWU 32'h6003
+`define INST_LWU_MASK 32'h707f
+
+// sb
+`define INST_SB 32'h23
+`define INST_SB_MASK 32'h707f
+
+// sh
+`define INST_SH 32'h1023
+`define INST_SH_MASK 32'h707f
+
+// sw
+`define INST_SW 32'h2023
+`define INST_SW_MASK 32'h707f
+
+// ecall
+`define INST_ECALL 32'h73
+`define INST_ECALL_MASK 32'hffffffff
+
+// ebreak
+`define INST_EBREAK 32'h100073
+`define INST_EBREAK_MASK 32'hffffffff
+
+// eret
+`define INST_ERET 32'h200073
+`define INST_ERET_MASK 32'hcfffffff
+
+// csrrw
+`define INST_CSRRW 32'h1073
+`define INST_CSRRW_MASK 32'h707f
+
+// csrrs
+`define INST_CSRRS 32'h2073
+`define INST_CSRRS_MASK 32'h707f
+
+// csrrc
+`define INST_CSRRC 32'h3073
+`define INST_CSRRC_MASK 32'h707f
+
+// csrrwi
+`define INST_CSRRWI 32'h5073
+`define INST_CSRRWI_MASK 32'h707f
+
+// csrrsi
+`define INST_CSRRSI 32'h6073
+`define INST_CSRRSI_MASK 32'h707f
+
+// csrrci
+`define INST_CSRRCI 32'h7073
+`define INST_CSRRCI_MASK 32'h707f
+
+// mul
+`define INST_MUL 32'h2000033
+`define INST_MUL_MASK 32'hfe00707f
+
+// mulh
+`define INST_MULH 32'h2001033
+`define INST_MULH_MASK 32'hfe00707f
+
+// mulhsu
+`define INST_MULHSU 32'h2002033
+`define INST_MULHSU_MASK 32'hfe00707f
+
+// mulhu
+`define INST_MULHU 32'h2003033
+`define INST_MULHU_MASK 32'hfe00707f
+
+// div
+`define INST_DIV 32'h2004033
+`define INST_DIV_MASK 32'hfe00707f
+
+// divu
+`define INST_DIVU 32'h2005033
+`define INST_DIVU_MASK 32'hfe00707f
+
+// rem
+`define INST_REM 32'h2006033
+`define INST_REM_MASK 32'hfe00707f
+
+// remu
+`define INST_REMU 32'h2007033
+`define INST_REMU_MASK 32'hfe00707f
+
+// wfi
+`define INST_WFI 32'h10500073
+`define INST_WFI_MASK 32'hffff8fff
+
+// fence
+`define INST_FENCE 32'hf
+`define INST_FENCE_MASK 32'h707f
+
+// sfence
+`define INST_SFENCE 32'h12000073
+`define INST_SFENCE_MASK 32'hfe007fff
+
+// fence.i
+`define INST_IFENCE 32'h100f
+`define INST_IFENCE_MASK 32'h707f
+
+//--------------------------------------------------------------------
+// Privilege levels
+//--------------------------------------------------------------------
+`define PRIV_USER         2'd0
+`define PRIV_SUPER        2'd1
+`define PRIV_MACHINE      2'd3
+
+//--------------------------------------------------------------------
+// IRQ Numbers
+//--------------------------------------------------------------------
+`define IRQ_S_SOFT   1
+`define IRQ_M_SOFT   3
+`define IRQ_S_TIMER  5
+`define IRQ_M_TIMER  7
+`define IRQ_S_EXT    9
+`define IRQ_M_EXT    11
+`define IRQ_MIN      (`IRQ_S_SOFT)
+`define IRQ_MAX      (`IRQ_M_EXT + 1)
+`define IRQ_MASK     ((1 << `IRQ_M_EXT)   | (1 << `IRQ_S_EXT)   |                       (1 << `IRQ_M_TIMER) | (1 << `IRQ_S_TIMER) |                       (1 << `IRQ_M_SOFT)  | (1 << `IRQ_S_SOFT))
+
+`define SR_IP_MSIP_R      `IRQ_M_SOFT
+`define SR_IP_MTIP_R      `IRQ_M_TIMER
+`define SR_IP_MEIP_R      `IRQ_M_EXT
+`define SR_IP_SSIP_R      `IRQ_S_SOFT
+`define SR_IP_STIP_R      `IRQ_S_TIMER
+`define SR_IP_SEIP_R      `IRQ_S_EXT
+
+//--------------------------------------------------------------------
+// CSR Registers - Simulation control
+//--------------------------------------------------------------------
+`define CSR_DSCRATCH       12'h7b2
+`define CSR_SIM_CTRL       12'h8b2
+`define CSR_SIM_CTRL_MASK  32'hFFFFFFFF
+    `define CSR_SIM_CTRL_EXIT (0 << 24)
+    `define CSR_SIM_CTRL_PUTC (1 << 24)
+
+//--------------------------------------------------------------------
+// CSR Registers
+//--------------------------------------------------------------------
+`define CSR_MSTATUS       12'h300
+`define CSR_MSTATUS_MASK  32'hFFFFFFFF
+`define CSR_MISA          12'h301
+`define CSR_MISA_MASK     32'hFFFFFFFF
+    `define MISA_RV32     32'h40000000
+    `define MISA_RVI      32'h00000100
+    `define MISA_RVE      32'h00000010
+    `define MISA_RVM      32'h00001000
+    `define MISA_RVA      32'h00000001
+    `define MISA_RVF      32'h00000020
+    `define MISA_RVD      32'h00000008
+    `define MISA_RVC      32'h00000004
+    `define MISA_RVS      32'h00040000
+    `define MISA_RVU      32'h00100000
+`define CSR_MEDELEG       12'h302
+`define CSR_MEDELEG_MASK  32'h0000FFFF
+`define CSR_MIDELEG       12'h303
+`define CSR_MIDELEG_MASK  32'h0000FFFF
+`define CSR_MIE           12'h304
+`define CSR_MIE_MASK      `IRQ_MASK
+`define CSR_MTVEC         12'h305
+`define CSR_MTVEC_MASK    32'hFFFFFFFF
+`define CSR_MSCRATCH      12'h340
+`define CSR_MSCRATCH_MASK 32'hFFFFFFFF
+`define CSR_MEPC          12'h341
+`define CSR_MEPC_MASK     32'hFFFFFFFF
+`define CSR_MCAUSE        12'h342
+`define CSR_MCAUSE_MASK   32'h8000000F
+`define CSR_MTVAL         12'h343
+`define CSR_MTVAL_MASK    32'hFFFFFFFF
+`define CSR_MIP           12'h344
+`define CSR_MIP_MASK      `IRQ_MASK
+`define CSR_MCYCLE        12'hc00
+`define CSR_MCYCLE_MASK   32'hFFFFFFFF
+`define CSR_MTIME         12'hc01
+`define CSR_MTIME_MASK    32'hFFFFFFFF
+`define CSR_MTIMEH        12'hc81
+`define CSR_MTIMEH_MASK   32'hFFFFFFFF
+`define CSR_MHARTID       12'hF14
+`define CSR_MHARTID_MASK  32'hFFFFFFFF
+
+// Non-std
+`define CSR_MTIMECMP        12'h7c0
+`define CSR_MTIMECMP_MASK   32'hFFFFFFFF
+
+//-----------------------------------------------------------------
+// CSR Registers - Supervisor
+//-----------------------------------------------------------------
+`define CSR_SSTATUS       12'h100
+`define CSR_SSTATUS_MASK  `SR_SMODE_MASK
+`define CSR_SIE           12'h104
+`define CSR_SIE_MASK      ((1 << `IRQ_S_EXT) | (1 << `IRQ_S_TIMER) | (1 << `IRQ_S_SOFT))
+`define CSR_STVEC         12'h105
+`define CSR_STVEC_MASK    32'hFFFFFFFF
+`define CSR_SSCRATCH      12'h140
+`define CSR_SSCRATCH_MASK 32'hFFFFFFFF
+`define CSR_SEPC          12'h141
+`define CSR_SEPC_MASK     32'hFFFFFFFF
+`define CSR_SCAUSE        12'h142
+`define CSR_SCAUSE_MASK   32'h8000000F
+`define CSR_STVAL         12'h143
+`define CSR_STVAL_MASK    32'hFFFFFFFF
+`define CSR_SIP           12'h144
+`define CSR_SIP_MASK      ((1 << `IRQ_S_EXT) | (1 << `IRQ_S_TIMER) | (1 << `IRQ_S_SOFT))
+`define CSR_SATP          12'h180
+`define CSR_SATP_MASK     32'hFFFFFFFF
+
+//--------------------------------------------------------------------
+// CSR Registers - DCACHE control
+//--------------------------------------------------------------------
+`define CSR_DFLUSH            12'h3a0 // pmpcfg0
+`define CSR_DFLUSH_MASK       32'hFFFFFFFF
+`define CSR_DWRITEBACK        12'h3a1 // pmpcfg1
+`define CSR_DWRITEBACK_MASK   32'hFFFFFFFF
+`define CSR_DINVALIDATE       12'h3a2 // pmpcfg2
+`define CSR_DINVALIDATE_MASK  32'hFFFFFFFF
+
+//--------------------------------------------------------------------
+// Status Register
+//--------------------------------------------------------------------
+`define SR_UIE         (1 << 0)
+`define SR_UIE_R       0
+`define SR_SIE         (1 << 1)
+`define SR_SIE_R       1
+`define SR_MIE         (1 << 3)
+`define SR_MIE_R       3
+`define SR_UPIE        (1 << 4)
+`define SR_UPIE_R      4
+`define SR_SPIE        (1 << 5)
+`define SR_SPIE_R      5
+`define SR_MPIE        (1 << 7)
+`define SR_MPIE_R      7
+`define SR_SPP         (1 << 8)
+`define SR_SPP_R       8
+
+`define SR_MPP_SHIFT   11
+`define SR_MPP_MASK    2'h3
+`define SR_MPP_R       12:11
+`define SR_MPP_U       `PRIV_USER
+`define SR_MPP_S       `PRIV_SUPER
+`define SR_MPP_M       `PRIV_MACHINE
+
+`define SR_SUM_R        18
+`define SR_SUM          (1 << `SR_SUM_R)
+
+`define SR_MPRV_R       17
+`define SR_MPRV         (1 << `SR_MPRV_R)
+
+`define SR_MXR_R        19
+`define SR_MXR          (1 << `SR_MXR_R)
+
+`define SR_SMODE_MASK   (`SR_UIE | `SR_SIE | `SR_UPIE | `SR_SPIE | `SR_SPP | `SR_SUM)
+
+//--------------------------------------------------------------------
+// SATP definitions
+//--------------------------------------------------------------------
+`define SATP_PPN_R        19:0 // TODO: Should be 21??
+`define SATP_ASID_R       30:22
+`define SATP_MODE_R       31
+
+//--------------------------------------------------------------------
+// MMU Defs (SV32)
+//--------------------------------------------------------------------
+`define MMU_LEVELS        2
+`define MMU_PTIDXBITS     10
+`define MMU_PTESIZE       4
+`define MMU_PGSHIFT       (`MMU_PTIDXBITS + 2)
+`define MMU_PGSIZE        (1 << `MMU_PGSHIFT)
+`define MMU_VPN_BITS      (`MMU_PTIDXBITS * `MMU_LEVELS)
+`define MMU_PPN_BITS      (32 - `MMU_PGSHIFT)
+`define MMU_VA_BITS       (`MMU_VPN_BITS + `MMU_PGSHIFT)
+
+`define PAGE_PRESENT      0
+`define PAGE_READ         1
+`define PAGE_WRITE        2
+`define PAGE_EXEC         3
+`define PAGE_USER         4
+`define PAGE_GLOBAL       5
+`define PAGE_ACCESSED     6
+`define PAGE_DIRTY        7
+`define PAGE_SOFT         9:8
+
+`define PAGE_FLAGS       10'h3FF
+
+`define PAGE_PFN_SHIFT   10
+`define PAGE_SIZE        4096
+
+//--------------------------------------------------------------------
+// Exception Causes
+//--------------------------------------------------------------------
+`define EXCEPTION_W                        6
+`define EXCEPTION_MISALIGNED_FETCH         6'h10
+`define EXCEPTION_FAULT_FETCH              6'h11
+`define EXCEPTION_ILLEGAL_INSTRUCTION      6'h12
+`define EXCEPTION_BREAKPOINT               6'h13
+`define EXCEPTION_MISALIGNED_LOAD          6'h14
+`define EXCEPTION_FAULT_LOAD               6'h15
+`define EXCEPTION_MISALIGNED_STORE         6'h16
+`define EXCEPTION_FAULT_STORE              6'h17
+`define EXCEPTION_ECALL                    6'h18
+`define EXCEPTION_ECALL_U                  6'h18
+`define EXCEPTION_ECALL_S                  6'h19
+`define EXCEPTION_ECALL_H                  6'h1a
+`define EXCEPTION_ECALL_M                  6'h1b
+`define EXCEPTION_PAGE_FAULT_INST          6'h1c
+`define EXCEPTION_PAGE_FAULT_LOAD          6'h1d
+`define EXCEPTION_PAGE_FAULT_STORE         6'h1f
+`define EXCEPTION_EXCEPTION                6'h10
+`define EXCEPTION_INTERRUPT                6'h20
+`define EXCEPTION_ERET_U                   6'h30
+`define EXCEPTION_ERET_S                   6'h31
+`define EXCEPTION_ERET_H                   6'h32
+`define EXCEPTION_ERET_M                   6'h33
+`define EXCEPTION_FENCE                    6'h34
+`define EXCEPTION_TYPE_MASK                6'h30
+`define EXCEPTION_SUBTYPE_R                3:0
+
+`define MCAUSE_INT                      31
+`define MCAUSE_MISALIGNED_FETCH         ((0 << `MCAUSE_INT) | 0)
+`define MCAUSE_FAULT_FETCH              ((0 << `MCAUSE_INT) | 1)
+`define MCAUSE_ILLEGAL_INSTRUCTION      ((0 << `MCAUSE_INT) | 2)
+`define MCAUSE_BREAKPOINT               ((0 << `MCAUSE_INT) | 3)
+`define MCAUSE_MISALIGNED_LOAD          ((0 << `MCAUSE_INT) | 4)
+`define MCAUSE_FAULT_LOAD               ((0 << `MCAUSE_INT) | 5)
+`define MCAUSE_MISALIGNED_STORE         ((0 << `MCAUSE_INT) | 6)
+`define MCAUSE_FAULT_STORE              ((0 << `MCAUSE_INT) | 7)
+`define MCAUSE_ECALL_U                  ((0 << `MCAUSE_INT) | 8)
+`define MCAUSE_ECALL_S                  ((0 << `MCAUSE_INT) | 9)
+`define MCAUSE_ECALL_H                  ((0 << `MCAUSE_INT) | 10)
+`define MCAUSE_ECALL_M                  ((0 << `MCAUSE_INT) | 11)
+`define MCAUSE_PAGE_FAULT_INST          ((0 << `MCAUSE_INT) | 12)
+`define MCAUSE_PAGE_FAULT_LOAD          ((0 << `MCAUSE_INT) | 13)
+`define MCAUSE_PAGE_FAULT_STORE         ((0 << `MCAUSE_INT) | 15)
+`define MCAUSE_INTERRUPT                (1 << `MCAUSE_INT)
+
+//--------------------------------------------------------------------
+// Debug
+//--------------------------------------------------------------------
+`define RISCV_REGNO_FIRST   13'd0
+`define RISCV_REGNO_GPR0    13'd0
+`define RISCV_REGNO_GPR31   13'd31
+`define RISCV_REGNO_PC      13'd32
+`define RISCV_REGNO_CSR0    13'd65
+`define RISCV_REGNO_CSR4095 (`RISCV_REGNO_CSR0 +  13'd4095)
+`define RISCV_REGNO_PRIV    13'd4161
+
+module riscv_alu
+(
+    
+     input  [  3:0]  alu_op_i
+    ,input  [ 31:0]  alu_a_i
+    ,input  [ 31:0]  alu_b_i
+
+    
+    ,output [ 31:0]  alu_p_o
+);
+endmodule
+
+module riscv_core
+
+
+
+#(
+     parameter SUPPORT_MULDIV   = 1
+    ,parameter SUPPORT_SUPER    = 0
+    ,parameter SUPPORT_MMU      = 0
+    ,parameter SUPPORT_LOAD_BYPASS = 1
+    ,parameter SUPPORT_MUL_BYPASS = 1
+    ,parameter SUPPORT_REGFILE_XILINX = 0
+    ,parameter EXTRA_DECODE_STAGE = 0
+    ,parameter MEM_CACHE_ADDR_MIN = 32'h80000000
+    ,parameter MEM_CACHE_ADDR_MAX = 32'h8fffffff
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input  [ 31:0]  mem_d_data_rd_i
+    ,input           mem_d_accept_i
+    ,input           mem_d_ack_i
+    ,input           mem_d_error_i
+    ,input  [ 10:0]  mem_d_resp_tag_i
+    ,input           mem_i_accept_i
+    ,input           mem_i_valid_i
+    ,input           mem_i_error_i
+    ,input  [ 31:0]  mem_i_inst_i
+    ,input           intr_i
+    ,input  [ 31:0]  reset_vector_i
+    ,input  [ 31:0]  cpu_id_i
+
+    
+    ,output [ 31:0]  mem_d_addr_o
+    ,output [ 31:0]  mem_d_data_wr_o
+    ,output          mem_d_rd_o
+    ,output [  3:0]  mem_d_wr_o
+    ,output          mem_d_cacheable_o
+    ,output [ 10:0]  mem_d_req_tag_o
+    ,output          mem_d_invalidate_o
+    ,output          mem_d_writeback_o
+    ,output          mem_d_flush_o
+    ,output          mem_i_rd_o
+    ,output          mem_i_flush_o
+    ,output          mem_i_invalidate_o
+    ,output [ 31:0]  mem_i_pc_o
+);
+endmodule
+
+module riscv_csr
+
+
+
+#(
+     parameter SUPPORT_MULDIV   = 1
+    ,parameter SUPPORT_SUPER    = 1
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           intr_i
+    ,input           opcode_valid_i
+    ,input  [ 31:0]  opcode_opcode_i
+    ,input  [ 31:0]  opcode_pc_i
+    ,input           opcode_invalid_i
+    ,input  [  4:0]  opcode_rd_idx_i
+    ,input  [  4:0]  opcode_ra_idx_i
+    ,input  [  4:0]  opcode_rb_idx_i
+    ,input  [ 31:0]  opcode_ra_operand_i
+    ,input  [ 31:0]  opcode_rb_operand_i
+    ,input           csr_writeback_write_i
+    ,input  [ 11:0]  csr_writeback_waddr_i
+    ,input  [ 31:0]  csr_writeback_wdata_i
+    ,input  [  5:0]  csr_writeback_exception_i
+    ,input  [ 31:0]  csr_writeback_exception_pc_i
+    ,input  [ 31:0]  csr_writeback_exception_addr_i
+    ,input  [ 31:0]  cpu_id_i
+    ,input  [ 31:0]  reset_vector_i
+    ,input           interrupt_inhibit_i
+
+    
+    ,output [ 31:0]  csr_result_e1_value_o
+    ,output          csr_result_e1_write_o
+    ,output [ 31:0]  csr_result_e1_wdata_o
+    ,output [  5:0]  csr_result_e1_exception_o
+    ,output          branch_csr_request_o
+    ,output [ 31:0]  branch_csr_pc_o
+    ,output [  1:0]  branch_csr_priv_o
+    ,output          take_interrupt_o
+    ,output          ifence_o
+    ,output [  1:0]  mmu_priv_d_o
+    ,output          mmu_sum_o
+    ,output          mmu_mxr_o
+    ,output          mmu_flush_o
+    ,output [ 31:0]  mmu_satp_o
+);
+endmodule
+
+module riscv_csr_regfile
+
+
+
+#(
+     parameter SUPPORT_MTIMECMP    = 1,
+     parameter SUPPORT_SUPER       = 0
+)
+
+
+
+(
+     input           clk_i
+    ,input           rst_i
+
+    ,input           ext_intr_i
+    ,input           timer_intr_i
+
+    ,input [31:0]    cpu_id_i
+    ,input [31:0]    misa_i
+
+    ,input [5:0]     exception_i
+    ,input [31:0]    exception_pc_i
+    ,input [31:0]    exception_addr_i
+
+    
+    ,input           csr_ren_i
+    ,input  [11:0]   csr_raddr_i
+    ,output [31:0]   csr_rdata_o
+
+    
+    ,input  [11:0]   csr_waddr_i
+    ,input  [31:0]   csr_wdata_i
+
+    ,output          csr_branch_o
+    ,output [31:0]   csr_target_o
+
+    
+    ,output [1:0]    priv_o
+    ,output [31:0]   status_o
+    ,output [31:0]   satp_o
+
+    
+    ,output [31:0]   interrupt_o
+);
+endmodule
+
+module riscv_decode
+
+
+
+#(
+     parameter SUPPORT_MULDIV   = 1
+    ,parameter EXTRA_DECODE_STAGE = 0
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           fetch_in_valid_i
+    ,input  [ 31:0]  fetch_in_instr_i
+    ,input  [ 31:0]  fetch_in_pc_i
+    ,input           fetch_in_fault_fetch_i
+    ,input           fetch_in_fault_page_i
+    ,input           fetch_out_accept_i
+    ,input           squash_decode_i
+
+    
+    ,output          fetch_in_accept_o
+    ,output          fetch_out_valid_o
+    ,output [ 31:0]  fetch_out_instr_o
+    ,output [ 31:0]  fetch_out_pc_o
+    ,output          fetch_out_fault_fetch_o
+    ,output          fetch_out_fault_page_o
+    ,output          fetch_out_instr_exec_o
+    ,output          fetch_out_instr_lsu_o
+    ,output          fetch_out_instr_branch_o
+    ,output          fetch_out_instr_mul_o
+    ,output          fetch_out_instr_div_o
+    ,output          fetch_out_instr_csr_o
+    ,output          fetch_out_instr_rd_valid_o
+    ,output          fetch_out_instr_invalid_o
+);
+endmodule
+
+module riscv_decoder
+(
+     input                        valid_i
+    ,input                        fetch_fault_i
+    ,input                        enable_muldiv_i
+    ,input  [31:0]                opcode_i
+
+    ,output                       invalid_o
+    ,output                       exec_o
+    ,output                       lsu_o
+    ,output                       branch_o
+    ,output                       mul_o
+    ,output                       div_o
+    ,output                       csr_o
+    ,output                       rd_valid_o
+);
+endmodule
+
+module riscv_divider
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           opcode_valid_i
+    ,input  [ 31:0]  opcode_opcode_i
+    ,input  [ 31:0]  opcode_pc_i
+    ,input           opcode_invalid_i
+    ,input  [  4:0]  opcode_rd_idx_i
+    ,input  [  4:0]  opcode_ra_idx_i
+    ,input  [  4:0]  opcode_rb_idx_i
+    ,input  [ 31:0]  opcode_ra_operand_i
+    ,input  [ 31:0]  opcode_rb_operand_i
+
+    
+    ,output          writeback_valid_o
+    ,output [ 31:0]  writeback_value_o
+);
+endmodule
+
+module riscv_exec
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           opcode_valid_i
+    ,input  [ 31:0]  opcode_opcode_i
+    ,input  [ 31:0]  opcode_pc_i
+    ,input           opcode_invalid_i
+    ,input  [  4:0]  opcode_rd_idx_i
+    ,input  [  4:0]  opcode_ra_idx_i
+    ,input  [  4:0]  opcode_rb_idx_i
+    ,input  [ 31:0]  opcode_ra_operand_i
+    ,input  [ 31:0]  opcode_rb_operand_i
+    ,input           hold_i
+
+    
+    ,output          branch_request_o
+    ,output          branch_is_taken_o
+    ,output          branch_is_not_taken_o
+    ,output [ 31:0]  branch_source_o
+    ,output          branch_is_call_o
+    ,output          branch_is_ret_o
+    ,output          branch_is_jmp_o
+    ,output [ 31:0]  branch_pc_o
+    ,output          branch_d_request_o
+    ,output [ 31:0]  branch_d_pc_o
+    ,output [  1:0]  branch_d_priv_o
+    ,output [ 31:0]  writeback_value_o
+);
+endmodule
+
+module riscv_fetch
+
+
+
+#(
+     parameter SUPPORT_MMU      = 1
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           fetch_accept_i
+    ,input           icache_accept_i
+    ,input           icache_valid_i
+    ,input           icache_error_i
+    ,input  [ 31:0]  icache_inst_i
+    ,input           icache_page_fault_i
+    ,input           fetch_invalidate_i
+    ,input           branch_request_i
+    ,input  [ 31:0]  branch_pc_i
+    ,input  [  1:0]  branch_priv_i
+
+    
+    ,output          fetch_valid_o
+    ,output [ 31:0]  fetch_instr_o
+    ,output [ 31:0]  fetch_pc_o
+    ,output          fetch_fault_fetch_o
+    ,output          fetch_fault_page_o
+    ,output          icache_rd_o
+    ,output          icache_flush_o
+    ,output          icache_invalidate_o
+    ,output [ 31:0]  icache_pc_o
+    ,output [  1:0]  icache_priv_o
+    ,output          squash_decode_o
+);
+endmodule
+
+module riscv_issue
+
+
+
+#(
+     parameter SUPPORT_MULDIV   = 1
+    ,parameter SUPPORT_DUAL_ISSUE = 1
+    ,parameter SUPPORT_LOAD_BYPASS = 1
+    ,parameter SUPPORT_MUL_BYPASS = 1
+    ,parameter SUPPORT_REGFILE_XILINX = 0
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           fetch_valid_i
+    ,input  [ 31:0]  fetch_instr_i
+    ,input  [ 31:0]  fetch_pc_i
+    ,input           fetch_fault_fetch_i
+    ,input           fetch_fault_page_i
+    ,input           fetch_instr_exec_i
+    ,input           fetch_instr_lsu_i
+    ,input           fetch_instr_branch_i
+    ,input           fetch_instr_mul_i
+    ,input           fetch_instr_div_i
+    ,input           fetch_instr_csr_i
+    ,input           fetch_instr_rd_valid_i
+    ,input           fetch_instr_invalid_i
+    ,input           branch_exec_request_i
+    ,input           branch_exec_is_taken_i
+    ,input           branch_exec_is_not_taken_i
+    ,input  [ 31:0]  branch_exec_source_i
+    ,input           branch_exec_is_call_i
+    ,input           branch_exec_is_ret_i
+    ,input           branch_exec_is_jmp_i
+    ,input  [ 31:0]  branch_exec_pc_i
+    ,input           branch_d_exec_request_i
+    ,input  [ 31:0]  branch_d_exec_pc_i
+    ,input  [  1:0]  branch_d_exec_priv_i
+    ,input           branch_csr_request_i
+    ,input  [ 31:0]  branch_csr_pc_i
+    ,input  [  1:0]  branch_csr_priv_i
+    ,input  [ 31:0]  writeback_exec_value_i
+    ,input           writeback_mem_valid_i
+    ,input  [ 31:0]  writeback_mem_value_i
+    ,input  [  5:0]  writeback_mem_exception_i
+    ,input  [ 31:0]  writeback_mul_value_i
+    ,input           writeback_div_valid_i
+    ,input  [ 31:0]  writeback_div_value_i
+    ,input  [ 31:0]  csr_result_e1_value_i
+    ,input           csr_result_e1_write_i
+    ,input  [ 31:0]  csr_result_e1_wdata_i
+    ,input  [  5:0]  csr_result_e1_exception_i
+    ,input           lsu_stall_i
+    ,input           take_interrupt_i
+
+    
+    ,output          fetch_accept_o
+    ,output          branch_request_o
+    ,output [ 31:0]  branch_pc_o
+    ,output [  1:0]  branch_priv_o
+    ,output          exec_opcode_valid_o
+    ,output          lsu_opcode_valid_o
+    ,output          csr_opcode_valid_o
+    ,output          mul_opcode_valid_o
+    ,output          div_opcode_valid_o
+    ,output [ 31:0]  opcode_opcode_o
+    ,output [ 31:0]  opcode_pc_o
+    ,output          opcode_invalid_o
+    ,output [  4:0]  opcode_rd_idx_o
+    ,output [  4:0]  opcode_ra_idx_o
+    ,output [  4:0]  opcode_rb_idx_o
+    ,output [ 31:0]  opcode_ra_operand_o
+    ,output [ 31:0]  opcode_rb_operand_o
+    ,output [ 31:0]  lsu_opcode_opcode_o
+    ,output [ 31:0]  lsu_opcode_pc_o
+    ,output          lsu_opcode_invalid_o
+    ,output [  4:0]  lsu_opcode_rd_idx_o
+    ,output [  4:0]  lsu_opcode_ra_idx_o
+    ,output [  4:0]  lsu_opcode_rb_idx_o
+    ,output [ 31:0]  lsu_opcode_ra_operand_o
+    ,output [ 31:0]  lsu_opcode_rb_operand_o
+    ,output [ 31:0]  mul_opcode_opcode_o
+    ,output [ 31:0]  mul_opcode_pc_o
+    ,output          mul_opcode_invalid_o
+    ,output [  4:0]  mul_opcode_rd_idx_o
+    ,output [  4:0]  mul_opcode_ra_idx_o
+    ,output [  4:0]  mul_opcode_rb_idx_o
+    ,output [ 31:0]  mul_opcode_ra_operand_o
+    ,output [ 31:0]  mul_opcode_rb_operand_o
+    ,output [ 31:0]  csr_opcode_opcode_o
+    ,output [ 31:0]  csr_opcode_pc_o
+    ,output          csr_opcode_invalid_o
+    ,output [  4:0]  csr_opcode_rd_idx_o
+    ,output [  4:0]  csr_opcode_ra_idx_o
+    ,output [  4:0]  csr_opcode_rb_idx_o
+    ,output [ 31:0]  csr_opcode_ra_operand_o
+    ,output [ 31:0]  csr_opcode_rb_operand_o
+    ,output          csr_writeback_write_o
+    ,output [ 11:0]  csr_writeback_waddr_o
+    ,output [ 31:0]  csr_writeback_wdata_o
+    ,output [  5:0]  csr_writeback_exception_o
+    ,output [ 31:0]  csr_writeback_exception_pc_o
+    ,output [ 31:0]  csr_writeback_exception_addr_o
+    ,output          exec_hold_o
+    ,output          mul_hold_o
+    ,output          interrupt_inhibit_o
+);
+endmodule
+
+module riscv_lsu
+
+
+
+#(
+     parameter MEM_CACHE_ADDR_MIN = 32'h80000000
+    ,parameter MEM_CACHE_ADDR_MAX = 32'h8fffffff
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           opcode_valid_i
+    ,input  [ 31:0]  opcode_opcode_i
+    ,input  [ 31:0]  opcode_pc_i
+    ,input           opcode_invalid_i
+    ,input  [  4:0]  opcode_rd_idx_i
+    ,input  [  4:0]  opcode_ra_idx_i
+    ,input  [  4:0]  opcode_rb_idx_i
+    ,input  [ 31:0]  opcode_ra_operand_i
+    ,input  [ 31:0]  opcode_rb_operand_i
+    ,input  [ 31:0]  mem_data_rd_i
+    ,input           mem_accept_i
+    ,input           mem_ack_i
+    ,input           mem_error_i
+    ,input  [ 10:0]  mem_resp_tag_i
+    ,input           mem_load_fault_i
+    ,input           mem_store_fault_i
+
+    
+    ,output [ 31:0]  mem_addr_o
+    ,output [ 31:0]  mem_data_wr_o
+    ,output          mem_rd_o
+    ,output [  3:0]  mem_wr_o
+    ,output          mem_cacheable_o
+    ,output [ 10:0]  mem_req_tag_o
+    ,output          mem_invalidate_o
+    ,output          mem_writeback_o
+    ,output          mem_flush_o
+    ,output          writeback_valid_o
+    ,output [ 31:0]  writeback_value_o
+    ,output [  5:0]  writeback_exception_o
+    ,output          stall_o
+);
+endmodule
+
+module riscv_lsu_fifo
+
+
+
+#(
+    parameter WIDTH   = 8,
+    parameter DEPTH   = 4,
+    parameter ADDR_W  = 2
+)
+
+
+
+(
+    
+     input               clk_i
+    ,input               rst_i
+    ,input  [WIDTH-1:0]  data_in_i
+    ,input               push_i
+    ,input               pop_i
+
+    
+    ,output [WIDTH-1:0]  data_out_o
+    ,output              accept_o
+    ,output              valid_o
+);
+endmodule
+
+module riscv_mmu
+
+
+
+#(
+     parameter MEM_CACHE_ADDR_MIN = 32'h80000000
+    ,parameter MEM_CACHE_ADDR_MAX = 32'h8fffffff
+    ,parameter SUPPORT_MMU      = 1
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input  [  1:0]  priv_d_i
+    ,input           sum_i
+    ,input           mxr_i
+    ,input           flush_i
+    ,input  [ 31:0]  satp_i
+    ,input           fetch_in_rd_i
+    ,input           fetch_in_flush_i
+    ,input           fetch_in_invalidate_i
+    ,input  [ 31:0]  fetch_in_pc_i
+    ,input  [  1:0]  fetch_in_priv_i
+    ,input           fetch_out_accept_i
+    ,input           fetch_out_valid_i
+    ,input           fetch_out_error_i
+    ,input  [ 31:0]  fetch_out_inst_i
+    ,input  [ 31:0]  lsu_in_addr_i
+    ,input  [ 31:0]  lsu_in_data_wr_i
+    ,input           lsu_in_rd_i
+    ,input  [  3:0]  lsu_in_wr_i
+    ,input           lsu_in_cacheable_i
+    ,input  [ 10:0]  lsu_in_req_tag_i
+    ,input           lsu_in_invalidate_i
+    ,input           lsu_in_writeback_i
+    ,input           lsu_in_flush_i
+    ,input  [ 31:0]  lsu_out_data_rd_i
+    ,input           lsu_out_accept_i
+    ,input           lsu_out_ack_i
+    ,input           lsu_out_error_i
+    ,input  [ 10:0]  lsu_out_resp_tag_i
+
+    
+    ,output          fetch_in_accept_o
+    ,output          fetch_in_valid_o
+    ,output          fetch_in_error_o
+    ,output [ 31:0]  fetch_in_inst_o
+    ,output          fetch_out_rd_o
+    ,output          fetch_out_flush_o
+    ,output          fetch_out_invalidate_o
+    ,output [ 31:0]  fetch_out_pc_o
+    ,output          fetch_in_fault_o
+    ,output [ 31:0]  lsu_in_data_rd_o
+    ,output          lsu_in_accept_o
+    ,output          lsu_in_ack_o
+    ,output          lsu_in_error_o
+    ,output [ 10:0]  lsu_in_resp_tag_o
+    ,output [ 31:0]  lsu_out_addr_o
+    ,output [ 31:0]  lsu_out_data_wr_o
+    ,output          lsu_out_rd_o
+    ,output [  3:0]  lsu_out_wr_o
+    ,output          lsu_out_cacheable_o
+    ,output [ 10:0]  lsu_out_req_tag_o
+    ,output          lsu_out_invalidate_o
+    ,output          lsu_out_writeback_o
+    ,output          lsu_out_flush_o
+    ,output          lsu_in_load_fault_o
+    ,output          lsu_in_store_fault_o
+);
+endmodule
+
+module riscv_multiplier
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           opcode_valid_i
+    ,input  [ 31:0]  opcode_opcode_i
+    ,input  [ 31:0]  opcode_pc_i
+    ,input           opcode_invalid_i
+    ,input  [  4:0]  opcode_rd_idx_i
+    ,input  [  4:0]  opcode_ra_idx_i
+    ,input  [  4:0]  opcode_rb_idx_i
+    ,input  [ 31:0]  opcode_ra_operand_i
+    ,input  [ 31:0]  opcode_rb_operand_i
+    ,input           hold_i
+
+    
+    ,output [ 31:0]  writeback_value_o
+);
+endmodule
+
+module riscv_pipe_ctrl
+
+
+
+#(
+     parameter SUPPORT_LOAD_BYPASS = 1
+    ,parameter SUPPORT_MUL_BYPASS  = 1
+)
+
+
+
+(
+     input           clk_i
+    ,input           rst_i
+
+    
+    ,input           issue_valid_i
+    ,input           issue_accept_i
+    ,input           issue_stall_i
+    ,input           issue_lsu_i
+    ,input           issue_csr_i
+    ,input           issue_div_i
+    ,input           issue_mul_i
+    ,input           issue_branch_i
+    ,input           issue_rd_valid_i
+    ,input  [4:0]    issue_rd_i
+    ,input  [5:0]    issue_exception_i
+    ,input           take_interrupt_i
+    ,input           issue_branch_taken_i
+    ,input [31:0]    issue_branch_target_i
+    ,input [31:0]    issue_pc_i
+    ,input [31:0]    issue_opcode_i
+    ,input [31:0]    issue_operand_ra_i
+    ,input [31:0]    issue_operand_rb_i
+
+    
+    ,input [31:0]    alu_result_e1_i
+
+    
+    ,input [ 31:0]   csr_result_value_e1_i
+    ,input           csr_result_write_e1_i
+    ,input [ 31:0]   csr_result_wdata_e1_i
+    ,input [  5:0]   csr_result_exception_e1_i
+
+    
+    ,output          load_e1_o
+    ,output          store_e1_o
+    ,output          mul_e1_o
+    ,output          branch_e1_o
+    ,output [  4:0]  rd_e1_o
+    ,output [31:0]   pc_e1_o
+    ,output [31:0]   opcode_e1_o
+    ,output [31:0]   operand_ra_e1_o
+    ,output [31:0]   operand_rb_e1_o
+
+    
+    ,input           mem_complete_i
+    ,input [31:0]    mem_result_e2_i
+    ,input  [5:0]    mem_exception_e2_i
+    ,input [31:0]    mul_result_e2_i
+
+    
+    ,output          load_e2_o
+    ,output          mul_e2_o
+    ,output [  4:0]  rd_e2_o
+    ,output [31:0]   result_e2_o
+
+    
+    ,input           div_complete_i
+    ,input  [31:0]   div_result_i
+
+    
+    ,output          valid_wb_o
+    ,output          csr_wb_o
+    ,output [  4:0]  rd_wb_o
+    ,output [31:0]   result_wb_o
+    ,output [31:0]   pc_wb_o
+    ,output [31:0]   opcode_wb_o
+    ,output [31:0]   operand_ra_wb_o
+    ,output [31:0]   operand_rb_wb_o
+    ,output [5:0]    exception_wb_o
+    ,output          csr_write_wb_o
+    ,output [11:0]   csr_waddr_wb_o
+    ,output [31:0]   csr_wdata_wb_o
+
+    ,output          stall_o
+    ,output          squash_e1_e2_o
+    ,input           squash_e1_e2_i
+    ,input           squash_wb_i
+);
+endmodule
+
+module riscv_regfile
+
+
+
+#(
+     parameter SUPPORT_REGFILE_XILINX = 0
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input  [  4:0]  rd0_i
+    ,input  [ 31:0]  rd0_value_i
+    ,input  [  4:0]  ra0_i
+    ,input  [  4:0]  rb0_i
+
+    
+    ,output [ 31:0]  ra0_value_o
+    ,output [ 31:0]  rb0_value_o
+);
+endmodule
+
+module riscv_xilinx_2r1w
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input  [  4:0]  rd0_i
+    ,input  [ 31:0]  rd0_value_i
+    ,input  [  4:0]  ra_i
+    ,input  [  4:0]  rb_i
+
+    
+    ,output [ 31:0]  ra_value_o
+    ,output [ 31:0]  rb_value_o
+);
+endmodule
+
+module RAM16X1D (DPO, SPO, A0, A1, A2, A3, D, DPRA0, DPRA1, DPRA2, DPRA3, WCLK, WE);
+parameter INIT = 16'h0000;
+output DPO, SPO;
+input  A0, A1, A2, A3, D, DPRA0, DPRA1, DPRA2, DPRA3, WCLK, WE;
+endmodule
+
+module dport_axi
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input  [ 31:0]  mem_addr_i
+    ,input  [ 31:0]  mem_data_wr_i
+    ,input           mem_rd_i
+    ,input  [  3:0]  mem_wr_i
+    ,input           mem_cacheable_i
+    ,input  [ 10:0]  mem_req_tag_i
+    ,input           mem_invalidate_i
+    ,input           mem_writeback_i
+    ,input           mem_flush_i
+    ,input           axi_awready_i
+    ,input           axi_wready_i
+    ,input           axi_bvalid_i
+    ,input  [  1:0]  axi_bresp_i
+    ,input           axi_arready_i
+    ,input           axi_rvalid_i
+    ,input  [ 31:0]  axi_rdata_i
+    ,input  [  1:0]  axi_rresp_i
+
+    
+    ,output [ 31:0]  mem_data_rd_o
+    ,output          mem_accept_o
+    ,output          mem_ack_o
+    ,output          mem_error_o
+    ,output [ 10:0]  mem_resp_tag_o
+    ,output          axi_awvalid_o
+    ,output [ 31:0]  axi_awaddr_o
+    ,output          axi_wvalid_o
+    ,output [ 31:0]  axi_wdata_o
+    ,output [  3:0]  axi_wstrb_o
+    ,output          axi_bready_o
+    ,output          axi_arvalid_o
+    ,output [ 31:0]  axi_araddr_o
+    ,output          axi_rready_o
+);
+endmodule
+
+module dport_axi_fifo
+
+
+
+#(
+    parameter WIDTH   = 8,
+    parameter DEPTH   = 2,
+    parameter ADDR_W  = 1
+)
+
+
+
+(
+    
+     input               clk_i
+    ,input               rst_i
+    ,input  [WIDTH-1:0]  data_in_i
+    ,input               push_i
+    ,input               pop_i
+
+    
+    ,output [WIDTH-1:0]  data_out_o
+    ,output              accept_o
+    ,output              valid_o
+);
+endmodule
+
+module dport_mux
+
+
+
+#(
+     parameter TCM_MEM_BASE     = 0
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input  [ 31:0]  mem_addr_i
+    ,input  [ 31:0]  mem_data_wr_i
+    ,input           mem_rd_i
+    ,input  [  3:0]  mem_wr_i
+    ,input           mem_cacheable_i
+    ,input  [ 10:0]  mem_req_tag_i
+    ,input           mem_invalidate_i
+    ,input           mem_writeback_i
+    ,input           mem_flush_i
+    ,input  [ 31:0]  mem_tcm_data_rd_i
+    ,input           mem_tcm_accept_i
+    ,input           mem_tcm_ack_i
+    ,input           mem_tcm_error_i
+    ,input  [ 10:0]  mem_tcm_resp_tag_i
+    ,input  [ 31:0]  mem_ext_data_rd_i
+    ,input           mem_ext_accept_i
+    ,input           mem_ext_ack_i
+    ,input           mem_ext_error_i
+    ,input  [ 10:0]  mem_ext_resp_tag_i
+
+    
+    ,output [ 31:0]  mem_data_rd_o
+    ,output          mem_accept_o
+    ,output          mem_ack_o
+    ,output          mem_error_o
+    ,output [ 10:0]  mem_resp_tag_o
+    ,output [ 31:0]  mem_tcm_addr_o
+    ,output [ 31:0]  mem_tcm_data_wr_o
+    ,output          mem_tcm_rd_o
+    ,output [  3:0]  mem_tcm_wr_o
+    ,output          mem_tcm_cacheable_o
+    ,output [ 10:0]  mem_tcm_req_tag_o
+    ,output          mem_tcm_invalidate_o
+    ,output          mem_tcm_writeback_o
+    ,output          mem_tcm_flush_o
+    ,output [ 31:0]  mem_ext_addr_o
+    ,output [ 31:0]  mem_ext_data_wr_o
+    ,output          mem_ext_rd_o
+    ,output [  3:0]  mem_ext_wr_o
+    ,output          mem_ext_cacheable_o
+    ,output [ 10:0]  mem_ext_req_tag_o
+    ,output          mem_ext_invalidate_o
+    ,output          mem_ext_writeback_o
+    ,output          mem_ext_flush_o
+);
+endmodule
+
+module riscv_tcm_top
+
+
+
+#(
+     parameter BOOT_VECTOR      = 32'h00002000
+    ,parameter CORE_ID          = 0
+    ,parameter TCM_MEM_BASE     = 0
+    ,parameter MEM_CACHE_ADDR_MIN = 0
+    ,parameter MEM_CACHE_ADDR_MAX = 32'hffffffff
+)
+
+
+
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           rst_cpu_i
+    ,input           axi_i_awready_i
+    ,input           axi_i_wready_i
+    ,input           axi_i_bvalid_i
+    ,input  [  1:0]  axi_i_bresp_i
+    ,input           axi_i_arready_i
+    ,input           axi_i_rvalid_i
+    ,input  [ 31:0]  axi_i_rdata_i
+    ,input  [  1:0]  axi_i_rresp_i
+    ,input           axi_t_awvalid_i
+    ,input  [ 31:0]  axi_t_awaddr_i
+    ,input  [  3:0]  axi_t_awid_i
+    ,input  [  7:0]  axi_t_awlen_i
+    ,input  [  1:0]  axi_t_awburst_i
+    ,input           axi_t_wvalid_i
+    ,input  [ 31:0]  axi_t_wdata_i
+    ,input  [  3:0]  axi_t_wstrb_i
+    ,input           axi_t_wlast_i
+    ,input           axi_t_bready_i
+    ,input           axi_t_arvalid_i
+    ,input  [ 31:0]  axi_t_araddr_i
+    ,input  [  3:0]  axi_t_arid_i
+    ,input  [  7:0]  axi_t_arlen_i
+    ,input  [  1:0]  axi_t_arburst_i
+    ,input           axi_t_rready_i
+    ,input  [ 31:0]  intr_i
+
+    
+    ,output          axi_i_awvalid_o
+    ,output [ 31:0]  axi_i_awaddr_o
+    ,output          axi_i_wvalid_o
+    ,output [ 31:0]  axi_i_wdata_o
+    ,output [  3:0]  axi_i_wstrb_o
+    ,output          axi_i_bready_o
+    ,output          axi_i_arvalid_o
+    ,output [ 31:0]  axi_i_araddr_o
+    ,output          axi_i_rready_o
+    ,output          axi_t_awready_o
+    ,output          axi_t_wready_o
+    ,output          axi_t_bvalid_o
+    ,output [  1:0]  axi_t_bresp_o
+    ,output [  3:0]  axi_t_bid_o
+    ,output          axi_t_arready_o
+    ,output          axi_t_rvalid_o
+    ,output [ 31:0]  axi_t_rdata_o
+    ,output [  1:0]  axi_t_rresp_o
+    ,output [  3:0]  axi_t_rid_o
+    ,output          axi_t_rlast_o
+);
+endmodule
+
+module tcm_mem
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           mem_i_rd_i
+    ,input           mem_i_flush_i
+    ,input           mem_i_invalidate_i
+    ,input  [ 31:0]  mem_i_pc_i
+    ,input  [ 31:0]  mem_d_addr_i
+    ,input  [ 31:0]  mem_d_data_wr_i
+    ,input           mem_d_rd_i
+    ,input  [  3:0]  mem_d_wr_i
+    ,input           mem_d_cacheable_i
+    ,input  [ 10:0]  mem_d_req_tag_i
+    ,input           mem_d_invalidate_i
+    ,input           mem_d_writeback_i
+    ,input           mem_d_flush_i
+    ,input           axi_awvalid_i
+    ,input  [ 31:0]  axi_awaddr_i
+    ,input  [  3:0]  axi_awid_i
+    ,input  [  7:0]  axi_awlen_i
+    ,input  [  1:0]  axi_awburst_i
+    ,input           axi_wvalid_i
+    ,input  [ 31:0]  axi_wdata_i
+    ,input  [  3:0]  axi_wstrb_i
+    ,input           axi_wlast_i
+    ,input           axi_bready_i
+    ,input           axi_arvalid_i
+    ,input  [ 31:0]  axi_araddr_i
+    ,input  [  3:0]  axi_arid_i
+    ,input  [  7:0]  axi_arlen_i
+    ,input  [  1:0]  axi_arburst_i
+    ,input           axi_rready_i
+
+    
+    ,output          mem_i_accept_o
+    ,output          mem_i_valid_o
+    ,output          mem_i_error_o
+    ,output [ 31:0]  mem_i_inst_o
+    ,output [ 31:0]  mem_d_data_rd_o
+    ,output          mem_d_accept_o
+    ,output          mem_d_ack_o
+    ,output          mem_d_error_o
+    ,output [ 10:0]  mem_d_resp_tag_o
+    ,output          axi_awready_o
+    ,output          axi_wready_o
+    ,output          axi_bvalid_o
+    ,output [  1:0]  axi_bresp_o
+    ,output [  3:0]  axi_bid_o
+    ,output          axi_arready_o
+    ,output          axi_rvalid_o
+    ,output [ 31:0]  axi_rdata_o
+    ,output [  1:0]  axi_rresp_o
+    ,output [  3:0]  axi_rid_o
+    ,output          axi_rlast_o
+);
+endmodule
+
+module tcm_mem_pmem
+(
+    
+     input           clk_i
+    ,input           rst_i
+    ,input           axi_awvalid_i
+    ,input  [ 31:0]  axi_awaddr_i
+    ,input  [  3:0]  axi_awid_i
+    ,input  [  7:0]  axi_awlen_i
+    ,input  [  1:0]  axi_awburst_i
+    ,input           axi_wvalid_i
+    ,input  [ 31:0]  axi_wdata_i
+    ,input  [  3:0]  axi_wstrb_i
+    ,input           axi_wlast_i
+    ,input           axi_bready_i
+    ,input           axi_arvalid_i
+    ,input  [ 31:0]  axi_araddr_i
+    ,input  [  3:0]  axi_arid_i
+    ,input  [  7:0]  axi_arlen_i
+    ,input  [  1:0]  axi_arburst_i
+    ,input           axi_rready_i
+    ,input           ram_accept_i
+    ,input           ram_ack_i
+    ,input           ram_error_i
+    ,input  [ 31:0]  ram_read_data_i
+
+    
+    ,output          axi_awready_o
+    ,output          axi_wready_o
+    ,output          axi_bvalid_o
+    ,output [  1:0]  axi_bresp_o
+    ,output [  3:0]  axi_bid_o
+    ,output          axi_arready_o
+    ,output          axi_rvalid_o
+    ,output [ 31:0]  axi_rdata_o
+    ,output [  1:0]  axi_rresp_o
+    ,output [  3:0]  axi_rid_o
+    ,output          axi_rlast_o
+    ,output [  3:0]  ram_wr_o
+    ,output          ram_rd_o
+    ,output [  7:0]  ram_len_o
+    ,output [ 31:0]  ram_addr_o
+    ,output [ 31:0]  ram_write_data_o
+);
+endmodule
+
+module tcm_mem_pmem_fifo2
+
+
+
+
+#(
+    parameter WIDTH   = 8,
+    parameter DEPTH   = 4,
+    parameter ADDR_W  = 2
+)
+
+
+
+(
+    
+     input               clk_i
+    ,input               rst_i
+    ,input  [WIDTH-1:0]  data_in_i
+    ,input               push_i
+    ,input               pop_i
+
+    
+    ,output [WIDTH-1:0]  data_out_o
+    ,output              accept_o
+    ,output              valid_o
+);
+endmodule
+
+module tcm_mem_ram
+(
+    
+     input           clk0_i
+    ,input           rst0_i
+    ,input  [ 13:0]  addr0_i
+    ,input  [ 31:0]  data0_i
+    ,input  [  3:0]  wr0_i
+    ,input           clk1_i
+    ,input           rst1_i
+    ,input  [ 13:0]  addr1_i
+    ,input  [ 31:0]  data1_i
+    ,input  [  3:0]  wr1_i
+
+    
+    ,output [ 31:0]  data0_o
+    ,output [ 31:0]  data1_o
+);
+endmodule

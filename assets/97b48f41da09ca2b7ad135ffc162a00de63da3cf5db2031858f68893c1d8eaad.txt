@@ -1,0 +1,39 @@
+The Verilog module `processor_memory_debug_bridge` is designed to interface with a processor and peripherals, handling both instruction fetching and data transactions while also integrating debug functionality. Below is a detailed instruction for generating the Verilog code:
+
+1. **Primary Function**:
+   The module orchestrates the interactions between a processor and external memory or peripherals by managing instruction fetching, data reads/writes, interrupts, and debug operations.
+
+2. **Key Control Flow**:
+   - The module operates based on a clock (`Clk`) and can be reset using `Reset`.
+   - It handles interrupts by responding to the `Interrupt` signal and acknowledges using `Interrupt_Ack`.
+   - It fetches instructions if `IReady` is asserted and drives `IFetch` and `I_AS` for instruction transaction control.
+   - For data transactions, it enables data read or write strobe signals (`Read_Strobe` and `Write_Strobe`) based on `DReady`, `DWait`, `DCE`, and `DUE`.
+   - It manages AXI interface signals for address, data, and control handshakes (`M_AXI_DP_*` signals), ensuring proper data transfer to/from the process.
+
+3. **Important Data Processing**:
+   - The module takes a 32-bit `Instr` input and outputs a 32-bit instruction address through `Instr_Addr`.
+   - It handles 32-bit data reads from `Data_Read` and prepares 32-bit data writes via `Data_Write` and `Data_Addr`.
+   - AXI data paths (`M_AXI_DP_ARADDR`, `M_AXI_DP_AWADDR`, and `M_AXI_DP_WDATA`) manage communication with an AXI bus.
+   - Byte enable signals (`Byte_Enable`) facilitate byte-level data transactions.
+
+4. **Debug Signal Interactions**:
+   - The module integrates a debug clock (`Dbg_Clk`), data input (`Dbg_TDI`), data output (`Dbg_TDO`), and various control signals (`Dbg_Reg_En`, `Dbg_Shift`, `Dbg_Capture`, `Dbg_Update`, `Debug_Rst`, and `Dbg_Disable`) to enable detailed debugging and monitoring.
+
+This detailed overview allows for the accurate generation of Verilog code capturing all essential interactions and operational details.
+
+Module Interface:
+module processor_memory_debug_bridge(
+  Clk, Reset, Interrupt, Interrupt_Address,
+  Interrupt_Ack, Instr_Addr, Instr, IFetch, I_AS, IReady, IWAIT, ICE, IUE,
+  Data_Addr, Data_Read, Data_Write, D_AS, Read_Strobe, Write_Strobe,
+  DReady, DWait, DCE, DUE, Byte_Enable, M_AXI_DP_AWADDR,
+  M_AXI_DP_AWPROT, M_AXI_DP_AWVALID, M_AXI_DP_AWREADY, M_AXI_DP_WDATA,
+  M_AXI_DP_WSTRB, M_AXI_DP_WVALID, M_AXI_DP_WREADY, M_AXI_DP_BRESP,
+  M_AXI_DP_BVALID, M_AXI_DP_BREADY, M_AXI_DP_ARADDR, M_AXI_DP_ARPROT,
+  M_AXI_DP_ARVALID, M_AXI_DP_ARREADY, M_AXI_DP_RDATA, M_AXI_DP_RRESP,
+  M_AXI_DP_RVALID, M_AXI_DP_RREADY, Dbg_Clk, Dbg_TDI, Dbg_TDO,
+  Dbg_Reg_En, Dbg_Shift, Dbg_Capture, Dbg_Update, Debug_Rst, Dbg_Disable
+);
+
+Behavioral Clarifications:
+- This is a port-declaration-only stub with no internal logic or always blocks. Key widths: Interrupt_Address/Instr/Data_Addr/Data_Read/Data_Write/M_AXI_DP_*ADDR/*DATA are 32-bit; Interrupt_Ack is 2-bit; Byte_Enable is 4-bit; M_AXI_DP_*PROT are 3-bit; M_AXI_DP_BRESP/RRESP are 2-bit; M_AXI_DP_WSTRB is 4-bit; Dbg_Reg_En is 8-bit.

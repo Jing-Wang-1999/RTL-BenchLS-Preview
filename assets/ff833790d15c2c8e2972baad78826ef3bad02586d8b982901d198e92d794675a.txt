@@ -1,0 +1,21 @@
+module __formal113_core_4fb43a8a6968036bec90 (i,o);
+input [7:0] i;
+output [7:0] o;
+wire [7:0] o;
+  assign o[0] = i[2]^i[4]^i[5];
+  assign o[1] = i[0]^i[3]^i[5]^i[6];
+  assign o[2] = i[0]^i[1]^i[2]^i[5]^i[6]^i[7];
+  assign o[3] = i[0]^i[1]^i[3]^i[4]^i[5]^i[6]^i[7];
+  assign o[4] = i[0]^i[1]^i[6]^i[7];
+  assign o[5] = i[1]^i[2]^i[7];
+  assign o[6] = i[0]^i[2]^i[3];
+  assign o[7] = i[1]^i[3]^i[4];
+endmodule
+module gf_mult_by_5e(
+  input wire [7:0] i,
+  output wire [7:0] o
+);
+wire [7:0] __negative_output;
+__formal113_core_4fb43a8a6968036bec90 dut(.i(i), .o(__negative_output));
+assign o = __negative_output ^ 8'd1;
+endmodule

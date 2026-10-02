@@ -1,0 +1,55 @@
+module origen_157586(
+    input [255:0] M,
+    input [255:0] N,
+    input clk,
+    input rst_n,
+    input start,
+    output [255:0] V,
+    output ready
+);
+
+    reg [256:0] D;
+    reg [255:0] V_reg;
+    reg [8:0] i;
+    reg ready_reg;
+    reg [255:0] next_V;
+    reg [8:0] next_i;
+    reg next_ready;
+
+    always @(*) begin
+        if (i == 256 || &i) begin
+            next_V = V_reg;
+        end else if (D[256]) begin
+            next_V = {V_reg[254:0], 1'b0};
+        end else begin
+            next_V = D[255:0];
+        end
+
+        if (i == 256) begin
+            next_i = 511;
+        end else if (i == 511) begin
+            next_i = 256;
+        end else begin
+            next_i = i + 1;
+        end
+
+        next_ready = (i == 256);
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n || start) begin
+            V_reg <= M;
+            i <= 0;
+            ready_reg <= 0;
+        end else begin
+            V_reg <= next_V;
+            i <= next_i;
+            ready_reg <= next_ready;
+        end
+    end
+
+    assign D = {1'b0, V_reg} - N;
+    assign V = V_reg;
+    assign ready = ready_reg;
+
+endmodule

@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""One upstream EH1 testbench point, requiring all seven pinned canned firmware runs."""
+import argparse, hashlib, json, os
+from pathlib import Path
+import re, shutil, subprocess, tempfile, time
+
+TOOLS = Path('/home/jwangjw/anaconda3/envs/securitylab/bin')
+
+
+def run(argv, cwd, log, env, timeout):
+    start = time.monotonic()
+    with log.open('w') as stream:
+        try:
+            process = subprocess.Popen(argv, cwd=cwd, env=env, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
+            try:
+                rc = process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                import signal
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait()
+                rc = 'timeout'
+        except OSError as exc:
+            stream.write(str(exc))
+            rc = 'launch_error'
+    return {'command': argv, 'cwd': str(cwd), 'returncode': rc, 'elapsed_seconds': round(time.monotonic()-start,3),
+            'log': str(log), 'log_sha256': hashlib.sha256(log.read_bytes()).hexdigest()}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    for key in ['payload', 'candidate', 'output']:
+        parser.add_argument('--'+key, required=True, type=Path)
+    args = parser.parse_args()
+    payload,candidate,output=args.payload.resolve(),args.candidate.resolve(),args.output.resolve()
+    output.mkdir(parents=True,exist_ok=True)
+    meta=json.loads((payload/'meta.json').read_text())
+    workspace=Path(tempfile.mkdtemp(prefix='replay_',dir=output))
+    stage=workspace/'source'
+    shutil.copytree(payload/'source',stage)
+    missing=[]
+    for relative in meta['rtl_files']:
+        if not (candidate/relative).is_file(): missing.append(relative)
+        else: shutil.copyfile(candidate/relative,stage/relative)
+    point={'id':'testbench/tb_top.sv','passed':False,'compile_valid':False,'missing_candidate_files':missing,'configurations':[]}
+    env={**os.environ,'PATH':str(TOOLS)+':/usr/bin:/bin','RV_ROOT':str(stage),'VERILATOR_ROOT':str(TOOLS.parent/'share/verilator')}
+    cwd=stage/'testbench'
+    if not missing:
+        argv=[str(TOOLS/'verilator'),'--cc','-CFLAGS','-std=c++14','snapshots/default/common_defines.vh',str(stage/'design/include/veer_types.sv'),
+              '-I'+str(stage/'design/include'),'-I'+str(stage/'design/lib'),'-Isnapshots/default','-Wno-UNOPTFLAT','-I'+str(cwd),
+              '-f',str(cwd/'flist'),str(cwd/'tb_top.sv'),str(cwd/'ahb_sif.sv'),'--top-module','tb_top','-exe',str(cwd/'test_tb_top.cpp'),'--autoflush']
+        point['verilation']=run(argv,cwd,workspace/'verilation.log',env,180)
+        if point['verilation']['returncode']==0:
+            point['build']=run(['/usr/bin/make','-j4','-C',str(cwd/'obj_dir'),'-f','Vtb_top.mk','OPT_FAST=-Os','CXX=/usr/bin/g++','LINK=/usr/bin/g++','AR=/usr/bin/ar'],cwd,workspace/'build.log',env,300)
+            point['compile_valid']=point['build']['returncode']==0
+        if point['compile_valid']:
+            for name in meta['firmware_configurations']:
+                run_dir=workspace/name
+                run_dir.mkdir()
+                shutil.copyfile(cwd/'hex'/f'{name}.hex',run_dir/'program.hex')
+                result=run([str(cwd/'obj_dir/Vtb_top')],run_dir,run_dir/'simulation.log',env,90)
+                text=Path(result['log']).read_text(errors='replace')
+                result['configuration']=name
+                result['passed']=(result['returncode']==0 and re.search(r'^TEST_PASSED\s*$',text,re.M) is not None
+                     and re.search(r'TEST_FAILED|Hit max cycle|%Error|\bError\b|\bERROR\b',text) is None
+                     and (name != 'hello_world' or 'Hello World from SweRV EH1 @WDC !!' in text))
+                point['configurations'].append(result)
+                if not result['passed']: break
+    point['passed']=point['compile_valid'] and len(point['configurations'])==len(meta['firmware_configurations']) and all(r['passed'] for r in point['configurations'])
+    result={'case_id':meta['case_id'],'passed_testbenches':int(point['passed']),'total_testbenches':1,'score':float(point['passed']),'points':[point]}
+    (output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+    print(json.dumps({'case_id':meta['case_id'],'score':result['score'],'compile_valid':point['compile_valid'],'firmware_runs':len(point['configurations'])}))
+
+
+if __name__=='__main__': main()

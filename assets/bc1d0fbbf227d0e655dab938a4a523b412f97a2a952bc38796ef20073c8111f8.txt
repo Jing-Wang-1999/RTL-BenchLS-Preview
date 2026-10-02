@@ -1,0 +1,49 @@
+module rtlpp_08205 (
+    input wire clk,
+    input wire rst_n,
+    input wire [7:0] seg,
+    input wire [5:0] sel,
+    output reg shcp,
+    output reg stcp,
+    output reg ds,
+    output wire oe
+);
+
+    reg [1:0] cnt;
+    reg [3:0] cnt_bit;
+    wire [13:0] data;
+
+    assign data = {seg, sel};
+    assign oe = 1'b0; // Output enable is constantly inactive
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            cnt <= 2'b00;
+            cnt_bit <= 4'b0000;
+            shcp <= 1'b0;
+            stcp <= 1'b0;
+            ds <= 1'b0;
+        end else begin
+            // Increment the 2-bit counter
+            cnt <= cnt + 1'b1;
+            
+            // Toggle shcp on every clock cycle
+            shcp <= (cnt == 2'b01) ? ~shcp : shcp;
+            
+            // Toggle stcp when cnt reaches 2'b11
+            if (cnt == 2'b11) begin
+                stcp <= ~stcp;
+                cnt_bit <= cnt_bit + 1'b1;
+            end
+            
+            // Shift out the current bit from data
+            ds <= data[cnt_bit];
+            
+            // Reset cnt_bit when all bits are processed
+            if (cnt_bit == 4'b1111) begin
+                cnt_bit <= 4'b0000;
+            end
+        end
+    end
+
+endmodule

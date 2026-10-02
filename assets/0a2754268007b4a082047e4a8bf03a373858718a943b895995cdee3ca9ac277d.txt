@@ -1,0 +1,26 @@
+{
+  "candidate_id": "large_module.49ab0e2b63d4aa1b0970",
+  "reviewer_identity": "/root/screen_protocol_v3",
+  "decision": "pass",
+  "rtl_sha256": "d677b9f962ae0807b67a6d473dc747467dd67dbf62225cec36531d9536291d35",
+  "specification_sha256": "99b8e3a4881955585d866252bb772f240c159e4473447c761f557141e6c89a52",
+  "rtl_reasonable": true,
+  "blocking_findings": [],
+  "evidence": [
+    "Independently read complete immutable jls_encoder RTL, final specification and upstream README timing requirements; checked all helper arithmetic, context forwarding, run interruption, Golomb packing, stuffing, header/footer and byte swap.",
+    "Verified synchronous reset, unreset RAM/read registers, long-SOF context initialization and K-stage lack of direct reset gate. The 368-cycle SOF and 32-cycle interframe idle are upstream requirements, not new formal constraints.",
+    "Default NEAR=0 is substantive lossless compressor RTL with line/context memories and adaptive coding. English upstream README permits height 16384, while an older source comment/Chinese paragraph says 16383; the 15-bit row counter and 16-bit height header support the specified 16384 limit."
+  ],
+  "formal_scope_review": {
+    "top_module": "jls_encoder",
+    "mode": "sec",
+    "clock": "clk",
+    "clock_command": null,
+    "reset_expression": "!rstn",
+    "preprocessor_defines": [],
+    "default_parameters_only": true,
+    "additional_traffic_assumptions": [],
+    "independent_of_primary_author": true,
+    "formal_qualification": "Separate root-controlled positive/negative qualification required; this signature does not claim a formal run or force unreset state to zero."
+  }
+}

@@ -1,0 +1,113 @@
+module origen_104635 (
+    input wire clok,
+    input wire resetm,
+    input wire new_char,
+    input wire [7:0] char_recieved,
+    input wire [5:0] char_count,
+    output reg [1:0] LEDS,
+    output reg new_key,
+    output reg start_over,
+    output reg found_key,
+    output reg matched_cont,
+    output reg done,
+    output reg last_key,
+    output reg compared_char,
+    output reg [23:0] key
+);
+
+    // Parameters
+    parameter MAX_CHARS = 32;
+    parameter MAX_KEY = 24'hFFFFFF;
+
+    // State enumeration
+    localparam [2:0]
+        WAIT_FOR_NEXT_CHAR = 3'd0,
+        CHECK_CHAR = 3'd1,
+        GET_NEXT_KEY = 3'd2,
+        REACHED_LAST_CHAR = 3'd3,
+        REACHED_LAST_KEY = 3'd4,
+        FINISHED_STRING = 3'd5;
+
+    // State register
+    reg [2:0] state, next_state;
+
+    // Internal registers
+    reg [5:0] char_index;
+    reg valid_char;
+
+    // State machine
+    always @(posedge clok or negedge resetm) begin
+        if (!resetm) begin
+            state <= WAIT_FOR_NEXT_CHAR;
+            key <= 24'd0;
+            char_index <= 6'd0;
+            LEDS <= 2'b00;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        next_state = state;
+        new_key = 1'b0;
+        start_over = 1'b0;
+        found_key = 1'b0;
+        matched_cont = 1'b0;
+        done = 1'b0;
+        last_key = 1'b0;
+        compared_char = 1'b0;
+
+        case (state)
+            WAIT_FOR_NEXT_CHAR: begin
+                if (new_char) next_state = CHECK_CHAR;
+            end
+
+            CHECK_CHAR: begin
+                compared_char = 1'b1;
+                if ((char_recieved >= 8'd97 && char_recieved <= 8'd122) || char_recieved == 8'd32) begin
+                    valid_char = 1'b1;
+                    if (char_index == char_count - 1) begin
+                        next_state = REACHED_LAST_CHAR;
+                    end else begin
+                        next_state = WAIT_FOR_NEXT_CHAR;
+                    end
+                end else begin
+                    valid_char = 1'b0;
+                    next_state = GET_NEXT_KEY;
+                end
+            end
+
+            GET_NEXT_KEY: begin
+                if (key == MAX_KEY) begin
+                    next_state = REACHED_LAST_KEY;
+                end else begin
+                    key <= key + 1;
+                    new_key = 1'b1;
+                    start_over = 1'b1;
+                    next_state = WAIT_FOR_NEXT_CHAR;
+                end
+            end
+
+            REACHED_LAST_CHAR: begin
+                found_key = 1'b1;
+                matched_cont = 1'b1;
+                next_state = FINISHED_STRING;
+            end
+
+            REACHED_LAST_KEY: begin
+                last_key = 1'b1;
+                next_state = FINISHED_STRING;
+            end
+
+            FINISHED_STRING: begin
+                done = 1'b1;
+                LEDS <= (found_key) ? 2'b01 : 2'b10;
+                next_state = WAIT_FOR_NEXT_CHAR;
+            end
+
+            default: next_state = WAIT_FOR_NEXT_CHAR;
+        endcase
+    end
+
+endmodule

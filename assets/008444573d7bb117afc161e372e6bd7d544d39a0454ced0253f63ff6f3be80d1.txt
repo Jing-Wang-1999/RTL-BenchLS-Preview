@@ -1,0 +1,59 @@
+module autovcoder_034947 (
+    input wire clk,
+    input wire rst_n,
+    output reg [7:0] c1,
+    output reg [7:0] x,
+    output reg [7:0] y,
+    output reg [7:0] act1,
+    output reg [7:0] act2,
+    output reg [1:0] i
+);
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            c1 <= 8'd0;
+            x <= 8'd0;
+            y <= 8'd0;
+            act1 <= 8'd0;
+            act2 <= 8'd0;
+            i <= 2'd0;
+        end else begin
+            case (i)
+                2'd0: begin
+                    // State 0: Counting and comparison state
+                    if (c1 == 8'd99) begin
+                        c1 <= 8'd0;
+                        x <= 8'd0;
+                        y <= 8'd0;
+                        i <= 2'd1;
+                    end else begin
+                        c1 <= c1 + 8'd1;
+                        
+                        // Parallel comparisons
+                        if (x == c1) begin
+                            x <= x + 8'd10;
+                            act1 <= act1 + 8'd1;
+                        end
+                        
+                        if (y == c1) begin
+                            y <= y + 8'd1;
+                            act2 <= act1;
+                        end
+                    end
+                end
+                
+                2'd1: begin
+                    // State 1: Single-cycle reset state
+                    act1 <= 8'd0;
+                    act2 <= 8'd0;
+                    i <= 2'd0;
+                end
+                
+                default: begin
+                    i <= 2'd0;
+                end
+            endcase
+        end
+    end
+
+endmodule

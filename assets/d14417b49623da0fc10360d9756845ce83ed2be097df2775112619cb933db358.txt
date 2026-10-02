@@ -1,0 +1,28 @@
+The module is a configurable register with synchronous load, asynchronous reset, asynchronous preset, and tri-state output control.
+
+**Inputs:**
+- Clock: The main clock signal.
+- ClockEnable: When high, enables clocked operations.
+- D: Data input bus, width set by NrOfBits.
+- Reset: Asynchronous reset (active high).
+- Tick: Load enable; when high with ClockEnable, loads D into the register.
+- cs: Chip select; when high, the output Q is high-impedance (tri-state).
+- pre: Asynchronous preset (active high); sets the register to all ones.
+
+**Outputs:**
+- Q: Data output bus, same width as D. Output is tri-stated when cs is high.
+
+**Function:**
+The module maintains two internal registers: one updated on the positive clock edge and one on the negative clock edge. The ActiveLevel parameter selects which register drives Q when cs is low (1 for positive-edge register, 0 for negative-edge register).
+
+**Operation:**
+- If Reset is high, both internal registers are cleared to zero immediately.
+- If pre is high, both internal registers are set to all ones immediately.
+- Otherwise, on the relevant clock edge (positive or negative), if both ClockEnable and Tick are high, the corresponding register loads the value from D.
+- Output Q is high-impedance when cs is high. When cs is low, Q outputs the value of the selected internal register based on ActiveLevel.
+
+**Parameters:**
+- ActiveLevel: Determines which clock edge register drives the output (1 = positive edge, 0 = negative edge).
+- NrOfBits: Sets the bit width of D and Q.
+
+The module combines edge-triggered storage with asynchronous control and tri-state output capability.

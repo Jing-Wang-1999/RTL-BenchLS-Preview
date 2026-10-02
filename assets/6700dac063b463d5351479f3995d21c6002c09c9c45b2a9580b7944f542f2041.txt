@@ -1,0 +1,49 @@
+{
+  "additions": 9,
+  "base_commit": "636491530c3aa834d1f00a931ae39202ba299753",
+  "base_ref": "master",
+  "deletions": 9,
+  "head_commit": "e004ce5c66c1c3fabf6d575d5079ff43fbbaa630",
+  "issue_info": {
+    "body": "When elaborating the following problem occurs in DC. We should fix this pls.\r\n \r\n```\r\nWarning:  ../../src/fpnew/src/common_cells/src/lzc.sv:52: signed to unsigned conversion occurs. (VER-318)\r\nWarning:  ../../src/fpnew/src/common_cells/src/lzc.sv:58: signed to unsigned conversion occurs. (VER-318)\r\nWarning:  ../../src/fpnew/src/common_cells/src/lzc.sv:64: signed to unsigned conversion occurs. (VER-318)\r\nWarning:  ../../src/fpnew/src/common_cells/src/lzc.sv:69: signed to unsigned conversion occurs. (VER-318)\r\nWarning:  ../../src/fpnew/src/common_cells/src/lzc.sv:58: signed to unsigned conversion occurs. (VER-318)\r\n```",
+    "created_at": "2019-01-30T08:55:10Z",
+    "labels": [
+      "synthesis"
+    ],
+    "state": "closed",
+    "title": "LZC: Signed to unsigned conversion occurs",
+    "updated_at": "2019-01-30T13:35:04Z"
+  },
+  "issue_number": 19,
+  "issue_url": "https://github.com/pulp-platform/common_cells/issues/19",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 9,
+      "changes": 18,
+      "deletions": 9,
+      "filename": "src/lzc.sv",
+      "patch": "@@ -26,7 +26,7 @@ module lzc #(\n   output logic                     empty_o // asserted if all bits in in_i are zero\n );\n \n-  localparam int NUM_LEVELS = $clog2(WIDTH);\n+  localparam int unsigned NUM_LEVELS = $clog2(WIDTH);\n \n   // pragma translate_off\n   initial begin\n@@ -42,7 +42,7 @@ module lzc #(\n \n   // reverse vector if required\n   always_comb begin : flip_vector\n-    for (int i = 0; i < WIDTH; i++) begin\n+    for (int unsigned i = 0; i < WIDTH; i++) begin\n       in_tmp[i] = MODE ? in_i[WIDTH-1-i] : in_i[i];\n     end\n   end\n@@ -59,26 +59,26 @@ module lzc #(\n   end\n   assign empty_o = ~(|in_i);\n `else\n-  for (genvar j = 0; j < WIDTH; j++) begin : g_index_lut\n-    assign index_lut[j] = j;\n+  for (genvar j = 0; unsigned'(j) < WIDTH; j++) begin : g_index_lut\n+    assign index_lut[j] = unsigned'(j);\n   end\n \n-  for (genvar level = 0; level < NUM_LEVELS; level++) begin : g_levels\n-    if (level == NUM_LEVELS-1) begin : g_last_level\n+  for (genvar level = 0; unsigned'(level) < NUM_LEVELS; level++) begin : g_levels\n+    if (unsigned'(level) == NUM_LEVELS-1) begin : g_last_level\n       for (genvar k = 0; k < 2**level; k++) begin : g_level\n         // if two successive indices are still in the vector...\n-        if (k * 2 < WIDTH-1) begin\n+        if (unsigned'(k) * 2 < WIDTH-1) begin\n           assign sel_nodes[2**level-1+k]   = in_tmp[k*2] | in_tmp[k*2+1];\n           assign index_nodes[2**level-1+k] = (in_tmp[k*2] == 1'b1) ? index_lut[k*2] :\n                                                                      index_lut[k*2+1];\n         end\n         // if only the first index is still in the vector...\n-        if (k * 2 == WIDTH-1) begin\n+        if (unsigned'(k) * 2 == WIDTH-1) begin\n           assign sel_nodes[2**level-1+k]   = in_tmp[k*2];\n           assign index_nodes[2**level-1+k] = index_lut[k*2];\n         end\n         // if index is out of range\n-        if (k * 2 > WIDTH-1) begin\n+        if (unsigned'(k) * 2 > WIDTH-1) begin\n           assign sel_nodes[2**level-1+k]   = 1'b0;\n           assign index_nodes[2**level-1+k] = '0;\n         end"
+    }
+  ],
+  "pr_info": {
+    "body": "",
+    "created_at": "2019-01-30T09:54:49Z",
+    "merged_at": "2019-01-30T13:35:03Z",
+    "state": "closed",
+    "title": "Fix unsigned/signed lint warnings in DC (fix #19).",
+    "updated_at": "2019-01-30T13:35:03Z",
+    "user": "msfschaffner"
+  },
+  "pr_number": 20,
+  "pr_url": "https://github.com/pulp-platform/common_cells/pull/20",
+  "repository": "pulp-platform/common_cells",
+  "source_info": {
+    "line_number": 14,
+    "source_file": "21.txt"
+  },
+  "task_id": "pulp-platform_common_cells_20_19",
+  "verilog_files": [
+    "src/lzc.sv"
+  ]
+}

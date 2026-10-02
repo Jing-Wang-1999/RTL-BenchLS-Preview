@@ -1,0 +1,11 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/harder3_1ed9c29578bf73d766fd_negative.v0.v
+check_sec -analyze -imp -sv ./input/rtl/harder3_1ed9c29578bf73d766fd_negative.negative.v
+check_sec -elaborate -spec -top hsci_mdec -disable_auto_bbox
+check_sec -elaborate -imp -top hsci_mdec -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock hsci_pclk
+reset -expression {!rstn}
+check_sec -gen
+check_sec -prove -strategy proof

@@ -1,0 +1,11 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/harder3_c64e6858a806f0919811_negative.v0.v
+check_sec -analyze -imp -sv ./input/rtl/harder3_c64e6858a806f0919811_negative.negative.v
+check_sec -elaborate -spec -top hazard3_csr -disable_auto_bbox
+check_sec -elaborate -imp -top hazard3_csr -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock -none
+reset -expression {!rst_n}
+check_sec -gen
+check_sec -prove -strategy proof

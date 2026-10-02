@@ -1,0 +1,18 @@
+This module is a clock domain crossing (CDC) synchronizer with optional data corruption detection. It transfers a multi-bit data signal across clock domains while handling metastability risks.
+
+**Inputs and Outputs:**
+- `clk`: The destination clock signal.
+- `sync`: A control signal. When high, the input data bypasses synchronization and is passed directly to the output.
+- `d`: The input data bus, width defined by the `WIDTH` parameter.
+- `q`: The synchronized output data bus, same width as input.
+
+**Behavior:**
+When the `sync` signal is active (high), the module operates in transparent mode, directly passing the input `d` to output `q`.
+
+When `sync` is inactive, the module enables its CDC synchronization and corruption detection logic (guarded by the `ARM_CDC_CHECK` conditional). In this mode:
+1.  It monitors the input data `d` for any changes.
+2.  Upon detecting a change, it activates an internal two-stage pipeline reset. This reset forces the pipeline stages to a known state (logic '1').
+3.  While the pipeline is in this reset state (indicated by the second stage being '1'), the output `q` is driven to a high-impedance (`z`) state for all bits, effectively corrupting the output data.
+4.  Once the reset condition clears and the pipeline flushes (after two clock cycles), valid synchronized data from `d` appears on `q`.
+
+If the `ARM_CDC_CHECK` definition is not set during compilation, the module reduces to a simple wire, directly assigning `q = d` regardless of

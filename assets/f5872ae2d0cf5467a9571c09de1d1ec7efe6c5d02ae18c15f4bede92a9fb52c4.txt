@@ -1,0 +1,45 @@
+### Instruction for Generating Verilog Code
+
+The Verilog module, `timing_adapter_fifo`, implements a 32-bit FIFO (First-In-First-Out) memory buffer with configurable depth, specifically designed to manage data transfer between mismatched clock domains or systems with different data generation and consumption rates.
+
+1. **Primary Function:**
+   - The module facilitates data storage and retrieval between an input interface and an output interface. It manages incoming data, stores it in an internal memory array, and provides it to the output based on the readiness signals on both sides.
+
+2. **Control Flow and Decision Points:**
+   - The module operates based on the system clock (`clk`) and can be reset using a reset signal (`reset`).
+   - Control signals like the `in_ready` and `out_ready` manage whether the FIFO can accept new data or output data respectively.
+   - On reset, the write address (`wr_addr`), read address (`rd_addr`), and internal flags (`empty`, `full`, `out_valid`) are initialized.
+   - The module uses decision logic to update the states of `empty`, `full`, `out_valid`, and address pointers (`wr_addr` and `rd_addr`) based on the `in_valid`, `in_ready`, and `out_ready` signals.
+   - If `in_ready` and `in_valid` are both high, data from `in_data` is written to memory at the address given by `wr_addr`, and `wr_addr` is incremented.
+   - If `out_ready` and `out_valid` are both high, data is read from memory at the address given by `rd_addr`, and `rd_addr` is incremented.
+
+3. **Data Processing and Signal Interactions:**
+   - FIFO stores incoming data (`in_data`) in the internal memory array (`mem`) at the address indicated by `wr_addr`.
+   - The memory address for reading (`mem_rd_addr`) and writing (`wr_addr`) is managed internally and updated synchronously based on the clock signal.
+   - The `fill_level` signal reflects the number of valid data entries in the FIFO, calculated as the difference between `wr_addr` and `rd_addr`.
+   - The functionality for reading data (`out_data`) involves deciding the correct `mem_rd_addr` based on whether the `out_ready` and `out_valid` signals are high.
+   - When the FIFO is not empty, `out_valid` is asserted to indicate valid data is present on `out_data`.
+   - Logic involves ensuring `empty` is asserted when `rd_addr` catches up to `wr_addr` and `full` is asserted when `next_wr_addr` catches up to `rd_addr`.
+
+Providing these details, an LLM should be able to generate the Verilog code for the module, including the handling of control logic and sequential elements for proper FIFO operation.
+
+Module Interface:
+module timing_adapter_fifo (
+      output reg [3:0] fill_level ,
+
+      input           clk,
+      input           reset,
+
+      output reg      in_ready,
+      input           in_valid,
+      input  [36:0]   in_data,
+
+      input           out_ready,
+      output reg      out_valid,
+      output reg [36:0] out_data
+);
+
+Behavioral Clarifications:
+- Parameters are DEPTH=8, DATA_WIDTH=37, ADDR_WIDTH=3; internal address registers are 3-bit and memory is 8 entries of 37 bits each.
+- Reset is active-high (posedge reset); on reset, empty initializes to 1, full and out_valid to 0, and address pointers to 0.
+- The combinational block computes in_ready as !full and fill_level as wr_addr minus rd_addr (set to DEPTH when full); a separate always block handles the read address look-ahead for out_data.

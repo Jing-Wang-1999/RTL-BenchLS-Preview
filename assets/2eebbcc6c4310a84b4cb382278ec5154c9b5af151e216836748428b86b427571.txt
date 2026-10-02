@@ -1,0 +1,44 @@
+module origen_089953 (
+    input [11:0] VGA_HORZ_COORD,
+    input [11:0] VGA_VERT_COORD,
+    input [11:0] background,
+    input [11:0] axes,
+    input [11:0] grid,
+    input [11:0] ticks,
+    output reg [3:0] VGA_Red_Grid,
+    output reg [3:0] VGA_Green_Grid,
+    output reg [3:0] VGA_Blue_Grid
+);
+
+always @(*) begin
+    if (VGA_HORZ_COORD == 640 || VGA_VERT_COORD == 512) begin
+        // Axes condition
+        VGA_Red_Grid = axes[11:8];
+        VGA_Green_Grid = axes[7:4];
+        VGA_Blue_Grid = axes[3:0];
+    end else if ((VGA_HORZ_COORD % 64 == 0 && VGA_VERT_COORD >= 507 && VGA_VERT_COORD <= 517) ||
+                 (VGA_VERT_COORD % 64 == 0 && VGA_HORZ_COORD >= 635 && VGA_HORZ_COORD <= 645)) begin
+        // Ticks condition
+        VGA_Red_Grid = ticks[11:8];
+        VGA_Green_Grid = ticks[7:4];
+        VGA_Blue_Grid = ticks[3:0];
+    end else if ((VGA_HORZ_COORD % 32 == 0 && VGA_VERT_COORD >= 509 && VGA_VERT_COORD <= 515) ||
+                 (VGA_VERT_COORD % 32 == 0 && VGA_HORZ_COORD >= 637 && VGA_HORZ_COORD <= 643)) begin
+        // Small ticks condition
+        VGA_Red_Grid = ticks[11:8];
+        VGA_Green_Grid = ticks[7:4];
+        VGA_Blue_Grid = ticks[3:0];
+    end else if (VGA_HORZ_COORD % 32 == 0 || VGA_VERT_COORD % 32 == 0) begin
+        // Grid condition
+        VGA_Red_Grid = grid[11:8];
+        VGA_Green_Grid = grid[7:4];
+        VGA_Blue_Grid = grid[3:0];
+    end else begin
+        // Background condition
+        VGA_Red_Grid = background[11:8];
+        VGA_Green_Grid = background[7:4];
+        VGA_Blue_Grid = background[3:0];
+    end
+end
+
+endmodule

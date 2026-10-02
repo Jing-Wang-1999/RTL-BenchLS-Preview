@@ -1,0 +1,56 @@
+module origen_107327 #(
+    parameter RESET_VAL = 1'b0,
+    parameter SYNC_STAGES = 2
+) (
+    input wire clk,
+    input wire rst_n,
+    input wire data_in,
+    output wire data_out
+);
+
+    reg [SYNC_STAGES-1:0] sync_regs;
+    
+    `ifndef EMULATION_MODE_FOR_QPRIME_COMPILATION
+    reg [3:0] meta_counter;
+    reg meta_cycle;
+    reg meta_sim_en;
+    
+    initial begin
+        meta_sim_en = $test$plusargs("C3LIB_META_SIM");
+    end
+    
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            meta_counter <= 4'b0;
+            meta_cycle <= 1'b0;
+        end else if (meta_sim_en) begin
+            if (meta_counter == 4'hF) begin
+                meta_cycle <= 1'b1;
+                meta_counter <= 4'b0;
+            end else begin
+                meta_cycle <= 1'b0;
+                meta_counter <= meta_counter + 1'b1;
+            end
+        end
+    end
+    `endif
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            sync_regs <= {SYNC_STAGES{RESET_VAL}};
+        end else begin
+            `ifndef EMULATION_MODE_FOR_QPRIME_COMPILATION
+            if (meta_sim_en && meta_cycle) begin
+                sync_regs[0] <= $random;
+            end else
+            `endif
+            begin
+                sync_regs[0] <= data_in;
+            end
+            sync_regs[SYNC_STAGES-1:1] <= sync_regs[SYNC_STAGES-2:0];
+        end
+    end
+
+    assign data_out = sync_regs[SYNC_STAGES-1];
+
+endmodule

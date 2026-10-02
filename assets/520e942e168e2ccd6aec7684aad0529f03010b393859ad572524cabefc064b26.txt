@@ -1,0 +1,23 @@
+module rtlpp_04715 (
+  input clk,
+  output [7:0] i_out,
+  output [7:0] q_out
+);
+  wire [15:0] dds_compiler_0_M_AXIS_DATA_TDATA;
+  wire dds_compiler_0_M_AXIS_DATA_TVALID;
+  wire [63:0] dds_config_gen_0_m_axis_config_TDATA;
+  wire dds_config_gen_0_m_axis_config_TVALID;
+  wire [26:0] xlconstant_freq_dout = 27'h1234567;  // Example constant value
+  wire [26:0] xlconstant_offs_dout = 27'h7654321;  // Example constant value
+  reg [15:0] sine_wave;
+  reg [15:0] cosine_wave;
+
+  assign i_out = sine_wave[15:8];
+  assign q_out = cosine_wave[15:8];
+
+  always @(posedge clk) begin
+    // DDS Compiler emulation
+    sine_wave <= sine_wave + 1; // Simplified DDS emulation
+    cosine_wave <= cosine_wave + 1; // Simplified DDS emulation
+  end
+endmodule

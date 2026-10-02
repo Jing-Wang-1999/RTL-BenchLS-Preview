@@ -1,0 +1,62 @@
+module Twos_Complement(A0, 
+                       A1, 
+                       A2, 
+                       A3, 
+                       RST, 
+                       C_OUT_1, 
+                       C_OUT_2, 
+                       C_OUT_3, 
+                       C_OUT_4);
+
+    input A0;
+    input A1;
+    input A2;
+    input A3;
+    input RST;
+    output C_OUT_1;
+    output C_OUT_2;
+    output C_OUT_3;
+    output C_OUT_4;
+
+    wire XLXN_12;
+    wire XLXN_13;
+    wire XLXN_14;
+    wire XLXN_15;
+    wire XLXN_23;
+    wire XLXN_24;
+    wire XLXN_25;
+    wire XLXN_30;
+
+    // Internal logic of Half_Adder_MUSER_Twos_Complement for use in Twos_Complement module
+    wire XLXN_1_1, XLXN_2_1, XLXN_1_2, XLXN_2_2, XLXN_1_3, XLXN_2_3, XLXN_1_4, XLXN_2_4;
+
+    assign XLXN_12 = ~A3;
+    assign XLXN_13 = ~A2;
+    assign XLXN_14 = ~A1;
+    assign XLXN_15 = ~A0;
+    assign XLXN_30 = 1'b1;
+
+    // First half adder instance logic within Twos_Complement
+    assign XLXN_1_1 = XLXN_12 ^ XLXN_25;
+    assign XLXN_2_1 = XLXN_12 & XLXN_25;
+    assign C_OUT_4 = RST & XLXN_1_1;
+
+    // Second half adder instance logic within Twos_Complement
+    assign XLXN_1_2 = XLXN_13 ^ XLXN_24;
+    assign XLXN_2_2 = XLXN_13 & XLXN_24;
+    assign C_OUT_3 = RST & XLXN_1_2;
+    assign XLXN_25 = RST & XLXN_2_1;
+
+    // Third half adder instance logic within Twos_Complement
+    assign XLXN_1_3 = XLXN_14 ^ XLXN_23;
+    assign XLXN_2_3 = XLXN_14 & XLXN_23;
+    assign C_OUT_2 = RST & XLXN_1_3;
+    assign XLXN_24 = RST & XLXN_2_2;
+
+    // Fourth half adder instance logic within Twos_Complement
+    assign XLXN_1_4 = XLXN_15 ^ XLXN_30;
+    assign XLXN_2_4 = XLXN_15 & XLXN_30;
+    assign C_OUT_1 = RST & XLXN_1_4;
+    assign XLXN_23 = RST & XLXN_2_3;
+
+endmodule

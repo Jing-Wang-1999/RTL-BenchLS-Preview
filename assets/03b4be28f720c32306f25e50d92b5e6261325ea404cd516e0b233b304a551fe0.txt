@@ -1,0 +1,18 @@
+module tb;
+reg clk=0,rst=1,ready=0,seed_start=0; reg [63:0] seed_val=5489;
+wire [63:0] data; wire valid,busy;
+rtlpp_02379 dut(clk,rst,data,valid,ready,busy,seed_val,seed_start);
+always #5 clk=~clk;
+integer n,k=0;
+initial begin
+@(negedge clk);rst=0;seed_start=1;
+@(posedge clk);#1;$display("SEED %b",busy);
+@(negedge clk);seed_start=0;ready=1;
+for(n=1;n<20010;n=n+1) begin
+ @(posedge clk);#1;
+ if(n>19965 && n<19971) $display("CYCLE %d busy=%b valid=%b",n,busy,valid);
+ if(valid && k<10) begin $display("WORD %h",data);k=k+1;end
+ @(negedge clk);
+end
+$finish;end
+endmodule

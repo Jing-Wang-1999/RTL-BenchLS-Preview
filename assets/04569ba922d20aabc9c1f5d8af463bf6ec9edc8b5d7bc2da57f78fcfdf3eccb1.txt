@@ -1,0 +1,102 @@
+module autovcoder_073902 (
+    C,
+    CE,
+    CLR,
+    CEO,
+    Q0,
+    Q1,
+    Q2,
+    Q3,
+    TC
+);
+
+  input C;
+  input CE;
+  input CLR;
+  output CEO;
+  output Q0;
+  output Q1;
+  output Q2;
+  output Q3;
+  output TC;
+
+  wire T2;
+  wire T3;
+  wire XLXN_1;
+  wire Q0_DUMMY;
+  wire Q1_DUMMY;
+  wire Q2_DUMMY;
+  wire Q3_DUMMY;
+  wire TC_DUMMY;
+
+  assign Q0 = Q0_DUMMY;
+  assign Q1 = Q1_DUMMY;
+  assign Q2 = Q2_DUMMY;
+  assign Q3 = Q3_DUMMY;
+  assign TC = TC_DUMMY;
+  (* HU_SET = "I_Q0_69" *)
+  FTCE_MXILINX_clkcntrl4 #(
+      .INIT(1'b0)
+  ) I_Q0 (
+      .C  (C),
+      .CE (CE),
+      .CLR(CLR),
+      .T  (XLXN_1),
+      .Q  (Q0_DUMMY)
+  );
+  (* HU_SET = "I_Q1_70" *)
+  FTCE_MXILINX_clkcntrl4 #(
+      .INIT(1'b0)
+  ) I_Q1 (
+      .C  (C),
+      .CE (CE),
+      .CLR(CLR),
+      .T  (Q0_DUMMY),
+      .Q  (Q1_DUMMY)
+  );
+  (* HU_SET = "I_Q2_71" *)
+  FTCE_MXILINX_clkcntrl4 #(
+      .INIT(1'b0)
+  ) I_Q2 (
+      .C  (C),
+      .CE (CE),
+      .CLR(CLR),
+      .T  (T2),
+      .Q  (Q2_DUMMY)
+  );
+  (* HU_SET = "I_Q3_72" *)
+  FTCE_MXILINX_clkcntrl4 #(
+      .INIT(1'b0)
+  ) I_Q3 (
+      .C  (C),
+      .CE (CE),
+      .CLR(CLR),
+      .T  (T3),
+      .Q  (Q3_DUMMY)
+  );
+  AND4 I_36_31 (
+      .I0(Q3_DUMMY),
+      .I1(Q2_DUMMY),
+      .I2(Q1_DUMMY),
+      .I3(Q0_DUMMY),
+      .O (TC_DUMMY)
+  );
+  AND3 I_36_32 (
+      .I0(Q2_DUMMY),
+      .I1(Q1_DUMMY),
+      .I2(Q0_DUMMY),
+      .O (T3)
+  );
+  AND2 I_36_33 (
+      .I0(Q1_DUMMY),
+      .I1(Q0_DUMMY),
+      .O (T2)
+  );
+  VCC I_36_58 (.P(XLXN_1));
+  AND2 I_36_67 (
+      .I0(CE),
+      .I1(TC_DUMMY),
+      .O (CEO)
+  );
+endmodule
+

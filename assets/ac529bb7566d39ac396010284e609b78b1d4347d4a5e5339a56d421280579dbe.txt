@@ -1,0 +1,106 @@
+module nios_debug_slave_bridge_a (
+    MonDReg,
+    break_readreg,
+    clk,
+    dbrk_hit0_latch,
+    dbrk_hit1_latch,
+    dbrk_hit2_latch,
+    dbrk_hit3_latch,
+    debugack,
+    monitor_error,
+    monitor_ready,
+    reset_n,
+    resetlatch,
+    tracemem_on,
+    tracemem_trcdata,
+    tracemem_tw,
+    trc_im_addr,
+    trc_on,
+    trc_wrap,
+    trigbrktype,
+    trigger_state_1,
+    jdo,
+    jrst_n,
+    st_ready_test_idle,
+    take_action_break_a,
+    take_action_break_b,
+    take_action_break_c,
+    take_action_ocimem_a,
+    take_action_ocimem_b,
+    take_action_tracectrl,
+    take_no_action_break_a,
+    take_no_action_break_b,
+    take_no_action_break_c,
+    take_no_action_ocimem_a
+);
+
+  output [37:0] jdo;
+  output        jrst_n;
+  output        st_ready_test_idle;
+  output        take_action_break_a;
+  output        take_action_break_b;
+  output        take_action_break_c;
+  output        take_action_ocimem_a;
+  output        take_action_ocimem_b;
+  output        take_action_tracectrl;
+  output        take_no_action_break_a;
+  output        take_no_action_break_b;
+  output        take_no_action_break_c;
+  output        take_no_action_ocimem_a;
+  input  [31:0] MonDReg;
+  input  [31:0] break_readreg;
+  input         clk;
+  input         dbrk_hit0_latch;
+  input         dbrk_hit1_latch;
+  input         dbrk_hit2_latch;
+  input         dbrk_hit3_latch;
+  input         debugack;
+  input         monitor_error;
+  input         monitor_ready;
+  input         reset_n;
+  input         resetlatch;
+  input         tracemem_on;
+  input  [35:0] tracemem_trcdata;
+  input         tracemem_tw;
+  input  [6:0]  trc_im_addr;
+  input         trc_on;
+  input         trc_wrap;
+  input         trigbrktype;
+  input         trigger_state_1;
+
+  wire   [37:0] sr;
+  wire          vji_cdr, vji_rti, vji_sdr, vji_tck, vji_tdi, vji_tdo, vji_udr, vji_uir;
+  wire   [1:0]  vji_ir_in, vji_ir_out;
+  
+  // Internal logic for the first instantiated module `lab7_1soc_nios2_gen2_0_cpu_debug_slave_tck`
+  assign jrst_n = reset_n & ~resetlatch;
+  assign sr = {tracemem_trcdata, tracemem_tw};
+  assign st_ready_test_idle = monitor_ready & ~monitor_error;
+  // The required signals to be connected properly.
+  // Add further logic specific to the_internal functionality of `lab7_1soc_nios2_gen2_0_cpu_debug_slave_tck`
+
+  // Internal logic for the second instantiated module `lab7_1soc_nios2_gen2_0_cpu_debug_slave_sysclk`
+  assign jdo = {MonDReg, sr[35:31]};
+  assign take_action_break_a = break_readreg[0] | dbrk_hit0_latch;
+  assign take_action_break_b = break_readreg[1] & dbrk_hit1_latch;
+  assign take_action_break_c = break_readreg[2] & dbrk_hit2_latch;
+  assign take_action_ocimem_a = break_readreg[3] & dbrk_hit3_latch;
+  assign take_action_ocimem_b = debugack;
+  assign take_action_tracectrl = tracemem_on;
+  assign take_no_action_break_a = ~take_action_break_a;
+  assign take_no_action_break_b = ~take_action_break_b;
+  assign take_no_action_break_c = ~take_action_break_c;
+  assign take_no_action_ocimem_a = ~take_action_ocimem_a;
+  // Add further logic specific to the_internal functionality of `lab7_1soc_nios2_gen2_0_cpu_debug_slave_sysclk`
+  
+  // Static assignments
+  assign vji_tck = 1'b0;
+  assign vji_tdi = 1'b0;
+  assign vji_sdr = 1'b0;
+  assign vji_cdr = 1'b0;
+  assign vji_rti = 1'b0;
+  assign vji_uir = 1'b0;
+  assign vji_udr = 1'b0;
+  assign vji_ir_in = 2'b0;
+
+endmodule

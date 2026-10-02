@@ -1,0 +1,22 @@
+module mg_02174 (
+    input wire [15:0] bin,
+    output reg [19:0] bcd
+);
+    reg [35:0] shift_reg;
+    integer i;
+
+    always @* begin
+        shift_reg = {20'b0, bin};
+        for (i = 0; i < 16; i = i + 1) begin
+            // Add 3 to each BCD digit if >= 5
+            if (shift_reg[35:32] >= 5) shift_reg[35:32] = shift_reg[35:32] + 3;
+            if (shift_reg[31:28] >= 5) shift_reg[31:28] = shift_reg[31:28] + 3;
+            if (shift_reg[27:24] >= 5) shift_reg[27:24] = shift_reg[27:24] + 3;
+            if (shift_reg[23:20] >= 5) shift_reg[23:20] = shift_reg[23:20] + 3;
+            if (shift_reg[19:16] >= 5) shift_reg[19:16] = shift_reg[19:16] + 3;
+            // Shift left
+            shift_reg = shift_reg << 1;
+        end
+        bcd = shift_reg[35:16];
+    end
+endmodule

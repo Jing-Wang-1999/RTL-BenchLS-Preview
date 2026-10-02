@@ -1,0 +1,47 @@
+module rtlpp_09924 (
+                        address,
+                        byteenable,
+                        chipselect,
+                        clk,
+                        clken,
+                        write,
+                        writedata,
+                        readdata
+                     );
+
+   // Input/output ports
+   output reg [31:0] readdata;
+   input [9:0] address;
+   input [3:0] byteenable;
+   input chipselect;
+   input clk;
+   input clken;
+   input write;
+   input [31:0] writedata;
+
+   // Internal RAM memory declaration
+   reg [31:0] memory [0:1023];
+
+   // Write enable signal
+   wire wren;
+   assign wren = chipselect & write;
+
+   // Read and write logic
+   always @ (posedge clk) begin
+       if (clken) begin
+           if (wren) begin
+               // Apply byte enable logic only to the appropriate bytes
+               if (byteenable[0])
+                   memory[address][7:0] <= writedata[7:0];
+               if (byteenable[1])
+                   memory[address][15:8] <= writedata[15:8];
+               if (byteenable[2])
+                   memory[address][23:16] <= writedata[23:16];
+               if (byteenable[3])
+                   memory[address][31:24] <= writedata[31:24];
+           end
+           readdata <= memory[address];
+       end
+   end
+   
+endmodule

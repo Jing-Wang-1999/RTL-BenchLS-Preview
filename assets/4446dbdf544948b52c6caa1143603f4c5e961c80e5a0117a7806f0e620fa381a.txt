@@ -1,0 +1,96 @@
+module origen_019581 #(
+    parameter BAUD_RATE = 9600,
+    parameter BUF_LEN = 16
+)(
+    input wire clk_150m,
+    input wire rst,
+    input wire wvalid,
+    input wire [7:0] char,
+    input wire trans_st,
+    output reg uart_txd,
+    output reg busy,
+    output reg overflow
+);
+
+    localparam CLK_FREQ = 150_000_000;
+    localparam BR_ACC = CLK_FREQ / BAUD_RATE;
+
+    reg [15:0] br_cnt;
+    reg clk_br;
+    reg [3:0] cnt_bit;
+    reg [7:0] char_buf [BUF_LEN-1:0];
+    reg [$clog2(BUF_LEN):0] num_char;
+    reg [$clog2(BUF_LEN)-1:0] rd_ptr, wr_ptr;
+    reg [7:0] tx_char;
+
+    // Baud rate clock generation
+    always @(posedge clk_150m or negedge rst) begin
+        if (!rst) begin
+            br_cnt <= 0;
+            clk_br <= 0;
+        end else if (br_cnt == BR_ACC - 1) begin
+            br_cnt <= 0;
+            clk_br <= ~clk_br;
+        end else begin
+            br_cnt <= br_cnt + 1;
+        end
+    end
+
+    // Buffer management
+    always @(posedge clk_150m or negedge rst) begin
+        if (!rst) begin
+            num_char <= 0;
+            rd_ptr <= 0;
+            wr_ptr <= 0;
+            overflow <= 0;
+        end else begin
+            if (wvalid && !busy && num_char < BUF_LEN) begin
+                char_buf[wr_ptr] <= char;
+                wr_ptr <= wr_ptr + 1;
+                num_char <= num_char + 1;
+            end
+            if (trans_st && !busy && num_char > 0) begin
+                busy <= 1;
+                tx_char <= char_buf[rd_ptr];
+                rd_ptr <= rd_ptr + 1;
+                num_char <= num_char - 1;
+            end
+            if (wvalid && num_char == BUF_LEN) begin
+                overflow <= 1;
+            end
+            if (cnt_bit == 4'd9 && clk_br) begin
+                if (num_char > 0) begin
+                    tx_char <= char_buf[rd_ptr];
+                    rd_ptr <= rd_ptr + 1;
+                    num_char <= num_char - 1;
+                end else begin
+                    busy <= 0;
+                end
+            end
+        end
+    end
+
+    // UART transmission
+    always @(posedge clk_br or negedge rst) begin
+        if (!rst) begin
+            uart_txd <= 1;
+            cnt_bit <= 0;
+        end else if (busy) begin
+            case (cnt_bit)
+                4'd0: uart_txd <= 0;  // Start bit
+                4'd1, 4'd2, 4'd3, 4'd4, 4'd5, 4'd6, 4'd7, 4'd8: uart_txd <= tx_char[cnt_bit-1];  // Data bits
+                4'd9: uart_txd <= 1;  // Stop bit
+                default: uart_txd <= 1;
+            endcase
+            if (cnt_bit == 4'd9) begin
+                cnt_bit <= 0;
+            end else begin
+                cnt_bit <= cnt_bit + 1;
+            end
+        end else begin
+            uart_txd <= 1;
+            cnt_bit <= 0;
+        end
+    end
+
+endmodule

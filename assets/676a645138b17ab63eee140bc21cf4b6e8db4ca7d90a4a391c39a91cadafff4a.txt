@@ -1,0 +1,59 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/13177",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/13026",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 13177,
+  "issue_number": 13026,
+  "verilog_files": [
+    "hw/ip_templates/alert_handler/rtl/alert_handler_reg_wrap.sv",
+    "hw/top_earlgrey/ip_autogen/alert_handler/rtl/alert_handler_reg_wrap.sv"
+  ],
+  "deletions": 4,
+  "additions": 10,
+  "patches": [
+    {
+      "filename": "hw/ip_templates/alert_handler/rtl/alert_handler_reg_wrap.sv",
+      "patch": "@@ -339,9 +339,12 @@ module alert_handler_reg_wrap import alert_pkg::*; (\n       // is that during escalation, certain alert senders may start to trigger due to FSMs being\n       // moved into escalation mode - thereby masking the actual alert reasons exposed in the cause\n       // registers. Note that the alert handler only captures the crashdump once upon first\n-      // assertion of this signal, and needs to be reset to re-arm the crashdump latching\n+      // assertion of this signal, and needs to be cleared or reset to re-arm the crashdump latching\n       // mechanism.\n-      if (latch_crashdump_i && !crashump_latched_q) begin\n+      if (|reg2hw_wrap.class_clr) begin\n+        crashump_latched_q <= 1'b0;\n+        crashdump_q <= '0;\n+      end else if (latch_crashdump_i && !crashump_latched_q) begin\n         crashump_latched_q <= 1'b1;\n         crashdump_q <= crashdump_d;\n       end",
+      "additions": 5,
+      "deletions": 2,
+      "changes": 7
+    },
+    {
+      "filename": "hw/top_earlgrey/ip_autogen/alert_handler/rtl/alert_handler_reg_wrap.sv",
+      "patch": "@@ -339,9 +339,12 @@ module alert_handler_reg_wrap import alert_pkg::*; (\n       // is that during escalation, certain alert senders may start to trigger due to FSMs being\n       // moved into escalation mode - thereby masking the actual alert reasons exposed in the cause\n       // registers. Note that the alert handler only captures the crashdump once upon first\n-      // assertion of this signal, and needs to be reset to re-arm the crashdump latching\n+      // assertion of this signal, and needs to be cleared or reset to re-arm the crashdump latching\n       // mechanism.\n-      if (latch_crashdump_i && !crashump_latched_q) begin\n+      if (|reg2hw_wrap.class_clr) begin\n+        crashump_latched_q <= 1'b0;\n+        crashdump_q <= '0;\n+      end else if (latch_crashdump_i && !crashump_latched_q) begin\n         crashump_latched_q <= 1'b1;\n         crashdump_q <= crashdump_d;\n       end",
+      "additions": 5,
+      "deletions": 2,
+      "changes": 7
+    }
+  ],
+  "pr_info": {
+    "title": "[alert_handler] Re-arm crashdump latching mechanism upon esc clear",
+    "body": "Fixes #13026\r\n\r\nSigned-off-by: Michael Schaffner <msf@opentitan.org>",
+    "state": "closed",
+    "created_at": "2022-06-11T12:05:52Z",
+    "updated_at": "2022-09-30T00:47:32Z",
+    "merged_at": "2022-06-22T14:50:25Z",
+    "user": "msfschaffner"
+  },
+  "issue_info": {
+    "title": "[alert_handler] crashdump upon escalation clear",
+    "body": "Hi Michael,\r\n\r\nRegarding the register `classa_clr_shadowed` and `crashdump` output,\r\nif the `crashdump_trigger` is set to phase0 and already capture the crashdump, but the escalation is cleared by system using `classa_clr_shadowed` register, I believe currently the crashdump will still capture the current phase0 information even though it is being cleared.\r\n\r\nDo you think this behavior is expected? I thought if user clears the escalation phase, that crashdump information is probably not useful anymore?\r\n\r\nThanks,\r\nCindy",
+    "labels": [
+      "Priority:P2",
+      "Type:Bug",
+      "IP:alert_handler"
+    ],
+    "state": "closed",
+    "created_at": "2022-06-03T00:18:34Z",
+    "updated_at": "2022-07-11T20:21:20Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 1656
+  },
+  "base_commit": "de4cb1bb9e7b707a3ca2a6882d83af7ed2aa1ab8",
+  "head_commit": "5e1f177f0d3c37fe10540c78b26c526b286f8e37",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_13177_13026",
+  "lec_status": "useful_pass"
+}

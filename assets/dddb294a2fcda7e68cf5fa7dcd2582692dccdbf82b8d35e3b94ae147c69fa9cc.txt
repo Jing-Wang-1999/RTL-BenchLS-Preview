@@ -1,0 +1,67 @@
+always @(posedge i_clk)
+	if (i_reset)
+		state <= RXU_RESET_IDLE;
+	else if (state == RXU_RESET_IDLE)
+	begin
+		// {{{
+		if (line_synch)
+			// Goto idle state from a reset
+			state <= RXU_IDLE;
+		else // Otherwise, stay in this condition 'til reset
+			state <= RXU_RESET_IDLE;
+		// }}}
+	end else if (o_break)
+	begin // We are in a break condition
+		state <= RXU_BREAK;
+	end else if (state == RXU_BREAK)
+	begin // Goto idle state following return ck_uart going high
+		// {{{
+		if (ck_uart)
+			state <= RXU_IDLE;
+		else
+			state <= RXU_BREAK;
+		// }}}
+	end else if (state == RXU_IDLE)
+	begin // Idle state, independent of baud counter
+		// {{{
+		if (!ck_uart && half_baud_time)
+		begin
+			// We are in the center of a valid start bit
+			case (data_bits)
+			2'b00: state <= RXU_BIT_ZERO;
+			2'b01: state <= RXU_BIT_ONE;
+			2'b10: state <= RXU_BIT_TWO;
+			2'b11: state <= RXU_BIT_THREE;
+			endcase
+		end else // Otherwise, just stay here in idle
+			state <= RXU_IDLE;
+		// }}}
+	end else if (zero_baud_counter)
+	begin
+		// {{{
+		if (state < RXU_BIT_SEVEN)
+			// Data arrives least significant bit first.
+			// By the time this is clocked in, it's what
+			// you'll have.
+			state <= state + 1;
+		else if (state == RXU_BIT_SEVEN)
+			state <= (use_parity) ? RXU_PARITY:RXU_STOP;
+		else if (state == RXU_PARITY)
+			state <= RXU_STOP;
+		else if (state == RXU_STOP)
+		begin // Stop (or parity) bit(s)
+			if (!ck_uart) // On frame error, wait 4 ch idle
+				state <= RXU_RESET_IDLE;
+			else if (dblstop)
+				state <= RXU_SECOND_STOP;
+			else
+				state <= RXU_IDLE;
+		end else // state must equal RX_SECOND_STOP
+		begin
+			if (!ck_uart) // On frame error, wait 4 ch idle
+				state <= RXU_RESET_IDLE;
+			else
+				state <= RXU_IDLE;
+		end
+		// }}}
+	end

@@ -1,0 +1,48 @@
+This Verilog module is designed to manage LCD commands through a state machine and includes both read and write operations for command data.
+
+1. **Primary Function**:
+   - The module operates an LCD command interface, handling command reading and writing through a state machine driven by a clock signal and reset mechanism.
+
+2. **Key Control Flow**:
+   - On reset, the module initializes to an IDLE state.
+   - In the IDLE state:
+     - If a write strobe (`i_cmd_write_stb`) is detected, the module moves to a FINISHED state, enabling write operations and passing the command data to the output.
+     - If a read strobe (`i_cmd_read_stb`) is detected, the module transitions to a READ_WAIT state, preparing to read data.
+   - In the READ_WAIT state, the module transitions immediately to FINISHED.
+   - In the FINISHED state:
+     - For a read operation (when `o_data_out_en` is not enabled), it captures input data into the command register.
+     - The module signals the completion of the command and reverts to the IDLE state.
+
+3. **Important Data Processing and Signal Interactions**:
+   - The command parameter's value directly sets the mode output (`o_cmd_mode`).
+   - When a write strobe is active, command data (`i_cmd_data`) is output to the LCD and the write signal (`o_write`) is enabled.
+   - When a read strobe is active, the read signal (`o_read`) is enabled, and in the subsequent FINISHED state, the input data (`i_data_in`) is captured as the command data if no other data output is enabled.
+   - The `o_cmd_finished` flag indicates when the command process is complete.
+
+This module effectively handles LCD command transactions with clear state transitions and data management, ensuring the appropriate read/write operations based on input strobes and command parameters.
+
+Module Interface:
+module lcd_command_sequencer (
+  input               rst,
+  input               clk,
+  output      [31:0]  debug, // This signal is declared but not used in the original module
+
+  input               i_cmd_write_stb,
+  input               i_cmd_read_stb,
+  input       [7:0]   i_cmd_data,
+  output  reg [7:0]   o_cmd_data,
+  input               i_enable, // This signal is declared but not used in the original module
+  input               i_cmd_parameter,
+  output  reg         o_cmd_finished,
+
+  output              o_cmd_mode,
+  output  reg         o_write,
+  output  reg         o_read,
+  output  reg [7:0]   o_data_out,
+  input       [7:0]   i_data_in,
+  output  reg         o_data_out_en
+);
+
+Behavioral Clarifications:
+- State encoding uses localparams: IDLE=4'h0, READ_WAIT=4'h1, FINISHED=4'h2; state register is 4 bits wide.
+- The single always block triggers on `posedge clk` only (synchronous active-high reset, no asynchronous reset edge). `o_cmd_finished` is cleared to 0 each cycle before case evaluation. `o_cmd_mode` is a continuous assign equal to `i_cmd_parameter`. `debug` is unconnected.

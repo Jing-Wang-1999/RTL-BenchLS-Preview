@@ -1,0 +1,1404 @@
+// Required path: library/axi_dmac/address_generator.v
+module address_generator #(
+
+  parameter ID_WIDTH = 3,
+  parameter DMA_DATA_WIDTH = 64,
+  parameter DMA_ADDR_WIDTH = 32,
+  parameter BEATS_PER_BURST_WIDTH = 4,
+  parameter BYTES_PER_BEAT_WIDTH = $clog2(DMA_DATA_WIDTH/8),
+  parameter LENGTH_WIDTH = 8,
+  parameter [3:0] AXI_AXCACHE = 4'b0011,
+  parameter [2:0] AXI_AXPROT = 3'b000
+) (
+  input                        clk,
+  input                        resetn,
+
+  input                        req_valid,
+  output reg                   req_ready,
+  input [DMA_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH] req_address,
+
+  output reg [ID_WIDTH-1:0]  id,
+  input [ID_WIDTH-1:0]       request_id,
+
+  input                             bl_valid,
+  output reg                        bl_ready,
+  input [BEATS_PER_BURST_WIDTH-1:0] measured_last_burst_length,
+
+  input                        eot,
+
+  input                        enable,
+  output reg                   enabled,
+
+  input                           addr_ready,
+  output reg                      addr_valid,
+  output     [DMA_ADDR_WIDTH-1:0] addr,
+  output     [LENGTH_WIDTH-1:0]   len,
+  output     [ 2:0]               size,
+  output     [ 1:0]               burst,
+  output     [ 2:0]               prot,
+  output     [ 3:0]               cache
+);
+endmodule
+
+// Required path: library/axi_dmac/axi_dmac_burst_memory.v
+module axi_dmac_burst_memory #(
+  parameter DATA_WIDTH_SRC = 64,
+  parameter DATA_WIDTH_DEST = 64,
+  parameter ID_WIDTH = 3,
+  parameter MAX_BYTES_PER_BURST = 128,
+  parameter ASYNC_CLK = 1,
+  parameter BYTES_PER_BEAT_WIDTH_SRC = $clog2(DATA_WIDTH_SRC/8),
+  parameter BYTES_PER_BURST_WIDTH = $clog2(MAX_BYTES_PER_BURST),
+  parameter DMA_LENGTH_ALIGN = 3,
+  parameter ENABLE_DIAGNOSTICS_IF = 0,
+  parameter ALLOW_ASYM_MEM = 0
+) (
+  input src_clk,
+  input src_reset,
+
+  input src_data_valid,
+  input [DATA_WIDTH_SRC-1:0] src_data,
+  input src_data_last,
+  input [BYTES_PER_BEAT_WIDTH_SRC-1:0] src_data_valid_bytes,
+  input src_data_partial_burst,
+
+  output [ID_WIDTH-1:0] src_data_request_id,
+
+  input dest_clk,
+  input dest_reset,
+
+  output dest_data_valid,
+  input dest_data_ready,
+  output [DATA_WIDTH_DEST-1:0] dest_data,
+  output dest_data_last,
+  output [DATA_WIDTH_DEST/8-1:0] dest_data_strb,
+
+  output [BYTES_PER_BURST_WIDTH-1:0] dest_burst_info_length,
+  output dest_burst_info_partial,
+  output [ID_WIDTH-1:0] dest_burst_info_id,
+  output reg dest_burst_info_write = 1'b0,
+
+  output [ID_WIDTH-1:0] dest_request_id,
+  input [ID_WIDTH-1:0] dest_data_request_id,
+  output [ID_WIDTH-1:0] dest_data_response_id,
+
+  
+  output  [7:0] dest_diag_level_bursts
+);
+endmodule
+
+// Required path: library/axi_dmac/axi_dmac_ext_sync.v
+module axi_dmac_ext_sync #(
+  parameter USE_EXT_SYNC = 0,
+  parameter ASYNC_CLK_REQ_SRC = 1,
+  parameter ASYNC_CLK_DEST_REQ = 1
+) (
+
+  input req_clk,
+  input req_resetn,
+
+  input src_clk,
+  input src_resetn,
+
+  input dest_clk,
+  input dest_resetn,
+
+  
+  input src_ext_sync,
+  input dest_ext_sync,
+
+  
+  output ext_sync_ready,
+  input ext_sync_valid
+);
+endmodule
+
+// Required path: library/axi_dmac/axi_dmac_framelock.v
+module axi_dmac_framelock #(
+  parameter DMA_AXI_ADDR_WIDTH = 32,
+  parameter BYTES_PER_BEAT_WIDTH_DEST = 3,
+  parameter BYTES_PER_BEAT_WIDTH_SRC = 3,
+  parameter FRAMELOCK_MODE =  0, 
+  parameter MAX_NUM_FRAMES_WIDTH = 3
+) (
+  input req_aclk,
+  input req_aresetn,
+
+  
+  input req_valid,
+  output reg req_ready,
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_DEST] req_dest_address,
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SRC] req_src_address,
+
+  input [MAX_NUM_FRAMES_WIDTH-1:0] req_flock_framenum,
+  input                            req_flock_mode,  
+  input                            req_flock_wait_writer,
+  input [MAX_NUM_FRAMES_WIDTH-1:0] req_flock_distance,
+  input [DMA_AXI_ADDR_WIDTH-1:0] req_flock_stride,
+  input req_flock_en,
+  input req_cyclic,
+
+  
+  output out_req_valid,
+  input  out_req_ready,
+  output [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_DEST] out_req_dest_address,
+  output [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SRC] out_req_src_address,
+
+  input out_eot,
+  input out_response_valid,
+  input out_response_ready,
+
+  
+  
+  input  [MAX_NUM_FRAMES_WIDTH-1:0] m_frame_in,
+  input                             m_frame_in_valid,
+  output [MAX_NUM_FRAMES_WIDTH-1:0] m_frame_out,
+  output                            m_frame_out_valid,
+  
+  input  [MAX_NUM_FRAMES_WIDTH-1:0] s_frame_in,
+  input                             s_frame_in_valid,
+  output [MAX_NUM_FRAMES_WIDTH-1:0] s_frame_out,
+  output                            s_frame_out_valid
+);
+endmodule
+
+// Required path: library/axi_dmac/axi_dmac_reset_manager.v
+module axi_dmac_reset_manager #(
+  parameter ASYNC_CLK_REQ_SRC = 1,
+  parameter ASYNC_CLK_SRC_DEST = 1,
+  parameter ASYNC_CLK_DEST_REQ = 1,
+  parameter ASYNC_CLK_REQ_SG = 1,
+  parameter DMA_SG_TRANSFER = 0
+) (
+  input clk,
+  input resetn,
+
+  input ctrl_enable,
+  input ctrl_pause,
+  input ctrl_hwdesc,
+
+  output req_resetn,
+  output req_enable,
+  input req_enabled,
+
+  input dest_clk,
+  input dest_ext_resetn,
+  output dest_resetn,
+  output dest_enable,
+  input dest_enabled,
+
+  input src_clk,
+  input src_ext_resetn,
+  output src_resetn,
+  output src_enable,
+  input src_enabled,
+
+  input sg_clk,
+  input sg_ext_resetn,
+  output sg_resetn,
+  output sg_enable,
+  input sg_enabled,
+
+  output [11:0] dbg_status
+);
+endmodule
+
+// Required path: library/axi_dmac/axi_dmac_resize_dest.v
+module axi_dmac_resize_dest #(
+  parameter DATA_WIDTH_DEST = 64,
+  parameter DATA_WIDTH_MEM = 64
+) (
+  input clk,
+  input reset,
+
+  input mem_data_valid,
+  output mem_data_ready,
+  input [DATA_WIDTH_MEM-1:0] mem_data,
+  input mem_data_last,
+  input [DATA_WIDTH_MEM/8-1:0] mem_data_strb,
+
+  output dest_data_valid,
+  input dest_data_ready,
+  output [DATA_WIDTH_DEST-1:0] dest_data,
+  output dest_data_last,
+  output [DATA_WIDTH_DEST/8-1:0] dest_data_strb
+);
+endmodule
+
+// Required path: library/axi_dmac/axi_dmac_resize_src.v
+module axi_dmac_resize_src #(
+  parameter DATA_WIDTH_SRC = 64,
+  parameter BYTES_PER_BEAT_WIDTH_SRC = 3,
+  parameter DATA_WIDTH_MEM = 64,
+  parameter BYTES_PER_BEAT_WIDTH_MEM = 3
+) (
+  input clk,
+  input reset,
+
+  input src_data_valid,
+  input [DATA_WIDTH_SRC-1:0] src_data,
+  input src_data_last,
+  input [BYTES_PER_BEAT_WIDTH_SRC-1:0] src_data_valid_bytes,
+  input src_data_partial_burst,
+
+  output mem_data_valid,
+  output [DATA_WIDTH_MEM-1:0] mem_data,
+  output mem_data_last,
+  output [BYTES_PER_BEAT_WIDTH_MEM-1:0] mem_data_valid_bytes,
+  output mem_data_partial_burst
+);
+endmodule
+
+// Required path: library/axi_dmac/axi_dmac_response_manager.v
+module axi_dmac_response_manager #(
+  parameter DMA_DATA_WIDTH_SRC = 64,
+  parameter DMA_DATA_WIDTH_DEST = 64,
+  parameter DMA_LENGTH_WIDTH = 24,
+  parameter BYTES_PER_BURST_WIDTH = 7,
+  parameter BYTES_PER_BEAT_WIDTH_SRC = $clog2(DMA_DATA_WIDTH_SRC/8),
+  parameter ASYNC_CLK_DEST_REQ = 1
+) (
+
+  
+  input dest_clk,
+  input dest_resetn,
+
+  input dest_response_valid,
+  output dest_response_ready,
+  input [1:0] dest_response_resp,
+  input dest_response_partial,
+  input dest_response_resp_eot,
+  input [BYTES_PER_BURST_WIDTH-1:0] dest_response_data_burst_length,
+
+  
+  input req_clk,
+  input req_resetn,
+
+  output response_eot,
+  output reg [BYTES_PER_BURST_WIDTH-1:0] measured_burst_length = 'h0,
+  output response_partial,
+  output reg response_valid = 1'b0,
+  input response_ready,
+
+  
+  input completion_req_valid,
+  output reg completion_req_ready = 1'b1,
+  input completion_req_last,
+  input [1:0] completion_transfer_id
+);
+endmodule
+
+// Required path: library/axi_dmac/axi_dmac_transfer.v
+module axi_dmac_transfer #(
+  parameter DMA_DATA_WIDTH_SRC = 64,
+  parameter DMA_DATA_WIDTH_DEST = 64,
+  parameter DMA_DATA_WIDTH_SG = 64,
+  parameter DMA_LENGTH_WIDTH = 24,
+  parameter DMA_LENGTH_ALIGN = 3,
+  parameter BYTES_PER_BEAT_WIDTH_DEST = $clog2(DMA_DATA_WIDTH_DEST/8),
+  parameter BYTES_PER_BEAT_WIDTH_SRC = $clog2(DMA_DATA_WIDTH_SRC/8),
+  parameter BYTES_PER_BEAT_WIDTH_SG = $clog2(DMA_DATA_WIDTH_SG/8),
+  parameter DMA_TYPE_DEST = 0,
+  parameter DMA_TYPE_SRC = 2,
+  parameter DMA_AXI_ADDR_WIDTH = 32,
+  parameter DMA_2D_TRANSFER = 0,
+  parameter DMA_2D_TLAST_MODE = 0,
+  parameter DMA_SG_TRANSFER = 0,
+  parameter ASYNC_CLK_REQ_SRC = 1,
+  parameter ASYNC_CLK_SRC_DEST = 1,
+  parameter ASYNC_CLK_DEST_REQ = 1,
+  parameter ASYNC_CLK_REQ_SG = 1,
+  parameter AXI_SLICE_DEST = 0,
+  parameter AXI_SLICE_SRC = 0,
+  parameter AXIS_TUSER_SYNC = 1,
+  parameter MAX_BYTES_PER_BURST = 128,
+  parameter BYTES_PER_BURST_WIDTH = 7,
+  parameter FIFO_SIZE = 8,
+  parameter ID_WIDTH = $clog2(FIFO_SIZE*2),
+  parameter AXI_LENGTH_WIDTH_SRC = 8,
+  parameter AXI_LENGTH_WIDTH_DEST = 8,
+  parameter AXI_LENGTH_WIDTH_SG = 8,
+  parameter ENABLE_DIAGNOSTICS_IF = 0,
+  parameter ALLOW_ASYM_MEM = 0,
+  parameter [3:0] AXI_AXCACHE = 4'b0011,
+  parameter [2:0] AXI_AXPROT = 3'b000,
+  parameter FRAMELOCK = 0,
+  parameter FRAMELOCK_MODE = 0,
+  parameter MAX_NUM_FRAMES_WIDTH = 3,
+  parameter USE_EXT_SYNC = 0
+) (
+  input ctrl_clk,
+  input ctrl_resetn,
+
+  input ctrl_enable,
+  input ctrl_pause,
+  input ctrl_hwdesc,
+  input ctrl_flock,
+
+  input req_valid,
+  output req_ready,
+
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_DEST] req_dest_address,
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SRC] req_src_address,
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SG] req_sg_address,
+  input [DMA_LENGTH_WIDTH-1:0] req_x_length,
+  input [DMA_LENGTH_WIDTH-1:0] req_y_length,
+  input [DMA_LENGTH_WIDTH-1:0] req_dest_stride,
+  input [DMA_LENGTH_WIDTH-1:0] req_src_stride,
+  input [MAX_NUM_FRAMES_WIDTH-1:0] req_flock_framenum,
+  input                            req_flock_mode,
+  input                            req_flock_wait_writer,
+  input [MAX_NUM_FRAMES_WIDTH-1:0] req_flock_distance,
+  input [DMA_AXI_ADDR_WIDTH-1:0] req_flock_stride,
+  input req_sync_transfer_start,
+  input req_sync,
+  input req_last,
+  input req_cyclic,
+
+  output req_eot,
+  output [31:0] req_sg_desc_id,
+  output [BYTES_PER_BURST_WIDTH-1:0] req_measured_burst_length,
+  output req_response_partial,
+  output req_response_valid,
+  input req_response_ready,
+
+  
+  input m_dest_axi_aclk,
+  input m_dest_axi_aresetn,
+  input m_src_axi_aclk,
+  input m_src_axi_aresetn,
+  input m_sg_axi_aclk,
+  input m_sg_axi_aresetn,
+
+  
+  output [DMA_AXI_ADDR_WIDTH-1:0] m_axi_awaddr,
+  output [AXI_LENGTH_WIDTH_DEST-1:0] m_axi_awlen,
+  output [2:0] m_axi_awsize,
+  output [1:0] m_axi_awburst,
+  output [2:0] m_axi_awprot,
+  output [3:0] m_axi_awcache,
+  output m_axi_awvalid,
+  input m_axi_awready,
+
+  
+  output [DMA_DATA_WIDTH_DEST-1:0] m_axi_wdata,
+  output [(DMA_DATA_WIDTH_DEST/8)-1:0] m_axi_wstrb,
+  input m_axi_wready,
+  output m_axi_wvalid,
+  output m_axi_wlast,
+
+  
+  input m_axi_bvalid,
+  input [1:0] m_axi_bresp,
+  output m_axi_bready,
+
+  
+  input m_axi_arready,
+  output m_axi_arvalid,
+  output [DMA_AXI_ADDR_WIDTH-1:0] m_axi_araddr,
+  output [AXI_LENGTH_WIDTH_SRC-1:0] m_axi_arlen,
+  output [2:0] m_axi_arsize,
+  output [1:0] m_axi_arburst,
+  output [2:0] m_axi_arprot,
+  output [3:0] m_axi_arcache,
+
+  
+  input [DMA_DATA_WIDTH_SRC-1:0] m_axi_rdata,
+  input m_axi_rlast,
+  output m_axi_rready,
+  input m_axi_rvalid,
+  input [1:0] m_axi_rresp,
+
+  
+  input m_sg_axi_arready,
+  output m_sg_axi_arvalid,
+  output [DMA_AXI_ADDR_WIDTH-1:0] m_sg_axi_araddr,
+  output [AXI_LENGTH_WIDTH_SG-1:0] m_sg_axi_arlen,
+  output [2:0] m_sg_axi_arsize,
+  output [1:0] m_sg_axi_arburst,
+  output [2:0] m_sg_axi_arprot,
+  output [3:0] m_sg_axi_arcache,
+
+  
+  input [DMA_DATA_WIDTH_SG-1:0] m_sg_axi_rdata,
+  input m_sg_axi_rlast,
+  output m_sg_axi_rready,
+  input m_sg_axi_rvalid,
+  input [1:0] m_sg_axi_rresp,
+
+  
+  input s_axis_aclk,
+  output s_axis_ready,
+  input s_axis_valid,
+  input [DMA_DATA_WIDTH_SRC-1:0] s_axis_data,
+  input [0:0] s_axis_user,
+  input s_axis_last,
+  output s_axis_xfer_req,
+
+  
+  input m_axis_aclk,
+  input m_axis_ready,
+  output m_axis_valid,
+  output [DMA_DATA_WIDTH_DEST-1:0] m_axis_data,
+  output [0:0]                     m_axis_user,
+  output m_axis_last,
+  output m_axis_xfer_req,
+
+  
+  input fifo_wr_clk,
+  input fifo_wr_en,
+  input [DMA_DATA_WIDTH_SRC-1:0] fifo_wr_din,
+  output fifo_wr_overflow,
+  output fifo_wr_xfer_req,
+
+  
+  input fifo_rd_clk,
+  input fifo_rd_en,
+  output fifo_rd_valid,
+  output [DMA_DATA_WIDTH_DEST-1:0] fifo_rd_dout,
+  output fifo_rd_underflow,
+  output fifo_rd_xfer_req,
+
+  output [ID_WIDTH-1:0] dbg_dest_request_id,
+  output [ID_WIDTH-1:0] dbg_dest_address_id,
+  output [ID_WIDTH-1:0] dbg_dest_data_id,
+  output [ID_WIDTH-1:0] dbg_dest_response_id,
+  output [ID_WIDTH-1:0] dbg_src_request_id,
+  output [ID_WIDTH-1:0] dbg_src_address_id,
+  output [ID_WIDTH-1:0] dbg_src_data_id,
+  output [ID_WIDTH-1:0] dbg_src_response_id,
+  output [11:0] dbg_status,
+
+  
+  
+  input  [MAX_NUM_FRAMES_WIDTH-1:0] m_frame_in,
+  input                             m_frame_in_valid,
+  output [MAX_NUM_FRAMES_WIDTH-1:0] m_frame_out,
+  output                            m_frame_out_valid,
+  
+  input  [MAX_NUM_FRAMES_WIDTH-1:0] s_frame_in,
+  input                             s_frame_in_valid,
+  output [MAX_NUM_FRAMES_WIDTH-1:0] s_frame_out,
+  output                            s_frame_out_valid,
+
+  
+  input src_ext_sync,
+  input dest_ext_sync,
+
+  
+  output [7:0] dest_diag_level_bursts
+);
+endmodule
+
+// Required path: library/axi_dmac/axi_register_slice.v
+module axi_register_slice #(
+
+  parameter DATA_WIDTH = 32,
+  parameter FORWARD_REGISTERED = 0,
+  parameter BACKWARD_REGISTERED = 0
+) (
+  input clk,
+  input resetn,
+
+  input s_axi_valid,
+  output s_axi_ready,
+  input [DATA_WIDTH-1:0] s_axi_data,
+
+  output m_axi_valid,
+  input m_axi_ready,
+  output [DATA_WIDTH-1:0] m_axi_data
+);
+endmodule
+
+// Required path: library/axi_dmac/data_mover.v
+module data_mover #(
+
+  parameter ID_WIDTH = 3,
+  parameter DATA_WIDTH = 64,
+  parameter BEATS_PER_BURST_WIDTH = 4,
+  parameter ALLOW_ABORT = 0
+) (
+  input clk,
+  input resetn,
+
+  input [ID_WIDTH-1:0] request_id,
+  output [ID_WIDTH-1:0] response_id,
+  input eot,
+
+  output rewind_req_valid,
+  input rewind_req_ready,
+  output [ID_WIDTH+3-1:0] rewind_req_data,
+
+  output reg bl_valid = 'b0,
+  input bl_ready,
+  output reg [BEATS_PER_BURST_WIDTH-1:0] measured_last_burst_length,
+
+  output block_descr_to_dst,
+
+  output [ID_WIDTH-1:0] source_id,
+  output source_eot,
+
+  output xfer_req,
+
+  output s_axi_ready,
+  input s_axi_valid,
+  input [DATA_WIDTH-1:0] s_axi_data,
+  input s_axi_last,
+  input s_axi_sync,
+
+  output m_axi_valid,
+  output [DATA_WIDTH-1:0] m_axi_data,
+  output m_axi_last,
+  output m_axi_partial_burst,
+
+  input req_valid,
+  output req_ready,
+  input [BEATS_PER_BURST_WIDTH-1:0] req_last_burst_length,
+  input req_sync_transfer_start,
+  input req_xlast
+);
+endmodule
+
+// Required path: library/axi_dmac/dest_axi_mm.v
+module dest_axi_mm #(
+
+  parameter ID_WIDTH = 3,
+  parameter DMA_DATA_WIDTH = 64,
+  parameter DMA_ADDR_WIDTH = 32,
+  parameter BYTES_PER_BEAT_WIDTH = $clog2(DMA_DATA_WIDTH/8),
+  parameter BEATS_PER_BURST_WIDTH = 4,
+  parameter MAX_BYTES_PER_BURST = 128,
+  parameter BYTES_PER_BURST_WIDTH = $clog2(MAX_BYTES_PER_BURST),
+  parameter AXI_LENGTH_WIDTH = 8,
+  parameter [3:0] AXI_AXCACHE = 4'b0011,
+  parameter [2:0] AXI_AXPROT = 3'b000
+) (
+  input                               m_axi_aclk,
+  input                               m_axi_aresetn,
+
+  input                               req_valid,
+  output                              req_ready,
+  input [DMA_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH] req_address,
+
+  input                             bl_valid,
+  output                            bl_ready,
+  input [BEATS_PER_BURST_WIDTH-1:0] measured_last_burst_length,
+
+  input                               enable,
+  output                              enabled,
+
+  output                              response_valid,
+  input                               response_ready,
+  output [1:0]                        response_resp,
+  output                              response_resp_eot,
+  output                              response_resp_partial,
+  output [BYTES_PER_BURST_WIDTH-1:0]  response_data_burst_length,
+
+  input  [ID_WIDTH-1:0]             request_id,
+  output [ID_WIDTH-1:0]             response_id,
+
+  output [ID_WIDTH-1:0]             address_id,
+  input                               address_eot,
+  input                               response_eot,
+
+  input                               fifo_valid,
+  output                              fifo_ready,
+  input [DMA_DATA_WIDTH-1:0]        fifo_data,
+  input [DMA_DATA_WIDTH/8-1:0]        fifo_strb,
+  input                               fifo_last,
+
+  input [BYTES_PER_BURST_WIDTH-1:0] dest_burst_info_length,
+  input                             dest_burst_info_partial,
+  input [ID_WIDTH-1:0]              dest_burst_info_id,
+  input                             dest_burst_info_write,
+  
+  input                               m_axi_awready,
+  output                              m_axi_awvalid,
+  output [DMA_ADDR_WIDTH-1:0]         m_axi_awaddr,
+  output [AXI_LENGTH_WIDTH-1:0]       m_axi_awlen,
+  output [ 2:0]                       m_axi_awsize,
+  output [ 1:0]                       m_axi_awburst,
+  output [ 2:0]                       m_axi_awprot,
+  output [ 3:0]                       m_axi_awcache,
+
+  
+  output [DMA_DATA_WIDTH-1:0]     m_axi_wdata,
+  output [(DMA_DATA_WIDTH/8)-1:0] m_axi_wstrb,
+  input                               m_axi_wready,
+  output                              m_axi_wvalid,
+  output                              m_axi_wlast,
+
+  
+  input                               m_axi_bvalid,
+  input  [ 1:0]                       m_axi_bresp,
+  output                              m_axi_bready
+);
+endmodule
+
+// Required path: library/axi_dmac/dest_axi_stream.v
+module dest_axi_stream #(
+
+  parameter ID_WIDTH = 3,
+  parameter S_AXIS_DATA_WIDTH = 64,
+  parameter BEATS_PER_BURST_WIDTH = 4
+) (
+  input s_axis_aclk,
+  input s_axis_aresetn,
+
+  input enable,
+  output enabled,
+  output xfer_req,
+
+  output [ID_WIDTH-1:0] response_id,
+  output [ID_WIDTH-1:0] data_id,
+  input data_eot,
+  input response_eot,
+
+  input m_axis_ready,
+  output m_axis_valid,
+  output [S_AXIS_DATA_WIDTH-1:0] m_axis_data,
+  output reg [0:0] m_axis_user = 1'b1,
+  output m_axis_last,
+
+  output fifo_ready,
+  input fifo_valid,
+  input [S_AXIS_DATA_WIDTH-1:0] fifo_data,
+  input fifo_last,
+
+  input req_valid,
+  output req_ready,
+  input req_sync_transfer_start,
+  input req_sync,
+  input req_xlast,
+  input req_islast,
+
+  output response_valid,
+  input response_ready,
+  output response_resp_eot,
+  output [1:0] response_resp
+);
+endmodule
+
+// Required path: library/axi_dmac/dest_fifo_inf.v
+module dest_fifo_inf #(
+
+  parameter ID_WIDTH = 3,
+  parameter DATA_WIDTH = 64,
+  parameter BEATS_PER_BURST_WIDTH = 4
+) (
+  input clk,
+  input resetn,
+
+  input enable,
+  output enabled,
+
+  input req_valid,
+  output req_ready,
+  input req_sync_transfer_start,
+  input req_sync,
+
+  output [ID_WIDTH-1:0] response_id,
+  output reg [ID_WIDTH-1:0] data_id = 'h0,
+  input data_eot,
+  input response_eot,
+
+  input en,
+  output reg [DATA_WIDTH-1:0] dout,
+  output reg valid,
+  output reg underflow,
+
+  output xfer_req,
+
+  output fifo_ready,
+  input fifo_valid,
+  input [DATA_WIDTH-1:0] fifo_data,
+  input fifo_last,
+
+  output response_valid,
+  input response_ready,
+  output response_resp_eot,
+  output [1:0] response_resp
+);
+endmodule
+
+// Required path: library/axi_dmac/dmac_2d_transfer.v
+module dmac_2d_transfer #(
+
+  parameter DMA_2D_TLAST_MODE = 0, 
+  parameter DMA_AXI_ADDR_WIDTH = 32,
+  parameter DMA_LENGTH_WIDTH = 24,
+  parameter BYTES_PER_BURST_WIDTH = 7,
+  parameter BYTES_PER_BEAT_WIDTH_SRC = 3,
+  parameter BYTES_PER_BEAT_WIDTH_DEST = 3
+) (
+  input req_aclk,
+  input req_aresetn,
+
+  input req_valid,
+  output reg req_ready,
+
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_DEST] req_dest_address,
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SRC] req_src_address,
+  input [DMA_LENGTH_WIDTH-1:0] req_x_length,
+  input [DMA_LENGTH_WIDTH-1:0] req_y_length,
+  input [DMA_LENGTH_WIDTH-1:0] req_dest_stride,
+  input [DMA_LENGTH_WIDTH-1:0] req_src_stride,
+  input req_sync_transfer_start,
+  input req_last,
+
+  output reg req_eot,
+  output reg [BYTES_PER_BURST_WIDTH-1:0] req_measured_burst_length,
+  output reg req_response_partial,
+  output reg req_response_valid,
+  input req_response_ready,
+
+  input out_abort_req,
+
+  output reg out_req_valid,
+  input out_req_ready,
+  output [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_DEST] out_req_dest_address,
+  output [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SRC] out_req_src_address,
+  output [DMA_LENGTH_WIDTH-1:0] out_req_length,
+  output out_req_sync_transfer_start,
+  output out_req_last,
+  output out_req_islast,
+
+  input out_eot,
+  input [BYTES_PER_BURST_WIDTH-1:0] out_measured_burst_length,
+  input out_response_partial,
+  input out_response_valid,
+  output reg out_response_ready = 1'b1
+);
+endmodule
+
+// Required path: library/axi_dmac/dmac_sg.v
+module dmac_sg #(
+  parameter DMA_AXI_ADDR_WIDTH = 32,
+  parameter DMA_DATA_WIDTH = 64,
+  parameter DMA_LENGTH_WIDTH = 24,
+  parameter AXI_LENGTH_WIDTH = 8,
+  parameter BYTES_PER_BEAT_WIDTH_DEST = 3,
+  parameter BYTES_PER_BEAT_WIDTH_SRC = 3,
+  parameter BYTES_PER_BEAT_WIDTH_SG = 3,
+  parameter ASYNC_CLK_REQ_SG = 1,
+  parameter [3:0] AXI_AXCACHE = 4'b0011,
+  parameter [2:0] AXI_AXPROT = 3'b000
+) (
+  input req_clk,
+  input req_resetn,
+  input req_enable,
+
+  output sg_clk,
+  input sg_resetn,
+  output sg_ext_resetn,
+  input sg_enable,
+  output sg_enabled,
+
+  input req_in_valid,
+  output req_in_ready,
+
+  output req_out_valid,
+  input req_out_ready,
+
+  output resp_out_eot,
+  input resp_in_valid,
+
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SG] req_desc_address,
+
+  output [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_DEST] out_dest_address,
+  output [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SRC] out_src_address,
+  output [DMA_LENGTH_WIDTH-1:0] out_x_length,
+  output [DMA_LENGTH_WIDTH-1:0] out_y_length,
+  output [DMA_LENGTH_WIDTH-1:0] out_dest_stride,
+  output [DMA_LENGTH_WIDTH-1:0] out_src_stride,
+  output [31:0] resp_out_id,
+
+  
+  input                            m_axi_aclk,
+  input                            m_axi_aresetn,
+
+  
+  input                            m_axi_arready,
+  output                           m_axi_arvalid,
+  output [DMA_AXI_ADDR_WIDTH-1:0]  m_axi_araddr,
+  output [AXI_LENGTH_WIDTH-1:0]    m_axi_arlen,
+  output [ 2:0]                    m_axi_arsize,
+  output [ 1:0]                    m_axi_arburst,
+  output [ 2:0]                    m_axi_arprot,
+  output [ 3:0]                    m_axi_arcache,
+
+  
+  input  [DMA_DATA_WIDTH-1:0]      m_axi_rdata,
+  input                            m_axi_rlast,
+  output                           m_axi_rready,
+  input                            m_axi_rvalid,
+  input  [ 1:0]                    m_axi_rresp
+);
+endmodule
+
+// Required path: library/axi_dmac/request_arb.v
+module request_arb #(
+  parameter DMA_DATA_WIDTH_SRC = 64,
+  parameter DMA_DATA_WIDTH_DEST = 64,
+  parameter DMA_LENGTH_WIDTH = 24,
+  parameter DMA_LENGTH_ALIGN = 3,
+  parameter BYTES_PER_BEAT_WIDTH_DEST = $clog2(DMA_DATA_WIDTH_DEST/8),
+  parameter BYTES_PER_BEAT_WIDTH_SRC = $clog2(DMA_DATA_WIDTH_SRC/8),
+  parameter DMA_TYPE_DEST = 0,
+  parameter DMA_TYPE_SRC = 2,
+  parameter DMA_AXI_ADDR_WIDTH = 32,
+  parameter ASYNC_CLK_REQ_SRC = 1,
+  parameter ASYNC_CLK_SRC_DEST = 1,
+  parameter ASYNC_CLK_DEST_REQ = 1,
+  parameter AXI_SLICE_DEST = 0,
+  parameter AXI_SLICE_SRC = 0,
+  parameter AXIS_TUSER_SYNC = 1,
+  parameter MAX_BYTES_PER_BURST = 128,
+  parameter BYTES_PER_BURST_WIDTH = 7,
+  parameter FIFO_SIZE = 8,
+  parameter ID_WIDTH = $clog2(FIFO_SIZE*2),
+  parameter AXI_LENGTH_WIDTH_SRC = 8,
+  parameter AXI_LENGTH_WIDTH_DEST = 8,
+  parameter ENABLE_DIAGNOSTICS_IF = 0,
+  parameter ALLOW_ASYM_MEM = 0,
+  parameter [3:0] AXI_AXCACHE = 4'b0011,
+  parameter [2:0] AXI_AXPROT = 3'b000,
+  parameter USE_EXT_SYNC = 0
+) (
+  input req_clk,
+  input req_resetn,
+
+  input req_valid,
+  output req_ready,
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_DEST] req_dest_address,
+  input [DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH_SRC] req_src_address,
+  input [DMA_LENGTH_WIDTH-1:0] req_length,
+  input req_xlast,
+  input req_islast,
+  input req_sync_transfer_start,
+  input req_sync,
+
+  output eot,
+  output [BYTES_PER_BURST_WIDTH-1:0] measured_burst_length,
+  output response_partial,
+  output response_valid,
+  input response_ready,
+
+  output abort_req,
+
+  
+  input                               m_dest_axi_aclk,
+  input                               m_dest_axi_aresetn,
+  input                               m_src_axi_aclk,
+  input                               m_src_axi_aresetn,
+
+  
+  output [DMA_AXI_ADDR_WIDTH-1:0]     m_axi_awaddr,
+  output [AXI_LENGTH_WIDTH_DEST-1:0]  m_axi_awlen,
+  output [ 2:0]                       m_axi_awsize,
+  output [ 1:0]                       m_axi_awburst,
+  output [ 2:0]                       m_axi_awprot,
+  output [ 3:0]                       m_axi_awcache,
+  output                              m_axi_awvalid,
+  input                               m_axi_awready,
+
+  
+  output [DMA_DATA_WIDTH_DEST-1:0]     m_axi_wdata,
+  output [(DMA_DATA_WIDTH_DEST/8)-1:0] m_axi_wstrb,
+  input                                m_axi_wready,
+  output                               m_axi_wvalid,
+  output                               m_axi_wlast,
+
+  
+  input                               m_axi_bvalid,
+  input  [ 1:0]                       m_axi_bresp,
+  output                              m_axi_bready,
+
+  
+  input                               m_axi_arready,
+  output                              m_axi_arvalid,
+  output [DMA_AXI_ADDR_WIDTH-1:0]     m_axi_araddr,
+  output [AXI_LENGTH_WIDTH_SRC-1:0]   m_axi_arlen,
+  output [ 2:0]                       m_axi_arsize,
+  output [ 1:0]                       m_axi_arburst,
+  output [ 2:0]                       m_axi_arprot,
+  output [ 3:0]                       m_axi_arcache,
+
+  
+  input  [DMA_DATA_WIDTH_SRC-1:0]     m_axi_rdata,
+  output                              m_axi_rready,
+  input                               m_axi_rvalid,
+  input                               m_axi_rlast,
+  input  [ 1:0]                       m_axi_rresp,
+
+  
+  input                               s_axis_aclk,
+  output                              s_axis_ready,
+  input                               s_axis_valid,
+  input  [DMA_DATA_WIDTH_SRC-1:0]     s_axis_data,
+  input                               s_axis_last,
+  input  [0:0]                        s_axis_user,
+  output                              s_axis_xfer_req,
+
+  
+  input                               m_axis_aclk,
+  input                               m_axis_ready,
+  output                              m_axis_valid,
+  output [DMA_DATA_WIDTH_DEST-1:0]    m_axis_data,
+  output [0:0]                        m_axis_user,
+  output                              m_axis_last,
+  output                              m_axis_xfer_req,
+
+  
+  input                               fifo_wr_clk,
+  input                               fifo_wr_en,
+  input  [DMA_DATA_WIDTH_SRC-1:0]     fifo_wr_din,
+  output                              fifo_wr_overflow,
+  output                              fifo_wr_xfer_req,
+
+  
+  input                               fifo_rd_clk,
+  input                               fifo_rd_en,
+  output                              fifo_rd_valid,
+  output [DMA_DATA_WIDTH_DEST-1:0]    fifo_rd_dout,
+  output                              fifo_rd_underflow,
+  output                              fifo_rd_xfer_req,
+
+  output [ID_WIDTH-1:0]               dbg_dest_request_id,
+  output [ID_WIDTH-1:0]               dbg_dest_address_id,
+  output [ID_WIDTH-1:0]               dbg_dest_data_id,
+  output [ID_WIDTH-1:0]               dbg_dest_response_id,
+  output [ID_WIDTH-1:0]               dbg_src_request_id,
+  output [ID_WIDTH-1:0]               dbg_src_address_id,
+  output [ID_WIDTH-1:0]               dbg_src_data_id,
+  output [ID_WIDTH-1:0]               dbg_src_response_id,
+
+  input req_enable,
+
+  output dest_clk,
+  input dest_resetn,
+  output dest_ext_resetn,
+  input dest_enable,
+  output dest_enabled,
+
+  output src_clk,
+  input src_resetn,
+  output src_ext_resetn,
+  input src_enable,
+  output src_enabled,
+
+  
+  input src_ext_sync,
+  input dest_ext_sync,
+
+  output ext_sync_ready,
+  input ext_sync_valid,
+
+  
+  output  [7:0] dest_diag_level_bursts
+);
+endmodule
+
+// Required path: library/axi_dmac/request_generator.v
+module request_generator #(
+
+  parameter ID_WIDTH = 3,
+  parameter BURSTS_PER_TRANSFER_WIDTH = 17
+) (
+  input clk,
+  input resetn,
+
+  output [ID_WIDTH-1:0] request_id,
+  input [ID_WIDTH-1:0] response_id,
+
+  input rewind_req_valid,
+  output rewind_req_ready,
+  input [ID_WIDTH+3-1:0] rewind_req_data,
+  output rewind_state,
+
+  output abort_req,
+
+  output reg completion_req_valid = 1'b0,
+  input completion_req_ready,
+  output completion_req_last,
+  output [1:0] completion_transfer_id,
+
+  input req_valid,
+  output reg req_ready,
+  input [BURSTS_PER_TRANSFER_WIDTH-1:0] req_burst_count,
+  input req_xlast,
+
+  input enable,
+
+  output eot
+);
+endmodule
+
+// Required path: library/axi_dmac/response_generator.v
+module response_generator #(
+
+  parameter ID_WIDTH = 3
+) (
+  input clk,
+  input resetn,
+
+  input enable,
+  output reg enabled,
+
+  input [ID_WIDTH-1:0] request_id,
+  output reg [ID_WIDTH-1:0] response_id,
+
+  input eot,
+
+  output resp_valid,
+  input resp_ready,
+  output resp_eot,
+  output [1:0] resp_resp
+);
+endmodule
+
+// Required path: library/axi_dmac/response_handler.v
+module response_handler #(
+
+  parameter ID_WIDTH = 3
+) (
+  input clk,
+  input resetn,
+
+  input bvalid,
+  output bready,
+  input [1:0] bresp,
+
+  output reg [ID_WIDTH-1:0] id,
+  input [ID_WIDTH-1:0] request_id,
+
+  input enable,
+  output reg enabled,
+
+  input eot,
+
+  output resp_valid,
+  input resp_ready,
+  output resp_eot,
+  output [1:0] resp_resp
+);
+endmodule
+
+// Required path: library/axi_dmac/splitter.v
+module splitter #(
+
+  parameter NUM_M = 2
+) (
+  input clk,
+  input resetn,
+
+  input s_valid,
+  output s_ready,
+
+  output [NUM_M-1:0] m_valid,
+  input [NUM_M-1:0] m_ready
+);
+endmodule
+
+// Required path: library/axi_dmac/src_axi_mm.v
+module src_axi_mm #(
+
+  parameter ID_WIDTH = 3,
+  parameter DMA_DATA_WIDTH = 64,
+  parameter DMA_ADDR_WIDTH = 32,
+  parameter BYTES_PER_BEAT_WIDTH = 3,
+  parameter BEATS_PER_BURST_WIDTH = 4,
+  parameter AXI_LENGTH_WIDTH = 8,
+  parameter [3:0] AXI_AXCACHE = 4'b0011,
+  parameter [2:0] AXI_AXPROT = 3'b000
+) (
+  input                           m_axi_aclk,
+  input                           m_axi_aresetn,
+
+  input                           req_valid,
+  output                          req_ready,
+  input [DMA_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH] req_address,
+  input [BEATS_PER_BURST_WIDTH-1:0] req_last_burst_length,
+  input [BYTES_PER_BEAT_WIDTH-1:0]  req_last_beat_bytes,
+
+  input                            enable,
+  output reg                       enabled = 1'b0,
+
+  output                           bl_valid,
+  input                            bl_ready,
+  output [BEATS_PER_BURST_WIDTH-1:0] measured_last_burst_length,
+
+
+  input  [ID_WIDTH-1:0]            request_id,
+  output [ID_WIDTH-1:0]            response_id,
+
+  output [ID_WIDTH-1:0]            data_id,
+  output [ID_WIDTH-1:0]            address_id,
+  input                            address_eot,
+
+  output                           fifo_valid,
+  output [DMA_DATA_WIDTH-1:0]      fifo_data,
+  output [BYTES_PER_BEAT_WIDTH-1:0] fifo_valid_bytes,
+  output                           fifo_last,
+
+  
+  input                            m_axi_arready,
+  output                           m_axi_arvalid,
+  output [DMA_ADDR_WIDTH-1:0]      m_axi_araddr,
+  output [AXI_LENGTH_WIDTH-1:0]    m_axi_arlen,
+  output [ 2:0]                    m_axi_arsize,
+  output [ 1:0]                    m_axi_arburst,
+  output [ 2:0]                    m_axi_arprot,
+  output [ 3:0]                    m_axi_arcache,
+
+  
+  input  [DMA_DATA_WIDTH-1:0]      m_axi_rdata,
+  output                           m_axi_rready,
+  input                            m_axi_rvalid,
+  input                            m_axi_rlast,
+  input  [ 1:0]                    m_axi_rresp
+);
+endmodule
+
+// Required path: library/axi_dmac/src_axi_stream.v
+module src_axi_stream #(
+
+  parameter ID_WIDTH = 3,
+  parameter S_AXIS_DATA_WIDTH = 64,
+  parameter S_AXIS_USER_SYNC = 1,
+  parameter BEATS_PER_BURST_WIDTH = 4
+) (
+  input s_axis_aclk,
+  input s_axis_aresetn,
+
+  input enable,
+  output enabled,
+
+  input [ID_WIDTH-1:0] request_id,
+  output [ID_WIDTH-1:0] response_id,
+  input eot,
+
+  output rewind_req_valid,
+  input rewind_req_ready,
+  output [ID_WIDTH+3-1:0] rewind_req_data,
+
+  output                             bl_valid,
+  input                              bl_ready,
+  output [BEATS_PER_BURST_WIDTH-1:0] measured_last_burst_length,
+
+  output block_descr_to_dst,
+
+  output [ID_WIDTH-1:0] source_id,
+  output source_eot,
+
+  output s_axis_ready,
+  input s_axis_valid,
+  input [S_AXIS_DATA_WIDTH-1:0] s_axis_data,
+  input [0:0] s_axis_user,
+  input s_axis_last,
+  output s_axis_xfer_req,
+
+  output fifo_valid,
+  output [S_AXIS_DATA_WIDTH-1:0] fifo_data,
+  output fifo_last,
+  output fifo_partial_burst,
+
+  input req_valid,
+  output req_ready,
+  input [BEATS_PER_BURST_WIDTH-1:0] req_last_burst_length,
+  input req_sync_transfer_start,
+  input req_sync,
+  input req_xlast
+);
+endmodule
+
+// Required path: library/axi_dmac/src_fifo_inf.v
+module src_fifo_inf #(
+
+  parameter ID_WIDTH = 3,
+  parameter DATA_WIDTH = 64,
+  parameter BEATS_PER_BURST_WIDTH = 4
+) (
+  input clk,
+  input resetn,
+
+  input enable,
+  output enabled,
+
+  input [ID_WIDTH-1:0] request_id,
+  output [ID_WIDTH-1:0] response_id,
+  input eot,
+
+  output bl_valid,
+  input bl_ready,
+  output [BEATS_PER_BURST_WIDTH-1:0] measured_last_burst_length,
+
+  input en,
+  input [DATA_WIDTH-1:0] din,
+  output reg overflow,
+  output xfer_req,
+
+  output fifo_valid,
+  output [DATA_WIDTH-1:0] fifo_data,
+  output fifo_last,
+
+  input req_valid,
+  output req_ready,
+  input [BEATS_PER_BURST_WIDTH-1:0] req_last_burst_length,
+  input req_sync_transfer_start,
+  input req_sync
+);
+endmodule
+
+// Required path: library/common/ad_mem.v
+module ad_mem #(
+
+  parameter  DATA_WIDTH = 16,
+  parameter  ADDRESS_WIDTH = 5
+) (
+  input                               clka,
+  input                               wea,
+  input       [(ADDRESS_WIDTH-1):0]   addra,
+  input       [(DATA_WIDTH-1):0]      dina,
+
+  input                               clkb,
+  input                               reb,
+  input       [(ADDRESS_WIDTH-1):0]   addrb,
+  output  reg [(DATA_WIDTH-1):0]      doutb
+);
+endmodule
+
+// Required path: library/common/ad_mem_asym.v
+module ad_mem_asym #(
+
+  parameter   A_ADDRESS_WIDTH =  8,
+  parameter   A_DATA_WIDTH = 256,
+  parameter   B_ADDRESS_WIDTH =   10,
+  parameter   B_DATA_WIDTH =  64,
+  parameter   CASCADE_HEIGHT = -1
+) (
+  input                             clka,
+  input                             wea,
+  input       [A_ADDRESS_WIDTH-1:0] addra,
+  input       [A_DATA_WIDTH-1:0]    dina,
+
+  input                             clkb,
+  input                             reb,
+  input       [B_ADDRESS_WIDTH-1:0] addrb,
+  output  reg [B_DATA_WIDTH-1:0]    doutb
+);
+endmodule
+
+// Required path: library/util_axis_fifo/util_axis_fifo.v
+module util_axis_fifo #(
+  parameter DATA_WIDTH = 64,
+  parameter ADDRESS_WIDTH = 5,
+  parameter ASYNC_CLK = 1,
+  parameter M_AXIS_REGISTERED = 1,
+  parameter [ADDRESS_WIDTH-1:0] ALMOST_EMPTY_THRESHOLD = 16,
+  parameter [ADDRESS_WIDTH-1:0] ALMOST_FULL_THRESHOLD = 16,
+  parameter TLAST_EN = 0,
+  parameter TKEEP_EN = 0,
+  parameter REMOVE_NULL_BEAT_EN = 0
+) (
+  input m_axis_aclk,
+  input m_axis_aresetn,
+  input m_axis_ready,
+  output m_axis_valid,
+  output [DATA_WIDTH-1:0] m_axis_data,
+  output [DATA_WIDTH/8-1:0] m_axis_tkeep,
+  output m_axis_tlast,
+  output [ADDRESS_WIDTH-1:0] m_axis_level,
+  output m_axis_empty,
+  output m_axis_almost_empty,
+
+  input s_axis_aclk,
+  input s_axis_aresetn,
+  output s_axis_ready,
+  input s_axis_valid,
+  input [DATA_WIDTH-1:0] s_axis_data,
+  input [DATA_WIDTH/8-1:0] s_axis_tkeep,
+  input s_axis_tlast,
+  output [ADDRESS_WIDTH-1:0] s_axis_room,
+  output s_axis_full,
+  output s_axis_almost_full
+);
+endmodule
+
+// Required path: library/util_axis_fifo/util_axis_fifo_address_generator.v
+module util_axis_fifo_address_generator #(
+  parameter ASYNC_CLK = 0,                
+  parameter ADDRESS_WIDTH = 4,            
+  parameter [ADDRESS_WIDTH-1:0] ALMOST_EMPTY_THRESHOLD = 16,
+  parameter [ADDRESS_WIDTH-1:0] ALMOST_FULL_THRESHOLD = 16
+) (
+
+  
+
+  input m_axis_aclk,
+  input m_axis_aresetn,
+  input m_axis_ready,
+  output m_axis_valid,
+  output m_axis_empty,
+  output m_axis_almost_empty,
+  output [ADDRESS_WIDTH-1:0] m_axis_raddr,
+  output [ADDRESS_WIDTH-1:0] m_axis_level,
+
+  
+
+  input s_axis_aclk,
+  input s_axis_aresetn,
+  output s_axis_ready,
+  input s_axis_valid,
+  output  s_axis_full,
+  output  s_axis_almost_full,
+  output [ADDRESS_WIDTH-1:0] s_axis_waddr,
+  output [ADDRESS_WIDTH-1:0] s_axis_room
+);
+endmodule
+
+// Required path: library/util_cdc/sync_bits.v
+module sync_bits #(
+
+  
+  parameter NUM_OF_BITS = 1,
+  
+  
+  parameter ASYNC_CLK = 1
+) (
+  input [NUM_OF_BITS-1:0] in_bits,
+  input out_resetn,
+  input out_clk,
+  output [NUM_OF_BITS-1:0] out_bits
+);
+endmodule
+
+// Required path: library/util_cdc/sync_event.v
+module sync_event #(
+  parameter NUM_OF_EVENTS = 1,
+  parameter ASYNC_CLK = 1
+) (
+  input in_clk,
+  input [NUM_OF_EVENTS-1:0] in_event,
+  input out_clk,
+  output reg [NUM_OF_EVENTS-1:0] out_event
+);
+endmodule
+
+// Required path: library/util_cdc/sync_gray.v
+module sync_gray #(
+
+  
+  parameter DATA_WIDTH = 1,
+  
+  
+  parameter ASYNC_CLK = 1
+) (
+  input in_clk,
+  input in_resetn,
+  input [DATA_WIDTH-1:0] in_count,
+  input out_resetn,
+  input out_clk,
+  output [DATA_WIDTH-1:0] out_count
+);
+endmodule

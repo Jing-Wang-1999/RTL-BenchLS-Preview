@@ -1,0 +1,32 @@
+always @(posedge clk)
+   if(cs_le)
+     begin
+	if(!bas)
+		casex({bus_width, mem_size})		// synopsys full_case parallel_case
+		   {2'h0, 2'h0}:		row_adr <=  {1'h0, wb_addr_i[24:13]};
+		   {2'h0, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[25:14]};
+		   {2'h0, 2'h2}:	row_adr <=         wb_addr_i[26:14];
+	
+		   {2'h1, 2'h0}:	row_adr <=  {1'h0, wb_addr_i[23:12]};
+		   {2'h1, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[24:13]};
+		   {2'h1, 2'h2}:	row_adr <=         wb_addr_i[25:13];
+	
+		   {2'h2, 2'h0}:	row_adr <=  {2'h0, wb_addr_i[22:12]};
+		   {2'h2, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[23:12]};
+		   {2'h2, 2'h2}:	row_adr <=         wb_addr_i[24:12];
+		endcase
+	else
+		casex({bus_width, mem_size})		// synopsys full_case parallel_case
+		   {2'h0, 2'h0}:		row_adr <=  {1'h0, wb_addr_i[22:11]};
+		   {2'h0, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[23:12]};
+		   {2'h0, 2'h2}:	row_adr <=         wb_addr_i[24:12];
+	
+		   {2'h1, 2'h0}:	row_adr <=  {1'h0, wb_addr_i[21:10]};
+		   {2'h1, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[22:11]};
+		   {2'h1, 2'h2}:	row_adr <=         wb_addr_i[23:11];
+	
+		   {2'h2, 2'h0}:	row_adr <=  {2'h0, wb_addr_i[20:10]};
+		   {2'h2, 2'h1}:	row_adr <=  {1'h0, wb_addr_i[21:10]};
+		   {2'h2, 2'h2}:	row_adr <=         wb_addr_i[22:10];
+		endcase
+     end

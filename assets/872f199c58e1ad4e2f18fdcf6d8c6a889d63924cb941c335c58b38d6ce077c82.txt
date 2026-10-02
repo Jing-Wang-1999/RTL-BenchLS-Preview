@@ -1,0 +1,51 @@
+module autovcoder_140000(
+    input wire clk,
+    input wire reset,
+    input wire tx_en,
+    input wire rx_en,
+    input wire [7:0] data_in,
+    output reg [7:0] data_out,
+    output reg tx_busy,
+    output reg rx_ready
+);
+    reg [3:0] baud_counter;
+    reg [7:0] tx_data_reg;
+    reg [7:0] rx_data_reg;
+    reg tx_state;
+    reg rx_state;
+
+    // Baud rate logic, assuming clk is fast clock
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            baud_counter <= 0;
+            tx_busy <= 0;
+            rx_ready <= 0;
+        end else begin
+            baud_counter <= baud_counter + 1;
+
+            // Simple baud rate control
+            if (baud_counter == 10) begin
+                baud_counter <= 0;
+                if (tx_en && !tx_busy) begin
+                    tx_busy <= 1;
+                    tx_data_reg <= data_in;
+                end
+                
+                if (tx_busy) begin
+                    // Transmit logic (simplified)
+                    data_out <= tx_data_reg; // In a real case, shift out bits
+                    tx_busy <= 0; // End transmission for this example
+                end
+
+                // Receive logic (simplified)
+                if (rx_en) begin
+                    rx_ready <= 1;
+                    rx_data_reg <= data_in; // Simulated received data
+                end
+                else begin
+                    rx_ready <= 0;
+                end
+            end
+        end
+    end
+endmodule

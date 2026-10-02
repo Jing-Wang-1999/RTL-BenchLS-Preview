@@ -1,0 +1,23 @@
+module tb;
+reg clk=0,rst=1;reg [31:0] input_a,input_b;reg input_a_stb=0,input_b_stb=0,output_z_ack=0;
+wire [31:0] output_z;wire output_z_stb,input_a_ack,input_b_ack;
+adder dut(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,output_z,output_z_stb,input_a_ack,input_b_ack);
+always #5 clk=~clk;
+reg [63:0] vectors[0:3661-1];integer i,n;
+initial begin
+$readmemh("independent_vectors.hex",vectors);
+@(negedge clk);rst=0;
+for(i=0;i<3661;i=i+1) begin
+ while(!input_a_ack) @(negedge clk);
+ input_a=vectors[i][63:32];input_a_stb=1;
+ @(negedge clk);input_a_stb=0;
+ while(!input_b_ack) @(negedge clk);
+ input_b=vectors[i][31:0];input_b_stb=1;
+ @(negedge clk);input_b_stb=0;n=0;
+ while(!output_z_stb && n<600) begin @(negedge clk);n=n+1;end
+ $display("RESULT %d %h %d",i,output_z,n);
+ repeat(2) begin @(negedge clk); if(!output_z_stb) $fatal(1,"valid dropped under backpressure");end
+ output_z_ack=1;@(negedge clk);output_z_ack=0;
+end
+$finish;end
+endmodule

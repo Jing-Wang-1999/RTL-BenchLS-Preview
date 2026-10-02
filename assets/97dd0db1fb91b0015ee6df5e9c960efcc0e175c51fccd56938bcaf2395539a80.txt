@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+"""Reviewed project-specific cases using shared packaging and qualification."""
+import argparse
+import json
+import os
+import random
+import re
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+from evaluate_case import TOOLCHAIN, evaluate, write_json
+from validate_cases import digest, validate
+
+TASK = Path(__file__).resolve().parents[1]
+ROOT = TASK.parents[1]
+HEAD = '''`timescale 1ns/1ps
+module tb;
+reg clk=0,rst=1; always #5 clk=~clk;
+task tick; begin @(posedge clk); #2; end endtask
+task reset; begin @(negedge clk);rst=0;repeat(4)tick;@(negedge clk);rst=1;end endtask
+initial begin #20000000;$fatal(1,"timeout");end
+'''
+END = '$display("RTL_BENCHLS_PASS");$finish(0);end\nendmodule\n'
+
+
+def strip_comments(code):
+    return re.sub(r'/\*.*?\*/|//[^\n]*', '', code, flags=re.S)
+
+
+def normalize(code):
+    # Pure simulation annotations only; no functional logic changes.
+    code = re.sub(r'`include\s+"timescale.v"', '`timescale 1ns/1ps', code)
+    return re.sub(r'(<=\s*)#\s*1\b', r'\1', code)
+
+
+def interfaces(code):
+    result = []
+    for chunk in re.findall(r'\bmodule\b.*?\bendmodule\b', strip_comments(code), re.S):
+        header, body = chunk.split(';', 1)
+        module = re.search(r'\bmodule\s+(\w+)', header)[1]
+        if re.search(r'\b(?:input|output|inout)\b', header):
+            decl = header + ';\nendmodule\n'
+        else:
+            params = re.findall(r'\bparameter\b[^;]*;', body)
+            ports = re.findall(r'\b(?:input|output|inout)\b[^;]*;', body)
+            assert all('=' not in p for p in ports), module
+            decl = header + ';\n' + '\n'.join(params + ports) + '\nendmodule\n'
+        result.append((module, decl))
+    return result
+
+
+def fifo_tb():
+    s = HEAD + '''reg clr=0,we=0,re=0;reg [7:0] din=0;wire [7:0] dout;wire full,empty;
+fifo4 dut(clk,rst,clr,din,we,dout,re,full,empty);
+initial begin reset; if(!empty || full)$fatal(1,"reset");
+'''
+    rng = random.Random(9030601); queue = []
+    for n in range(400):
+        clear = n % 71 == 70
+        wr = not clear and len(queue) < 4 and bool(rng.randrange(2))
+        rd = not clear and bool(queue) and bool(rng.randrange(2))
+        d = rng.randrange(256)
+        if clear: queue = []
+        else:
+            if rd: queue.pop(0)
+            if wr: queue.append(d)
+        s += f'@(negedge clk);clr={int(clear)};we={int(wr)};re={int(rd)};din=8\'h{d:02x};tick;'
+        s += f'if(empty!==1\'b{int(not queue)} || full!==1\'b{int(len(queue)==4)})$fatal(1,"flags {n}");'
+        if queue: s += f'if(dout!==8\'h{queue[0]:02x})$fatal(1,"fifo data {n}");'
+        s += '\n'
+    return s + END
+
+
+SPI_BUS = '''reg cyc=0,stb=0,we=0;reg [1:0] adr=0;reg [7:0] di=0;wire [7:0] dout;
+wire ack,irq,sck,mosi;wire miso=~mosi;
+simple_spi_top dut(clk,rst,cyc,stb,adr,we,di,dout,ack,irq,sck,mosi,miso);
+task wr;input [1:0] a;input [7:0] d;begin
+@(negedge clk);cyc=1;stb=1;we=1;adr=a;di=d;tick;if(ack!==1)$fatal(1,"ack");
+tick;if(ack!==0)$fatal(1,"alternating ack");@(negedge clk);cyc=0;stb=0;we=0;tick;end endtask
+task rd;input [1:0] a;input [7:0] expected;begin
+@(negedge clk);cyc=1;stb=1;we=0;adr=a;tick;
+if(ack!==1 || dout!==expected)$fatal(1,"read %d %h != %h",a,dout,expected);
+tick;@(negedge clk);cyc=0;stb=0;tick;end endtask
+'''
+
+
+def spi_register_tb():
+    s = HEAD + SPI_BUS + 'initial begin reset;repeat(3)tick;rd(0,8\'h10);rd(3,0);rd(1,5);\n'
+    for d in [0,0x10,0x20,0x80,0x0f,0x91]:
+        s += f"wr(0,8'h{d:02x});rd(0,8'h{d|16:02x});\n"
+    for d in [0,0x55,0xaa,0xff]: s += f"wr(3,8'h{d:02x});rd(3,8'h{d:02x});\n"
+    return s + END
+
+
+def spi_transfer_tb(mode, slow=False):
+    s = HEAD + SPI_BUS + '''integer bits=0,period=0,last_edge=0,cycles=0;reg [7:0] sent=0;reg monitor=0;
+always @(posedge clk)cycles=cycles+1;
+'''
+    # Capture output at the sampling edge appropriate to CPOL/CPHA.
+    edge = 'posedge' if mode in (0,3) else 'negedge'
+    s += f'always @({edge} sck) if(monitor)begin bits=bits+1;sent={{sent[6:0],mosi}};'
+    s += 'if(last_edge && cycles-last_edge!=period)$fatal(1,"SCK divider");last_edge=cycles;end\n'
+    s += f"initial begin reset;wr(3,0);wr(0,8'h{0xd0 | (mode<<2) | (1 if slow else 0):02x});repeat(8)tick;period={4 if slow else 2};\n"
+    rng = random.Random(9030602+mode)
+    for value in [0,255,0x81,0x42]+[rng.randrange(256) for _ in range(20)]:
+        s += f"bits=0;sent=0;last_edge=0;monitor=1;wr(2,8'h{value:02x});repeat(120)tick;monitor=0;"
+        s += f"if(bits!=8 || sent!==8'h{value:02x})$fatal(1,\"serial transmit %d %h\",bits,sent);"
+        s += f"rd(2,8'h{value^255:02x});if(irq!==1)$fatal(1,\"irq\");wr(1,8'h80);repeat(3)tick;if(irq!==0)$fatal(1,\"irq clear\");\n"
+    return s + END
+
+
+SPI_INSTRUCTION = '''# Implement the simple SPI controller project
+Read specification/project.txt and the original PDF. Implement both required
+files, fifo4 and simple_spi_top, using the declared ports and hierarchy.
+The top contains independent four-byte transmit/receive FIFOs. Only master mode
+is supported. Reset rst_i/rst is active low. The default FIFO width is eight.
+
+Contract clarifications from the pinned interface/RTL audit:
+- Wishbone address 0 is SPCR, 1 SPSR, 2 transmit-write/receive-read data, 3 SPER.
+  SPCR resets to 0x10; its master bit 4 always reads one. SPER resets to zero.
+  ack_o registers cyc_i & stb_i & !old_ack_o. A data FIFO operation occurs at
+  an edge with old ack_o=1 and an active access; hold a request across two
+  rising edges and then release. Register writes accept active write accesses.
+  dat_o registers the selected read value every rising edge, even when idle.
+- SPCR fields are interrupt-enable[7], enable[6], reserved/open-drain[5],
+  forced-master[4], CPOL[3], CPHA[2], divider-low[1:0]. SPER[1:0] extends
+  the divider; SPER[7:6] selects interrupt after 1..4 completed bytes.
+  With enable=0, FIFO pointers, serial state, completion/collision flags and
+  interrupt transfer count are cleared/reloaded by rising clocks. Give reset
+  and disable several clocks to settle; idle FIFO memory/data is unspecified.
+- SPSR[7] is sticky completion, [6] sticky transmit FIFO collision, [5:4]=0,
+  [3] TX full, [2] TX empty, [1] RX full, [0] RX empty. Write one to bits 7/6
+  to clear the corresponding flag. irq is registered completion & enable-IRQ.
+- Transfers are eight bits MSB first; all four CPOL/CPHA modes are required.
+  Divider codes {SPER[1:0],SPCR[1:0]} 0..11 give full SCK periods
+  2,4,8,32,64,16,128,256,512,1024,2048,4096 input clocks respectively.
+  These values correct inconsistent comments/tables in the old release.
+  Codes 12..15 are outside this case. No automatic slave-select output exists.
+- fifo4 has asynchronous read of its oldest entry, rising-edge write/read,
+  active-low reset and synchronous clr of pointers/flags. Legal accesses never
+  read empty or write full. Concurrent legal read/write preserves occupancy;
+  clear has priority for pointers/flags. Empty dout is unspecified.
+
+Use synthesizable logic without simulation delays or includes. The private
+reference removes only #1 nonblocking simulation annotations and the timescale
+include. Internal state encodings are free. Private points check FIFO behavior,
+register transactions, and actual serial data, RX, divider and IRQ behavior in
+all four modes. Public checks compile only; write your own behavioral tests.
+'''
+
+
+def spi_spec():
+    return dict(case_id='opencores_simple_spi_v1', project='communication_controller_spi_core',
+                top='simple_spi_top', instruction=SPI_INSTRUCTION,
+                tests=[('fifo','fifo4',fifo_tb()),('registers','simple_spi_top',spi_register_tb())]+
+                      [(f'mode{m}','simple_spi_top',spi_transfer_tb(m,m%2==1)) for m in range(4)],
+                mutations=[('fifo_order','rtl/verilog/fifo4.v','mem[ rp ]','mem[ wp ]'),
+                           ('master_bit','rtl/verilog/simple_spi_top.v',"dat_i | 8'h10",'dat_i'),
+                           ('tx_bit','rtl/verilog/simple_spi_top.v','mosi_o = treg[7]','mosi_o = treg[6]'),
+                           ('rx_bit','rtl/verilog/simple_spi_top.v','{treg[6:0], miso_i}','{treg[6:0], ~miso_i}'),
+                           ('irq_mask','rtl/verilog/simple_spi_top.v','spif & spie','spif & ~spie')])
+
+
+def build(spec):
+    draft = TASK / 'project_pool/drafts' / spec['case_id']
+    if draft.exists(): raise RuntimeError('Preserve existing draft before rebuilding: '+str(draft))
+    matches = list((ROOT/'scope2/common/projects').glob('*/'+spec['project']+'/project.json'))
+    assert len(matches)==1
+    project = json.loads(matches[0].read_text()); source = Path(project['source']['local_path'])
+    cfg = next(c for c in project['configurations'] if c.get('top_module')==spec['top'] and c.get('source_closure') and (not spec.get('configuration') or c['configuration_id']==spec['configuration']))
+    rtl_source=source/cfg.get('source_subtree','.')
+    public = draft/'public'; (public/'specification').mkdir(parents=True)
+    for i, name in enumerate(cfg['specification_paths']):
+        pdf = public/'specification'/('project.pdf' if i==0 else f'additional_{i}.pdf')
+        shutil.copyfile(source/name,pdf)
+        subprocess.run(['pdftotext','-layout',str(pdf),str(pdf.with_suffix('.txt'))],check=True)
+    files=[]; decl=[]; transformations=[]
+    for name in cfg['source_closure']:
+        original=(rtl_source/name).read_text(); code=normalize(original)
+        orig=draft/'private/original_reference'/name;orig.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(rtl_source/name,orig)
+        if spec.get('preprocess'):
+            # Keep every original header privately, but require only RTL modules.
+            if not re.search(r'\bmodule\b',strip_comments(original)):
+                continue
+            with tempfile.TemporaryDirectory() as tmp:
+                work=Path(tmp)
+                for other in cfg['source_closure']:
+                    target=work/other;target.parent.mkdir(parents=True,exist_ok=True)
+                    target.write_text(normalize((rtl_source/other).read_text()))
+                output=work/'expanded.v'
+                command=[str(TOOLCHAIN/'bin/iverilog'),'-g2012','-E']
+                for directory in sorted({str((work/f).parent) for f in cfg['source_closure']}):command+=['-I',directory]
+                command+=['-o',str(output),str(work/name)]
+                proc=subprocess.run(command,capture_output=True,env=dict(os.environ,LD_LIBRARY_PATH=str(TOOLCHAIN/'lib')))
+                evidence=draft/'private/preprocessing'/Path(name).stem;evidence.mkdir(parents=True)
+                write_json(evidence/'command.json',{'argv':command,'returncode':proc.returncode})
+                (evidence/'stdout.log').write_bytes(proc.stdout);(evidence/'stderr.log').write_bytes(proc.stderr)
+                if proc.returncode:raise RuntimeError('Preprocessing failed: '+name)
+                code=output.read_text()
+        modules=interfaces(code)
+        if not modules: raise RuntimeError('Header requires explicit support: '+name)
+        files.append({'path':name,'module':modules[0][0],'modules':[m for m,_ in modules]})
+        decl.append('// Required path: '+name+'\n'+'\n'.join(d for _,d in modules))
+        target=draft/'private/reference'/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(code)
+        if original!=code: transformations.append({'path':name,'rule':'remove #1 NBA annotation; replace timescale include'+('; Icarus preprocess pinned default macros/includes' if spec.get('preprocess') else ''),'original_sha256':digest(orig),'normalized_sha256':digest(target)})
+    write_json(public/'output_contract.json',{'top_module':spec['top'],'required_files':files})
+    (public/'interfaces').mkdir();(public/'interfaces/modules.v').write_text('\n'.join(decl))
+    (public/'instruction.md').write_text(spec['instruction']+'\nImplement every required path in output_contract.json. Declaration-only ports\nare in interfaces/modules.v. No initial/final, delays, simulation system tasks,\nforce/release or external includes are permitted. Only declared RTL is collected.\nMissing files, forbidden constructs or failed top compilation score zero. Each\nprivate point has equal weight and requires all of its checks to pass. Use\nterminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.\nRun `python3 checks/check.py` for public compilation feedback.\n')
+    (public/'checks').mkdir();shutil.copyfile(TASK/'cases/opencores_uartspi_8n1_v1/public/checks/check.py',public/'checks/check.py')
+    points=[]
+    for name,target,tb in spec['tests']:
+        path=draft/'private/verification'/f'{name}.v';path.parent.mkdir(parents=True,exist_ok=True);path.write_text(tb)
+        points.append({'id':name,'target':target,'weight':1,'timeout_seconds':30,'testbench':path.name,'command':['iverilog','-g2012','-s','tb','<required_files>',path.name,'then','vvp'],'pass_criterion':'exit zero and exact RTL_BENCHLS_PASS; all assertions pass'})
+    write_json(draft/'private/scoring.json',{'points':points,'gate_failure_score':0,'oracle':'independent protocol/algorithm assertions; finite simulation','limitations':'Fixed documented configuration; sampled transactions, not universal equivalence.'})
+    (draft/'environment').mkdir();shutil.copyfile(TASK/'cases/opencores_present80_v1/environment/runtime.json',draft/'environment/runtime.json')
+    case={'schema_version':'task2.1.case.v1','case_id':spec['case_id'],'project_id':project['project_id'],'configuration_id':spec['case_id'],'status':'draft','source':project['source'],'source_subtree':cfg.get('source_subtree','.'),'closure_lines':sum(len((rtl_source/f['path']).read_text().splitlines()) for f in files),'required_module_count':sum(len(f['modules']) for f in files),'normalizations':transformations,'clarification_provenance':'Original project PDF plus port/timing audit before model calls; no model output used.'}
+    write_json(draft/'case.json',case)
+    shutil.copyfile(Path(__file__),draft/'private/verification/build_expansion_cases.py')
+    shutil.copyfile(Path(__file__).with_name('evaluate_case.py'),draft/'private/verification/evaluate_case.py')
+    if spec.get('builder_source'):
+        shutil.copyfile(spec['builder_source'],draft/'private/verification'/Path(spec['builder_source']).name)
+    for name in spec.get('original_tests',[]):
+        target=draft/'private/original_testbenches'/Path(name).name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(name,target)
+    return draft
+
+
+def qualify(spec, draft):
+    out=draft/'private/qualification'
+    if out.exists(): raise RuntimeError('Preserve prior qualification before retrying')
+    golden=evaluate(draft,draft/'private/reference',out/'golden')
+    print(json.dumps({'case':spec['case_id'],'golden':golden}),flush=True)
+    if not golden['full_project_pass']: raise RuntimeError('Golden failed; inspect retained logs')
+    controls=[]
+    for name,file,old,new in spec['mutations']:
+        with tempfile.TemporaryDirectory() as tmp:
+            sub=Path(tmp)/'submission';shutil.copytree(draft/'private/reference',sub)
+            path=sub/file;code=path.read_text();assert old in code,(name,old)
+            path.write_text(code.replace(old,new));ev=out/name;ev.mkdir();shutil.copyfile(path,ev/path.name)
+            score=evaluate(draft,sub,ev)
+            controls.append({'name':name,'compile_pass':score['compile_pass'],'detected':not score['full_project_pass'],'failed_points':[p['id'] for p in score['points'] if not p['passed']]})
+            print(json.dumps(controls[-1]),flush=True)
+            if not score['compile_pass'] or score['full_project_pass']:raise RuntimeError('Invalid/undetected control '+name)
+    write_json(out/'review.json',{'golden_score':golden['score'],'controls':controls,'review':'Project-specific original spec plus explicit contract; independent transaction/algorithm tests and compile-valid mutations; golden source hidden.'})
+    case=json.loads((draft/'case.json').read_text());case.update(status='finalized',readiness_review={'approved':True,'reviewer':'Codex engineering qualification 2026-09-06','evidence_paths':['private/qualification/review.json']})
+    case['artifacts']={str(p.relative_to(draft)):digest(p) for p in sorted(draft.rglob('*')) if p.is_file() and p!=draft/'case.json'}
+    write_json(draft/'case.json',case)
+    final=TASK/'cases'/spec['case_id'];assert not final.exists();draft.rename(final)
+    row={k:case[k] for k in ['case_id','project_id','configuration_id']};row.update(path=spec['case_id'],manifest_sha256=digest(final/'case.json'))
+    with (TASK/'cases/index.jsonl').open('a') as f:f.write(json.dumps(row,sort_keys=True)+'\n')
+    print(json.dumps(validate()))
+
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser();parser.add_argument('case',choices=['spi','aes','keccak','uartbus','gpio','i2c','pid','sha256']);parser.add_argument('--qualify-and-freeze',action='store_true');args=parser.parse_args()
+    if args.case=='aes':
+        from case_specs_aes import aes_spec
+        spec=aes_spec()
+    elif args.case=='keccak':
+        from case_specs_keccak import keccak_spec
+        spec=keccak_spec()
+    elif args.case=='uartbus':
+        from case_specs_uartbus import uartbus_spec
+        spec=uartbus_spec()
+    elif args.case=='gpio':
+        from case_specs_gpio import gpio_spec
+        spec=gpio_spec()
+    elif args.case=='i2c':
+        from case_specs_i2c import i2c_spec
+        spec=i2c_spec()
+    elif args.case=='pid':
+        from case_specs_pid import pid_spec
+        spec=pid_spec()
+    elif args.case=='sha256':
+        from case_specs_sha256 import sha256_spec
+        spec=sha256_spec()
+    else:spec=spi_spec()
+    draft=TASK/'project_pool/drafts'/spec['case_id']
+    if args.qualify_and_freeze:qualify(spec,draft)
+    else:print(build(spec))

@@ -1,0 +1,39 @@
+module rtlpp_01557 (
+    input clk,
+    input rstn,
+    input sample,
+    input [7:0] raw_data_in,
+    output reg [7:0] ave_data_out,
+    output reg data_out_valid
+);
+
+parameter ADC_WIDTH = 8;
+parameter LPF_DEPTH_BITS = 4;
+parameter SAMPLE_COUNT = 1 << LPF_DEPTH_BITS;
+
+reg [ADC_WIDTH + LPF_DEPTH_BITS - 1:0] accumulator;
+reg [LPF_DEPTH_BITS:0] sample_counter;
+
+always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+        accumulator <= 0;
+        sample_counter <= 0;
+        ave_data_out <= 0;
+        data_out_valid <= 0;
+    end else begin
+        data_out_valid <= 0;
+        if (sample) begin
+            accumulator <= accumulator + raw_data_in;
+            sample_counter <= sample_counter + 1;
+
+            if (sample_counter == SAMPLE_COUNT - 1) begin
+                ave_data_out <= accumulator >> LPF_DEPTH_BITS;
+                data_out_valid <= 1;
+                accumulator <= 0;
+                sample_counter <= 0;
+            end
+        end
+    end
+end
+
+endmodule

@@ -1,0 +1,42 @@
+module mg_09097 (
+    input clk,
+    input ir_we,
+    input [31:0] instr,
+    output [5:0] opcode,
+    output [4:0] reg1,
+    output [4:0] reg2,
+    output [4:0] reg3,
+    output [31:0] sx16,
+    output [31:0] zx16,
+    output [31:0] hi16,
+    output [31:0] sx16s2,
+    output [31:0] sx26s2
+);
+
+    reg [31:0] ir;
+    wire [15:0] copy_sign_16;
+
+    // Update instruction register on rising edge of clock if ir_we is asserted
+    always @(posedge clk) begin
+        if (ir_we) begin
+            ir <= instr;
+        end
+    end
+
+    // Extract fields from the instruction register
+    assign opcode = ir[31:26];
+    assign reg1 = ir[25:21];
+    assign reg2 = ir[20:16];
+    assign reg3 = ir[15:11];
+
+    // Sign extension and zero extension
+    assign copy_sign_16 = ir[15] ? 16'hFFFF : 16'h0000;
+    assign sx16 = {copy_sign_16, ir[15:0]};
+    assign zx16 = {16'h0000, ir[15:0]};
+    assign hi16 = {ir[15:0], 16'h0000};
+
+    // Sign-extended and shifted outputs
+    assign sx16s2 = {copy_sign_16, ir[15:0]} << 2;
+    assign sx26s2 = {{6{ir[25]}}, ir[25:0]} << 2;
+
+endmodule

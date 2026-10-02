@@ -1,0 +1,120 @@
+{
+  "case_id": "s1derived.0752128e2a278e24bc44.3e077f0bef78",
+  "compile_check": {
+    "case_id": "s1derived.0752128e2a278e24bc44.3e077f0bef78",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_03897",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_03897.1a4e3ba341b40abc/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.0752128e2a278e24bc44",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "0752128e2a278e24bc44c06d83eb0849801a7b73e5ccf076caa961c3308a62ef",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0752128e2a278e24bc44.3e077f0bef78",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_03897.1a4e3ba341b40abc/private/commercial_positive.log",
+    "commercial_log_sha256": "6c5a14a9e297d8df83dd6a180657dbe46d92c295b818e647e95bcc5b43075a28",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_03897.1a4e3ba341b40abc/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "rtlpp_03897"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.rtlpp_03897.1a4e3ba341b40abc",
+    "parent_id": "s1p.0752128e2a278e24bc44",
+    "revised_tops": [
+      "rtlpp_03897"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_03897",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0752128e2a278e24bc44.3e077f0bef78",
+    "checks": {
+      "behavior": "Direct pass-through matches.",
+      "boundaries": "No delay is present despite comments.",
+      "interface": "All scalar ports match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Combinational."
+    },
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Direct pass-through matches. Combinational. No delay is present despite comments.",
+        "rtl_excerpt": "three continuous buffer assignments relay A; power/body ports unused",
+        "spec_excerpt": "\u201cInputs A, VPWR, VGND, VPB, VNB ... X=A ... power inputs do not affect output\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0752128e2a278e24bc44",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "5b4e442f185ff8ec9638e9a1a7c23591f475f43b1fea849534597273cbeb8f72",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0752128e2a278e24bc44c06d83eb0849801a7b73e5ccf076caa961c3308a62ef",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_03897.1a4e3ba341b40abc/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_03897.1a4e3ba341b40abc/private/historical_harness/01_conformal_rtl_rtlpp_03897.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_03897.1a4e3ba341b40abc/private/historical_harness/02_fm_rtl_rtlpp_03897.tcl"
+  ],
+  "parent_id": "s1p.0752128e2a278e24bc44",
+  "primary_review": {
+    "case_id": "s1derived.0752128e2a278e24bc44.3e077f0bef78",
+    "checks": {
+      "behavior": "Compared observable equations/state transitions. RTL uses only zero-delay continuous assignments stage1=A, stage2=stage1, X=stage2; power pins are ignored.",
+      "boundaries": "Checked unsupported selector/opcode/state cases, simultaneous controls, arithmetic flags, zero values, and compile completeness as applicable.",
+      "interface": "Compared exact ports, widths, parameters, and defaults. The prose claims delay/timing adjustment without stating a delay and implies the stages are sequential.",
+      "rtl_reasonableness": "RTL describes a coherent hardware or deliberate simulation-checker function under the stated contract.",
+      "sequential_and_reset": "Compared edge sensitivity, reset polarity and synchrony, enables, holds, update ordering, and latency where sequential state exists; otherwise confirmed combinational behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file comparison supports decision=revise; the excerpts identify the decisive semantic agreement or discrepancy.",
+        "rtl_excerpt": "RTL uses only zero-delay continuous assignments stage1=A, stage2=stage1, X=stage2; power pins are ignored.",
+        "spec_excerpt": "The prose claims delay/timing adjustment without stating a delay and implies the stages are sequential."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose claims delay/timing adjustment without stating a delay and implies the stages are sequential.",
+        "rtl_evidence": "RTL uses only zero-delay continuous assignments stage1=A, stage2=stage1, X=stage2; power pins are ignored.",
+        "spec_evidence": "The prose claims delay/timing adjustment without stating a delay and implies the stages are sequential.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.0752128e2a278e24bc44",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.0752128e2a278e24bc44.3e077f0bef78.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0752128e2a278e24bc44c06d83eb0849801a7b73e5ccf076caa961c3308a62ef",
+    "source_group": "S4",
+    "specification_sha256": "3e077f0bef786d39e28100ac4f2f98570e19a6145c13de5772b75f00b560feea",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.0752128e2a278e24bc44.3e077f0bef78.md",
+  "qualified_specification_sha256": "5b4e442f185ff8ec9638e9a1a7c23591f475f43b1fea849534597273cbeb8f72",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_03897.1a4e3ba341b40abc/private/golden_design.v",
+  "rtl_sha256": "0752128e2a278e24bc44c06d83eb0849801a7b73e5ccf076caa961c3308a62ef",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.rtlpp_03897.1a4e3ba341b40abc/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "3e077f0bef786d39e28100ac4f2f98570e19a6145c13de5772b75f00b560feea",
+  "top_module": "rtlpp_03897"
+}

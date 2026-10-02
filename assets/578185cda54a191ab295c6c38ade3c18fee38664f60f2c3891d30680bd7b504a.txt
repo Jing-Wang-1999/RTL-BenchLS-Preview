@@ -1,0 +1,58 @@
+/*
+ * schoolMIPS - small MIPS CPU for "Young Russian Chip Architects" 
+ *              summer school ( yrca@googlegroups.com )
+ *
+ * originally based on Sarah L. Harris MIPS CPU 
+ * 
+ * Copyright(c) 2017 Stanislav Zhelnio 
+ *                   Aleksandr Romanov 
+ */
+module sm_cpu
+(
+    input           clk,        
+    input           rst_n,      
+    input   [ 4:0]  regAddr,    
+    output  [31:0]  regData,    
+    output  [31:0]  imAddr,     
+    input   [31:0]  imData      
+);
+endmodule
+
+module sm_control
+(
+    input      [5:0] cmdOper,
+    input      [5:0] cmdFunk,
+    input            aluZero,
+    output           pcSrc, 
+    output reg       regDst, 
+    output reg       regWrite, 
+    output reg       aluSrc,
+    output reg [2:0] aluControl
+);
+endmodule
+
+module sm_alu
+(
+    input  [31:0] srcA,
+    input  [31:0] srcB,
+    input  [ 2:0] oper,
+    input  [ 4:0] shift,
+    output        zero,
+    output reg [31:0] result
+);
+endmodule
+
+module sm_register_file
+(
+    input         clk,
+    input  [ 4:0] a0,
+    input  [ 4:0] a1,
+    input  [ 4:0] a2,
+    input  [ 4:0] a3,
+    output [31:0] rd0,
+    output [31:0] rd1,
+    output [31:0] rd2,
+    input  [31:0] wd3,
+    input         we3
+);
+endmodule

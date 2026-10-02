@@ -1,0 +1,46 @@
+module autovcoder_133560 (
+    input clk,
+    input [127:0] data_in,
+    input start,
+    output reg [31:0] hash_out,
+    output reg done
+);
+    reg [31:0] A, B, C, D;
+    reg [5:0] state;
+
+    always @(posedge clk) begin
+        if (start) begin
+            // Initialize hash values
+            A <= 32'h67452301;
+            B <= 32'hEFCDAB89;
+            C <= 32'h98BADCFE;
+            D <= 32'h10325476;
+            state <= 0;
+            done <= 0;
+        end else begin
+            case (state)
+                0: begin
+                    A <= A + (B ^ C ^ D) + data_in[31:0]; // Simplified operation
+                    state <= 1;
+                end
+                1: begin
+                    B <= B + (A ^ C ^ D) + data_in[63:32]; // Simplified operation
+                    state <= 2;
+                end
+                2: begin
+                    C <= C + (A ^ B ^ D) + data_in[95:64]; // Simplified operation
+                    state <= 3;
+                end
+                3: begin
+                    D <= D + (A ^ B ^ C) + data_in[127:96]; // Simplified operation
+                    state <= 4;
+                end
+                4: begin
+                    hash_out <= A; // Output hash
+                    done <= 1;
+                    state <= 0; // Reset state for next input
+                end
+            endcase
+        end
+    end
+endmodule

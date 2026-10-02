@@ -1,0 +1,67 @@
+module rtlpp_10201( 
+                input clock,
+				input reset,
+				input enable,              
+				input start,               
+				input  signed [31:0] x,    
+				input  signed [31:0] y,    
+				output signed [31:0] mod,  
+				output signed [31:0] angle 
+			  );
+			  
+
+reg signed [33:0]	yr;
+reg signed [33:0]	xr;
+reg signed [31:0]	zr;
+wire signed [31:0]	ATAN_data;
+reg signed [5:0]  count_out;
+
+always @(posedge clock or posedge reset)
+begin
+	if (reset)
+		count_out <= 0;
+	else if (enable)
+		if (start)
+			count_out <= 0;
+		else if (count_out == 6'b111111)
+			count_out <= count_out;
+		else
+			count_out <= count_out + 1;
+end
+
+always @(posedge clock)
+begin	
+	if(reset)
+		xr <= 0;
+	else if (enable)
+		xr <= start ? x : (yr[33] ? xr - (yr >>> count_out) : xr + (yr >>> count_out));
+end
+
+always @(posedge clock)
+begin
+	if(reset)
+		yr <= 0;
+	else if (enable)	
+		yr <= start ? y : (yr[33] ? yr + (xr >>> count_out) : yr - (xr >>> count_out));
+end
+
+always @(posedge clock)
+begin
+	if(reset)
+		zr <= 0;
+	else if (enable)
+		zr <= start ? 32'b0 : (yr[33] ? zr - (ATAN_data) : zr + (ATAN_data));
+end
+
+reg signed [31:0] ATAN_ROM [0:47];
+
+initial begin
+	$readmemh("ATAN_ROM_VALUES.mem", ATAN_ROM);
+end
+
+assign ATAN_data = ATAN_ROM[count_out];
+
+assign mod = (xr * xr + yr * yr);
+assign angle = zr; 
+
+endmodule

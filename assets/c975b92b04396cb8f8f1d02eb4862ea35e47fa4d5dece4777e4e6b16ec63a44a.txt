@@ -1,0 +1,54 @@
+module origen_065183 (
+    input wire nreset,
+    input wire clock,
+    input wire [4:0] Wdata_rst,
+    input wire [4:0] Waddr_rst,
+    input wire Wen_rst,
+    input wire flush,
+    input wire [4:0] Rsaddr_rst,
+    input wire [4:0] Rtaddr_rst,
+    input wire [4:0] RB_tag_rst,
+    input wire RB_valid_rst,
+    output wire [4:0] Rstag_rst,
+    output wire Rsvalid_rst,
+    output wire [4:0] Rttag_rst,
+    output wire Rtvalid_rst
+);
+
+    reg [5:0] RST_array [31:0];
+    wire [31:0] rob_wen;
+
+    // Read operations
+    assign Rstag_rst = RST_array[Rsaddr_rst][5:1];
+    assign Rsvalid_rst = RST_array[Rsaddr_rst][0];
+    assign Rttag_rst = RST_array[Rtaddr_rst][5:1];
+    assign Rtvalid_rst = RST_array[Rtaddr_rst][0];
+
+    // Generate rob_wen signal
+    genvar i;
+    generate
+        for (i = 0; i < 32; i = i + 1) begin : rob_wen_gen
+            assign rob_wen[i] = RB_valid_rst && (RST_array[i][5:1] == RB_tag_rst);
+        end
+    endgenerate
+
+    // Write operations and reset/flush logic
+    integer j;
+    always @(posedge clock or negedge nreset) begin
+        if (!nreset || flush) begin
+            for (j = 0; j < 32; j = j + 1) begin
+                RST_array[j] <= 6'b0;
+            end
+        end else begin
+            if (Wen_rst) begin
+                RST_array[Waddr_rst] <= {Wdata_rst, 1'b1};
+            end
+            for (j = 0; j < 32; j = j + 1) begin
+                if (rob_wen[j]) begin
+                    RST_array[j] <= 6'b0;
+                end
+            end
+        end
+    end
+
+endmodule

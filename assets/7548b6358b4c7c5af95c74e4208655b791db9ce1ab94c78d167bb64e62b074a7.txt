@@ -1,0 +1,116 @@
+module origen_123303 (
+    input [23:0] video_data,
+    input hsync,
+    input vsync,
+    input clock,
+    output reg [9:0] data_out,
+    output reg h_sync_out,
+    output reg v_sync_out,
+    output reg clock_out
+);
+
+    // 8b/10b encoding table (simplified)
+    reg [9:0] encoding_table [0:255];
+    initial begin
+        // Initialize encoding table (simplified)
+        encoding_table[8'h00] = 10'b1101010100;
+        // ... Add more encodings as per DisplayPort 1.2a specification
+    end
+
+    reg [7:0] current_byte;
+    reg [2:0] byte_counter;
+    reg [1:0] state;
+
+    parameter IDLE = 2'b00, SEND_VIDEO = 2'b01, SEND_HSYNC = 2'b10, SEND_VSYNC = 2'b11;
+
+    always @(posedge clock) begin
+        case (state)
+            IDLE: begin
+                if (hsync) state <= SEND_HSYNC;
+                else if (vsync) state <= SEND_VSYNC;
+                else state <= SEND_VIDEO;
+            end
+            SEND_VIDEO: begin
+                case (byte_counter)
+                    3'b000: current_byte <= video_data[7:0];
+                    3'b001: current_byte <= video_data[15:8];
+                    3'b010: current_byte <= video_data[23:16];
+                    default: current_byte <= 8'h00; // Padding
+                endcase
+                data_out <= encoding_table[current_byte];
+                byte_counter <= byte_counter + 1;
+                if (byte_counter == 3'b011) state <= IDLE;
+            end
+            SEND_HSYNC: begin
+                data_out <= 10'b1101010100; // K28.5 symbol for HSYNC
+                state <= IDLE;
+            end
+            SEND_VSYNC: begin
+                data_out <= 10'b0101111100; // K28.1 symbol for VSYNC
+                state <= IDLE;
+            end
+        endcase
+
+        h_sync_out <= hsync;
+        v_sync_out <= vsync;
+        clock_out <= clock;
+    end
+
+endmodule
+
+module DisplayPortReceiver (
+    input [9:0] data_in,
+    input h_sync_in,
+    input v_sync_in,
+    input clock_in,
+    output reg [23:0] video_data_out,
+    output reg hsync_out,
+    output reg vsync_out,
+    output reg clock_out
+);
+
+    // 10b/8b decoding table (simplified)
+    reg [7:0] decoding_table [0:1023];
+    initial begin
+        // Initialize decoding table (simplified)
+        decoding_table[10'b1101010100] = 8'h00;
+        // ... Add more decodings as per DisplayPort 1.2a specification
+    end
+
+    reg [7:0] decoded_byte;
+    reg [1:0] byte_counter;
+    reg [1:0] state;
+
+    parameter IDLE = 2'b00, RECEIVE_VIDEO = 2'b01, RECEIVE_HSYNC = 2'b10, RECEIVE_VSYNC = 2'b11;
+
+    always @(posedge clock_in) begin
+        case (state)
+            IDLE: begin
+                if (data_in == 10'b1101010100) state <= RECEIVE_HSYNC;
+                else if (data_in == 10'b0101111100) state <= RECEIVE_VSYNC;
+                else state <= RECEIVE_VIDEO;
+            end
+            RECEIVE_VIDEO: begin
+                decoded_byte <= decoding_table[data_in];
+                case (byte_counter)
+                    2'b00: video_data_out[7:0] <= decoded_byte;
+                    2'b01: video_data_out[15:8] <= decoded_byte;
+                    2'b10: video_data_out[23:16] <= decoded_byte;
+                endcase
+                byte_counter <= byte_counter + 1;
+                if (byte_counter == 2'b10) state <= IDLE;
+            end
+            RECEIVE_HSYNC: begin
+                hsync_out <= 1;
+                state <= IDLE;
+            end
+            RECEIVE_VSYNC: begin
+                vsync_out <= 1;
+                state <= IDLE;
+            end
+        endcase
+
+        clock_out <= clock_in;
+    end
+
+endmodule

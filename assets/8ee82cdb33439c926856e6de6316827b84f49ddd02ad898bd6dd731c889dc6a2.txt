@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+"""Reproduce the v1 X/Z false pass on real square waveforms; require v2 rejection."""
+import argparse,hashlib,importlib.util,json,re
+from pathlib import Path
+
+def load(path,name):
+ s=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
+
+def main():
+ p=argparse.ArgumentParser();p.add_argument('--golden',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=False)
+ here=Path(__file__).resolve().parent;old=load(here/'replay_pio_next21.py','pio_v1');new=load(here/'replay_pio_next21_v2.py','pio_v2');checks=[]
+ for name in ['square','tb']:
+  source=a.golden/name/'waves.vcd';text=source.read_text();trace=new.Trace(source);new.judge(name,trace);checks.append({'bench':name,'kind':'golden','v2_pass':True,'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest()})
+  # Replace one host-clock interval at the end of a valid high phase with X/Z.
+  # Keep every known output transition and the original bench completion time.
+  tick=trace.events['gpio_out'][-1][0]-400;assert trace.at('gpio_out',tick)==1
+  stack=[];code=None
+  for line in text.splitlines():
+   fields=line.split()
+   if not fields:continue
+   if fields[0]=='$scope':stack.append(fields[2])
+   elif fields[0]=='$upscope':stack.pop()
+   elif fields[0]=='$var' and stack==['tb'] and fields[4]=='gpio_out':code=fields[3]
+   elif fields[0]=='$enddefinitions':break
+  assert code
+  for value in ['x','z']:
+   lines=text.splitlines();indices=[i for i,line in enumerate(lines) if line.startswith('#') and int(line[1:])>tick];assert indices;at=indices[0]
+   modified='\n'.join(lines[:at]+['#'+str(tick),'b'+value+' '+code]+lines[at:])+'\n';path=a.output/(name+'_'+value+'.vcd');path.write_text(modified)
+   bad=old.Trace(path);old.judge(name,bad);assert bad.end==trace.end
+   try:new.judge(name,new.Trace(path))
+   except ValueError as e:assert 'unknown GPIO output' in str(e);reason=str(e)
+   else:raise AssertionError('v2 accepted unknown output interval')
+   checks.append({'bench':name,'kind':value+'_interval','from_tick':tick,'until_tick':trace.events['gpio_out'][-1][0],'v1_false_pass_reproduced':True,'v2_rejected':True,'reason':reason,'trace':str(path)})
+ result={'passed':True,'golden_checks':2,'unknown_interval_checks':4,'checks':checks};(a.output/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
+if __name__=='__main__':main()

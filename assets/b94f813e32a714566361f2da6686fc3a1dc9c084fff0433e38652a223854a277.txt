@@ -1,0 +1,50 @@
+module origen_040806 (
+    input wire clk,
+    input wire rst,
+    input wire read_write_enable,
+    input wire [3:0] register_1,
+    input wire [3:0] register_2,
+    input wire [3:0] write_reg,
+    input wire [15:0] write_data,
+    input wire [15:0] write_reg_15,
+    output reg [15:0] read_reg_1,
+    output reg [15:0] read_reg_2,
+    output reg [15:0] read_reg_15
+);
+
+    reg [15:0] register_memory [0:15];
+
+    always @(*) begin
+        if (!rst) begin
+            register_memory[0] <= 16'h0000;
+            register_memory[1] <= 16'h0001;
+            register_memory[2] <= 16'h0002;
+            register_memory[3] <= 16'h0003;
+            register_memory[4] <= 16'h0004;
+            register_memory[5] <= 16'h0005;
+            register_memory[6] <= 16'h0006;
+            register_memory[7] <= 16'h0007;
+            register_memory[8] <= 16'h0008;
+            register_memory[9] <= 16'h0009;
+            register_memory[10] <= 16'h000A;
+            register_memory[11] <= 16'h000B;
+            register_memory[12] <= 16'h000C;
+            register_memory[13] <= 16'h000D;
+            register_memory[14] <= 16'h000E;
+            register_memory[15] <= 16'h000F;
+            read_reg_1 <= 16'h0000;
+            read_reg_2 <= 16'h0000;
+            read_reg_15 <= 16'h0000;
+        end
+        else if (read_write_enable) begin
+            read_reg_1 <= register_memory[register_1];
+            read_reg_2 <= register_memory[register_2];
+            read_reg_15 <= register_memory[15];
+        end
+        else begin
+            register_memory[write_reg] <= write_data;
+            register_memory[15] <= write_reg_15;
+        end
+    end
+
+endmodule

@@ -1,0 +1,166 @@
+module rtlpp_01939(
+  input        rfsh_b,
+  inout        adr15,
+  inout        adr15_aux,
+  input        adr14,
+  input        adr8,
+  input        iorq_b,
+  input        mreq_b,
+  input        reset_b,
+  inout        wr_b,
+  inout        rd_b,
+  input [7:0]  data,
+  input        ready,
+  input        clk,
+  input        m1_b,
+  input [1:0]  dip,
+  input        ramrd_b,
+  inout        ramdis,
+  output       ramcs_b,
+  output [4:0] ramadrhi,
+  output       ramoe_b,
+  output       ramwe_b
+);
+
+  reg [5:0]        ramblock_q;
+  reg [4:0]        ramadrhi_r;
+  reg              dip3_lat_q;
+  reg              dip2_lat_q;
+  
+  wire             cardsel_w = 1'b1;
+  reg              mode3_q;
+  reg              mwr_cyc_q;
+  reg              mwr_cyc_f_q;
+  reg              ramcs_b_r;
+  reg              adr15_q;
+  reg              exp_ram_r;
+  reg              mreq_b_q;
+  reg              exp_ram_q;
+  reg              urom_disable_q;
+  reg              lrom_disable_q;
+  reg              int_ramrd_r;    
+
+  wire             ram_ctrl_select_w;
+  wire             rom_ctrl_select_w;
+  wire [2:0]       shadow_bank;
+  wire             full_shadow;
+  wire             overdrive_mode;
+  wire             mwr_cyc_d;
+  wire             adr15_overdrive_w;
+  wire             low512kb_mode;
+  wire             reset_b_w;
+
+  assign overdrive_mode= dip[0] | dip[1];
+  assign shadow_mode   = dip[0];
+  assign full_shadow   = dip[0] & dip[1];
+  assign shadow_bank   = {3'b011}; 
+  assign low512kb_mode = 1'b0 ;
+  assign ramadrhi      = ramadrhi_r[4:0];
+
+  assign ram_ctrl_select_w = (!iorq_b && !wr_b && !adr15 && data[6] && data[7]);
+  assign rom_ctrl_select_w = (!iorq_b && !wr_b && !adr15 && !data[6] && data[7]);
+
+  assign reset_b_w = reset_b;
+  
+  always @ ( * ) begin
+    int_ramrd_r = 1'b0; 	 
+    if (rfsh_b & !mreq_b) begin
+      if ((adr15_q | adr15_overdrive_w) != adr14)
+        int_ramrd_r = 1'b1; 
+      else if (urom_disable_q & ({(adr15_q | adr15_overdrive_w), adr14} == 2'b11))
+        int_ramrd_r = 1'b1; 
+      else if (lrom_disable_q & ({(adr15_q | adr15_overdrive_w), adr14} == 2'b00))
+        int_ramrd_r = 1'b1;
+    end
+  end
+
+  assign ramwe_b = !(!wr_b & mwr_cyc_q & mwr_cyc_f_q);
+  assign ramoe_b = (!int_ramrd_r) | rd_b;
+
+  assign wr_b = (overdrive_mode & exp_ram_q & (mwr_cyc_q & !mwr_cyc_f_q)) ? 1'b0 : 1'bz;
+  assign rd_b = (overdrive_mode & exp_ram_q & (mwr_cyc_q | mwr_cyc_f_q)) ? 1'b0 : 1'bz;
+  
+  assign mwr_cyc_d = !mreq_b & rd_b;
+  assign adr15_overdrive_w = overdrive_mode & mode3_q & adr14 & ((shadow_mode) ? (mwr_cyc_q | mwr_cyc_d) : !mreq_b);
+
+  assign {adr15, adr15_aux} = (adr15_overdrive_w) ? 2'b11 : 2'bzz;
+  assign ramdis = (full_shadow) ? 1'b1 : (((!ramcs_b_r) & cardsel_w) ? 1'b1 : 1'bz);
+  assign ramcs_b = !( ((!ramcs_b_r) & cardsel_w) | full_shadow) | mreq_b | !rfsh_b;
+  
+  always @ (posedge clk) begin
+    if (mwr_cyc_d)
+      mwr_cyc_q <= 1'b1;
+    else if (mreq_b)
+      mwr_cyc_q <= 1'b0;
+  end
+
+  always @ (negedge clk or negedge reset_b_w) begin
+    if (!reset_b_w)
+      mwr_cyc_f_q <= 1'b0;
+    else
+      mwr_cyc_f_q <= mwr_cyc_q;
+  end
+
+  always @ (posedge clk or negedge reset_b_w) begin
+    if (!reset_b_w) begin
+      mreq_b_q <= 1'b1;
+      exp_ram_q <= 1'b0;
+    end else begin
+      mreq_b_q <= mreq_b;
+      exp_ram_q <= exp_ram_r;
+    end
+  end
+
+  always @ (negedge clk or negedge reset_b_w) begin
+    if (!reset_b_w)
+      adr15_q <= 1'b0;
+    else
+      adr15_q <= (mreq_b) ? adr15 : adr15_q;
+  end
+
+  always @ (negedge clk or negedge reset_b_w) begin
+    if (!reset_b_w) begin
+      ramblock_q <= 6'b0;
+      mode3_q <= 1'b0;
+      urom_disable_q <= 1'b0;
+      lrom_disable_q <= 1'b0;
+    end else begin
+      if (ram_ctrl_select_w) begin
+        if (shadow_mode && (data[5:3] == shadow_bank))
+          ramblock_q <= {data[5:4], 1'b0, data[2:0]};
+        else
+          ramblock_q <= data[5:0];
+        mode3_q <= (data[2:0] == 3'b011);
+      end else if (rom_ctrl_select_w) begin
+        {urom_disable_q, lrom_disable_q} <= data[3:2];
+      end
+    end
+  end
+
+  always @ ( * ) begin
+    if (shadow_mode) begin
+      case (ramblock_q[2:0])
+        3'b000: {exp_ram_r, ramcs_b_r, ramadrhi_r} = {1'b0, !mwr_cyc_q, shadow_bank, adr15, adr14};
+        3'b001: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b11) ? {2'b10, ramblock_q[5:3], 2'b11} : {1'b0, !mwr_cyc_q, shadow_bank, adr15, adr14};
+        3'b010: {exp_ram_r, ramcs_b_r, ramadrhi_r} = {2'b10, ramblock_q[5:3], adr15, adr14};
+        3'b011: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15_q, adr14} == 2'b11) ? {2'b10, ramblock_q[5:3], 2'b11} : ({adr15_q, adr14} == 2'b01) ? {2'b00, shadow_bank, 2'b11} : {1'b0, !mwr_cyc_q, shadow_bank, adr15, adr14};
+        3'b100: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b01) ? {2'b10, ramblock_q[5:3], 2'b00} : {1'b0, !mwr_cyc_q, shadow_bank, adr15, adr14};
+        3'b101: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b01) ? {2'b10, ramblock_q[5:3], 2'b01} : {1'b0, !mwr_cyc_q, shadow_bank, adr15, adr14};
+        3'b110: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b01) ? {2'b10, ramblock_q[5:3], 2'b10} : {1'b0, !mwr_cyc_q, shadow_bank, adr15, adr14};
+        3'b111: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b01) ? {2'b10, ramblock_q[5:3], 2'b11} : {1'b0, !mwr_cyc_q, shadow_bank, adr15, adr14};
+      endcase
+    end else begin
+      case (ramblock_q[2:0])
+        3'b000: {exp_ram_r, ramcs_b_r, ramadrhi_r} = {2'b01, 5'bxxxxx};
+        3'b001: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b11) ? {2'b10, ramblock_q[5:3], 2'b11} : {2'b01, 5'bxxxxx};
+        3'b010: {exp_ram_r, ramcs_b_r, ramadrhi_r} = {2'b10, ramblock_q[5:3], adr15, adr14};
+        3'b011: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15_q, adr14} == 2'b11) ? {2'b10, ramblock_q[5:3], 2'b11} : {2'b01, 5'bxxxxx};
+        3'b100: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b01) ? {2'b10, ramblock_q[5:3], 2'b00} : {2'b01, 5'bxxxxx};
+        3'b101: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b01) ? {2'b10, ramblock_q[5:3], 2'b01} : {2'b01, 5'bxxxxx};
+        3'b110: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b01) ? {2'b10, ramblock_q[5:3], 2'b10} : {2'b01, 5'bxxxxx};
+        3'b111: {exp_ram_r, ramcs_b_r, ramadrhi_r} = ({adr15, adr14} == 2'b01) ? {2'b10, ramblock_q[5:3], 2'b11} : {2'b01, 5'bxxxxx};
+      endcase
+    end
+  end
+
+endmodule

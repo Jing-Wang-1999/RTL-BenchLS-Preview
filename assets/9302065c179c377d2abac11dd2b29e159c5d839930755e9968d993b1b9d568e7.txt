@@ -1,0 +1,21 @@
+always @(posedge rd_clk or negedge rd_reset_n) begin
+      if (!rd_reset_n) begin
+         rd_ptr <= 0;
+	 grey_rd_ptr <= 0;
+	 empty_q <= 1'b1;
+      end
+      else begin
+         if (rd_en) begin
+            rd_ptr <= rd_ptr_inc;
+            grey_rd_ptr <= bin2grey(rd_ptr_inc);
+            if (rd_cnt==(EMPTY_DP+1)) begin
+               empty_q <= 1'b1;
+            end
+         end
+         else begin
+            if (empty_q && (rd_cnt!=EMPTY_DP)) begin
+	      empty_q <= 1'b0;
+	    end
+         end
+       end
+    end

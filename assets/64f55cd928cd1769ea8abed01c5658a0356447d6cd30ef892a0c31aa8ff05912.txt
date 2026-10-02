@@ -1,0 +1,31 @@
+module origen_133431(
+    input [31:0] a,
+    input [31:0] b,
+    output [7:0] final_output
+);
+
+    // Intermediate signals
+    wire [31:0] sum;
+    wire [5:0] ones_count;
+    wire [7:0] padded_ones_count;
+
+    // Binary Adder: Compute the sum of a and b
+    assign sum = a + b;
+
+    // Count Ones: Count the number of '1's in the sum
+    assign ones_count = sum[0] + sum[1] + sum[2] + sum[3] +
+                        sum[4] + sum[5] + sum[6] + sum[7] +
+                        sum[8] + sum[9] + sum[10] + sum[11] +
+                        sum[12] + sum[13] + sum[14] + sum[15] +
+                        sum[16] + sum[17] + sum[18] + sum[19] +
+                        sum[20] + sum[21] + sum[22] + sum[23] +
+                        sum[24] + sum[25] + sum[26] + sum[27] +
+                        sum[28] + sum[29] + sum[30] + sum[31];
+
+    // Pad ones_count with two leading zeros to make it 8 bits
+    assign padded_ones_count = {2'b00, ones_count};
+
+    // Final Processor: XOR the least significant 8 bits of sum with padded_ones_count
+    assign final_output = sum[7:0] ^ padded_ones_count;
+
+endmodule

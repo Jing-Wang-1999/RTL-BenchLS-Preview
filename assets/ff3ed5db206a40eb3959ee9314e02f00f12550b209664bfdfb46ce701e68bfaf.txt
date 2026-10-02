@@ -1,0 +1,103 @@
+module origen_023851 (
+    input wire clk,
+    input wire rst_n,
+    output reg led,
+    output reg [14:0] sram_addr,
+    output reg sram_wr_n,
+    inout wire [7:0] sram_data
+);
+
+    reg [25:0] delay;
+    reg [7:0] wr_data, rd_data;
+    reg [14:0] addr_r;
+    reg [2:0] state, next_state;
+    reg [2:0] cnt;
+    reg [7:0] sram_data_out;
+    reg sram_data_oe;
+
+    localparam IDLE = 3'd0, WRT0 = 3'd1, WRT1 = 3'd2, REA0 = 3'd3, REA1 = 3'd4;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            delay <= 26'd0;
+            wr_data <= 8'd0;
+            addr_r <= 15'd0;
+            state <= IDLE;
+            cnt <= 3'd0;
+            led <= 1'b0;
+        end else begin
+            delay <= delay + 1'b1;
+            state <= next_state;
+
+            case (state)
+                IDLE: begin
+                    if (delay == 26'd9999) begin
+                        next_state <= WRT0;
+                    end else if (delay == 26'd19999) begin
+                        next_state <= REA0;
+                    end else if (delay == 26'd29999) begin
+                        wr_data <= wr_data + 1'b1;
+                        addr_r <= addr_r + 1'b1;
+                        next_state <= IDLE;
+                    end else begin
+                        next_state <= IDLE;
+                    end
+                end
+
+                WRT0: begin
+                    if (cnt == 3'd4) begin
+                        next_state <= WRT1;
+                        cnt <= 3'd0;
+                    end else begin
+                        cnt <= cnt + 1'b1;
+                        next_state <= WRT0;
+                    end
+                end
+
+                WRT1: begin
+                    if (cnt == 3'd4) begin
+                        next_state <= IDLE;
+                        cnt <= 3'd0;
+                    end else begin
+                        cnt <= cnt + 1'b1;
+                        next_state <= WRT1;
+                    end
+                end
+
+                REA0: begin
+                    if (cnt == 3'd4) begin
+                        next_state <= REA1;
+                        cnt <= 3'd0;
+                    end else begin
+                        cnt <= cnt + 1'b1;
+                        next_state <= REA0;
+                    end
+                end
+
+                REA1: begin
+                    if (cnt == 3'd4) begin
+                        next_state <= IDLE;
+                        cnt <= 3'd0;
+                        rd_data <= sram_data;
+                        led <= (rd_data == wr_data);
+                    end else begin
+                        cnt <= cnt + 1'b1;
+                        next_state <= REA1;
+                    end
+                end
+
+                default: next_state <= IDLE;
+            endcase
+        end
+    end
+
+    always @(*) begin
+        sram_addr = addr_r;
+        sram_wr_n = (state == WRT0 || state == WRT1) ? 1'b0 : 1'b1;
+        sram_data_out = wr_data;
+        sram_data_oe = (state == WRT0 || state == WRT1);
+    end
+
+    assign sram_data = sram_data_oe ? sram_data_out : 8'bz;
+
+endmodule

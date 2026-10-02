@@ -1,0 +1,91 @@
+# ODIN neuron state transition
+
+Implement combinational module `izh_neuron_state`. No clock/reset, parameters, internal storage or latency. Current state is supplied externally and next state is computed for every input combination. All arithmetic on4-bit state wraps modulo16, on3-bit counters modulo8; comparisons are unsigned. This is a phenomenological digital neuron state component, not a numerical differential-equation solver.
+
+Public ports:
+
+|Direction|Name|Width|Meaning|
+|---|---|---:|---|
+|input|param_spk_ref|3|number of spikes per burst parameter|
+|input|param_isi_ref|3|inter-spike-interval in burst parameter|
+|input|param_rfr|3|neuron refractory period parameter|
+|input|param_dapdel|3|delay for spike latency or DAP parameter|
+|input|param_spklat_en|1|spike latency enable parameter|
+|input|param_dap_en|1|DAP enable parameter|
+|input|param_phasic_en|1|phasic behavior enable parameter|
+|input|param_mixed_en|1|mixed mode behavior enable parameter|
+|input|param_class2_en|1|class 2 excitability enable parameter|
+|input|param_neg_en|1|negative state enable parameter|
+|input|param_rebound_en|1|rebound behavior enable parameter|
+|input|param_inhin_en|1|inhibition-induced behavior enable parameter|
+|input|param_bist_en|1|bistability behavior enable parameter|
+|input|param_reson_en|1|resonant behavior enable parameter|
+|input|param_acc_en|1|accommodation behavior enable parameter (requires threshold variability enabled)|
+|input|param_reson_sharp_en|1|sharp resonant behavior enable parameter|
+|input|param_reson_sharp_amt|3|sharp resonant behavior time constant parameter|
+|input|state_refrac|1|refractory period state from SRAM |
+|input|state_core|4|membrane potential state from SRAM |
+|input|state_dapdel_cnt|3|dapdel counter state from SRAM  |
+|input|state_phasic_lock|1|phasic lock state from SRAM|
+|input|state_mixed_lock|1|mixed lock state from SRAM|
+|input|state_spkout_done|1|spike sent in current Tref interval state from SRAM|
+|input|state_bist_lock|1|bistability lock state from SRAM|
+|input|state_inhin_lock|1|inhibition-induced lock state from SRAM|
+|input|state_reson_sign|2|resonant sign state from SRAM|
+|input|state_burst_lock|1|burst lock state from SRAM|
+|input|state_stim_str_tmp|4|temporary stimulation strength state from SRAM |
+|input|ovfl_leak|1|overflow leakage type event|
+|input|ovfl_inh|1|overflow inhibitory type event|
+|input|ovfl_exc|1|overflow excitatory type event|
+|input|event_tref|1|time reference event|
+|input|burst_end|1|end of burst signal|
+|input|stim_gt_thr_exc|1|excitatory stimulation strength greater than threshold signal|
+|input|stim_tmp_gt_thr_exc|1|current excitatory stimulation strength greater than threshold signal|
+|input|stim_gt_thr_inh|1|inhibitory stimulation strength greater than threshold signal|
+|input|stim_tmp_gt_thr_inh|1|current inhibitory stimulation strength greater than threshold signal|
+|input|stim_lone_spike_exc|1|isolated excitatory spike signal|
+|input|stim_lone_spike_inh|1|isolated inhibitory spike signal|
+|input|stim_zero|1|zero stimulation signal|
+|input|threshold_eff|4|neuron current effective threshold signal|
+|output|state_refrac_next|1|next refractory period state to SRAM|
+|output|state_core_next|4|next membrane potential state to SRAM |
+|output|state_dapdel_cnt_next|3|next dapdel counter state to SRAM|
+|output|state_phasic_lock_next|1|next phasic lock state to SRAM|
+|output|state_mixed_lock_next|1|next mixed lock state to SRAM|
+|output|state_spkout_done_next|1|next spike sent in current Tref interval state to SRAM|
+|output|state_bist_lock_next|1|next bistability lock state to SRAM|
+|output|state_inhin_lock_next|1|next inhibition-induced lock state to SRAM|
+|output|state_reson_sign_next|2|next resonant sign state to SRAM|
+|output|state_burst_lock_next|1|next burst lock state to SRAM|
+|output|event_out|7|neuron spike event output   |
+
+For compact notation below remove prefix `param_` from parameter inputs and `state_` from current-state inputs. `core_i` and `sign_i` are intermediate values, not output registers. In every ordered list take the first matching condition; otherwise hold the corresponding supplied current state. The four resonant sign codes are POS=0,NEG=1,ZERO_TO_P=2,ZERO_TO_N=3.
+
+Compute intermediate membrane core_i:
+
+1. If spklat_en and dapdel_cnt!=0: hold core.
+2. If phasic_lock and core=0: hold core.
+3. Else if event_tref: reson_en has first priority (subtract1 only when reson_sign=ZERO_TO_N); else if refrac, hold if burst_lock else add1; else if acc_en, hold if spkout_done else subtract stim_str_tmp; else if dap_en and dapdel_cnt=1 and core>0 set0; else if ovfl_leak and core!=0, add1 when core[3]=1 else subtract1; otherwise hold.
+4. Else if ovfl_inh: when reson_en, add1 for NEG/ZERO_TO_N unless core=7, subtract1 for POS/ZERO_TO_P unless core=0, otherwise hold. Without reson_en hold during refrac; otherwise subtract1 except at saturation core=8 if neg_en, or core=0 if not neg_en.
+5. Else if ovfl_exc: when reson_en, subtract1 for NEG/ZERO_TO_N unless core=0, add1 for POS/ZERO_TO_P unless core=7, otherwise hold. Without reson_en hold during refrac, or when class2_en and neither stim_gt_thr_exc nor stim_tmp_gt_thr_exc; otherwise add1 except hold at core=7.
+6. Otherwise hold core.
+
+Compute sign_i: if not reson_en choose POS. Else if not event_tref hold reson_sign. Else if core=0 choose POS. Otherwise map POS->ZERO_TO_N,NEG->ZERO_TO_P,ZERO_TO_P->POS; ZERO_TO_N maps to POS when core_i=0, otherwise NEG.
+
+Compute spike, by ordered priority: if reson_sharp_en, spike=ovfl_exc AND dapdel_cnt=reson_sharp_amt; else if spklat_en, spike=event_tref AND dapdel_cnt=1; else if rebound_en, spike=stim_lone_spike_inh OR core_i=threshold_eff; else if bist_en, spike=(!bist_lock AND stim_lone_spike_exc) OR (bist_lock AND core_i=0) OR core_i=threshold_eff; else if current inhin_lock, spike=(core_i=0); else if reson_en, spike=(sign_i=POS AND core_i=threshold_eff); else spike=(core_i=threshold_eff). There is no blanket event enable on these comparisons: even no-event inputs can assert spike if state equals threshold.
+
+The output event_out is `{spike,0[2:0],0[2:0]}` when current mixed_lock=1, otherwise `{spike,spk_ref,isi_ref}`. Its low fields can remain nonzero with spike=0. state_core_next is core_i if no spike, otherwise +{0,rfr} when dap_en OR reson_en, or its4-bit modular negative otherwise. state_reson_sign_next is NEG on spike AND reson_en, otherwise sign_i.
+
+Remaining next-state outputs:
+
+|Output|Ordered update rule|
+|---|---|
+|state_inhin_lock_next|Set1 if inhin_en AND !refrac AND four-bit(-core)=threshold_eff; else clear0 if event_tref AND current inhin_lock AND stim_zero; else hold.|
+|state_refrac_next|If spike OR state_inhin_lock_next: (!dap_en AND rfr!=0 AND !reson_en); otherwise clear if core_i=0, else hold refrac.|
+|state_dapdel_cnt_next|If reson_sharp_en: increment if event_tref AND dapdel_cnt!=7; else clear on ovfl_exc; else hold. Otherwise load dapdel when (dap_en AND spike) OR (spklat_en AND core_i=threshold_eff AND core!=threshold_eff); else decrement on event_tref AND dapdel_cnt!=0; else hold.|
+|state_phasic_lock_next and state_mixed_lock_next|If spike AND (stim_tmp_gt_thr_exc OR stim_gt_thr_exc), set to phasic_en/mixed_en respectively. Else if event_tref AND spkout_done AND (core=0 OR refrac) AND stim_tmp_gt_thr_exc, set to those enables. Else if !stim_gt_thr_exc, clear both. Else hold both.|
+|state_spkout_done_next|Clear on event_tref; else set on spike; else hold.|
+|state_bist_lock_next|On event_tref AND bist_en: toggle iff stim_lone_spike_exc, otherwise hold. Else hold.|
+|state_burst_lock_next|Set if event_out[6] AND event_out[5:3]!=0; else clear on burst_end; else hold.|
+
+All mode combinations follow the stated priority. Inputs that would normally be computed by surrounding stimulation logic remain independent public inputs; do not add consistency assumptions, register any output, or reinterpret unsigned encoded state as signed comparisons.

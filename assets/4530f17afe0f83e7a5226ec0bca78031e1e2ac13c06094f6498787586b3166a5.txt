@@ -1,0 +1,33 @@
+The module named `autovcoder_119451` is a digital hardware component designed to process multiple 16-bit input signals and produce a single 16-bit output signal. It operates based on a hierarchical selection mechanism using multiplexers.
+
+### Parameters:
+- **ID**: An identifier for the module, default is 0.
+- **NUM_STAGE**: Specifies the number of stages in the module, default is 1.
+- **din0_WIDTH to din8_WIDTH**: Define the bit-width for each input signal, default is 32 bits.
+- **dout_WIDTH**: Defines the bit-width for the output signal, default is 32 bits.
+
+### Inputs:
+- **din0 to din8**: These are the input signals, each 16 bits wide. The module accepts nine such inputs.
+
+### Output:
+- **dout**: This is the output signal, 16 bits wide, resulting from the selection process.
+
+### Internal Signals:
+The module uses a series of internal signals, named `mux_1_0` to `mux_16_0`, to facilitate the selection process across multiple levels.
+
+### Operation:
+1. **Selection Mechanism**: The module uses the value of `din8` as a selection signal (`sel`). This signal determines which inputs are chosen at each stage of the multiplexing process.
+   
+2. **Hierarchical Multiplexing**: 
+   - **Level 1**: The module begins by selecting between pairs of inputs (`din0` vs `din1`, `din2` vs `din3`, `din4` vs `din5`, `din6` vs `din7`) based on the least significant bit of `sel`.
+   - **Level 2**: The outputs from Level 1 are further selected between two pairs using the next bit of `sel`.
+   - **Level 3**: The outputs from Level 2 are combined into a single signal using another bit of `sel`.
+   - **Levels 4 to 16**: The signal is propagated through additional levels without further selection, effectively passing the signal unchanged through these stages.
+
+3. **Final Output**: The signal from Level 16 (`mux_16_0`) is assigned to the output `dout`.
+
+### Functionality:
+The module essentially performs a multi-level multiplexing operation, where the selection of inputs is controlled by the bits of the `din8` signal. The first three levels involve active selection, while subsequent levels simply pass the signal through unchanged. This design allows for flexible input selection based on the `sel` signal, enabling dynamic control over which input is ultimately outputted.
+
+### Use Cases:
+This module can be used in digital systems where dynamic selection of input signals is required, such as in signal routing, data processing units, or configurable logic blocks. It provides a structured approach to manage multiple inputs and produce a single output based on a programmable selection criterion.

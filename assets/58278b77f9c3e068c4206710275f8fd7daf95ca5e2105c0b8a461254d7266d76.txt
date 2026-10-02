@@ -1,0 +1,31 @@
+always @(posedge clk) begin
+    sum_valid_reg[0] <= 1'b0;
+
+    if (s_axis_tvalid) begin
+        for (i = 0; i < DATA_WIDTH/8/4; i = i + 1) begin
+            sum_reg[0][i*17 +: 17] <= {s_axis_tdata_masked[(4*i+0)*8 +: 8], s_axis_tdata_masked[(4*i+1)*8 +: 8]} + {s_axis_tdata_masked[(4*i+2)*8 +: 8], s_axis_tdata_masked[(4*i+3)*8 +: 8]};
+        end
+        sum_valid_reg[0] <= 1'b1;
+        sum_last_reg[0] <= s_axis_tlast;
+
+        if (s_axis_tlast) begin
+            offset_reg <= START_OFFSET/KEEP_WIDTH;
+            mask_reg <= {KEEP_WIDTH{1'b1}} << START_OFFSET;
+        end else if (START_OFFSET < KEEP_WIDTH || offset_reg == 0) begin
+            mask_reg <= {KEEP_WIDTH{1'b1}};
+        end else begin
+            offset_reg <= offset_reg - 1;
+            if (offset_reg == 1) begin
+                mask_reg <= {KEEP_WIDTH{1'b1}} << (START_OFFSET%KEEP_WIDTH);
+            end else begin
+                mask_reg <= {KEEP_WIDTH{1'b0}};
+            end
+        end
+    end
+
+    if (rst) begin
+        offset_reg <= START_OFFSET/KEEP_WIDTH;
+        mask_reg <= {KEEP_WIDTH{1'b1}} << START_OFFSET;
+        sum_valid_reg[0] <= 1'b0;
+    end
+end

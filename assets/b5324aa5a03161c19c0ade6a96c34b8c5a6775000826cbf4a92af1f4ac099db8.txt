@@ -1,0 +1,118 @@
+module origen_116472 (
+    input wire clk,
+    input wire dv,
+    input wire [15:0] com,
+    input wire [3:0] data,
+    output reg give_com,
+    output reg [3:0] adr,
+    output reg give_data,
+    output reg write
+);
+
+    // State definition
+    reg [2:0] state, next_state;
+    parameter READ = 3'b000, DECODE = 3'b001, OPERATOR = 3'b010, EXEC = 3'b011, WRITE = 3'b100;
+
+    // Internal registers
+    reg [15:0] command;
+    reg [3:0] operator1, operator2, result;
+    reg [3:0] adr1, adr2, adr_result;
+    reg [1:0] operation;
+    reg [3:0] i;
+    reg op_flag, write_flag;
+
+    // State machine
+    always @(posedge clk) begin
+        state <= next_state;
+    end
+
+    // Next state logic and output control
+    always @(*) begin
+        next_state = state;
+        give_com = 0;
+        give_data = 0;
+        write = 0;
+        
+        case (state)
+            READ: begin
+                give_com = 1;
+                adr = i;
+                if (dv) begin
+                    next_state = DECODE;
+                end
+            end
+            
+            DECODE: begin
+                next_state = OPERATOR;
+            end
+            
+            OPERATOR: begin
+                give_data = 1;
+                if (!op_flag) begin
+                    adr = adr1;
+                end else begin
+                    adr = adr2;
+                end
+                if (dv) begin
+                    if (op_flag) next_state = EXEC;
+                end
+            end
+            
+            EXEC: begin
+                next_state = WRITE;
+            end
+            
+            WRITE: begin
+                write = 1;
+                adr = adr_result;
+                if (write_flag) next_state = READ;
+            end
+        endcase
+    end
+
+    // Datapath and control
+    always @(posedge clk) begin
+        case (state)
+            READ: begin
+                if (dv) command <= com;
+            end
+            
+            DECODE: begin
+                adr1 <= command[4:1];
+                adr2 <= command[8:5];
+                adr_result <= command[12:9];
+                operation <= command[1:0];
+                op_flag <= 0;
+            end
+            
+            OPERATOR: begin
+                if (dv) begin
+                    if (!op_flag) begin
+                        operator1 <= data;
+                        op_flag <= 1;
+                    end else begin
+                        operator2 <= data;
+                    end
+                end
+            end
+            
+            EXEC: begin
+                case (operation)
+                    2'b00: result <= operator2 + operator1;
+                    2'b01: result <= operator2 - operator1;
+                    default: result <= 4'b0000;
+                endcase
+                write_flag <= 0;
+            end
+            
+            WRITE: begin
+                operator1 <= result;
+                write_flag <= 1;
+                if (write_flag) begin
+                    i <= i + 1;
+                end
+            end
+        endcase
+    end
+
+endmodule

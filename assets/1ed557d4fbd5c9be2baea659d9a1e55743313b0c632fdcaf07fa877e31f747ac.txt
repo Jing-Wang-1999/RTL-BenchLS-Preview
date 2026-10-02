@@ -1,0 +1,22 @@
+The module mg_05772 is designed to process multi-channel color data with configurable parameters. It operates based on a clock signal and a reset signal. The module has several inputs and outputs:
+
+Inputs:
+1. `clk`: The clock signal that synchronizes operations.
+2. `rst_n`: An active-low reset signal that initializes the module.
+3. `lm_gain`: A signed integer representing the gain applied to the input data.
+4. `in_enable`: A signal that enables processing of input data.
+5. `in_data`: A multi-channel input data signal, where each channel is represented by a specific width.
+
+Outputs:
+1. `out_ready`: A signal indicating that the output data is ready.
+2. `out_data`: The processed multi-channel output data.
+
+Parameters:
+- `work_mode`: Determines the mode of operation. Mode 0 uses direct assignment, while other modes use registered assignment.
+- `color_channels`: Specifies the number of color channels to process.
+- `color_width`: Defines the bit-width of each color channel.
+
+Behavior:
+The module processes input data across multiple color channels. For each channel, it applies a gain to the input data, resulting in an intermediate sum. This sum is then checked for overflow or underflow conditions. If overflow occurs, the output is clamped to the maximum value; if underflow occurs, it is clamped to zero. Otherwise, the sum is passed through unchanged.
+
+The module uses a control signal (`con_enable`) to determine when the

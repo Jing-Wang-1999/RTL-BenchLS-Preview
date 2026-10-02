@@ -1,0 +1,78 @@
+module origen_038774 (
+    input clk,
+    input reset,
+    input nozzleSwitch,
+    input pressureSensor,
+    output reg fuel_out,
+    output reg [2:0] State_out
+);
+
+    // State definitions
+    localparam [2:0] IDLE = 3'b000;
+    localparam [2:0] FUEL_ON_WAITING = 3'b001;
+    localparam [2:0] FUEL_OFF_READY = 3'b010;
+    localparam [2:0] FUEL_ON_ACTIVE = 3'b011;
+    localparam [2:0] FUEL_OFF_LOCKED = 3'b100;
+
+    // State register
+    reg [2:0] current_state, next_state;
+
+    // State transition logic
+    always @(*) begin
+        case (current_state)
+            IDLE: begin
+                if (nozzleSwitch && pressureSensor)
+                    next_state = FUEL_OFF_READY;
+                else
+                    next_state = FUEL_ON_WAITING;
+            end
+            
+            FUEL_ON_WAITING: begin
+                if (nozzleSwitch && pressureSensor)
+                    next_state = FUEL_OFF_READY;
+                else
+                    next_state = FUEL_ON_WAITING;
+            end
+            
+            FUEL_OFF_READY: begin
+                if (nozzleSwitch && pressureSensor)
+                    next_state = FUEL_OFF_LOCKED;
+                else
+                    next_state = FUEL_ON_ACTIVE;
+            end
+            
+            FUEL_ON_ACTIVE: begin
+                if (nozzleSwitch && pressureSensor)
+                    next_state = FUEL_OFF_LOCKED;
+                else
+                    next_state = FUEL_ON_ACTIVE;
+            end
+            
+            FUEL_OFF_LOCKED: begin
+                next_state = FUEL_OFF_LOCKED;
+            end
+            
+            default: begin
+                next_state = IDLE;
+            end
+        endcase
+    end
+
+    // State register update
+    always @(posedge clk) begin
+        if (reset)
+            current_state <= IDLE;
+        else
+            current_state <= next_state;
+    end
+
+    // Output logic
+    always @(*) begin
+        // Fuel output is high only in states 1 and 3
+        fuel_out = (current_state == FUEL_ON_WAITING) || (current_state == FUEL_ON_ACTIVE);
+        
+        // State output
+        State_out = current_state;
+    end
+
+endmodule

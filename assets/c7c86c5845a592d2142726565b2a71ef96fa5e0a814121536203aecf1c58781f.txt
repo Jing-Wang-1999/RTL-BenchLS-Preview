@@ -1,0 +1,73 @@
+module mg_06532 (
+    input wire clk,
+    input wire rst_n,
+    input wire [0:0] work_mode,
+    input wire in_enable,
+    input wire [0:0] template,
+    input wire [0:0] in_data,
+    output reg out_ready,
+    output reg out_data
+);
+
+    // Parameter for window width (configurable)
+    parameter window_width = 1;
+    localparam WINDOW_SIZE = window_width * window_width;
+    
+    // Internal signals
+    reg match_result;
+    reg enable_trigger;
+    reg enable_sync;
+    
+    // Generate match result (combinational)
+    always @* begin
+        match_result = (in_data == template);
+    end
+    
+    // Synchronize enable signal for edge detection
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            enable_sync <= 1'b0;
+        end else begin
+            enable_sync <= in_enable;
+        end
+    end
+    
+    // Detect rising edge of in_enable
+    assign enable_trigger = in_enable && !enable_sync;
+    
+    // Main operation logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            out_ready <= 1'b0;
+            out_data <= 1'b0;
+        end else begin
+            case (work_mode)
+                // Mode 0: Synchronous operation
+                1'b0: begin
+                    if (in_enable) begin
+                        out_ready <= 1'b1;
+                        out_data <= match_result;
+                    end else begin
+                        out_ready <= 1'b0;
+                    end
+                end
+                
+                // Mode 1: Asynchronous/event-driven operation
+                1'b1: begin
+                    if (enable_trigger) begin
+                        out_ready <= 1'b1;
+                        out_data <= match_result;
+                    end else begin
+                        out_ready <= 1'b0;
+                    end
+                end
+                
+                default: begin
+                    out_ready <= 1'b0;
+                    out_data <= 1'b0;
+                end
+            endcase
+        end
+    end
+
+endmodule

@@ -1,0 +1,8 @@
+always @(posedge i_clk)
+	if (i_reset)
+		o_frame_err <= 1'b0;
+	else if ((zero_baud_counter)&&((state == RXU_STOP)
+					||(state == RXU_SECOND_STOP)))
+		o_frame_err <= (o_frame_err)||(~ck_uart);
+	else if ((zero_baud_counter)||(state >= RXU_BREAK))
+		o_frame_err <= 1'b0;

@@ -1,0 +1,3 @@
+# Specification
+
+`origen_057857` has clock `clk`, active-high asynchronous `reset`, state inputs `state_alu`, `state_fetch`, `state_read`, `state_write`, operand `ob[31:0]`, controls `destpdlp`, `destpdlx`, `pdlcnt`, `srcpdlidx`, `srcpdlpop`, `srcpdlptr`, registered outputs `pdlidx[9:0]`, `pdlptr[9:0]`, and combinational outputs `pidrive`, `ppdrive`. Reset clears both pointers. On a rising edge, state_write & destpdlx loads pdlidx from ob[9:0]. For pdlptr, state_read has priority: ~destpdlp & pdlcnt & ~srcpdlpop increments it. Otherwise state_fetch loads ob[9:0] when destpdlp, or decrements when pdlcnt & srcpdlpop. Other cases hold. pidrive=srcpdlidx&(state_alu|state_write|state_fetch); ppdrive is analogous with srcpdlptr. Ten-bit arithmetic wraps.

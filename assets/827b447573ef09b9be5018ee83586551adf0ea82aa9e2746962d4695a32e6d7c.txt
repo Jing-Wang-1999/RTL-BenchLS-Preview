@@ -1,0 +1,56 @@
+**Module Specification: origen_064698**
+
+**Overview**  
+This module implements a finite state machine (FSM) that monitors environmental and system inputs to control temperature alerts, smoke detection, electrical status, and a sequence of ejection signals. The system operates synchronously with a clock and can be reset to an initial state.
+
+**Inputs**  
+- **Clk**: System clock; state transitions occur on the rising edge.  
+- **Reset**: Asynchronous reset; when asserted, the FSM returns to the initial state (s0).  
+- **Humo**: Smoke detection input; a high value indicates smoke is present.  
+- **T1**: Temperature sensor 1 input; a high value indicates a high-temperature condition.  
+- **T2**: Temperature sensor 2 input; used in combination with T1 to detect medium-temperature conditions.  
+- **CS**: Control or electrical status input; a high value triggers an electrical alert.
+
+**Outputs**  
+- **TempAlto**: High-temperature alert; asserted when a high-temperature condition is detected.  
+- **TempMedio**: Medium-temperature alert; asserted when a medium-temperature condition is detected.  
+- **HumoOut**: Smoke alert; asserted when smoke is detected.  
+- **Elec**: Electrical alert; asserted when the CS input is high in the appropriate state.  
+- **EJECA, EJECB, EJECC, EJECD**: Ejection control signals; each is asserted in specific states to indicate progression through the sequence.
+
+**Behavior**  
+The FSM has eight states (s0 through s7) and transitions based on input conditions. Outputs are asserted combinationally according to the current state and, in some cases, the inputs. All outputs default to low unless specified.
+
+**State Transitions and Outputs**  
+1. **State s0 (Initial)**:  
+   - If T1 is high, transition to s1, assert TempAlto and EJECA.  
+   - Otherwise, transition to s2 and assert EJECA.
+
+2. **State s1**: Transition unconditionally to s2 with no additional outputs.
+
+3. **State s2**:  
+   - If T1 is low and T2 is high, transition to s3, assert TempMedio and EJECB.  
+   - Otherwise, transition to s4 and assert EJECB.
+
+4. **State s3**: Transition unconditionally to s4 with no additional outputs.
+
+5. **State s4**:  
+   - If Humo is high, transition to s5, assert HumoOut and EJECC.  
+   - Otherwise, transition to s6 and assert EJECC.
+
+6. **State s5**: Transition unconditionally to s6 with no additional outputs.
+
+7. **State s6**:  
+   - If CS is high, transition to s7, assert Elec and EJECD.  
+   - Otherwise, transition to s0 and assert EJECD.
+
+8. **State s7**: Transition unconditionally to s0 with no additional outputs.
+
+**Key Notes**  
+- The FSM is designed to progress through a sequence where each major condition (high temperature, medium temperature, smoke, electrical status) is checked in order, with ejection signals (EJECA–EJECD) marking each step.  
+- Transitions from odd-numbered states (s1, s3, s5, s7) are unconditional and serve as delay or confirmation states.  
+- The system returns to the initial state (s0) after completing the sequence or if the CS condition is not met in state s6.  
+- All outputs are glitch-free and synchronous to the clock except during reset.
+
+**Allowed Sub-modules**  
+Only basic combinational and sequential logic elements (e.g., registers, gates) may be used; no additional FSMs or complex modules are required.

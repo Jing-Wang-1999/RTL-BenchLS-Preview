@@ -1,0 +1,73 @@
+module autovcoder_063080 (
+    OCLK,
+    EOUT,
+    DOUT,
+    E,
+    D
+);
+  input E, D, OCLK;
+  output EOUT, DOUT;
+  supply1 VCC_0;
+  supply0 GND_0;
+  reg NOTIFY_REG;
+
+  // create Logics for combinatorial output Logics! 
+
+  buf BUF_DOUT_0 (DOUT, D);
+
+  // create the sequential logic -- DFF flip-flop plus comb input logic
+
+  Dffpr DF_0 (
+      EOUT,
+      E,
+      OCLK,
+      VCC_0,
+      VCC_0,
+      GND_0,
+      NOTIFY_REG
+  );
+
+  // some temp signals created for timing checking sections
+
+
+  //--------------------------------------------------------------
+  //              Timing Checking Section 
+  //-------------------------------------------------------------
+
+  specify
+
+    specparam tpdLH_D_to_DOUT = (0.1: 0.1: 0.1);
+    specparam tpdHL_D_to_DOUT = (0.1: 0.1: 0.1);
+    specparam tpdLH_OCLK_to_EOUT = (0.1: 0.1: 0.1);
+    specparam tpdHL_OCLK_to_EOUT = (0.1: 0.1: 0.1);
+
+    // checking timing path for combinatorial output
+
+    (D => DOUT) = (tpdLH_D_to_DOUT, tpdHL_D_to_DOUT);
+
+    //check timing delay for output
+
+    (posedge OCLK => (EOUT +: E)) = (tpdLH_OCLK_to_EOUT, tpdHL_OCLK_to_EOUT);
+
+    //checking setup and hold timing for inputs
+
+    $setup(posedge E, posedge OCLK, 0.0, NOTIFY_REG);
+    $setup(negedge E, posedge OCLK, 0.0, NOTIFY_REG);
+    $hold(posedge OCLK, posedge E, 0.0, NOTIFY_REG);
+    $hold(posedge OCLK, negedge E, 0.0, NOTIFY_REG);
+
+    //checking timing for control signals
+
+
+    //checking the pulse width
+
+    $width(posedge OCLK, 0, 0, NOTIFY_REG);
+    $width(negedge OCLK, 0, 0, NOTIFY_REG);
+
+    //checing the recovery data
+
+
+  endspecify
+
+endmodule
+

@@ -1,0 +1,20 @@
+# Implement the Secworks SHA-224/SHA-256 project
+Read specification/project.md (unchanged upstream README) and implement the four required RTL files with sha256 as the 32-bit bus top. Streaming/AXI wrappers are separate configurations. This core compresses already-padded 512-bit blocks; the caller performs padding. Both SHA-224 and SHA-256 are required.
+
+Curator interface clarification, reviewed against the pinned release before evaluation:
+- Rising-edge clock; asynchronous active-low reset_n. cs && we writes a word-addressed register on an edge. cs && !we selects a combinational read. No handshake/acknowledgment; unmapped reads and read_data when deselected/writing are zero. error is always zero in this release, including invalid addresses.
+- Identity registers 0x00/01/02 return 0x73686132/0x2d323536/0x312e3830. Control 0x08 bits 0/1 are one-cycle registered init/next strobes; bit 2 is mode (1 SHA-256, 0 SHA-224), reset to 1. Every control write also writes mode. Thus 0x05 starts a new SHA-256 message, 0x06 continues it; 0x01/02 select SHA-224. Read control reflects {mode,next,init}. Status 0x09 bits 0/1 reports ready/digest_valid through one wrapper register stage.
+- Block words 0x10..1f are read/write, MSW first. Digest words 0x20..27 are read-only, MSW first. Wrapper block/digest/control/status storage resets to zero except mode=1. Digest storage updates when core digest_valid is high. SHA-224 uses the first seven digest words; the eighth is the core's extra chaining word, not part of the 224-bit digest.
+- init starts compression with the standard mode-dependent initial hash; next continues with the preceding chaining state. Keep mode fixed within a message. Wait for ready to become low then high before starting another block or reading the completed digest. Inputs are sampled at the accepted block command; wrapper block registers can be loaded while the previous block computes. Do not overlap init/next or issue commands while busy.
+- sha256_core implements the 64 standard rounds, 32-bit modular additions, message expansion and feed-forward. sha256_k_constants is the combinational 64-entry standard SHA-256 constant ROM indexed by round. sha256_w_mem loads the 16 MSW-first words on init and advances its sliding message schedule on next: W[t]=sigma1(W[t-2])+W[t-7]+sigma0(W[t-15])+W[t-16] modulo 2^32. Its w port supplies the selected initial word for rounds 0..15 and the expanded word afterward. sigma0=ROTR7 xor ROTR18 xor SHR3; sigma1=ROTR17 xor ROTR19 xor SHR10.
+- Core ready is high at reset; digest_valid clears on reset and a newly accepted command, and asserts on completion. Stable completed outputs and finite ready-handshake completion are required; internal state names are unrestricted.
+
+Original-document scope: README specifies the algorithm, two modes, unpadded block API, buffering and control-mode caveat. Exact bus addresses/identity/reset behavior above are curator clarifications from the pinned RTL. The original w-memory bench only prints state and is retained unscored; checked core and bus benches exercise its operation through the complete design.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

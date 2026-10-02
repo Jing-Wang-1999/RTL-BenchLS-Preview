@@ -1,0 +1,17 @@
+always @(posedge req_aclk) begin
+    if (req_aresetn == 1'b0) begin
+      transfer_id <= 'h0;
+      req_address <= 'h0;
+    end else if (req_valid && req_ready) begin
+      transfer_id <= 'h0;
+      req_address <= FRAMELOCK_MODE ? req_src_address : req_dest_address;
+    end else if (calc_enable) begin
+      if (transfer_id == req_flock_framenum) begin
+        transfer_id <= 'h0;
+        req_address <= FRAMELOCK_MODE ? req_src_address : req_dest_address;
+      end else begin
+        transfer_id <= transfer_id_p1[MAX_NUM_FRAMES_WIDTH-1:0];
+        req_address <= req_address + req_flock_stride[DMA_AXI_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH];
+      end
+    end
+  end

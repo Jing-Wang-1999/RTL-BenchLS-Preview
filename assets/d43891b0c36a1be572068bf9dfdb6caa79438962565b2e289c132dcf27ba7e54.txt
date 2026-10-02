@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.0dbb9ca01cd86abad02e.7b63ae2085a9",
+  "compile_check": {
+    "case_id": "s1derived.0dbb9ca01cd86abad02e.7b63ae2085a9",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_097092",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_097092.0468bf53ed7348f3/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.0dbb9ca01cd86abad02e",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "0dbb9ca01cd86abad02e0c5456bc357004a2e75d63e4f3cc184f1ed7a340331f",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0dbb9ca01cd86abad02e.7b63ae2085a9",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_097092.0468bf53ed7348f3/private/commercial_positive.log",
+    "commercial_log_sha256": "8bddabd98f6ffd514682efe26f5f2879fa9ebf687fcaa985c53519d777a1bca1",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_097092.0468bf53ed7348f3/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "origen_097092"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.origen_097092.0468bf53ed7348f3",
+    "parent_id": "s1p.0dbb9ca01cd86abad02e",
+    "revised_tops": [
+      "origen_097092"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_097092",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0dbb9ca01cd86abad02e.7b63ae2085a9",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Checked all eight decoded opcode branches and default controls. Reset clears the procedural control outputs while the continuous fence comparison remains active; invert is unused. ALUop from funct[2:1], U/J immediate selectors and writeback selectors match each case exactly.",
+        "rtl_excerpt": "assign fence = (opcode == 7'b0001111);",
+        "specification_excerpt": "does not mask `fence`, which is always one exactly for opcode `0001111`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0dbb9ca01cd86abad02e",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "4a42b891f059f371f8a27dd26749b6592c5c3d71f3f737e7b1326010e8d5d5b5",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0dbb9ca01cd86abad02e0c5456bc357004a2e75d63e4f3cc184f1ed7a340331f",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_097092.0468bf53ed7348f3/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_097092.0468bf53ed7348f3/private/historical_harness/01_conformal_rtl_origen_097092.do"
+  ],
+  "parent_id": "s1p.0dbb9ca01cd86abad02e",
+  "primary_review": {
+    "case_id": "s1derived.0dbb9ca01cd86abad02e.7b63ae2085a9",
+    "checks": {
+      "behavior": "Listed decode cases agree, but complete opcode outputs and fence/reset behavior are missing.",
+      "boundaries": "checked selector/opcode ranges, widths, arithmetic and state/default paths",
+      "interface": "checked complete RTL port names, directions and widths against prose",
+      "rtl_reasonableness": "reasonable hardware for stated behavior",
+      "sequential_and_reset": "checked clock/reset edges, initialization, update, hold, priority and latency"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Listed decode cases agree, but complete opcode outputs and fence/reset behavior are missing.",
+        "rtl_excerpt": "priority decode with defaults; fence=(opcode==0001111) independent of reset",
+        "spec_excerpt": "Opcode decoding drives ALU, branch, memory, jump, CSR and writeback controls."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification truncates before completing J/CSR/load/default behavior and reset does not suppress combinational fence.",
+        "rtl_evidence": "priority decode with defaults; fence=(opcode==0001111) independent of reset",
+        "spec_evidence": "Opcode decoding drives ALU, branch, memory, jump, CSR and writeback controls.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.0dbb9ca01cd86abad02e",
+    "proposed_specification_path": "proposed_repairs_3_sol_03/s1derived.0dbb9ca01cd86abad02e.7b63ae2085a9.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0dbb9ca01cd86abad02e0c5456bc357004a2e75d63e4f3cc184f1ed7a340331f",
+    "source_group": "S2",
+    "specification_sha256": "7b63ae2085a997f25e7f17f3286dc9a72eb22b067034be5d649ec076666eda49",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_03/s1derived.0dbb9ca01cd86abad02e.7b63ae2085a9.md",
+  "qualified_specification_sha256": "4a42b891f059f371f8a27dd26749b6592c5c3d71f3f737e7b1326010e8d5d5b5",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_097092.0468bf53ed7348f3/private/golden_design.v",
+  "rtl_sha256": "0dbb9ca01cd86abad02e0c5456bc357004a2e75d63e4f3cc184f1ed7a340331f",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_097092.0468bf53ed7348f3/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "7b63ae2085a997f25e7f17f3286dc9a72eb22b067034be5d649ec076666eda49",
+  "top_module": "origen_097092"
+}

@@ -1,0 +1,68 @@
+module origen_091847 (
+    input [15:0] Data,
+    input Clear,
+    input CLK_slow,
+    output reg [3:0] Select,
+    output reg [7:0] Segment
+);
+
+    reg [1:0] counter;
+    wire [3:0] digit;
+    reg [6:0] segment_pattern;
+
+    // Counter logic
+    always @(posedge CLK_slow or posedge Clear) begin
+        if (Clear)
+            counter <= 2'b00;
+        else
+            counter <= counter + 1'b1;
+    end
+
+    // Digit selection mux
+    assign digit = (counter == 2'b00) ? Data[3:0] :
+                   (counter == 2'b01) ? Data[7:4] :
+                   (counter == 2'b10) ? Data[11:8] :
+                   Data[15:12];
+
+    // 7-segment decoder for hexadecimal digits
+    always @* begin
+        case (digit)
+            4'h0: segment_pattern = 7'b0111111;
+            4'h1: segment_pattern = 7'b0000110;
+            4'h2: segment_pattern = 7'b1011011;
+            4'h3: segment_pattern = 7'b1001111;
+            4'h4: segment_pattern = 7'b1100110;
+            4'h5: segment_pattern = 7'b1101101;
+            4'h6: segment_pattern = 7'b1111101;
+            4'h7: segment_pattern = 7'b0000111;
+            4'h8: segment_pattern = 7'b1111111;
+            4'h9: segment_pattern = 7'b1101111;
+            4'hA: segment_pattern = 7'b1110111;
+            4'hB: segment_pattern = 7'b1111100;
+            4'hC: segment_pattern = 7'b0111001;
+            4'hD: segment_pattern = 7'b1011110;
+            4'hE: segment_pattern = 7'b1111001;
+            4'hF: segment_pattern = 7'b1110001;
+            default: segment_pattern = 7'b0000000;
+        endcase
+    end
+
+    // Output logic
+    always @* begin
+        // Select output (active-low, one-hot)
+        case (counter)
+            2'b00: Select = 4'b1110;
+            2'b01: Select = 4'b1101;
+            2'b10: Select = 4'b1011;
+            2'b11: Select = 4'b0111;
+            default: Select = 4'b1111;
+        endcase
+
+        // Segment output (active-low, bit 7 unused)
+        if (Clear)
+            Segment = 8'b11111111;
+        else
+            Segment = {1'b1, ~segment_pattern};
+    end
+
+endmodule

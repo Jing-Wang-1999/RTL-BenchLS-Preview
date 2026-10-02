@@ -1,0 +1,30 @@
+# Specification for SDP_Y_INP_mgc_shift_r_v4 Module
+
+## Overview
+This module implements a parameterized right-shift operation with configurable signedness. It performs arithmetic or logical right shifts based on whether the input is treated as signed or unsigned.
+
+## Parameters
+- **width_a**: Bit width of the input data to be shifted (default: 4 bits)
+- **signd_a**: Signedness flag for input 'a' (1 = signed, 0 = unsigned; default: 1)
+- **width_s**: Bit width of the shift amount input (default: 2 bits)
+- **width_z**: Bit width of the output result (default: 8 bits)
+
+## Inputs
+- **a**: The data value to be shifted, with width specified by width_a parameter
+- **s**: The shift amount (unsigned), with width specified by width_s parameter
+
+## Outputs
+- **z**: The shifted result, with width specified by width_z parameter
+
+## Behavior
+
+### Signed Mode (signd_a = 1)
+When the input is treated as signed:
+- Performs arithmetic right shift
+- Sign-extends the result using the most significant bit (MSB) of input 'a'
+- Preserves the sign of the original value during shifting
+- Fills vacated left positions with copies of the sign bit
+
+### Unsigned Mode (signd_a = 0)
+When the input is treated as unsigned:
+-

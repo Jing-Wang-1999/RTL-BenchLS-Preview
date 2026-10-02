@@ -1,0 +1,55 @@
+always @ (*) begin
+	// Pass through by default
+	d_rs1             = raw_rs1 & REGADDR_MASK;
+	d_rs2             = raw_rs2 & REGADDR_MASK;
+	d_rd              = raw_rd  & REGADDR_MASK;
+	d_imm             = raw_imm;
+	d_alusrc_a        = raw_alusrc_a;
+	d_alusrc_b        = raw_alusrc_b;
+	d_aluop           = raw_aluop;
+	d_memop           = raw_memop;
+	d_mulop           = raw_mulop;
+	d_csr_ren         = raw_csr_ren;
+	d_csr_wen         = raw_csr_wen;
+	d_csr_wtype       = raw_csr_wtype;
+	d_csr_w_imm       = raw_csr_w_imm;
+	d_branchcond      = raw_branchcond;
+	d_addr_is_regoffs = raw_addr_is_regoffs;
+	d_except          = raw_except;
+	d_sleep_wfi       = raw_sleep_wfi;
+	d_sleep_block     = raw_sleep_block;
+	d_sleep_unblock   = raw_sleep_unblock;
+	d_fence_i         = raw_fence_i;
+	d_fence_d         = raw_fence_d;
+
+	if (d_invalid || d_starved || d_except_instr_bus_fault || partial_predicted_branch) begin
+		d_rs1             = {W_REGADDR{1'b0}};
+		d_rs2             = {W_REGADDR{1'b0}};
+		d_rd              = {W_REGADDR{1'b0}};
+		d_memop           = MEMOP_NONE;
+		d_branchcond      = BCOND_NEVER;
+		d_csr_ren         = 1'b0;
+		d_csr_wen         = 1'b0;
+		d_except          = EXCEPT_NONE;
+		d_sleep_wfi       = 1'b0;
+		d_sleep_block     = 1'b0;
+		d_sleep_unblock   = 1'b0;
+		d_fence_i         = 1'b0;
+		d_fence_d         = 1'b0;
+
+		if (EXTENSION_M)
+			d_aluop = ALUOP_ADD;
+
+		if (d_except_instr_bus_fault)
+			d_except = EXCEPT_INSTR_FAULT;
+		else if (d_invalid && !d_starved)
+			d_except = EXCEPT_INSTR_ILLEGAL;
+	end
+	if (partial_predicted_branch) begin
+		d_addr_is_regoffs = 1'b0;
+		d_branchcond = BCOND_ALWAYS;
+	end
+	if (cir_lock_prev) begin
+		d_branchcond = BCOND_NEVER;
+	end
+end

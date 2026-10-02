@@ -1,0 +1,56 @@
+module origen_144192 (
+    input wire clk,
+    input wire [7:0] adc_d,
+    input wire [7:0] lf_ed_threshold,
+    output reg [7:0] max,
+    output reg [7:0] min,
+    output reg [7:0] high_threshold,
+    output reg [7:0] highz_threshold,
+    output reg [7:0] lowz_threshold,
+    output reg [7:0] low_threshold,
+    output reg edge_state,
+    output reg edge_toggle
+);
+
+    reg [7:0] prev_adc_d;
+    reg trigger_enabled;
+    reg [7:0] hysteresis;
+
+    // Min-Max Tracker
+    always @(posedge clk) begin
+        if (adc_d > max) max <= adc_d;
+        if (adc_d < min) min <= adc_d;
+    end
+
+    // Threshold Calculations
+    always @(posedge clk) begin
+        high_threshold <= max - ((max - min) >> 2);
+        highz_threshold <= (max - min) >> 3;
+        lowz_threshold <= -((max - min) >> 3);
+        low_threshold <= min + ((max - min) >> 2);
+    end
+
+    // Edge Detection with Hysteresis
+    always @(posedge clk) begin
+        prev_adc_d <= adc_d;
+        hysteresis <= (max - min) >> 4;
+
+        if (trigger_enabled) begin
+            if (adc_d >= high_threshold && prev_adc_d < high_threshold && (adc_d - high_threshold) > hysteresis) begin
+                edge_state <= 1'b1;
+                edge_toggle <= ~edge_toggle;
+                trigger_enabled <= 1'b0;
+            end else if (adc_d <= low_threshold && prev_adc_d > low_threshold && (low_threshold - adc_d) > hysteresis) begin
+                edge_state <= 1'b0;
+                edge_toggle <= ~edge_toggle;
+                trigger_enabled <= 1'b0;
+            end
+        end
+
+        // Reset trigger_enabled when signal goes near zero
+        if (adc_d >= lowz_threshold && adc_d <= highz_threshold) begin
+            trigger_enabled <= 1'b1;
+        end
+    end
+
+endmodule

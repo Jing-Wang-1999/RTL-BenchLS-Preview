@@ -1,0 +1,124 @@
+"""Independent numeric tests for the documented LUT trigonometric project."""
+import math
+import random
+import struct
+from pathlib import Path
+SOURCE=Path('/home/jwangjw/project_3rd/ICLR-RTL-BenchLS-backup-jul-29/sources/opencores_git_mirror/arithmetic_core_trigonometric_functions_degrees_in_double_fpu')
+NAMES=['sine','cosine','tangent','cosecant','secant','cotangent']
+HEAD='''`timescale 1ns/1ps
+module tb;
+reg clk=0,rst=0,enable=0;reg[31:0]degrees=0;reg[1:0]quad=0;reg[2:0]actv=0;wire[63:0]data;
+always #5 clk=~clk;
+task tick;begin @(posedge clk);#1;end endtask
+initial begin #2000000;$fatal(1,"timeout");end
+// Compare sign and finite binary64 magnitude within 64 representable steps.
+task check;input[63:0]expected;reg[63:0]delta;begin
+if((^data)===1'bx)$fatal(1,"unknown result");
+if(data[63]!==expected[63])$fatal(1,"sign %h != %h",data,expected);
+if(expected[62:52]==2047 || expected[62:0]==0)begin
+if(data!==expected)$fatal(1,"special value %h != %h",data,expected);end
+else begin
+if(data[62:52]==2047)$fatal(1,"nonfinite result");
+delta=data[62:0]>expected[62:0]?data[62:0]-expected[62:0]:expected[62:0]-data[62:0];
+if(delta>64)$fatal(1,"numeric result %h != %h",data,expected);end
+end endtask
+'''
+END='$display("RTL_BENCHLS_PASS");$finish(0);end endmodule\n'
+
+def expected(fn,d,q):
+    a=math.radians(d)
+    if d==0:values=[0.,1.,0.,math.inf,1.,math.inf]
+    elif d==90:values=[1.,0.,math.inf,1.,math.inf,0.]
+    else:values=[math.sin(a),math.cos(a),math.tan(a),1/math.sin(a),1/math.cos(a),1/math.tan(a)]
+    sign=q in ([2,3] if fn in [0,3] else [1,2] if fn in [1,4] else [1,3])
+    bits=struct.unpack('>Q',struct.pack('>d',values[fn]))[0]
+    return bits | (int(sign)<<63)
+
+def fold(d):
+    if d>360:
+        r=d%360
+        if r>270:return r-270,3 # pinned legacy branch, disclosed in public contract
+        if r>180:return r-180,2
+        if r>90:return 180-r,1
+        return r,0
+    if d>270:return 360-d,3
+    if d>180:return d-180,2
+    if d>90:return 180-d,1
+    return d,0
+
+def unit(fn):
+    s=HEAD+f'{NAMES[fn]}_lut dut(quad,enable,degrees,data,rst,clk);\ninitial begin enable=1;\n'
+    for q in range(4):
+        for d in range(91):s+=f"@(negedge clk);quad={q};degrees={d};tick;check(64'h{expected(fn,d,q):016x});\n"
+    # rst is unused by these legacy submodules, so no invented reset behavior.
+    return s+END
+
+def top_test(mode):
+    s=HEAD+'top dut(enable,degrees,data,rst,actv,clk);\ninitial begin rst=1;repeat(3)tick;@(negedge clk);rst=0;enable=1;\n'
+    rng=random.Random(9060701+mode)
+    if mode==0:angles=list(range(361));rng.shuffle(angles)
+    else:angles=[360*k+d for k in [1,2,27,10000] for d in [0,1,89,90,91,179,180,181,269,270,271,299,359]]+[rng.randrange(361,2**32) for _ in range(64)]
+    for d in angles:
+        a,q=fold(d)
+        for fn in range(6):s+=f"@(negedge clk);degrees=32'd{d};actv={fn};repeat(8)tick;check(64'h{expected(fn,a,q):016x});\n"
+    for fn in [6,7]:s+=f"@(negedge clk);actv={fn};tick;if(data!==0)$fatal(1,\"invalid selector\");\n"
+    s+='@(negedge clk);rst=1;enable=0;repeat(4)tick;@(negedge clk);rst=0;enable=1;degrees=30;actv=0;repeat(8)tick;check(64\'h3fe0000000000000);\n'
+    return s+END
+
+def divider():
+    s='''`timescale 1ns/1ps
+module tb;reg clk=0,rst=0;reg[31:0]inp=0;wire[31:0]out;
+always #5 clk=~clk;dividor dut(clk,inp,rst,out);
+initial begin
+'''
+    rng=random.Random(9060703)
+    for i,d in enumerate([0,1,359,360,361,2**32-1]+[rng.getrandbits(32) for _ in range(200)]):
+        reset=i%19==0;s+=f"@(negedge clk);rst={int(reset)};inp=32'd{d};@(posedge clk);#1;if(out!==32'd{0 if reset else d%360})$fatal(1,\"modulo/reset\");\n"
+    return s+END
+
+INSTRUCTION='''# Implement the trigonometric LUT project
+Implement all eight required modules/files from the original specification:
+six degree LUTs, the unsigned modulo-360 `dividor`, and integration `top`.
+Input degrees are unsigned 32-bit integers, not binary64 inputs. Output is
+IEEE binary64 encoded bits. actv=0..5 selects sin, cos, tan, csc, sec, cot;
+actv=6/7 produces zero at the next rising edge. Implement synthesizable integer
+logic/constant LUTs. Python may generate mathematical constants during development;
+real arithmetic, simulation system functions and initial blocks in RTL are forbidden.
+
+Numeric contract: first-quadrant LUT degrees cover integers 0..90 inclusive.
+Return the corresponding absolute function magnitude and apply the supplied
+quadrant sign: sin/csc negative for quad2/3, cos/sec for quad1/2, tan/cot for
+quad1/3. Exact endpoints are sin(0)=0, cos(0)=1, tan(0)=0, csc(0)=infinity,
+sec(0)=1, cot(0)=infinity; at90: 1,0,infinity,1,infinity,0 respectively.
+Apply quadrant sign even to zero/infinity. Finite nonzero binary64 results
+allow at most 64 ULP from the mathematical value; exact reference LUT bit
+patterns are not required. The source's rounded constants vary by up to16 ULP
+from ordinary host math in the audited 1..89 range.
+
+Clock/control contract: each enabled LUT updates at a rising edge. Its rst
+port is unused in the pinned implementation. Disabled LUT results are unspecified.
+The divider produces inp%360 at each rising edge; active-high synchronous rst
+produces zero. Top rst synchronously disables internal enables. Hold degrees,
+actv and enable stable for eight clocks after changes before sampling top data.
+Transient pipeline outputs, reset data and disabled valid-function data are
+unspecified; there is no valid/ready signal. Check integration after re-enabling.
+
+Top angle reduction is pinned legacy compatibility behavior, including a known
+difference from the PDF for inputs above360 in quadrant4:
+- For d<=360: d<=90 uses (d,quad0); 90<d<=180 uses (180-d,quad1);
+  180<d<=270 uses (d-180,quad2); 270<d<=360 uses (360-d,quad3).
+- For d>360 use r=d%360. r<=90 uses (r,quad0); 90<r<=180 uses
+  (180-r,quad1); 180<r<=270 uses (r-180,quad2); 270<r<360 uses
+  (r-270,quad3). That last branch differs from mathematical angle reduction;
+  preserve it for this compatibility case. Example: d=659 selects magnitude
+  at29 degrees with quadrant3 sign. Do not silently use 61 degrees instead.
+
+Private points cover every first-quadrant integer and sign combination, divider
+boundaries/random inputs, integration over0..360, and larger unsigned inputs.
+Public feedback is compilation only. Original reference LUT contents are hidden.
+'''
+
+def trig_spec():
+    return dict(case_id='opencores_trig64_v1',project='arithmetic_core_trigonometric_functions_degrees_in_double_fpu',top='top',preprocess=True,instruction=INSTRUCTION,builder_source=__file__,original_tests=[str(SOURCE/'testbench/top_tb.v')],
+        tests=[(name,name+'_lut',unit(i)) for i,name in enumerate(NAMES)]+[('modulo','dividor',divider()),('top_degrees','top',top_test(0)),('top_modulo','top',top_test(1))],
+        mutations=[('sin_sign','verilog/sine.v',"data[63] <= 1'b1","data[63] <= 1'b0"),('cos_value','verilog/cosine.v',"64'h3fe6a09e667f3bcd","64'h3ff0000000000000"),('modulo','verilog/divider.v','inp % DIVISOR','inp % 359'),('selector','verilog/top.v','data1 <= data_sin','data1 <= data_cos'),('quadrant','verilog/top.v',"quad <= 2'b11","quad <= 2'b00")])

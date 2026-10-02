@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.a453574e0e321dc9bea3.4379d1a8323d",
+  "compile_check": {
+    "case_id": "s1derived.a453574e0e321dc9bea3.4379d1a8323d",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_08977",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_08977.39b6808234e21a04/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.a453574e0e321dc9bea3",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "a453574e0e321dc9bea36f05a51726138c94a4cee780e932b8c73db7a6b2518f",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.a453574e0e321dc9bea3.4379d1a8323d",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_08977.39b6808234e21a04/private/commercial_positive.log",
+    "commercial_log_sha256": "0086739bbe52d62c9767eefc9901833f03521e15bf734e627f524edd73db4c78",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_08977.39b6808234e21a04/private/historical_harness/00_sec_rtlpp_08977.tcl",
+    "executed_script_sha256": "643c21ac2b72ed78ffe4938ef1fa61dec13b7d4793a88cca21cafc107b16649f",
+    "golden_tops": [
+      "rtlpp_08977"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.rtlpp_08977.39b6808234e21a04",
+    "parent_id": "s1p.a453574e0e321dc9bea3",
+    "revised_tops": [
+      "rtlpp_08977"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_08977",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.a453574e0e321dc9bea3.4379d1a8323d",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All1024x32 memory dimensions, byte mask ordering, clock enable and chipselect-only-write behavior match the registered read-before-write contract.",
+        "rtl_excerpt": "readdata <= mem[address];",
+        "specification_excerpt": "return the old word"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.a453574e0e321dc9bea3",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "85f3a8a0fa1fdba2ca4adf70eaf5621c9ec63bd037fa4aa2289f3eac64eb9153",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "a453574e0e321dc9bea36f05a51726138c94a4cee780e932b8c73db7a6b2518f",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_08977.39b6808234e21a04/private/historical_harness/00_sec_rtlpp_08977.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_08977.39b6808234e21a04/private/historical_harness/01_sec_rtlpp_08977.tcl"
+  ],
+  "parent_id": "s1p.a453574e0e321dc9bea3",
+  "primary_review": {
+    "case_id": "s1derived.a453574e0e321dc9bea3.4379d1a8323d",
+    "checks": {
+      "behavior": "Checked byte writes, synchronous reads, and enables.",
+      "boundaries": "Checked partial writes and same-address read/write.",
+      "interface": "All ports and memory dimensions match.",
+      "rtl_reasonableness": "Reasonable byte-enable memory.",
+      "sequential_and_reset": "No reset; state updates on rising edges with clken."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The original ends abruptly and lacks boundary semantics needed for equivalence.",
+        "rtl_excerpt": "if (clken) begin ... readdata <= mem[address];",
+        "spec_excerpt": "**Sub-mod"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose truncates and omits read-during-write, hold, and uninitialized-memory semantics.",
+        "rtl_evidence": "mem[address][...] <= writedata[...]; readdata <= mem[address]",
+        "spec_evidence": "**Sub-mod",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.a453574e0e321dc9bea3",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.a453574e0e321dc9bea3.4379d1a8323d.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "a453574e0e321dc9bea36f05a51726138c94a4cee780e932b8c73db7a6b2518f",
+    "source_group": "S4",
+    "specification_sha256": "4379d1a8323d3659f139e7073755ea570e4b7c5768756f22b6eb6617ec2af856",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.a453574e0e321dc9bea3.4379d1a8323d.md",
+  "qualified_specification_sha256": "85f3a8a0fa1fdba2ca4adf70eaf5621c9ec63bd037fa4aa2289f3eac64eb9153",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_08977.39b6808234e21a04/private/golden_design.v",
+  "rtl_sha256": "a453574e0e321dc9bea36f05a51726138c94a4cee780e932b8c73db7a6b2518f",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_08977.39b6808234e21a04/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "4379d1a8323d3659f139e7073755ea570e4b7c5768756f22b6eb6617ec2af856",
+  "top_module": "rtlpp_08977"
+}

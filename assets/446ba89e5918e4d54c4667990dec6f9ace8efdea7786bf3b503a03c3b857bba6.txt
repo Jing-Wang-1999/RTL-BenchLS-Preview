@@ -1,0 +1,17 @@
+module ct_hpcp_cntinten_reg (
+    input wire cntinten_wen_x,
+    input wire cpurst_b,
+    input wire hpcp_clk,
+    input wire hpcp_wdata_x,
+    output reg cntinten_x
+);
+
+always @(posedge hpcp_clk or negedge cpurst_b) begin
+    if (!cpurst_b) begin
+        cntinten_x <= 1'b0;
+    end else if (cntinten_wen_x) begin
+        cntinten_x <= hpcp_wdata_x;
+    end
+end
+
+endmodule

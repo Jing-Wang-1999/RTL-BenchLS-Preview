@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.08a8a40d3943ccbceef4.c47822bc9fba",
+  "compile_check": {
+    "case_id": "s1derived.08a8a40d3943ccbceef4.c47822bc9fba",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_027756",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_027756.94ceba57c8980efc/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.08a8a40d3943ccbceef4",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "08a8a40d3943ccbceef4d3936c5c5f1119fcb96c8c26ed96f479db6edefbd6cc",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.08a8a40d3943ccbceef4.c47822bc9fba",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_027756.94ceba57c8980efc/private/commercial_positive.log",
+    "commercial_log_sha256": "fef4a8d610388e22d3c0039eb64184b577f42419f60bc6fa281667e45e106925",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_027756.94ceba57c8980efc/private/historical_harness/00_sec_origen_027756.tcl",
+    "executed_script_sha256": "68441af62a830eb62bd7d92da9953f75415dab8497f5803b6e3727fcf1b3d812",
+    "golden_tops": [
+      "origen_027756"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.origen_027756.94ceba57c8980efc",
+    "parent_id": "s1p.08a8a40d3943ccbceef4",
+    "revised_tops": [
+      "origen_027756"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_027756",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.08a8a40d3943ccbceef4.c47822bc9fba",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Every field width, simultaneous enabled capture, hold, and initial zero value match.",
+        "rtl_excerpt": "`if(!stall) begin OPout<=OPin; ... PCout<=PCin; end`",
+        "spec_excerpt": "\u201cOPin/OPout[5:0] ... PCin/PCout[31:0]\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.08a8a40d3943ccbceef4",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "23b75de45e60622202ba87979a3ce00ad06346ae72f03d6bedeaee9c915958d7",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "08a8a40d3943ccbceef4d3936c5c5f1119fcb96c8c26ed96f479db6edefbd6cc",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_027756.94ceba57c8980efc/private/historical_harness/00_sec_origen_027756.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_027756.94ceba57c8980efc/private/historical_harness/01_sec_origen_027756.tcl"
+  ],
+  "parent_id": "s1p.08a8a40d3943ccbceef4",
+  "primary_review": {
+    "case_id": "s1derived.08a8a40d3943ccbceef4.c47822bc9fba",
+    "checks": {
+      "behavior": "All fields capture together only when stall is low.",
+      "boundaries": "stall=1 holds all fields; stall=0 updates all fields atomically.",
+      "interface": "The nine field pairs have widths 6,6,5,5,5,16,26,32,32.",
+      "rtl_reasonableness": "The pipeline-register bank is reasonable.",
+      "sequential_and_reset": "Positive-edge registers have no reset; an initial block sets them to zero."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "All fields capture together only when stall is low. Positive-edge registers have no reset; an initial block sets them to zero.",
+        "rtl_excerpt": "if (!stall) all nine outputs capture inputs; initial block zeros every output",
+        "spec_excerpt": "The last sentence ends \u201cWhen the clock signal rises and the stall signal\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose ends before stating the active-low stall condition, hold behavior, exact widths, and simulation initialization.",
+        "rtl_evidence": "if (!stall) all nine outputs capture inputs; initial block zeros every output",
+        "spec_evidence": "The last sentence ends \u201cWhen the clock signal rises and the stall signal\u201d.",
+        "type": "truncated_hold_and_initialization"
+      }
+    ],
+    "parent_id": "s1p.08a8a40d3943ccbceef4",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.08a8a40d3943ccbceef4.c47822bc9fba.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "08a8a40d3943ccbceef4d3936c5c5f1119fcb96c8c26ed96f479db6edefbd6cc",
+    "source_group": "S2",
+    "specification_sha256": "c47822bc9fbacbdc30cd46536ddd507aff7622faaf48c6bd52707a6170cb4f49",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.08a8a40d3943ccbceef4.c47822bc9fba.md",
+  "qualified_specification_sha256": "23b75de45e60622202ba87979a3ce00ad06346ae72f03d6bedeaee9c915958d7",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_027756.94ceba57c8980efc/private/golden_design.v",
+  "rtl_sha256": "08a8a40d3943ccbceef4d3936c5c5f1119fcb96c8c26ed96f479db6edefbd6cc",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_027756.94ceba57c8980efc/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "c47822bc9fbacbdc30cd46536ddd507aff7622faaf48c6bd52707a6170cb4f49",
+  "top_module": "origen_027756"
+}

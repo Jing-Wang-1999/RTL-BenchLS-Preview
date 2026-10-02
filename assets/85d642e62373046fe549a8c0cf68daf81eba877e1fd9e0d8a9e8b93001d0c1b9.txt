@@ -1,0 +1,52 @@
+module origen_023462(
+    input [11:0] direccion,
+    input cs,
+    input we,
+    inout [3:0] data
+);
+    reg [3:0] mem [0:4095];
+    
+    assign data = (cs && !we) ? mem[direccion] : 4'bz;
+    
+    always @(posedge we) begin
+        if (cs) mem[direccion] <= data;
+    end
+endmodule
+
+module Buffer4bits(
+    input Eneable,
+    input [3:0] I,
+    output [3:0] Y
+);
+    assign Y = Eneable ? I : 4'bz;
+endmodule
+
+module FlipFlopD_4b(
+    input eneable2,
+    input reset2,
+    input clk2,
+    input [3:0] D2,
+    output reg [3:0] Q2
+);
+    always @(posedge clk2 or posedge reset2) begin
+        if (reset2)
+            Q2 <= 4'b0000;
+        else if (eneable2)
+            Q2 <= D2;
+    end
+endmodule
+
+module FlipFlopD(
+    input eneable1,
+    input reset1,
+    input clk1,
+    input D1,
+    output reg Q1
+);
+    always @(posedge clk1 or posedge reset1) begin
+        if (reset1)
+            Q1 <= 1'b0;
+        else if (eneable1)
+            Q1 <= D1;
+    end
+endmodule

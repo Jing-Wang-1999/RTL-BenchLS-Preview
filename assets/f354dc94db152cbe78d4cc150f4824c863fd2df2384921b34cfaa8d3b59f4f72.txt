@@ -1,0 +1,47 @@
+always @(posedge clk) begin
+    init_reg <= init_next;
+    init_ptr_reg <= init_ptr_next;
+
+    op_axil_read_pipe_reg <= op_axil_read_pipe_next;
+    op_acc_pipe_reg <= op_acc_pipe_next;
+
+    s_axis_stat_tready_reg <= s_axis_stat_tready_next;
+
+    s_axil_awready_reg <= s_axil_awready_next;
+    s_axil_wready_reg <= s_axil_wready_next;
+    s_axil_bvalid_reg <= s_axil_bvalid_next;
+    s_axil_arready_reg <= s_axil_arready_next;
+    s_axil_rdata_reg <= s_axil_rdata_next;
+    s_axil_rvalid_reg <= s_axil_rvalid_next;
+
+    for (i = 0; i < PIPELINE; i = i + 1) begin
+        mem_addr_pipeline_reg[i] <= mem_addr_pipeline_next[i];
+        axil_shift_pipeline_reg[i] <= axil_shift_pipeline_next[i];
+        stat_inc_pipeline_reg[i] <= stat_inc_pipeline_next[i];
+    end
+
+    if (mem_wr_en) begin
+        mem[mem_wr_addr] <= mem_wr_data;
+    end
+    mem_read_data_reg <= mem[mem_rd_addr];
+    mem_read_data_pipeline_reg[1] <= mem_read_data_reg;
+    for (i = 2; i < PIPELINE; i = i + 1) begin
+        mem_read_data_pipeline_reg[i] <= mem_read_data_pipeline_reg[i-1];
+    end
+
+    if (rst) begin
+        init_reg <= 1'b1;
+        init_ptr_reg <= 0;
+
+        op_axil_read_pipe_reg <= 0;
+        op_acc_pipe_reg <= 0;
+
+        s_axis_stat_tready_reg <= 1'b0;
+
+        s_axil_awready_reg <= 1'b0;
+        s_axil_wready_reg <= 1'b0;
+        s_axil_bvalid_reg <= 1'b0;
+        s_axil_arready_reg <= 1'b0;
+        s_axil_rvalid_reg <= 1'b0;
+    end
+end

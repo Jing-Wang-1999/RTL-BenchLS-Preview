@@ -1,0 +1,42 @@
+### Verilog Module Instruction
+
+The provided Verilog module implements a countdown timer with configurable period registers and interrupts for use in an alarm or counter application. Below are the detailed functionalities:
+
+1. **Primary Function**:
+   - The primary function of the module is to count down from a set value (which is configurable via period registers) and signal a timeout event via an interrupt (irq) when the countdown reaches zero.
+
+2. **Key Control Flow**:
+   - The module involves multiple control signals for starting (`start_strobe`), stopping (`stop_strobe`), and reloading the counter. The control flow manages the state of the counter (running or stopped) based on these signals, detecting when to reload the counter or when a timeout event has occurred.
+   - The reset signal (`reset_n`) initializes the internal state of the module, including the internal counter and control registers.
+
+3. **Important Data Processing and Signal Interactions**:
+   - **Counter Operation**: The counter loads its start value from concatenated period registers (`period_h_register`, `period_l_register`) and counts down on each clock cycle when in running state. It reloads or decrements based on control signals and state conditions.
+   - **Period Configuration**: The period values can be set via `writedata` when the corresponding address is selected for high or low period registers (`period_h_wr_strobe`, `period_l_wr_strobe`).
+   - **Control Register**: Handles settings for starting/stopping the counter and enabling interrupts.
+   - **Snapshot Functionality**: Allows capturing the current counter value for readback to ensure precise monitoring of countdown status.
+   - **Interrupt Handling**: Generates an interrupt (`irq`) upon timeout if interrupts are enabled.
+
+4. **Concise Operation Summary**:
+   - On reset, initialize all registers and set the counter to a default value.
+   - Configurable period registers determine the countdown start value upon reloading.
+   - The counter decrements while running and reloads based on control signals.
+   - Timeout detection generates an interrupt, and the interrupt status is controlled through control registers.
+   - Snapshot registers capture the current counter value for external readback.
+
+Following these instructions should provide a clear and thorough foundation for generating the corresponding Verilog code while encapsulating the provided module's functionalities.
+
+Module Interface:
+module programmable_alarm_timer_50m (
+    address,
+    chipselect,
+    clk,
+    reset_n,
+    write_n,
+    writedata,
+    irq,
+    readdata
+);
+
+Behavioral Clarifications:
+- The active-low reset is asynchronous. Reset initializes `internal_counter` to `32'h02FA_F07F`, `period_l_register` to 16'd61567, and `period_h_register` to 16'd762.
+- The timeout latch, continuous-mode reload, start/stop strobes, and snapshot registers follow the described timer behavior exactly.

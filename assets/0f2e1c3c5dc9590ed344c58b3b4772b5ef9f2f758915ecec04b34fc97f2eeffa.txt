@@ -1,0 +1,59 @@
+module origen_127912 (
+  input CLK_IN1,
+  input COUNTER_RESET,
+  output reg [1:1] CLK_OUT,
+  output wire COUNT
+);
+
+  // PLL parameters
+  localparam DIVIDE_RATIO = 4;
+  localparam PHASE_DETECTOR_FREQ = 10_000_000; // 10 MHz
+
+  // PID controller coefficients
+  localparam KP = 0.5;
+  localparam KI = 0.1;
+  localparam KD = 0.01;
+
+  // Internal signals
+  reg [1:0] counter;
+  reg [31:0] phase_error;
+  reg [31:0] integral_error;
+  reg [31:0] prev_error;
+  reg [31:0] pid_output;
+
+  // PLL
+  always @(posedge CLK_IN1 or posedge COUNTER_RESET) begin
+    if (COUNTER_RESET) begin
+      counter <= 0;
+      phase_error <= 0;
+      integral_error <= 0;
+      prev_error <= 0;
+      pid_output <= 0;
+      CLK_OUT[1] <= 0;
+    end else begin
+      counter <= counter + 1;
+
+      // Phase detector
+      if (counter == 0) begin
+        phase_error <= $time % (1_000_000_000 / PHASE_DETECTOR_FREQ);
+      end
+
+      // PID controller
+      integral_error <= integral_error + phase_error;
+      pid_output <= $rtoi(KP * $itor(phase_error) + KI * $itor(integral_error) + KD * $itor(phase_error - prev_error));
+      prev_error <= phase_error;
+
+      // VCO
+      if (pid_output[31]) begin
+        CLK_OUT[1] <= ~CLK_OUT[1];
+      end else if (counter == DIVIDE_RATIO - 1) begin
+        CLK_OUT[1] <= ~CLK_OUT[1];
+        counter <= 0;
+      end
+    end
+  end
+
+  // Output COUNT signal
+  assign COUNT = counter[1];
+
+endmodule

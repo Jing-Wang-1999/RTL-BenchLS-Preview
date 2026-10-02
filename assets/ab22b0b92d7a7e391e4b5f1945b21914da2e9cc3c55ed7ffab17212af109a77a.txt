@@ -1,0 +1,7 @@
+# origen_064698
+
+This eight-state FSM has one-bit inputs `Clk`, active-high asynchronous reset `Reset`, `Humo`, `T1`, `T2`, and `CS`. Its one-bit combinational outputs are `TempAlto`, `TempMedio`, `HumoOut`, `Elec`, `EJECA`, `EJECB`, `EJECC`, and `EJECD`.
+
+`Reset` asynchronously sets the state to `s0`; otherwise state advances on each rising `Clk` edge. All outputs default to zero. In `s0`, `EJECA=1`; if `T1=1`, also set `TempAlto=1` and go to `s1`, otherwise go to `s2`. `s1` goes unconditionally to `s2`. In `s2`, `EJECB=1`; if `T1=0` and `T2=1`, also set `TempMedio=1` and go to `s3`, otherwise go to `s4`. `s3` goes to `s4`. In `s4`, `EJECC=1`; if `Humo=1`, also set `HumoOut=1` and go to `s5`, otherwise go to `s6`. `s5` goes to `s6`. In `s6`, `EJECD=1`; if `CS=1`, also set `Elec=1` and go to `s7`, otherwise go to `s0`. `s7` goes to `s0`. An invalid state goes to `s0` with every output zero.
+
+Because outputs are combinational functions of current state and current inputs, the alert outputs and next-state logic can change between clock edges. There are no submodules.

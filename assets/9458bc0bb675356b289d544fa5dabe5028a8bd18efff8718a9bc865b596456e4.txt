@@ -1,0 +1,21 @@
+The module `autovcoder_097098` is a digital hardware component designed to manage state transitions based on clock signals, control signals, and input data. It is parameterized to handle a configurable number of bits, defined by the parameter `NrOfBits`, which defaults to 1. The module operates with an active level specified by the parameter `ActiveLevel`, which also defaults to 1.
+
+### Inputs:
+1. **Clock**: A clock signal that triggers state updates on its positive and negative edges.
+2. **ClockEnable**: A control signal that enables the clock-driven state updates when active.
+3. **D**: A data input vector of width `NrOfBits`, representing the new state to be loaded.
+4. **Reset**: An asynchronous reset signal that initializes the state to zero when active.
+5. **Tick**: A control signal that, when active, allows the state to be updated with the input data `D`.
+6. **cs**: A control signal that determines the output state behavior.
+7. **pre**: A preset signal that, when active, initializes the state to all ones.
+
+### Outputs:
+- **Q**: An output vector of width `NrOfBits` that reflects the current state of the module. The output is high-impedance (represented by 'z') when `cs` is active. Otherwise, it reflects either the state from the positive or negative clock edge, depending on the `ActiveLevel`.
+
+### Internal Registers:
+- **s_state_reg**: A register that holds the current state updated on the positive edge of the clock.
+- **s_state_reg_neg_edge**: A register that holds the current state updated on the negative edge of the clock.
+
+### Behavior:
+- On initialization, `s_state_reg` is set to zero.
+- On the positive edge of the clock, if `Reset` is active, `

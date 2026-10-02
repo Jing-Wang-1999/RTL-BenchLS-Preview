@@ -1,0 +1,366 @@
+#!/usr/bin/env python3
+"""Build and qualify the fixed 8N1 UART-to-SPI project case, with independent protocol tests."""
+import argparse
+import json
+import random
+import re
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+from evaluate_case import evaluate, write_json
+from validate_cases import digest, validate
+
+TASK=Path(__file__).resolve().parents[1]
+ROOT=TASK.parents[1]
+CASE_ID='opencores_uartspi_8n1_v1'
+DRAFT=TASK/'project_pool/drafts'/CASE_ID
+PROJECT=ROOT/'scope2/common/projects/OpenCores_Medium/communication_controller_uart_to_spi/project.json'
+
+INSTRUCTION='''# Implement the UART-to-SPI bridge project
+
+Read `specification/project.txt` and its original PDF. Implement all 11 files
+and 15 modules in `output_contract.json`; declaration-only templates are in
+`interfaces/modules.v`. Save synthesizable RTL at the exact paths. All required
+files must compile together with integration module `top`. Extra RTL files are
+not collected. No initial/final blocks, simulation system tasks, delays,
+force/release, or external includes in submitted RTL. Scratch tests are allowed.
+
+This fixed configuration uses eight UART data bits, no parity (`cfg_pri_mod=0`),
+one stop bit (`cfg_stop_bit=0`), active-low asynchronous reset, and both TX/RX
+enabled for normal operation. Implement the project hierarchy: top connects
+uart_core, uart_msg_handler and spi_core; uart_core connects clk_ctl, uart_rxfsm
+and uart_txfsm; spi_core connects spi_cfg, spi_ctl and spi_if; register storage
+uses the register primitives. Internal instance names and FSM encodings are free.
+
+## Contract clarifications
+
+These behavioral details supplement the original document following an audit
+of its interfaces and the pinned reference. They are part of the specification,
+not hidden requirements. Tests compare protocol results, except for the explicit
+clock-divider and register timing contracts below. Parity modes, invalid UART
+frames, malformed commands, and SPI operation types 2/3 are outside this case.
+
+- `clk_ctl`: parameter WD defaults to 1; the divider input has WD+1 bits.
+  Reset clears output and both WD-bit high/low counters. On each mclk rising
+  edge: if high count is nonzero, decrement it and output 1; else if low count
+  is nonzero, decrement it and output 0; otherwise load high count with
+  floor(ratio/2)+ratio[0], low count with floor(ratio/2)+1, and invert output.
+  Counter assignments truncate to WD bits. UART uses WD=11. For ordinary
+  nonoverflowing ratios the output period is ratio+2 mclk cycles.
+- UART transmits idle-high, start-low, eight data bits LSB first, stop-high,
+  each lasting 16 baud_clk_16x rising edges. TX consumes a byte with a one-cycle
+  fifo_rd pulse when it starts a frame; disabled or empty TX holds idle high.
+  RX accepts a valid frame when enabled and fifo_aval is high, and produces
+  one fifo_wr pulse with the byte. uart_core maps these handshakes to tx_rd,
+  rx_wr and inverts tx_data_avail for the TX fifo_empty input.
+- Parser input is one rx_wr pulse per ASCII character, separated by idle cycles;
+  rx_ready is always 1. Commands are lowercase `wm <hex address> <hex data>\\n`
+  and `rm <hex address>\\n`. Address is 16 bits, data 32 bits; hex digits can
+  use either case. Extra spaces between fields are allowed; do not send leading
+  command spaces after a completed transaction (the reference retains a count).
+  Newline is LF (0A), not CR. Hold reg_req, reg_wr, address and write data
+  until reg_ack. Writes return `cmd success\\n>>`; reads return
+  `Response: ` followed by eight uppercase hex digits and LF. Startup sends
+  `Command Format:\\nwm <ad> <data>\\n rm <ad>\\n>>` (41 characters).
+  tx_data_avail/tx_data offer a character; tx_rd acknowledges it. Allow a few
+  idle clocks between acknowledgments. Read reg_rdata remains valid through
+  serialization of the response. Commands arrive after the previous response.
+- The bridge drives the parser and SPI with baud_clk_16x. SPI reg_addr is
+  parser reg_addr[5:2], and reg_be is 4'b1111. SPI byte addresses are 0,4,8;
+  standalone spi_cfg/spi_core address ports instead take word indices 0,1,2.
+- spi_cfg resets all stored registers, reg_ack and reg_rdata to zero. A selected
+  read or write gets registered ack=1 when old ack=0, otherwise ack=0. Reads
+  latch data; reg_rdata holds on writes and idle. Writes obey each byte enable.
+  Register 0 has writable low 24 bits; bits 30:24 are zero in this revision.
+  Thus only chip selects 0 and 1 are reachable through this register, despite
+  the PDF advertising four. Bit 31 is a set-on-write-one request: software
+  writing zero holds it; hware_op_done clears it; a simultaneous software set
+  wins. Register 1 holds all 32 TX data bits. Register 2 reads cfg_dataout and
+  ignores writes. Word indices 3..15 read zero. Field mapping is in the PDF.
+- bit_register writes on we, otherwise holds. req_register sets on cpu_we AND
+  cpu_req, else clears on hware_ack. stat_register sets on hware_req, else
+  clears on cpu_we AND cpu_ack. Set has priority. All reset to RESET_DEFAULT.
+  generic_register and generic_intr_stat_reg apply the respective bit behavior
+  independently across WD bits, with per-bit write enables and reset values.
+- SPI supports separate write (type 0) and read (type 1) transactions of
+  transfer_size+1 bytes (1..4), MSB byte and MSB bit first. SPI SCK period is
+  cfg_sck_period input clocks; tested periods are even and >=4. Setup and hold
+  use cfg_sck_cs_period SCK ticks. For byte j=0..3, cfg_cs_byte[7-2*j] is the
+  selected CS level during setup/transfer; cfg_cs_byte[6-2*j] is its hold level.
+  Nonselected CS outputs stay high. Completion raises op_done until request
+  deasserts. Reads place bytes into cfg_dataout starting at bits31:24, leaving
+  unused low bytes zero. There are eight SCK rising edges per transferred byte.
+- spi_if directly routes sck_int to sck and decodes cfg_tgt_sel (all four values)
+  to cs_n. At a rising clk edge, load_byte loads its TX shift register; otherwise
+  shift_out shifts it left. When shift_out is high, so takes the OLD TX MSB,
+  including when load_byte is also high. Otherwise so holds. On sck_pe AND
+  shift_in, shift si into the RX LSB; byte_in continuously exposes that register.
+  Both shift registers and so reset to zero.
+
+## Tools and scoring
+
+Use terminal/file editing, `iverilog`, `vvp` and Python to inspect documents,
+implement, test and revise. `python3 checks/check.py` compiles all required RTL;
+it supplies no behavioral oracle or expected trace. Write your own tests.
+The private evaluator has ten equal points: register primitives, divider,
+SPI registers, SPI shift interface, UART TX, UART RX, parser transactions,
+SPI write transfers, SPI read transfers, and whole-bridge UART read/write plus
+SPI output. A point requires every check to pass. Missing required files,
+forbidden simulation constructs or failed top compilation give 0/10. This is
+finite simulation coverage, not formal equivalence. Save files and call finish.
+'''
+
+HEAD='`timescale 1ns/1ps\nmodule tb;\nreg clk=0,reset_n=1; always #5 clk=~clk;\ntask tick; begin @(posedge clk); #1; end endtask\ntask reset; begin @(negedge clk); reset_n=0; repeat(4) tick; @(negedge clk); reset_n=1; end endtask\ninitial begin #10000000; $fatal(1,"timeout"); end\n'
+END='\n$display("RTL_BENCHLS_PASS"); $finish(0); end\nendmodule\n'
+
+def regs_tb():
+    s=HEAD+'''reg [7:0] we=0,d=0,hw=0;
+wire [7:0] q,st; wire req,bitq,statq;
+generic_register #(8,8'hA5) a(we,d,reset_n,clk,q);
+generic_intr_stat_reg #(8,8'h5A) b(clk,reset_n,we,d,hw,st);
+req_register #(1) c(clk,reset_n,we[0],d[0],hw[0],req);
+bit_register #(1) e(we[0],clk,reset_n,d[0],bitq);
+stat_register #(0) f(clk,reset_n,we[0],d[0],hw[0],statq);
+initial begin reset; if(q!==8'hA5 || st!==8'h5A || req!==1 || bitq!==1 || statq!==0) $fatal(1,"reset");
+'''
+    rng=random.Random(219061);q=0xa5;st=0x5a;req=1;bitq=1;statq=0
+    for _ in range(160):
+        w,d,h=[rng.randrange(256) for _ in range(3)];q=(q&~w)|(d&w);st=(st&~(w&d))|h
+        req=1 if w&d&1 else 0 if h&1 else req;bitq=d&1 if w&1 else bitq;statq=1 if h&1 else 0 if w&d&1 else statq
+        s+=f"@(negedge clk); we=8'h{w:02x}; d=8'h{d:02x}; hw=8'h{h:02x}; tick; if(q!==8'h{q:02x} || st!==8'h{st:02x} || req!==1'b{req} || bitq!==1'b{bitq} || statq!==1'b{statq}) $fatal(1,\"register\");\n"
+    return s+END
+
+def divider_tb():
+    s=HEAD+"reg [11:0] ratio=0; wire q; clk_ctl #(11) dut(q,clk,reset_n,ratio); initial begin\n"
+    for ratio in [0,1,2,3,4,7,16,160,4095]:
+        s+=f'ratio=12\'d{ratio}; reset;\n';h=l=q=0
+        for _ in range(min(ratio*2+20,8300)):
+            if h: h-=1;q=1
+            elif l:l-=1;q=0
+            else:h=((ratio//2)+(ratio&1))&2047;l=(ratio//2+1)&2047;q^=1
+            s+=f'tick; if(q!==1\'b{q}) $fatal(1,"divider");\n'
+    return s+END
+
+BUS='''reg reg_cs=0,reg_wr=0; reg [3:0] reg_addr=0,reg_be=15; reg [31:0] reg_wdata=0;
+wire [31:0] reg_rdata; wire reg_ack;
+task wr; input [3:0] a; input [31:0] d; input [3:0] be;
+begin @(negedge clk);reg_cs=1;reg_wr=1;reg_addr=a;reg_wdata=d;reg_be=be;tick;
+if(reg_ack!==1) $fatal(1,"write ack"); @(negedge clk);reg_cs=0; tick; end endtask
+task rd; input [3:0] a; input [31:0] expected;
+begin @(negedge clk);reg_cs=1;reg_wr=0;reg_addr=a;tick;
+if(reg_ack!==1 || reg_rdata!==expected) $fatal(1,"read %h got %h expected %h",a,reg_rdata,expected);
+@(negedge clk);reg_cs=0;tick;end endtask
+'''
+
+def cfg_tb():
+    s=HEAD+BUS+'''wire [1:0] tgt,typ,size;wire req;wire [5:0] period;wire [4:0] holdp;wire [7:0] csbyte;wire [31:0] din;
+reg [31:0] dout=32'hDEADBEEF;reg done=0;
+spi_cfg dut(clk,reset_n,reg_cs,reg_wr,reg_addr,reg_wdata,reg_be,reg_rdata,reg_ack,tgt,req,typ,size,period,holdp,csbyte,din,dout,done);
+initial begin reset;rd(0,0);rd(1,0);rd(2,32'hDEADBEEF);
+'''
+    rng=random.Random(219062);r=[0,0]
+    for i in range(96):
+        a=i%2;d=rng.getrandbits(32);be=rng.randrange(16)
+        mask=sum(255<<(8*b) for b in range(4) if be>>b&1)
+        if a==0:
+            lo=mask&0xffffff;r[a]=(r[a]&~lo)|(d&lo)
+            if be&8 and d>>31:r[a]|=1<<31
+        else:r[a]=(r[a]&~mask)|(d&mask)
+        s+=f"wr({a},32'h{d:08x},4'h{be:x});rd({a},32'h{r[a]:08x});\n"
+        if a==0:s+=f"if ({{req,7'b0,tgt[0],typ,size,period,holdp,csbyte}}!==32'h{r[a]:08x} || tgt[1]!==0) $fatal(1,\"fields\");\n"
+        else:s+=f"if(din!==32'h{r[1]:08x}) $fatal(1,\"TX data\");\n"
+    s+='wr(0,32\'h80000000,8); @(negedge clk);done=1;tick; @(negedge clk);done=0;tick; if(req!==0) $fatal(1,"done");\n'
+    s+='wr(2,0,15); rd(2,32\'hDEADBEEF);\n'+''.join(f'rd({i},0);\n' for i in range(3,16))
+    return s+END
+
+def shift_tb():
+    s=HEAD+'''reg pe=0,sc=0,cs=1,load=0,sho=0,shi=0,si=0;reg [1:0] tgt=0;reg [7:0] dout=0;
+wire [7:0] din;wire sck,so;wire [3:0] csn;
+spi_if dut(clk,reset_n,pe,sc,cs,din,load,dout,sho,shi,tgt,sck,so,si,csn);
+initial begin reset;
+''';rng=random.Random(219063);tx=rx=so=0
+    for i in range(256):
+        pe,sc,cs,load,sho,shi,si=[rng.randrange(2) for _ in range(7)];tgt=rng.randrange(4);d=rng.randrange(256)
+        if sho:so=tx>>7
+        if load:tx=d
+        elif sho:tx=(tx<<1)&255
+        if pe and shi:rx=((rx<<1)|si)&255
+        csn=15 if cs else 15^(1<<tgt)
+        s+=f"@(negedge clk);{{pe,sc,cs,load,sho,shi,si}}=7'b{pe}{sc}{cs}{load}{sho}{shi}{si};tgt={tgt};dout=8'h{d:02x};tick;if(din!==8'h{rx:02x} || so!==1'b{so} || sck!==1'b{sc} || csn!==4'h{csn:x}) $fatal(1,\"shift {i}\");\n"
+    return s+END
+
+def tx_tb():
+    return HEAD+'''reg en=0,empty=1;reg [7:0] data=0;wire rd,so;integer n,j,k;
+uart_txfsm dut(reset_n,clk,en,1'b0,2'b00,empty,rd,data,so);
+task frame;input [7:0] value;begin
+@(negedge clk); data=value;empty=0;en=1;
+k=0;while(so!==0 && k<40) begin tick;k=k+1;end
+if(so!==0 || rd!==1) $fatal(1,"start/handshake");
+@(negedge clk);empty=1;
+repeat(8) tick; if(so!==0) $fatal(1,"start duration");
+for(j=0;j<8;j=j+1) begin repeat(16) tick;if(so!==value[j]) $fatal(1,"TX bit %d",j);end
+repeat(16) tick;if(so!==1) $fatal(1,"stop");repeat(32) tick;end endtask
+initial begin reset;repeat(32) tick;if(so!==1) $fatal(1,"idle");
+empty=0;repeat(32) tick;if(rd!==0 || so!==1) $fatal(1,"disabled");empty=1;
+'''+''.join(f"frame(8'h{x:02x});\n" for x in [0,255,85,170]+[random.Random(219064+i).randrange(256) for i in range(28)])+END
+
+def rx_tb():
+    return HEAD+'''reg en=1,avail=1,si=1;wire [1:0] err;wire wr;wire [7:0] data;integer count=0,j;reg [7:0] received;
+uart_rxfsm dut(reset_n,clk,en,1'b0,2'b00,err,avail,wr,data,si);
+always @(negedge clk) if(reset_n && wr) begin count=count+1;received=data;end
+ task bitval; input x; begin @(negedge clk);si=x;repeat(16) tick;end endtask
+ task frame;input [7:0] value;integer before_count;begin before_count=count;
+ bitval(0);for(j=0;j<8;j=j+1)bitval(value[j]);bitval(1);repeat(24)tick;
+ if(count!==before_count+1 || received!==value || err!==0) $fatal(1,"RX value/count");end endtask
+ initial begin reset;repeat(32)tick;
+'''+''.join(f"frame(8'h{x:02x});\n" for x in [0,255,85,170]+[random.Random(219065+i).randrange(256) for i in range(28)])+END
+
+PARSER='''wire txavail,ready;wire [7:0] txdata;reg txrd=0,rxwr=0;reg [7:0] rxdata=0;
+wire [15:0] addr;wire [31:0] wdata;wire req,wr;reg ack=0;reg [31:0] rdata=0;
+integer cyc=0;always @(negedge clk) begin cyc=cyc+1;txrd=(cyc%8==0);end
+uart_msg_handler dut(reset_n,clk,txavail,txrd,txdata,ready,rxwr,rxdata,addr,wr,wdata,req,ack,rdata);
+task charin;input [7:0] c;begin @(negedge clk);rxdata=c;rxwr=1;tick;@(negedge clk);rxwr=0;repeat(6)tick;end endtask
+task request_check;input iswrite;input [15:0] a;input [31:0] d;integer k;
+begin k=0;while(req!==1 && k<40)begin tick;k=k+1;end
+if(req!==1 || wr!==iswrite || addr!==a || (iswrite && wdata!==d)) $fatal(1,"parser request");
+repeat(7)begin tick;if(req!==1 || addr!==a) $fatal(1,"request hold");end
+@(negedge clk);ack=1;tick;@(negedge clk);ack=0;repeat(300)tick;
+if(req!==0 || ready!==1) $fatal(1,"request completion");end endtask
+'''
+def parser_tb():
+    s=HEAD+PARSER+'initial begin reset;repeat(600)tick;\n';rng=random.Random(219066)
+    for i in range(24):
+        a=rng.randrange(65536);d=rng.getrandbits(32)
+        cmd=f'wm  {a:04x}  {d:08X}\n' if i%2==0 else f'rm {a:04X}\n'
+        s+=''.join(f"charin(8'h{ord(c):02x});" for c in cmd)+'\n'
+        s+=f"request_check(1'b{1 if i%2==0 else 0},16'h{a:04x},32'h{d:08x});\n"
+    return s+END
+
+SPI='''wire sck,so;reg si=0;wire [3:0] cs_n;
+spi_core dut(clk,reset_n,reg_cs,reg_wr,reg_addr,reg_wdata,reg_be,reg_rdata,reg_ack,sck,so,si,cs_n);
+integer bits=0;reg [31:0] captured=0;reg monitor=0;
+always @(posedge sck) if(monitor)begin
+ if(cs_n===4'b1111) $fatal(1,"SCK while all CS idle");
+ captured={captured[30:0],so};bits=bits+1;end
+ task wait_done;integer k;begin k=0;
+ @(negedge clk);reg_cs=1;reg_wr=0;reg_addr=0;
+ while(k<6000)begin tick;if(reg_ack===1 && reg_rdata[31]===0)k=6001;else k=k+1;end
+ if(k==6000)$fatal(1,"SPI request timeout");@(negedge clk);reg_cs=0;tick;end endtask
+'''
+def spi_tb(read=False):
+    s=HEAD+BUS+SPI+'initial begin\n';rng=random.Random(219067+read)
+    for i in range(12):
+        size=i%4+1;tgt=i%2;period=[4,8,12][i%3];data=rng.getrandbits(32);ones=i%2
+        # CS low throughout the byte stream; high after its final byte.
+        csbyte=1<<(2*(4-size));control=0x80000000|(tgt<<23)|(int(read)<<21)|((size-1)<<19)|(period<<13)|(2<<8)|csbyte
+        s+=f"monitor=0;reset;repeat(4)tick;bits=0;captured=0;si={ones};wr(1,32'h{data:08x},15);monitor=1;wr(0,32'h{control:08x},15);wait_done;monitor=0;\n"
+        s+=f'if(bits!={size*8})$fatal(1,"SPI edge count %d",bits);if(cs_n!==4\'hF)$fatal(1,"CS completion");\n'
+        if read:
+            expected=(((1<<(size*8))-1)<<(32-size*8)) if ones else 0
+            s+=f"rd(2,32'h{expected:08x});\n"
+        else:s+=f"if(captured!==32'h{data>>(32-size*8):08x}) $fatal(1,\"SPI data %h\",captured);\n"
+    return s+END
+
+TOP='''reg rxd=1,si=0;wire txd,sck,so,baud,frm,par;wire [3:0] csn;
+top dut(reset_n,clk,1'b1,1'b1,1'b0,2'b00,12'd2,frm,par,baud,rxd,txd,sck,so,si,csn);
+reg [7:0] chars[0:1023];integer nchars=0,b;reg [7:0] value;
+initial forever begin @(negedge txd);#960;
+for(b=0;b<8;b=b+1)begin value[b]=txd;#640;end
+if(txd!==1)$fatal(1,"UART stop");chars[nchars]=value;nchars=nchars+1;end
+integer bits=0;reg [31:0] captured=0;
+always @(posedge sck) begin if(csn===4'hF)$fatal(1,"CS idle");captured={captured[30:0],so};bits=bits+1;end
+task charin;input [7:0] c;integer j;begin
+@(negedge clk);rxd=0;repeat(64)tick;
+for(j=0;j<8;j=j+1)begin @(negedge clk);rxd=c[j];repeat(64)tick;end
+@(negedge clk);rxd=1;repeat(80)tick;end endtask
+ task find_hex;input [63:0] hexchars;integer k,j,ok,found;
+begin found=0;for(k=0;k<nchars-7;k=k+1) begin ok=1;for(j=0;j<8;j=j+1)
+if(chars[k+j]!==hexchars[63-j*8-:8])ok=0;if(ok)found=1;end
+if(!found)$fatal(1,"missing UART read data %h, bytes %d",hexchars,nchars);end endtask
+'''
+def top_tb():
+    s=HEAD+TOP+'initial begin reset;repeat(35000)tick;\n'
+    for d in [0xa5f00f96,0x13c8b72e]:
+        for command in [f'wm 0004 {d:08X}\n','rm 0004\n']:
+            s+=''.join(f"charin(8'h{ord(c):02x});" for c in command)+'repeat(18000)tick;\n'
+        s+=f'find_hex("{d:08X}");\n'
+    s+='bits=0;captured=0;\n'
+    s+=''.join(f"charin(8'h{ord(c):02x});" for c in 'wm 0000 80190201\n')+'repeat(22000)tick;\n'
+    s+='if(bits!=32 || captured!==32\'h13C8B72E || csn!==4\'hF) $fatal(1,"whole bridge SPI %d %h",bits,captured);\n'
+    return s+END
+
+
+def build():
+    if DRAFT.exists():raise RuntimeError('refusing to overwrite draft')
+    p=json.loads(PROJECT.read_text());source=Path(p['source']['local_path']);cfg=p['configurations'][0]
+    (DRAFT/'public/specification').mkdir(parents=True)
+    pdf=DRAFT/'public/specification/project.pdf';shutil.copyfile(source/cfg['specification_paths'][0],pdf)
+    subprocess.run(['pdftotext','-layout',str(pdf),str(pdf.with_suffix('.txt'))],check=True)
+    files=[];interfaces=[]
+    for name in cfg['source_closure']:
+        code=re.sub(r'/\*.*?\*/|//[^\n]*','',(source/name).read_text(),flags=re.S)
+        modules=[]
+        for match in re.finditer(r'\bmodule\s+(\w+)\s*\((.*?)\);(.*?)endmodule',code,re.S):
+            module,portlist,body=match.groups();params=re.findall(r'\bparameter\s+(?:WD|RESET_DEFAULT)\b[^;]*;',body)
+            ports=re.findall(r'\b(?:input|output|inout)\b[^;]*;',body)
+            assert all('=' not in item for item in ports),(module,'not declaration only')
+            interfaces+=['// Required path: '+name, f'module {module}({portlist});',*params,*ports,'endmodule\n']
+            modules.append(module)
+        assert modules,name
+        files.append({'path':name,'module':modules[0],'modules':modules})
+        target=DRAFT/'private/reference'/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source/name,target)
+    write_json(DRAFT/'public/output_contract.json',{'top_module':'top','required_files':files,'fixed_configuration':'8N1 UART; valid commands; SPI read/write; even SCK period >=4'})
+    (DRAFT/'public/interfaces').mkdir();(DRAFT/'public/interfaces/modules.v').write_text('\n'.join(interfaces))
+    (DRAFT/'public/instruction.md').write_text(INSTRUCTION)
+    (DRAFT/'public/checks').mkdir();(DRAFT/'public/checks/check.py').write_text('''import json,subprocess,tempfile
+from pathlib import Path
+root=Path(__file__).resolve().parents[1]
+c=json.loads((root/'output_contract.json').read_text())
+with tempfile.TemporaryDirectory() as tmp:
+ subprocess.run(['iverilog','-g2012','-Wall','-s',c['top_module'],'-o',str(Path(tmp)/'compile.vvp')]+[str(root/x['path']) for x in c['required_files']],check=True)
+print('PUBLIC_COMPILE_PASS')
+''')
+    tests=[('register_primitives','generic_register',regs_tb()),('clock_divider','clk_ctl',divider_tb()),('spi_registers','spi_cfg',cfg_tb()),('spi_shift_interface','spi_if',shift_tb()),('uart_tx','uart_txfsm',tx_tb()),('uart_rx','uart_rxfsm',rx_tb()),('parser_transactions','uart_msg_handler',parser_tb()),('spi_write','spi_core',spi_tb()),('spi_read','spi_core',spi_tb(True)),('top_uart_spi','top',top_tb())]
+    points=[]
+    for name,target,tb in tests:
+        path=DRAFT/'private/verification'/f'{name}.v';path.parent.mkdir(parents=True,exist_ok=True);path.write_text(tb)
+        points.append({'id':name,'target':target,'weight':1,'timeout_seconds':20,'testbench':path.name,'command':['iverilog','-g2012','-s','tb','<required_files>',path.name,'then','vvp'],'pass_criterion':'exit 0 with exact RTL_BENCHLS_PASS; all assertions pass'})
+    write_json(DRAFT/'private/scoring.json',{'points':points,'oracle':'independent register equations and UART/SPI protocol scoreboards; no generated reference traces','gate_failure_score':0,'limits':'finite fixed-configuration tests; no parity, malformed protocol, or formal equivalence claims'})
+    shutil.copyfile(TASK/'cases/opencores_present80_v1/environment/runtime.json',DRAFT/'runtime.tmp')
+    (DRAFT/'environment').mkdir();(DRAFT/'runtime.tmp').rename(DRAFT/'environment/runtime.json')
+    case={'schema_version':'task2.1.case.v1','case_id':CASE_ID,'project_id':p['project_id'],'configuration_id':'uartspi_8n1_documented_contract_v1','status':'draft','source':p['source'],'closure_lines':sum(len((source/n).read_text().splitlines()) for n in cfg['source_closure']),'required_module_count':sum(len(f['modules']) for f in files),'clarification_provenance':'Original PDF plus pinned RTL port/protocol audit; explicit chip-select register limitation; fixed 8N1 configuration. No model output used in case construction.','original_specification_sha256':digest(pdf),'reference_hashes':{f['path']:digest(DRAFT/'private/reference'/f['path']) for f in files}}
+    write_json(DRAFT/'case.json',case)
+    shutil.copyfile(Path(__file__),DRAFT/'private/verification/build_uartspi_case.py')
+    shutil.copyfile(Path(__file__).with_name('evaluate_case.py'),DRAFT/'private/verification/evaluate_case.py')
+    print(json.dumps({'draft':str(DRAFT),'files':len(files),'modules':case['required_module_count'],'lines':case['closure_lines']}))
+
+
+def qualify(freeze):
+    out=DRAFT/'private/qualification'
+    if out.exists():raise RuntimeError('preserve prior qualification by archiving draft before rebuilding')
+    golden=evaluate(DRAFT,DRAFT/'private/reference',out/'golden')
+    print(json.dumps(golden,indent=2),flush=True)
+    if not golden['full_project_pass']:raise RuntimeError('golden failed')
+    mutations=[('bad_divider','rtl/uart_core/clk_ctl.v',"low_count   <= 'h0", "low_count   <= 'h1"),('bad_register','rtl/lib/registers.v','else if (we)','else if (!we)'),('bad_spi_data','rtl/spi/spi_if.v','so <= so_reg[7]','so <= so_reg[6]'),('bad_uart_tx','rtl/uart_core/uart_txfsm.v','so   <= txdata[cnt]','so   <= ~txdata[cnt]'),('bad_parser','rtl/msg_hand/uart_msg_handler.v',"16'h776D", "16'h776E"),('bad_integration_address','rtl/top/top.v','reg_addr[5:2]','reg_addr[3:0]')]
+    controls=[]
+    for name,file,old,new in mutations:
+        with tempfile.TemporaryDirectory() as tmp:
+            sub=Path(tmp)/'submission';shutil.copytree(DRAFT/'private/reference',sub);path=sub/file;code=path.read_text()
+            if old not in code:raise RuntimeError('mutation anchor missing: '+name)
+            path.write_text(code.replace(old,new));ev=out/name;ev.mkdir();shutil.copyfile(path,ev/path.name)
+            score=evaluate(DRAFT,sub,ev)
+            if not score['compile_pass'] or score['full_project_pass']:raise RuntimeError('invalid/undetected control: '+name)
+            controls.append({'name':name,'detected':True,'compile_pass':True,'failed_points':[x['id'] for x in score['points'] if not x['passed']]})
+    write_json(out/'review.json',{'golden_score':golden['score'],'negative_controls':controls,'review':'Independent functional scoreboards, golden and compile-valid mutants; 8N1 scope and document corrections public; original implementation and grading code remain private.','limits':'Sampled valid transactions only; register/clock exact semantics; handshake implementations have bounded timing slack.'})
+    if freeze:
+        case=json.loads((DRAFT/'case.json').read_text());case['status']='finalized';case['readiness_review']={'approved':True,'reviewer':'Codex engineering qualification 2026-09-05','evidence_paths':['private/qualification/review.json']};case['artifacts']={str(p.relative_to(DRAFT)):digest(p) for p in sorted(DRAFT.rglob('*')) if p.is_file() and p!=DRAFT/'case.json'};write_json(DRAFT/'case.json',case)
+        final=TASK/'cases'/CASE_ID
+        if final.exists():raise RuntimeError('frozen case exists')
+        DRAFT.rename(final);row={k:case[k] for k in ['case_id','project_id','configuration_id']};row.update(path=CASE_ID,manifest_sha256=digest(final/'case.json'))
+        with (TASK/'cases/index.jsonl').open('a') as f:f.write(json.dumps(row,sort_keys=True)+'\n')
+        print(json.dumps(validate()))
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--qualify-and-freeze',action='store_true');a=p.parse_args()
+    qualify(True) if a.qualify_and_freeze else build()

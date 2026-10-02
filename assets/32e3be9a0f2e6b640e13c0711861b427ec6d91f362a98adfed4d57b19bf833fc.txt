@@ -1,0 +1,5 @@
+# mg_09438
+
+Inputs `clock`, active-high asynchronous `reset`, `start`, `Nothing`, `Zero`, and `Q0` are scalar. Outputs `Ready`, `Load_regs`, `Decr_P`, `Add_regs`, and `Shift_regs` are active high. State encodings are `S_idle=00`, `S_add=01`, and `S_shift=10`.
+
+An asserted reset immediately sets the state to idle. Otherwise state changes on each rising clock edge. In idle, `Ready=1` unconditionally. While `start=0`, the next state remains idle; with `start=1`, `Load_regs=1` and the next state is add. In add, `Decr_P=1`, `Add_regs=Q0`, and the next state is shift. In shift, `Shift_regs=1`; the next state is idle when `Zero|Nothing` is one and add otherwise. All other outputs are zero in each state. An invalid state drives all outputs low and selects idle for the next edge. Outputs are Moore-style except `Load_regs` depends on `start` and `Add_regs` depends on `Q0`.

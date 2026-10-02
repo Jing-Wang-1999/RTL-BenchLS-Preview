@@ -1,0 +1,16 @@
+module mg_01992 (input wire clk,input wire sound_enable,input wire [4:0] i0,input wire [4:0] i1,input wire [4:0] i2,input wire [4:0] i3,input wire [4:0] i4,input wire [4:0] i5,output reg [7:0] o);
+reg [7:0] compressor_table[0:255]; 
+  initial begin 
+  $readmemh ("compressor_lut.hex", compressor_table); 
+  end 
+  reg [7:0] mix; 
+  always @* begin 
+  if (sound_enable == 1'b1) 
+  mix = i0 + i1 + i2 + i3 + i4 + i5; 
+  else 
+  mix = 8'd0; 
+  end 
+  always @(posedge clk) begin 
+  o <= compressor_table[mix]; 
+  end 
+ endmodule

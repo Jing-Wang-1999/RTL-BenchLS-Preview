@@ -1,0 +1,73 @@
+module origen_063434 (
+    input CLOCK,
+    input nRESET,
+    input CLKEN,
+    input ENABLE,
+    input nWR,
+    input DUMMY,
+    input [7:0] DI,
+    output reg [7:0] DO,
+    output reg DONE,
+    output SD_CS,
+    output SD_CLK,
+    output SD_MOSI,
+    input SD_MISO
+);
+
+    reg [4:0] counter;
+    reg [8:0] shift_reg;
+    reg [7:0] input_reg;
+    wire counter_max;
+
+    // Determine maximum counter value based on DUMMY mode
+    assign counter_max = DUMMY ? (counter == 5'd17) : (counter == 5'd15);
+    
+    // SD_CS is always asserted when not in reset
+    assign SD_CS = nRESET;
+    
+    // SD_CLK is generated from counter LSB
+    assign SD_CLK = counter[0];
+    
+    // SD_MOSI is driven by MSB of shift register
+    assign SD_MOSI = shift_reg[8];
+
+    always @(posedge CLOCK or negedge nRESET) begin
+        if (!nRESET) begin
+            // Reset initialization
+            counter <= 5'd15;
+            shift_reg <= 9'b111111111;
+            input_reg <= 8'b11111111;
+            DO <= 8'b11111111;
+            DONE <= 1'b0;
+        end else if (CLKEN) begin
+            if (ENABLE) begin
+                // Increment counter
+                counter <= counter + 1'b1;
+                
+                // Handle data latching and shifting
+                if (!nWR && (counter == 5'd0)) begin
+                    // Latch input data and load shift register
+                    input_reg <= DI;
+                    shift_reg <= {DI, 1'b1};
+                end else begin
+                    // Shift left, insert SD_MISO at LSB
+                    shift_reg <= {shift_reg[7:0], SD_MISO};
+                end
+                
+                // Handle completion
+                if (counter_max) begin
+                    // Capture received data
+                    DO <= shift_reg[7:0];
+                    DONE <= 1'b1;
+                end else begin
+                    DONE <= 1'b0;
+                end
+            end else begin
+                // Not enabled - reset to idle state
+                counter <= 5'd15;
+                DONE <= 1'b0;
+            end
+        end
+    end
+
+endmodule

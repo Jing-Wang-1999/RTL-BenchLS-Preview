@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/222",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/216",
+  "repository": "lowRISC/ibex",
+  "pr_number": 222,
+  "issue_number": 216,
+  "verilog_files": [
+    "rtl/ibex_id_stage.sv"
+  ],
+  "deletions": 3,
+  "additions": 7,
+  "patches": [
+    {
+      "filename": "rtl/ibex_id_stage.sv",
+      "patch": "@@ -163,6 +163,7 @@ module ibex_id_stage #(\n   logic        jump_set;\n \n   logic        instr_executing;\n+  logic        instr_multicycle;\n   logic        instr_multicycle_done_n, instr_multicycle_done_q;\n   logic        stall_lsu;\n   logic        stall_multdiv;\n@@ -477,18 +478,22 @@ module ibex_id_stage #(\n   // ID-EX/WB //\n   //////////////\n \n+  assign multdiv_en_dec   = mult_en_dec | div_en_dec;\n+  assign instr_multicycle = data_req_dec | multdiv_en_dec | branch_in_dec | jump_in_dec;\n+\n   // Forward decoder output to EX, WB and controller only if current instr is still\n   // being executed. This is the case if the current instr is either:\n   // - a new instr (not yet done)\n   // - a multicycle instr that is not yet done\n-  assign instr_executing = (instr_new_i | ~instr_multicycle_done_q);\n+  assign instr_executing = instr_new_i | (instr_multicycle & ~instr_multicycle_done_q);\n   assign data_req_id     = instr_executing ? data_req_dec  : 1'b0;\n   assign mult_en_id      = instr_executing ? mult_en_dec   : 1'b0;\n   assign div_en_id       = instr_executing ? div_en_dec    : 1'b0;\n \n   ///////////\n   // ID-EX //\n   ///////////\n+\n   assign data_req_ex_o               = data_req_id;\n   assign data_we_ex_o                = data_we_id;\n   assign data_type_ex_o              = data_type_id;\n@@ -531,8 +536,6 @@ module ibex_id_stage #(\n   // ID-EX/WB FSM //\n   //////////////////\n \n-  assign multdiv_en_dec  = mult_en_dec | div_en_dec;\n-\n   always_comb begin : id_wb_fsm\n     id_wb_fsm_ns            = id_wb_fsm_cs;\n     instr_multicycle_done_n = instr_multicycle_done_q;\n@@ -580,6 +583,7 @@ module ibex_id_stage #(\n               instr_multicycle_done_n = 1'b0;\n             end\n             default: begin\n+              instr_multicycle_done_n = 1'b0;\n               instr_ret_o             = 1'b1;\n             end\n           endcase",
+      "additions": 7,
+      "deletions": 3,
+      "changes": 10
+    }
+  ],
+  "pr_info": {
+    "title": "Fix IF stalls preventing deassertion of regfile write enable",
+    "body": "This PR makes sure the signal `instr_multicycle_done_q` is only evaluated when the decoder currently has a multicycle instruction (load/store, mult/div, branch, jump). If this signal is evaluated\r\nfor single-cycle instructions, it can prevent the reg file write enable from being de-asserted in the case of stalls due to the IF stage.\r\n\r\n@udinator: Could you please verify that this actually fixes the bug you reported in #216 before we merge it?",
+    "state": "closed",
+    "created_at": "2019-08-06T12:49:23Z",
+    "updated_at": "2019-10-24T17:03:31Z",
+    "merged_at": "2019-08-06T16:04:58Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "instr_multicycle_done is not asserted, continuous register writes",
+    "body": "While executing the code shown below:\r\n![Screenshot from 2019-08-05 18-14-11](https://user-images.githubusercontent.com/16736281/62504340-e2de7b00-b7ac-11e9-8b26-0cc4090ccec3.png)\r\nWe see this incorrect behavior in the core:\r\n![Screenshot from 2019-08-05 18-13-52](https://user-images.githubusercontent.com/16736281/62504356-ee31a680-b7ac-11e9-8d28-748683269f7e.png)\r\n\r\nAs shown, the `addi` instruction at PC `0x80000088` appears to correctly load register `x13` with the value `0xa5a5a5a5`, but at the very next instruction (PC: `0x8000008c`), we can see from the trace log that `x13` now has the value `0xa5a5de17`. \r\n![Screenshot from 2019-08-05 18-12-33](https://user-images.githubusercontent.com/16736281/62504456-76b04700-b7ad-11e9-94ab-524900644a48.png)\r\n\r\nFrom the waveform, `rf_reg[13]` is written correctly by the `addi` after adding the immediate value `0x5a5` (`alu_operand_b_i`), and becomes `0xa5a5a5a5`. After this, the testbench does not assert the `instr_gnt_i` for a number of cycles, leading the core to stay in the DECODE phase while waiting for the next instruction fetch. However, we see that `rf_reg[13]` keeps getting written with the incremented values of `alu_result` in every consecutive cycle that the core waits, as `instr_multicycle_done_q` in the ID stage does not go high after the `addi` finishes. This keeps `regfile_we` at 1, causing the continuous writes.",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "created_at": "2019-08-06T01:37:27Z",
+    "updated_at": "2019-08-06T16:04:59Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 247
+  },
+  "task_id": "lowRISC_ibex_222_216",
+  "lec_status": "useful_pass",
+  "base_commit": "e5bdf1ea9fd522bb345db6f7310b2c0f9253c706",
+  "head_commit": "f7454716b9e99fe575963b653cbed0730e3c2c1c"
+}

@@ -1,0 +1,40 @@
+The Verilog module "exp3_sensor" is designed to interface with an ultrasonic sensor for measurement purposes and visualize the measurement values on 7-segment displays. Here's an explanation encompassing its purpose, key control flow, decision points, and important data processing or signal interactions:
+
+1. **Primary Function:**
+   The module performs distance measurement using an ultrasonic sensor and displays the result on three 7-segment displays. It also handles debounce logic for the input signals and provides various debug outputs.
+
+2. **Control Flow and Decision Points:**
+   - The module initializes or resets internal registers (`medida_reg`, `pronto_reg`, `estado_reg`) when the `reset` signal is high.
+   - The measurement process is triggered by debouncing the `medir` input signal using two-stage flip-flops (`medir_ff1`, `medir_ff2`). The `s_medir` signal ensures only a single pulse is considered from the `medir` input.
+   - During every clock cycle, provided `reset` is low, the internal measurement (`medida_reg`) and state (`estado_reg`) registers are updated. The measurement logic is placeholder and should be replaced with the specific sensor's control logic for capturing distance.
+   - The edge detection of the `echo` signal sets the sensor trigger (`s_trigger`).
+
+3. **Data Processing and Signal Interactions:**
+   - The measured value (`medida_reg`) is converted into three 4-bit chunks, each displayed on a 7-segment display (`hex0`, `hex1`, `hex2`).
+   - The `hexa_to_seg` function maps the 4-bit digit inputs to their respective 7-segment display binary codes.
+   - The debounced signals are outputted as `db_medir` (debounced measurement command), `db_echo` (direct echo signal), `db_trigger` (debounced trigger signal), and `db_estado` (current state in 7-segment format).
+   - The state of the measurement process is shown through the `pronto` signal, which indicates if a distance measurement operation is complete or in progress.
+
+By combining these elements, the `three_sensor_interface` module effectively manages ultrasonic sensor measurements, debounces input signals, and provides a clear visual representation of the process on 7-segment displays, while offering signals for further processing or debugging.
+
+Module Interface:
+module three_sensor_interface (
+    input wire        clock,
+    input wire        reset,
+    input wire        medir,
+    input wire        echo,
+    output wire       trigger,
+    output wire [6:0] hex0,
+    output wire [6:0] hex1,
+    output wire [6:0] hex2,
+    output wire       pronto,
+    output wire       db_medir,
+    output wire       db_echo,
+    output wire       db_trigger,
+    output wire [6:0] db_estado
+);
+
+Behavioral Clarifications:
+- The internal measurement register is 12 bits wide and the state register is 4 bits wide; both reset to zero on posedge reset.
+- Edge detection for medir uses two-stage synchronizer flip-flops; s_medir is the rising-edge pulse (medir_ff1 AND NOT medir_ff2).
+- The 7-segment encoding function covers all 16 hex values (0-F) with active-low segment encoding.

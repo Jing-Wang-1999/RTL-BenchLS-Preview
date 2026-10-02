@@ -1,0 +1,59 @@
+always @(posedge clk) begin
+    reg_rd_data_reg <= 0;
+    reg_rd_ack_reg <= 1'b0;
+
+    if (ref_strb_sync_3_reg ^ ref_strb_sync_2_reg) begin
+        clk_acc_reg <= 1;
+        clk_cnt_reg <= clk_acc_reg;
+    end else begin
+        clk_acc_reg <= clk_acc_reg + 1;
+    end
+
+    for (k = 0; k < CH_CNT; k = k + 1) begin
+        if (ref_strb_sync_3_reg ^ ref_strb_sync_2_reg) begin
+            ch_acc_reg[k] <= ch_flag[k];
+            ch_cnt_reg[k] <= ch_acc_reg[k];
+        end else begin
+            ch_acc_reg[k] <= ch_acc_reg[k] + ch_flag[k];
+        end
+    end
+
+    if (reg_rd_en && !reg_rd_ack_reg) begin
+        // read operation
+        reg_rd_ack_reg <= 1'b1;
+        case ({reg_rd_addr >> 2, 2'b00})
+            RBB+5'h00: reg_rd_data_reg <= RB_TYPE;       // Type
+            RBB+5'h04: reg_rd_data_reg <= 32'h00000100;  // Version
+            RBB+5'h08: reg_rd_data_reg <= RB_NEXT_PTR;   // Next header
+            RBB+5'h0C: reg_rd_data_reg <= CH_CNT;
+            RBB+5'h10: begin
+                reg_rd_data_reg[31:16] <= REF_CLK_PERIOD_NS_NUM;
+                reg_rd_data_reg[15:0] <= REF_CLK_PERIOD_NS_DENOM;
+            end
+            RBB+5'h18: begin
+                reg_rd_data_reg[31:16] <= CLK_PERIOD_NS_NUM;
+                reg_rd_data_reg[15:0] <= CLK_PERIOD_NS_DENOM;
+            end
+            RBB+5'h1C: reg_rd_data_reg <= clk_cnt_reg << SHIFT;
+            default: reg_rd_ack_reg <= 1'b0;
+        endcase
+        for (k = 0; k < CH_CNT; k = k + 1) begin
+            if ({reg_rd_addr >> 2, 2'b00} == RBB+7'h20 + k*4) begin
+                reg_rd_data_reg <= ch_cnt_reg[k] << (SHIFT+CH_PRESCALE_WIDTH);
+                reg_rd_ack_reg <= 1'b1;
+            end
+        end
+    end
+
+    if (rst) begin
+        reg_rd_ack_reg <= 1'b0;
+
+        clk_acc_reg <= 0;
+        clk_cnt_reg <= 0;
+
+        for (k = 0; k < CH_CNT; k = k + 1) begin
+            ch_acc_reg[k] <= 0;
+            ch_cnt_reg[k] <= 0;
+        end
+    end
+end

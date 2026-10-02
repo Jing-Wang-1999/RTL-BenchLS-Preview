@@ -1,0 +1,95 @@
+module origen_174524(
+    input clk,
+    input zero,
+    input [31:0] code,
+    output PC_CLK,
+    output IM_R,
+    output RF_CLK,
+    output M1, M2, M3, M4, M5, M6, M7, M8, M9,
+    output [3:0] ALUC,
+    output RF_W,
+    output DM_w,
+    output DM_r,
+    output EXT16
+);
+
+    parameter ADD = 6'b100000;
+    parameter ADDU = 6'b100001;
+    parameter SUB = 6'b100010;
+    parameter SUBU = 6'b100011;
+    parameter AND = 6'b100100;
+    parameter OR = 6'b100101;
+    parameter XOR = 6'b100110;
+    parameter NOR = 6'b100111;
+    parameter SLT = 6'b101010;
+    parameter SLTU = 6'b101011;
+    parameter SLL = 6'b000000;
+    parameter SRL = 6'b000010;
+    parameter SRA = 6'b000011;
+    parameter SLLV = 6'b000100;
+    parameter SRLV = 6'b000110;
+    parameter SRAV = 6'b000111;
+    parameter JR = 6'b001000;
+    parameter ADDI = 6'b001000;
+    parameter ADDIU = 6'b001001;
+    parameter ANDI = 6'b001100;
+    parameter ORI = 6'b001101;
+    parameter XORI = 6'b001110;
+    parameter LW = 6'b100011;
+    parameter SW = 6'b101011;
+    parameter BEQ = 6'b000100;
+    parameter BNE = 6'b000101;
+    parameter SLTI = 6'b001010;
+    parameter SLTIU = 6'b001011;
+    parameter LUI = 6'b001111;
+    parameter J = 6'b000010;
+    parameter JAL = 6'b000011;
+
+    reg [3:0] ALUC_reg;
+    reg PC_CLK_reg, IM_R_reg, RF_CLK_reg, RF_W_reg, DM_w_reg, DM_r_reg, EXT16_reg;
+    reg M1_reg, M2_reg, M3_reg, M4_reg, M5_reg, M6_reg, M7_reg, M8_reg, M9_reg;
+
+    always @(*) begin
+        case (code[31:26])
+            ADD: begin
+                ALUC_reg = 4'b0000;
+                PC_CLK_reg = 1'b1;
+                IM_R_reg = 1'b1;
+                RF_CLK_reg = 1'b1;
+                M1_reg = 1'b0;
+                M2_reg = 1'b0;
+                M3_reg = 1'b0;
+                M4_reg = 1'b0;
+                M5_reg = 1'b1;
+                M6_reg = 1'b0;
+                M7_reg = 1'b0;
+                M8_reg = 1'b0;
+                M9_reg = 1'b0;
+                RF_W_reg = 1'b1;
+                DM_w_reg = 1'b0;
+                DM_r_reg = 1'b0;
+                EXT16_reg = 1'b0;
+            end
+            // Add more cases for other instruction types
+        endcase
+    end
+
+    assign PC_CLK = PC_CLK_reg;
+    assign IM_R = IM_R_reg;
+    assign RF_CLK = RF_CLK_reg;
+    assign M1 = M1_reg;
+    assign M2 = M2_reg;
+    assign M3 = M3_reg;
+    assign M4 = M4_reg;
+    assign M5 = M5_reg;
+    assign M6 = M6_reg;
+    assign M7 = M7_reg;
+    assign M8 = M8_reg;
+    assign M9 = M9_reg;
+    assign ALUC = ALUC_reg;
+    assign RF_W = RF_W_reg;
+    assign DM_w = DM_w_reg;
+    assign DM_r = DM_r_reg;
+    assign EXT16 = EXT16_reg;
+
+endmodule

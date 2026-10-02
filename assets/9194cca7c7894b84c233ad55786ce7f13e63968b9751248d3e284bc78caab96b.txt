@@ -1,0 +1,54 @@
+module origen_146609 (
+    input A,
+    input B,
+    input SEL,
+    output Y,
+    input VPWR,
+    input VGND,
+    input VPB,
+    input VNB
+);
+
+    wire sel_inv;
+    wire nand_out1, nand_out2;
+
+    sky130_fd_sc_hd__inv_1 inv (
+        .A(SEL),
+        .Y(sel_inv),
+        .VPWR(VPWR),
+        .VGND(VGND),
+        .VPB(VPB),
+        .VNB(VNB)
+    );
+
+    sky130_fd_sc_hd__nand2b nand1 (
+        .A_N(A),
+        .B(sel_inv),
+        .Y(nand_out1),
+        .VPWR(VPWR),
+        .VGND(VGND),
+        .VPB(VPB),
+        .VNB(VNB)
+    );
+
+    sky130_fd_sc_hd__nand2b nand2 (
+        .A_N(B),
+        .B(SEL),
+        .Y(nand_out2),
+        .VPWR(VPWR),
+        .VGND(VGND),
+        .VPB(VPB),
+        .VNB(VNB)
+    );
+
+    sky130_fd_sc_hd__nand2 nand3 (
+        .A(nand_out1),
+        .B(nand_out2),
+        .Y(Y),
+        .VPWR(VPWR),
+        .VGND(VGND),
+        .VPB(VPB),
+        .VNB(VNB)
+    );
+
+endmodule

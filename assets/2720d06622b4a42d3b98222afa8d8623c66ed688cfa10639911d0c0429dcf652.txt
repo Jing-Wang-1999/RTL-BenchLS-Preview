@@ -1,0 +1,9 @@
+# Four-request round-robin arbiter
+
+Implement `axicb_round_robin_core` with parameter `REQ_NB=4`; this case evaluates that default configuration. Inputs `aclk`, `aresetn`, `srst`, `en` are one bit, `req` is 4 bits; output `grant` is 4 bits. `aresetn` is an asynchronous active-low reset; `srst` is active-high synchronous reset on the rising edge of `aclk`.
+
+Maintain a four-bit priority mask and a four-bit retained grant, both reset to zero by either reset. Form a combinational candidate by selecting the lowest-numbered asserted bit of `req & mask` when that vector is nonzero, otherwise the lowest asserted bit of `req`; no requests produce zero. `grant` equals this candidate while `en=1`, and equals the retained grant while `en=0`. Reset does not combinationally suppress a candidate when `en=1`.
+
+At an enabled nonreset rising edge, save the current candidate as the retained grant. When that candidate is nonzero, update the mask according to its granted index: index 0 gives 1110, 1 gives 1100, 2 gives 1000, and 3 gives 1111. A zero candidate leaves the mask unchanged. Disabled edges hold both registers. Thus grants are combinational when enabled, including changes within a cycle; disabling exposes the last captured grant, which can remain asserted after its request disappears. There is no implicit acceptance input or transaction lock beyond `en`.
+
+The reset-reachable state and all binary request/enable combinations are defined. State before reset is unspecified. Other parameter values are outside this case; the many generated requester-count alternatives are not active complexity in the default four-request implementation.

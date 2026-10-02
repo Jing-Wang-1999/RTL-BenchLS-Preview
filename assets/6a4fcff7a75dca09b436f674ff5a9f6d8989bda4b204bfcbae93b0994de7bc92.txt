@@ -1,0 +1,57 @@
+module origen_152461(
+    input signed [8:0] A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20,
+    input signed [1:0] W1, W2, W3, W4, W5, W6, W7, W8, W9, W10, W11, W12, W13, W14, W15, W16, W17, W18, W19, W20,
+    input clk,
+    output reg signed [12:0] out_neuron
+);
+
+reg [1:0] Pres_state, Next_state;
+reg signed [8:0] Activation [19:0];
+reg signed [1:0] Weight [19:0];
+reg signed [20:0] out_array [19:0];
+reg signed [20:0] y;
+reg signed [4:0] i;
+
+always @(posedge clk) begin
+    case (Pres_state)
+        2'b00: begin // State S0 (Initialization)
+            Activation[0] <= A1;  Activation[1] <= A2;  Activation[2] <= A3;  Activation[3] <= A4;  Activation[4] <= A5;
+            Activation[5] <= A6;  Activation[6] <= A7;  Activation[7] <= A8;  Activation[8] <= A9;  Activation[9] <= A10;
+            Activation[10] <= A11; Activation[11] <= A12; Activation[12] <= A13; Activation[13] <= A14; Activation[14] <= A15;
+            Activation[15] <= A16; Activation[16] <= A17; Activation[17] <= A18; Activation[18] <= A19; Activation[19] <= A20;
+
+            Weight[0] <= W1;  Weight[1] <= W2;  Weight[2] <= W3;  Weight[3] <= W4;  Weight[4] <= W5;
+            Weight[5] <= W6;  Weight[6] <= W7;  Weight[7] <= W8;  Weight[8] <= W9;  Weight[9] <= W10;
+            Weight[10] <= W11; Weight[11] <= W12; Weight[12] <= W13; Weight[13] <= W14; Weight[14] <= W15;
+            Weight[15] <= W16; Weight[16] <= W17; Weight[17] <= W18; Weight[18] <= W19; Weight[19] <= W20;
+
+            i <= 0;
+            Next_state <= 2'b01;
+        end
+
+        2'b01: begin // State S1 (Multiplication)
+            out_array[i] <= Activation[i] * Weight[i];
+            i <= i + 1;
+            Next_state <= 2'b10;
+        end
+
+        2'b10: begin // State S2 (Summation)
+            if (i <= 19) begin
+                y <= y + out_array[i];
+                i <= i + 1;
+                Next_state <= 2'b10;
+            end else begin
+                Next_state <= 2'b11;
+            end
+        end
+
+        2'b11: begin // State S3 (Output)
+            out_neuron <= y[12:0];
+            Pres_state <= 2'b00;
+        end
+
+        default: Pres_state <= 2'b00;
+    endcase
+end
+
+endmodule

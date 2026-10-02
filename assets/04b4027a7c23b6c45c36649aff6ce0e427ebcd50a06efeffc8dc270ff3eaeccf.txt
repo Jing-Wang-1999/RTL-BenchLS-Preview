@@ -1,0 +1,11 @@
+always @(posedge clk_i or negedge arst_i)
+	  if (!arst_i)
+	    ctrl <=  0;
+	  else if (rst_i)
+	    ctrl <=  0;
+	  else if (reg_wacc & (REG_ADR == CTRL_ADR) & ~wbm_busy )
+	    ctrl <=  dat_i;
+	  else begin
+	    ctrl[6] <=  ctrl[6] & !cbsint_in;
+	    ctrl[5] <=  ctrl[5] & !vbsint_in;
+	  end

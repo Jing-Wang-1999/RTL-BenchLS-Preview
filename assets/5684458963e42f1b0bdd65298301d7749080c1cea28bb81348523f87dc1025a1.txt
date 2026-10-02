@@ -1,0 +1,180 @@
+module origen_007269 (
+    input wire clk,
+    input wire rst,
+    input wire tx_en,
+    input wire [7:0] tx_data,
+    input wire bpsclk,
+    output reg tx_stop,
+    output reg tx_out
+);
+
+    // State encoding
+    typedef enum reg [3:0] {
+        IDLE = 4'b0000,
+        START_BIT = 4'b0001,
+        DATA_BIT_0 = 4'b0010,
+        DATA_BIT_1 = 4'b0011,
+        DATA_BIT_2 = 4'b0100,
+        DATA_BIT_3 = 4'b0101,
+        DATA_BIT_4 = 4'b0110,
+        DATA_BIT_5 = 4'b0111,
+        DATA_BIT_6 = 4'b1000,
+        DATA_BIT_7 = 4'b1001,
+        STOP_BIT_1 = 4'b1010,
+        STOP_BIT_2 = 4'b1011
+    } state_t;
+
+    state_t current_state, next_state;
+    reg [2:0] bit_counter;
+
+    // State transition
+    always @(posedge clk or negedge rst) begin
+        if (!rst)
+            current_state <= IDLE;
+        else
+            current_state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (current_state)
+            IDLE: begin
+                if (tx_en)
+                    next_state = START_BIT;
+                else
+                    next_state = IDLE;
+            end
+            START_BIT: begin
+                if (bpsclk)
+                    next_state = DATA_BIT_0;
+                else
+                    next_state = START_BIT;
+            end
+            DATA_BIT_0: begin
+                if (bpsclk)
+                    next_state = DATA_BIT_1;
+                else
+                    next_state = DATA_BIT_0;
+            end
+            DATA_BIT_1: begin
+                if (bpsclk)
+                    next_state = DATA_BIT_2;
+                else
+                    next_state = DATA_BIT_1;
+            end
+            DATA_BIT_2: begin
+                if (bpsclk)
+                    next_state = DATA_BIT_3;
+                else
+                    next_state = DATA_BIT_2;
+            end
+            DATA_BIT_3: begin
+                if (bpsclk)
+                    next_state = DATA_BIT_4;
+                else
+                    next_state = DATA_BIT_3;
+            end
+            DATA_BIT_4: begin
+                if (bpsclk)
+                    next_state = DATA_BIT_5;
+                else
+                    next_state = DATA_BIT_4;
+            end
+            DATA_BIT_5: begin
+                if (bpsclk)
+                    next_state = DATA_BIT_6;
+                else
+                    next_state = DATA_BIT_5;
+            end
+            DATA_BIT_6: begin
+                if (bpsclk)
+                    next_state = DATA_BIT_7;
+                else
+                    next_state = DATA_BIT_6;
+            end
+            DATA_BIT_7: begin
+                if (bpsclk)
+                    next_state = STOP_BIT_1;
+                else
+                    next_state = DATA_BIT_7;
+            end
+            STOP_BIT_1: begin
+                if (bpsclk)
+                    next_state = STOP_BIT_2;
+                else
+                    next_state = STOP_BIT_1;
+            end
+            STOP_BIT_2: begin
+                if (bpsclk)
+                    next_state = IDLE;
+                else
+                    next_state = STOP_BIT_2;
+            end
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Output logic
+    always @(posedge clk or negedge rst) begin
+        if (!rst) begin
+            tx_out <= 1'b1;
+            tx_stop <= 1'b0;
+            bit_counter <= 3'b000;
+        end else begin
+            case (current_state)
+                IDLE: begin
+                    tx_out <= 1'b1;
+                    tx_stop <= 1'b0;
+                    bit_counter <= 3'b000;
+                end
+                START_BIT: begin
+                    if (bpsclk)
+                        tx_out <= 1'b0;
+                end
+                DATA_BIT_0: begin
+                    if (bpsclk)
+                        tx_out <= tx_data[0];
+                end
+                DATA_BIT_1: begin
+                    if (bpsclk)
+                        tx_out <= tx_data[1];
+                end
+                DATA_BIT_2: begin
+                    if (bpsclk)
+                        tx_out <= tx_data[2];
+                end
+                DATA_BIT_3: begin
+                    if (bpsclk)
+                        tx_out <= tx_data[3];
+                end
+                DATA_BIT_4: begin
+                    if (bpsclk)
+                        tx_out <= tx_data[4];
+                end
+                DATA_BIT_5: begin
+                    if (bpsclk)
+                        tx_out <= tx_data[5];
+                end
+                DATA_BIT_6: begin
+                    if (bpsclk)
+                        tx_out <= tx_data[6];
+                end
+                DATA_BIT_7: begin
+                    if (bpsclk)
+                        tx_out <= tx_data[7];
+                end
+                STOP_BIT_1: begin
+                    if (bpsclk)
+                        tx_out <= 1'b1;
+                end
+                STOP_BIT_2: begin
+                    if (bpsclk) begin
+                        tx_out <= 1'b1;
+                        tx_stop <= 1'b1;
+                    end
+                end
+            endcase
+        end
+    end
+
+endmodule

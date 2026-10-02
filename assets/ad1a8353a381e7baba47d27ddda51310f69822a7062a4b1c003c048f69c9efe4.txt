@@ -1,0 +1,58 @@
+// D Flip-Flop module
+module origen_004706 (
+    input d, rst, clk,
+    output reg q,
+    output qb
+);
+
+    always @(posedge clk or posedge rst) begin
+        if (rst)
+            q <= 1'b0;
+        else
+            q <= d;
+    end
+
+    assign qb = ~q;
+
+endmodule
+
+// Testbench
+module dff_tb;
+    reg D, rst1, CLK;
+    wire Q, QB;
+
+    // Instantiate the DFF
+    dff dut (
+        .d(D),
+        .rst(rst1),
+        .clk(CLK),
+        .q(Q),
+        .qb(QB)
+    );
+
+    // Clock generation
+    initial begin
+        CLK = 0;
+        forever #10 CLK = ~CLK;
+    end
+
+    // Stimulus
+    initial begin
+        D = 0; rst1 = 1;
+        #20 rst1 = 0;
+        #10 D = 1;
+        #20 rst1 = 1;
+        #10 D = 0;
+        #20 rst1 = 0;
+        #10 D = 1;
+        #10 $finish;
+    end
+
+    // Monitor
+    initial begin
+        $monitor("Time=%0t D=%b rst1=%b CLK=%b Q=%b QB=%b", $time, D, rst1, CLK, Q, QB);
+        $dumpfile("dff_tb.vcd");
+        $dumpvars(0, dff_tb);
+    end
+
+endmodule

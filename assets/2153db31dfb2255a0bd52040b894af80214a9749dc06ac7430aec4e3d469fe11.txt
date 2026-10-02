@@ -1,0 +1,15 @@
+This module is a clocked data selector with a combined control output. It operates on the rising edge of the CLK signal.
+
+Inputs:
+- `s1` and `s2`: Single-bit select signals.
+- `c1` and `c2`: Single-bit control signals.
+- `d1` and `d2`: 16-bit data inputs.
+- `CLK`: Clock signal.
+
+Outputs:
+- `od`: A 16-bit registered data output.
+- `os`: A single-bit registered status output indicating valid data selection.
+- `oc`: A single-bit registered control output.
+
+Behavior:
+On each clock cycle, the output `od` is updated. If `s1` is high, `od` takes the value of `d1` and `os` is set high. If `s1` is low but `s2` is high, `od` takes the value of `d2` and `os` is set high. If neither `s1` nor `s2` is high, `od` is set to zero and `os` is set low. Simultaneously, the output `oc` is set high if either `c1` or `

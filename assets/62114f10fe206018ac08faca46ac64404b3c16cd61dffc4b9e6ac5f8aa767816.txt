@@ -1,0 +1,24 @@
+module random_delay #(
+	parameter D_INCREMENT = 100,
+	parameter WIDTH = 8
+)(
+	input [WIDTH-1:0] din,
+	output reg [WIDTH-1:0] dout
+);
+	
+reg [2:0] delay_sel;
+initial delay_sel = $random;
+
+always @(*) begin
+	case (delay_sel) 
+		3'h0 : dout = din;
+		3'h1 : dout = #D_INCREMENT din;
+		3'h2 : dout = #(D_INCREMENT*2) din;
+		3'h3 : dout = #(D_INCREMENT*3) din;
+		3'h4 : dout = #(D_INCREMENT*4) din;
+		3'h5 : dout = #(D_INCREMENT*5) din;
+		3'h6 : dout = #(D_INCREMENT*6) din;
+		3'h7 : dout = #(D_INCREMENT*7) din;		
+	endcase
+end
+endmodule

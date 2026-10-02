@@ -1,0 +1,7 @@
+# HLS_fp17_mul_core_chn_b_rsci_chn_b_wait_dp
+
+This module is a one-entry, 17-bit wait-state data buffer. Inputs are `nvdla_core_clk`, active-low asynchronous reset `nvdla_core_rstn`, control bits `chn_b_rsci_oswt`, `chn_b_rsci_biwt`, and `chn_b_rsci_bdwt`, and data `chn_b_rsci_d[16:0]`. Outputs are `chn_b_rsci_bawt`, `chn_b_rsci_wen_comp`, and `chn_b_rsci_d_mxwt[16:0]`.
+
+Combinationally, `chn_b_rsci_bawt = chn_b_rsci_biwt | bcwt`, `chn_b_rsci_wen_comp = ~chn_b_rsci_oswt | chn_b_rsci_bawt`, and `chn_b_rsci_d_mxwt` selects the saved buffer when `bcwt=1`, otherwise the live input data.
+
+On the falling edge of reset, `bcwt` and the saved data clear to zero. On each rising clock edge outside reset, `bcwt` becomes `(bcwt | chn_b_rsci_biwt) & ~chn_b_rsci_bdwt`, and the saved data captures the current multiplexed output. There are no submodules.

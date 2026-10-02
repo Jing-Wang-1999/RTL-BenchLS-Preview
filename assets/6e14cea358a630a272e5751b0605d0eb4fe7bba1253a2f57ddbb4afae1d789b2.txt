@@ -1,0 +1,35 @@
+# Module Specification: autovcoder_104119
+
+## Overview
+This module implements a 32-bit rotate-right-through-carry operation with variable shift amounts. It performs a circular rotation where a carry flag participates in the rotation chain.
+
+## Inputs
+- **a** (32-bit): The input data word to be rotated
+- **flagc** (1-bit): The carry flag input that participates in the rotation
+- **shift** (5-bit): The rotation amount, specifying how many bit positions to rotate (0 to 31)
+
+## Outputs
+- **q** (32-bit): The rotated result data word
+- **c** (1-bit): The carry flag output after rotation
+
+## Functional Behavior
+
+The module performs a rotate-right operation through carry, where the carry flag is treated as an additional bit in the rotation chain. The operation can be visualized as rotating a 33-bit value consisting of the 32-bit input word concatenated with the carry flag.
+
+### Rotation Mechanism
+
+For each shift amount from 0 to 31:
+
+- **Shift = 0**: No rotation occurs. Output q equals input a, and output c equals input flagc.
+
+- **Shift = 1**: The carry flag is inserted at the most significant bit position of the output. The original MSB of input a becomes the new carry output. The remaining 31 bits of a are shifted right by one position.
+
+- **Shift = 2 to 31**: The rotation continues in the same pattern. For shift amount N:
+  - The lower N bits of input a wrap around to the upper N bits of the output
+  - The carry flag is inserted at bit position (32-N) of the output
+  - The upper (32-N) bits of input a are shifted right and occupy the lower (32-N) bits of the output
+  - Bit position (31-N) of input a becomes the new carry output
+
+### Operation Details
+
+The rotation is combinational (no clock required). The shift amount directly selects one of 32 possible rotation configurations. Each configuration maintains all 33 bits of information (32 data bits plus 1 carry bit) but rearranges their positions according to the rotation amount

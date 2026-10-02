@@ -1,0 +1,29 @@
+module origen_112223(
+    input [7:0] A,
+    input [7:0] B,
+    input op,
+    output [7:0] S,
+    output sinal
+);
+
+    wire [7:0] mux_out;
+    wire [8:0] carry;
+
+    assign carry[0] = op; // Initial carry is the operation type (0 for addition, 1 for subtraction)
+
+    // Generate mux_out and perform addition/subtraction using full adders
+    genvar i;
+    generate
+        for (i = 0; i < 8; i = i + 1) begin : bit_operations
+            // Mux2: Select between B[i] and ~B[i] based on op
+            assign mux_out[i] = op ? ~B[i] : B[i];
+
+            // Full adder: A[i] + mux_out[i] + carry[i]
+            assign {carry[i+1], S[i]} = A[i] + mux_out[i] + carry[i];
+        end
+    endgenerate
+
+    // The sign of the result is the most significant bit of S
+    assign sinal = S[7];
+
+endmodule

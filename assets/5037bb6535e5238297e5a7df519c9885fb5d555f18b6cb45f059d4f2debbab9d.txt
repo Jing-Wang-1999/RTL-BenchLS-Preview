@@ -1,0 +1,149 @@
+module rtlpp_00415 (
+	ff_tx_data,
+	ff_tx_eop,
+	ff_tx_err,
+	ff_tx_mod,
+	ff_tx_sop,
+	ff_tx_wren,
+	ff_tx_clk,
+	ff_rx_rdy,
+	ff_rx_clk,
+	address,
+	read,
+	writedata,
+	write,
+	clk,
+	reset,
+	mdio_in,
+	rxp,
+	ref_clk,
+	ff_tx_rdy,
+	ff_rx_data,
+	ff_rx_dval,
+	ff_rx_eop,
+	ff_rx_mod,
+	ff_rx_sop,
+	rx_err,
+	readdata,
+	waitrequest,
+	mdio_out,
+	mdio_oen,
+	mdc,
+	led_an,
+	led_char_err,
+	led_link,
+	led_disp_err,
+	led_crs,
+	led_col,
+	txp,
+	rx_recovclkout
+);
+
+	input	[31:0]	ff_tx_data;
+	input		ff_tx_eop;
+	input		ff_tx_err;
+	input	[1:0]	ff_tx_mod;
+	input		ff_tx_sop;
+	input		ff_tx_wren;
+	input		ff_tx_clk;
+	input		ff_rx_rdy;
+	input		ff_rx_clk;
+	input	[7:0]	address;
+	input		read;
+	input	[31:0]	writedata;
+	input		write;
+	input		clk;
+	input		reset;
+	input		mdio_in;
+	input		rxp;
+	input		ref_clk;
+	output	reg	ff_tx_rdy;
+	output	reg [31:0]	ff_rx_data;
+	output	reg	ff_rx_dval;
+	output	reg	ff_rx_eop;
+	output	reg [1:0]	ff_rx_mod;
+	output	reg	ff_rx_sop;
+	output	reg [5:0]	rx_err;
+	output	reg [31:0]	readdata;
+	output	reg	waitrequest;
+	output	reg	mdio_out;
+	output	reg	mdio_oen;
+	output	reg	mdc;
+	output	reg	led_an;
+	output	reg	led_char_err;
+	output	reg	led_link;
+	output	reg	led_disp_err;
+	output	reg	led_crs;
+	output	reg	led_col;
+	output	reg	txp;
+	output	reg	rx_recovclkout;
+
+	// Internal signal declarations
+	reg [31:0] internal_ff_tx_data;
+	reg internal_ff_tx_eop;
+	reg internal_ff_tx_err;
+	reg [1:0] internal_ff_tx_mod;
+	reg internal_ff_tx_sop;
+	reg internal_ff_tx_wren;
+	reg internal_ff_tx_clk;
+	reg internal_ff_rx_rdy;
+	reg internal_ff_rx_clk;
+	reg [7:0] internal_address;
+	reg internal_read;
+	reg [31:0] internal_writedata;
+	reg internal_write;
+	reg internal_clk;
+	reg internal_reset;
+	reg internal_mdio_in;
+	reg internal_rxp;
+	reg internal_ref_clk;
+
+	// Logic to mimic the functionality of the instantiated module
+	always @(posedge clk or posedge reset) begin
+		if (reset) begin
+			ff_tx_rdy <= 0;
+			ff_rx_data <= 0;
+			ff_rx_dval <= 0;
+			ff_rx_eop <= 0;
+			ff_rx_mod <= 0;
+			ff_rx_sop <= 0;
+			rx_err <= 0;
+			readdata <= 0;
+			waitrequest <= 0;
+			mdio_out <= 0;
+			mdio_oen <= 1;
+			mdc <= 0;
+			led_an <= 0;
+			led_char_err <= 0;
+			led_link <= 0;
+			led_disp_err <= 0;
+			led_crs <= 0;
+			led_col <= 0;
+			txp <= 0;
+			rx_recovclkout <= 0;
+		end else begin
+			// Simplified logic for example purposes - replace with full functionality
+			ff_tx_rdy <= 1;
+			ff_rx_data <= 32'b0;
+			ff_rx_dval <= 0;
+			ff_rx_eop <= 0;
+			ff_rx_mod <= 2'b0;
+			ff_rx_sop <= 0;
+			rx_err <= 6'b0;
+			readdata <= 32'b0;
+			waitrequest <= 0;
+			mdio_out <= mdio_in;
+			mdio_oen <= ~mdio_in;
+			mdc <= ~mdc;
+			led_an <= 1;
+			led_char_err <= 0;
+			led_link <= 1;
+			led_disp_err <= 0;
+			led_crs <= 0;
+			led_col <= 0;
+			txp <= rxp;
+			rx_recovclkout <= ref_clk;
+		end
+	end
+
+endmodule

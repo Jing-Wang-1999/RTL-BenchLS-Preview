@@ -1,0 +1,100 @@
+module rtlpp_05886 (
+  input wire aclk,
+  input wire aresetn,
+  
+  // Slave Interface
+  input wire [79:0] s_axi_awaddr,
+  input wire [5:0] s_axi_awprot,
+  input wire [1:0] s_axi_awvalid,
+  output wire [1:0] s_axi_awready,
+  input wire [63:0] s_axi_wdata,
+  input wire [7:0] s_axi_wstrb,
+  input wire [1:0] s_axi_wvalid,
+  output wire [1:0] s_axi_wready,
+  output wire [3:0] s_axi_bresp,
+  output wire [1:0] s_axi_bvalid,
+  input wire [1:0] s_axi_bready,
+  input wire [79:0] s_axi_araddr,
+  input wire [5:0] s_axi_arprot,
+  input wire [1:0] s_axi_arvalid,
+  output wire [1:0] s_axi_arready,
+  output wire [63:0] s_axi_rdata,
+  output wire [3:0] s_axi_rresp,
+  output wire [1:0] s_axi_rvalid,
+  input wire [1:0] s_axi_rready,
+  
+  // Master Interface
+  output wire [199:0] m_axi_awaddr,
+  output wire [14:0] m_axi_awprot,
+  output wire [4:0] m_axi_awvalid,
+  input wire [4:0] m_axi_awready,
+  output wire [159:0] m_axi_wdata,
+  output wire [19:0] m_axi_wstrb,
+  output wire [4:0] m_axi_wvalid,
+  input wire [4:0] m_axi_wready,
+  input wire [9:0] m_axi_bresp,
+  input wire [4:0] m_axi_bvalid,
+  output wire [4:0] m_axi_bready,
+  output wire [199:0] m_axi_araddr,
+  output wire [14:0] m_axi_arprot,
+  output wire [4:0] m_axi_arvalid,
+  input wire [4:0] m_axi_arready,
+  input wire [159:0] m_axi_rdata,
+  input wire [9:0] m_axi_rresp,
+  input wire [4:0] m_axi_rvalid,
+  output wire [4:0] m_axi_rready
+);
+
+  // Internal register and wire declarations
+
+  reg [1:0] awready_reg;
+  assign s_axi_awready = awready_reg;
+
+  reg [1:0] wready_reg;
+  assign s_axi_wready = wready_reg;
+
+  reg [3:0] bresp_reg;
+  reg [1:0] bvalid_reg;
+  assign s_axi_bresp = bresp_reg;
+  assign s_axi_bvalid = bvalid_reg;
+
+  reg [1:0] arready_reg;
+  assign s_axi_arready = arready_reg;
+
+  reg [63:0] rdata_reg;
+  reg [3:0] rresp_reg;
+  reg [1:0] rvalid_reg;
+  assign s_axi_rdata = rdata_reg;
+  assign s_axi_rresp = rresp_reg;
+  assign s_axi_rvalid = rvalid_reg;
+
+  reg [199:0] m_awaddr_reg;
+  reg [14:0] m_awprot_reg;
+  reg [4:0] m_awvalid_reg;
+  assign m_axi_awaddr = m_awaddr_reg;
+  assign m_axi_awprot = m_awprot_reg;
+  assign m_axi_awvalid = m_awvalid_reg;
+
+  reg [159:0] m_wdata_reg;
+  reg [19:0] m_wstrb_reg;
+  reg [4:0] m_wvalid_reg;
+  assign m_axi_wdata = m_wdata_reg;
+  assign m_axi_wstrb = m_wstrb_reg;
+  assign m_axi_wvalid = m_wvalid_reg;
+
+  reg [4:0] bready_reg;
+  assign m_axi_bready = bready_reg;
+
+  reg [199:0] m_araddr_reg;
+  reg [14:0] m_arprot_reg;
+  reg [4:0] m_arvalid_reg;
+  assign m_axi_araddr = m_araddr_reg;
+  assign m_axi_arprot = m_arprot_reg;
+  assign m_axi_arvalid = m_arvalid_reg;
+
+  reg [4:0] rready_reg;
+  assign m_axi_rready = rready_reg;
+
+  // Logic for AXI Crossbar (place your own logic here)
+
+endmodule

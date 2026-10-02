@@ -1,0 +1,112 @@
+module origen_147685 (
+    input wire clk,
+    input wire rst_n,
+    input wire PS2CLK,
+    inout wire PS2DATA,
+    output reg [7:0] data_out,
+    output reg data_valid,
+    output reg busy,
+    output reg error
+);
+
+    // State machine states
+    localparam IDLE = 3'b000;
+    localparam START = 3'b001;
+    localparam DATA = 3'b010;
+    localparam PARITY = 3'b011;
+    localparam STOP = 3'b100;
+
+    reg [2:0] state, next_state;
+    reg [3:0] bit_count;
+    reg [10:0] shift_reg;
+    reg [1:0] ps2clk_sync;
+    reg [1:0] ps2data_sync;
+    wire ps2clk_falling_edge;
+
+    // Synchronize PS2CLK and PS2DATA
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ps2clk_sync <= 2'b11;
+            ps2data_sync <= 2'b11;
+        end else begin
+            ps2clk_sync <= {ps2clk_sync[0], PS2CLK};
+            ps2data_sync <= {ps2data_sync[0], PS2DATA};
+        end
+    end
+
+    // Detect falling edge of PS2CLK
+    assign ps2clk_falling_edge = (ps2clk_sync == 2'b10);
+
+    // State machine
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE;
+            bit_count <= 4'd0;
+            shift_reg <= 11'd0;
+            data_out <= 8'd0;
+            data_valid <= 1'b0;
+            busy <= 1'b0;
+            error <= 1'b0;
+        end else begin
+            state <= next_state;
+
+            case (state)
+                IDLE: begin
+                    busy <= 1'b0;
+                    error <= 1'b0;
+                    if (ps2clk_falling_edge && !ps2data_sync[1]) begin
+                        shift_reg <= {ps2data_sync[1], shift_reg[10:1]};
+                        bit_count <= 4'd1;
+                        busy <= 1'b1;
+                    end
+                end
+
+                START: begin
+                    if (ps2clk_falling_edge) begin
+                        shift_reg <= {ps2data_sync[1], shift_reg[10:1]};
+                        bit_count <= bit_count + 1'b1;
+                    end
+                end
+
+                DATA: begin
+                    if (ps2clk_falling_edge) begin
+                        shift_reg <= {ps2data_sync[1], shift_reg[10:1]};
+                        bit_count <= bit_count + 1'b1;
+                    end
+                end
+
+                PARITY: begin
+                    if (ps2clk_falling_edge) begin
+                        shift_reg <= {ps2data_sync[1], shift_reg[10:1]};
+                        bit_count <= bit_count + 1'b1;
+                    end
+                end
+
+                STOP: begin
+                    if (ps2clk_falling_edge) begin
+                        if (ps2data_sync[1] && (^shift_reg[9:1])) begin
+                            data_out <= shift_reg[8:1];
+                            data_valid <= 1'b1;
+                        end else begin
+                            error <= 1'b1;
+                        end
+                        busy <= 1'b0;
+                    end
+                end
+            endcase
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        next_state = state;
+        case (state)
+            IDLE: if (ps2clk_falling_edge && !ps2data_sync[1]) next_state = START;
+            START: if (bit_count == 4'd1) next_state = DATA;
+            DATA: if (bit_count == 4'd9) next_state = PARITY;
+            PARITY: if (bit_count == 4'd10) next_state = STOP;
+            STOP: if (ps2clk_falling_edge) next_state = IDLE;
+        endcase
+    end
+
+endmodule

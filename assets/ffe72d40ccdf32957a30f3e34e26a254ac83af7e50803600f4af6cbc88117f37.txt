@@ -1,0 +1,362 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module spi_cfg (
+
+             mclk,
+             reset_n,
+
+        
+             reg_cs,
+             reg_wr,
+             reg_addr,
+             reg_wdata,
+             reg_be,
+
+            
+            reg_rdata,
+            reg_ack,
+
+
+           
+           cfg_tgt_sel        ,
+           cfg_op_req         , 
+           cfg_op_type        , 
+           cfg_transfer_size  , 
+           cfg_sck_period     , 
+           cfg_sck_cs_period  , 
+           cfg_cs_byte        , 
+           cfg_datain         , 
+           cfg_dataout        , 
+           hware_op_done      
+
+        );
+
+
+
+input         mclk;
+input         reset_n;
+
+output [1:0]  cfg_tgt_sel        ;
+
+output        cfg_op_req         ; 
+output [1:0]  cfg_op_type        ; 
+output [1:0]  cfg_transfer_size  ; 
+output [5:0]  cfg_sck_period     ; 
+output [4:0]  cfg_sck_cs_period  ; 
+output [7:0]  cfg_cs_byte        ; 
+output [31:0] cfg_datain         ; 
+input  [31:0] cfg_dataout        ; 
+input         hware_op_done      ; 
+
+
+
+
+input             reg_cs         ;
+input             reg_wr         ;
+input [3:0]       reg_addr       ;
+input [31:0]      reg_wdata      ;
+input [3:0]       reg_be         ;
+
+
+output [31:0]     reg_rdata      ;
+output            reg_ack        ;
+
+
+
+
+
+
+
+wire           sw_rd_en;
+wire           sw_wr_en;
+wire  [3:0]    sw_addr ; 
+wire  [3:0]    wr_be   ;
+
+reg   [31:0]  reg_rdata      ;
+reg           reg_ack     ;
+
+wire [31:0]    reg_0;  
+wire [31:0]    reg_1;  
+wire [31:0]    reg_2;  
+wire [31:0]    reg_3 = 0;  
+wire [31:0]    reg_4 = 0;  
+wire [31:0]    reg_5 = 0;  
+wire [31:0]    reg_6 = 0;  
+wire [31:0]    reg_7 = 0;  
+wire [31:0]    reg_8 = 0;  
+wire [31:0]    reg_9 = 0;  
+wire [31:0]    reg_10 = 0; 
+wire [31:0]    reg_11 = 0; 
+wire [31:0]    reg_12 = 0; 
+wire [31:0]    reg_13 = 0; 
+wire [31:0]    reg_14 = 0; 
+wire [31:0]    reg_15 = 0; 
+reg  [31:0]    reg_out;
+
+
+
+
+
+
+
+
+    assign sw_addr       = reg_addr [3:0];
+    assign sw_rd_en      = reg_cs & !reg_wr;
+    assign sw_wr_en      = reg_cs & reg_wr;
+    assign wr_be         = reg_be;
+
+
+
+
+
+
+always @ (posedge mclk or negedge reset_n)
+begin : preg_out_Seq
+   if (reset_n == 1'b0)
+   begin
+      reg_rdata [31:0]  <= 32'h0000_0000;
+      reg_ack           <= 1'b0;
+   end
+   else if (sw_rd_en && !reg_ack) 
+   begin
+      reg_rdata [31:0]  <= reg_out [31:0];
+      reg_ack           <= 1'b1;
+   end
+   else if (sw_wr_en && !reg_ack) 
+      reg_ack           <= 1'b1;
+   else
+   begin
+      reg_ack        <= 1'b0;
+   end
+end
+
+
+
+
+
+wire   sw_wr_en_0 = sw_wr_en & (sw_addr == 4'h0);
+wire   sw_rd_en_0 = sw_rd_en & (sw_addr == 4'h0);
+wire   sw_wr_en_1 = sw_wr_en & (sw_addr == 4'h1);
+wire   sw_rd_en_1 = sw_rd_en & (sw_addr == 4'h1);
+wire   sw_wr_en_2 = sw_wr_en & (sw_addr == 4'h2);
+wire   sw_rd_en_2 = sw_rd_en & (sw_addr == 4'h2);
+wire   sw_wr_en_3 = sw_wr_en & (sw_addr == 4'h3);
+wire   sw_rd_en_3 = sw_rd_en & (sw_addr == 4'h3);
+wire   sw_wr_en_4 = sw_wr_en & (sw_addr == 4'h4);
+wire   sw_rd_en_4 = sw_rd_en & (sw_addr == 4'h4);
+wire   sw_wr_en_5 = sw_wr_en & (sw_addr == 4'h5);
+wire   sw_rd_en_5 = sw_rd_en & (sw_addr == 4'h5);
+wire   sw_wr_en_6 = sw_wr_en & (sw_addr == 4'h6);
+wire   sw_rd_en_6 = sw_rd_en & (sw_addr == 4'h6);
+wire   sw_wr_en_7 = sw_wr_en & (sw_addr == 4'h7);
+wire   sw_rd_en_7 = sw_rd_en & (sw_addr == 4'h7);
+wire   sw_wr_en_8 = sw_wr_en & (sw_addr == 4'h8);
+wire   sw_rd_en_8 = sw_rd_en & (sw_addr == 4'h8);
+wire   sw_wr_en_9 = sw_wr_en & (sw_addr == 4'h9);
+wire   sw_rd_en_9 = sw_rd_en & (sw_addr == 4'h9);
+wire   sw_wr_en_10 = sw_wr_en & (sw_addr == 4'hA);
+wire   sw_rd_en_10 = sw_rd_en & (sw_addr == 4'hA);
+wire   sw_wr_en_11 = sw_wr_en & (sw_addr == 4'hB);
+wire   sw_rd_en_11 = sw_rd_en & (sw_addr == 4'hB);
+wire   sw_wr_en_12 = sw_wr_en & (sw_addr == 4'hC);
+wire   sw_rd_en_12 = sw_rd_en & (sw_addr == 4'hC);
+wire   sw_wr_en_13 = sw_wr_en & (sw_addr == 4'hD);
+wire   sw_rd_en_13 = sw_rd_en & (sw_addr == 4'hD);
+wire   sw_wr_en_14 = sw_wr_en & (sw_addr == 4'hE);
+wire   sw_rd_en_14 = sw_rd_en & (sw_addr == 4'hE);
+wire   sw_wr_en_15 = sw_wr_en & (sw_addr == 4'hF);
+wire   sw_rd_en_15 = sw_rd_en & (sw_addr == 4'hF);
+
+
+always @( *)
+begin : preg_sel_Com
+
+  reg_out [31:0] = 32'd0;
+
+  case (sw_addr [3:0])
+    4'b0000 : reg_out [31:0] = reg_0 [31:0];     
+    4'b0001 : reg_out [31:0] = reg_1 [31:0];    
+    4'b0010 : reg_out [31:0] = reg_2 [31:0];     
+    4'b0011 : reg_out [31:0] = reg_3 [31:0];    
+    4'b0100 : reg_out [31:0] = reg_4 [31:0];    
+    4'b0101 : reg_out [31:0] = reg_5 [31:0];    
+    4'b0110 : reg_out [31:0] = reg_6 [31:0];    
+    4'b0111 : reg_out [31:0] = reg_7 [31:0];    
+    4'b1000 : reg_out [31:0] = reg_8 [31:0];    
+    4'b1001 : reg_out [31:0] = reg_9 [31:0];    
+    4'b1010 : reg_out [31:0] = reg_10 [31:0];   
+    4'b1011 : reg_out [31:0] = reg_11 [31:0];   
+    4'b1100 : reg_out [31:0] = reg_12 [31:0];   
+    4'b1101 : reg_out [31:0] = reg_13 [31:0];
+    4'b1110 : reg_out [31:0] = reg_14 [31:0];
+    4'b1111 : reg_out [31:0] = reg_15 [31:0]; 
+  endcase
+end
+
+
+
+
+
+
+
+
+wire         cfg_op_req         = reg_0[31];    
+wire [1:0]   cfg_tgt_sel        = reg_0[24:23]; 
+wire [1:0]   cfg_op_type        = reg_0[22:21]; 
+wire [1:0]   cfg_transfer_size  = reg_0[20:19]; 
+wire [5:0]   cfg_sck_period     = reg_0[18:13]; 
+wire [4:0]   cfg_sck_cs_period  = reg_0[12:8];  
+wire [7:0]   cfg_cs_byte        = reg_0[7:0];   
+
+generic_register #(8,0  ) u_spi_ctrl_be0 (
+	      .we            ({8{sw_wr_en_0 & 
+                                 wr_be[0]   }}  ),		 
+	      .data_in       (reg_wdata[7:0]    ),
+	      .reset_n       (reset_n           ),
+	      .clk           (mclk              ),
+	      
+	      
+	      .data_out      (reg_0[7:0]        )
+          );
+
+generic_register #(8,0  ) u_spi_ctrl_be1 (
+	      .we            ({8{sw_wr_en_0 & 
+                                wr_be[1]   }}  ),		 
+	      .data_in       (reg_wdata[15:8]  ),
+	      .reset_n       (reset_n           ),
+	      .clk           (mclk              ),
+	      
+	      
+	      .data_out      (reg_0[15:8]       )
+          );
+
+generic_register #(8,0  ) u_spi_ctrl_be2 (
+	      .we            ({8{sw_wr_en_0 & 
+                                wr_be[2]   }}  ),		 
+	      .data_in       (reg_wdata[23:16] ),
+	      .reset_n       (reset_n           ),
+	      .clk           (mclk              ),
+	      
+	      
+	      .data_out      (reg_0[23:16]       )
+          );
+
+assign reg_0[30:24] = 7'h0;
+
+req_register #(0  ) u_spi_ctrl_req (
+	      .cpu_we       ({sw_wr_en_0 & 
+                             wr_be[3]   }       ),		 
+	      .cpu_req      (reg_wdata[31]      ),
+	      .hware_ack    (hware_op_done      ),
+	      .reset_n       (reset_n           ),
+	      .clk           (mclk              ),
+	      
+	      
+	      .data_out      (reg_0[31]         )
+          );
+
+
+
+
+
+
+
+wire [31:0]   cfg_datain        = reg_1[31:0]; 
+
+generic_register #(8,0  ) u_spi_din_be0 (
+	      .we            ({8{sw_wr_en_1 & 
+                                wr_be[0]   }}  ),		 
+	      .data_in       (reg_wdata[7:0]    ),
+	      .reset_n       (reset_n           ),
+	      .clk           (mclk              ),
+	      
+	      
+	      .data_out      (reg_1[7:0]        )
+          );
+
+generic_register #(8,0  ) u_spi_din_be1 (
+	      .we            ({8{sw_wr_en_1 & 
+                                wr_be[1]   }}  ),		 
+	      .data_in       (reg_wdata[15:8]   ),
+	      .reset_n       (reset_n           ),
+	      .clk           (mclk              ),
+	      
+	      
+	      .data_out      (reg_1[15:8]       )
+          );
+
+generic_register #(8,0  ) u_spi_din_be2 (
+	      .we            ({8{sw_wr_en_1 & 
+                                wr_be[2]   }}  ),		 
+	      .data_in       (reg_wdata[23:16]  ),
+	      .reset_n       (reset_n           ),
+	      .clk           (mclk              ),
+	      
+	      
+	      .data_out      (reg_1[23:16]      )
+          );
+
+
+generic_register #(8,0  ) u_spi_din_be3 (
+	      .we            ({8{sw_wr_en_1 & 
+                                wr_be[3]   }}  ),		 
+	      .data_in       (reg_wdata[31:24]  ),
+	      .reset_n       (reset_n           ),
+	      .clk           (mclk              ),
+	      
+	      
+	      .data_out      (reg_1[31:24]      )
+          );
+
+
+
+
+
+assign  reg_2 = cfg_dataout; 
+
+
+
+endmodule

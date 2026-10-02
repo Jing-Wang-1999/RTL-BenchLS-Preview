@@ -1,0 +1,253 @@
+// Required path: RTL/ftdi_245fifo/axi_stream_downsizing.v
+module axi_stream_downsizing #(
+    parameter IEW = 0,                       
+    parameter OEW = 0                        
+                                             
+) (
+    input  wire                rstn,
+    input  wire                clk,
+    
+    output wire                i_tready,
+    input  wire                i_tvalid,
+    input  wire [(8<<IEW)-1:0] i_tdata,
+    input  wire [(1<<IEW)-1:0] i_tkeep,
+    input  wire                i_tlast,
+    
+    input  wire                o_tready,
+    output wire                o_tvalid,
+    output wire [(8<<OEW)-1:0] o_tdata,
+    output wire [(1<<OEW)-1:0] o_tkeep,
+    output wire                o_tlast
+);
+endmodule
+
+// Required path: RTL/ftdi_245fifo/axi_stream_packing.v
+module axi_stream_packing #(
+    parameter                 EW = 2,     
+    parameter   SUBMIT_IMMEDIATE = 0      
+                                          
+) (
+    input  wire               rstn,
+    input  wire               clk,
+    
+    output wire               i_tready,
+    input  wire               i_tvalid,
+    input  wire [(8<<EW)-1:0] i_tdata,
+    input  wire [(1<<EW)-1:0] i_tkeep,
+    input  wire               i_tlast,
+    
+    input  wire               o_tready,
+    output reg                o_tvalid,
+    output reg  [(8<<EW)-1:0] o_tdata,
+    output reg  [(1<<EW)-1:0] o_tkeep,
+    output wire               o_tlast
+);
+endmodule
+
+// Required path: RTL/ftdi_245fifo/axi_stream_resizing.v
+module axi_stream_resizing #(
+    parameter IEW = 0,                       
+    parameter OEW = 0                        
+) (
+    input  wire                rstn,
+    input  wire                clk,
+    
+    output wire                i_tready,
+    input  wire                i_tvalid,
+    input  wire [(8<<IEW)-1:0] i_tdata,
+    input  wire [(1<<IEW)-1:0] i_tkeep,
+    input  wire                i_tlast,
+    
+    input  wire                o_tready,
+    output wire                o_tvalid,
+    output wire [(8<<OEW)-1:0] o_tdata,
+    output wire [(1<<OEW)-1:0] o_tkeep,
+    output wire                o_tlast
+);
+endmodule
+
+// Required path: RTL/ftdi_245fifo/axi_stream_upsizing.v
+module axi_stream_upsizing #(
+    parameter IEW = 0,                       
+    parameter OEW = 0                        
+                                             
+) (
+    input  wire                rstn,
+    input  wire                clk,
+    
+    output wire                i_tready,
+    input  wire                i_tvalid,
+    input  wire [(8<<IEW)-1:0] i_tdata,
+    input  wire [(1<<IEW)-1:0] i_tkeep,
+    input  wire                i_tlast,
+    
+    input  wire                o_tready,
+    output reg                 o_tvalid,
+    output reg  [(8<<OEW)-1:0] o_tdata,
+    output reg  [(1<<OEW)-1:0] o_tkeep,
+    output reg                 o_tlast
+);
+endmodule
+
+// Required path: RTL/ftdi_245fifo/fifo2.v
+module fifo2 # (
+    parameter            DW = 8
+) (
+    input  wire          rstn,
+    input  wire          clk,
+    output wire          i_rdy,
+    input  wire          i_en,
+    input  wire [DW-1:0] i_data,
+    input  wire          o_rdy,
+    output wire          o_en,
+    output wire [DW-1:0] o_data
+);
+endmodule
+
+// Required path: RTL/ftdi_245fifo/fifo4.v
+module fifo4 # (
+    parameter            DW = 8
+) (
+    input  wire          rstn,
+    input  wire          clk,
+    output wire          i_almost_full,
+    output wire          i_rdy,
+    input  wire          i_en,
+    input  wire [DW-1:0] i_data,
+    input  wire          o_rdy,
+    output wire          o_en,
+    output wire [DW-1:0] o_data
+);
+endmodule
+
+// Required path: RTL/ftdi_245fifo/fifo_async.v
+module fifo_async #(
+    parameter   DW = 8,
+    parameter   EA = 10
+)(
+    input  wire          i_rstn,
+    input  wire          i_clk,
+    output wire          i_tready,
+    input  wire          i_tvalid,
+    input  wire [DW-1:0] i_tdata,
+    input  wire          o_rstn,
+    input  wire          o_clk,
+    input  wire          o_tready,
+    output reg           o_tvalid,
+    output reg  [DW-1:0] o_tdata
+);
+endmodule
+
+// Required path: RTL/ftdi_245fifo/fifo_delay_submit.v
+module fifo_delay_submit #(
+    parameter            DW = 8      
+) (
+    input  wire          rstn,
+    input  wire          clk,
+    
+    output wire          i_rdy,
+    input  wire          i_en,
+    input  wire [DW-1:0] i_data,
+    
+    input  wire          o_rdy,
+    output reg           o_en,
+    output reg  [DW-1:0] o_data
+);
+endmodule
+
+// Required path: RTL/ftdi_245fifo/ftdi_245fifo_fsm.v
+module ftdi_245fifo_fsm #(
+    parameter  CHIP_EW               = 0,    
+    parameter  CHIP_DRIVE_AT_NEGEDGE = 0
+) ( 
+    input  wire                    rstn,
+    input  wire                    clk,
+    output wire                    tx_tready,
+    input  wire                    tx_tvalid,
+    input  wire [(8<<CHIP_EW)-1:0] tx_tdata,
+    input  wire [(1<<CHIP_EW)-1:0] tx_tkeep,
+    input  wire                    rx_almost_full,
+    output wire                    rx_tvalid,
+    output wire [(8<<CHIP_EW)-1:0] rx_tdata,
+    output wire [(1<<CHIP_EW)-1:0] rx_tkeep,
+    output wire                    rx_tlast,
+    
+    input  wire                    ftdi_rxf_n,
+    input  wire                    ftdi_txe_n,
+    output reg                     ftdi_oe_n,
+    output reg                     ftdi_rd_n,
+    output reg                     ftdi_wr_n,
+    output reg                     ftdi_master_oe,   
+    output reg  [(8<<CHIP_EW)-1:0] ftdi_data_out,    
+    output reg  [(1<<CHIP_EW)-1:0] ftdi_be_out,      
+    input  wire [(8<<CHIP_EW)-1:0] ftdi_data_in,
+    input  wire [(1<<CHIP_EW)-1:0] ftdi_be_in
+);
+endmodule
+
+// Required path: RTL/ftdi_245fifo/ftdi_245fifo_top.v
+module ftdi_245fifo_top #(
+    parameter  TX_EW      = 2 ,          
+    parameter  TX_EA      = 10,          
+    parameter  RX_EW      = 2 ,          
+    parameter  RX_EA      = 10,          
+    parameter  CHIP_TYPE  = "FTx232H",   
+    parameter  SIMULATION = 0            
+) ( 
+    
+    rstn_async,
+    
+    tx_clk,          
+    tx_tready,
+    tx_tvalid,
+    tx_tdata,
+    tx_tkeep,
+    tx_tlast,
+    
+    rx_clk,          
+    rx_tready,
+    rx_tvalid,
+    rx_tdata,
+    rx_tkeep,
+    rx_tlast,
+    
+    ftdi_clk,
+    ftdi_rxf_n,
+    ftdi_txe_n,
+    ftdi_oe_n,
+    ftdi_rd_n,
+    ftdi_wr_n,
+    ftdi_data,
+    ftdi_be          
+);
+localparam CHIP_EW = (CHIP_TYPE=="FT601") ? 2 : (CHIP_TYPE=="FT600") ? 1 : 0;
+input  wire                    rstn_async;
+input  wire                    tx_clk;
+output wire                    tx_tready;
+input  wire                    tx_tvalid;
+input  wire   [(8<<TX_EW)-1:0] tx_tdata;
+input  wire   [(1<<TX_EW)-1:0] tx_tkeep;
+input  wire                    tx_tlast;
+input  wire                    rx_clk;
+input  wire                    rx_tready;
+output wire                    rx_tvalid;
+output wire   [(8<<RX_EW)-1:0] rx_tdata;
+output wire   [(1<<RX_EW)-1:0] rx_tkeep;
+output wire                    rx_tlast;
+input  wire                    ftdi_clk;
+input  wire                    ftdi_rxf_n;
+input  wire                    ftdi_txe_n;
+output wire                    ftdi_oe_n;
+output wire                    ftdi_rd_n;
+output wire                    ftdi_wr_n;
+inout       [(8<<CHIP_EW)-1:0] ftdi_data;
+inout       [(1<<CHIP_EW)-1:0] ftdi_be;
+endmodule
+
+// Required path: RTL/ftdi_245fifo/resetn_sync.v
+module resetn_sync (
+    input  wire  rstn_async,
+    input  wire  clk,
+    output wire  rstn
+);
+endmodule

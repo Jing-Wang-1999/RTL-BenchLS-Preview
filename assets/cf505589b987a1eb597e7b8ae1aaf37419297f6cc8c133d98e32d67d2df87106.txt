@@ -1,0 +1,21 @@
+always @ (posedge clk)
+      if (~reset_n) begin
+	 x2b_wrok_r <= 1'b0;
+	 xfr_ok_r   <= 1'b0;
+	 x2b_rdok_r <= 1'b0;
+	 b2x_cmd_r  <= 2'b0;
+	 timer0_tc_r  <= 1'b0;
+	 tras_ok_r    <= 1'b0;
+	 x2b_pre_ok_r <= 1'b0;
+	 x2b_act_ok_r <= 1'b0;
+      end
+      else begin
+	 x2b_wrok_r <= x2b_wrok;
+	 xfr_ok_r   <= xfr_ok;
+	 x2b_rdok_r <= x2b_rdok;
+	 b2x_cmd_r  <= b2x_cmd_t;
+	 timer0_tc_r <= (ld_trp | ld_trcd) ? 1'b0 : timer0_tc_t;
+	 tras_ok_r   <= tras_ok_internal;
+	 x2b_pre_ok_r  <= x2b_pre_ok;
+	 x2b_act_ok_r  <= x2b_act_ok;
+      end

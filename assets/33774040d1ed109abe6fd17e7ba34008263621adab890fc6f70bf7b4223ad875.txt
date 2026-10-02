@@ -1,0 +1,53 @@
+module rtlpp_08994 (
+    address, byteenable, chipselect, clk, clken, reset, write, writedata, readdata
+);
+
+  parameter INIT_FILE = "../altera_mem_if_ddr2_phy_0001_qsys_sequencer_sequencer_ram.hex";
+
+  output reg [31:0] readdata;
+  input [8:0] address;
+  input [3:0] byteenable;
+  input chipselect;
+  input clk;
+  input clken;
+  input reset;
+  input write;
+  input [31:0] writedata;
+
+  wire [31:0] mem_data_out;
+  reg [31:0] mem [0:511];
+  reg [31:0] register;
+  wire wren;
+
+  assign wren = chipselect & write;
+
+  integer i;
+
+  initial begin
+      if (INIT_FILE != "UNUSED") begin
+          $readmemh(INIT_FILE, mem);
+      end else begin
+          for (i = 0; i < 512; i = i + 1) begin
+              mem[i] = 32'b0;
+          end
+      end
+  end
+  
+  always @(posedge clk) begin
+    if (reset) begin
+      register <= 32'b0;
+    end
+    else if (clken) begin
+      if (wren) begin
+        if (byteenable[0]) mem[address][7:0] <= writedata[7:0];
+        if (byteenable[1]) mem[address][15:8] <= writedata[15:8];
+        if (byteenable[2]) mem[address][23:16] <= writedata[23:16];
+        if (byteenable[3]) mem[address][31:24] <= writedata[31:24];
+      end
+      else begin
+        register <= mem[address];
+        readdata <= register;
+      end
+    end
+  end
+endmodule

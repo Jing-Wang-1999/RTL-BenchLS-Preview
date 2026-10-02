@@ -1,0 +1,106 @@
+module rtlpp_10816
+(	serial_in,
+	data_out,
+	read_buffer,
+	reset_buffer,
+	en_16_x_baud,
+	buffer_data_present,
+	buffer_full,
+	buffer_half_full,
+	clk);
+
+input 	serial_in;
+output[7:0] data_out;
+input 	read_buffer;
+input 	reset_buffer;
+input 	en_16_x_baud;
+output 	buffer_data_present;
+output 	buffer_full;
+output 	buffer_half_full;
+input 	clk;
+
+wire   	serial_in;
+reg  [7:0] data_out;
+wire   	read_buffer;
+wire   	reset_buffer;
+wire   	en_16_x_baud;
+reg   	buffer_data_present;
+reg   	buffer_full;
+reg   	buffer_half_full;
+wire   	clk;
+
+reg [7:0] uart_data_out;
+reg  fifo_write;
+
+// Internal variables for the uart receiver
+reg [3:0] baud_count;
+reg [3:0] bit_count;
+reg [9:0] shift_reg;
+reg data_ready;
+
+// Internal variables for the FIFO
+reg [7:0] fifo_mem[0:15];
+reg [3:0] fifo_wr_ptr;
+reg [3:0] fifo_rd_ptr;
+integer fifo_count;
+
+// UART Receiver block
+always @(posedge clk) begin
+	if (reset_buffer) begin
+		bit_count <= 0;
+		baud_count <= 0;
+		fifo_write <= 0;
+		data_ready <= 0;
+	end else if (en_16_x_baud) begin
+		if (baud_count == 15) begin
+			baud_count <= 0;
+			shift_reg <= {serial_in, shift_reg[9:1]};
+			if (bit_count == 9) begin
+				bit_count <= 0;
+				if (shift_reg[0] == 0 && serial_in == 1) begin
+					uart_data_out <= shift_reg[8:1];
+					fifo_write <= 1;
+					data_ready <= 1;
+				end
+			end else begin
+				bit_count <= bit_count + 1;
+				fifo_write <= 0;
+				data_ready <= 0;
+			end
+		end else begin
+			baud_count <= baud_count + 1;
+		end
+	end
+end
+
+// FIFO block
+always @(posedge clk) begin
+	if (reset_buffer) begin
+		fifo_wr_ptr <= 0;
+		fifo_rd_ptr <= 0;
+		fifo_count <= 0;
+		buffer_full <= 0;
+		buffer_half_full <= 0;
+		buffer_data_present <= 0;
+	end else begin
+		if (fifo_write && !buffer_full) begin
+			fifo_mem[fifo_wr_ptr] <= uart_data_out;
+			fifo_wr_ptr <= fifo_wr_ptr + 1;
+			if (fifo_wr_ptr == 15)
+				fifo_wr_ptr <= 0;
+			fifo_count <= fifo_count + 1;
+		end
+		if (read_buffer && fifo_count > 0) begin
+			data_out <= fifo_mem[fifo_rd_ptr];
+			fifo_rd_ptr <= fifo_rd_ptr + 1;
+			if (fifo_rd_ptr == 15)
+				fifo_rd_ptr <= 0;
+			fifo_count <= fifo_count - 1;
+		end
+		buffer_full <= (fifo_count == 16);
+		buffer_half_full <= (fifo_count >= 8);
+		buffer_data_present <= (fifo_count > 0);
+	end
+end
+
+endmodule

@@ -1,0 +1,12 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/pcf_06d74b830ad2db3e43.v0.v
+check_sec -analyze -imp -sv ./input/rtl/pcf_06d74b830ad2db3e43.negative.v
+check_sec -elaborate -spec -top rtl_issue_top -disable_auto_bbox
+check_sec -elaborate -imp -top rtl_issue_top -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clk
+reset -expression {!resetn}
+check_sec -gen
+check_sec -prove -strategy proof
+exit

@@ -1,0 +1,67 @@
+The provided Verilog module is a floating-point unit (FPU) for addition and subtraction on 32-bit operands. Here's a comprehensive explanation of its purpose and operation:
+
+1. **Primary Function**:
+   The module performs floating-point addition or subtraction on two 32-bit single-precision operands (`a` and `b`), generating the result along with various status flags (e.g., invalid operation, infinite result, NaN result).
+
+2. **Key Control Flow/Decision Points**:
+   - The operation starts on a positive edge of the `start_i` input signal.
+   - Intermediate states (Stage 1, Stage 2, Stage 3) propagate through the pipeline at each clock cycle when `adv_i` is asserted.
+   - The `flush_i` input resets the state of the pipeline, ensuring no stale data propagates when a new set of operations begins.
+   - The `rst` input asynchronously resets the output ready flags and pipeline stages.
+
+3. **Important Data Processing and Signal Interactions**:
+   - **Stage 1**: Determines initial conditions such as checking for invalid operations (e.g., infinity handling with opposite signs). It calculates the exponent difference and prepares the fractions for shifting.
+   - **Stage 2**: Performs the necessary fraction shifts and computes the sticky bit, adjusting for accurate rounding. Here, additions and subtractions of significant bits take place using the prepared sign and shift data.
+   - **Stage 3**: Counts leading zeros in the result, adjusts the exponent accordingly, and finalizes alignment shifts for the result.
+
+4. **Detailed Data Path**:
+   - **Input Handling**: Inputs include operand signs, exponents, and fractions, plus control signals for operation type (add/subtract) and start/advance control.
+   - **Intermediate Signals**: Compute immediate values like exponent differences, fractions to shift, and necessary adjustments for stage transitions. This handling maintains bit-accuracy and ensures proper flow of precise data.
+   - **Registers**: Store intermediate results between stages, maintaining the pipeline's integrity across multiple clock cycles.
+   - **Output Generation**: The final stage calculates and sets outputs for the resulting float value, any conditional status flags, and signal readiness for the downstream processing.
+
+This module relies on a sequential flow with proper synchronization through clock and reset signals, ensuring each stage's calculations propagate correctly. The pipeline stages carefully manage exponent alignment, fraction shifting, and result normalization to guarantee a correctly rounded floating-point addition or subtraction result.
+
+Module Interface:
+module single_precision_fpu_addsub(
+   input             clk,
+   input             rst,
+   input             flush_i,
+   input             adv_i,
+   input             start_i,
+   input             is_sub_i,
+
+   input             signa_i,
+   input       [9:0] exp10a_i,
+   input      [23:0] fract24a_i,
+   input             infa_i,
+
+   input             signb_i,
+   input       [9:0] exp10b_i,
+   input      [23:0] fract24b_i,
+   input             infb_i,
+
+   input             snan_i,
+   input             qnan_i,
+   input             anan_sign_i,
+   input             addsub_agtb_i,
+   input             addsub_aeqb_i,
+
+   output reg        add_rdy_o,
+   output reg        add_sign_o,
+   output reg        add_sub_0_o,
+   output reg  [4:0] add_shl_o,
+   output reg  [9:0] add_exp10shl_o,
+   output reg  [9:0] add_exp10sh0_o,
+   output reg [27:0] add_fract28_o,
+   output reg        add_inv_o,
+   output reg        add_inf_o,
+   output reg        add_snan_o,
+   output reg        add_qnan_o,
+   output reg        add_anan_sign_o
+);
+
+Behavioral Clarifications:
+- The pipeline has three sequential clock-enabled stages; stage-ready registers (s1o_ready, s2o_ready, add_rdy_o) use asynchronous reset via rst and synchronous flush via flush_i, while data path registers update only when adv_i is asserted.
+- Stage 2 contains one combinational always block computing the sticky bit using a 26-entry case on the 5-bit shift amount; Stage 3 contains one combinational always block computing leading-zero count using a 27-entry casez on the 27-bit fraction.
+- The output fraction add_fract28_o is 28 bits wide, formed by concatenating the 27-bit stage-2 fraction result with the sticky bit.

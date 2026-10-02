@@ -1,0 +1,31 @@
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        tmrd <= 16'h0;
+        tmrd_buf <= 16'h0;
+        tmrd_flag <= 1'b0;
+    end
+    else if (clk7_en) begin
+        if (wr && tdlo) begin
+            tmrd <= {tmrd[15:8], data_in};
+        end
+        if (wr && tdhi) begin
+            tmrd <= {data_in, tmrd[7:0]};
+        end
+        if (wr && (tdlo || tdhi)) begin
+            tmrd_flag <= 1'b0;
+        end
+        if (tick & ~tick_del && !tmrd_flag) begin
+            if (tmrd == 16'h0001) begin
+                tmrd_flag <= 1'b1;
+                tmrd <= tmrd_buf;
+            end
+            else begin
+                tmrd <= tmrd - 16'h0001;
+            end
+        end
+        if (wr && crb) begin
+            tmrd_flag <= data_in[0];
+        end
+        tmrd_buf <= tmrd;
+    end
+end

@@ -1,0 +1,19 @@
+always @(posedge clk) 
+	begin
+		if (rst) begin
+			sum_round <= 0;
+			sum_round_2 <= 0;
+			exponent_round <= 0;
+			sum_final <= 0; 
+			exponent_final <= 0;
+			round_out <= 0;
+		end
+		else begin
+			sum_round <= rounding_amount + mantissa_term;
+			sum_round_2 <= sum_round_overflow ? sum_round >> 1 : sum_round;
+			exponent_round <= sum_round_overflow ? (exponent_term + 1) : exponent_term;
+			sum_final <= round_trigger ? sum_round_2 : mantissa_term; 
+			exponent_final <= round_trigger ? exponent_round : exponent_term;
+			round_out <= { sign_term, exponent_final[10:0], sum_final[53:2] };
+			end
+	end

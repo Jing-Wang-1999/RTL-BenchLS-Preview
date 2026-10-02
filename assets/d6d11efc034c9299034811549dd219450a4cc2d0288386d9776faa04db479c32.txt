@@ -1,0 +1,53 @@
+module origen_040968 (
+    input wire clock,
+    input wire start,
+    input wire [31:0] operand1,
+    input wire [31:0] operand2,
+    output reg [63:0] result,
+    output reg finish,
+    output reg illegal
+);
+
+    reg [5:0] step;
+    reg [31:0] dividend, divisor;
+    reg [63:0] temp_dividend;
+    reg dividend_sign, divisor_sign;
+
+    always @(posedge clock) begin
+        if (start) begin
+            step <= 0;
+            finish <= 0;
+            illegal <= 0;
+            dividend_sign <= operand1[31];
+            divisor_sign <= operand2[31];
+            dividend <= dividend_sign ? -operand1 : operand1;
+            divisor <= divisor_sign ? -operand2 : operand2;
+            temp_dividend <= {32'b0, dividend};
+        end else if (!finish) begin
+            if (divisor == 0) begin
+                illegal <= 1;
+                finish <= 1;
+            end else if (step < 32) begin
+                temp_dividend <= {temp_dividend[62:0], 1'b0};
+                if (temp_dividend[63:32] >= divisor) begin
+                    temp_dividend[63:32] <= temp_dividend[63:32] - divisor;
+                    temp_dividend[0] <= 1'b1;
+                end
+                step <= step + 1;
+            end else if (step == 32) begin
+                if (dividend_sign ^ divisor_sign)
+                    result[31:0] <= -temp_dividend[31:0];
+                else
+                    result[31:0] <= temp_dividend[31:0];
+                
+                if (dividend_sign)
+                    result[63:32] <= -temp_dividend[63:32];
+                else
+                    result[63:32] <= temp_dividend[63:32];
+                
+                finish <= 1;
+            end
+        end
+    end
+
+endmodule

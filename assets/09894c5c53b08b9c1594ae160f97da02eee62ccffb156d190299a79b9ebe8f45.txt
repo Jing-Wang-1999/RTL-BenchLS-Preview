@@ -1,0 +1,57 @@
+module origen_163665(
+    input wire y,
+    input wire clk,
+    output reg [6:0] a_to_g,
+    output wire [3:0] an,
+    output wire dp
+);
+
+    reg [19:0] clkdiv;
+    reg [3:0] digit;
+    reg [3:0] aen;
+    reg [1:0] s;
+    reg [15:0] x;
+
+    always @(posedge clk) begin
+        clkdiv <= clkdiv + 1;
+        s <= clkdiv[19:18];
+    end
+
+    always @(posedge clk) begin
+        case (s)
+            2'b00: digit <= x[3:0];
+            2'b01: digit <= x[7:4];
+            2'b10: digit <= x[11:8];
+            2'b11: digit <= x[15:12];
+        endcase
+    end
+
+    always @(*) begin
+        case (digit)
+            4'b0000: a_to_g = 7'b1000000;
+            4'b0001: a_to_g = 7'b1111001;
+            4'b0010: a_to_g = 7'b0100100;
+            4'b0011: a_to_g = 7'b0110000;
+            4'b0100: a_to_g = 7'b0011001;
+            4'b0101: a_to_g = 7'b0010010;
+            4'b0110: a_to_g = 7'b0000010;
+            4'b0111: a_to_g = 7'b1111000;
+            4'b1000: a_to_g = 7'b0000000;
+            4'b1001: a_to_g = 7'b0010000;
+            default: a_to_g = 7'b1000000;
+        endcase
+    end
+
+    always @(*) begin
+        case (s)
+            2'b00: aen = 4'b1110;
+            2'b01: aen = 4'b1101;
+            2'b10: aen = 4'b1011;
+            2'b11: aen = 4'b0111;
+        endcase
+    end
+
+    assign an = aen;
+    assign dp = 1'b1;
+
+endmodule

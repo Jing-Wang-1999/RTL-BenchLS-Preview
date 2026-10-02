@@ -1,0 +1,63 @@
+(* equivalent_register_removal = "no" *)
+module origen_064019 (
+    input wire clk,
+    input wire outsig,
+    input wire oe,
+    inout wire pad
+);
+
+reg sampled_outsig, sampled_oe;
+reg next_outsig, next_oe;
+
+always @(posedge clk) begin
+    sampled_outsig <= next_outsig;
+    sampled_oe <= next_oe;
+end
+
+always @* begin
+    #1;
+    next_outsig = outsig;
+    next_oe = oe;
+end
+
+assign pad = sampled_oe ? sampled_outsig : 1'bz;
+
+endmodule
+
+(* equivalent_register_removal = "no" *)
+module ddr_clkout (
+    input wire clk,
+    output wire pad
+);
+
+assign pad = clk;
+
+endmodule
+
+(* equivalent_register_removal = "no" *)
+module ddr_inbuf #(
+    parameter WIDTH = 32
+) (
+    input wire clk,
+    input wire [WIDTH-1:0] pad,
+    output reg [WIDTH-1:0] indata,
+    output reg [WIDTH-1:0] indata180
+);
+
+reg [WIDTH-1:0] next_indata, next_indata180;
+
+always @(posedge clk) begin
+    indata <= next_indata;
+end
+
+always @(negedge clk) begin
+    indata180 <= next_indata180;
+end
+
+always @* begin
+    #1;
+    next_indata = pad;
+    next_indata180 = pad;
+end
+
+endmodule

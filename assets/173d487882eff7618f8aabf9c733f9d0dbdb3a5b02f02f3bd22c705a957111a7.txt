@@ -1,0 +1,37 @@
+always @(posedge sg_clk) begin
+    if (sg_resetn == 1'b0) begin
+      hwdesc_state <= STATE_IDLE;
+    end else begin
+      case (hwdesc_state)
+        STATE_IDLE: begin
+          if (sg_in_valid == 1'b1 && sg_enable == 1'b1) begin
+            hwdesc_state <= STATE_SEND_ADDR;
+          end
+          end
+
+        STATE_SEND_ADDR: begin
+          if (m_axi_arready) begin
+            hwdesc_state <= STATE_RECV_DESC;
+          end
+          end
+
+        STATE_RECV_DESC: begin
+          if (m_axi_rvalid == 1'b1 && m_axi_rlast == 1'b1) begin
+            hwdesc_state <= STATE_DESC_READY;
+          end
+          end
+
+        STATE_DESC_READY: begin
+          if (sg_enable == 1'b0) begin
+              hwdesc_state <= STATE_IDLE;
+          end else if (fetch_ready == 1'b1) begin
+            if (hwdesc_flags & MASK_LAST_HWDESC) begin
+              hwdesc_state <= STATE_IDLE;
+            end else begin
+              hwdesc_state <= STATE_SEND_ADDR;
+            end
+          end
+          end
+      endcase
+    end
+  end

@@ -1,0 +1,101 @@
+module sdrc_xfr_ctl (clk,
+		    reset_n,
+		    
+		    
+		    r2x_idle,	   
+		    b2x_idle,      
+		    b2x_req,	   
+		    b2x_start,	   
+		    b2x_last,	   
+		    b2x_id,	   
+		    b2x_ba,	   
+		    b2x_addr,	   
+		    b2x_len,	   
+		    b2x_cmd,	   
+		    b2x_wrap,	   
+		    x2b_ack,	   
+		     
+		    
+		    b2x_tras_ok,   
+		    x2b_refresh,   
+		    x2b_pre_ok,	   
+		    x2b_act_ok,	   
+		    x2b_rdok,	   
+		    x2b_wrok,	   
+		    
+		    
+		    sdr_cs_n,
+		    sdr_cke,
+		    sdr_ras_n,
+		    sdr_cas_n,
+		    sdr_we_n,
+		    sdr_dqm,
+		    sdr_ba,
+		    sdr_addr, 
+		    sdr_din,
+		    sdr_dout,
+		    sdr_den_n,
+		    
+		    
+		    x2a_rdstart,
+		    x2a_wrstart,
+		    x2a_rdlast,
+		    x2a_wrlast,
+		    x2a_id,
+		    a2x_wrdt,
+		    a2x_wren_n,
+		    x2a_wrnext,
+		    x2a_rddt,
+		    x2a_rdok,
+		    sdr_init_done,
+		    
+		    
+		    sdram_enable,
+		    sdram_mode_reg,
+		    
+		    
+		    xfr_bank_sel,
+
+		    
+		    cas_latency,
+		    trp_delay,	   
+		    trcar_delay,   
+		    twr_delay,	   
+		    rfsh_time,	   
+		    rfsh_rmax);
+parameter  SDR_DW   = 16;
+parameter  SDR_BW   = 2;
+input            clk, reset_n;
+input 			b2x_req, b2x_start, b2x_last, b2x_tras_ok,
+				b2x_wrap, r2x_idle, b2x_idle;
+input [4-1:0] 	b2x_id;
+input [1:0] 			b2x_ba;
+input [12:0] 		b2x_addr;
+input [(1'b0 == 1'b0) ? 6 : 12-1:0] 	b2x_len;
+input [1:0] 			b2x_cmd;
+output 			x2b_ack;
+output [3:0] 		x2b_pre_ok;
+output 			x2b_refresh, x2b_act_ok, x2b_rdok,
+				x2b_wrok;
+output 			x2a_rdstart, x2a_wrstart, x2a_rdlast, x2a_wrlast;
+output [4-1:0] 	x2a_id;
+input [SDR_DW-1:0] 	a2x_wrdt;
+input [SDR_BW-1:0] 	a2x_wren_n;
+output [SDR_DW-1:0] 	x2a_rddt;
+output 			x2a_wrnext, x2a_rdok, sdr_init_done;
+output 			sdr_cs_n, sdr_cke, sdr_ras_n, sdr_cas_n,
+				sdr_we_n;
+output [SDR_BW-1:0] 	sdr_dqm;
+output [1:0] 		sdr_ba;
+output [12:0] 		sdr_addr;
+input [SDR_DW-1:0] 	sdr_din;
+output [SDR_DW-1:0] 	sdr_dout;
+output [SDR_BW-1:0] 	sdr_den_n;
+output [1:0]			xfr_bank_sel;
+input 			sdram_enable;
+input [12:0] 		sdram_mode_reg;
+input [2:0] 			cas_latency;
+input [3:0] 			trp_delay, trcar_delay, twr_delay;
+input [12-1 : 0] rfsh_time;
+input [3-1:0] rfsh_rmax;
+endmodule

@@ -1,0 +1,17 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Auto-generated for design sirv_spigpioport_2
+set DESIGN_NAME_GOLDEN "sirv_spigpioport_2.v0"
+set DESIGN_NAME "sirv_spigpioport_2.v1"
+set TOP_NAME "sirv_spigpioport_2"
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/${DESIGN_NAME_GOLDEN}.v
+check_sec -analyze -imp -sv ./input/rtl/${DESIGN_NAME}.v
+check_sec -elaborate -spec -top ${TOP_NAME} -disable_auto_bbox
+check_sec -elaborate -imp -top ${TOP_NAME} -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clock
+reset reset
+check_sec -gen
+check_sec -prove -strategy proof

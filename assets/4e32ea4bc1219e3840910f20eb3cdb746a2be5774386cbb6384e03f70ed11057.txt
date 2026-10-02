@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.7ddabeb4f1ac33b4f071.105f86fb99ba",
+  "compile_check": {
+    "case_id": "s1derived.7ddabeb4f1ac33b4f071.105f86fb99ba",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mix_one_column",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mix_one_column.810f3a17c8819a4a/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.7ddabeb4f1ac33b4f071",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "7ddabeb4f1ac33b4f071ed5f939a69c3274aaf5e5bfe482c39a4498a2117f20b",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.7ddabeb4f1ac33b4f071.105f86fb99ba",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mix_one_column.810f3a17c8819a4a/private/commercial_positive.log",
+    "commercial_log_sha256": "bb6bc327573505877f780ea0cbcbf19ff6d172c9ad47858662b04872ab0b35be",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mix_one_column.810f3a17c8819a4a/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mix_one_column"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.mix_one_column.810f3a17c8819a4a",
+    "parent_id": "s1p.7ddabeb4f1ac33b4f071",
+    "revised_tops": [
+      "mix_one_column"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "mix_one_column",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.7ddabeb4f1ac33b4f071.105f86fb99ba",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The bit concatenation is AES xtime: left shift with conditional 0x1b reduction. All four row equations and MSB-to-LSB byte order match the repaired prose; this is a complete, sensible combinational MixColumns column.",
+        "rtl_excerpt": "mult2 = {n[6],n[5],n[4],n[3]^n[7],n[2]^n[7],n[1],n[0]^n[7],n[7]};",
+        "specification_excerpt": "Multiplication is in the AES finite field"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.7ddabeb4f1ac33b4f071",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "9f998238f9ccb0b46e15f9a3d53c0d24efb06ccb7512fa9483e955db732f0fbc",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "7ddabeb4f1ac33b4f071ed5f939a69c3274aaf5e5bfe482c39a4498a2117f20b",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mix_one_column.810f3a17c8819a4a/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mix_one_column.810f3a17c8819a4a/private/historical_harness/01_conformal_rtl_mix_one_column.do"
+  ],
+  "parent_id": "s1p.7ddabeb4f1ac33b4f071",
+  "primary_review": {
+    "case_id": "s1derived.7ddabeb4f1ac33b4f071.105f86fb99ba",
+    "checks": {
+      "behavior": "Function agrees, but the incomplete document should be replaced by a standalone specification.",
+      "boundaries": "checked full Boolean/data mapping and interface widths",
+      "interface": "checked against complete RTL port declarations",
+      "rtl_reasonableness": "reasonable synthesizable hardware for the stated function; compile diagnostic considered",
+      "sequential_and_reset": "combinational/no sequential state, except case-specific diagnostics stated in flaws"
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Function agrees, but the incomplete document should be replaced by a standalone specification.",
+        "rtl_excerpt": "s0_o through s3_o continuous assignments match all four equations",
+        "spec_excerpt": "The four output-byte MixColumns equations are as listed."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The source specification is visibly truncated and omits the explicit stateless timing/submodule contract.",
+        "rtl_evidence": "functions and continuous assignments only; no instances, clock, reset, or state",
+        "spec_evidence": "ends at 'Allowed sub-mod'",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.7ddabeb4f1ac33b4f071",
+    "proposed_specification_path": "proposed_repairs_3_sol_01/s1derived.7ddabeb4f1ac33b4f071.105f86fb99ba.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "calibrated_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "7ddabeb4f1ac33b4f071ed5f939a69c3274aaf5e5bfe482c39a4498a2117f20b",
+    "source_group": "S1",
+    "specification_sha256": "105f86fb99bac2710c81ebd5f14bb554b7249b261088f3444138335cabe50e0a",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_sol_01/s1derived.7ddabeb4f1ac33b4f071.105f86fb99ba.md",
+  "qualified_specification_sha256": "9f998238f9ccb0b46e15f9a3d53c0d24efb06ccb7512fa9483e955db732f0fbc",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mix_one_column.810f3a17c8819a4a/private/golden_design.v",
+  "rtl_sha256": "7ddabeb4f1ac33b4f071ed5f939a69c3274aaf5e5bfe482c39a4498a2117f20b",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.mix_one_column.810f3a17c8819a4a/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "105f86fb99bac2710c81ebd5f14bb554b7249b261088f3444138335cabe50e0a",
+  "top_module": "mix_one_column"
+}

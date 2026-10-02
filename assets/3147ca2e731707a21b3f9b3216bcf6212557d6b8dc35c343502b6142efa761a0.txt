@@ -1,0 +1,228 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module top (  
+        line_reset_n ,
+        line_clk ,
+
+	
+        cfg_tx_enable  , 
+        cfg_rx_enable  , 
+        cfg_stop_bit   , 
+        cfg_pri_mod    , 
+	cfg_baud_16x   ,
+
+       
+        frm_error      ,
+	par_error      ,
+
+	baud_clk_16x,
+
+       
+        rxd,
+        txd,
+
+      
+        sck,
+        so,
+        si,
+        cs_n  
+
+     );
+
+
+
+
+
+
+
+input        line_reset_n         ; 
+input        line_clk             ; 
+
+
+
+
+input         cfg_tx_enable        ; 
+input         cfg_rx_enable        ; 
+input         cfg_stop_bit         ; 
+input   [1:0] cfg_pri_mod          ; 
+input   [11:0] cfg_baud_16x        ; 
+
+
+
+
+output        frm_error            ; 
+output        par_error            ; 
+
+output        baud_clk_16x         ; 
+
+
+
+
+
+input         rxd                  ; 
+output        txd                  ; 
+
+
+
+
+output              sck            ; 
+output              so             ; 
+input               si             ; 
+output [3:0]        cs_n           ; 
+
+
+
+
+wire  [15:0] reg_addr           ; 
+wire  [31:0]  reg_wdata          ; 
+wire         reg_req            ; 
+wire         reg_wr             ; 
+wire          reg_ack            ; 
+wire   [31:0] reg_rdata          ;
+
+
+
+wire         tx_data_avail        ; 
+wire [7:0]   tx_data              ; 
+wire        tx_rd                ; 
+
+
+
+
+
+wire         rx_ready           ; 
+wire [7:0]  rx_data             ; 
+wire        rx_wr               ; 
+
+spi_core  u_spi (
+
+             .clk                (baud_clk_16x),
+             .reset_n            (line_reset_n),
+               
+        
+             .reg_cs             (reg_req      ),
+             .reg_wr             (reg_wr       ),
+             .reg_addr           (reg_addr[5:2]),
+             .reg_wdata          (reg_wdata    ),
+             .reg_be             (4'b1111      ),
+
+            
+            .reg_rdata           (reg_rdata    ),
+            .reg_ack             (reg_ack      ),
+
+          
+               .sck              (sck          ),
+               .so               (so           ),
+               .si               (si           ),
+               .cs_n             (cs_n         ) 
+
+           );
+
+ uart_core u_core (  
+          .line_reset_n       (line_reset_n) ,
+          .line_clk           (line_clk) ,
+
+	
+          .cfg_tx_enable      (cfg_tx_enable) , 
+          .cfg_rx_enable      (cfg_rx_enable) , 
+          .cfg_stop_bit       (cfg_stop_bit) , 
+          .cfg_pri_mod        (cfg_pri_mod) , 
+	  .cfg_baud_16x       (cfg_baud_16x) ,
+
+    
+          .tx_data_avail      (tx_data_avail) ,
+          .tx_rd              (tx_rd) ,
+          .tx_data            (tx_data) ,
+         
+
+    
+          .rx_ready           (rx_ready) ,
+          .rx_wr              (rx_wr) ,
+          .rx_data            (rx_data) ,
+
+       
+          .frm_error          (frm_error) ,
+	  .par_error          (par_error) ,
+
+	  .baud_clk_16x       (baud_clk_16x) ,
+
+       
+          .rxd                (rxd) ,
+          .txd                (txd) 
+
+     );
+
+
+
+uart_msg_handler u_msg (  
+          .reset_n            (line_reset_n ) ,
+          .sys_clk            (baud_clk_16x ) ,
+
+
+    
+          .tx_data_avail      (tx_data_avail) ,
+          .tx_rd              (tx_rd) ,
+          .tx_data            (tx_data) ,
+         
+
+    
+          .rx_ready           (rx_ready) ,
+          .rx_wr              (rx_wr) ,
+          .rx_data            (rx_data) ,
+
+      
+          .reg_addr          (reg_addr),
+          .reg_wr            (reg_wr),
+          .reg_wdata         (reg_wdata),
+          .reg_req           (reg_req),
+          .reg_ack           (reg_ack),
+	  .reg_rdata         (reg_rdata) 
+
+     );
+
+endmodule

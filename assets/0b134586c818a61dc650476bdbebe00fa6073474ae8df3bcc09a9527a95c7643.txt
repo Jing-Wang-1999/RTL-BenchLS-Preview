@@ -1,0 +1,72 @@
+module rtlpp_04778 (
+    input x,
+    input Clk,
+    output Y
+);
+
+wire gnd;
+wire vcc;
+wire unknown;
+
+assign gnd = 1'b0;
+assign vcc = 1'b1;
+assign unknown = 1'bx;
+
+tri1 devclrn;
+tri1 devpor;
+tri1 devoe;
+wire Y_output_o;
+wire Clk_input_o;
+wire Clk_inputclkctrl_outclk;
+wire x_input_o;
+wire pstate_S0_feeder_combout;
+wire pstate_S0_q;
+wire nstate_10_combout;
+wire pstate_S1_q;
+wire Selector0_0_combout;
+wire Y_reg0_q;
+
+assign Y = Y_reg0_q;
+assign Clk_inputclkctrl_outclk = Clk;
+assign x_input_o = x;
+
+// Combinational logic for \pstate.S0~feeder
+assign pstate_S0_feeder_combout = (gnd & gnd & gnd & x_input_o);
+
+// D flip-flop for \pstate.S0
+reg pstate_S0_q_reg;
+always @(posedge Clk_inputclkctrl_outclk or posedge devclrn or posedge devpor) begin
+    if (devclrn || devpor)
+        pstate_S0_q_reg <= gnd;
+    else
+        pstate_S0_q_reg <= pstate_S0_feeder_combout;
+end
+assign pstate_S0_q = pstate_S0_q_reg;
+
+// Combinational logic for \nstate~10
+assign nstate_10_combout = (gnd & gnd & gnd & pstate_S0_q_reg);
+
+// D flip-flop for \pstate.S1
+reg pstate_S1_q_reg;
+always @(posedge Clk_inputclkctrl_outclk or posedge devclrn or posedge devpor) begin
+    if (devclrn || devpor)
+        pstate_S1_q_reg <= gnd;
+    else
+        pstate_S1_q_reg <= nstate_10_combout;
+end
+assign pstate_S1_q = pstate_S1_q_reg;
+
+// Combinational logic for \Selector0~0
+assign Selector0_0_combout = (gnd & gnd & pstate_S1_q & pstate_S0_q);
+
+// D flip-flop for \Y~reg0
+reg Y_reg0_q_reg;
+always @(posedge Clk_inputclkctrl_outclk or posedge devclrn or posedge devpor) begin
+    if (devclrn || devpor)
+        Y_reg0_q_reg <= gnd;
+    else
+        Y_reg0_q_reg <= Selector0_0_combout;
+end
+assign Y_reg0_q = Y_reg0_q_reg;
+
+endmodule

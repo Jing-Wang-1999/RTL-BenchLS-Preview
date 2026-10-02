@@ -1,0 +1,110 @@
+module origen_136326(
+    input [255:0] mux_inputs,
+    input [7:0] select,
+    input nor_input,
+    output [6:0] seven_seg_out
+);
+
+    wire mux_out;
+    wire nor_out;
+
+    // 256-to-1 multiplexer using binary tree and priority encoder
+    mux_256to1 mux (
+        .inputs(mux_inputs),
+        .select(select),
+        .out(mux_out)
+    );
+
+    // NOR gate implemented using NAND gates
+    nor_gate nor_gate (
+        .a(mux_out),
+        .b(nor_input),
+        .out(nor_out)
+    );
+
+    // 7-segment display controller
+    seven_segment_display display (
+        .in(nor_out),
+        .out(seven_seg_out)
+    );
+
+endmodule
+
+module mux_256to1(
+    input [255:0] inputs,
+    input [7:0] select,
+    output out
+);
+
+    wire [127:0] level1;
+    wire [63:0] level2;
+    wire [31:0] level3;
+    wire [15:0] level4;
+    wire [7:0] level5;
+    wire [3:0] level6;
+    wire [1:0] level7;
+
+    genvar i;
+
+    // Binary tree structure
+    generate
+        for (i = 0; i < 128; i = i + 1) begin : level1_mux
+            assign level1[i] = select[0] ? inputs[2*i+1] : inputs[2*i];
+        end
+
+        for (i = 0; i < 64; i = i + 1) begin : level2_mux
+            assign level2[i] = select[1] ? level1[2*i+1] : level1[2*i];
+        end
+
+        for (i = 0; i < 32; i = i + 1) begin : level3_mux
+            assign level3[i] = select[2] ? level2[2*i+1] : level2[2*i];
+        end
+
+        for (i = 0; i < 16; i = i + 1) begin : level4_mux
+            assign level4[i] = select[3] ? level3[2*i+1] : level3[2*i];
+        end
+
+        for (i = 0; i < 8; i = i + 1) begin : level5_mux
+            assign level5[i] = select[4] ? level4[2*i+1] : level4[2*i];
+        end
+
+        for (i = 0; i < 4; i = i + 1) begin : level6_mux
+            assign level6[i] = select[5] ? level5[2*i+1] : level5[2*i];
+        end
+
+        for (i = 0; i < 2; i = i + 1) begin : level7_mux
+            assign level7[i] = select[6] ? level6[2*i+1] : level6[2*i];
+        end
+    endgenerate
+
+    assign out = select[7] ? level7[1] : level7[0];
+
+endmodule
+
+module nor_gate(
+    input a,
+    input b,
+    output out
+);
+
+    wire nand_out1, nand_out2;
+
+    nand(nand_out1, a, a);
+    nand(nand_out2, b, b);
+    nand(out, nand_out1, nand_out2);
+
+endmodule
+
+module seven_segment_display(
+    input in,
+    output reg [6:0] out
+);
+
+    always @(*) begin
+        if (in)
+            out = 7'b1111111; // All segments off
+        else
+            out = 7'b0000001; // Display "0"
+    end
+
+endmodule

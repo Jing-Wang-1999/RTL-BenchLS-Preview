@@ -1,0 +1,127 @@
+module origen_201982(
+    input clock_in,
+    input reset_in,
+    output reg [7:0] lcd_data,
+    output reg lcd_e,
+    output reg lcd_rw,
+    output reg lcd_rs
+);
+
+reg [15:0] clk_div;
+reg [3:0] state;
+reg [7:0] dat;
+reg [4:0] cnt;
+
+always @(posedge clock_in or posedge reset_in) begin
+    if (reset_in) begin
+        clk_div <= 0;
+        state <= 1;
+        cnt <= 0;
+        dat <= 0;
+        lcd_e <= 0;
+        lcd_rw <= 0;
+        lcd_rs <= 0;
+    end
+    else begin
+        clk_div <= clk_div + 1;
+
+        case (state)
+            1: begin // Clear display
+                if (cnt == 15) begin
+                    lcd_data <= 8'h01;
+                    lcd_rw <= 0;
+                    lcd_rs <= 0;
+                    execute;
+                    state <= 2;
+                    cnt <= 0;
+                end
+                else begin
+                    cnt <= cnt + 1;
+                end
+            end
+            2: begin // Set 8-bit data mode, 2-line display, 5x8 dot matrix
+                if (cnt == 15) begin
+                    lcd_data <= 8'h38;
+                    lcd_rw <= 0;
+                    lcd_rs <= 0;
+                    execute;
+                    state <= 3;
+                    cnt <= 0;
+                end
+                else begin
+                    cnt <= cnt + 1;
+                end
+            end
+            3: begin // Set entry mode to increment address, no display shift
+                if (cnt == 15) begin
+                    lcd_data <= 8'h06;
+                    lcd_rw <= 0;
+                    lcd_rs <= 0;
+                    execute;
+                    state <= 4;
+                    cnt <= 0;
+                end
+                else begin
+                    cnt <= cnt + 1;
+                end
+            end
+            4: begin // Turn on display, no cursor, no blinking
+                if (cnt == 15) begin
+                    lcd_data <= 8'h0C;
+                    lcd_rw <= 0;
+                    lcd_rs <= 0;
+                    execute;
+                    state <= 5;
+                    cnt <= 0;
+                end
+                else begin
+                    cnt <= cnt + 1;
+                end
+            end
+            5: begin // Set DDRAM address to the first character position
+                if (cnt == 15) begin
+                    lcd_data <= 8'h80;
+                    lcd_rw <= 0;
+                    lcd_rs <= 0;
+                    execute;
+                    state <= 6;
+                    cnt <= 0;
+                end
+                else begin
+                    cnt <= cnt + 1;
+                end
+            end
+            6: begin // Write character data
+                if (clk_div[11]) begin
+                    lcd_data <= dat;
+                    lcd_rw <= 0;
+                    lcd_rs <= 1;
+                    execute;
+                    state <= 7;
+                    cnt <= 0;
+                end
+            end
+            7: begin // Write another character data
+                if (clk_div[11]) begin
+                    lcd_data <= dat;
+                    lcd_rw <= 0;
+                    lcd_rs <= 1;
+                    execute;
+                    state <= 6;
+                    cnt <= 0;
+                end
+            end
+        endcase
+    end
+end
+
+task execute;
+    begin
+        lcd_e <= 1;
+        #1;
+        lcd_e <= 0;
+        #5;
+    end
+endtask
+
+endmodule

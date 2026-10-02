@@ -1,0 +1,38 @@
+module mg_00532 #(
+    parameter N = 2,
+    parameter X = 2
+) (
+    input wire clk,
+    input wire rst,
+    input wire got_data,
+    input wire [7:0] Cambio,
+    output reg [N-1:0] Cuenta
+);
+
+    localparam MAX_COUNT = X;
+    
+    always @(posedge clk) begin
+        if (rst) begin
+            Cuenta <= {N{1'b0}};
+        end else if (got_data) begin
+            case (Cambio)
+                8'h7A: begin  // increment
+                    if (Cuenta == MAX_COUNT) begin
+                        Cuenta <= {N{1'b0}};
+                    end else begin
+                        Cuenta <= Cuenta + 1'b1;
+                    end
+                end
+                8'h69: begin  // decrement
+                    if (Cuenta == {N{1'b0}}) begin
+                        Cuenta <= MAX_COUNT;
+                    end else begin
+                        Cuenta <= Cuenta - 1'b1;
+                    end
+                end
+                default: Cuenta <= Cuenta;
+            endcase
+        end
+    end
+
+endmodule

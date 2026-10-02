@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   dip_switch_pio_a.v0, dip_switch_pio_a.v1, dip_switch_pio_a, clk, -none
+set DESIGN_NAME_GOLDEN "dip_switch_pio_a.v0"
+set DESIGN_NAME "dip_switch_pio_a.v1"
+set TOP_NAME "dip_switch_pio_a"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_31ad1208c05808b8.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_31ad1208c05808b8.negative.v
+check_sec -elaborate -spec -top dip_switch_pio_a -disable_auto_bbox
+check_sec -elaborate -imp -top dip_switch_pio_a -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clk 
+reset -none
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

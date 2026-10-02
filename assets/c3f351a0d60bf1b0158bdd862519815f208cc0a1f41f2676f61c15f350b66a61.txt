@@ -1,0 +1,107 @@
+module origen_059911 (
+    input wire clk,
+    input wire rst,
+    output reg [19:0] o_sram_addr,
+    inout wire [15:0] io_sram_data,
+    output reg o_sram_we_n,
+    output reg o_sram_oe_n,
+    input wire i_vpg_pre_valid,
+    input wire i_frame_finish,
+    output reg o_dvi_finish,
+    output reg [23:0] o_rgb
+);
+
+    // FSM states
+    localparam IDLE = 3'd0, SYNC = 3'd1, RDLEFT = 3'd2, RDRIGHT = 3'd3, LNDONE = 3'd4, FMDONE = 3'd5;
+    reg [2:0] state, next_state;
+
+    // Counters and registers
+    reg [8:0] x_count;
+    reg [8:0] y_count;
+    reg [19:0] sram_addr;
+    reg [15:0] sram_data_reg;
+    reg read_data;
+
+    // RGB conversion
+    wire [7:0] red = {sram_data_reg[15:11], sram_data_reg[15:13]};
+    wire [7:0] green = {sram_data_reg[10:5], sram_data_reg[10:9]};
+    wire [7:0] blue = {sram_data_reg[4:0], sram_data_reg[4:2]};
+
+    // SRAM data read
+    assign io_sram_data = read_data ? 16'hzzzz : 16'h0000;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            state <= IDLE;
+            x_count <= 0;
+            y_count <= 0;
+            sram_addr <= 0;
+            o_sram_we_n <= 1;
+            o_sram_oe_n <= 1;
+            o_dvi_finish <= 0;
+            read_data <= 0;
+        end else begin
+            state <= next_state;
+            case (state)
+                IDLE: begin
+                    if (i_frame_finish && i_vpg_pre_valid) begin
+                        x_count <= 0;
+                        y_count <= 0;
+                        sram_addr <= 0;
+                    end
+                end
+                SYNC: begin
+                    o_sram_oe_n <= 0;
+                    read_data <= 1;
+                end
+                RDLEFT: begin
+                    if (x_count < 319) begin
+                        sram_data_reg <= io_sram_data;
+                        o_rgb <= {red, green, blue};
+                        x_count <= x_count + 1;
+                        sram_addr <= sram_addr + 1;
+                    end
+                end
+                RDRIGHT: begin
+                    if (x_count < 639) begin
+                        sram_data_reg <= io_sram_data;
+                        o_rgb <= {red, green, blue};
+                        x_count <= x_count + 1;
+                        sram_addr <= sram_addr + 1;
+                    end
+                end
+                LNDONE: begin
+                    if (y_count < 479) begin
+                        y_count <= y_count + 1;
+                        x_count <= 0;
+                    end
+                end
+                FMDONE: begin
+                    o_sram_oe_n <= 1;
+                    read_data <= 0;
+                    o_dvi_finish <= 1;
+                end
+            endcase
+        end
+    end
+
+    always @(*) begin
+        next_state = state;
+        case (state)
+            IDLE: if (i_frame_finish && i_vpg_pre_valid) next_state = SYNC;
+            SYNC: next_state = RDLEFT;
+            RDLEFT: if (x_count == 319) next_state = RDRIGHT;
+            RDRIGHT: if (x_count == 639) next_state = LNDONE;
+            LNDONE: begin
+                if (y_count == 479) next_state = FMDONE;
+                else next_state = SYNC;
+            end
+            FMDONE: next_state = IDLE;
+        endcase
+    end
+
+    always @(*) begin
+        o_sram_addr = sram_addr;
+    end
+
+endmodule

@@ -1,0 +1,157 @@
+always @ (*) begin 
+      case (xfr_st)
+
+	2'b00 : begin
+
+	   sel_mgmt = mgmt_req;
+	   sel_b2x = ~mgmt_req & sdr_init_done & b2x_req;
+	   i_xfr_cmd = 4'b1111;
+	   rd_next = ~mgmt_req & sdr_init_done & b2x_req & b2x_read;
+	   wr_next = ~mgmt_req & sdr_init_done & b2x_req & b2x_write;
+	   rdok = ~mgmt_req;
+	   cb_pre_ok = 1'b1;
+	   wrok = ~mgmt_req;
+	   next_xfr_st = (mgmt_req | ~sdr_init_done) ? 2'b00 :
+			 (~b2x_req) ? 2'b00 :
+			 (b2x_read) ? 2'b10 :
+			 (b2x_write) ? 2'b01 : 2'b00;
+
+	end // case: `XFR_IDLE
+	   
+	2'b10 : begin
+	   rd_next = ~l_xfr_end |
+		     l_xfr_end & ~mgmt_req & b2x_req & b2x_read;
+	   wr_next = 1'b0;
+	   rdok = l_xfr_end & ~mgmt_req;
+	   // Break the timing path for FPGA Based Design
+	   cb_pre_ok = (1'b0 == 1'b0) ? 1'b0 : l_xfr_end;
+	   wrok = 1'b0;
+	   sel_mgmt = 1'b0;
+
+	   if (l_xfr_end) begin		  // end of transfer
+
+	      if (~l_wrap) begin
+		 // Current transfer was not wrap mode, may need BT
+		 // If next cmd is a R or W or PRE to same bank allow
+		 // it else issue BT 
+		 // This is a little pessimistic since BT is issued
+		 // for non-wrap mode transfers even if the transfer
+		 // ends on a burst boundary, but is felt to be of
+		 // minimal performance impact.
+
+		 i_xfr_cmd = 4'b0110;
+		 sel_b2x = b2x_req & ~mgmt_req & (b2x_read | b2x_prechg_hit);
+
+	      end // if (~l_wrap)
+	      
+	      else begin
+		 // Wrap mode transfer, by definition is end of burst
+		 // boundary 
+
+		 i_xfr_cmd = 4'b1111;
+		 sel_b2x = b2x_req & ~mgmt_req & ~b2x_write;
+
+	      end // else: !if(~l_wrap)
+		 
+	      next_xfr_st = (sdr_init_done) ? ((b2x_req & ~mgmt_req & b2x_read) ? 2'b10 : 2'b11) : 2'b00;
+
+	   end // if (l_xfr_end)
+
+	   else begin
+	      // Not end of transfer
+	      // If current transfer was not wrap mode and we are at
+	      // the start of a burst boundary issue another R cmd to
+	      // step sequemtially thru memory, ELSE,
+	      // issue precharge/activate commands from the bank control
+
+	      i_xfr_cmd = (burst_bdry & ~l_wrap) ? 4'b0101 : 4'b1111;
+	      sel_b2x = ~(burst_bdry & ~l_wrap) & b2x_req;
+	      next_xfr_st = 2'b10;
+
+	   end // else: !if(l_xfr_end)
+	   
+	end // case: `XFR_READ
+	
+	2'b11 : begin 
+	   rd_next = ~mgmt_req & b2x_req & b2x_read;
+	   wr_next = rd_pipe_mt & ~mgmt_req & b2x_req & b2x_write;
+	   rdok = ~mgmt_req;
+	   cb_pre_ok = 1'b1;
+	   wrok = rd_pipe_mt & ~mgmt_req;
+
+	   sel_mgmt = mgmt_req;
+	   
+	   sel_b2x = ~mgmt_req & b2x_req;
+
+	   i_xfr_cmd = 4'b1111;
+
+	   next_xfr_st = (~mgmt_req & b2x_req & b2x_read) ? 2'b10 : 
+			 (~rd_pipe_mt) ? 2'b11 :
+			 (~mgmt_req & b2x_req & b2x_write) ? 2'b01 : 
+			 2'b00;
+
+	end // case: `XFR_RDWT
+	
+	2'b01 : begin
+	   rd_next = l_xfr_end & ~mgmt_req & b2x_req & b2x_read;
+	   wr_next = ~l_xfr_end |
+		     l_xfr_end & ~mgmt_req & b2x_req & b2x_write;
+	   rdok = l_xfr_end & ~mgmt_req;
+	   cb_pre_ok = 1'b0;
+	   wrok = l_xfr_end & ~mgmt_req;
+	   sel_mgmt = 1'b0;
+
+	   if (l_xfr_end) begin		  // End of transfer
+
+	      if (~l_wrap) begin
+		 // Current transfer was not wrap mode, may need BT
+		 // If next cmd is a R or W allow it else issue BT 
+		 // This is a little pessimistic since BT is issued
+		 // for non-wrap mode transfers even if the transfer
+		 // ends on a burst boundary, but is felt to be of
+		 // minimal performance impact.
+
+
+		 sel_b2x = b2x_req & ~mgmt_req & (b2x_read | b2x_write);
+		 i_xfr_cmd = 4'b0110;
+	      end // if (~l_wrap)
+
+	      else begin
+		 // Wrap mode transfer, by definition is end of burst
+		 // boundary 
+
+		 sel_b2x = b2x_req & ~mgmt_req & ~b2x_prechg_hit;
+		 i_xfr_cmd = 4'b1111;
+	      end // else: !if(~l_wrap)
+	      
+	      next_xfr_st = (~mgmt_req & b2x_req & b2x_read) ? 2'b10 : 
+			    (~mgmt_req & b2x_req & b2x_write) ? 2'b01 : 
+			    2'b00;
+
+	   end // if (l_xfr_end)
+
+	   else begin
+	      // Not end of transfer
+	      // If current transfer was not wrap mode and we are at
+	      // the start of a burst boundary issue another R cmd to
+	      // step sequemtially thru memory, ELSE,
+	      // issue precharge/activate commands from the bank control
+
+	      if (burst_bdry & ~l_wrap) begin
+		 sel_b2x = 1'b0;
+		 i_xfr_cmd = 4'b0100;
+	      end // if (burst_bdry & ~l_wrap)
+	      
+	      else begin
+		 sel_b2x = b2x_req & ~mgmt_req;
+		 i_xfr_cmd = 4'b1111;
+	      end // else: !if(burst_bdry & ~l_wrap)
+
+	      next_xfr_st = 2'b01;
+	   end // else: !if(l_xfr_end)
+
+	end // case: `XFR_WRITE
+
+      endcase // case(xfr_st)
+
+   end

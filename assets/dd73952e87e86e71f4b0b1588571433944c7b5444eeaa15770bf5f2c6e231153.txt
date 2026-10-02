@@ -1,0 +1,31 @@
+module mg_03579 (
+    input wire [31:0] I_dataA,
+    input wire [31:0] I_dataB,
+    input wire [2:0] I_branchOp,
+    input wire I_Cin,
+    output wire O_doBranch
+);
+
+    wire signed [31:0] signed_A, signed_B;
+    assign signed_A = $signed(I_dataA);
+    assign signed_B = $signed(I_dataB);
+
+    reg branch_decision;
+
+    always @(*) begin
+        case (I_branchOp)
+            3'b000: branch_decision = (I_dataA == I_dataB);      // equality
+            3'b001: branch_decision = (I_dataA != I_dataB);      // inequality
+            3'b010: branch_decision = (I_dataA > I_dataB);        // unsigned greater-than
+            3'b011: branch_decision = (I_dataA >= I_dataB);      // unsigned greater-than-or-equal
+            3'b100: branch_decision = (signed_A > signed_B);     // signed greater-than
+            3'b101: branch_decision = (signed_A >= signed_B);    // signed greater-than-or-equal
+            3'b110: branch_decision = I_Cin;                     // pass-through carry input
+            3'b111: branch_decision = 1'b1;                      // unconditional branch
+            default: branch_decision = 1'b0;
+        endcase
+    end
+
+    assign O_doBranch = branch_decision;
+
+endmodule

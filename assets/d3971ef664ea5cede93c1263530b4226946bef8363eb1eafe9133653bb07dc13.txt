@@ -1,0 +1,54 @@
+module origen_098838 #(
+    parameter CLK_FREQUENCY = 100_000_000,
+    parameter FREQ_PWM = 10_000,
+    parameter CUENTA_INICIAL = 0,
+    parameter CUENTA_MAXIMA = CLK_FREQUENCY/(2*FREQ_PWM),
+    parameter DEBUG = 0
+)(
+    input wire clk,
+    input wire [31:0] entrada,
+    input wire enable,
+    input wire en_log,
+    output reg salida_PWM
+);
+
+    reg [31:0] contador;
+    reg [31:0] registro_comparacion;
+    reg up_down;
+
+    always @(posedge clk) begin
+        if (contador == CUENTA_MAXIMA - 1) begin
+            up_down <= 1;
+            contador <= contador - 1;
+        end else if (contador == 0) begin
+            up_down <= 0;
+            contador <= contador + 1;
+            registro_comparacion <= entrada + CUENTA_MAXIMA/2;
+        end else begin
+            contador <= up_down ? contador - 1 : contador + 1;
+        end
+
+        salida_PWM <= (registro_comparacion > contador);
+    end
+
+    generate
+        if (DEBUG == 1) begin : debug_instance
+            analizador_PWM #(
+                .CLK_FREQUENCY(CLK_FREQUENCY),
+                .FREQ_PWM(FREQ_PWM),
+                .CUENTA_INICIAL(CUENTA_INICIAL),
+                .CUENTA_MAXIMA(CUENTA_MAXIMA)
+            ) analizador_PWM_inst (
+                .clk(clk),
+                .entrada(entrada),
+                .enable(enable),
+                .en_log(en_log),
+                .salida_PWM(salida_PWM),
+                .contador(contador),
+                .registro_comparacion(registro_comparacion),
+                .up_down(up_down)
+            );
+        end
+    endgenerate
+
+endmodule

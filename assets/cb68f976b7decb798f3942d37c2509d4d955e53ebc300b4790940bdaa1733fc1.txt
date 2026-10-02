@@ -1,0 +1,51 @@
+module rtlpp_01013(
+    input [17:0] dix, diy,    
+    input iv,                    
+    output [17:0] dox, doy,    
+    output ov,                    
+    input clk,                    
+    input [11:0] limit,        
+    output [11:0] peak,        
+    input pkrst                
+    );
+
+wire [11:0] mag;            
+wire mv;
+reg [11:0] max;            
+wire [12:0] ldif, mdif;    
+wire pkdet;
+reg [17:0] xi, yi;            
+reg blank;                    
+reg bv;                        
+reg [17:0] xo, yo;            
+reg dv;                        
+
+// Embedded logic for mag12 module
+wire [11:0] mag_x, mag_y;
+assign mag_x = dix[17:6] * dix[17:6];
+assign mag_y = diy[17:6] * diy[17:6];
+assign mag = (mag_x + mag_y) >> 12; // Assuming mag is the magnitude of the vector (magnitude calculation)
+assign mv = iv; // Assuming mv is directly derived from iv
+
+always @ (posedge clk) begin
+    if (iv) xi <= dix;    
+    if (iv) yi <= diy;
+    blank <= ldif[12];    
+    bv <= mv;
+    if (bv) xo <= blank ? 18'h00000 : xi;    
+    if (bv) yo <= blank ? 18'h00000 : yi;
+    dv <= bv;
+    if (pkrst) max <= 0;
+    else if (pkdet) max <= mag;    
+end
+
+assign ldif = limit - mag;    
+assign mdif = max - mag;    
+assign pkdet = mdif[12];
+
+assign dox = xo;
+assign doy = yo;
+assign ov = dv;
+assign peak = max;
+
+endmodule

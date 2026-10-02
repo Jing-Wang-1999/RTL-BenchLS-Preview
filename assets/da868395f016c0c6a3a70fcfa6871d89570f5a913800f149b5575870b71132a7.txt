@@ -1,0 +1,50 @@
+# rtlpp_04687: default-configuration specification
+
+Implement the default DEVICE_FAMILY="ARRIAGX" receive-alignment adapter. Only this default generate branch is qualified. All sequential updates occur on rising clk, with asynchronous active-high reset. Capture alt_dataout and every alt_* status input except runlengthviolation into a first-stage register each nonreset edge; reset all these first-stage registers0. altpcs_sync is the first-stage registered alt_sync.
+
+At each nonreset edge, if current (unregistered) alt_sync1, copy previous first-stage DATA, DISPERR, CTRLDETECT, ERRDETECT, RMFIFODATADELETED and RMFIFODATAINSERTED into their corresponding altpcs outputs. Otherwise output DATA0, DISPERR1, ERRDETECT1 and the other three flags0. Reset establishes those same output values. Thus DATA/flags traverse two registers, but their validity gating uses current alt_sync, while altpcs_sync has one register. No error correction changes payload bits.
+
+A run-length-violation latch resets0. At each edge clear it if old altpcs_carrierdetect0 or current alt_sync0; otherwise set it if current alt_runlengthviolation1; otherwise retain. altpcs_carrierdetect resets1. On each nonreset edge compute its next value as NOT any row in the table below; every row additionally requires previous first-stage sync1. Let D,C,P,E,X,R be previous first-stage data, control-detect, pattern-detect, error-detect, disparity-error and running-disparity; L is old violation latch; U is current unregistered alt_runningdisp.
+
+| D | Additional condition giving carrier-detect0 |
+|---|---|
+|1C|C=1,P=1,E=1,X=1,L=0|
+|FC|C=1,P=1|
+|9C|C=1,P=0|
+|BC, AC, B4,43,53,4B|C=0,P=0|
+|A7|C=0,P=0,R=1|
+|A1|C=0,P=0,R=1,L=1|
+|A2|C=0,P=0,R=1,E=1,X=U|
+|47|C=0,P=0,R=0|
+|41|C=0,P=0,R=0,L=1,E=1,X=NOT U|
+|42|C=0,P=0,R=0,E=1,X=NOT U|
+
+Values not meeting a row produce carrier-detect1. The table deliberately includes live U in A2/41/42 conditions and old L in latch-dependent rows. alt_runlengthviolation is not independently pipelined. There are no initial-only state promises, external assumptions, or other active family branches.
+
+Public interface declarations (parameter values and behavior are specified above):
+
+```verilog
+module rtlpp_04687 (
+  input clk,
+  input reset,
+
+  input [7:0] alt_dataout,
+  input alt_sync,
+  input alt_disperr,
+  input alt_ctrldetect,
+  input alt_errdetect,
+  input alt_rmfifodatadeleted,
+  input alt_rmfifodatainserted,
+  input alt_runlengthviolation,
+  input alt_patterndetect,
+  input alt_runningdisp,
+
+  output reg [7:0] altpcs_dataout,
+  output altpcs_sync,
+  output reg altpcs_disperr,
+  output reg altpcs_ctrldetect,
+  output reg altpcs_errdetect,
+  output reg altpcs_rmfifodatadeleted,
+  output reg altpcs_rmfifodatainserted,
+  output reg altpcs_carrierdetect) ;
+```

@@ -1,0 +1,209 @@
+// Required path: rtl/wbuart.v
+module	wbuart #(
+		
+		
+		parameter [30:0] INITIAL_SETUP = 31'd25,
+		parameter [3:0]	LGFLEN = 4,
+		parameter [0:0]	HARDWARE_FLOW_CONTROL_PRESENT = 1'b1,
+		
+		
+		
+		localparam [3:0]	LCLLGFLEN = (LGFLEN > 4'ha)? 4'ha
+					: ((LGFLEN < 4'h2) ? 4'h2 : LGFLEN)
+		
+	) (
+		
+		input	wire		i_clk, i_reset,
+		
+		input	wire		i_wb_cyc,
+		input	wire		i_wb_stb, i_wb_we,
+		input	wire	[1:0]	i_wb_addr,
+		input	wire	[31:0]	i_wb_data,
+		input	wire	[3:0]	i_wb_sel,
+		output	wire		o_wb_stall,
+		output	reg		o_wb_ack,
+		output	reg	[31:0]	o_wb_data,
+		
+		input	wire		i_uart_rx,
+		output	wire		o_uart_tx,
+		input	wire		i_cts_n,
+		output	reg		o_rts_n,
+		output	wire		o_uart_rx_int, o_uart_tx_int,
+					o_uart_rxfifo_int, o_uart_txfifo_int
+		
+	);
+endmodule
+
+// Required path: rtl/rxuart.v
+module rxuart #(
+		
+		
+		parameter [30:0] INITIAL_SETUP = 31'd868,
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		localparam [3:0]	RXU_BIT_ZERO    = 4'h0,
+					RXU_BIT_ONE     = 4'h1,
+					RXU_BIT_TWO     = 4'h2,
+					RXU_BIT_THREE   =  4'h3,
+					
+					
+					
+					RXU_BIT_SEVEN   = 4'h7,
+					RXU_PARITY      = 4'h8,
+					RXU_STOP        = 4'h9,
+					RXU_SECOND_STOP = 4'ha,
+					
+					
+					RXU_BREAK       = 4'hd,
+					RXU_RESET_IDLE  = 4'he,
+					RXU_IDLE        = 4'hf
+		
+	) (
+		
+		input	wire		i_clk, i_reset,
+		
+		input	wire	[30:0]	i_setup,
+		
+		input	wire		i_uart_rx,
+		output	reg		o_wr,
+		output	reg	[7:0]	o_data,
+		output	reg		o_break,
+		output	reg		o_parity_err, o_frame_err,
+		output	wire		o_ck_uart
+		
+	);
+endmodule
+
+// Required path: rtl/rxuartlite.v
+module rxuartlite #(
+		
+		parameter			TIMER_BITS = 10,
+`ifdef	FORMAL
+		parameter  [(TIMER_BITS-1):0]	CLOCKS_PER_BAUD = 16, 
+`else
+		parameter  [(TIMER_BITS-1):0]	CLOCKS_PER_BAUD = 868,	
+`endif
+		localparam			TB = TIMER_BITS,
+		
+		localparam [3:0]	RXUL_BIT_ZERO  = 4'h0,
+		
+		
+		localparam [3:0]	RXUL_BIT_ONE   = 4'h1,
+		localparam [3:0]	RXUL_BIT_TWO   = 4'h2,
+		localparam [3:0]	RXUL_BIT_THREE = 4'h3,
+		localparam [3:0]	RXUL_BIT_FOUR  = 4'h4,
+		localparam [3:0]	RXUL_BIT_FIVE  = 4'h5,
+		localparam [3:0]	RXUL_BIT_SIX   = 4'h6,
+		localparam [3:0]	RXUL_BIT_SEVEN = 4'h7,
+		
+		localparam [3:0]	RXUL_STOP      = 4'h8,
+		localparam [3:0]	RXUL_WAIT      = 4'h9,
+		localparam [3:0]	RXUL_IDLE      = 4'hf
+		
+	) (
+		
+		input	wire		i_clk, i_reset,
+		input	wire		i_uart_rx,
+		output	reg		o_wr,
+		output	reg	[7:0]	o_data
+		
+	);
+endmodule
+
+// Required path: rtl/txuart.v
+module txuart #(
+		
+		parameter	[30:0]	INITIAL_SETUP = 31'd868,
+		
+		localparam 	[3:0]	TXU_BIT_ZERO  = 4'h0,
+		localparam 	[3:0]	TXU_BIT_ONE   = 4'h1,
+		localparam 	[3:0]	TXU_BIT_TWO   = 4'h2,
+		localparam 	[3:0]	TXU_BIT_THREE = 4'h3,
+		
+		
+		
+		localparam 	[3:0]	TXU_BIT_SEVEN = 4'h7,
+		localparam 	[3:0]	TXU_PARITY    = 4'h8,
+		localparam 	[3:0]	TXU_STOP      = 4'h9,
+		localparam 	[3:0]	TXU_SECOND_STOP = 4'ha,
+		
+		localparam 	[3:0]	TXU_BREAK     = 4'he,
+		localparam 	[3:0]	TXU_IDLE      = 4'hf
+		
+	) (
+		
+		input	wire		i_clk, i_reset,
+		input	wire	[30:0]	i_setup,
+		input	wire		i_break,
+		input	wire		i_wr,
+		input	wire	[7:0]	i_data,
+		
+		
+		
+		input	wire		i_cts_n,
+		
+		output	reg		o_uart_tx,
+		
+		
+		
+		output	wire		o_busy
+		
+	);
+endmodule
+
+// Required path: rtl/txuartlite.v
+module txuartlite #(
+		
+		
+		
+		
+		
+		parameter	[4:0]	TIMING_BITS = 5'd24,
+		localparam		TB = TIMING_BITS,
+		
+		
+		parameter	[(TB-1):0]	CLOCKS_PER_BAUD = 8 
+		
+	) (
+		
+		input	wire		i_clk, i_reset,
+		input	wire		i_wr,
+		input	wire	[7:0]	i_data,
+		
+		output	reg		o_uart_tx,
+		
+		
+		
+		output	wire		o_busy
+		
+	);
+endmodule
+
+// Required path: rtl/ufifo.v
+module ufifo #(
+		
+		parameter	BW=8,	
+		parameter [3:0]	LGFLEN=4,
+		parameter [0:0]	RXFIFO=1'b1,
+		localparam	FLEN=(1<<LGFLEN)
+		
+	) (
+		
+		input	wire		i_clk, i_reset,
+		input	wire		i_wr,
+		input	wire [(BW-1):0]	i_data,
+		output	wire		o_empty_n, 
+		input	wire		i_rd,
+		output	wire [(BW-1):0]	o_data,
+		output	wire	[15:0]	o_status,
+		output	wire		o_err
+		
+	);
+endmodule

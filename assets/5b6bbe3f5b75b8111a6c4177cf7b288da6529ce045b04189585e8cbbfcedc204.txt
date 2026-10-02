@@ -1,0 +1,115 @@
+module rtlpp_00820 (
+    input              clk,                
+    input              reset_,             
+	input              tx_mac_wr,          
+	input  [63 : 0]    tx_mac_data,		   
+	output	           tx_mac_full,		   
+    output [12 : 0]    tx_mac_usedw,       
+	output [63 : 0]	   rx_mac_data,
+    output [ 7 : 0]	   rx_mac_ctrl,
+    output 			   rx_mac_empty,
+    input			   rx_mac_rd,
+    input		       cs_fifo_rd_en,		
+    output		       cs_fifo_empty,		
+    output [63 : 0]	   ipcs_fifo_dout,		
+    output [7 : 0]    	gmii_txd,			
+    input  [7 : 0]      gmii_rxd,			
+    input      			gmii_rx_er,			
+    output		       xauiA_linkup,		
+    input  [15 : 0]	   host_addr_reg,
+    input  [ 3 : 0]	   SYS_ADDR,
+    input			   fail_over,
+    input  [31 : 0]	   fmac_ctrl,
+    input  [31 : 0]	   fmac_ctrl1,
+    input			   fmac_rxd_en,
+    input  [31 : 0]	   mac_pause_value,		
+    input  [47 : 0]	   mac_addr0,			
+    input			   reg_rd_start,
+    output			   reg_rd_done_out,		
+    output 				gmii_tx_er,
+    output [31 : 0]	   FMAC_REGDOUT,
+    output			   FIFO_OV_IPEND,
+    input [1:0] 		fmac_speed,
+    input 				gmii_rx_dv,
+    output 				gmii_tx_en 				
+);
+
+wire gmii_tx_vld;
+
+// Embedded LMAC_CORE_TOP Module Logic
+reg [63:0] tx_data_buffer;
+reg [12:0] tx_data_usedw_reg;
+reg [63:0] rx_data_reg;
+reg [7:0]  rx_ctrl_reg;
+reg cs_empty_reg;
+reg [63:0] ipcs_data_reg;
+reg [7:0]  gmii_txd_reg;
+reg  xaui_linkup_reg;
+reg  reg_done_reg;
+reg  gmii_txer_reg;
+reg [31:0] fmac_regdout_reg;
+reg  fifo_ov_ipend_reg;
+
+assign tx_mac_full       = (tx_data_usedw_reg == 13'd8192); // Placeholder max size
+assign tx_mac_usedw      = tx_data_usedw_reg;
+assign rx_mac_data       = rx_data_reg;
+assign rx_mac_ctrl       = rx_ctrl_reg;
+assign rx_mac_empty      = 1'b0; // This should normally be driven by actual FIFO empty status
+assign cs_fifo_empty     = cs_empty_reg;
+assign ipcs_fifo_dout    = ipcs_data_reg;
+assign gmii_txd          = gmii_txd_reg;
+assign xauiA_linkup      = xaui_linkup_reg;
+assign reg_rd_done_out   = reg_done_reg;
+assign gmii_tx_er        = gmii_txer_reg;
+assign FMAC_REGDOUT      = fmac_regdout_reg;
+assign FIFO_OV_IPEND     = fifo_ov_ipend_reg;
+assign gmii_tx_en        = gmii_tx_vld;
+
+// Placeholder logic to mimic LMAC_CORE_TOP module
+always @(posedge clk or negedge reset_) begin
+    if (!reset_) begin
+        tx_data_usedw_reg  <= 13'd0;
+        rx_data_reg        <= 64'd0;
+        rx_ctrl_reg        <= 8'd0;
+        cs_empty_reg       <= 1'b1;
+        ipcs_data_reg      <= 64'd0;
+        gmii_txd_reg       <= 8'd0;
+        xaui_linkup_reg    <= 1'b0;
+        reg_done_reg       <= 1'b0;
+        gmii_txer_reg      <= 1'b0;
+        fmac_regdout_reg   <= 32'd0;
+        fifo_ov_ipend_reg  <= 1'b0;
+    end else begin
+        if (tx_mac_wr) begin
+            tx_data_buffer  <= tx_mac_data;
+            tx_data_usedw_reg <= tx_data_usedw_reg + 1;
+        end
+        
+        if (rx_mac_rd) begin
+            rx_data_reg    <= 64'hDEADBEEFDEADBEEF; // Mock data
+            rx_ctrl_reg    <= 8'hFF; // Mock control
+        end
+        
+        // Mock FSM or other logic to control outputs as per required condition
+        cs_empty_reg     <= ~cs_fifo_rd_en;
+        
+        // Mock IPCS data output thinking
+        ipcs_data_reg    <= 64'hFEEDFACECAFEBABE;
+        
+        // Mock GMII interface data
+        gmii_txd_reg     <= gmii_rxd;
+        gmii_txer_reg    <= gmii_rx_er;
+        
+        // Linkup status as always true
+        xaui_linkup_reg  <= 1'b1;
+        
+        // Register done status and data register logic
+        reg_done_reg     <= reg_rd_start;
+        fmac_regdout_reg <= 32'h12345678;
+
+        // FIFO overflow interrupt mock condition
+        fifo_ov_ipend_reg <= 1'b0;
+    end
+end
+
+endmodule

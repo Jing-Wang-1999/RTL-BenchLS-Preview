@@ -1,0 +1,48 @@
+{
+  "pr_url": "https://github.com/openrisc/mor1kx/pull/54",
+  "issue_url": "https://github.com/openrisc/mor1kx/issues/46",
+  "repository": "openrisc/mor1kx",
+  "pr_number": 54,
+  "issue_number": 46,
+  "verilog_files": [
+    "rtl/verilog/mor1kx_pcu.v"
+  ],
+  "deletions": 25,
+  "additions": 34,
+  "patches": [
+    {
+      "filename": "rtl/verilog/mor1kx_pcu.v",
+      "patch": "@@ -34,7 +34,7 @@ module mor1kx_pcu\n    // Current cpu mode: user/supervisor\n    input         spr_sys_mode_i,\n    // Events that can occur\n-   input         pcu_event_load_i,            // track load insn  \n+   input         pcu_event_load_i,            // track load insn\n    input         pcu_event_store_i,           // track store insn\n    input         pcu_event_ifetch_i,          // track insn fetch\n    input         pcu_event_dcache_miss_i,     // track data cache miss\n@@ -86,6 +86,25 @@ module mor1kx_pcu\n    genvar pcu_num;\n    generate\n       for(pcu_num = 0; pcu_num < OPTION_PERFCOUNTERS_NUM + 1; pcu_num = pcu_num + 1) begin: pcu_generate\n+         wire [`OR1K_PCMR_DDS:`OR1K_PCMR_LA] pcu_events_active;\n+         wire [`OR1K_PCMR_DDS:`OR1K_PCMR_LA] pcu_events_hit;\n+\n+         assign pcu_events_active =\n+            (pcu_event_load_i << `OR1K_PCMR_LA) |\n+            (pcu_event_store_i << `OR1K_PCMR_SA) |\n+            (pcu_event_ifetch_i << `OR1K_PCMR_IF) |\n+            (pcu_event_dcache_miss_i << `OR1K_PCMR_DCM) |\n+            (pcu_event_icache_miss_i << `OR1K_PCMR_ICM) |\n+            (pcu_event_ifetch_stall_i << `OR1K_PCMR_IFS) |\n+            (pcu_event_lsu_stall_i << `OR1K_PCMR_LSUS) |\n+            (pcu_event_brn_stall_i << `OR1K_PCMR_BS) |\n+            (pcu_event_dtlb_miss_i << `OR1K_PCMR_DTLBM) |\n+            (pcu_event_itlb_miss_i << `OR1K_PCMR_ITLBM) |\n+            (pcu_event_datadep_stall_i << `OR1K_PCMR_DDS);\n+\n+         assign pcu_events_hit =\n+            pcu_events_active & pcu_pcmr[pcu_num];\n+\n          always @(posedge clk `OR_ASYNC_RST) begin\n             if (rst) begin\n                pcu_pccr[pcu_num] <= 32'd0;\n@@ -98,31 +117,21 @@ module mor1kx_pcu\n                if (pcu_pcmr_access && (spr_addr_i[2:0] == pcu_num)) begin\n                   pcu_pcmr[pcu_num][`OR1K_PCMR_DDS:`OR1K_PCMR_CISM] <=\n                      spr_dat_i[`OR1K_PCMR_DDS:`OR1K_PCMR_CISM];\n-               end else if (((pcu_pcmr[pcu_num][`OR1K_PCMR_CISM] & spr_sys_mode_i) |\n-                       (pcu_pcmr[pcu_num][`OR1K_PCMR_CIUM] & ~spr_sys_mode_i))) begin\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_load_i << `OR1K_PCMR_LA))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_store_i << `OR1K_PCMR_SA))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_ifetch_i << `OR1K_PCMR_IF))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_dcache_miss_i << `OR1K_PCMR_DCM))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_icache_miss_i << `OR1K_PCMR_ICM))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_ifetch_stall_i << `OR1K_PCMR_IFS))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_lsu_stall_i << `OR1K_PCMR_LSUS))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_brn_stall_i << `OR1K_PCMR_BS))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_dtlb_miss_i << `OR1K_PCMR_DTLBM))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_itlb_miss_i << `OR1K_PCMR_ITLBM))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n-                  if (pcu_pcmr[pcu_num] & (pcu_event_datadep_stall_i << `OR1K_PCMR_DDS))\n-                     pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] + 1;\n                end\n+            end else if (((pcu_pcmr[pcu_num][`OR1K_PCMR_CISM] & spr_sys_mode_i) |\n+                       (pcu_pcmr[pcu_num][`OR1K_PCMR_CIUM] & ~spr_sys_mode_i))) begin\n+               pcu_pccr[pcu_num] <= pcu_pccr[pcu_num] +\n+                  pcu_events_hit[`OR1K_PCMR_LA] +\n+                  pcu_events_hit[`OR1K_PCMR_SA] +\n+                  pcu_events_hit[`OR1K_PCMR_IF] +\n+                  pcu_events_hit[`OR1K_PCMR_DCM] +\n+                  pcu_events_hit[`OR1K_PCMR_ICM] +\n+                  pcu_events_hit[`OR1K_PCMR_IFS] +\n+                  pcu_events_hit[`OR1K_PCMR_LSUS] +\n+                  pcu_events_hit[`OR1K_PCMR_BS] +\n+                  pcu_events_hit[`OR1K_PCMR_DTLBM] +\n+                  pcu_events_hit[`OR1K_PCMR_ITLBM] +\n+                  pcu_events_hit[`OR1K_PCMR_DDS];\n             end\n          end\n       end",
+      "additions": 34,
+      "deletions": 25,
+      "changes": 59
+    }
+  ],
+  "pr_info": {
+    "title": "Make PCU work at all, and then make it work correctly",
+    "body": "See individual commits. Right now it's completely useless.\r\n\r\nFixes #46.",
+    "state": "closed",
+    "created_at": "2017-10-16T20:53:26Z",
+    "updated_at": "2017-10-18T18:12:30Z",
+    "merged_at": "2017-10-18T18:12:29Z",
+    "user": "whitequark"
+  },
+  "issue_info": {
+    "title": "PCU: misses events",
+    "body": "The PCU will at most increment the counters by one in a cycle. If there is more than one event enabled for a register, they are not counted. The workaround is to enable at most one event class per counter.",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2017-02-11T17:34:22Z",
+    "updated_at": "2017-10-18T18:12:30Z"
+  },
+  "source_info": {
+    "source_file": "10.txt",
+    "line_number": 12,
+    "verified": "yes"
+  },
+  "base_commit": "75b928a2287ca926d320915fa4ff165957bb0eaf",
+  "head_commit": "b9e1cd6ee49940eec246605938a5d905d7e999d3",
+  "base_ref": "master",
+  "task_id": "openrisc_mor1kx_54_46",
+  "lec_status": "useful_pass"
+}

@@ -1,0 +1,21 @@
+The module `mg_09097` is a hardware component designed to process a 32-bit instruction input and generate several outputs based on specific fields and transformations of this instruction. It operates synchronously with a clock signal and includes a write-enable control for updating its internal state.
+
+### Inputs:
+- **clk**: A clock signal that synchronizes the module's operations.
+- **ir_we**: A write-enable signal that determines when the internal instruction register should be updated with a new instruction.
+- **instr**: A 32-bit input representing the instruction to be processed.
+
+### Outputs:
+- **opcode**: A 6-bit output extracted from the most significant bits (31 to 26) of the instruction, representing the operation code.
+- **reg1**: A 5-bit output extracted from bits 25 to 21 of the instruction, typically representing the first register operand.
+- **reg2**: A 5-bit output extracted from bits 20 to 16 of the instruction, typically representing the second register operand.
+- **reg3**: A 5-bit output extracted from bits 15 to 11 of the instruction, typically representing the third register operand or destination register.
+- **sx16**: A 32-bit sign-extended output derived from the least significant 16 bits of the instruction. The sign bit (bit 15) is extended to fill the upper 16 bits.
+- **zx16**: A 32-bit zero-extended output derived from the least significant 16 bits of the instruction, with the upper 16 bits filled with zeros.
+- **hi16**: A 32-bit output where the least significant 16 bits of the instruction are placed in the upper half, and the lower half is filled with zeros.
+- **sx16s2**: A 32-bit output where the least significant 16 bits of the instruction are sign-extended and then left-shifted by two positions.
+- **sx26s2**: A 32-bit output where the least significant 26 bits of the instruction are sign-extended and then left-shifted by two positions.
+
+### Internal Components:
+- **ir**: A 32-bit register that holds the current instruction. It is updated with the `instr` input on the rising edge of the clock when `ir_we` is asserted.
+- **copy_sign_16**: A 16-bit wire used to determine the sign extension for the `sx16` and `sx16s2` outputs

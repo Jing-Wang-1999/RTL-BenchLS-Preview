@@ -1,0 +1,47 @@
+### Instruction
+
+This Verilog module implements a Consistent Overhead Byte Stuffing (COBS) decoder for streaming data. Here's an in-depth explanation of its function and operation:
+
+1. **Primary Function:**
+   The module decodes COBS-encoded input data from the `s_axis` interface and sends the decoded data through the `m_axis` interface. In COBS encoding, zeros are removed, and their positions are marked in the data, allowing for the transmission of data without zero bytes, which can be useful in communication protocols that do not allow zero bytes.
+
+2. **Key Control Flow/Decision Points:**
+   - **STATE_IDLE:** The module waits for valid input data. If the input byte is non-zero, it updates the count and determines whether to enter `STATE_SEGMENT` or `STATE_NEXT_SEGMENT`, based on the value of the byte.
+   - **STATE_SEGMENT:** The module processes the bytes sequentially, decrementing a count register for each byte until it reaches zero or encounters a termination condition, such as the end of a segment or a zero byte.
+   - **STATE_NEXT_SEGMENT:** Handles the transition between segments, inserting necessary zero bytes when appropriate and managing state transitions based on the input byte value.
+
+3. **Important Data Processing/Signal Interactions:**
+   - **s_axis_tdata and m_axis_tdata:** The input data (`s_axis_tdata`) is processed and decoded, with the output data (`m_axis_tdata`) generated based on the removal of zero bytes.
+   - **Temporary Data Registers:** Intermediate data and flags are held in temporary registers (`temp_tdata_reg`, `temp_tvalid_reg`) to manage synchronization and transition between different states while waiting for output readiness (`m_axis_tready`).
+   - **Ready/Valid Handshakes:** The module uses ready/valid signals (`s_axis_tready`, `s_axis_tvalid`, `m_axis_tready`, `m_axis_tvalid`) to coordinate data transfer between states and to handle situations where the output interface is not immediately ready to accept data.
+   - **State Management:** The state machine (`state_reg`, `state_next`) transitions between different states based on input conditions and the current state of data processing.
+
+4. **Overview of Operation:**
+   - The module starts in `STATE_IDLE`, waiting for valid input data. Upon receiving a non-zero byte, it updates the count register and transitions to `STATE_SEGMENT` or `STATE_NEXT_SEGMENT` depending on the value of the byte.
+   - In `STATE_SEGMENT`, it processes each byte and updates the output data stream until a segment is completed, either by decrementing the count to zero or encountering a specific termination condition.
+   - In `STATE_NEXT_SEGMENT`, the module handles transitions between data segments, inserting zero bytes if necessary and preparing for the next data segment.
+   - Throughout the process, the ready/valid handshakes ensure that data is only transferred when both input and output sides are ready, allowing for efficient data streaming and preventing data loss.
+
+By synthesizing these operations and interactions, the overarching goal is to decode COBS-encoded input data seamlessly while managing state transitions and ensuring data integrity through careful synchronization of input and output interfaces.
+
+Module Interface:
+module axi_stream_cobs_decoder
+(
+    input  wire        clk,
+    input  wire        rst,
+    input  wire [7:0]  s_axis_tdata,
+    input  wire        s_axis_tvalid,
+    output wire        s_axis_tready,
+    input  wire        s_axis_tlast,
+    input  wire        s_axis_tuser,
+    output wire [7:0]  m_axis_tdata,
+    output wire        m_axis_tvalid,
+    input  wire        m_axis_tready,
+    output wire        m_axis_tlast,
+    output wire        m_axis_tuser
+);
+
+Behavioral Clarifications:
+- State encoding: STATE_IDLE=2'd0, STATE_SEGMENT=2'd1, STATE_NEXT_SEGMENT=2'd2. The suppress_zero flag is set when a segment length byte equals 255, suppressing zero insertion at that segment boundary.
+- The output path uses a skid-buffer with a secondary temp register (temp_m_axis_*) to allow back-pressure; the internal ready signal m_axis_tready_int_early accounts for both direct downstream acceptance and temp buffer availability.
+- On synchronous reset, state_reg, temp_tvalid_reg, s_axis_tready_reg, m_axis_tvalid_reg, m_axis_tready_int_reg, and temp_m_axis_tvalid_reg are cleared; data registers are not reset.

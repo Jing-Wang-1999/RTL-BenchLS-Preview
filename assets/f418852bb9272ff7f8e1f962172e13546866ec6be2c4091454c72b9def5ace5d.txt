@@ -1,0 +1,101 @@
+**Instruction for Verilog Module Generation**
+
+1. **Primary Function**: This Verilog module handles communication between a system clock and reset inputs, PCI Express (PCIe) interfaces, and AXI / AXI-Lite bus systems. It facilitates various data transactions and control signaling necessary for managing PCIe operations and memory-mapped I/O.
+
+2. **Key Control Flow**: The operation is driven by the system clock (`sys_clk`) and reset signal (`sys_rst_n`). It incorporates configuration management reads and writes via control signals such as `cfg_mgmt_write`, `cfg_mgmt_read`, and `cfg_mgmt_type1_cfg_reg_access`. The module ensures a seamless control flow from input transactions to producing necessary responses and acknowledgments.
+
+3. **Important Data Processing and Signal Interactions**:
+   - The PCIe receive signals (`pci_exp_rxp` and `pci_exp_rxn`) are processed internally to generate corresponding PCIe transmit signals (`pci_exp_txp` and `pci_exp_txn`).
+   - AXI signals are managed to perform write and read transactions; this includes ensuring AXI write address (`m_axi_awaddr`), write data (`m_axi_wdata`), read address (`m_axi_araddr`), and read data (`m_axi_rdata`) are correctly handled alongside their respective control signals like burst types, IDs, and validity.
+   - Similarly, AXI-Lite write and read transactions are managed using signals such as `m_axil_awaddr`, `m_axil_wdata`, `m_axil_araddr`, and `m_axil_rdata`.
+   - An interrupt mechanism is supported through `usr_irq_req` (input) producing `usr_irq_ack` (output).
+   - The module also manages features like MSI (Message Signaled Interrupts) through `msi_enable` and `msi_vector_width`.
+
+4. **Clarity and Conciseness**:
+   - Ensure that the internal logic effectively governs data transactions, configurations, and PCIe signal processing.
+   - Handle AXI interaction: Ensure the correct management of ready/valid signals for data integrity and transaction correctness.
+   - Include appropriate acknowledgment and response signals to indicate transaction completions.
+   - Synchronize outputs appropriately with the system clock to maintain system coherence and performance.
+
+Module Interface:
+module pcie_axi_dma_bridge(
+  input sys_clk,
+  input sys_rst_n,
+  output user_lnk_up,
+  output [0:0] pci_exp_txp,
+  output [0:0] pci_exp_txn,
+  input [0:0] pci_exp_rxp,
+  input [0:0] pci_exp_rxn,
+  output axi_aclk,
+  output axi_aresetn,
+  input [0:0] usr_irq_req,
+  output [0:0] usr_irq_ack,
+  output msi_enable,
+  output [2:0] msi_vector_width,
+  input m_axi_awready,
+  input m_axi_wready,
+  input [3:0] m_axi_bid,
+  input [1:0] m_axi_bresp,
+  input m_axi_bvalid,
+  input m_axi_arready,
+  input [3:0] m_axi_rid,
+  input [63:0] m_axi_rdata,
+  input [1:0] m_axi_rresp,
+  input m_axi_rlast,
+  input m_axi_rvalid,
+  output [3:0] m_axi_awid,
+  output [63:0] m_axi_awaddr,
+  output [7:0] m_axi_awlen,
+  output [2:0] m_axi_awsize,
+  output [1:0] m_axi_awburst,
+  output [2:0] m_axi_awprot,
+  output m_axi_awvalid,
+  output m_axi_awlock,
+  output [3:0] m_axi_awcache,
+  output [63:0] m_axi_wdata,
+  output [7:0] m_axi_wstrb,
+  output m_axi_wlast,
+  output m_axi_wvalid,
+  output m_axi_bready,
+  output [3:0] m_axi_arid,
+  output [63:0] m_axi_araddr,
+  output [7:0] m_axi_arlen,
+  output [2:0] m_axi_arsize,
+  output [1:0] m_axi_arburst,
+  output [2:0] m_axi_arprot,
+  output m_axi_arvalid,
+  output m_axi_arlock,
+  output [3:0] m_axi_arcache,
+  output m_axi_rready,
+  output [31:0] m_axil_awaddr,
+  output [2:0] m_axil_awprot,
+  output m_axil_awvalid,
+  input m_axil_awready,
+  output [31:0] m_axil_wdata,
+  output [3:0] m_axil_wstrb,
+  output m_axil_wvalid,
+  input m_axil_wready,
+  input m_axil_bvalid,
+  input [1:0] m_axil_bresp,
+  output m_axil_bready,
+  output [31:0] m_axil_araddr,
+  output [2:0] m_axil_arprot,
+  output m_axil_arvalid,
+  input m_axil_arready,
+  input [31:0] m_axil_rdata,
+  input [1:0] m_axil_rresp,
+  input m_axil_rvalid,
+  output m_axil_rready,
+  input [18:0] cfg_mgmt_addr,
+  input cfg_mgmt_write,
+  input [31:0] cfg_mgmt_write_data,
+  input [3:0] cfg_mgmt_byte_enable,
+  input cfg_mgmt_read,
+  output [31:0] cfg_mgmt_read_data,
+  output cfg_mgmt_read_write_done,
+  input cfg_mgmt_type1_cfg_reg_access
+);
+
+Behavioral Clarifications:
+- The golden RTL is an empty stub: the module declares all ports but contains no internal logic (no always blocks, no assign statements).
+- Implement as a port-declaration-only stub; all outputs default to 0 with no functional logic needed to match the golden.

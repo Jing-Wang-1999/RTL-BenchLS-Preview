@@ -1,0 +1,31 @@
+The Verilog module "axi_crossbar" acts as an interconnection network to route AXI transactions between one set of slave interfaces (`s_axi_*`) and multiple master interfaces (`m_axi_*`). The primary function is to forward AXI read and write transactions from a single slave to multiple masters, handling address, data, and control signals.
+
+1. **Primary Function**:
+   The module routes AXI transactions from the slave interface to corresponding master interfaces, facilitating communication in a multi-master environment.
+
+2. **Control Flow**:
+   - When a slave writes an address (`s_axi_awvalid`), it is forwarded to the master (`m_axi_awvalid`). The module waits for acknowledgment (`m_axi_awready`) before proceeding.
+   - Similarly, write data (`s_axi_wvalid`) is forwarded, with synchronization via `m_axi_wready`.
+   - For reading, it controls address signals (`s_axi_arvalid` to `m_axi_arvalid`) and waits for completion (`m_axi_arready`).
+   - Write responses (`m_axi_bvalid` to `s_axi_bvalid`) and read responses (`m_axi_rvalid` to `s_axi_rvalid`) are synchronized similarly, ensuring all transactions are acknowledged correctly.
+
+3. **Data Processing**:
+   - Input address, data, and control signals from the slave (`s_axi_*`) are directly mapped to the master outputs (`m_axi_*`), but typically you would add logic to determine the target master based on address decoding if there are multiple targets.
+   - Output responses and data from masters (`m_axi_*`) are routed back to the slave (`s_axi_*`) with appropriate acknowledgments.
+
+Overall, the module provides an essential bridging mechanism that facilitates effective communication control, ensuring proper signal handshaking and data routing between multiple AXI components. Additional internal logic would typically handle address decoding and arbitration if connecting multiple masters and slaves.
+
+For the LLM to generate this Verilog code, ensure it includes connections and handshaking logic for the AXI read and write channels, as well as stubbed default assignments.
+
+Module Interface:
+module multiport_axi_crossbar(aclk, aresetn, s_axi_awaddr, s_axi_awprot,
+  s_axi_awvalid, s_axi_awready, s_axi_wdata, s_axi_wstrb, s_axi_wvalid, s_axi_wready,
+  s_axi_bresp, s_axi_bvalid, s_axi_bready, s_axi_araddr, s_axi_arprot, s_axi_arvalid,
+  s_axi_arready, s_axi_rdata, s_axi_rresp, s_axi_rvalid, s_axi_rready, m_axi_awaddr,
+  m_axi_awprot, m_axi_awvalid, m_axi_awready, m_axi_wdata, m_axi_wstrb, m_axi_wvalid,
+  m_axi_wready, m_axi_bresp, m_axi_bvalid, m_axi_bready, m_axi_araddr, m_axi_arprot,
+  m_axi_arvalid, m_axi_arready, m_axi_rdata, m_axi_rresp, m_axi_rvalid, m_axi_rready);
+
+Behavioral Clarifications:
+- The golden RTL is a stub with all slave-side outputs and all master-side outputs driven to zero via assign statements (no clock/reset logic). There are 4 master ports; master buses are 128-bit wide (address, data) and 4-bit wide (valid/ready vectors).
+- All outputs are driven by constant-zero assign statements; no routing or handshaking logic is present.

@@ -1,0 +1,58 @@
+module origen_084862 (
+    input [31:0] InA,
+    input [31:0] InB,
+    input En,
+    output reg [31:0] OUT
+);
+
+    wire sign_a, sign_b, sign_out;
+    wire [7:0] exp_a, exp_b, exp_out;
+    wire [22:0] frac_a, frac_b;
+    wire [23:0] mant_a, mant_b;
+    wire [47:0] div_result;
+    wire [7:0] exp_diff;
+    reg [23:0] norm_frac;
+    reg [7:0] norm_exp;
+    integer shift;
+
+    assign sign_a = InA[31];
+    assign sign_b = InB[31];
+    assign sign_out = sign_a ^ sign_b;
+
+    assign exp_a = InA[30:23];
+    assign exp_b = InB[30:23];
+    assign frac_a = InA[22:0];
+    assign frac_b = InB[22:0];
+
+    assign mant_a = {1'b1, frac_a};
+    assign mant_b = {1'b1, frac_b};
+
+    assign exp_diff = (exp_a - 8'd127) - (exp_b - 8'd127) + 8'd127;
+
+    assign div_result = {mant_a, 24'b0} / mant_b;
+
+    always @(*) begin
+        if (!En) begin
+            OUT = 32'bz;
+        end else if (InA == 32'b0 && InB == 32'b0) begin
+            OUT = 32'bz;
+        end else if (InA == 32'b0) begin
+            OUT = 32'b0;
+        end else if (InB == 32'b0) begin
+            OUT = 32'bz;
+        end else begin
+            shift = 0;
+            norm_frac = div_result[47:24];
+            norm_exp = exp_diff;
+
+            while (norm_frac[23] == 1'b0 && shift < 24) begin
+                norm_frac = norm_frac << 1;
+                norm_exp = norm_exp - 1;
+                shift = shift + 1;
+            end
+
+            OUT = {sign_out, norm_exp, norm_frac[22:0]};
+        end
+    end
+
+endmodule

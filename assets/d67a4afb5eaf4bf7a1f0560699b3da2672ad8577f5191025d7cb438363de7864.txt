@@ -1,0 +1,62 @@
+### Instruction for Verilog Code Generation
+
+The primary function of the Verilog module `processor_execution_stage` is to handle the execution stage of a CPU pipeline, involved in various arithmetic and logic operations including ALU operations, multiplication/division, and interactions with an eFPGA. The module combines results from these different execution units to provide final output data and control signals.
+
+1. **ALU Operations**:
+    - Perform operations based on the 5-bit `alu_operator_i` signal: addition, subtraction, bitwise AND, OR, and XOR.
+    - Compute additional comparison results, such as equality and less-than, which influence control signals like `branch_decision_o`.
+
+2. **Multiplication and Division**:
+    - Multiplication or division is conditionally enabled based on the `mult_en_i` and `div_en_i` signals.
+    - The module supports a simplified model of unsigned multiplication, producing results stored in `multdiv_result` and setting a ready signal `multdiv_ready`.
+    - The enable selector logic `multdiv_en_sel` determines whether multiply or divide operations are enabled.
+
+3. **eFPGA Interaction**:
+    - If `eFPGA_en_i` is high, perform operations specified by `eFPGA_operator_i` on inputs `eFPGA_result_a_i`, `eFPGA_result_b_i`, and `eFPGA_result_c_i`.
+    - The results from eFPGA operations are stored in `eFPGA_result`, and a ready signal `eFPGA_ready` is set.
+
+4. **Control and Data Signals**:
+    - The module selects the final output `regfile_wdata_ex_o` based on whether multiply/divide or eFPGA operations are enabled, defaulting to ALU results otherwise.
+    - The `branch_decision_o` output is determined by ALU comparison results.
+    - The `ex_ready_o` signal indicates the readiness of the module based on the status of multiply/divide, load/store, and eFPGA operations.
+    - Multiplication and division operands are processed with extended bits for internal ALU operations.
+
+5. **Further Details**:
+    - The module handles synchronous reset (`rst_n`) and clock (`clk`) inputs to control state transitions.
+    - Various wire and register definitions manage intermediate results and operational states which are responsive to the input control signals.
+
+By covering these key areas, this instruction ensures the synthesized Verilog module will replicate the described functionality and control/data interactions accurately.
+
+Module Interface:
+module processor_execution_stage (
+	clk,
+	rst_n,
+	alu_operator_i,
+	multdiv_operator_i,
+	mult_en_i,
+	div_en_i,
+	eFPGA_en_i,
+	eFPGA_operator_i,
+	eFPGA_result_a_i,
+	eFPGA_result_b_i,
+	eFPGA_result_c_i,
+	eFPGA_delay_i,
+	eFPGA_fpga_done_i,
+	eFPGA_write_strobe_o,
+	alu_operand_a_i,
+	alu_operand_b_i,
+	multdiv_signed_mode_i,
+	multdiv_operand_a_i,
+	multdiv_operand_b_i,
+	alu_adder_result_ex_o,
+	regfile_wdata_ex_o,
+	jump_target_o,
+	branch_decision_o,
+	lsu_en_i,
+	lsu_ready_ex_i,
+	ex_ready_o
+);
+
+Behavioral Clarifications:
+- Parameter RV32M=1 controls whether multiply/divide is enabled; when RV32M=1, multdiv_en_sel uses div_en_i only (MULT_TYPE=1 localparam), while multdiv_en is the OR of mult_en_i and div_en_i.
+- The eFPGA_write_strobe_o is directly driven by eFPGA_fpga_done_i. The ex_ready_o combinational block uses priority-encoded case(1'b1) selecting multdiv_ready, lsu_ready_ex_i, or eFPGA_ready based on which enable is active, defaulting to 1.

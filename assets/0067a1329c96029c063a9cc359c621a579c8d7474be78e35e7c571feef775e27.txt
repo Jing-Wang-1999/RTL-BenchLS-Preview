@@ -1,0 +1,70 @@
+{
+  "candidate_target_id": "github_alexforencich_axi_fifo_direct_v1::rtl/axi_fifo_wr.v::axi_fifo_wr",
+  "construction_hold": false,
+  "file_path": "rtl/axi_fifo_wr.v",
+  "formal_contracts": [
+    {
+      "clock": "clk",
+      "clock_edge": "posedge",
+      "compare": "all declared output ports",
+      "defines": [],
+      "includes": [],
+      "input_assumptions": [],
+      "mode": "sec",
+      "parameter_override_required": false,
+      "parameters": {
+        "ADDR_WIDTH": "32",
+        "AWUSER_ENABLE": "0",
+        "AWUSER_WIDTH": "1",
+        "BUSER_ENABLE": "0",
+        "BUSER_WIDTH": "1",
+        "DATA_WIDTH": "32",
+        "FIFO_DELAY": "0",
+        "FIFO_DEPTH": "32",
+        "ID_WIDTH": "8",
+        "STRB_WIDTH": "(DATA_WIDTH/8)",
+        "WUSER_ENABLE": "0",
+        "WUSER_WIDTH": "1"
+      },
+      "reset_expression": "rst",
+      "reset_semantics": "synchronous active-high",
+      "source_files": [
+        "rtl/axi_fifo_wr.v"
+      ],
+      "top": "axi_fifo_wr",
+      "unit_id": "axi_fifo_wr"
+    }
+  ],
+  "helper_files": [],
+  "literal_module_count": 1,
+  "mask_granularity": "module",
+  "masked_modules": [
+    "axi_fifo_wr"
+  ],
+  "noncomment_lines": 324,
+  "parent_case_id": "github_alexforencich_axi_fifo_direct_v1",
+  "parent_manifest_sha256": "77f8bbbc75168c9cecaef5f7989c68a0c1b2230002388517aa5fee3ac15e69ff",
+  "parent_path": "scope2/task2_1_spec_to_project/cases/github_alexforencich_axi_fifo_direct_v1",
+  "rank": 2,
+  "reference_path": "scope2/task2_1_spec_to_project/cases/github_alexforencich_axi_fifo_direct_v1/private/reference/rtl/axi_fifo_wr.v",
+  "reference_sha256": "e0f06c5c6e3deae0b764e85319e16395c7b2e428b7419853c264129350df67ca",
+  "retained_context_files": [
+    "rtl/axi_fifo.v",
+    "rtl/axi_fifo_rd.v"
+  ],
+  "retained_public_evidence": [
+    {
+      "path": "scope2/task2_1_spec_to_project/cases/github_alexforencich_axi_fifo_direct_v1/public/specification/project.md",
+      "sha256": "99499ca09430eff2c4aca5ed472759e4090bf51c1dcef5e07b880f9a11fc3a61"
+    },
+    {
+      "path": "scope2/task2_1_spec_to_project/cases/github_alexforencich_axi_fifo_direct_v1/public/interfaces/modules.v",
+      "sha256": "8d9e56cad10353ad7f7c8fd73e09f605816e7bb43f561e251aacdaf2120be2d5"
+    }
+  ],
+  "review_caveats": "Qualification uses the declared default FIFO_DEPTH=32 and FIFO_DELAY=0. The address channel is combinationally forwarded; the write-response channel is also forwarded; user outputs are zero when their enables are zero. FIFO storage is not reset; reset clears pointers and staged valid flags, not all payload/address registers. Reads use a registered memory stage followed by a held output stage; both stages may prefetch when empty. Preserve payload behavior outside valid cycles as well as valid/ready timing; no handshake or burst-legality assumptions are imposed by the oracle.",
+  "reviewcontext": "The parent specification documents this component and AXI signals. Interfaces retain the complete port/parameter declarations; the top wrapper shows channel wiring and the other direction remains visible. The clarification below fixes the default timing/reset profile used by formal scoring.",
+  "reviewer": "root",
+  "reviewimportance": "Buffer AXI write data (data, strobe, last) through a bounded FIFO with ordered delivery, backpressure, pointer wrap and staged read/output validity; preserve the other AXI channels.",
+  "screening_status": "reviewed_default_profile"
+}

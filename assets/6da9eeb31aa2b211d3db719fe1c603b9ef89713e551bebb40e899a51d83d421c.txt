@@ -1,0 +1,30 @@
+The `ad_addsub` module is a configurable arithmetic unit designed to perform addition or subtraction operations on input data. It is parameterized to allow customization of data width and a constant value used in operations. The module operates synchronously with a clock signal and includes control logic to handle overflow and underflow conditions.
+
+### Parameters:
+- **A_DATA_WIDTH**: Specifies the bit-width of the input data `A` and the output `out`. The default width is 32 bits.
+- **B_DATA_VALUE**: A constant value used in arithmetic operations. The default value is 32'h1.
+- **ADD_OR_SUB_N**: A control parameter that determines the operation mode. A value of 0 configures the module for subtraction, while a value of 1 configures it for addition.
+
+### Inputs:
+- **clk**: The clock signal that synchronizes the module's operations.
+- **A**: The primary input data, with a width defined by `A_DATA_WIDTH`.
+- **Amax**: A threshold value used to resolve overflow or underflow conditions.
+- **CE (Clock Enable)**: A control signal that enables the output logic. When high, the output is updated; when low, the output is reset to zero.
+
+### Outputs:
+- **out**: The result of the arithmetic operation, with a width defined by `A_DATA_WIDTH`.
+
+### Internal Logic:
+1. **Input Latching**: The inputs `A` and `Amax` are latched on the rising edge of the clock to ensure stable data for processing.
+
+2. **Arithmetic Operation**: 
+   - If `ADD_OR_SUB_N` is set to 1 (ADDER mode), the module adds the constant `B_DATA_VALUE` to the input `A`.
+   - If `ADD_OR_SUB_N` is set to 0 (SUBTRACTER mode), the module subtracts the constant `B_DATA_VALUE` from the input `A`.
+
+3. **Overflow/Underflow Resolution**:
+   - In ADDER mode, if the result exceeds `Amax`, the module subtracts `Amax` from the result to resolve overflow.
+   - In SUBTRACTER mode, if the result is negative (indicated by the most significant bit being 1), the module adds `Amax` to the result to resolve underflow.
+
+4. **Output Logic**: The resolved result is assigned to the output `out` on the rising edge of the clock if the `CE` signal is high. If `CE` is low, the output is reset to zero.
+
+### Allowed Sub-mod

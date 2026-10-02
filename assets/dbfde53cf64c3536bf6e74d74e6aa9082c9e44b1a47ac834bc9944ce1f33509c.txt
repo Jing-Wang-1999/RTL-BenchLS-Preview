@@ -1,0 +1,83 @@
+module rtlpp_10478 (
+    clk,
+    x_in,
+    d_in,
+    e_out,
+    y_out,
+    f0_out,
+    f1_out
+);
+
+    parameter W1 = 8;
+    parameter W2 = 16;
+    parameter L = 2;
+    parameter Delay = 3; // Not used in simplified version
+
+    input clk;
+    input [W1-1:0] x_in, d_in;
+    output [W2-1:0] e_out, y_out;
+    output [W1-1:0] f0_out, f1_out;
+
+    reg [W1-1:0] x, x0, x1, x2, x3, x4, f0, f1;
+    reg [W1-1:0] d0, d1, d2, d3;
+    // Intermediate signals
+    reg [W2-1:0] p0, p1, xemu0, xemu1, y, e, sxtd, sxty, emu;
+    reg [W2-1:0] sum;
+    
+    initial begin
+        sum = 0;
+    end
+    
+    // Sign extending d3
+    assign sxtd = {{8{d3[7]}}, d3};
+
+    always @(posedge clk) begin
+        // Storing previous inputs
+        d0 <= d_in;
+        d1 <= d0;
+        d2 <= d1;
+        d3 <= d2;
+        
+        x0 <= x_in;
+        x1 <= x0;
+        x2 <= x1;
+        x3 <= x2;
+        x4 <= x3;
+        
+        // Updating filter coefficients
+        f0 <= f0 + xemu0[15:8];
+        f1 <= f1 + xemu1[15:8];
+    end
+
+    // Multiplier functionality
+    always @(posedge clk) begin
+        p0 <= $signed(x0) * $signed(f0);
+        p1 <= $signed(x1) * $signed(f1);
+    end
+
+    // Resultant output
+    always @(posedge clk) begin
+        y <= p0 + p1;
+
+        // Shifting the result
+        sxty <= {{7{y[15]}}, y[15:7]};
+        
+        // Calculating error
+        e <= sxtd - sxty;
+        
+        // Adjusting error value
+        emu <= e[8:1];
+    end
+
+    // Multiplier functionality for updating coefficients
+    always @(posedge clk) begin
+        xemu0 <= $signed(x3) * $signed(emu);
+        xemu1 <= $signed(x4) * $signed(emu);
+    end
+
+    assign y_out = y;
+    assign e_out = e;
+    assign f0_out = f0;
+    assign f1_out = f1;
+
+endmodule

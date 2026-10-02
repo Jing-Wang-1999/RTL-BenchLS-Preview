@@ -1,0 +1,54 @@
+module origen_082638 (
+    input wire USER_CLK,
+    input wire [7:0] TX_Data,
+    input wire TX_Request,
+    output reg FPGA_SERIAL1_TX,
+    output reg Busy
+);
+
+    reg [9:0] rs232ctr;
+    reg rs232clk;
+    reg [3:0] rs232state;
+    reg [7:0] tx_reg;
+
+    // Clock divider
+    always @(posedge USER_CLK) begin
+        if (rs232ctr == 10'd867) begin
+            rs232ctr <= 10'd0;
+            rs232clk <= ~rs232clk;
+        end else begin
+            rs232ctr <= rs232ctr + 1'b1;
+        end
+    end
+
+    // State machine and transmission logic
+    always @(posedge USER_CLK) begin
+        if (TX_Request && !Busy) begin
+            rs232state <= 4'b0001;
+            tx_reg <= TX_Data;
+            Busy <= 1'b1;
+        end else if (rs232clk) begin
+            case (rs232state)
+                4'b0000: begin // Idle state
+                    FPGA_SERIAL1_TX <= 1'b1;
+                    Busy <= 1'b0;
+                end
+                4'b0001: begin // Start bit
+                    FPGA_SERIAL1_TX <= 1'b0;
+                    rs232state <= rs232state + 1'b1;
+                end
+                4'b0010, 4'b0011, 4'b0100, 4'b0101, 4'b0110, 4'b0111, 4'b1000, 4'b1001: begin // Data bits
+                    FPGA_SERIAL1_TX <= tx_reg[0];
+                    tx_reg <= {1'b0, tx_reg[7:1]};
+                    rs232state <= rs232state + 1'b1;
+                end
+                4'b1010, 4'b1011: begin // Stop bits
+                    FPGA_SERIAL1_TX <= 1'b1;
+                    rs232state <= (rs232state == 4'b1011) ? 4'b0000 : rs232state + 1'b1;
+                end
+                default: rs232state <= 4'b0000;
+            endcase
+        end
+    end
+
+endmodule

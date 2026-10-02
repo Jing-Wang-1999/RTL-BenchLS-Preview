@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.3afe33708e4d467f9952.4cc95d464611",
+  "compile_check": {
+    "case_id": "s1derived.3afe33708e4d467f9952.4cc95d464611",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_022932",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_022932.edc381150b4257cc/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.3afe33708e4d467f9952",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "3afe33708e4d467f995235aea41b3e47a376516dce3b9336fa7bee20a262aae1",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.3afe33708e4d467f9952.4cc95d464611",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_022932.edc381150b4257cc/private/commercial_positive.log",
+    "commercial_log_sha256": "745cf847ff414111b1262337ffbca8d17778416d8f6cd5f187d2d0dceecc709d",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_022932.edc381150b4257cc/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "origen_022932"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.origen_022932.edc381150b4257cc",
+    "parent_id": "s1p.3afe33708e4d467f9952",
+    "revised_tops": [
+      "origen_022932"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_022932",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.3afe33708e4d467f9952.4cc95d464611",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The complete four-column MixColumns equations, byte order, GF reduction polynomial and enabled128-bit output register agree; no reset is claimed.",
+        "rtl_excerpt": "gm3 = gm2(op) ^ op;",
+        "specification_excerpt": "Apply this independently"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.3afe33708e4d467f9952",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "c1acc172c128444102b1230a38c0dd6b52206457057c443496b6ec336b3c0e51",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3afe33708e4d467f995235aea41b3e47a376516dce3b9336fa7bee20a262aae1",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_022932.edc381150b4257cc/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_022932.edc381150b4257cc/private/historical_harness/01_conformal_rtl_origen_022932.do"
+  ],
+  "parent_id": "s1p.3afe33708e4d467f9952",
+  "primary_review": {
+    "case_id": "s1derived.3afe33708e4d467f9952.4cc95d464611",
+    "checks": {
+      "behavior": "Verified gm2, gm3, byte order, and four-word transform.",
+      "boundaries": "Checked inactive hold and pre-first-write unspecified value.",
+      "interface": "Clock, enable, input, and output widths match.",
+      "rtl_reasonableness": "Reasonable registered AES MixColumns block.",
+      "sequential_and_reset": "One enabled output register with no reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The original omits the complete temporal contract.",
+        "rtl_excerpt": "if (i_active) begin r_data <= mixcolumns(i_data);",
+        "spec_excerpt": "### Behavior: Upon"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification truncates before stating enable hold, latency, lack of reset, and initial-value behavior.",
+        "rtl_evidence": "always @(posedge i_clock) if (i_active) r_data <= mixcolumns(i_data)",
+        "spec_evidence": "### Behavior: Upon",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.3afe33708e4d467f9952",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.3afe33708e4d467f9952.4cc95d464611.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3afe33708e4d467f995235aea41b3e47a376516dce3b9336fa7bee20a262aae1",
+    "source_group": "S2",
+    "specification_sha256": "4cc95d464611ef841e93b83e5c08c59465db3305556e35d05efde2d034c36573",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.3afe33708e4d467f9952.4cc95d464611.md",
+  "qualified_specification_sha256": "c1acc172c128444102b1230a38c0dd6b52206457057c443496b6ec336b3c0e51",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_022932.edc381150b4257cc/private/golden_design.v",
+  "rtl_sha256": "3afe33708e4d467f995235aea41b3e47a376516dce3b9336fa7bee20a262aae1",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_022932.edc381150b4257cc/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "4cc95d464611ef841e93b83e5c08c59465db3305556e35d05efde2d034c36573",
+  "top_module": "origen_022932"
+}

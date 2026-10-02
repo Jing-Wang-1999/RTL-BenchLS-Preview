@@ -1,0 +1,17 @@
+always @(posedge clk) begin
+    if(adv_i) begin
+      s1o_inv         <= s1t_inv;
+      s1o_inf_i       <= s1t_inf_i;
+      s1o_snan_i      <= snan_i;
+      s1o_qnan_i      <= qnan_i;
+      s1o_anan_i_sign <= anan_sign_i;
+        
+      s1o_aeqb        <= addsub_aeqb_i;
+      s1o_shr         <= s1t_shr & {5{~s1t_inf_i}};
+      s1o_sign_nsh    <= addsub_agtb_i ? s1t_calc_signa : s1t_calc_signb;
+      s1o_op_sub      <= s1t_calc_signa ^ s1t_calc_signb;
+      s1o_exp10c      <= addsub_agtb_i ? exp10a_i : exp10b_i;
+      s1o_fract24_nsh <= s1t_fract24_nsh & {24{~s1t_inf_i}};
+      s1o_fract24_fsh <= s1t_fract24_fsh & {24{~s1t_inf_i}};
+    end 
+  end

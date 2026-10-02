@@ -1,0 +1,135 @@
+always @* begin
+    state_next = STATE_IDLE;
+
+    data_next = data_reg;
+    strb_next = strb_reg;
+
+    current_segment_next = current_segment_reg;
+
+    s_axil_awready_next = 1'b0;
+    s_axil_wready_next = 1'b0;
+    s_axil_bresp_next = s_axil_bresp_reg;
+    s_axil_bvalid_next = s_axil_bvalid_reg && !s_axil_bready;
+    m_axil_awaddr_next = m_axil_awaddr_reg;
+    m_axil_awprot_next = m_axil_awprot_reg;
+    m_axil_awvalid_next = m_axil_awvalid_reg && !m_axil_awready;
+    m_axil_wdata_next = m_axil_wdata_reg;
+    m_axil_wstrb_next = m_axil_wstrb_reg;
+    m_axil_wvalid_next = m_axil_wvalid_reg && !m_axil_wready;
+    m_axil_bready_next = 1'b0;
+
+    if (SEGMENT_COUNT == 1 || EXPAND) begin
+        // master output is same width or wider; single cycle direct transfer
+        case (state_reg)
+            STATE_IDLE: begin
+                s_axil_awready_next = !m_axil_awvalid;
+
+                if (s_axil_awready && s_axil_awvalid) begin
+                    s_axil_awready_next = 1'b0;
+                    m_axil_awaddr_next = s_axil_awaddr;
+                    m_axil_awprot_next = s_axil_awprot;
+                    m_axil_awvalid_next = 1'b1;
+                    s_axil_wready_next = !m_axil_wvalid;
+                    state_next = STATE_DATA;
+                end else begin
+                    state_next = STATE_IDLE;
+                end
+            end
+            STATE_DATA: begin
+                s_axil_wready_next = !m_axil_wvalid;
+
+                if (s_axil_wready && s_axil_wvalid) begin
+                    s_axil_wready_next = 1'b0;
+                    if (M_WORD_WIDTH == S_WORD_WIDTH) begin
+                        m_axil_wdata_next = s_axil_wdata;
+                        m_axil_wstrb_next = s_axil_wstrb;
+                    end else begin
+                        m_axil_wdata_next = {(M_WORD_WIDTH/S_WORD_WIDTH){s_axil_wdata}};
+                        m_axil_wstrb_next = s_axil_wstrb << (m_axil_awaddr_reg[M_ADDR_BIT_OFFSET - 1:S_ADDR_BIT_OFFSET] * S_STRB_WIDTH);
+                    end
+                    m_axil_wvalid_next = 1'b1;
+                    m_axil_bready_next = !s_axil_bvalid;
+                    state_next = STATE_RESP;
+                end else begin
+                    state_next = STATE_DATA;
+                end
+            end
+            STATE_RESP: begin
+                m_axil_bready_next = !s_axil_bvalid;
+
+                if (m_axil_bready && m_axil_bvalid) begin
+                    m_axil_bready_next = 1'b0;
+                    s_axil_bresp_next = m_axil_bresp;
+                    s_axil_bvalid_next = 1'b1;
+                    s_axil_awready_next = !m_axil_awvalid;
+                    state_next = STATE_IDLE;
+                end else begin
+                    state_next = STATE_RESP;
+                end
+            end
+        endcase
+    end else begin
+        // master output is narrower; may need several cycles
+        case (state_reg)
+            STATE_IDLE: begin
+                s_axil_awready_next = !m_axil_awvalid;
+
+                current_segment_next = s_axil_awaddr >> M_ADDR_BIT_OFFSET;
+                s_axil_bresp_next = 2'd0;
+
+                if (s_axil_awready && s_axil_awvalid) begin
+                    s_axil_awready_next = 1'b0;
+                    m_axil_awaddr_next = s_axil_awaddr;
+                    m_axil_awprot_next = s_axil_awprot;
+                    m_axil_awvalid_next = 1'b1;
+                    s_axil_wready_next = !m_axil_wvalid;
+                    state_next = STATE_DATA;
+                end else begin
+                    state_next = STATE_IDLE;
+                end
+            end
+            STATE_DATA: begin
+                s_axil_wready_next = !m_axil_wvalid;
+
+                if (s_axil_wready && s_axil_wvalid) begin
+                    s_axil_wready_next = 1'b0;
+                    data_next = s_axil_wdata;
+                    strb_next = s_axil_wstrb;
+                    m_axil_wdata_next = data_next >> current_segment_reg*SEGMENT_DATA_WIDTH;
+                    m_axil_wstrb_next = strb_next >> current_segment_reg*SEGMENT_STRB_WIDTH;
+                    m_axil_wvalid_next = 1'b1;
+                    m_axil_bready_next = !s_axil_bvalid;
+                    current_segment_next = current_segment_reg + 1;
+                    state_next = STATE_RESP;
+                end else begin
+                    state_next = STATE_DATA;
+                end
+            end
+            STATE_RESP: begin
+                m_axil_bready_next = !s_axil_bvalid;
+
+                if (m_axil_bready && m_axil_bvalid) begin
+                    m_axil_bready_next = 1'b0;
+                    m_axil_awaddr_next = (m_axil_awaddr_reg & M_ADDR_MASK) + SEGMENT_STRB_WIDTH;
+                    m_axil_wdata_next = data_next >> current_segment_reg*SEGMENT_DATA_WIDTH;
+                    m_axil_wstrb_next = strb_next >> current_segment_reg*SEGMENT_STRB_WIDTH;
+                    current_segment_next = current_segment_reg + 1;
+                    if (m_axil_bresp != 0) begin
+                        s_axil_bresp_next = m_axil_bresp;
+                    end
+                    if (current_segment_reg == 0) begin
+                        s_axil_bvalid_next = 1'b1;
+                        s_axil_awready_next = !m_axil_awvalid;
+                        state_next = STATE_IDLE;
+                    end else begin
+                        m_axil_awvalid_next = 1'b1;
+                        m_axil_wvalid_next = 1'b1;
+                        state_next = STATE_RESP;
+                    end
+                end else begin
+                    state_next = STATE_RESP;
+                end
+            end
+        endcase
+    end
+end

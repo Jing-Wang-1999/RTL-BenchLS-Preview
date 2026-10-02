@@ -1,0 +1,14 @@
+module GPIO(PAD, A, DIR, Y);
+    inout [0:0] PAD;
+    input [0:0] A;
+    input [0:0] DIR;
+    output [0:0] Y;
+    reg PAD_int;
+
+    assign Y = (DIR == 1'b0) ? PAD : 1'bz;
+    assign PAD = (DIR == 1'b1) ? A : 1'bz;
+
+    always @* begin
+        PAD_int = DIR ? A : 1'bz;
+    end
+endmodule

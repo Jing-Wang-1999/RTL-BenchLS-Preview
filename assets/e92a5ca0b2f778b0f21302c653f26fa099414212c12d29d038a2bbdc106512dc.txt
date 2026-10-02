@@ -1,0 +1,93 @@
+# Hardware Specification for autovcoder_011153
+
+## Overview
+This module implements a streaming FIFO (First-In-First-Out) buffer controller with a capacity of 4 entries. It manages data flow between a producer (push side) and consumer (pop side) with handshaking protocols and provides occupancy tracking.
+
+## Module Purpose
+The module serves as a flow control mechanism for streaming data, buffering up to 4 transactions between upstream and downstream components. It implements ready-valid handshaking on both interfaces and supports flushing to reset the buffer state.
+
+## Inputs
+
+**Clock and Reset:**
+- `io_axiClk`: System clock signal for synchronous operation
+- `resetCtrl_axiReset`: Active-high asynchronous reset signal
+
+**Push Interface (Producer Side):**
+- `io_push_valid`: Indicates the producer has valid data to push into the buffer
+
+**Pop Interface (Consumer Side):**
+- `io_pop_ready`: Indicates the consumer is ready to accept data from the buffer
+
+**Control:**
+- `io_flush`: Synchronous flush signal that clears the buffer and resets all pointers
+
+## Outputs
+
+**Push Interface:**
+- `io_push_ready`: Indicates the buffer can accept new data (not full)
+
+**Pop Interface:**
+- `io_pop_valid`: Indicates the buffer has valid data available for the consumer
+
+**Status:**
+- `io_occupancy`: 3-bit value indicating the current number of entries stored in the buffer (0 to 4)
+
+## Functional Behavior
+
+### Buffer Management
+The module uses two 2-bit pointers to manage a circular buffer with 4 positions:
+- A push pointer tracks where the next entry will be written
+- A pop pointer tracks where the next entry will be read
+- Both pointers increment modulo 4 (wrap from 3 back to 0)
+
+### State Tracking
+The module maintains an internal state to distinguish between empty and full conditions:
+- When push and pop pointers match, the buffer could be either empty or full
+- A rising occupancy flag tracks whether the last operation was a push (indicating full) or pop (indicating empty)
+- The buffer is empty when pointers match and rising occupancy is false
+- The buffer is full when pointers match and rising occupancy is true
+
+### Handshaking Protocol
+
+**Push Operations:**
+- A push occurs when both `io_push_valid` and `io_push_ready` are high
+- `io_push_ready` is asserted when the buffer is not full
+- On a successful push, the push pointer increments
+
+**Pop Operations:**
+- A pop occurs when both `io_pop_valid` and `io_pop_ready` are high
+- `io_pop_valid` is asserted when the buffer is not empty
+- On a successful pop, the pop pointer increments
+- When the buffer is empty, `io_pop_valid` directly reflects `io_push_valid` (bypass mode)
+
+### Bypass Mode
+When the buffer is empty, data can flow directly from push to pop interface without buffering, allowing zero-latency operation when the consumer is ready.
+
+### Occupancy Calculation
+The occupancy output is computed as a 3-bit value:
+- The lower 2 bits represent the difference between push and pop pointers
+- The most significant bit is set when the buffer is full (pointers match with rising occupancy)
+- This provides values from 0 (empty) to 4 (full)
+
+### Flush Operation
+When `io_flush` is asserted:
+- Both push and pop pointers reset to zero
+- The rising occupancy flag clears
+- The buffer returns to an empty state
+- All pending data is discarded
+
+### Reset Behavior
+On asynchronous reset (`resetCtrl_axiReset`):
+- Push pointer initializes to 0
+- Pop pointer initializes to 0
+- Rising occupancy flag initializes to false
+- Buffer starts in empty state
+
+## Timing
+All state updates occur on the rising edge of `io_axiClk`. The asynchronous reset takes immediate effect regardless of clock state. All pointer updates and state changes are registered, providing clean timing boundaries.
+
+## Design Constraints
+- Buffer depth is fixed at 4 entries
+- No actual data storage is implemented in this module (only control logic)
+- Pointers are 2 bits wide, supporting indices 0-3
+- The module assumes data storage is handled externally using the pointer values

@@ -1,0 +1,198 @@
+module rtlpp_04255 (
+                        iCLK,
+                        iRST_N,
+                        iUART_CTRL,
+                        iZOOM_MODE_SW,
+                        iEXPOSURE_ADJ,
+                        iEXPOSURE_DEC_p,
+                        
+                        I2C_SCLK,
+                        I2C_SDAT
+                        );
+                        
+
+input           iCLK;
+input           iRST_N;
+input           iUART_CTRL;
+input           iZOOM_MODE_SW;
+input           iEXPOSURE_ADJ;
+input           iEXPOSURE_DEC_p;
+
+output          I2C_SCLK;
+inout           I2C_SDAT;
+
+reg     [15:0]  mI2C_CLK_DIV;
+reg     [31:0]  mI2C_DATA;
+reg             mI2C_CTRL_CLK;
+reg             mI2C_GO;
+wire            mI2C_END;
+wire            mI2C_ACK;
+reg     [23:0]  LUT_DATA;
+reg     [5:0]   LUT_INDEX;
+reg     [3:0]   mSetup_ST;
+reg     [24:0]  combo_cnt;
+wire            combo_pulse;
+reg     [1:0]   izoom_mode_sw_delay;
+reg     [3:0]   iexposure_adj_delay;
+wire            exposure_adj_set;
+wire            exposure_adj_reset;
+reg     [15:0]  senosr_exposure;
+wire    [23:0]  sensor_start_row;
+wire    [23:0]  sensor_start_column;
+wire    [23:0]  sensor_row_size;
+wire    [23:0]  sensor_column_size;
+wire    [23:0]  sensor_row_mode;
+wire    [23:0]  sensor_column_mode;
+
+// Parameters
+parameter       default_exposure         = 16'h07c0;
+parameter       exposure_change_value    = 16'd200;
+parameter       CLK_Freq                 = 50000000;  
+parameter       I2C_Freq                 = 20000;      
+parameter       LUT_SIZE                 = 25;
+
+// Assignments
+assign sensor_start_row     = iZOOM_MODE_SW ?  24'h010036 : 24'h010000;
+assign sensor_start_column  = iZOOM_MODE_SW ?  24'h020010 : 24'h020000;
+assign sensor_row_size      = iZOOM_MODE_SW ?  24'h0303BF : 24'h03077F;
+assign sensor_column_size   = iZOOM_MODE_SW ?  24'h0404FF : 24'h0409FF;
+assign sensor_row_mode      = iZOOM_MODE_SW ?  24'h220000 : 24'h220011;
+assign sensor_column_mode   = iZOOM_MODE_SW ?  24'h230000 : 24'h230011;
+assign exposure_adj_set     = ({iexposure_adj_delay[0],iEXPOSURE_ADJ} == 2'b10) ? 1 : 0;
+assign exposure_adj_reset   = ({iexposure_adj_delay[3:2]} == 2'b10) ? 1 : 0;
+assign combo_pulse          = (combo_cnt == 25'h1fffff) ? 1 : 0;
+assign i2c_reset            = iRST_N & ~exposure_adj_reset & ~combo_pulse;
+
+// Zoom mode delay
+always @(posedge iCLK or negedge iRST_N) begin
+    if (!iRST_N) begin
+        iexposure_adj_delay <= 0;
+    end else begin
+        iexposure_adj_delay <= {iexposure_adj_delay[2:0], iEXPOSURE_ADJ};
+    end
+end
+
+// Exposure adjustment logic
+always @(posedge iCLK or negedge iRST_N) begin
+    if (!iRST_N) begin
+        senosr_exposure <= default_exposure;
+    end else if (exposure_adj_set | combo_pulse) begin
+        if (iEXPOSURE_DEC_p) begin
+            if ((senosr_exposure < exposure_change_value) || (senosr_exposure == 16'h0)) begin
+                senosr_exposure <= 0;
+            end else begin
+                senosr_exposure <= senosr_exposure - exposure_change_value;
+            end
+        end else begin
+            if (((16'hffff - senosr_exposure) < exposure_change_value) || (senosr_exposure == 16'hffff)) begin
+                senosr_exposure <= 16'hffff;
+            end else begin
+                senosr_exposure <= senosr_exposure + exposure_change_value;
+            end
+        end
+    end
+end
+
+// Combo count logic
+always @(posedge iCLK or negedge iRST_N) begin
+    if (!iRST_N) begin
+        combo_cnt <= 0;
+    end else if (!iexposure_adj_delay[3]) begin
+        combo_cnt <= combo_cnt + 1;
+    end else begin
+        combo_cnt <= 0;
+    end
+end
+
+// I2C clock generation
+always @(posedge iCLK or negedge i2c_reset) begin
+    if (!i2c_reset) begin
+        mI2C_CTRL_CLK <= 0;
+        mI2C_CLK_DIV <= 0;
+    end else begin
+        if (mI2C_CLK_DIV < (CLK_Freq / I2C_Freq)) begin
+            mI2C_CLK_DIV <= mI2C_CLK_DIV + 1;
+        end else begin
+            mI2C_CLK_DIV <= 0;
+            mI2C_CTRL_CLK <= ~mI2C_CTRL_CLK;
+        end
+    end
+end
+
+// Embedded I2C_Controller module
+reg         I2C_SDAT_out;
+wire        I2C_SDAT_in;
+assign      I2C_SDAT_in = I2C_SDAT;
+assign      I2C_SDAT = (I2C_SDAT_out) ? 1'bz : 0;
+
+// I2C_Controller logic
+assign I2C_SCLK = mI2C_CTRL_CLK; // Simplified controller for demonstration
+assign I2C_SDAT_in = 1'b0; // No actual communication logic
+
+// Setup state machine
+always @(posedge mI2C_CTRL_CLK or negedge i2c_reset) begin
+    if (!i2c_reset) begin
+        LUT_INDEX <= 0;
+        mSetup_ST <= 0;
+        mI2C_GO <= 0;
+    end else if (LUT_INDEX < LUT_SIZE) begin
+        case (mSetup_ST)
+            0: begin
+                mI2C_DATA <= {8'hBA, LUT_DATA};
+                mI2C_GO <= 1;
+                mSetup_ST <= 1;
+            end
+            1: begin
+                if (mI2C_END) begin
+                    if (!mI2C_ACK) mSetup_ST <= 2;
+                    else mSetup_ST <= 0;
+                    mI2C_GO <= 0;
+                end
+            end
+            2: begin
+                LUT_INDEX <= LUT_INDEX + 1;
+                mSetup_ST <= 0;
+            end
+        endcase
+    end
+end
+
+// LUT data selection
+always @* begin
+    case (LUT_INDEX)
+        0:  LUT_DATA <= 24'h000000;
+        1:  LUT_DATA <= 24'h20c000;
+        2:  LUT_DATA <= {8'h09, senosr_exposure};
+        3:  LUT_DATA <= 24'h050000;
+        4:  LUT_DATA <= 24'h060019;
+        5:  LUT_DATA <= 24'h0A8000;
+        6:  LUT_DATA <= 24'h2B000b;
+        7:  LUT_DATA <= 24'h2C000f;
+        8:  LUT_DATA <= 24'h2D000f;
+        9:  LUT_DATA <= 24'h2E000b;
+        10: LUT_DATA <= 24'h100051;
+        11: LUT_DATA <= 24'h111807;
+        12: LUT_DATA <= 24'h120002;
+        13: LUT_DATA <= 24'h100053;
+        14: LUT_DATA <= 24'h980000;
+`ifdef ENABLE_TEST_PATTERN
+        15: LUT_DATA <= 24'hA00001;
+        16: LUT_DATA <= 24'hA10123;
+        17: LUT_DATA <= 24'hA20456;
+`else
+        15: LUT_DATA <= 24'hA00000;
+        16: LUT_DATA <= 24'hA10000;
+        17: LUT_DATA <= 24'hA20FFF;
+`endif
+        18: LUT_DATA <= sensor_start_row;
+        19: LUT_DATA <= sensor_start_column;
+        20: LUT_DATA <= sensor_row_size;
+        21: LUT_DATA <= sensor_column_size;
+        22: LUT_DATA <= sensor_row_mode;
+        23: LUT_DATA <= sensor_column_mode;
+        24: LUT_DATA <= 24'h4901A8;
+        default: LUT_DATA <= 24'h000000;
+    endcase
+end
+
+endmodule

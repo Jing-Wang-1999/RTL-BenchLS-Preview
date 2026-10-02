@@ -1,0 +1,15 @@
+module oh_clockor #(parameter N = 2, parameter SYN = "TRUE", parameter TYPE = "DEFAULT")
+(
+    input  wire [N-1:0] clkin,
+    output wire         clkout
+);
+
+generate
+    if (SYN == "TRUE") begin
+        assign clkout = |clkin; // Logical OR of all clock inputs
+    end else begin
+        assign clkout = 1'b0; // Non-synthesizable case, output is constant 0
+    end
+endgenerate
+
+endmodule

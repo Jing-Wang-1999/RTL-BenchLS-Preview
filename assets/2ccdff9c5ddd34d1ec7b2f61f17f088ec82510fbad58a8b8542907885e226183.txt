@@ -1,0 +1,8 @@
+always @(posedge clk or posedge rst)
+	if(rst)					ack_cnt <=  4'h0;
+	else
+	if(no_wb_cycle)				ack_cnt <=  4'h0;
+	else
+	if(dv & !mem_ack_s)			ack_cnt <=  ack_cnt + 4'h1;
+	else
+	if(!dv & mem_ack_s)			ack_cnt <=  ack_cnt - 4'h1;

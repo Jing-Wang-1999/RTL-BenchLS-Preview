@@ -1,0 +1,16 @@
+always @(posedge clk or negedge nReset)
+      if (~nReset)
+      begin
+          sta_condition <=  1'b0;
+          sto_condition <=  1'b0;
+      end
+      else if (rst)
+      begin
+          sta_condition <=  1'b0;
+          sto_condition <=  1'b0;
+      end
+      else
+      begin
+          sta_condition <=  ~sSDA &  dSDA & sSCL;
+          sto_condition <=   sSDA & ~dSDA & sSCL;
+      end

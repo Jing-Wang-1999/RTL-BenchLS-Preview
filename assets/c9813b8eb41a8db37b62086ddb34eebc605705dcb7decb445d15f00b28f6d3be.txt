@@ -1,0 +1,28 @@
+always @ (posedge clk or posedge reset)
+begin
+   if (reset)
+   begin
+      rcon[31:0] <= 32'h01000000;
+      rcon_is_1b <= 1'b0;
+   end
+   else if (key_start)
+   begin
+      rcon[31:0] <= 32'h01000000;
+      rcon_is_1b <= 1'b0;
+   end
+   else if (sbox_out_valid && (state[1:0] == GENKEY1))
+   begin
+      if (rcon[31])
+      begin
+         rcon[31:0] <= 32'h1b000000;
+         rcon_is_1b <= 1'b1;
+      end
+      else if (rcon_is_1b)
+      begin
+         rcon[31:0] <= 32'h36000000;
+         rcon_is_1b <= 1'b1;
+      end
+      else
+         rcon[31:0] <= {rcon[30:0],1'b0};
+   end
+end

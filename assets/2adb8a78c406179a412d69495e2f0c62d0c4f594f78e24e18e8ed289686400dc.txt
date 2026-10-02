@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/302",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/300",
+  "repository": "lowRISC/ibex",
+  "pr_number": 302,
+  "issue_number": 300,
+  "verilog_files": [
+    "rtl/ibex_controller.sv"
+  ],
+  "deletions": 1,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "rtl/ibex_controller.sv",
+      "patch": "@@ -215,7 +215,7 @@ module ibex_controller (\n     debug_csr_save_o      = 1'b0;\n     debug_cause_o         = DBG_CAUSE_EBREAK;\n     debug_mode_d          = debug_mode_q;\n-    nmi_mode_d            = 1'b0;\n+    nmi_mode_d            = nmi_mode_q;\n \n     perf_tbranch_o        = 1'b0;\n     perf_jump_o           = 1'b0;",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "Controller: fix `nmi_mode` default assignment",
+    "body": "Without this commit, the `nmi_mode` register is continuously cleared and set again, and the core can never handle the NMI.\r\n\r\nThis resolves lowRISC/ibex#300 reported by @udinator.",
+    "state": "closed",
+    "created_at": "2019-09-11T09:08:32Z",
+    "updated_at": "2019-09-12T08:57:30Z",
+    "merged_at": "2019-09-11T09:45:27Z",
+    "user": "vogelpi"
+  },
+  "issue_info": {
+    "title": "Non-maskable interrupt handling",
+    "body": "Hi all,\r\nIn testing Ibex's interrupt interface, I ran into the following situation:\r\n![Screenshot from 2019-09-10 14-39-58](https://user-images.githubusercontent.com/16736281/64652505-e3d08100-d3d8-11e9-8886-8a355f31a7f7.png)\r\nI drive `irq_nm_i`, signaling a non-maskable interrupt to Ibex. Since Ibex treats interrupts as level sensitive, and relies on handler routines to deassert the interrupt lines, I treat non-maskable interrupts the same way, and leave it driven to `1'b1` until the handler code is completed. However, Ibex, after jumping into the `DECODE` state from `IRQ_TAKEN` upon detection of the `irq_nm`, seems to keep detecting that `irq_nm` is high, and then infinitely loops between the `DECODE` and `IRQ_TAKEN` states, causing the simulation to time out. Since according to #199 as well as the docs this seems to be incorrect behavior for `irq_nm`, would it be possible to clarify what expected behavior for non-maskable interrupt should be? ",
+    "labels": [
+      "Type:Bug",
+      "Component:RTL"
+    ],
+    "state": "closed",
+    "created_at": "2019-09-10T21:48:24Z",
+    "updated_at": "2019-09-11T09:45:27Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 290
+  },
+  "task_id": "lowRISC_ibex_302_300",
+  "lec_status": "useful_pass",
+  "base_commit": "ac22439374a0bafd6fc2f9d38aefc02e44fa2abb",
+  "head_commit": "3c01f7d9e3fe7cebdcc2e21c18716241db3341fe"
+}

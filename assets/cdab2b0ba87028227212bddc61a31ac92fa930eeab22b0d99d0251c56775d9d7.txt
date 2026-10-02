@@ -1,0 +1,72 @@
+module simplified_fft_stream (
+    input       clk,
+    input       reset_n,
+    input       inverse,
+    input       sink_valid,
+    input       sink_sop,
+    input       sink_eop,
+    input [15:0] sink_real,
+    input [15:0] sink_imag,
+    input [1:0]  sink_error,
+    input       source_ready,
+    output      sink_ready,
+    output [1:0] source_error,
+    output      source_sop,
+    output      source_eop,
+    output      source_valid,
+    output [5:0] source_exp,
+    output [15:0] source_real,
+    output [15:0] source_imag
+);
+
+    // Internal signals 
+    reg [15:0] internal_sink_real;
+    reg [15:0] internal_sink_imag;
+    reg [15:0] internal_source_real;
+    reg [15:0] internal_source_imag;
+    reg [5:0]  internal_source_exp;
+    reg [1:0]  internal_source_error;
+    reg        internal_sink_ready;
+    reg        internal_source_sop;
+    reg        internal_source_eop;
+    reg        internal_source_valid;
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            internal_sink_ready <= 0;
+            internal_source_sop <= 0;
+            internal_source_eop <= 0;
+            internal_source_valid <= 0;
+            internal_source_error <= 2'b00;
+            internal_source_exp <= 6'b000000;
+            internal_source_real <= 16'b0;
+            internal_source_imag <= 16'b0;
+        end else begin
+            // Simulating FFT Functionality
+            if (sink_valid && sink_sop && sink_eop) begin
+                internal_sink_ready <= 1;
+                // example logic assuming some dummy transformation for illustration
+                internal_source_real <= sink_real * 2;  // Sample transformation
+                internal_source_imag <= sink_imag * 2;  // Sample transformation
+                internal_source_exp <= 6'b000001;       // Dummy value
+                internal_source_sop <= sink_sop;
+                internal_source_eop <= sink_eop;
+                internal_source_valid <= 1;
+                internal_source_error <= 2'b00;
+            end else begin
+                internal_sink_ready <= 0;
+                internal_source_valid <= 0;
+            end
+        end
+    end
+
+    // Output assignments
+    assign sink_ready = internal_sink_ready;
+    assign source_sop = internal_source_sop;
+    assign source_eop = internal_source_eop;
+    assign source_valid = internal_source_valid;
+    assign source_exp = internal_source_exp;
+    assign source_real = internal_source_real;
+    assign source_imag = internal_source_imag;
+    assign source_error = internal_source_error;
+endmodule

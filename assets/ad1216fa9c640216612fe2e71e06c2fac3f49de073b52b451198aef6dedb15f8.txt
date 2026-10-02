@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.19ef02e4800ebf08a06c.1711b420ccf0",
+  "compile_check": {
+    "case_id": "s1derived.19ef02e4800ebf08a06c.1711b420ccf0",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "fifomem",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.19ef02e4800ebf08a06c.1711b420ccf0/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "19ef02e4800ebf08a06cb906585594865824f2f1ad7914ed226e4406ee870bfb",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.19ef02e4800ebf08a06c.1711b420ccf0",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.19ef02e4800ebf08a06c",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "fifomem"
+  },
+  "independent_review": {
+    "case_id": "s1derived.19ef02e4800ebf08a06c.1711b420ccf0",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Memory depth, guarded write, both read modes, absence of initialization, and collision caveat are accurate.",
+        "rtl_excerpt": "`if (FALLTHROUGH == \"TRUE\") assign rdata = mem[raddr]; else always @(posedge rclk)`",
+        "spec_excerpt": "\u201cWith exact FALLTHROUGH \"TRUE\", rdata asynchronously reads mem[raddr]; otherwise ... registers that word\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.19ef02e4800ebf08a06c",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "cf73b3dce80376be41e5bd05eaddebe437fea52341427b82353cf96311a6f116",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "19ef02e4800ebf08a06cb906585594865824f2f1ad7914ed226e4406ee870bfb",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.19ef02e4800ebf08a06c",
+  "primary_review": {
+    "case_id": "s1derived.19ef02e4800ebf08a06c.1711b420ccf0",
+    "checks": {
+      "behavior": "Write matches; read incomplete.",
+      "boundaries": "Registered output holds if rclken=0.",
+      "interface": "Ports listed; defaults missing.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "No reset/initialization."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Write matches; read incomplete. No reset/initialization.",
+        "rtl_excerpt": "FALLTHROUGH==\"TRUE\" uses async read; every other value uses enabled posedge rclk read",
+        "spec_excerpt": "The final sentence ends \u201cIf set to FALSE, data\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose ends before defining registered-read behavior, exact string selection, defaults, lack of reset, and collisions.",
+        "rtl_evidence": "FALLTHROUGH==\"TRUE\" uses async read; every other value uses enabled posedge rclk read",
+        "spec_evidence": "The final sentence ends \u201cIf set to FALSE, data\u201d.",
+        "type": "truncated_read_mode"
+      }
+    ],
+    "parent_id": "s1p.19ef02e4800ebf08a06c",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.19ef02e4800ebf08a06c.1711b420ccf0.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "19ef02e4800ebf08a06cb906585594865824f2f1ad7914ed226e4406ee870bfb",
+    "source_group": "S1",
+    "specification_sha256": "1711b420ccf0a55c05366ccf2c64cdb511330893decb517e1972e67b048ae6f2",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.19ef02e4800ebf08a06c.1711b420ccf0.md",
+  "qualified_specification_sha256": "cf73b3dce80376be41e5bd05eaddebe437fea52341427b82353cf96311a6f116",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.19ef02e4800ebf08a06c.1711b420ccf0/private/golden_design.v",
+  "rtl_sha256": "19ef02e4800ebf08a06cb906585594865824f2f1ad7914ed226e4406ee870bfb",
+  "source_corpus": "SEC-Flow-Star-repos-19.async_fifo",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.19ef02e4800ebf08a06c.1711b420ccf0/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "1711b420ccf0a55c05366ccf2c64cdb511330893decb517e1972e67b048ae6f2",
+  "top_module": "fifomem"
+}

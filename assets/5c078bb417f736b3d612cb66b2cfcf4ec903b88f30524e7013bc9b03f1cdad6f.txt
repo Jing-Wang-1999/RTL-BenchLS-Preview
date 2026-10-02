@@ -1,0 +1,98 @@
+module origen_008585 (
+    input [5:0] instr_op_i,
+    output reg RegWrite_o,
+    output reg [2:0] ALU_op_o,
+    output reg ALUSrc_o,
+    output reg RegDst_o,
+    output reg [1:0] Branch_o,
+    output reg SignExtend_o,
+    output reg MemRead_o,
+    output reg MemWrite_o,
+    output reg MemtoReg_o
+);
+
+    // Opcode definitions
+    localparam OP_RTYPE = 6'b000000;
+    localparam OP_ADDI  = 6'b001000;
+    localparam OP_BEQ   = 6'b000100;
+    localparam OP_BNE   = 6'b000101;
+    localparam OP_LW    = 6'b100011;
+    localparam OP_SW    = 6'b101011;
+
+    // ALU operation encodings
+    localparam ALU_ADD = 3'b000;
+    localparam ALU_SUB = 3'b001;
+    localparam ALU_RTYPE = 3'b010;
+
+    // Branch encodings
+    localparam BRANCH_NONE = 2'b00;
+    localparam BRANCH_BEQ  = 2'b01;
+    localparam BRANCH_BNE  = 2'b10;
+
+    always @(*) begin
+        // Default values (no operation)
+        RegWrite_o = 1'b0;
+        ALU_op_o = ALU_ADD;
+        ALUSrc_o = 1'b0;
+        RegDst_o = 1'b0;
+        Branch_o = BRANCH_NONE;
+        SignExtend_o = 1'b0;
+        MemRead_o = 1'b0;
+        MemWrite_o = 1'b0;
+        MemtoReg_o = 1'b0;
+
+        case (instr_op_i)
+            OP_RTYPE: begin  // R-type instructions
+                RegWrite_o = 1'b1;
+                ALU_op_o = ALU_RTYPE;
+                ALUSrc_o = 1'b0;      // Register source
+                RegDst_o = 1'b1;      // rd field
+                // Other signals remain at defaults
+            end
+
+            OP_ADDI: begin   // ADDI
+                RegWrite_o = 1'b1;
+                ALU_op_o = ALU_ADD;
+                ALUSrc_o = 1'b1;      // Immediate source
+                RegDst_o = 1'b0;      // rt field
+                SignExtend_o = 1'b1;
+            end
+
+            OP_BEQ: begin    // BEQ
+                ALU_op_o = ALU_SUB;   // For comparison
+                ALUSrc_o = 1'b0;      // Register source
+                Branch_o = BRANCH_BEQ;
+                SignExtend_o = 1'b1;  // For branch offset
+            end
+
+            OP_BNE: begin    // BNE
+                ALU_op_o = ALU_SUB;   // For comparison
+                ALUSrc_o = 1'b0;      // Register source
+                Branch_o = BRANCH_BNE;
+                SignExtend_o = 1'b1;  // For branch offset
+            end
+
+            OP_LW: begin     // LW
+                RegWrite_o = 1'b1;
+                ALU_op_o = ALU_ADD;   // For address calculation
+                ALUSrc_o = 1'b1;      // Immediate source
+                RegDst_o = 1'b0;      // rt field
+                SignExtend_o = 1'b1;
+                MemRead_o = 1'b1;
+                MemtoReg_o = 1'b1;    // Memory to register
+            end
+
+            OP_SW: begin     // SW
+                ALU_op_o = ALU_ADD;   // For address calculation
+                ALUSrc_o = 1'b1;      // Immediate source
+                SignExtend_o = 1'b1;
+                MemWrite_o = 1'b1;
+            end
+
+            default: begin   // All other opcodes (NOP)
+                // All signals remain at defaults
+            end
+        endcase
+    end
+
+endmodule

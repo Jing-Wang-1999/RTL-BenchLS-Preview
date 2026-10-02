@@ -1,0 +1,56 @@
+module origen_190510 #(
+    parameter PW = 8,
+    parameter OW = 16
+) (
+    input i_clk,
+    input i_reset,
+    input i_ce,
+    input [PW-1:0] i_phase,
+    input [OW-1:0] i_aux,
+    output [OW-1:0] o_val,
+    output [OW-1:0] o_aux
+);
+
+    reg [OW-1:0] tbl [0:(1<<PW)-1];
+    initial $readmemh("sintable.hex", tbl);
+
+    reg [OW-1:0] val_reg;
+    reg [OW-1:0] aux_reg;
+    reg f_past_valid;
+
+    always @(posedge i_clk) begin
+        if (i_reset) begin
+            val_reg <= 0;
+            aux_reg <= 0;
+            f_past_valid <= 0;
+        end else if (i_ce) begin
+            val_reg <= tbl[i_phase];
+            aux_reg <= i_aux;
+            f_past_valid <= 1;
+        end
+    end
+
+    assign o_val = val_reg;
+    assign o_aux = aux_reg;
+
+    `ifdef FORMAL
+        parameter FORMAL_TEST = 0;
+
+        always @(posedge i_clk) begin
+            if (FORMAL_TEST == 1) begin
+                // Test case 1: Reset behavior
+                assert(i_reset |-> (o_val == 0 && o_aux == 0));
+            end else if (FORMAL_TEST == 2) begin
+                // Test case 2: Output value matches the sine table
+                assert(f_past_valid |-> o_val == tbl[i_phase]);
+            end else if (FORMAL_TEST == 3) begin
+                // Test case 3: Auxiliary output matches the input
+                assert(f_past_valid |-> o_aux == i_aux);
+            end else if (FORMAL_TEST == 4) begin
+                // Test case 4: Clock enable behavior
+                assert(f_past_valid && !i_ce |-> $stable(o_val) && $stable(o_aux));
+            end
+        end
+    `endif
+
+endmodule

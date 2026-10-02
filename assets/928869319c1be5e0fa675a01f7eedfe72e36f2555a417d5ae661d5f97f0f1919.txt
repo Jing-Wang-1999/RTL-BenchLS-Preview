@@ -1,0 +1,140 @@
+module origen_193794 (
+    input clk,
+    input reset,
+    input cancle_flag,
+    input [9:0] coin_val,
+    input get_ind,
+    input buy_flag,
+    output reg op_start,
+    output reg light,
+    output reg light_one,
+    output reg light_two,
+    output reg hold_ind,
+    output reg not_enough
+);
+
+    // State encoding
+    localparam S0 = 2'b00;  // Idle
+    localparam S1 = 2'b01;  // Insufficient funds, no buy
+    localparam S2 = 2'b10;  // Active - insufficient funds
+    localparam S3 = 2'b11;  // Active - sufficient funds
+
+    reg [1:0] state, next_state;
+
+    // State register
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            state <= S0;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            S0: begin
+                if (cancle_flag) begin
+                    next_state = S0;
+                end else if (buy_flag) begin
+                    if (coin_val >= 10'd100) begin
+                        next_state = S3;
+                    end else begin
+                        next_state = S2;
+                    end
+                end else begin
+                    next_state = S0;
+                end
+            end
+            
+            S1: begin
+                // This state is not directly reachable per specification
+                next_state = S0;
+            end
+            
+            S2: begin
+                if (cancle_flag) begin
+                    next_state = S0;
+                end else if (get_ind) begin
+                    next_state = S0;
+                end else begin
+                    next_state = S2;
+                end
+            end
+            
+            S3: begin
+                if (cancle_flag) begin
+                    next_state = S0;
+                end else if (get_ind) begin
+                    next_state = S0;
+                end else begin
+                    next_state = S3;
+                end
+            end
+            
+            default: begin
+                next_state = S0;
+            end
+        endcase
+    end
+
+    // Output logic (all registered)
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            op_start <= 1'b0;
+            light <= 1'b0;
+            light_one <= 1'b0;
+            light_two <= 1'b0;
+            hold_ind <= 1'b0;
+            not_enough <= 1'b0;
+        end else begin
+            case (state)
+                S0: begin
+                    op_start <= 1'b0;
+                    light <= 1'b0;
+                    light_one <= 1'b0;
+                    light_two <= 1'b0;
+                    hold_ind <= 1'b0;
+                    not_enough <= 1'b0;
+                end
+                
+                S1: begin
+                    op_start <= 1'b0;
+                    light <= 1'b0;
+                    light_one <= 1'b0;
+                    light_two <= 1'b0;
+                    hold_ind <= 1'b0;
+                    not_enough <= 1'b1;  // Only state where not_enough is asserted
+                end
+                
+                S2: begin
+                    op_start <= 1'b1;
+                    light <= 1'b1;
+                    light_one <= 1'b1;
+                    light_two <= 1'b0;
+                    hold_ind <= 1'b1;
+                    not_enough <= 1'b0;
+                end
+                
+                S3: begin
+                    op_start <= 1'b1;
+                    light <= 1'b1;
+                    light_one <= 1'b1;
+                    light_two <= 1'b1;
+                    hold_ind <= 1'b1;
+                    not_enough <= 1'b0;
+                end
+                
+                default: begin
+                    op_start <= 1'b0;
+                    light <= 1'b0;
+                    light_one <= 1'b0;
+                    light_two <= 1'b0;
+                    hold_ind <= 1'b0;
+                    not_enough <= 1'b0;
+                end
+            endcase
+        end
+    end
+
+endmodule

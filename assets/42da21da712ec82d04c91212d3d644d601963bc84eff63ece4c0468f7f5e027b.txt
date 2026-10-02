@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.dceafa730570ebc5af6b.f9cdaf256e0f",
+  "compile_check": {
+    "case_id": "s1derived.dceafa730570ebc5af6b.f9cdaf256e0f",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "long_to_double",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.dceafa730570ebc5af6b.f9cdaf256e0f/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "dceafa730570ebc5af6bcb8b0dd09ae7850be6995c3a159f3abe6db9d8d3fd2b",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.dceafa730570ebc5af6b.f9cdaf256e0f",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.dceafa730570ebc5af6b",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "long_to_double"
+  },
+  "independent_review": {
+    "case_id": "s1derived.dceafa730570ebc5af6b.f9cdaf256e0f",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Signed magnitude including zero, normalization, rounding carry, packing, handshake pre-edge timing, and synchronous reset match.",
+        "rtl_excerpt": "`if(guard&&(round_bit||sticky||z_m[0])) z_m<=z_m+1; ... if(rst) begin state<=get_a; ... end`",
+        "spec_excerpt": "\u201cround-to-nearest, ties-to-even ... reset ... overrides state transition\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.dceafa730570ebc5af6b",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "d52a2ecbde473779581cfecfb94339bc814df81c1ef0b7a4be2284c7e60c3ef8",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "dceafa730570ebc5af6bcb8b0dd09ae7850be6995c3a159f3abe6db9d8d3fd2b",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.dceafa730570ebc5af6b",
+  "primary_review": {
+    "case_id": "s1derived.dceafa730570ebc5af6b.f9cdaf256e0f",
+    "checks": {
+      "behavior": "Signed conversion, zero handling, normalization, ties-to-even rounding, packing, and held output handshake match.",
+      "boundaries": "Handshake tests use registered prior-cycle acknowledge/strobe values.",
+      "interface": "Actual ports and widths must be named; no parameter exists.",
+      "rtl_reasonableness": "RTL is a reasonable iterative integer-to-binary64 converter.",
+      "sequential_and_reset": "Reset is active-high synchronous and overrides case updates, but does not clear datapath or output registers."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Signed conversion, zero handling, normalization, ties-to-even rounding, packing, and held output handshake match. Reset is active-high synchronous and overrides case updates, but does not clear datapath or output registers.",
+        "rtl_excerpt": "if(rst){state<=get_a; s_input_a_ack<=0; s_output_z_stb<=0;}",
+        "spec_excerpt": "\u201cAll handshake signals are deasserted, and internal data registers are cleared.\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose uses generic port names instead of the actual interface and says reset clears all internal data, while RTL resets only state and handshake registers.",
+        "rtl_evidence": "if(rst){state<=get_a; s_input_a_ack<=0; s_output_z_stb<=0;}",
+        "spec_evidence": "\u201cAll handshake signals are deasserted, and internal data registers are cleared.\u201d",
+        "type": "interface_and_reset_inaccuracy"
+      }
+    ],
+    "parent_id": "s1p.dceafa730570ebc5af6b",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_03/s1derived.dceafa730570ebc5af6b.f9cdaf256e0f.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "dceafa730570ebc5af6bcb8b0dd09ae7850be6995c3a159f3abe6db9d8d3fd2b",
+    "source_group": "S1",
+    "specification_sha256": "f9cdaf256e0f53926cd47d485aef7f4a9f28b092ffea0981dcd981c38088d436",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_03/s1derived.dceafa730570ebc5af6b.f9cdaf256e0f.md",
+  "qualified_specification_sha256": "d52a2ecbde473779581cfecfb94339bc814df81c1ef0b7a4be2284c7e60c3ef8",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.dceafa730570ebc5af6b.f9cdaf256e0f/private/golden_design.v",
+  "rtl_sha256": "dceafa730570ebc5af6bcb8b0dd09ae7850be6995c3a159f3abe6db9d8d3fd2b",
+  "source_corpus": "SEC-Flow-Star-repos-18.fpu",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.dceafa730570ebc5af6b.f9cdaf256e0f/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "f9cdaf256e0f53926cd47d485aef7f4a9f28b092ffea0981dcd981c38088d436",
+  "top_module": "long_to_double"
+}

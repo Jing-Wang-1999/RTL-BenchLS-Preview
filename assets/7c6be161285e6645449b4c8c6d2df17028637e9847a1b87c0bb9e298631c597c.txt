@@ -1,0 +1,24 @@
+This module is a finite state machine (FSM) that processes a serial input and generates a single output flag. It operates on the falling edge of the clock and has an active-low reset.
+
+**Inputs:**
+- **din**: A single-bit serial data input.
+- **clk**: The system clock. State transitions occur on the falling edge.
+- **rst_n**: An active-low asynchronous reset signal. When low, the FSM is forced into its initial state.
+
+**Output:**
+- **flag**: A single-bit registered output. It is high when the FSM is in either of two specific internal states (F or H), and low otherwise.
+
+**Internal Operation:**
+The FSM has nine distinct states: IDLE, A, B, C, D, E, F, G, and H. The state transitions are determined solely by the current state and the value of the *din* input at each clock cycle. The transition rules are as follows:
+- From IDLE: go to state A if *din* is high, or to state B if low.
+- From A: go to C if *din* is high, or back to B if low.
+- From B: go to A if *din* is high, or to D if low.
+- From C: go to E if *din* is high, or to D if low.
+- From D: go to G if *din* is high, or back to B if low.
+- From E: go to F if *din* is high, or to D if low.
+- From F: go to C if *din* is high, or to B if low.
+- From G: go to H if *din* is high, or to B if low.
+- From H: go to C if *din* is high, or to B if low.
+
+**Function:**
+The module's primary function is to monitor the sequence of *din* values and set the *flag* output to logic high only when the internal state is F or H. This creates a specific pattern detector where the flag is asserted upon

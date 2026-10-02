@@ -1,0 +1,124 @@
+module origen_142044 (
+    input wire clk,
+    inout wire ddc_scl_io,
+    inout wire ddc_sda_io,
+    input wire hdmi_clk_n,
+    input wire hdmi_clk_p,
+    input wire [2:0] hdmi_d_n,
+    input wire [2:0] hdmi_d_p,
+    output wire hdmi_hpd,
+    output wire hdmi_out_en,
+    output wire [4:0] vga_b,
+    output wire [5:0] vga_g,
+    output wire vga_hs,
+    output wire [4:0] vga_r,
+    output wire vga_vs
+);
+
+    // DDC interface
+    reg ddc_scl_out, ddc_sda_out;
+    wire ddc_scl_in, ddc_sda_in;
+    reg ddc_scl_oe, ddc_sda_oe;
+
+    assign ddc_scl_io = ddc_scl_oe ? ddc_scl_out : 1'bz;
+    assign ddc_sda_io = ddc_sda_oe ? ddc_sda_out : 1'bz;
+    assign ddc_scl_in = ddc_scl_io;
+    assign ddc_sda_in = ddc_sda_io;
+
+    // HDMI interface
+    reg [2:0] hdmi_data;
+    reg hdmi_clock;
+    reg hdmi_hpd_reg;
+    reg hdmi_out_en_reg;
+
+    always @(posedge clk) begin
+        hdmi_clock <= hdmi_clk_p ^ hdmi_clk_n;
+        hdmi_data <= hdmi_d_p ^ hdmi_d_n;
+    end
+
+    assign hdmi_hpd = hdmi_hpd_reg;
+    assign hdmi_out_en = hdmi_out_en_reg;
+
+    // VGA interface
+    reg [4:0] vga_r_reg, vga_b_reg;
+    reg [5:0] vga_g_reg;
+    reg vga_hs_reg, vga_vs_reg;
+
+    assign vga_r = vga_r_reg;
+    assign vga_g = vga_g_reg;
+    assign vga_b = vga_b_reg;
+    assign vga_hs = vga_hs_reg;
+    assign vga_vs = vga_vs_reg;
+
+    // DDC state machine
+    localparam DDC_IDLE = 2'b00;
+    localparam DDC_START = 2'b01;
+    localparam DDC_DATA = 2'b10;
+    localparam DDC_STOP = 2'b11;
+
+    reg [1:0] ddc_state;
+    reg [7:0] ddc_data;
+    reg [3:0] ddc_bit_count;
+
+    always @(posedge clk) begin
+        case (ddc_state)
+            DDC_IDLE: begin
+                if (ddc_scl_in && ddc_sda_in) begin
+                    ddc_state <= DDC_START;
+                    ddc_scl_oe <= 0;
+                    ddc_sda_oe <= 0;
+                end
+            end
+            DDC_START: begin
+                if (!ddc_scl_in) begin
+                    ddc_state <= DDC_DATA;
+                    ddc_bit_count <= 0;
+                    ddc_data <= 8'h00;
+                end
+            end
+            DDC_DATA: begin
+                if (ddc_scl_in) begin
+                    ddc_data <= {ddc_data[6:0], ddc_sda_in};
+                    ddc_bit_count <= ddc_bit_count + 1;
+                    if (ddc_bit_count == 4'h7) begin
+                        ddc_state <= DDC_STOP;
+                    end
+                end
+            end
+            DDC_STOP: begin
+                if (ddc_scl_in && ddc_sda_in) begin
+                    ddc_state <= DDC_IDLE;
+                    // Process received DDC data
+                    case (ddc_data)
+                        8'hA0: hdmi_hpd_reg <= 1;
+                        8'hA1: hdmi_out_en_reg <= 1;
+                        default: begin
+                            hdmi_hpd_reg <= 0;
+                            hdmi_out_en_reg <= 0;
+                        end
+                    endcase
+                end
+            end
+        endcase
+    end
+
+    // Output signal conditioning
+    always @(posedge clk) begin
+        if (hdmi_out_en_reg) begin
+            // HDMI output
+            vga_r_reg <= hdmi_data[2] ? 5'h1F : 5'h00;
+            vga_g_reg <= hdmi_data[1] ? 6'h3F : 6'h00;
+            vga_b_reg <= hdmi_data[0] ? 5'h1F : 5'h00;
+            vga_hs_reg <= hdmi_clock;
+            vga_vs_reg <= ^hdmi_data;
+        end else begin
+            // VGA output (placeholder, replace with actual VGA timing logic)
+            vga_r_reg <= 5'h10;
+            vga_g_reg <= 6'h20;
+            vga_b_reg <= 5'h10;
+            vga_hs_reg <= 1'b1;
+            vga_vs_reg <= 1'b1;
+        end
+    end
+
+endmodule

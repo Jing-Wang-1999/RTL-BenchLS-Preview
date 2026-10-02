@@ -1,0 +1,66 @@
+module rtlpp_01811 (clk, x_in0, x_in1, x_in2, y); 
+
+  input         clk;
+  input  [2:0]  x_in0, x_in1, x_in2;
+  output [5:0]  y;
+  reg    [5:0]  y;
+  reg    [2:0]  x0, x1, x2;
+  wire   [2:0]  table_in;
+  reg    [2:0]  table_out;
+
+  reg [5:0] p;  
+  wire ena;
+
+  assign ena = 1;
+
+  assign table_in[0] = x0[0];
+  assign table_in[1] = x1[0];
+  assign table_in[2] = x2[0];
+
+  always @(posedge clk)  
+  begin : DA
+    parameter s0 = 0, s1 = 1;
+    reg [0:0] state = s0;
+    reg [1:0] count;
+
+    if (state == s0) begin
+      state <= s1;
+      count = 0;
+      p  <= 0;
+      x0 <= x_in0;
+      x1 <= x_in1;
+      x2 <= x_in2;
+    end else if (state == s1) begin
+      if (count == 3) begin
+        y <= p;
+        state <= s0;
+      end else begin
+        p <= {p[5], p[5:1]} + {1'b0, table_out, 2'b00};
+        x0[0] <= x0[1];
+        x0[1] <= x0[2];
+        x1[0] <= x1[1];
+        x1[1] <= x1[2];
+        x2[0] <= x2[1];
+        x2[1] <= x2[2];
+        count = count + 1;
+        state <= s1;
+      end
+    end
+  end
+
+  // ROM functionality embedded
+  always @(table_in) begin
+    case (table_in)
+      3'b000: table_out = 3'b000; // Replace with actual data
+      3'b001: table_out = 3'b001; // Replace with actual data
+      3'b010: table_out = 3'b010; // Replace with actual data
+      3'b011: table_out = 3'b011; // Replace with actual data
+      3'b100: table_out = 3'b100; // Replace with actual data
+      3'b101: table_out = 3'b101; // Replace with actual data
+      3'b110: table_out = 3'b110; // Replace with actual data
+      3'b111: table_out = 3'b111; // Replace with actual data
+      default: table_out = 3'b000; // Default case
+    endcase
+  end
+
+endmodule

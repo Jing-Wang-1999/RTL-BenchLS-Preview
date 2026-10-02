@@ -1,0 +1,20 @@
+module mg_05834(input wire Clk,input wire InputBuffer,output reg [17:0] oBufferIn,output reg EndOfFile);
+reg [17:0] tmpChar; 
+  integer i; 
+  initial 
+  begin 
+  i = $fopen("original.txt"); 
+  EndOfFile = 1'b0; 
+  end 
+  always @ (posedge Clk) 
+  begin 
+  if(InputBuffer) 
+  begin 
+  tmpChar = $fgetc(i); 
+  if($feof(i)) 
+  EndOfFile = 1'b1; 
+  else 
+  oBufferIn = tmpChar; 
+  end 
+  end 
+ endmodule

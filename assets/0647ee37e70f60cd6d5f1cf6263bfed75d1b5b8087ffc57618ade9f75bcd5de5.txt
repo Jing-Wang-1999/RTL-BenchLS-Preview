@@ -1,0 +1,104 @@
+module autovcoder_018837 (
+    cbit,
+    sp4_out,
+    bl,
+    pgate,
+    prog,
+    reset,
+    slfop,
+    vdd_cntl,
+    wl
+);
+
+
+  input prog, slfop;
+
+  output [4:0] sp4_out;
+  output [7:5] cbit;
+
+  inout [3:0] bl;
+
+  input [1:0] vdd_cntl;
+  input [1:0] pgate;
+  input [1:0] reset;
+  input [1:0] wl;
+  supply1 vdd_;
+  supply0 gnd_;
+  /* //////////////wire vddp_ = test.cds_globalsInst.vddp_; */ supply1 vddp_;
+  supply0 GND_;
+  supply1 VDD_;
+
+  // Buses in the design
+
+  wire [7:0] cbitb;
+
+  wire [1:0] r_vdd;
+
+  wire [7:0] cbit_int;
+  assign cbit[7:5] = cbit_int[7:5];
+
+
+
+  pch_hvt vdd_cntrl_1_ (
+      .D(r_vdd[1]),
+      .B(vdd_),
+      .G(vdd_cntl[1]),
+      .S(vdd_)
+  );
+  pch_hvt vdd_cntrl_0_ (
+      .D(r_vdd[0]),
+      .B(vdd_),
+      .G(vdd_cntl[0]),
+      .S(vdd_)
+  );
+  odrv4 I_odrv_4_ (
+      .cbitb(cbitb[4]),
+      .sp4  (sp4_out[4]),
+      .slfop(slfop),
+      .prog (prog)
+  );
+  odrv4 I_odrv_3_ (
+      .cbitb(cbitb[3]),
+      .sp4  (sp4_out[3]),
+      .slfop(slfop),
+      .prog (prog)
+  );
+  odrv4 I_odrv_2_ (
+      .cbitb(cbitb[2]),
+      .sp4  (sp4_out[2]),
+      .slfop(slfop),
+      .prog (prog)
+  );
+  odrv4 I_odrv_1_ (
+      .cbitb(cbitb[1]),
+      .sp4  (sp4_out[1]),
+      .slfop(slfop),
+      .prog (prog)
+  );
+  odrv4 I_odrv_0_ (
+      .cbitb(cbitb[0]),
+      .sp4  (sp4_out[0]),
+      .slfop(slfop),
+      .prog (prog)
+  );
+  cram2x2 Icram2x2_1_ (
+      .bl(bl[3:2]),
+      .q_b(cbitb[7:4]),
+      .reset(reset[1:0]),
+      .q(cbit_int[7:4]),
+      .wl(wl[1:0]),
+      .r_vdd(r_vdd[1:0]),
+      .pgate(pgate[1:0])
+  );
+  cram2x2 Icram2x2_0_ (
+      .bl(bl[1:0]),
+      .q_b(cbitb[3:0]),
+      .reset(reset[1:0]),
+      .q(cbit_int[3:0]),
+      .wl(wl[1:0]),
+      .r_vdd(r_vdd[1:0]),
+      .pgate(pgate[1:0])
+  );
+
+endmodule
+

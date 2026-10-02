@@ -1,0 +1,50 @@
+module autovcoder_145001 (
+    input clk,
+    input rst,
+    input [31:0] virtual_addr,
+    output reg [31:0] physical_addr,
+    output reg page_fault
+);
+
+    // Internal page table with 4 entries
+    reg [31:0] page_table [0:3];
+    reg [1:0] lru_counter [0:3];
+    
+    // Extract 2-bit page index from MSBs
+    wire [1:0] page_index = virtual_addr[31:30];
+    
+    integer i;
+    
+    // Sequential logic
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            // Clear outputs only on reset
+            physical_addr <= 32'b0;
+            page_fault <= 1'b0;
+        end else begin
+            // Check if page table entry is valid (non-zero)
+            if (page_table[page_index] == 32'b0) begin
+                // Page fault - load virtual address into page table
+                page_table[page_index] <= virtual_addr;
+                physical_addr <= virtual_addr;
+                page_fault <= 1'b1;
+            end else begin
+                // Valid entry - output physical address
+                physical_addr <= page_table[page_index];
+                page_fault <= 1'b0;
+            end
+            
+            // Update LRU counters
+            for (i = 0; i < 4; i = i + 1) begin
+                if (i == page_index) begin
+                    // Set accessed entry to max value (3)
+                    lru_counter[i] <= 2'b11;
+                end else begin
+                    // Decrement other entries (saturating at 0)
+                    lru_counter[i] <= (lru_counter[i] == 2'b00) ? 2'b00 : lru_counter[i] - 1;
+                end
+            end
+        end
+    end
+
+endmodule

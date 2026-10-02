@@ -1,0 +1,9 @@
+always @ (posedge clk or posedge reset)
+begin
+   if (reset)
+      round[3:0] <= 1'b0;
+   else if (nstate[1:0] == IDLE)
+      round[3:0] <= 4'b0;
+   else if (state[1:0] == START)
+      round[3:0] <= round[3:0] + 1'b1;
+end

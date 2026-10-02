@@ -1,0 +1,32 @@
+The module named "origen_054772" is designed to convert binary-coded decimal (BCD) inputs representing time into a format suitable for driving a seven-segment display. This module processes three separate BCD inputs: the ones digit of seconds, the tens digit of seconds, and the minutes. Each input is a 4-bit binary number.
+
+### Inputs:
+1. **seconds_ones**: A 4-bit input representing the ones digit of the seconds in BCD format. It can take values from 0 to 9.
+2. **seconds_tens**: A 4-bit input representing the tens digit of the seconds in BCD format. It can take values from 0 to 5.
+3. **minutes**: A 4-bit input representing the minutes in BCD format. It can take values from 0 to 9.
+
+### Outputs:
+1. **seconds_ones_out**: A 7-bit output that corresponds to the seven-segment display encoding of the ones digit of the seconds.
+2. **seconds_tens_out**: A 7-bit output that corresponds to the seven-segment display encoding of the tens digit of the seconds.
+3. **minutes_out**: A 7-bit output that corresponds to the seven-segment display encoding of the minutes.
+
+### Behavior:
+- The module continuously monitors the inputs and updates the outputs accordingly. It uses combinational logic to map each BCD input to its corresponding seven-segment display encoding.
+- For each input, a specific seven-segment pattern is assigned based on the BCD value:
+  - **0** is displayed as `7'b0000001`.
+  - **1** is displayed as `7'b1001111`.
+  - **2** is displayed as `7'b0010010`.
+  - **3** is displayed as `7'b0000110`.
+  - **4** is displayed as `7'b1001100`.
+  - **5** is displayed as `7'b0100100`.
+  - **6** is displayed as `7'b0100000`.
+  - **7** is displayed as `7'b0001101`.
+  - **8** is displayed as `7'b0000000`.
+  - **9** is displayed as `7'b0000100`.
+- If any input value is outside its valid range, the output defaults to `7'b1111111`, which typically represents an error or blank display.
+
+### Allowed Sub-modules:
+- This module does not instantiate or rely on any sub-modules. It operates independently using internal combinational logic to achieve its functionality.
+
+### Use Case:
+This module is typically used in digital clocks or timers where time needs to be displayed on a seven-segment display. It translates the BCD representation of time into a format that can be directly used to illuminate the appropriate segments of a seven-segment display, allowing for a human-readable representation of time.

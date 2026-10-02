@@ -1,0 +1,53 @@
+module origen_212434 (
+    input            CLOCK,
+    input     [23:0]  I2C_DATA,
+    input            GO,
+    input            RESET_N,
+    inout            I2C_SDAT,
+    output           I2C_SCLK,
+    output           END,
+    output    [2:0]   ACK,
+    output    [5:0]   SD_COUNTER,
+    output           SDO
+);
+
+reg [23:0] SD;
+reg [5:0]  sd_counter;
+reg        sdo;
+
+assign I2C_SCLK = (sd_counter >= 4 && sd_counter <= 30) ? CLOCK : 1'b0;
+assign I2C_SDAT = sdo ? 1'bz : 0;
+assign SD_COUNTER = sd_counter;
+assign SDO = sdo;
+assign END = (sd_counter == 6'b100000);
+assign ACK = (sd_counter == 6'b011110) ? {I2C_SDAT, 2'b00} : 3'b000;
+
+always @(posedge CLOCK or negedge RESET_N) begin
+    if (~RESET_N)
+        sd_counter <= 6'b111111;
+    else if (~GO)
+        sd_counter <= 6'b000000;
+    else if (sd_counter < 6'b100000)
+        sd_counter <= sd_counter + 1'b1;
+end
+
+always @(posedge CLOCK) begin
+    if (sd_counter == 6'b000001)
+        SD <= I2C_DATA;
+    else if (sd_counter == 6'b000011)
+        sdo <= SD[23];
+    else if (sd_counter >= 6'b000011 && sd_counter <= 6'b001010)
+        sdo <= SD[22 - (sd_counter - 6'b000011)];
+    else if (sd_counter == 6'b001100)
+        sdo <= SD[15];
+    else if (sd_counter >= 6'b001100 && sd_counter <= 6'b010010)
+        sdo <= SD[14 - (sd_counter - 6'b001100)];
+    else if (sd_counter == 6'b010100)
+        sdo <= SD[7];
+    else if (sd_counter >= 6'b010100 && sd_counter <= 6'b011010)
+        sdo <= SD[6 - (sd_counter - 6'b010100)];
+    else
+        sdo <= 1'b1;
+end
+
+endmodule

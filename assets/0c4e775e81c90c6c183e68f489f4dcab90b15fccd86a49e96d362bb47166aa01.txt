@@ -1,0 +1,61 @@
+// Counter module
+module origen_144659 (
+    input wire clk,
+    input wire rst,
+    input wire out_en,
+    output reg [2:0] count
+);
+
+reg [2:0] internal_count;
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        internal_count <= 3'b000;
+    end else if (internal_count == 3'b111) begin
+        internal_count <= 3'b000;
+    end else begin
+        internal_count <= internal_count + 1;
+    end
+end
+
+always @(*) begin
+    if (out_en) begin
+        count = internal_count;
+    end else begin
+        count = 3'bzzz;
+    end
+end
+
+endmodule
+
+// Testbench
+module counter_tb;
+
+reg clk, rst, out_en;
+wire [2:0] count;
+
+counter dut (
+    .clk(clk),
+    .rst(rst),
+    .out_en(out_en),
+    .count(count)
+);
+
+initial begin
+    clk = 0;
+    forever #5 clk = ~clk;
+end
+
+initial begin
+    rst = 1;
+    out_en = 0;
+    #10 rst = 0;
+    #50 out_en = 1;
+    #100 $finish;
+end
+
+initial begin
+    $monitor("Time=%0t rst=%b out_en=%b count=%b", $time, rst, out_en, count);
+end
+
+endmodule

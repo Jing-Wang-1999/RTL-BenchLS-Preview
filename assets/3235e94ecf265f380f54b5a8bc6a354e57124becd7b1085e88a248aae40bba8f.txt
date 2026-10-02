@@ -1,0 +1,24 @@
+always @(negedge ECLK)
+  begin
+    if (rst_i)
+    begin
+      tod_count <= 24'b0;
+      tod_pls <= 1'b0;
+    end
+    else if (sel_tod & we_i & ~crb_alrm)
+    begin
+      tod_pls <= 1'b0;
+
+      if (adr_todlo)
+        tod_count[7:0] <= DBi;
+      if (adr_todmi)
+        tod_count[15:8] <= DBi;
+      if (adr_todhi)
+        tod_count[23:16] <= DBi;
+    end
+    else
+    begin
+      tod_pls <= tod_tck;
+      tod_count <= tod_count + tod_tck;
+    end
+  end

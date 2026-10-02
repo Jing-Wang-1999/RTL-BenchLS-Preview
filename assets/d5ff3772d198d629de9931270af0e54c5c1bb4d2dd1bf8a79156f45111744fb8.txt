@@ -1,0 +1,104 @@
+module rtlpp_02176(
+    input clk,
+    input [3:0] dig10, dig11,
+    input [3:0] dig20, dig21,
+    input [9:0] x, y,
+    output [3:0] text_on,
+    output reg [11:0] text_rgb
+    );
+
+    wire [10:0] rom_addr;
+    reg [6:0] char_addr, char_addr_s, char_addr_o;
+    reg [3:0] row_addr;
+    wire [3:0] row_addr_s, row_addr_o;
+    reg [2:0] bit_addr;
+    wire [2:0] bit_addr_s, bit_addr_o;
+    reg [7:0] ascii_rom [0:2047];    // Embedded ASCII ROM
+    wire [7:0] ascii_word;
+    wire ascii_bit, score_on, over_on;
+
+    initial $readmemh("ascii_rom_data.mem", ascii_rom);  // Load ASCII ROM data from file
+
+    assign ascii_word = ascii_rom[rom_addr];
+    
+    assign score_on = (y >= 32) && (y < 64) && (x[9:4] < 32);
+    assign row_addr_s = y[4:1];
+    assign bit_addr_s = x[3:1];
+
+    always @* begin
+        case(x[8:4])
+            5'h0 : char_addr_s = 7'h00;
+            5'h1 : char_addr_s = 7'h50;
+            5'h2 : char_addr_s = 7'h4C;
+            5'h3 : char_addr_s = 7'h41;
+            5'h4 : char_addr_s = 7'h59;
+            5'h5 : char_addr_s = 7'h45;
+            5'h6 : char_addr_s = 7'h52;
+            5'h7 : char_addr_s = 7'h20;
+            5'h8 : char_addr_s = 7'h31;
+            5'h9 : char_addr_s = 7'h3A;
+            5'hA : char_addr_s = {3'b011, dig11};    
+            5'hB : char_addr_s = {3'b011, dig10};    
+            5'hC : char_addr_s = 7'h00;
+            5'hD : char_addr_s = 7'h00;
+            5'hE : char_addr_s = 7'h50;
+            5'hF : char_addr_s = 7'h4C;
+            5'h10 : char_addr_s = 7'h41;
+            5'h11 : char_addr_s = 7'h59;
+            5'h12 : char_addr_s = 7'h45;
+            5'h13 : char_addr_s = 7'h52;
+            5'h14 : char_addr_s = 7'h20;
+            5'h15 : char_addr_s = 7'h32;
+            5'h16 : char_addr_s = 7'h3A;
+            5'h17 : char_addr_s = {3'b011, dig21};    
+            5'h18 : char_addr_s = {3'b011, dig20};    
+            5'h19 : char_addr_s = 7'h00;
+            5'h1A : char_addr_s = 7'h00;
+            5'h1B : char_addr_s = 7'h00;
+            5'h1C : char_addr_s = 7'h00;
+            5'h1D : char_addr_s = 7'h00;
+            5'h1E : char_addr_s = 7'h00;
+            5'h1F : char_addr_s = 7'h00;
+        endcase
+    end
+
+    assign over_on = (y[9:6] == 3) && (5 <= x[9:5]) && (x[9:5] <= 13);
+    assign row_addr_o = y[5:2];
+    assign bit_addr_o = x[4:2];
+
+    always @* begin
+        case(x[8:5])
+            4'h5 : char_addr_o = 7'h47;
+            4'h6 : char_addr_o = 7'h41;
+            4'h7 : char_addr_o = 7'h4D;
+            4'h8 : char_addr_o = 7'h45;
+            4'h9 : char_addr_o = 7'h00;
+            4'hA : char_addr_o = 7'h4F;
+            4'hB : char_addr_o = 7'h56;
+            4'hC : char_addr_o = 7'h45;
+            default : char_addr_o = 7'h52;
+        endcase
+    end
+    
+    always @* begin
+        text_rgb = 12'h0FF;
+        if(score_on) begin
+            char_addr = char_addr_s;
+            row_addr = row_addr_s;
+            bit_addr = bit_addr_s;
+            if(ascii_bit)
+                text_rgb = 12'hF00;
+        end else begin
+            char_addr = char_addr_o;
+            row_addr = row_addr_o;
+            bit_addr = bit_addr_o;
+            if(ascii_bit)
+                text_rgb = 12'hF00;
+        end
+    end
+    
+    assign text_on = {score_on, 1'b0, 1'b0, over_on};
+    assign rom_addr = {char_addr, row_addr};
+    assign ascii_bit = ascii_word[~bit_addr];
+    
+endmodule

@@ -1,0 +1,53 @@
+module origen_075160(
+    input [8:0] SW,
+    input CLOCK_50,
+    output reg [17:0] LEDR,
+    output reg [7:0] LEDG
+);
+
+    reg [31:0] contadorSegundos;
+    reg [3:0] posicao;
+    reg sinal, standby;
+    wire [4:0] codigo;
+    wire [2:0] tamanho;
+
+    assign codigo = SW[4:0];
+    assign tamanho = SW[7:5];
+
+    always @(posedge CLOCK_50) begin
+        if (SW[8]) begin // Morse code generation mode
+            if (contadorSegundos == 0) begin
+                if (posicao < tamanho) begin
+                    sinal = ~sinal;
+                    if (sinal) begin
+                        LEDR = 18'b111111111111111111;
+                        LEDG = codigo[posicao] ? 8'b11000000 : 8'b10000000;
+                        contadorSegundos = codigo[posicao] ? 75_000_000 : 25_000_000; // 1.5s or 0.5s
+                    end else begin
+                        LEDR = 18'b000000000000000000;
+                        LEDG = 8'b00000000;
+                        contadorSegundos = 50_000_000; // 1s gap
+                        posicao = posicao + 1;
+                    end
+                end else begin
+                    LEDR = 18'b000000000000000000;
+                    LEDG = 8'b11111111;
+                    contadorSegundos = 50_000_000; // 1s delay before reset
+                    posicao = 0;
+                end
+            end else begin
+                contadorSegundos = contadorSegundos - 1;
+            end
+        end else begin // Standby mode
+            if (contadorSegundos == 0) begin
+                standby = ~standby;
+                LEDR = standby ? 18'b101010101010101010 : 18'b010101010101010101;
+                LEDG = standby ? 8'b10101010 : 8'b01010101;
+                contadorSegundos = 25_000_000; // 0.5s
+            end else begin
+                contadorSegundos = contadorSegundos - 1;
+            end
+        end
+    end
+
+endmodule

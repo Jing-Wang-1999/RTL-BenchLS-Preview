@@ -1,0 +1,28 @@
+always @ (posedge clock or posedge reset)
+begin 
+	if (reset)
+	begin 
+		write_req <= 1'b0;
+		int_write <= 1'b0;
+		int_wr_data <= 0;
+	end 
+	else if (write_op && (main_sm == 4'b0100) && new_rx_data && !data_in_hex_range)
+	begin 
+		write_req <= 1'b1;
+		int_wr_data <= data_param;
+	end 
+	// binary extension mode 
+	else if (bin_write_op && (main_sm == 4'b1100) && new_rx_data) 
+	begin 
+		write_req <= 1'b1;
+		int_wr_data <= rx_data;
+	end 
+	else if (int_gnt && write_req) 
+	begin 
+		// set internal bus write and clear the write request flag 
+		int_write <= 1'b1;
+		write_req <= 1'b0;
+	end 
+	else 
+		int_write <= 1'b0;
+end

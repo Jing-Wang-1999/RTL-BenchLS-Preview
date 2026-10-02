@@ -1,0 +1,71 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/13936",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/13934",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 13936,
+  "issue_number": 13934,
+  "verilog_files": [
+    "hw/ip/spi_device/rtl/spi_device.sv",
+    "hw/ip/spi_device/rtl/spi_readcmd.sv",
+    "hw/ip/spi_device/rtl/spi_s2p.sv",
+    "hw/ip/spi_device/rtl/spid_upload.sv"
+  ],
+  "deletions": 33,
+  "additions": 0,
+  "patches": [
+    {
+      "filename": "hw/ip/spi_device/rtl/spi_device.sv",
+      "patch": "@@ -251,7 +251,6 @@ module spi_device\n   io_mode_e           sub_iomode[IoModeEnd];\n   logic               s2p_data_valid;\n   spi_byte_t          s2p_data;\n-  logic [BitCntW-1:0] s2p_bitcnt;\n \n   logic        p2s_valid;\n   spi_byte_t   p2s_data;\n@@ -1216,7 +1215,6 @@ module spi_device\n \n     .data_valid_o (s2p_data_valid),\n     .data_o       (s2p_data      ),\n-    .bitcnt_o     (s2p_bitcnt    ),\n \n     // Config (changed dynamically)\n     .order_i      (rxorder),\n@@ -1361,7 +1359,6 @@ module spi_device\n     // S2P\n     .s2p_valid_i   (s2p_data_valid),\n     .s2p_byte_i    (s2p_data),\n-    .s2p_bitcnt_i  (s2p_bitcnt),\n \n     // P2S\n     .p2s_valid_o   (sub_p2s_valid [IoModeReadCmd]),\n@@ -1527,7 +1524,6 @@ module spi_device\n     // Interface: SPI to Parallel\n     .s2p_valid_i  (s2p_data_valid),\n     .s2p_byte_i   (s2p_data),\n-    .s2p_bitcnt_i (s2p_bitcnt),\n \n     // Interface: Parallel to SPI\n     .p2s_valid_o (sub_p2s_valid[IoModeUpload]),",
+      "additions": 0,
+      "deletions": 4,
+      "changes": 4
+    },
+    {
+      "filename": "hw/ip/spi_device/rtl/spi_readcmd.sv",
+      "patch": "@@ -126,7 +126,6 @@ module spi_readcmd\n   // Interface: SPI to Parallel\n   input               s2p_valid_i,\n   input spi_byte_t    s2p_byte_i,\n-  input [BitCntW-1:0] s2p_bitcnt_i,\n \n   // Interface: Parallel to SPI\n   // Should be latched to clk_out_i\n@@ -201,9 +200,6 @@ module spi_readcmd\n           && cmd_info_i.payload_dir == PayloadOut\n           && cmd_info_i.valid)\n \n-  logic unused_s2p_bitcnt;\n-  assign unused_s2p_bitcnt = ^s2p_bitcnt_i;\n-\n   /////////////////\n   // Definitions //\n   /////////////////",
+      "additions": 0,
+      "deletions": 4,
+      "changes": 4
+    },
+    {
+      "filename": "hw/ip/spi_device/rtl/spi_s2p.sv",
+      "patch": "@@ -16,7 +16,6 @@ module spi_s2p\n   // to following logic\n   output logic               data_valid_o,\n   output spi_byte_t          data_o,\n-  output logic [BitCntW-1:0] bitcnt_o, // up to 256B payload\n \n   // Configuration\n   input                             order_i,\n@@ -37,7 +36,6 @@ module spi_s2p\n   typedef logic [BitCntW-1:0] bitcount_t;\n \n   count_t cnt;\n-  bitcount_t bitcnt;\n \n   spi_byte_t data_d, data_q;\n \n@@ -72,21 +70,6 @@ module spi_s2p\n   // send un-latched data\n   assign data_o = data_d;\n \n-  // total bit count\n-  always_ff @(posedge clk_i or negedge rst_ni) begin\n-    if (!rst_ni) begin\n-      bitcnt <= '0;\n-    end else begin\n-      unique case (io_mode_i)\n-        SingleIO: bitcnt <= bitcnt + bitcount_t'('h1);\n-        DualIO:   bitcnt <= bitcnt + bitcount_t'('h2);\n-        QuadIO:   bitcnt <= bitcnt + bitcount_t'('h4);\n-        default:  bitcnt <= bitcnt;\n-      endcase\n-    end\n-  end\n-  assign bitcnt_o = bitcnt;\n-\n   // Bitcount in a byte\n   always_ff @(posedge clk_i or negedge rst_ni) begin\n     if (!rst_ni) begin\n@@ -121,8 +104,4 @@ module spi_s2p\n   // to decode SPI Opcode.\n   `ASSERT(IoModeDefault_A, $rose(rst_ni) |-> io_mode_i == SingleIO, clk_i, 0)\n \n-  // Bitcnd shall not exceed 2**12\n-  `ASSERT(BitcountOverflow_A, bitcnt != '1)\n-\n-\n endmodule",
+      "additions": 0,
+      "deletions": 21,
+      "changes": 21
+    },
+    {
+      "filename": "hw/ip/spi_device/rtl/spid_upload.sv",
+      "patch": "@@ -87,7 +87,6 @@ module spid_upload\n   // Interface: SPI to Parallel\n   input               s2p_valid_i,\n   input spi_byte_t    s2p_byte_i,\n-  input [BitCntW-1:0] s2p_bitcnt_i,\n \n   // Interface: Parallel to SPI\n   // Not used in spid_upload\n@@ -227,9 +226,6 @@ module spid_upload\n \n \n   // unused\n-  logic unused_s2p_bitcnt;\n-  assign unused_s2p_bitcnt = ^s2p_bitcnt_i;\n-\n   logic unused_cmdinfo_idx;\n   assign unused_cmdinfo_idx = ^cmd_info_idx_i;\n ",
+      "additions": 0,
+      "deletions": 4,
+      "changes": 4
+    }
+  ],
+  "pr_info": {
+    "title": "[spi_device] Remove `bitcnt`",
+    "body": "`bitcnt` is 12 bit data counting how many bits `spi_s2p` has received.\r\nThe signal is then sent to the following modules along with the valid\r\nsignal and a byte data.\r\n\r\nThe signal assumes the max data transfer in a SPI transaction to 256B.\r\n256B is common for SPI Flash page size.\r\n\r\nHowever, the host can read more than a page size. And the signal is\r\nnever used in the following modules (spi_readcmd, spid_upload)\r\n\r\nThe issue has been reported by @weicaiyang in #13934 ",
+    "state": "closed",
+    "created_at": "2022-08-01T19:17:08Z",
+    "updated_at": "2022-08-02T22:40:03Z",
+    "merged_at": "2022-08-02T22:40:01Z",
+    "user": "eunchan"
+  },
+  "issue_info": {
+    "title": "[spi_device] Assertion update needed",
+    "body": "\r\nThis assume doesn't work for mailbox read, when it reads across mailbox boundary.\r\n```\r\n  // intercept_en shall not be de-asserted except reset\r\n   `ASSUME(InterceptLevel_M,\r\n     $rose(intercept_en) |=> $stable(intercept_en) until !rst_spi_n,\r\n     clk_spi_out_buf, !rst_spi_n)\r\n```\r\n\r\nSounds like it's ok to issue a transaction that sends over 4k bits (512 bytes)\r\n```\r\n  // Bitcnd shall not exceed 2**12\r\n   `ASSERT(BitcountOverflow_A, bitcnt != '1)\r\n```",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2022-08-01T19:04:52Z",
+    "updated_at": "2022-08-09T17:52:51Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 1890
+  },
+  "base_commit": "a8485b5cef73cdd6e671449bdfdc65020b0fb676",
+  "head_commit": "bb20609fd2893b3cdaefebdbdf014bcca65c78fd",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_13936_13934",
+  "lec_status": "useful_pass"
+}

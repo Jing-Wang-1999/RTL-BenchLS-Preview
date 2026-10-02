@@ -1,0 +1,118 @@
+// CAN Transmitter Module
+module origen_135871 #(
+    parameter BAUD_RATE = 1000000,
+    parameter SAMPLE_POINT = 0.75
+)(
+    input wire clk,
+    input wire rst_n,
+    input wire [10:0] id,
+    input wire [7:0] data,
+    input wire tx_en,
+    output reg can_tx
+);
+
+    localparam BIT_TIME = 1000000000 / BAUD_RATE;
+    localparam SAMPLE_TIME = BIT_TIME * SAMPLE_POINT;
+
+    reg [28:0] message;
+    reg [5:0] bit_counter;
+    reg [31:0] time_counter;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            can_tx <= 1'b1;
+            message <= 29'b0;
+            bit_counter <= 6'b0;
+            time_counter <= 32'b0;
+        end else if (tx_en) begin
+            if (time_counter == 0) begin
+                message <= {1'b0, id, 1'b0, 1'b0, 4'b0, data, 15'b111111111111111};
+                bit_counter <= 6'd0;
+            end
+
+            if (time_counter == SAMPLE_TIME) begin
+                can_tx <= message[28 - bit_counter];
+                if (bit_counter == 28) begin
+                    bit_counter <= 6'd0;
+                end else begin
+                    bit_counter <= bit_counter + 1'b1;
+                end
+            end
+
+            if (time_counter == BIT_TIME - 1) begin
+                time_counter <= 32'd0;
+            end else begin
+                time_counter <= time_counter + 1'b1;
+            end
+        end else begin
+            can_tx <= 1'b1;
+            message <= 29'b0;
+            bit_counter <= 6'b0;
+            time_counter <= 32'b0;
+        end
+    end
+
+endmodule
+
+// CAN Receiver Module
+module can_receiver #(
+    parameter BAUD_RATE = 1000000,
+    parameter SAMPLE_POINT = 0.75
+)(
+    input wire clk,
+    input wire rst_n,
+    input wire can_rx,
+    output reg [10:0] id,
+    output reg [7:0] data,
+    output reg rx_en
+);
+
+    localparam BIT_TIME = 1000000000 / BAUD_RATE;
+    localparam SAMPLE_TIME = BIT_TIME * SAMPLE_POINT;
+
+    reg [28:0] message;
+    reg [5:0] bit_counter;
+    reg [31:0] time_counter;
+    reg receiving;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            id <= 11'b0;
+            data <= 8'b0;
+            rx_en <= 1'b0;
+            message <= 29'b0;
+            bit_counter <= 6'b0;
+            time_counter <= 32'b0;
+            receiving <= 1'b0;
+        end else begin
+            if (!receiving && !can_rx) begin
+                receiving <= 1'b1;
+                bit_counter <= 6'd0;
+                time_counter <= 32'd0;
+            end
+
+            if (receiving) begin
+                if (time_counter == SAMPLE_TIME) begin
+                    message[28 - bit_counter] <= can_rx;
+                    if (bit_counter == 28) begin
+                        id <= message[27:17];
+                        data <= message[16:9];
+                        rx_en <= 1'b1;
+                        receiving <= 1'b0;
+                    end else begin
+                        bit_counter <= bit_counter + 1'b1;
+                    end
+                end
+
+                if (time_counter == BIT_TIME - 1) begin
+                    time_counter <= 32'd0;
+                end else begin
+                    time_counter <= time_counter + 1'b1;
+                end
+            end else begin
+                rx_en <= 1'b0;
+            end
+        end
+    end
+
+endmodule

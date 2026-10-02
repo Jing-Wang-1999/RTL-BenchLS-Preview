@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.0f55a96d56f35e25e3b3.4a03b9cf9b60",
+  "compile_check": {
+    "case_id": "s1derived.0f55a96d56f35e25e3b3.4a03b9cf9b60",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_09438",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_09438.d47d1787bf9fa2bd/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.0f55a96d56f35e25e3b3",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "0f55a96d56f35e25e3b31ed2d562b2069c90ff455d8ab7585ce268c8e34f0d51",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.0f55a96d56f35e25e3b3.4a03b9cf9b60",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_09438.d47d1787bf9fa2bd/private/commercial_positive.log",
+    "commercial_log_sha256": "e0a445bf168ab36c59ca802f2a4256e369c55a6498aeaf1c1ea589fec87c70c9",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_09438.d47d1787bf9fa2bd/private/historical_harness/00_sec_mg_09438.tcl",
+    "executed_script_sha256": "efcb9f6a932e5b703ae1cdf3f3e02c5b3aed9a93dd128b85b4774533a7cb543c",
+    "golden_tops": [
+      "mg_09438"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.mg_09438.d47d1787bf9fa2bd",
+    "parent_id": "s1p.0f55a96d56f35e25e3b3",
+    "revised_tops": [
+      "mg_09438"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_09438",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.0f55a96d56f35e25e3b3.4a03b9cf9b60",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Re-read fullRTL and corrected contract: unbraced else does not guard Ready. All three state transitions and outputs now match, including idle start acceptance.",
+        "rtl_excerpt": "Ready = 1;",
+        "specification_excerpt": "`Ready=1` unconditionally"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.0f55a96d56f35e25e3b3",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "32e3be9a0f2e6b640e13c0711861b427ec6d91f362a98adfed4d57b19bf833fc",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0f55a96d56f35e25e3b31ed2d562b2069c90ff455d8ab7585ce268c8e34f0d51",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_09438.d47d1787bf9fa2bd/private/historical_harness/00_sec_mg_09438.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_09438.d47d1787bf9fa2bd/private/historical_harness/01_sec_mg_09438.tcl"
+  ],
+  "parent_id": "s1p.0f55a96d56f35e25e3b3",
+  "primary_review": {
+    "case_id": "s1derived.0f55a96d56f35e25e3b3.4a03b9cf9b60",
+    "checks": {
+      "behavior": "Compared observable equations/state transitions. RTL uses asynchronous posedge reset; shift returns idle on Zero|Nothing and otherwise add, with defined output pulses and invalid-state recovery.",
+      "boundaries": "Checked unsupported selector/opcode/state cases, simultaneous controls, arithmetic flags, zero values, and compile completeness as applicable.",
+      "interface": "Compared exact ports, widths, parameters, and defaults. The specification truncates the shift-state behavior and calls reset synchronous.",
+      "rtl_reasonableness": "RTL describes a coherent hardware or deliberate simulation-checker function under the stated contract.",
+      "sequential_and_reset": "Compared edge sensitivity, reset polarity and synchrony, enables, holds, update ordering, and latency where sequential state exists; otherwise confirmed combinational behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file comparison supports decision=revise; the excerpts identify the decisive semantic agreement or discrepancy.",
+        "rtl_excerpt": "RTL uses asynchronous posedge reset; shift returns idle on Zero|Nothing and otherwise add, with defined output pulses and invalid-state recovery.",
+        "spec_excerpt": "The specification truncates the shift-state behavior and calls reset synchronous."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification truncates the shift-state behavior and calls reset synchronous.",
+        "rtl_evidence": "RTL uses asynchronous posedge reset; shift returns idle on Zero|Nothing and otherwise add, with defined output pulses and invalid-state recovery.",
+        "spec_evidence": "The specification truncates the shift-state behavior and calls reset synchronous.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.0f55a96d56f35e25e3b3",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.0f55a96d56f35e25e3b3.4a03b9cf9b60.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "0f55a96d56f35e25e3b31ed2d562b2069c90ff455d8ab7585ce268c8e34f0d51",
+    "source_group": "S5",
+    "specification_sha256": "4a03b9cf9b607c8dd848cef8e6466adea0ff3daa18e05f3cf796ffa51bcd0427",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.0f55a96d56f35e25e3b3.4a03b9cf9b60.md",
+  "qualified_specification_sha256": "32e3be9a0f2e6b640e13c0711861b427ec6d91f362a98adfed4d57b19bf833fc",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_09438.d47d1787bf9fa2bd/private/golden_design.v",
+  "rtl_sha256": "0f55a96d56f35e25e3b31ed2d562b2069c90ff455d8ab7585ce268c8e34f0d51",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.mg_09438.d47d1787bf9fa2bd/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "4a03b9cf9b607c8dd848cef8e6466adea0ff3daa18e05f3cf796ffa51bcd0427",
+  "top_module": "mg_09438"
+}

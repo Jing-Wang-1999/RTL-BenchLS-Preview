@@ -1,0 +1,47 @@
+module rtlpp_05136 (
+    address,
+    begintransfer,
+    clk,
+    read,
+    reset_n,
+    write,
+    writedata,
+    LCD_E,
+    LCD_RS,
+    LCD_RW,
+    LCD_data,
+    readdata
+);
+
+  input  [1:0] address;
+  input        begintransfer;
+  input        clk;
+  input        read;
+  input        reset_n;
+  input        write;
+  input  [7:0] writedata;
+
+  output       LCD_E;
+  output       LCD_RS;
+  output       LCD_RW;
+  inout  [7:0] LCD_data;
+  output [7:0] readdata;
+
+  wire         LCD_E;
+  wire         LCD_RS;
+  wire         LCD_RW;
+  wire  [7:0]  readdata;
+  wire  [7:0]  LCD_data_internal;
+
+  assign LCD_RW = address[0];
+  assign LCD_RS = address[1];
+  assign LCD_E = read | write;
+  
+  // Tri-state buffer logic for LCD_data
+  assign LCD_data = (address[0]) ? 8'bz : writedata;
+  assign LCD_data_internal = (address[0]) ? LCD_data : 8'bz;
+
+  // Reading data from LCD_data
+  assign readdata = LCD_data_internal;
+
+endmodule

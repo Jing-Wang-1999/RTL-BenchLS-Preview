@@ -1,0 +1,34 @@
+module mg_03926(gauge,value,enable,enforce);
+parameter LOGWORD=0; 
+  localparam WORD=(1<<LOGWORD); 
+  localparam HWORD=(1<<(LOGWORD-1)); 
+  output reg [WORD-1:0] gauge; 
+  input [LOGWORD+1-1:0] value; 
+  input enable; 
+  input enforce; 
+  reg l_enable; 
+  reg l_enforce; 
+  reg r_enable; 
+  reg r_enforce; 
+  wire [HWORD+1-1:0] l_gauge; 
+  wire [HWORD+1-1:0] r_gauge; 
+  generate 
+  if(LOGWORD<=0) begin 
+  always @(*) begin 
+  gauge <= enforce; 
+  end 
+  end 
+  else begin 
+  always @(*) begin 
+  l_enable <= enable && value[LOGWORD-1]; 
+  r_enable <= enable; 
+  l_enforce <= enforce; 
+  r_enforce <= enforce || l_enable; 
+  gauge[ WORD-1:HWORD] <= l_gauge; 
+  gauge[HWORD-1: 0] <= r_gauge; 
+  end 
+ ThermoGauge #(.LOGWORD(LOGWORD-1)) i_l_thermogauge (l_gauge[HWORD-1:0],value[LOGWORD-1:0],l_enable,l_enforce); 
+ ThermoGauge #(.LOGWORD(LOGWORD-1)) i_r_thermogauge (r_gauge[HWORD-1:0],value[LOGWORD-1:0],r_enable,r_enforce); 
+  end 
+  endgenerate 
+ endmodule

@@ -1,0 +1,117 @@
+module autovcoder_018237 (
+    A,
+    B,
+    Cin,
+    S,
+    Cout
+);
+  input [31:0] A;
+  input [31:0] B;
+  output [31:0] S;
+  input Cin;
+  output Cout;
+  wire n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15;
+  wire [6:0] carry_gen_Co;
+
+  CARRY_GENERATOR_NBIT32_NBIT_PER_BLOCK4 U_CARRY_GENERATOR (
+      .A  (A),
+      .B  (B),
+      .CIN(Cin),
+      .CO ({Cout, carry_gen_Co})
+  );
+  RCA_NBIT4_0 U_FIRST_RCA (
+      .A (A[3:0]),
+      .B ({n6, B[2], n4, n15}),
+      .Ci(Cin),
+      .S (S[3:0])
+  );
+  SUM_GENERATOR_NBIT_PER_BLOCK4_NBLOCKS7 U_SUM_GENERATOR (
+      .A(A[31:4]),
+      .B({
+        B[31:24],
+        n10,
+        B[22],
+        n7,
+        B[20],
+        n14,
+        B[18],
+        n8,
+        B[16],
+        n3,
+        B[14],
+        n13,
+        B[12],
+        n11,
+        n5,
+        n12,
+        B[8],
+        n2,
+        n1,
+        n9,
+        B[4]
+      }),
+      .Ci(carry_gen_Co),
+      .S(S[31:4])
+  );
+  CLKBUF_X1 U1 (
+      .A(B[6]),
+      .Z(n1)
+  );
+  CLKBUF_X1 U2 (
+      .A(B[5]),
+      .Z(n9)
+  );
+  CLKBUF_X1 U3 (
+      .A(B[7]),
+      .Z(n2)
+  );
+  CLKBUF_X1 U4 (
+      .A(B[9]),
+      .Z(n12)
+  );
+  CLKBUF_X1 U5 (
+      .A(B[15]),
+      .Z(n3)
+  );
+  CLKBUF_X1 U6 (
+      .A(B[1]),
+      .Z(n4)
+  );
+  CLKBUF_X1 U7 (
+      .A(B[10]),
+      .Z(n5)
+  );
+  CLKBUF_X1 U8 (
+      .A(B[17]),
+      .Z(n8)
+  );
+  CLKBUF_X1 U9 (
+      .A(B[3]),
+      .Z(n6)
+  );
+  CLKBUF_X1 U10 (
+      .A(B[21]),
+      .Z(n7)
+  );
+  CLKBUF_X1 U11 (
+      .A(B[23]),
+      .Z(n10)
+  );
+  CLKBUF_X1 U12 (
+      .A(B[11]),
+      .Z(n11)
+  );
+  BUF_X1 U13 (
+      .A(B[13]),
+      .Z(n13)
+  );
+  CLKBUF_X1 U14 (
+      .A(B[19]),
+      .Z(n14)
+  );
+  CLKBUF_X1 U15 (
+      .A(B[0]),
+      .Z(n15)
+  );
+endmodule
+

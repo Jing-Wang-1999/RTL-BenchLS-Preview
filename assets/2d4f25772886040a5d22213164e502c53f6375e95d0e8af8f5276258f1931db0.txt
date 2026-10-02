@@ -1,0 +1,53 @@
+module origen_047005(
+    input clk,
+    output reg [7:0] led,
+    output reg [3:0] servo
+);
+
+    reg [63:0] mem [0:255];
+    reg [7:0] ptr;
+    reg [63:0] data;
+    reg [31:0] run;
+    reg [9:0] tf;
+    reg tf_en;
+    reg [15:0] t0, t1, t2, t3;
+
+    initial begin
+        $readmemh("ram.txt", mem);
+        ptr = 0;
+        run = 0;
+        tf = 0;
+        tf_en = 0;
+        t0 = 0;
+        t1 = 0;
+        t2 = 0;
+        t3 = 0;
+    end
+
+    always @(posedge clk) begin
+        run <= run + 1;
+        tf <= (tf == 599) ? 0 : tf + 1;
+        tf_en <= (run[10:0] == 0);
+        
+        if (tf == 0) begin
+            ptr <= ptr + 1;
+            data <= mem[ptr];
+            t0 <= data[15:0];
+            t1 <= data[31:16];
+            t2 <= data[47:32];
+            t3 <= data[63:48];
+        end else if (tf_en) begin
+            if (t0 > 0) t0 <= t0 - 1;
+            if (t1 > 0) t1 <= t1 - 1;
+            if (t2 > 0) t2 <= t2 - 1;
+            if (t3 > 0) t3 <= t3 - 1;
+        end
+
+        led <= run[31:24];
+        servo[0] <= (t0 != 0);
+        servo[1] <= (t1 != 0);
+        servo[2] <= (t2 != 0);
+        servo[3] <= (t3 != 0);
+    end
+
+endmodule

@@ -1,0 +1,56 @@
+module origen_072888(
+    input PS2Clk,
+    input PS2Data,
+    output reg [7:0] keyPressed,
+    output kpSignal
+);
+
+    reg [10:0] scanCode;
+    reg send, transmissionComplete, strobe_100ms;
+    reg [3:0] bitcount;
+    reg [1:0] state;
+
+    `define KEY 8:1
+    `define PARBIT 9
+    `define PARVAL ^scanCode[`KEY]
+
+    always @(negedge PS2Clk) begin
+        case (state)
+            0: begin
+                if (!PS2Data) begin
+                    scanCode <= 0;
+                    bitcount <= 0;
+                    state <= 1;
+                end
+            end
+            1: begin
+                scanCode[bitcount] <= PS2Data;
+                bitcount <= bitcount + 1;
+                if (bitcount == 10) begin
+                    state <= 2;
+                    transmissionComplete <= 1;
+                end
+            end
+            2: begin
+                transmissionComplete <= 0;
+                state <= 0;
+            end
+        endcase
+    end
+
+    always @(posedge transmissionComplete) begin
+        if (send) begin
+            keyPressed <= scanCode[`KEY];
+            strobe_100ms <= 1;
+            send <= 0;
+        end
+        else if (scanCode[`KEY] == 8'hF0) begin
+            send <= 1;
+        end
+    end
+
+    always @(negedge strobe_100ms) begin
+        strobe_100ms <= 0;
+    end
+
+endmodule

@@ -1,0 +1,19 @@
+module mg_02619 (
+    input [63:0] inword,
+    input [2:0] sel,
+    output reg [7:0] outbyte
+);
+    always @(*) begin
+        case (sel)
+            3'b000: outbyte = inword[7:0];
+            3'b001: outbyte = inword[15:8];
+            3'b010: outbyte = inword[23:16];
+            3'b011: outbyte = inword[31:24];
+            3'b100: outbyte = inword[39:32];
+            3'b101: outbyte = inword[47:40];
+            3'b110: outbyte = inword[55:48];
+            3'b111: outbyte = inword[63:56];
+            default: outbyte = 8'b00000000;
+        endcase
+    end
+endmodule

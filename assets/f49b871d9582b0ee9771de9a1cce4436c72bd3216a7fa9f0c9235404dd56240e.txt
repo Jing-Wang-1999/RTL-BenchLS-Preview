@@ -1,0 +1,14 @@
+always @(negedge ECLK)
+  begin
+    if (rst_i)
+    begin
+      tb_latch <= 16'hffff;
+    end
+    else if (sel_i & we_i)
+    begin
+      if (adr_tblo)
+        tb_latch[7:0]  <= DBi;
+      if (adr_tbhi)
+        tb_latch[15:8] <= DBi;
+    end
+  end

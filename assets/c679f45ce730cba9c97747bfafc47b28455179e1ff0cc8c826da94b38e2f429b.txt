@@ -1,0 +1,157 @@
+module ALT_IOBUF(
+  input i,
+  input oe,
+  output o,
+  inout io
+);
+  assign io = oe ? i : 1'bz;
+  assign o = io;
+endmodule
+
+module rtlpp_10737 (
+  input            sys_clk,
+  output  [14:0]   ddr3_a,
+  output  [ 2:0]   ddr3_ba,
+  output           ddr3_reset_n,
+  output           ddr3_ck_p,
+  output           ddr3_ck_n,
+  output           ddr3_cke,
+  output           ddr3_cs_n,
+  output           ddr3_ras_n,
+  output           ddr3_cas_n,
+  output           ddr3_we_n,
+  inout   [31:0]   ddr3_dq,
+  inout   [ 3:0]   ddr3_dqs_p,
+  inout   [ 3:0]   ddr3_dqs_n,
+  output  [ 3:0]   ddr3_dm,
+  output           ddr3_odt,
+  input            ddr3_rzq,
+  output            eth1_tx_clk,
+  output            eth1_tx_ctl,
+  output  [  3:0]   eth1_tx_d,
+  input             eth1_rx_clk,
+  input             eth1_rx_ctl,
+  input   [  3:0]   eth1_rx_d,
+  output            eth1_mdc,
+  inout             eth1_mdio,
+  output            sdio_clk,
+  inout             sdio_cmd,
+  inout   [  3:0]   sdio_d,
+  output            spim1_ss0,
+  output            spim1_clk,
+  output            spim1_mosi,
+  input             spim1_miso,
+  input             usb1_clk,
+  output            usb1_stp,
+  input             usb1_dir,
+  input             usb1_nxt,
+  inout   [  7:0]   usb1_d,
+  input             uart0_rx,
+  output            uart0_tx,
+  inout             hps_conv_usb_n,
+  output  [  7:0]   gpio_bd_o,
+  input   [  5:0]   gpio_bd_i,
+  output            hdmi_out_clk,
+  output            hdmi_vsync,
+  output            hdmi_hsync,
+  output            hdmi_data_e,
+  output  [ 23:0]   hdmi_data,
+  inout             hdmi_i2c_scl,
+  inout             hdmi_i2c_sda,
+  input                   adc_clk_in,
+  input                   adc_ready_in,
+  input       [ 3:0]      adc_data_in,
+  output                  spi_csn,
+  output                  spi_clk,
+  output                  spi_mosi,
+  input                   spi_miso,
+  output                  start_n,
+  output                  sdp_convst,
+  output                  sdp_mclk,
+  output                  reset_n
+);
+  
+  wire             sys_resetn;
+  wire    [63:0]   gpio_i;
+  wire    [63:0]   gpio_o;
+  wire    [63:0]   gpio_t;
+
+  wire             i2c1_scl;
+  wire             i2c1_scl_oe;
+  wire             i2c1_sda;
+  wire             i2c1_sda_oe;
+
+  wire             i2c0_out_data;
+  wire             i2c0_sda;
+  wire             i2c0_out_clk;
+  wire             i2c0_scl_in_clk;
+
+  assign start_n    = gpio_o[33];
+  assign sdp_convst = gpio_o[34];
+  assign sdp_mclk   = gpio_o[35];
+  assign reset_n    = gpio_o[39];
+
+  assign gpio_i[63:39] = gpio_o[63:39];
+  assign gpio_i[35:33] = gpio_o[35:33];
+  assign gpio_i[31:15] = gpio_o[31:15];
+
+  assign gpio_i[13:8] = gpio_bd_i[5:0];
+  assign gpio_bd_o[7:0] = gpio_o[7:0];
+
+  ALT_IOBUF scl_video_iobuf (
+    .i(1'b0),
+    .oe(i2c0_out_clk),
+    .o(i2c0_scl_in_clk),
+    .io(hdmi_i2c_scl)
+  );
+
+  ALT_IOBUF sda_video_iobuf (
+    .i(1'b0),
+    .oe(i2c0_out_data),
+    .o(i2c0_sda),
+    .io(hdmi_i2c_sda)
+  );
+
+  wire    [14:0]   system_bd_ddr3_a;
+  wire    [ 2:0]   system_bd_ddr3_ba;
+  wire             system_bd_ddr3_reset_n;
+  wire             system_bd_ddr3_ck_p;
+  wire             system_bd_ddr3_ck_n;
+  wire             system_bd_ddr3_cke;
+  wire             system_bd_ddr3_cs_n;
+  wire             system_bd_ddr3_ras_n;
+  wire             system_bd_ddr3_cas_n;
+  wire             system_bd_ddr3_we_n;
+  wire    [31:0]   system_bd_ddr3_dq;
+  wire    [ 3:0]   system_bd_ddr3_dqs_p;
+  wire    [ 3:0]   system_bd_ddr3_dqs_n;
+  wire    [ 3:0]   system_bd_ddr3_dm;
+  wire             system_bd_ddr3_odt;
+  wire             system_bd_sys_resetn;
+  wire             system_bd_i2c0_out_clk;
+  wire             system_bd_i2c0_out_data;
+  wire             system_bd_i2c0_scl_in_clk;
+  wire             system_bd_i2c0_sda;
+
+  assign ddr3_a    = system_bd_ddr3_a;
+  assign ddr3_ba   = system_bd_ddr3_ba;
+  assign ddr3_reset_n = system_bd_ddr3_reset_n;
+  assign ddr3_ck_p    = system_bd_ddr3_ck_p;
+  assign ddr3_ck_n    = system_bd_ddr3_ck_n;
+  assign ddr3_cke     = system_bd_ddr3_cke;
+  assign ddr3_cs_n    = system_bd_ddr3_cs_n;
+  assign ddr3_ras_n   = system_bd_ddr3_ras_n;
+  assign ddr3_cas_n   = system_bd_ddr3_cas_n;
+  assign ddr3_we_n    = system_bd_ddr3_we_n;
+  assign ddr3_dq      = system_bd_ddr3_dq;
+  assign ddr3_dqs_p   = system_bd_ddr3_dqs_p;
+  assign ddr3_dqs_n   = system_bd_ddr3_dqs_n;
+  assign ddr3_dm      = system_bd_ddr3_dm;
+  assign ddr3_odt     = system_bd_ddr3_odt;
+  assign sys_resetn   = system_bd_sys_resetn;
+  assign i2c0_out_clk = system_bd_i2c0_out_clk;
+  assign i2c0_out_data = system_bd_i2c0_out_data;
+  assign i2c0_scl_in_clk = system_bd_i2c0_scl_in_clk;
+  assign i2c0_sda    = system_bd_i2c0_sda;
+
+endmodule

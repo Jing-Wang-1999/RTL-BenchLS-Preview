@@ -1,0 +1,96 @@
+module __formal113_core_085c83d2bc8d (
+    input       clk,
+    input       reset_n,
+    input       inverse,
+    input       sink_valid,
+    input       sink_sop,
+    input       sink_eop,
+    input [15:0] sink_real,
+    input [15:0] sink_imag,
+    input [1:0]  sink_error,
+    input       source_ready,
+    output      sink_ready,
+    output [1:0] source_error,
+    output      source_sop,
+    output      source_eop,
+    output      source_valid,
+    output [5:0] source_exp,
+    output [15:0] source_real,
+    output [15:0] source_imag
+);
+
+    // Internal signals 
+    reg [15:0] internal_sink_real;
+    reg [15:0] internal_sink_imag;
+    reg [15:0] internal_source_real;
+    reg [15:0] internal_source_imag;
+    reg [5:0]  internal_source_exp;
+    reg [1:0]  internal_source_error;
+    reg        internal_sink_ready;
+    reg        internal_source_sop;
+    reg        internal_source_eop;
+    reg        internal_source_valid;
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            internal_sink_ready <= 0;
+            internal_source_sop <= 0;
+            internal_source_eop <= 0;
+            internal_source_valid <= 0;
+            internal_source_error <= 2'b00;
+            internal_source_exp <= 6'b000000;
+            internal_source_real <= 16'b0;
+            internal_source_imag <= 16'b0;
+        end else begin
+            // Simulating FFT Functionality
+            if (sink_valid && sink_sop && sink_eop) begin
+                internal_sink_ready <= 1;
+                // example logic assuming some dummy transformation for illustration
+                internal_source_real <= sink_real * 2;  // Sample transformation
+                internal_source_imag <= sink_imag * 2;  // Sample transformation
+                internal_source_exp <= 6'b000001;       // Dummy value
+                internal_source_sop <= sink_sop;
+                internal_source_eop <= sink_eop;
+                internal_source_valid <= 1;
+                internal_source_error <= 2'b00;
+            end else begin
+                internal_sink_ready <= 0;
+                internal_source_valid <= 0;
+            end
+        end
+    end
+
+    // Output assignments
+    assign sink_ready = internal_sink_ready;
+    assign source_sop = internal_source_sop;
+    assign source_eop = internal_source_eop;
+    assign source_valid = internal_source_valid;
+    assign source_exp = internal_source_exp;
+    assign source_real = internal_source_real;
+    assign source_imag = internal_source_imag;
+    assign source_error = internal_source_error;
+endmodule
+module simplified_fft_stream(
+  input wire [0:0] clk,
+  input wire [0:0] reset_n,
+  input wire [0:0] inverse,
+  input wire [0:0] sink_valid,
+  input wire [0:0] sink_sop,
+  input wire [0:0] sink_eop,
+  input wire [15:0] sink_real,
+  input wire [15:0] sink_imag,
+  input wire [1:0] sink_error,
+  input wire [0:0] source_ready,
+  output wire [0:0] sink_ready,
+  output wire [1:0] source_error,
+  output wire [0:0] source_sop,
+  output wire [0:0] source_eop,
+  output wire [0:0] source_valid,
+  output wire [5:0] source_exp,
+  output wire [15:0] source_real,
+  output wire [15:0] source_imag
+);
+wire [0:0] __negative_output;
+__formal113_core_085c83d2bc8d dut(.clk(clk), .reset_n(reset_n), .inverse(inverse), .sink_valid(sink_valid), .sink_sop(sink_sop), .sink_eop(sink_eop), .sink_real(sink_real), .sink_imag(sink_imag), .sink_error(sink_error), .source_ready(source_ready), .sink_ready(__negative_output), .source_error(source_error), .source_sop(source_sop), .source_eop(source_eop), .source_valid(source_valid), .source_exp(source_exp), .source_real(source_real), .source_imag(source_imag));
+assign sink_ready = __negative_output ^ 1'd1;
+endmodule

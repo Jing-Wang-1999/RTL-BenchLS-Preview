@@ -1,0 +1,28 @@
+module rtlpp_06366 (
+    input clk,
+    input rst,
+    input [1:0] in,
+    output reg o
+);
+
+    reg yB, yC;
+
+    wire selector1, selector2, selector3;
+
+    assign selector1 = ~in[0] & ~in[1] & ~yB & ~yC;
+    assign selector2 = ~in[0] & ~in[1] & ~yC & yB;
+    assign selector3 = ~in[0] & ~in[1] & ~yC & ~yB;
+
+    always @(posedge clk or negedge rst) begin
+        if (!rst) begin
+            yB <= 1'b0;
+            yC <= 1'b0;
+            o <= 1'b0;
+        end else begin
+            yB <= selector1;
+            yC <= selector2;
+            o <= selector3;
+        end
+    end
+
+endmodule

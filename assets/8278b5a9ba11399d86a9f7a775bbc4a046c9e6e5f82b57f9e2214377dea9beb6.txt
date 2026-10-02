@@ -1,0 +1,82 @@
+# Buffered AXI-stream byte FIFO
+
+Implement `axis_fifo` with the public declaration below. The qualified configuration is its declared defaults: depth4096, data8, keep disabled (port width1), last enabled, ID and destination disabled (ports8 each), user enabled (width1), RAM_PIPELINE=1, OUTPUT_FIFO_ENABLE=0, FRAME_FIFO=0, all drop/mark modes0, PAUSE_ENABLE=0 and FRAME_PAUSE=0. The derived address width is12 and output-FIFO address width3. Nondefault parameter combinations are outside this case. Retain the declaration and default interface; a correct implementation may specialize to this configuration.
+
+The FIFO stores the ten-bit tuple (user,last,data) in order. Transfer into it occurs on a rising `clk` edge with both `s_axis_tvalid` and `s_axis_tready`. Transfer out occurs with `m_axis_tvalid AND m_axis_tready`. Last and user are metadata and never cause frame dropping or filtering. There are4096 RAM slots followed by two pipeline slots. The pipeline can prefetch without output readiness and its occupancy is excluded from the reported RAM depth. Consequently the total stall-buffer capacity is4098 entries.
+
+## Exact cycle behavior
+
+Use modulo8192 unsigned write and read counts W and R and memory index low12 bits. Combinational `s_axis_tready` is false exactly when W equals R XOR4096; otherwise true. It does not anticipate a read on this edge. A committed-write count equals W in this default configuration. Empty means W=R.
+
+The output pipeline has two ten-bit payload registers P0/P1 and valid bits V0/V1. Output valid is V1; output data/last/user continuously expose P1 even when invalid. Each rising edge uses the pre-edge values throughout, in the following priority order:
+
+1. If output ready, provisionally clear V1.
+2. If output ready OR V1=0, set P1 to old P0 and V1 to old V0, and provisionally clear V0.
+3. If output ready OR either V0 or V1 is zero, read memory at old R into P0, and set V0 to NOT empty. Increment R only when NOT empty. This read takes place even while empty; the resulting payload is invalid, not forced to zero.
+4. If input valid and ready, write the tuple into memory at old W and increment W. A simultaneous memory read and write at the same address reads the previous memory value.
+5. A high synchronous `rst` overrides W, R and both valid bits to zero. It does not reset memory or pipeline payload registers, nor suppress memory/payload assignments on that edge. A reset-first trace is required; do not assume initialized memory.
+
+An item accepted into an empty FIFO on edge E appears valid at the output immediately after edge E+2, provided the pipeline is not blocked, and can first be consumed on edge E+3. Stalled valid output payload remains unchanged. Bubble motion continues behind it until both stages are occupied.
+
+## Sidebands and status
+
+`m_axis_tkeep` is1, `m_axis_tid` and `m_axis_tdest` are zero. Their corresponding input sidebands are ignored. `pause_req` is ignored and `pause_ack` is zero. `status_overflow`, `status_bad_frame`, and `status_good_frame` remain zero after reset; ordinary full backpressure does not report overflow.
+
+Both 13-bit depth outputs are registers loaded every edge with pre-edge `(W-R) mod8192`, including reset edges. They have no synchronous reset override; after a reset edge they may briefly report the preceding depth, then zero on the next edge. They count only RAM occupancy, not prefetched pipeline words. No arbitrary traffic assumption is needed beyond initial reset: cycles with valid low or ready low still follow the specified payload and depth evolution.
+
+## Public declaration
+
+```verilog
+module axis_fifo #
+(
+    parameter DEPTH = 4096,
+    parameter DATA_WIDTH = 8,
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    parameter KEEP_WIDTH = ((DATA_WIDTH+7)/8),
+    parameter LAST_ENABLE = 1,
+    parameter ID_ENABLE = 0,
+    parameter ID_WIDTH = 8,
+    parameter DEST_ENABLE = 0,
+    parameter DEST_WIDTH = 8,
+    parameter USER_ENABLE = 1,
+    parameter USER_WIDTH = 1,
+    parameter RAM_PIPELINE = 1,
+    parameter OUTPUT_FIFO_ENABLE = 0,
+    parameter FRAME_FIFO = 0,
+    parameter USER_BAD_FRAME_VALUE = 1'b1,
+    parameter USER_BAD_FRAME_MASK = 1'b1,
+    parameter DROP_OVERSIZE_FRAME = FRAME_FIFO,
+    parameter DROP_BAD_FRAME = 0,
+    parameter DROP_WHEN_FULL = 0,
+    parameter MARK_WHEN_FULL = 0,
+    parameter PAUSE_ENABLE = 0,
+    parameter FRAME_PAUSE = FRAME_FIFO
+)
+(
+    input  wire                   clk,
+    input  wire                   rst,
+    input  wire [DATA_WIDTH-1:0]  s_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  s_axis_tkeep,
+    input  wire                   s_axis_tvalid,
+    output wire                   s_axis_tready,
+    input  wire                   s_axis_tlast,
+    input  wire [ID_WIDTH-1:0]    s_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  s_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  s_axis_tuser,
+    output wire [DATA_WIDTH-1:0]  m_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  m_axis_tkeep,
+    output wire                   m_axis_tvalid,
+    input  wire                   m_axis_tready,
+    output wire                   m_axis_tlast,
+    output wire [ID_WIDTH-1:0]    m_axis_tid,
+    output wire [DEST_WIDTH-1:0]  m_axis_tdest,
+    output wire [USER_WIDTH-1:0]  m_axis_tuser,
+    input  wire                   pause_req,
+    output wire                   pause_ack,
+    output wire [$clog2(DEPTH):0] status_depth,
+    output wire [$clog2(DEPTH):0] status_depth_commit,
+    output wire                   status_overflow,
+    output wire                   status_bad_frame,
+    output wire                   status_good_frame
+);
+```

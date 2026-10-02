@@ -1,0 +1,47 @@
+{
+  "case_id": "issue.YosysHQ_picorv32_9_8",
+  "formal_contract": {
+    "clock": "clk",
+    "defines": [
+      "SYNTHESIS"
+    ],
+    "mode": "sec",
+    "parameters": {
+      "CATCH_ILLINSN": 1,
+      "ENABLE_IRQ": 1,
+      "ENABLE_PCPI": 1
+    },
+    "reset_expression": "!resetn",
+    "source_files": [
+      "picorv32.v",
+      "wrapper.sv"
+    ],
+    "top": "rtl_issue_top",
+    "unit_id": "pcpi_irq_picorv32"
+  },
+  "issue_scope": "PCPI valid must clear after an illegal-instruction timeout rather than causing a spurious later interrupt.",
+  "localization_targets": [
+    "picorv32.v"
+  ],
+  "meaningfulness_review": "The issue explicitly enables PCPI and describes interrupt return. The patch clears pcpi_valid at both illegal-instruction timeout sites.",
+  "model_calls": 0,
+  "modes": [
+    "easy",
+    "hard"
+  ],
+  "official_task": "3.3",
+  "revisions": {
+    "after": {
+      "commit": "38d51a33839f1c7407e42bb51a6104a8bad88aec",
+      "rtl_sha256": "335a0dd818186c56b5dd9e146ae5c4b37d6b9c682bfc7b64eaed8edca516fd4b",
+      "wrapper_sha256": "2601a7b804f6a145a8f293798438917f7df47a3ca44840150f79551b0e15e196"
+    },
+    "before": {
+      "commit": "d72b25993c4e582dcfb124f2d99a037cd76ad34c",
+      "rtl_sha256": "f37bd77309deb53eacc926edfc0533f3a4abd819abaa60b958839be38dfc229e",
+      "wrapper_sha256": "2601a7b804f6a145a8f293798438917f7df47a3ca44840150f79551b0e15e196"
+    }
+  },
+  "source_fix": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/common/issue_pairs/offline_20260916_v1/fixes/yosyshq__picorv32__pr9/manifest.json",
+  "status": "candidate"
+}

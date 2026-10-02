@@ -1,0 +1,52 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/977",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/975",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 977,
+  "issue_number": 975,
+  "verilog_files": [
+    "rtl/cv32e40p_id_stage.sv"
+  ],
+  "deletions": 1,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "rtl/cv32e40p_id_stage.sv",
+      "patch": "@@ -1355,7 +1355,7 @@ module cv32e40p_id_stage\n           .hwlp_dec_cnt_i(hwlp_dec_cnt)\n       );\n \n-      assign hwlp_valid = instr_valid_i & clear_instr_valid_o;\n+      assign hwlp_valid = (instr_valid_i | csr_status) & clear_instr_valid_o;\n \n       // hwloop register id\n       assign hwlp_regid = instr[7];  // rd contains hwloop register id",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "Issue #975 correction.",
+    "body": null,
+    "state": "closed",
+    "created_at": "2024-04-09T15:28:57Z",
+    "updated_at": "2024-04-10T07:31:28Z",
+    "merged_at": "2024-04-09T15:30:21Z",
+    "user": "pascalgouedo"
+  },
+  "issue_info": {
+    "title": "HWLoop count not updated when last instruction is a CSR access with pipeline flush",
+    "body": "# Issue description\r\nWhen the last instruction of an Hardware Loop is a CSR access (MSTATUS, MEPC, MTVEC, MCAUSE, any counter) leading to a pipeline flush, lpcount is not decremented.\r\n\r\n### Component\r\n\r\n**Component:RTL**: For issues in the RTL (e.g. for files in the rtl directory)\r\n\r\n### Steps to Reproduce\r\n1. cv32e40p git tag [cv32e40p_v1.7.0](https://github.com/openhwgroup/cv32e40p/tree/cv32e40p_v1.7.0)\r\n2. core-v-verif git hash 6d973dda74bb666697f93d8ba0ba6131933ca4ad\r\n3. command with ISS: makeuvmt test TEST=pulp_hardware_loop CFG=pulp_fpu USE_ISS=1\r\n\\# Info (IDV) Instruction executed prior to mismatch '0x404(startZ_7+10): 30002373 csrr    x6,mstatus'\r\n\\# Error (IDV) CSR register value mismatch (HartId:0, PC:0x00000404 startZ_7+10):\r\n\\# Error (IDV) Mismatch 0> CSR cc2 (lpcount0)\r\n\\# Error (IDV)   . dut:0x0000000a (not updated)\r\n\\# Error (IDV)   . ref:0x00000009\r\n\\# UVM_ERROR @ 35034.300 ns : idvPkg.sv(55) reporter [] uvmt_cv32e40p_tb.imperas_dv.trace2api.state_compare @ 35034.000 ns: MISMATCH\r\n4. command without ISS: makeuvmt test TEST=pulp_hardware_loop CFG=pulp_fpu USE_ISS=0\r\nNever ending as inner loop lpcount is never decremented.",
+    "labels": [
+      "Type:Bug",
+      "Status:Resolved",
+      "Component:RTL",
+      "PARAM:PULP_XPULP"
+    ],
+    "state": "closed",
+    "created_at": "2024-04-09T12:41:13Z",
+    "updated_at": "2024-05-27T10:27:57Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 4
+  },
+  "base_commit": "b11c5f3d49a0c11ad76afd65995e7e15c379f723",
+  "head_commit": "ad7efbf0aee56be9cde52e55994685751412fc6d",
+  "base_ref": "dev",
+  "task_id": "openhwgroup_cv32e40p_977_975",
+  "lec_status": "useful_pass"
+}

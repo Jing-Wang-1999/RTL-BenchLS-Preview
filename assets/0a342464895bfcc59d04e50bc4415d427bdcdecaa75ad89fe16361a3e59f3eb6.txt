@@ -1,0 +1,50 @@
+{
+  "additions": 1,
+  "base_commit": "584c3d46afbad43dea506fd8055243b7e05adbce",
+  "base_ref": "master",
+  "deletions": 1,
+  "head_commit": "22176ac751c2e340fbe433833733417c15261b7a",
+  "issue_info": {
+    "body": "### Description\n\nAssertion coverage for rom_ctrl has several assertions that don't run to completion. These are of the form `A |-> always B` which... obviously doesn't complete! Tweak them to fix.",
+    "created_at": "2024-08-14T17:58:45Z",
+    "labels": [
+      "Component:DV",
+      "IP:rom_ctrl"
+    ],
+    "state": "closed",
+    "title": "[rom_ctrl,dv] Make some assertions terminate",
+    "updated_at": "2024-08-15T14:59:17Z"
+  },
+  "issue_number": 24322,
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/24322",
+  "lec_status": "error",
+  "patches": [
+    {
+      "additions": 1,
+      "changes": 2,
+      "deletions": 1,
+      "filename": "hw/ip/prim/rtl/prim_assert.sv",
+      "patch": "@@ -179,7 +179,7 @@\n        (!$stable(__state) & __name``_cond, initial_state = $past(__state)) |->                                   \\\n            (__state != initial_state) until (__rst == 1'b1);                                                     \\\n      endproperty                                                                                                 \\\n-   `ASSERT(__name, __name``_p, __clk, __rst)                                                                     \\\n+   `ASSERT(__name, __name``_p, __clk, 0)                                                                         \\\n   `endif\n \n `include \"prim_assert_sec_cm.svh\""
+    }
+  ],
+  "pr_info": {
+    "body": "The assertion is supposed to start and say that we don't come back to a state until reset. Unfortunately, the implementation was disabling the property when reset happened, which meant that the assertion never finished, so it got marked as incomplete in the coverage.\r\n\r\nChange the call to `ASSERT() so that it doesn't kill the property any more, relying on the fact that the property will terminate on its own once we go into reset.\r\n\r\nThis is associated with #24322, but I'm not marking the PR as fixing that issue because the \"rom_ctrl assertions terminating\" is addressed by a different PR.",
+    "created_at": "2024-08-14T19:06:38Z",
+    "merged_at": "2024-08-16T10:02:06Z",
+    "state": "closed",
+    "title": "[dv] Allow assertions from ASSERT_FPV_LINEAR_FSM to complete",
+    "updated_at": "2024-08-16T10:02:09Z",
+    "user": "rswarbrick"
+  },
+  "pr_number": 24328,
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/24328",
+  "repository": "lowRISC/opentitan",
+  "source_info": {
+    "line_number": 345,
+    "source_file": "12.txt"
+  },
+  "task_id": "lowRISC_opentitan_24328_24322",
+  "verilog_files": [
+    "hw/ip/prim/rtl/prim_assert.sv"
+  ]
+}

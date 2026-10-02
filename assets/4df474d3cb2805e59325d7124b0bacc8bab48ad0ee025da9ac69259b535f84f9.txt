@@ -1,0 +1,3 @@
+# HT_dynamic_key
+
+Inputs are `clk`, active-high asynchronous `rst`, and `key[127:0]`; output register is `HT_key[127:0]`. Asserting `rst` immediately clears `HT_key` to zero. At each rising edge of `clk` while reset is low, if the old `HT_key` is zero it loads `key`; otherwise it clears to zero. Thus a nonzero loaded key is exposed for one clock interval and then cleared. If `key` is zero when loading occurs, the output remains zero and attempts another load at the next edge. Reset has priority over the clocked update. There is no enable or submodule.

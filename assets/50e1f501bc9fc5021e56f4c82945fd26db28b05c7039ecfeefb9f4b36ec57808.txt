@@ -1,0 +1,78 @@
+The Verilog module "fir10_spec" implements a basic FIR (Finite Impulse Response) filter interface. The module primarily handles the forwarding of input data to output data, along with associated control signals, under certain conditions. Here is a detailed explanation broken down as requested:
+
+---
+
+### 1. Primary Function:
+The primary function of the "fir10_spec" module is to transfer data from the input interface to the output interface, including various control signals, while ensuring correct timing and conditional readiness.
+
+### 2. Control Flow/Decision Points:
+- **Reset Condition:** When the `reset_n` signal is low, all output registers are set to zero, ensuring the module starts in a known state.
+- **Data Transfer Condition:** Data is transferred from the input to the output when both the `ast_sink_valid` (indicating incoming data is valid) and `ast_source_ready` (indicating the module is ready to accept data) signals are high.
+
+### 3. Data Processing and Signal Interactions:
+- **Data Transfer:** The input data from `ast_sink_data` (28-bits) is directly transferred to the output `ast_source_data`. This is conditional upon the `ast_sink_valid` and `ast_source_ready` signals being high.
+- **Control Signals Propagation:**
+  - `ast_sink_ready` is set high to indicate to the sender that the module is ready to accept new data when both `ast_sink_valid` and `ast_source_ready` are high.
+  - `ast_source_valid` is set to indicate valid output data under the same condition.
+  - The `ast_sink_sop`, `ast_sink_eop`, and `ast_sink_error` control signals are propagated to `ast_source_sop`, `ast_source_eop`, and `ast_source_error` respectively to maintain consistency in data packet signaling.
+  - `ast_source_channel` is set to 0 as a placeholder channel indicator which can be updated according to specific needs.
+
+---
+
+### Detailed Description for Code Generation
+
+Generate a Verilog module named "fir10_spec" with the following functionality:
+
+- **Inputs:**
+  - `clk`: Clock signal.
+  - `reset_n`: Active low reset signal.
+  - `ast_sink_data` (28-bits): Input data to be processed.
+  - `ast_sink_valid`: Signal indicating the input data is valid.
+  - `ast_source_ready`: Signal indicating readiness for receiving data.
+  - `ast_sink_sop`: Start of packet signal.
+  - `ast_sink_eop`: End of packet signal.
+  - `ast_sink_error` (2-bits): Input error signals.
+
+- **Outputs:**
+  - `ast_source_data` (28-bits): Output data, forwarded from input.
+  - `ast_sink_ready`: Signal indicating readiness to accept data.
+  - `ast_source_valid`: Signal indicating the output data is valid.
+  - `ast_source_sop`: Start of packet signal, forwarded from input.
+  - `ast_source_eop`: End of packet signal, forwarded from input.
+  - `ast_source_channel`: Channel indicator, set to 0.
+  - `ast_source_error` (2-bits): Output error signals, forwarded from input.
+
+- **Behavior:**
+  - Upon reset (`reset_n` is low), initialize all outputs to zero.
+  - When `ast_sink_valid` and `ast_source_ready` are high:
+    - Transfer `ast_sink_data` to `ast_source_data`.
+    - Set `ast_sink_ready` to 1, indicating readiness to accept new data.
+    - Set `ast_source_valid` to 1, indicating valid data is present on the output.
+    - Forward `ast_sink_sop`, `ast_sink_eop`, and `ast_sink_error` to their respective output signals.
+    - Set `ast_source_channel` to 0.
+  - When the condition (`ast_sink_valid` and `ast_source_ready` high) is not met, clear `ast_sink_ready`, `ast_source_valid`, `ast_source_sop`, and `ast_source_eop` to 0.
+
+This description ensures that the LLM has a clear and comprehensive understanding of the module's purpose, operation, control flow, and data interactions to generate accurate Verilog code.
+
+Module Interface:
+module fir_stream_passthrough (
+	clk,
+	reset_n,
+	ast_sink_data,
+	ast_sink_valid,
+	ast_source_ready,
+	ast_sink_sop,
+	ast_sink_eop,
+	ast_sink_error,
+	ast_source_data,
+	ast_sink_ready,
+	ast_source_valid,
+	ast_source_sop,
+	ast_source_eop,
+	ast_source_channel,
+	ast_source_error
+);
+
+Behavioral Clarifications:
+- All outputs are registered. The single always block triggers on `posedge clk or negedge reset_n` (asynchronous active-low reset).
+- When the transfer condition is not met, only `ast_sink_ready`, `ast_source_valid`, `ast_source_sop`, and `ast_source_eop` are cleared; `ast_source_data`, `ast_source_error`, and `ast_source_channel` retain their previous values.

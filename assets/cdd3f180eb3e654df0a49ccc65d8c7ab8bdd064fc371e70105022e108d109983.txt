@@ -1,0 +1,90 @@
+always @(posedge clk) begin
+    reg_wr_ack_reg <= 1'b0;
+    reg_rd_data_reg <= 0;
+    reg_rd_ack_reg <= 1'b0;
+
+    if (reg_wr_en && !reg_wr_ack_reg) begin
+        // write operation
+        reg_wr_ack_reg <= 1'b0;
+        for (k = 0; k < PORTS; k = k + 1) begin
+            if ({reg_wr_addr >> 2, 2'b00} == RBB+7'h14 + k*16) begin
+                hash_mask_reg[k] <= reg_wr_data;
+                reg_wr_ack_reg <= 1'b1;
+            end
+            if ({reg_wr_addr >> 2, 2'b00} == RBB+7'h18 + k*16) begin
+                app_mask_reg[k] <= reg_wr_data[30:0];
+                app_direct_en_reg[k] <= reg_wr_data[31];
+                reg_wr_ack_reg <= 1'b1;
+            end
+        end
+    end
+
+    if (reg_rd_en && !reg_rd_ack_reg) begin
+        // read operation
+        reg_rd_ack_reg <= 1'b1;
+        case ({reg_rd_addr >> 2, 2'b00})
+            RBB+7'h00: reg_rd_data_reg <= 32'h0000C090;  // Type
+            RBB+7'h04: reg_rd_data_reg <= 32'h00000200;  // Version
+            RBB+7'h08: reg_rd_data_reg <= RB_NEXT_PTR;   // Next header
+            RBB+7'h0C: begin
+                reg_rd_data_reg[7:0]  <= PORTS;
+                reg_rd_data_reg[15:8] <= INDIR_TBL_ADDR_WIDTH;
+            end
+            default: reg_rd_ack_reg <= 1'b0;
+        endcase
+        for (k = 0; k < PORTS; k = k + 1) begin
+            if ({reg_rd_addr >> 2, 2'b00} == RBB+7'h10 + k*16) begin
+                reg_rd_data_reg <= AXIL_BASE_ADDR + 2**(INDIR_TBL_ADDR_WIDTH+2)*k;
+                reg_rd_ack_reg <= 1'b1;
+            end
+            if ({reg_rd_addr >> 2, 2'b00} == RBB+7'h14 + k*16) begin
+                reg_rd_data_reg <= hash_mask_reg[k];
+                reg_rd_ack_reg <= 1'b1;
+            end
+            if ({reg_rd_addr >> 2, 2'b00} == RBB+7'h18 + k*16) begin
+                reg_rd_data_reg[30:0] <= app_mask_reg[k];
+                reg_rd_data_reg[31] <= app_direct_en_reg[k];
+                reg_rd_ack_reg <= 1'b1;
+            end
+        end
+    end
+
+    indir_tbl_index_reg[INDIR_TBL_ADDR_WIDTH-1:0] <= (req_dest & app_mask_reg[req_id]) + (req_hash & hash_mask_reg[req_id]);
+    if (PORTS > 1) begin
+        indir_tbl_index_reg[INDIR_TBL_ADDR_WIDTH +: CL_PORTS] <= req_id;
+    end
+    req_dest_d1_reg <= req_dest;
+    req_dest_d1_reg[DEST_WIDTH-1] <= req_dest[DEST_WIDTH-1] & app_direct_en_reg[req_id];
+    req_tag_d1_reg <= req_tag;
+    req_valid_d1_reg <= req_valid;
+
+    indir_tbl_queue_reg <= indir_tbl_mem[indir_tbl_index_reg];
+    req_dest_d2_reg <= req_dest_d1_reg;
+    req_tag_d2_reg <= req_tag_d1_reg;
+    req_valid_d2_reg <= req_valid_d1_reg;
+
+    if (req_dest_d2_reg[DEST_WIDTH-1]) begin
+        resp_queue_reg <= req_dest_d2_reg;
+    end else begin
+        resp_queue_reg <= indir_tbl_queue_reg;
+    end
+    resp_tag_reg <= req_tag_d2_reg;
+    resp_valid_reg <= req_valid_d2_reg;
+
+    if (rst) begin
+        reg_wr_ack_reg <= 1'b0;
+        reg_rd_ack_reg <= 1'b0;
+
+        app_direct_en_reg <= 0;
+        for (k = 0; k < PORTS; k = k + 1) begin
+            offset_reg[k] <= 0;
+            hash_mask_reg[k] <= 0;
+            app_mask_reg[k] <= 0;
+        end
+
+        req_valid_d1_reg <= 1'b0;
+        req_valid_d2_reg <= 1'b0;
+
+        resp_valid_reg <= 1'b0;
+    end
+end

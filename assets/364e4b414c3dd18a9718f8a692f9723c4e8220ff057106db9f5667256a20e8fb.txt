@@ -1,0 +1,90 @@
+module mg_07034 (clk,t1,seg7,scan);
+input clk; 
+  input [31:0]t1; 
+  output seg7; 
+  output scan; 
+  reg [4:0] data = 0; 
+  reg [3:0] scan ; 
+  reg [7:0] seg7 ; 
+  reg [1:0] cnt = 0; 
+  reg clk1khz = 0; 
+  reg [14:0] count1 = 0; 
+  always @ (posedge clk) 
+  begin 
+  if(count1==25000) 
+  begin 
+  clk1khz<=~clk1khz; 
+  count1<=0; 
+  end 
+  else 
+  begin 
+  count1<=count1+1; 
+  end 
+  end 
+  always @(posedge clk1khz) 
+  begin 
+  if(cnt == 3) 
+  begin cnt<=0;end 
+  else 
+  begin cnt<=cnt+1;end 
+  end 
+  always @ (cnt) 
+  begin 
+  case(cnt) 
+  2'b00: 
+  begin 
+  data[3:0] <= t1[3:0]; 
+  data[4] <= 0; 
+  scan[3:0] <= 4'b1110; 
+  end 
+  2'b01: 
+  begin 
+  data[3:0]<=t1[7:4]; 
+  data[4]<=0; 
+  scan[3:0]<=4'b1101; 
+  end 
+  2'b10: 
+  begin 
+  data[3:0]<=t1[11:8]; 
+  data[4]<=0; 
+  scan[3:0]<=4'b1011; 
+  end 
+  2'b11: 
+  begin 
+  data[3:0]<=t1[15:12]; 
+  data[4]<=0; 
+  scan[3:0]<=4'b0111; 
+  end 
+  default: 
+  begin 
+  data<=5'b0; 
+  scan<=4'b1111; 
+  end 
+  endcase 
+  end 
+  always @(data) 
+  begin 
+  if(data[4]) 
+  seg7[7:0]=8'b01111111; 
+  else 
+  case(data[3:0]) 
+  4'b0000:seg7[7:0]=8'b11000000; 
+  4'b0001:seg7[7:0]=8'b11111001; 
+  4'b0010:seg7[7:0]=8'b10100100; 
+  4'b0011:seg7[7:0]=8'b10110000; 
+  4'b0100:seg7[7:0]=8'b10011001; 
+  4'b0101:seg7[7:0]=8'b10010010; 
+  4'b0110:seg7[7:0]=8'b10000010; 
+  4'b0111:seg7[7:0]=8'b11111000; 
+  4'b1000:seg7[7:0]=8'b10000000; 
+  4'b1001:seg7[7:0]=8'b10010000; 
+  4'b1010:seg7[7:0]=8'b10001000; 
+  4'b1011:seg7[7:0]=8'b10000011; 
+  4'b1100:seg7[7:0]=8'b11000110; 
+  4'b1101:seg7[7:0]=8'b10100001; 
+  4'b1110:seg7[7:0]=8'b10000110; 
+  4'b1111:seg7[7:0]=8'b10001110; 
+  default:seg7[7:0]=8'b11111111; 
+  endcase 
+  end 
+ endmodule

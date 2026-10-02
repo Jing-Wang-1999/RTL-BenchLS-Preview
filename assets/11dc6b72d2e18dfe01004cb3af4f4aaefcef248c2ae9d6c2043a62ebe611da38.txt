@@ -1,0 +1,27 @@
+module __formal113_core_cdc15a3298c9c8db81d2 #(parameter DW = 1 ) // array width
+   (
+    input [DW-1:0]  d0,
+    input [DW-1:0]  d1,
+    input [DW-1:0]  d2,
+    input [DW-1:0]  s0,
+    input [DW-1:0]  s1,
+    output [DW-1:0] z
+    );
+   
+   assign z = ~((d0 & ~s0 & ~s1) |
+		(d1 & s0  & ~s1) |
+		(d2 & s1));
+   
+endmodule
+module oh_mxi3(
+  input wire [0:0] d0,
+  input wire [0:0] d1,
+  input wire [0:0] d2,
+  input wire [0:0] s0,
+  input wire [0:0] s1,
+  output wire [0:0] z
+);
+wire [0:0] __negative_output;
+__formal113_core_cdc15a3298c9c8db81d2 dut(.d0(d0), .d1(d1), .d2(d2), .s0(s0), .s1(s1), .z(__negative_output));
+assign z = __negative_output ^ 1'd1;
+endmodule

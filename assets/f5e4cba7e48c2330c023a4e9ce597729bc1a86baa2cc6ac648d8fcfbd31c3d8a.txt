@@ -1,0 +1,168 @@
+always @(posedge clk) begin
+    req_state_reg <= req_state_next;
+    read_state_reg <= read_state_next;
+    axi_state_reg <= axi_state_next;
+
+    req_axi_addr_reg <= req_axi_addr_next;
+    ram_sel_reg <= ram_sel_next;
+    ram_addr_reg <= ram_addr_next;
+    imm_reg <= imm_next;
+    imm_en_reg <= imm_en_next;
+    op_count_reg <= op_count_next;
+    zero_len_reg <= zero_len_next;
+    tr_count_reg <= tr_count_next;
+    tr_word_count_reg <= tr_word_count_next;
+    tag_reg <= tag_next;
+
+    read_axi_addr_reg <= read_axi_addr_next;
+    read_ram_sel_reg <= read_ram_sel_next;
+    read_ram_addr_reg <= read_ram_addr_next;
+    read_imm_en_reg <= read_imm_en_next;
+    read_len_reg <= read_len_next;
+    read_ram_mask_reg <= read_ram_mask_next;
+    read_ram_mask_0_reg <= read_ram_mask_0_next;
+    read_ram_mask_1_reg <= read_ram_mask_1_next;
+    ram_wrap_reg <= ram_wrap_next;
+    read_cycle_count_reg <= read_cycle_count_next;
+    read_last_cycle_reg <= read_last_cycle_next;
+    cycle_byte_count_reg <= cycle_byte_count_next;
+    start_offset_reg <= start_offset_next;
+    end_offset_reg <= end_offset_next;
+
+    axi_addr_reg <= axi_addr_next;
+    axi_imm_reg <= axi_imm_next;
+    axi_imm_en_reg <= axi_imm_en_next;
+    axi_len_reg <= axi_len_next;
+    axi_zero_len_reg <= axi_zero_len_next;
+    offset_reg <= offset_next;
+    strb_offset_mask_reg <= strb_offset_mask_next;
+    last_cycle_offset_reg <= last_cycle_offset_next;
+    ram_mask_reg <= ram_mask_next;
+    ram_mask_valid_reg <= ram_mask_valid_next;
+    cycle_count_reg <= cycle_count_next;
+    last_cycle_reg <= last_cycle_next;
+
+    read_cmd_axi_addr_reg <= read_cmd_axi_addr_next;
+    read_cmd_ram_sel_reg <= read_cmd_ram_sel_next;
+    read_cmd_ram_addr_reg <= read_cmd_ram_addr_next;
+    read_cmd_imm_en_reg <= read_cmd_imm_en_next;
+    read_cmd_len_reg <= read_cmd_len_next;
+    read_cmd_cycle_count_reg <= read_cmd_cycle_count_next;
+    read_cmd_last_cycle_reg <= read_cmd_last_cycle_next;
+    read_cmd_valid_reg <= read_cmd_valid_next;
+
+    m_axi_awid_reg <= m_axi_awid_next;
+    m_axi_awaddr_reg <= m_axi_awaddr_next;
+    m_axi_awlen_reg <= m_axi_awlen_next;
+    m_axi_awvalid_reg <= m_axi_awvalid_next;
+    m_axi_bready_reg <= m_axi_bready_next;
+
+    s_axis_write_desc_ready_reg <= s_axis_write_desc_ready_next;
+
+    m_axis_write_desc_status_tag_reg <= m_axis_write_desc_status_tag_next;
+    m_axis_write_desc_status_error_reg <= m_axis_write_desc_status_error_next;
+    m_axis_write_desc_status_valid_reg <= m_axis_write_desc_status_valid_next;
+
+    status_busy_reg <= active_op_count_reg != 0;
+
+    stat_wr_op_start_tag_reg <= stat_wr_op_start_tag_next;
+    stat_wr_op_start_len_reg <= stat_wr_op_start_len_next;
+    stat_wr_op_start_valid_reg <= stat_wr_op_start_valid_next;
+    stat_wr_op_finish_tag_reg <= stat_wr_op_finish_tag_next;
+    stat_wr_op_finish_status_reg <= stat_wr_op_finish_status_next;
+    stat_wr_op_finish_valid_reg <= stat_wr_op_finish_valid_next;
+    stat_wr_req_start_tag_reg <= stat_wr_req_start_tag_next;
+    stat_wr_req_start_len_reg <= stat_wr_req_start_len_next;
+    stat_wr_req_start_valid_reg <= stat_wr_req_start_valid_next;
+    stat_wr_req_finish_tag_reg <= stat_wr_req_finish_tag_next;
+    stat_wr_req_finish_status_reg <= stat_wr_req_finish_status_next;
+    stat_wr_req_finish_valid_reg <= stat_wr_req_finish_valid_next;
+    stat_wr_op_table_full_reg <= stat_wr_op_table_full_next;
+    stat_wr_tx_stall_reg <= stat_wr_tx_stall_next;
+
+    ram_rd_cmd_sel_reg <= ram_rd_cmd_sel_next;
+    ram_rd_cmd_addr_reg <= ram_rd_cmd_addr_next;
+    ram_rd_cmd_valid_reg <= ram_rd_cmd_valid_next;
+
+    active_op_count_reg <= active_op_count_reg + inc_active_op - dec_active_op;
+
+    if (mask_fifo_we) begin
+        mask_fifo_mask[mask_fifo_wr_ptr_reg[MASK_FIFO_ADDR_WIDTH-1:0]] <= mask_fifo_wr_mask;
+        mask_fifo_wr_ptr_reg <= mask_fifo_wr_ptr_reg + 1;
+    end
+    mask_fifo_rd_ptr_reg <= mask_fifo_rd_ptr_next;
+
+    if (op_table_start_en) begin
+        op_table_start_ptr_reg <= op_table_start_ptr_reg + 1;
+        op_table_active[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= 1'b1;
+        op_table_write_complete[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= 1'b0;
+        op_table_axi_addr[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= op_table_start_axi_addr;
+        op_table_imm[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= op_table_start_imm;
+        op_table_imm_en[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= op_table_start_imm_en;
+        op_table_len[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= op_table_start_len;
+        op_table_zero_len[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= op_table_start_zero_len;
+        op_table_cycle_count[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= op_table_start_cycle_count;
+        op_table_offset[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= op_table_start_offset;
+        op_table_tag[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= op_table_start_tag;
+        op_table_last[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] <= op_table_start_last;
+    end
+
+    if (op_table_tx_start_en) begin
+        op_table_tx_start_ptr_reg <= op_table_tx_start_ptr_reg + 1;
+    end
+
+    if (op_table_tx_finish_en) begin
+        op_table_tx_finish_ptr_reg <= op_table_tx_finish_ptr_reg + 1;
+    end
+
+    if (USE_AXI_ID && op_table_write_complete_en) begin
+        op_table_write_complete[op_table_write_complete_ptr] <= 1'b1;
+        op_table_error_code[op_table_write_complete_ptr] <= op_table_write_complete_error;
+    end
+
+    if (op_table_finish_en) begin
+        op_table_finish_ptr_reg <= op_table_finish_ptr_reg + 1;
+        op_table_active[op_table_finish_ptr_reg[OP_TAG_WIDTH-1:0]] <= 1'b0;
+    end
+
+    if (rst) begin
+        req_state_reg <= REQ_STATE_IDLE;
+        read_state_reg <= READ_STATE_IDLE;
+        axi_state_reg <= AXI_STATE_IDLE;
+
+        read_cmd_valid_reg <= 1'b0;
+
+        ram_mask_valid_reg <= 1'b0;
+
+        m_axi_awvalid_reg <= 1'b0;
+        m_axi_bready_reg <= 1'b0;
+
+        s_axis_write_desc_ready_reg <= 1'b0;
+        m_axis_write_desc_status_error_reg <= 4'd0;
+        m_axis_write_desc_status_valid_reg <= 1'b0;
+
+        status_busy_reg <= 1'b0;
+
+        stat_wr_op_start_tag_reg <= 0;
+        stat_wr_op_start_valid_reg <= 1'b0;
+        stat_wr_op_finish_tag_reg <= 0;
+        stat_wr_op_finish_valid_reg <= 1'b0;
+        stat_wr_req_start_valid_reg <= 1'b0;
+        stat_wr_req_finish_valid_reg <= 1'b0;
+        stat_wr_op_table_full_reg <= 1'b0;
+        stat_wr_tx_stall_reg <= 1'b0;
+
+        ram_rd_cmd_valid_reg <= {RAM_SEG_COUNT{1'b0}};
+
+        active_op_count_reg <= 0;
+
+        mask_fifo_wr_ptr_reg <= 0;
+        mask_fifo_rd_ptr_reg <= 0;
+
+        op_table_start_ptr_reg <= 0;
+        op_table_tx_start_ptr_reg <= 0;
+        op_table_tx_finish_ptr_reg <= 0;
+        op_table_finish_ptr_reg <= 0;
+        op_table_active <= 0;
+    end
+end

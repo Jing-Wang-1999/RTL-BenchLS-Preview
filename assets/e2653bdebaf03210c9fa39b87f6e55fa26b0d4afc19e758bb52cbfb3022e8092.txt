@@ -1,0 +1,27 @@
+# Floating-point division operand prenormalizer
+
+Implement `fpu_division_prenormalizer`. Inputs: clk_i, opa_i and opb_i, each
+operand FP_WIDTH bits. Outputs: exp_10_o (EXP_WIDTH+2 bits, registered),
+dvdnd_50_o (2*(FRAC_WIDTH+2) bits), dvsor_27_o (FRAC_WIDTH+4 bits).
+Parameters are FP_WIDTH=32, MUL_SERIAL=0, MUL_COUNT=11, FRAC_WIDTH=23,
+EXP_WIDTH=8, ZERO_VECTOR=31'd0, INF=31'b1111111100000000000000000000000,
+QNAN=31'b1111111110000000000000000000000,
+SNAN=31'b1111111100000000000000000000001. MUL_SERIAL, MUL_COUNT, ZERO_VECTOR, INF, QNAN and SNAN do not alter computation. Use default widths for evaluation.
+
+There is no reset or register initialization. Operand signs are ignored.
+Extract exponent bits 30:23 and fraction bits 22:0. Prepend a hidden one iff the
+exponent is nonzero, giving a 24-bit fraction. Count its leading zeros, including
+24 for all-zero fractions; left-shift by that count, retaining 24 bits.
+The combinational dividend is the normalized fraction of opa_i followed by
+26 zeros. The combinational divisor is three zeros followed by the normalized
+fraction of opb_i. No special infinity/NaN bypass is implemented.
+
+The exponent path has three register boundaries. On edge n, capture each current
+8-bit exponent plus one iff it is zero, in 10-bit registers A and B. On that
+SAME edge, intermediate D takes the PREVIOUS A minus PREVIOUS B plus 127 minus
+the CURRENT leading-zero count of opa_i plus the CURRENT count of opb_i.
+The public exponent output takes the PREVIOUS D. All arithmetic wraps modulo
+1024. Thus captured exponents affect the output on the third sampling edge,
+while the associated zero-count correction is taken on the second edge; the
+counts are not delayed alongside the input exponents. Do not describe this as
+a uniformly aligned two-cycle pipeline.

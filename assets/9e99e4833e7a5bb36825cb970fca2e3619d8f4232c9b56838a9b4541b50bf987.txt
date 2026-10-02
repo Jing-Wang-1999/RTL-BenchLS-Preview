@@ -1,0 +1,258 @@
+module autovcoder_053733 (
+    c0,
+    i_a,
+    i_b,
+    o_s,
+    o_carry
+);
+  input c0;
+  input [15:0] i_a;
+  input [15:0] i_b;
+  output [15:0] o_s;
+  output o_carry;
+
+  // Internal wires
+  wire FE_OCPN22712_adder_14_out_20;
+  wire FE_OCPN21769_adder_14_out_15;
+  wire FE_OCPN21722_adder_14_out_18;
+  wire FE_OCPN21684_adder_14_out_22;
+  wire FE_OCPN21236_adder_14_out_21;
+  wire FE_OCPN20731_adder_14_out_19;
+  wire FE_RN_1;
+  wire c1;
+  wire c2;
+  wire c3;
+  wire c4;
+  wire c6;
+  wire o_p_addn;
+  wire [15:0] p1;
+  wire [15:0] g1;
+  wire [14:0] p2;
+  wire [15:0] g2;
+  wire [15:0] ps1;
+  wire [12:0] p3;
+  wire [15:0] g3;
+  wire [15:0] ps2;
+  wire [8:0] p4;
+  wire [15:0] g4;
+  wire [15:0] ps3;
+  wire [15:0] p6;
+  wire [15:0] g6;
+
+  BUFX2 FE_OCPC22712_adder_14_out_20 (
+      .A(p6[8]),
+      .Y(FE_OCPN22712_adder_14_out_20)
+  );
+  BUFX2 FE_OCPC21769_adder_14_out_15 (
+      .A(p6[3]),
+      .Y(FE_OCPN21769_adder_14_out_15)
+  );
+  BUFX2 FE_OCPC21722_adder_14_out_18 (
+      .A(p6[6]),
+      .Y(FE_OCPN21722_adder_14_out_18)
+  );
+  BUFX2 FE_OCPC21684_adder_14_out_22 (
+      .A(p6[10]),
+      .Y(FE_OCPN21684_adder_14_out_22)
+  );
+  BUFX2 FE_OCPC21236_adder_14_out_21 (
+      .A(p6[9]),
+      .Y(FE_OCPN21236_adder_14_out_21)
+  );
+  BUFX2 FE_OCPC20731_adder_14_out_19 (
+      .A(p6[7]),
+      .Y(FE_OCPN20731_adder_14_out_19)
+  );
+  ks_1_16b_29 s1 (
+      .i_c0(c0),
+      .i_a(i_a),
+      .i_b(i_b),
+      .o_pk_1(p1),
+      .o_gk_1(g1),
+      .o_c0_1(c1)
+  );
+  ks_2_16b_29 s2 (
+      .i_c0(c1),
+      .i_pk({
+        p1[15],
+        p1[14],
+        p1[13],
+        i_a[12],
+        p1[11],
+        p1[10],
+        p1[9],
+        p1[8],
+        p1[7],
+        p1[6],
+        p1[5],
+        p1[4],
+        p1[3],
+        p1[2],
+        p1[1],
+        p1[0]
+      }),
+      .i_gk(g1),
+      .o_c0(c2),
+      .o_pk(p2),
+      .o_gk(g2),
+      .o_p_save({
+        ps1[15],
+        ps1[14],
+        ps1[13],
+        ps1[12],
+        ps1[11],
+        ps1[10],
+        ps1[9],
+        ps1[8],
+        ps1[7],
+        ps1[6],
+        ps1[5],
+        ps1[4],
+        ps1[3],
+        ps1[2],
+        ps1[1],
+        o_s[0]
+      })
+  );
+  ks_3_16b_29 s3 (
+      .i_c0(c2),
+      .i_pk(p2),
+      .i_gk({
+        g2[15],
+        g2[14],
+        g2[13],
+        g2[12],
+        g2[11],
+        g2[10],
+        g2[9],
+        g2[8],
+        g2[7],
+        g2[6],
+        g2[5],
+        g2[4],
+        g2[3],
+        g2[2],
+        g2[1],
+        g1[0]
+      }),
+      .i_p_save({
+        ps1[15],
+        ps1[14],
+        ps1[13],
+        ps1[12],
+        ps1[11],
+        ps1[10],
+        ps1[9],
+        ps1[8],
+        ps1[7],
+        ps1[6],
+        ps1[5],
+        ps1[4],
+        ps1[3],
+        ps1[2],
+        ps1[1],
+        o_s[0]
+      }),
+      .o_c0(c3),
+      .o_pk(p3),
+      .o_gk(g3),
+      .o_p_save(ps2)
+  );
+  ks_4_16b_29 s4 (
+      .i_c0(c3),
+      .i_pk(p3),
+      .i_gk(g3),
+      .i_p_save(ps2),
+      .o_c0(c4),
+      .o_pk(p4),
+      .o_gk(g4),
+      .o_p_save(ps3)
+  );
+  ks_5_16b_29 s5 (
+      .i_c0(c4),
+      .i_pk(p4),
+      .i_gk({
+        g4[15],
+        g4[14],
+        g4[13],
+        g4[12],
+        g4[11],
+        g4[10],
+        g4[9],
+        g4[8],
+        g4[7],
+        g4[6],
+        g4[5],
+        g4[4],
+        g4[3],
+        g4[2],
+        g3[1],
+        g3[0]
+      }),
+      .i_p_save(ps3),
+      .o_c0(c6),
+      .o_pk(p6),
+      .o_gk(g6),
+      .o_p_addn(o_p_addn)
+  );
+  ks_7_16b_29 s7 (
+      .i_c0(c6),
+      .i_pk({
+        p6[15],
+        p6[14],
+        p6[13],
+        ps1[12],
+        p6[11],
+        FE_OCPN21684_adder_14_out_22,
+        FE_OCPN21236_adder_14_out_21,
+        FE_OCPN22712_adder_14_out_20,
+        FE_OCPN20731_adder_14_out_19,
+        FE_OCPN21722_adder_14_out_18,
+        p6[5],
+        p6[4],
+        FE_OCPN21769_adder_14_out_15,
+        p6[2],
+        p6[1],
+        p6[0]
+      }),
+      .i_gk({
+        g6[15],
+        g6[14],
+        g6[13],
+        g6[12],
+        g6[11],
+        g6[10],
+        g6[9],
+        g6[8],
+        g4[7],
+        g6[6],
+        g6[5],
+        g6[4],
+        g6[3],
+        g6[2],
+        g3[1],
+        g3[0]
+      }),
+      .i_p_addn(o_p_addn),
+      .o_s({
+        o_s[15],
+        o_s[14],
+        o_s[13],
+        o_s[12],
+        o_s[11],
+        o_s[10],
+        o_s[9],
+        o_s[8],
+        o_s[7],
+        o_s[6],
+        o_s[5],
+        o_s[4],
+        o_s[3],
+        o_s[2],
+        o_s[1],
+        FE_RN_1
+      }),
+      .o_carry(o_carry)
+  );
+endmodule
+

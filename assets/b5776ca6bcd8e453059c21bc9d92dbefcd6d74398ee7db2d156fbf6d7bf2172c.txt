@@ -1,0 +1,48 @@
+{
+  "pr_url": "https://github.com/analogdevicesinc/hdl/pull/1460",
+  "issue_url": "https://github.com/analogdevicesinc/hdl/issues/916",
+  "repository": "analogdevicesinc/hdl",
+  "pr_number": 1460,
+  "issue_number": 916,
+  "verilog_files": [
+    "library/axi_ad9361/xilinx/axi_ad9361_lvds_if.v"
+  ],
+  "deletions": 14,
+  "additions": 4,
+  "patches": [
+    {
+      "filename": "library/axi_ad9361/xilinx/axi_ad9361_lvds_if.v",
+      "patch": "@@ -1,6 +1,6 @@\n // ***************************************************************************\n // ***************************************************************************\n-// Copyright (C) 2014-2023 Analog Devices, Inc. All rights reserved.\n+// Copyright (C) 2014-2024 Analog Devices, Inc. All rights reserved.\n //\n // In this HDL repository, there are many different and unique modules, consisting\n // of various HDL (Verilog or VHDL) components. The individual modules are\n@@ -166,6 +166,7 @@ module axi_ad9361_lvds_if #(\n   wire    [ 5:0]      rx_data_0_s;\n   wire    [ 1:0]      rx_frame_s;\n   wire                locked_s;\n+  wire                rx_error;\n \n   // drp interface signals\n \n@@ -214,16 +215,9 @@ module axi_ad9361_lvds_if #(\n   end\n \n   // frame check\n+  assign rx_error = ^rx_frame;\n \n   // delineation\n-  reg             rx_error_r1 = 'd0;\n-  reg             rx_error_r2 = 'd0;\n-\n-  always @(posedge l_clk) begin\n-    rx_error_r1 <= ~((rx_frame_s == 4'b1100) || (rx_frame_s == 4'b0011));\n-    rx_error_r2 <= ~((rx_frame_s == 4'b1111) || (rx_frame_s == 4'b1100) ||\n-                     (rx_frame_s == 4'b0000) || (rx_frame_s == 4'b0011));\n-  end\n \n   always @(posedge l_clk) begin\n       case ({rx_r1_mode, rx_frame_s, rx_frame})\n@@ -252,11 +246,7 @@ module axi_ad9361_lvds_if #(\n   // adc-status\n \n   always @(posedge l_clk) begin\n-    if (adc_r1_mode == 1'b1) begin\n-      adc_status_p <= ~rx_error_r1 & rx_locked;\n-    end else begin\n-      adc_status_p <= ~rx_error_r2 & rx_locked;\n-    end\n+    adc_status_p <= ~rx_error & rx_locked;\n   end\n \n   // transfer to common clock",
+      "additions": 4,
+      "deletions": 14,
+      "changes": 18
+    }
+  ],
+  "pr_info": {
+    "title": "axi_ad9361: Fixup LVDS RX_FRAME (#916)",
+    "body": "## PR Description\r\n\r\nThe rx_error_r* on the axi_ad9361/xilinx/axi_ad9361_lvds_if.v were not implemented properly.\r\nthe author intended it to be the inverse of all valid frames combinations {rx_frame, rx_frame_s} but only compared against rx_frame_s.\r\n\r\nChecking against all valid frames is also unnecessary, since checking for unequal DDR output values have the same practical effect.\r\nIt is also worth noting that at 2RX mode, a frame fulfills the 2 channels in 4 clock cycles, while  {rx_frame, rx_frame_s} looks back only 2 clock cycles.\r\n\r\n![image](https://github.com/user-attachments/assets/e853382e-7999-4fd6-80c8-1cb926c8f315)\r\nUG-570, p95\r\n\r\nThis commit changes rx_error to be a \"link stable signal\".\r\n\r\nRelevant information:\r\nAD9361:\r\noperates in DDR\r\nLinux/no-os drivers set (or leave default):\r\n *  reg 0x010 value 0xC8, bit 2 -> Rx Frame Pulse Mode : 50% duty cycle\r\n * reg 0x011 value 0x00, bit 2 -> Invert Rx Frame : don't invert\r\n\r\nAXI_AD9361:\r\n\r\nrx_r1_mode is [ADC_COMMON 0x0011[2] R1_MODE](https://github.com/analogdevicesinc/hdl/blob/main/docs/regmap/adi_regmap_adc.txt#L83-L88C8) with:\r\n* clear: 2 channels\r\n* set: 1 channel\r\n\r\nstatus is [ADC_COMMON 0x0017 [0] STATUS](https://github.com/analogdevicesinc/hdl/blob/main/docs/regmap/adi_regmap_adc.txt#L212-L252) with:\r\n* clear : error on intf\r\n\r\nAims to fix #916, but does not try to fix the frame skew/unequal ddr output observed in the issue author first screenshot, however, the prior logic may resolve into the error signal never asserting, entering runtime without properly aligning, somewhere around [ad9361_conv.c#ad9361_dig_tune_delay](https://github.com/analogdevicesinc/linux/blob/8077957e8f81d539f05a7a065a6b17a2477c4a89/drivers/iio/adc/ad9361_conv.c#L448-L507).\r\nAn unaligned frame results into the following Linux boot log message:\r\n```\r\nSAMPL CLK: 61440000 tuning: RX\r\n  0:1:2:3:4:5:6:7:8:9:a:b:c:d:e:f:\r\n0:# # # # # # # # # # # # # # # #\r\n1:# # # # # # # # # # # # # # # #\r\nad9361 spi0.0: ad9361_dig_tune_delay: Tuning RX FAILED!\r\n```\r\n\r\nTested on hardware in loopback with single channel, dual channel, single tone, dual tone, and BISPs.\r\nUpdates only the xilinx side, since the https://github.com/analogdevicesinc/hdl/commit/83d3bded6312449766385730ab07b3afde1adbfe only edited it, but the error logic could be added to intel also.\r\n\r\n## PR Type\r\n- [X] Bug fix (change that fixes an issue)\r\n- [ ] New feature (change that adds new functionality)\r\n- [ ] Breaking change (has dependencies in other repos or will cause CI to fail)\r\n\r\n## PR Checklist\r\n- [X] I have followed the code style guidelines\r\n- [ ] I have performed a self-review of changes\r\n- [ ] I have compiled all hdl projects and libraries affected by this PR\r\n- [ ] I have tested in hardware affected projects, at least on relevant boards\r\n- [ ] I have commented my code, at least hard-to-understand parts\r\n- [ ] I have signed off all commits from this PR\r\n- [ ] I have updated the documentation (wiki pages, ReadMe files, Copyright etc)\r\n- [ ] I have not introduced new Warnings/Critical Warnings on compilation\r\n- [ ] I have added new hdl testbenches or updated existing ones\r\n",
+    "state": "closed",
+    "created_at": "2024-09-17T20:53:43Z",
+    "updated_at": "2024-11-27T13:40:08Z",
+    "merged_at": "2024-11-27T13:40:06Z",
+    "user": "gastmaier"
+  },
+  "issue_info": {
+    "title": "[BUG] AD9361 Xilinx axi_ad9361_lvds_if",
+    "body": "Seems commit 83d3bded6312449766385730ab07b3afde1adbfe from years ago completely breaks RX on the AD9361. Prior commits of this file works perfectly for us, but the changes in this commit breaks it. When I look at the rx_frame signals in a logic analyze at runtime, the case statements for delineation can not possibly work. This is an RTL bug, tool and software versions should not matter here.\r\n\r\n![image](https://user-images.githubusercontent.com/12023194/162583698-b62ec540-e61e-4928-a7d0-96a94438bc29.png)\r\n\r\nUsed Software: No-OS\r\nTool version: Vivado 2019.1.3\r\nHDL Release version hdl_2019_r2\r\nSoftware Release version 2019_r2",
+    "labels": [
+      "bug"
+    ],
+    "state": "closed",
+    "created_at": "2022-04-09T16:56:07Z",
+    "updated_at": "2024-11-27T13:40:08Z"
+  },
+  "source_info": {
+    "source_file": "4.txt",
+    "line_number": 2
+  },
+  "task_id": "analogdevicesinc_hdl_1460_916",
+  "lec_status": "useful_pass",
+  "base_commit": "5acfc088ca0b1286f93dae07eb01ad8233e08859",
+  "head_commit": "471ac08544879a9163dcf3d30ea88036a2697aa2"
+}

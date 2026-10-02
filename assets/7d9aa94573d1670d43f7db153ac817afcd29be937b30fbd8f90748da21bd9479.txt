@@ -1,0 +1,54 @@
+module origen_121591(
+    input wire clk,
+    input wire [3:0] in0, in1, in2, in3,
+    output reg a, b, c, d, e, f, g, dp,
+    output reg [3:0] an
+);
+
+    parameter N = 18;
+    reg [N-1:0] count;
+    reg [3:0] digit_val;
+    reg [3:0] digit_en;
+    reg [6:0] sseg_LEDs;
+
+    always @(posedge clk)
+        count <= count + 1;
+
+    always @* begin
+        case(count[N-1:N-2])
+            2'b00: begin digit_val = in0; digit_en = 4'b1110; end
+            2'b01: begin digit_val = in1; digit_en = 4'b1101; end
+            2'b10: begin digit_val = in2; digit_en = 4'b1011; end
+            2'b11: begin digit_val = in3; digit_en = 4'b0111; end
+        endcase
+    end
+
+    always @* begin
+        case(digit_val)
+            4'h0: sseg_LEDs = 7'b1000000;
+            4'h1: sseg_LEDs = 7'b1111001;
+            4'h2: sseg_LEDs = 7'b0100100;
+            4'h3: sseg_LEDs = 7'b0110000;
+            4'h4: sseg_LEDs = 7'b0011001;
+            4'h5: sseg_LEDs = 7'b0010010;
+            4'h6: sseg_LEDs = 7'b0000010;
+            4'h7: sseg_LEDs = 7'b1111000;
+            4'h8: sseg_LEDs = 7'b0000000;
+            4'h9: sseg_LEDs = 7'b0010000;
+            4'ha: sseg_LEDs = 7'b0001000;
+            4'hb: sseg_LEDs = 7'b0000011;
+            4'hc: sseg_LEDs = 7'b1000110;
+            4'hd: sseg_LEDs = 7'b0100001;
+            4'he: sseg_LEDs = 7'b0000110;
+            4'hf: sseg_LEDs = 7'b0001110;
+            default: sseg_LEDs = 7'b1111111;
+        endcase
+    end
+
+    always @* begin
+        {a, b, c, d, e, f, g} = sseg_LEDs;
+        dp = 1'b1;
+        an = digit_en;
+    end
+
+endmodule

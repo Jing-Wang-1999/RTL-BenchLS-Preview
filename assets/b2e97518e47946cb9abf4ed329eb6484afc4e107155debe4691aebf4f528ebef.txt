@@ -1,0 +1,9 @@
+always @(posedge clk) begin
+    if (state == STATE_IDLE) begin
+      burst_count <= req_burst_count;
+    end else if (state == STATE_REWIND_ID) begin
+      burst_count <= cur_burst_length;
+    end else if (incr_id == 1'b1) begin
+      burst_count <= burst_count - 1'b1;
+    end
+  end

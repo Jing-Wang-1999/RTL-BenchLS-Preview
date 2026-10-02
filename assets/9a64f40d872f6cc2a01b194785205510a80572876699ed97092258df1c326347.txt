@@ -1,0 +1,55 @@
+{
+  "additions": 3,
+  "base_commit": "e1b39475bed1899fefffc3eebf1426d730d8c9c8",
+  "base_ref": "master",
+  "deletions": 3,
+  "head_commit": "3b8e97241287ed594f589ae3bcce5428be19aa3d",
+  "issue_info": {
+    "body": "https://github.com/openrisc/mor1kx/blob/master/rtl/verilog/mor1kx_dcache.v#L243\n\n``` verilog\nwire [TAG_WIDTH-1:0] check_way_tag [OPTION_DCACHE_WAYS-1:0];\n...\nassign check_way_tag[i] = tag_way_out[i][TAGMEM_WAY_WIDTH-1:0];\n```\n\nThough won't affect the design functionality, I suspect the assignment should read\n\n``` verilog\nassign check_way_tag[i] = tag_way_out[i][TAG_WIDTH-1:0];\n```\n",
+    "created_at": "2014-11-10T15:43:41Z",
+    "labels": [],
+    "state": "closed",
+    "title": "mor1kx_dcache.v check_way_tag bus size",
+    "updated_at": "2014-12-09T04:58:01Z"
+  },
+  "issue_number": 19,
+  "issue_url": "https://github.com/openrisc/mor1kx/issues/19",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 2,
+      "changes": 4,
+      "deletions": 2,
+      "filename": "rtl/verilog/mor1kx_dcache.v",
+      "patch": "@@ -240,7 +240,7 @@ module mor1kx_dcache\n \t assign way_din[i] = way_wr_dat;\n \n \t // compare stored tag with incoming tag and check valid bit\n-         assign check_way_tag[i] = tag_way_out[i][TAGMEM_WAY_WIDTH-1:0];\n+         assign check_way_tag[i] = tag_way_out[i][TAG_WIDTH-1:0];\n          assign check_way_match[i] = (check_way_tag[i] == tag_tag);\n          assign check_way_valid[i] = tag_way_out[i][TAGMEM_WAY_VALID];\n \n@@ -254,7 +254,7 @@ module mor1kx_dcache\n \t    // The same for the snoop tag memory\n             assign snoop_way_out[i] = snoop_dout[(i+1)*TAGMEM_WAY_WIDTH-1:i*TAGMEM_WAY_WIDTH];\n \n-\t    assign snoop_check_way_tag[i] = snoop_way_out[i][TAGMEM_WAY_WIDTH-1:0];\n+\t    assign snoop_check_way_tag[i] = snoop_way_out[i][TAG_WIDTH-1:0];\n \t    assign snoop_check_way_match[i] = (snoop_check_way_tag[i] == snoop_tag);\n \t    assign snoop_check_way_valid[i] = snoop_way_out[i][TAGMEM_WAY_VALID];\n "
+    },
+    {
+      "additions": 1,
+      "changes": 2,
+      "deletions": 1,
+      "filename": "rtl/verilog/mor1kx_icache.v",
+      "patch": "@@ -199,7 +199,7 @@ module mor1kx_icache\n \t assign way_din[i] = wrdat_i;\n \n \t // compare stored tag with incoming tag and check valid bit\n-         assign check_way_tag[i] = tag_way_out[i][TAGMEM_WAY_WIDTH-1:0];\n+         assign check_way_tag[i] = tag_way_out[i][TAG_WIDTH-1:0];\n          assign check_way_match[i] = (check_way_tag[i] == tag_tag);\n          assign check_way_valid[i] = tag_way_out[i][TAGMEM_WAY_VALID];\n "
+    }
+  ],
+  "pr_info": {
+    "body": "see #19 \n",
+    "created_at": "2014-11-12T11:49:37Z",
+    "merged_at": "2014-11-12T13:36:22Z",
+    "state": "closed",
+    "title": "fix part selects for check_way_tag in d/icaches",
+    "updated_at": "2014-11-12T13:36:22Z",
+    "user": "andrewray"
+  },
+  "pr_number": 21,
+  "pr_url": "https://github.com/openrisc/mor1kx/pull/21",
+  "repository": "openrisc/mor1kx",
+  "source_info": {
+    "line_number": 13,
+    "source_file": "10.txt"
+  },
+  "task_id": "openrisc_mor1kx_21_19",
+  "verilog_files": [
+    "rtl/verilog/mor1kx_dcache.v",
+    "rtl/verilog/mor1kx_icache.v"
+  ]
+}

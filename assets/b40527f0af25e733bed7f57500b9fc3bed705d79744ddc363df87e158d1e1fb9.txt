@@ -1,0 +1,76 @@
+module mg_04944 (
+    input clk1,
+    input clk2,
+    input reset1,
+    input reset2,
+    input set2,
+    output reg sync_out
+);
+
+    // clk2 domain registers
+    reg set2_q;      // Input latch in clk2 domain
+    reg set2_q2;     // First sync stage (clk2 to clk1)
+    reg clear2_q;    // First stage of feedback (clk1 to clk2)
+    reg clear2_q2;   // Second stage of feedback (clk1 to clk2)
+    
+    // clk1 domain registers
+    reg set1_q;      // Second sync stage (clk2 to clk1)
+    reg set1_q2;     // Third sync stage (clk2 to clk1)
+    
+    // clk2 domain logic
+    always @(posedge clk2 or posedge reset2) begin
+        if (reset2) begin
+            set2_q <= 1'b0;
+        end else begin
+            // Set the latch when set2 is asserted
+            if (set2) begin
+                set2_q <= 1'b1;
+            end
+            // Clear the latch when clear signal comes back from clk1 domain
+            else if (clear2_q2) begin
+                set2_q <= 1'b0;
+            end
+        end
+    end
+    
+    // First synchronization stage: set2_q from clk2 to clk1
+    always @(posedge clk2 or posedge reset2) begin
+        if (reset2) begin
+            set2_q2 <= 1'b0;
+        end else begin
+            set2_q2 <= set2_q;
+        end
+    end
+    
+    // clk1 domain logic - synchronization stages
+    always @(posedge clk1 or posedge reset1) begin
+        if (reset1) begin
+            set1_q <= 1'b0;
+            set1_q2 <= 1'b0;
+        end else begin
+            set1_q <= set2_q2;
+            set1_q2 <= set1_q;
+        end
+    end
+    
+    // Output in clk1 domain
+    always @(posedge clk1 or posedge reset1) begin
+        if (reset1) begin
+            sync_out <= 1'b0;
+        end else begin
+            sync_out <= set1_q2;
+        end
+    end
+    
+    // Feedback path: set1_q2 from clk1 to clk2 domain
+    always @(posedge clk2 or posedge reset2) begin
+        if (reset2) begin
+            clear2_q <= 1'b0;
+            clear2_q2 <= 1'b0;
+        end else begin
+            clear2_q <= set1_q2;
+            clear2_q2 <= clear2_q;
+        end
+    end
+
+endmodule

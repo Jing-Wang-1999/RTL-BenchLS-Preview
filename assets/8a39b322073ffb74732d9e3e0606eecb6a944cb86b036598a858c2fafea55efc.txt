@@ -1,0 +1,34 @@
+**Specification: origen_152018 Module**
+
+**Overview**
+This module implements a finite state machine (FSM) with a counter, generating a single-bit output based on input conditions and internal state transitions.
+
+**Inputs**
+- *clk*: System clock signal.
+- *reset*: Asynchronous active-high reset, forcing the module to its initial state.
+- *sw*: Control input, influencing state transitions when asserted.
+
+**Outputs**
+- *db*: Single-bit output, asserted high only when the FSM is in state `100` (binary).
+
+**Behavior**
+The module operates as an 8-state FSM with the following transitions:
+1. **Initial State (000)**: Waits for *sw* to be asserted. If *sw* is high, advances to state `001`; otherwise, remains in `000`.
+2. **Intermediate States (001, 010, 011)**: Sequentially advances through states `001`, `010`, and `011` if *sw* remains high. If *sw* deasserts, returns to `000`.
+3. **State 011**: Triggers a one-clock-cycle pulse (*m_tick*) and unconditionally transitions to `100`.
+4. **State 100**: Output *db* is asserted. Transitions to `101` unconditionally.
+5. **State 101**: Waits for *sw* to deassert. If *sw* remains high, stays in `101`; otherwise, advances to `110`.
+6. **State 110**: Waits for *sw* to be asserted. If *sw* is high, advances to `111`; otherwise, returns to `000`.
+7. **State 111**: Triggers *m_tick* and unconditionally returns to `000`.
+
+**Counter**
+- A 32-bit counter increments on each *m_tick* pulse.
+- Resets to 0 when reaching a configurable threshold (*N* = 100,000).
+- Operates synchronously with *clk*.
+
+**Sub-Modules**
+- No explicit sub-modules are allowed; the design is self-contained.
+
+**Timing**
+- All state transitions and counter updates occur on the rising edge of *clk*.
+- *reset* overrides all other operations.

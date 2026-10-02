@@ -1,0 +1,102 @@
+"""LPC host bridge with an independent pin-level peripheral driver."""
+import random
+from case_specs_uartbus import HEAD, END
+
+BUS=HEAD+'''reg [31:0] addr=0,di=0;wire [31:0] data;reg [3:0] sel=1;reg [1:0] tag=0;
+reg we=0,stb=0,cyc=0;wire ack,err,frame,oe;wire [3:0] ladout;reg [3:0] ladin=15;reg [2:0] channel=3;reg tc=1;
+wb_lpc_host dut(clk,~rst,addr,data,di,sel,tag,we,stb,cyc,ack,err,channel,tc,frame,ladin,ladout,oe);
+task host;input [3:0] nibble;input f;begin tick;if(ladout!==nibble || oe!==1 || frame!==f)$fatal(1,"LPC host nibble %h != %h frame %b",ladout,nibble,frame);end endtask
+task turnaround;begin host(15,0);tick;if(oe!==0)$fatal(1,"release LAD");end endtask
+task sync_ready;input integer waits;input fail;integer k;begin
+for(k=0;k<waits;k=k+1)begin @(negedge clk);ladin=k%2?6:5;tick;if(ack || err || oe)$fatal(1,"wait response");end
+@(negedge clk);ladin=fail?10:0;tick;if(oe)$fatal(1,"sync contention");end endtask
+task nibble_in;input [3:0] d;begin @(negedge clk);ladin=d;tick;if(oe)$fatal(1,"read contention");end endtask
+task retire;input fail;begin tick;if(ack!==1 || err!==fail)$fatal(1,"Wishbone completion");
+@(negedge clk);cyc=0;stb=0;tick;if(ack || err)$fatal(1,"retire pulse");repeat(3)tick;end endtask
+'''
+
+
+def transactions(tag, waits=0, error=False):
+    s=BUS+'initial begin reset;repeat(3)tick;\n';rng=random.Random(9060633+tag)
+    for n in range(24):
+        write=n%2==0;address=rng.getrandbits(32);value=rng.getrandbits(32)
+        length=[1,2,4][n%3] if tag in [2,3] else 1
+        # Reset between independent transactions so untouched read-data bytes
+        # are defined zero. Dedicated held-request checks exercise retirement.
+        s+=f"reset;@(negedge clk);tag={tag};we={int(write)};addr=32'h{address:x};di=32'h{value:x};sel={2**length-1};cyc=1;stb=1;tick;\n"
+        s+=f'host({14 if write else 13},1);\n' if tag==2 else 'host(0,1);\n'
+        if tag!=2:s+=f'host({(8 | (0 if write else 2)) if tag==3 else ((4 if tag==0 else 0)|(2 if write else 0))},0);\n'
+        if tag==3:s+='host(11,0);\n'
+        else:
+            for shift in range(28 if tag in [0,2] else 12,-1,-4):s+=f'host({(address>>shift)&15},0);\n'
+        if tag in [2,3]:
+            size_code={1:0,2:1,4:(2 if tag==2 else 3)}[length]
+            s+=f'host({size_code},0);\n'
+        if write:
+            chunks=length if tag==3 else 1
+            for chunk in range(chunks):
+                begin=2*chunk if tag==3 else 0;end=begin+2 if tag==3 else 2*length
+                for index in range(begin,end):s+=f'host({(value>>(4*index))&15},0);\n'
+                s+=f'turnaround;sync_ready({waits},{int(error)});\n'
+                if error or chunk==chunks-1:break
+                s+='tick;if(ack || err)$fatal(1,"early DMA completion");\n'
+        else:
+            s+='turnaround;\n'
+            for byte in range(length):
+                if byte==0 or tag==3:s+=f'sync_ready({waits},{int(error)});\n'
+                if error:break
+                for index in [2*byte,2*byte+1]:s+=f'nibble_in({(value>>(4*index))&15});\n'
+            if not error:s+=f"if(data!==32'h{value&((1<<(8*length))-1):x})$fatal(1,\"LPC read data %h\",data);\n"
+        s+=f'retire({int(error)});\n'
+    return s+END
+
+
+INSTRUCTION='''# Implement the Wishbone-to-LPC host bridge
+Read the original bridge project specification. Implement wb_lpc_host in the
+required file. This selects the HOST configuration: the peripheral bridge is
+another configuration of the same project and is not required here. The defines
+header is resolved privately; the declaration-only interface is self-contained.
+
+Clarifications for the pinned host:
+- nrst_i is active-low asynchronous. Reset clears ACK, ERR, frame, LAD output
+  enable and read-data buffer. Hold Wishbone address/data/tag/select/direction
+  and cyc/stb until completion. ACK is a pulse; a held request after completion
+  is retired without starting another LPC transaction until cyc/stb is released.
+- wbs_tga_i: memory=0, I/O=1, firmware=2, DMA=3. Memory and I/O transfer one
+  byte in low data bits. Firmware/DMA select 1/2/4 bytes with sel=1/3/F.
+  Other select values default to one byte. Untouched read-data bytes retain
+  previous values (reset zero); no byte-lane address shifting is performed.
+- lframe_o is ACTIVE HIGH for the START nibble despite physical LPC conventions.
+  lad_oe=1 drives lad_o, zero releases it. Non-firmware START is nibble0 then
+  cycle type: memory read/write=4/6, I/O=0/2, DMA Wishbone read/write=A/8.
+  Firmware START is D for read, E for write and omits the cycle-type nibble.
+- Addresses are sent MS nibble first: memory/firmware32 bits, I/O low16 bits.
+  Firmware high address nibble carries IDSEL. DMA sends {dma_tc_i,dma_chan_i}
+  instead of address. Firmware/DMA then send size: 1 byte=0, 2=1, 4=2 (firmware)
+  or 3 (DMA). Payload data is low nibble first within low byte first.
+- Host turnaround drives F for one cycle, then releases for one cycle. Sync
+  READY=0 or MORE=9 proceeds, ERROR=A terminates with ERR; other values wait.
+  Short/long waits are 5/6. Read data follows successful sync; writes precede
+  turnaround/sync. Firmware data bytes are contiguous. DMA writes repeat
+  data-byte/host-turnaround/sync/peripheral-turnaround per byte; DMA reads get
+  another sync between data bytes, without an extra host-turnaround.
+- The peripheral turnaround cycle after the final data/sync completes the bus
+  access. This release asserts ACK together with ERR on a sync error; preserve
+  that interface behavior. A completion then retires until Wishbone release.
+  Internal state encoding is unrestricted. Cycle-level LPC pin waveforms matter.
+
+Private points exercise I/O, memory, firmware and DMA directions/sizes, inserted
+wait states and explicit error termination. The complete host is one RTL module.
+'''
+
+
+def lpc_spec():
+    return dict(case_id='opencores_lpc_host_v1',project='communication_controller_wishbone_lpc_host_and_peripheral_bridge',
+        top='wb_lpc_host',configuration='lpc_host',preprocess=True,instruction=INSTRUCTION,builder_source=__file__,
+        tests=[('io','wb_lpc_host',transactions(1)),('memory','wb_lpc_host',transactions(0)),
+            ('firmware','wb_lpc_host',transactions(2)),('dma','wb_lpc_host',transactions(3)),
+            ('wait_states','wb_lpc_host',transactions(0,9)),('sync_error','wb_lpc_host',transactions(0,3,True))],
+        mutations=[('address_nibble','rtl/verilog/wb_lpc_host.v','lad_o <= wbs_adr_i[31:28]','lad_o <= wbs_adr_i[27:24]'),
+            ('tx_nibble','rtl/verilog/wb_lpc_host.v','lad_o <= wbs_dat_i[3:0]','lad_o <= wbs_dat_i[7:4]'),
+            ('rx_nibble','rtl/verilog/wb_lpc_host.v','lpc_dat_i[3:0] <= lad_i','lpc_dat_i[3:0] <= ~lad_i'),
+            ('dma_channel','rtl/verilog/wb_lpc_host.v','{dma_tc_i, dma_chan_i}','{~dma_tc_i, dma_chan_i}')])

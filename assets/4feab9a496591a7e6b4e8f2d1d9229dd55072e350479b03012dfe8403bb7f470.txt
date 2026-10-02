@@ -1,0 +1,22 @@
+always @ (posedge clk or posedge reset)
+begin 
+	if (reset)
+		rd_addr <= 4'b0;
+	else if (sb_valid[1] | i_data_valid) 
+	begin 
+		if (i_ende) 
+		begin 
+			if (i_data_valid)
+				rd_addr <= max_round[3:0];
+			else 
+				rd_addr <= max_round[3:0] - sb_round_cnt2[3:0];
+		end 
+		else 
+		begin 
+			if (i_data_valid) 
+				rd_addr <= 4'b0;
+			else 
+				rd_addr <= sb_round_cnt2[3:0];
+		end 
+	end 
+end

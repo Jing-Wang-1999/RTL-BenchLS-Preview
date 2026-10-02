@@ -1,0 +1,55 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/402",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/354",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 402,
+  "issue_number": 354,
+  "verilog_files": [
+    "rtl/cv32e40p_cs_registers.sv",
+    "rtl/include/cv32e40p_pkg.sv"
+  ],
+  "deletions": 4,
+  "additions": 12,
+  "patches": [
+    {
+      "filename": "rtl/cv32e40p_cs_registers.sv",
+      "patch": "@@ -349,9 +349,11 @@ if(PULP_SECURE==1) begin\n       // mhartid: unique hardware thread id\n       CSR_MHARTID: csr_rdata_int = hart_id_i;\n \n+      // mvendorid: Machine Vendor ID\n+      CSR_MVENDORID: csr_rdata_int = {MVENDORID_BANK, MVENDORID_OFFSET};\n+\n       // unimplemented, read 0 CSRs\n-      CSR_MVENDORID,\n-        CSR_MARCHID,\n+      CSR_MARCHID,\n         CSR_MIMPID,\n         CSR_MTVAL,\n         CSR_MCOUNTEREN :\n@@ -503,9 +505,11 @@ end else begin //PULP_SECURE == 0\n       // mhartid: unique hardware thread id\n       CSR_MHARTID: csr_rdata_int = hart_id_i;\n \n+      // mvendorid: Machine Vendor ID\n+      CSR_MVENDORID: csr_rdata_int = {MVENDORID_BANK, MVENDORID_OFFSET};\n+\n       // unimplemented, read 0 CSRs\n-      CSR_MVENDORID,\n-        CSR_MARCHID,\n+      CSR_MARCHID,\n         CSR_MIMPID,\n         CSR_MTVAL,\n         CSR_MCOUNTEREN :",
+      "additions": 8,
+      "deletions": 4,
+      "changes": 12
+    },
+    {
+      "filename": "rtl/include/cv32e40p_pkg.sv",
+      "patch": "@@ -411,6 +411,10 @@ typedef enum logic[1:0] {\n   PRIV_LVL_U = 2'b00\n } PrivLvl_t;\n \n+// Machine Vendor ID - OpenHW JEDEC ID is '2 decimal (bank 13)'\n+parameter MVENDORID_OFFSET = 7'h2;      // Final byte without parity bit\n+parameter MVENDORID_BANK = 25'hC;       // Number of continuation codes\n+\n ///////////////////////////////////////////////\n //   ___ ____    ____  _                     //\n //  |_ _|  _ \\  / ___|| |_ __ _  __ _  ___   //",
+      "additions": 4,
+      "deletions": 0,
+      "changes": 4
+    }
+  ],
+  "pr_info": {
+    "title": "Updated mvendorid with OpenHW JEDEC code",
+    "body": "Fix for #354 \r\n\r\nSigned-off-by: Arjan Bink <Arjan.Bink@silabs.com>",
+    "state": "closed",
+    "created_at": "2020-07-09T08:35:12Z",
+    "updated_at": "2020-07-14T10:35:52Z",
+    "merged_at": "2020-07-14T10:32:44Z",
+    "user": "Silabs-ArjanB"
+  },
+  "issue_info": {
+    "title": "Implement mvendorid",
+    "body": "The RISC-V ISA Privileged Architecture Specification v1.10 Section 3.1.2 Machine Vendor ID Register mvendorid should be implemented and reflect the OpenHW JEDEC ID (which has been applied for).",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2020-05-27T06:42:08Z",
+    "updated_at": "2020-07-14T10:36:29Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 116
+  },
+  "base_commit": "05b3361fb9d8cf9ace04a74e7c6145f439f2cf80",
+  "head_commit": "8a626b912ba5491c9fb384a4e498554ca579cae3",
+  "base_ref": "master",
+  "task_id": "openhwgroup_cv32e40p_402_354",
+  "lec_status": "useful_pass"
+}

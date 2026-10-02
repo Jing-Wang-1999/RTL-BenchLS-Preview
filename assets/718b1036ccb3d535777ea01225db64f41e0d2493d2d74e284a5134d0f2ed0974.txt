@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.60eeffb63419d74ed713.1e05eb262b7f",
+  "compile_check": {
+    "case_id": "s1derived.60eeffb63419d74ed713.1e05eb262b7f",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_10431",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10431.1a25c66c4ef9b6c8/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.60eeffb63419d74ed713",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "60eeffb63419d74ed7133fe3f6b59f7f5c44935f3eb0d84e84f786ca72743059",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.60eeffb63419d74ed713.1e05eb262b7f",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10431.1a25c66c4ef9b6c8/private/commercial_positive.log",
+    "commercial_log_sha256": "996919ee8cb1c9a7241bc06fdc51fbc6dbe8d2022e3824cde71f0df3f97ab1f1",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10431.1a25c66c4ef9b6c8/private/historical_harness/00_sec_mg_10431.tcl",
+    "executed_script_sha256": "5b98b41473e6e3b244c37a252da3e278a5dfdee3ed91c5d24207e0cd179a7008",
+    "golden_tops": [
+      "mg_10431"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.mg_10431.1a25c66c4ef9b6c8",
+    "parent_id": "s1p.60eeffb63419d74ed713",
+    "revised_tops": [
+      "mg_10431"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_10431",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.60eeffb63419d74ed713.1e05eb262b7f",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The8-bit unsigned comparisons, selected edge, initial zero and unused power controls match at default and described alternative settings.",
+        "rtl_excerpt": "wire clk_minv = (CLK_EDGE == \"RISING\") ? CLK : ~CLK;",
+        "specification_excerpt": "Both outputs initialize to zero"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.60eeffb63419d74ed713",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "0296bcf052a0496ef0bc29c991c7c8126c89c1cc761700a677de9455e8da36b3",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "60eeffb63419d74ed7133fe3f6b59f7f5c44935f3eb0d84e84f786ca72743059",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10431.1a25c66c4ef9b6c8/private/historical_harness/00_sec_mg_10431.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10431.1a25c66c4ef9b6c8/private/historical_harness/01_sec_mg_10431.tcl"
+  ],
+  "parent_id": "s1p.60eeffb63419d74ed713",
+  "primary_review": {
+    "case_id": "s1derived.60eeffb63419d74ed713.1e05eb262b7f",
+    "checks": {
+      "behavior": "Checked equality and both greater comparison modes.",
+      "boundaries": "Checked equality boundary and non-RISING edge selection.",
+      "interface": "Ports and parameter defaults match.",
+      "rtl_reasonableness": "Reasonable registered comparator.",
+      "sequential_and_reset": "Checked selected edge, initial values, and absence of reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The contract ends before resolving the configurable behavior.",
+        "rtl_excerpt": "if(GREATER_OR_EQUAL) GREATER <= (INP >= INN);",
+        "spec_excerpt": "either strictly greater-than or greater-than-"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose truncates before completing comparison modes, edge selection, initialization, and unused power-down behavior.",
+        "rtl_evidence": "parameter CLK_EDGE = \"RISING\"; parameter GREATER_OR_EQUAL = 1'b0",
+        "spec_evidence": "either strictly greater-than or greater-than-",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.60eeffb63419d74ed713",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.60eeffb63419d74ed713.1e05eb262b7f.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "60eeffb63419d74ed7133fe3f6b59f7f5c44935f3eb0d84e84f786ca72743059",
+    "source_group": "S5",
+    "specification_sha256": "1e05eb262b7f9e21f064ccc95922a07a60446eec0b7008b9c79327c4746146ac",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_05/s1derived.60eeffb63419d74ed713.1e05eb262b7f.md",
+  "qualified_specification_sha256": "0296bcf052a0496ef0bc29c991c7c8126c89c1cc761700a677de9455e8da36b3",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10431.1a25c66c4ef9b6c8/private/golden_design.v",
+  "rtl_sha256": "60eeffb63419d74ed7133fe3f6b59f7f5c44935f3eb0d84e84f786ca72743059",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_10431.1a25c66c4ef9b6c8/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "1e05eb262b7f9e21f064ccc95922a07a60446eec0b7008b9c79327c4746146ac",
+  "top_module": "mg_10431"
+}

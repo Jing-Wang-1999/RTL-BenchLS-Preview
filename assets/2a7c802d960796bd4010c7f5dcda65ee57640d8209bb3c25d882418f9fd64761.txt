@@ -1,0 +1,45 @@
+# Implement UART-to-bus
+Implement all six modules and required paths in output_contract.json. Read the
+original project PDF and text. This is an 8N1 UART command bridge, with 16-bit
+address and 8-bit data internal bus. Both text and binary protocols are required.
+Reset is active-high asynchronous. The integration top uses baud_freq=144 and
+baud_limit=2981, matching 115200 baud at a 40 MHz input clock. Other baud values
+are checked through the baud_gen and uart_top interfaces.
+
+Contract clarifications:
+- baud_gen maintains a 16-bit accumulator. Reset clears it and ce_16. At each
+  edge, if the old accumulator is at least baud_limit, subtract baud_limit and
+  assert ce_16; otherwise add baud_freq and clear ce_16. UART bits span 16 enables.
+- UART idle/stop is high, start is low, data is eight bits LSB first. tx_busy
+  covers the frame; accept new_tx_data only when idle, holding data at acceptance.
+  new_rx_data is a one-clock pulse on a received byte. Framing-error recovery
+  and overrun beyond the documented no-buffer flow are outside this case.
+- uart_parser defaults AW=8; the integration top instantiates AW=16. Text accepts
+  upper/lower command and hex characters, space/tab separators and CR/LF endings.
+  Read response is two UPPERCASE hex digits followed by CR LF; text writes have
+  no reply. The first non-hex separator after the address initiates the access;
+  normal commands terminate that address with CR/LF. Illegal-command recovery
+  beyond the PDF's framing rules is not assigned an extra behavior here.
+- Binary: 00 prefix, command, address high/low, length, then write data. Command
+  bits 5:4 choose NOP=00/read=01/write=10; bit 1 DISABLES increment; bit 0 requests
+  0x5A status. Length 0 means 256. NOP consists only of prefix and command. The
+  pinned implementation replies 0x5A to NOP regardless of bit 0 (PDF ambiguity).
+  Reads return raw bytes, then optional status; writes return only optional status.
+- Hold int_req until grant; issue a single-clock int_read/int_write per access.
+  Provide read data by the clock after the active read cycle. Do not send another
+  write byte until grant/access completes; no command FIFO is required. Parser
+  read responses wait for tx_busy to rise and fall before sending the next byte.
+  Address increments after each binary write, or after transmitting each binary
+  read byte except the last. Reset clears pending command/serial/bus state.
+
+Private points check the divider, TX, RX, parser protocols and real serial-to-bus
+transactions in both protocols, including delayed bus grants. Internal encodings
+are free. Public feedback is compilation only; create your own behavioral tests.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

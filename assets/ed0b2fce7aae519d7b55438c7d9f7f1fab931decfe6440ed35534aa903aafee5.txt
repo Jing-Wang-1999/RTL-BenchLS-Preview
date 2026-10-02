@@ -1,0 +1,41 @@
+The `gearbox_20_67` module is a digital hardware component designed to convert a stream of 20-bit input words into a stream of 67-bit output words. This module is particularly useful in applications where data needs to be restructured or reformatted from one bit-width to another, such as in communication systems or data processing pipelines.
+
+### Inputs:
+
+1. **clk**: This is the clock signal input. The module operates synchronously with the rising edge of this clock signal.
+   
+2. **arst**: This is an asynchronous reset input. When asserted, it resets the internal state of the module, initializing all registers and control signals to their default states.
+
+3. **din**: This is a 20-bit wide data input. The module continuously accepts new 20-bit data words from this input.
+
+4. **slip_to_frame**: This is a control signal input. When set to 1, it instructs the module to adjust the data processing to ensure that the output words are properly framed. This is useful in scenarios where data alignment is critical.
+
+### Outputs:
+
+1. **dout**: This is a 67-bit wide data output. It provides the restructured data words formed by combining multiple input words.
+
+2. **dout_valid**: This is a validity signal for the `dout` output. It indicates when the data on `dout` is valid and ready for use by downstream components.
+
+### Internal Operation:
+
+- **Data Storage and Buffering**: The module uses a 42-bit internal buffer to store incoming data. This buffer allows the module to accumulate enough bits to form a complete 67-bit output word.
+
+- **Bit Scheduling and Extraction**: The module uses a scheduling mechanism to determine how many bits to extract from the buffer to form each part of the output word. It extracts 22 bits for the high and middle parts and 23 bits for the low part of the 67-bit output.
+
+- **Control Logic**: The module includes control logic to manage the scheduling of bit extraction and to ensure that the output words are properly framed. The `schedule` register determines the sequence of operations, and the `top_ptr` register tracks the number of bits currently stored in the buffer.
+
+- **Framing Adjustment**: When `slip_to_frame` is active, the module checks the framing of the data and adjusts the scheduling to ensure that the output words are correctly aligned. This involves checking specific bits in the data to determine if a framing error has occurred and resetting the schedule if necessary.
+
+### Behavior:
+
+- On each clock cycle, the module accepts a new 20-bit word from `din` and appends it to the internal buffer.
+
+- The module checks if there are enough bits in the buffer to form a complete 67-bit word. If so, it extracts the necessary bits according to the current schedule and updates the output `dout`.
+
+- The `dout_valid` signal is asserted when a complete and valid 67-bit word is available on `dout`.
+
+- The module continuously cycles through its scheduling sequence, adjusting as needed based on the `slip_to_frame` signal and the framing of the data.
+
+- If a reset is triggered via `arst`, the module clears its internal state and prepares to start processing new data from a clean state.
+
+This module is designed to operate efficiently in environments where data needs to be reformatted from a smaller bit-width to a larger one, ensuring that the output is both valid and correctly framed according to the input control signals.

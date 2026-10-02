@@ -1,0 +1,35 @@
+always @ (posedge clk or negedge rstn)
+    if (~rstn) begin
+        state <= S_RX_IDLE;
+    end else begin
+        case (state)
+            S_RX_IDLE :
+                if (~ftdi_rxf_n & ~rx_almost_full)
+                    state <= S_RX_OE;
+                else
+                    state <= S_TX_IDLE;
+            
+            S_RX_OE :
+                state <= S_RX_EN;
+            
+            S_RX_EN :
+                if (ftdi_rxf_n | rx_almost_full)
+                    state <= S_RX_WAIT;
+            
+            S_RX_WAIT :
+                state <= S_RX_END;
+            
+            S_RX_END :                                    // check whether there's no more RX data (ftdi_rxf_n==1) in this state, 
+                state <= S_TX_IDLE;
+            
+            S_TX_EN :
+                if (ftdi_txe_n || ~tx_tvalid || (tx_tkeep != BE_ALL_ONE))
+                    state <= S_RX_IDLE;
+            
+            default : // S_TX_IDLE :
+                if (~ftdi_txe_n & tx_tvalid)
+                    state <= S_TX_EN;
+                else
+                    state <= S_RX_IDLE;
+        endcase
+    end

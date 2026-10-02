@@ -1,0 +1,38 @@
+module rtlpp_07184 (
+  input [9:0] address,
+  output reg [17:0] instruction,
+  input clk,
+  input [17:0] mem_port_data,
+  input mem_port_wr,
+  input [9:0] mem_port_addr,
+  input mem_wr_clk
+);
+
+  reg [17:0] mem [0:1023];
+
+  // Initializing the memory with the contents from the INIT params.
+  initial begin
+    mem[0] = 18'h01BD6F;
+    mem[1] = 18'h019C1D;
+    mem[2] = 18'h184017;
+    mem[3] = 18'h301510;
+    mem[4] = 18'h01A002;
+    mem[5] = 18'h040404;
+    mem[6] = 18'h000010;
+    mem[7] = 18'h0004C7;
+    mem[8] = 18'h007C1D;
+    // ...similar initialization for other locations based on the INIT parameters
+    // Continue this initialization sequence for all the locations specified in the INIT parameters.
+  end
+
+  always @(posedge clk) begin
+    instruction <= mem[address];
+  end
+
+  always @(posedge mem_wr_clk) begin
+    if (mem_port_wr == 1'b1) begin
+      mem[mem_port_addr] <= mem_port_data;
+    end
+  end
+
+endmodule

@@ -1,0 +1,14 @@
+module mg_09449(input clk,input re,input we,input [29:0] addr,output reg [31:0] rdata,input [31:0] wdata);
+reg [31:0] mem [0:4096]; 
+ initial begin 
+  $readmemh("../test/test2.asm.hex", mem); 
+ end 
+ always @(posedge clk) begin 
+  if (re) 
+  rdata <= mem[addr]; 
+  else 
+  rdata <= 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; 
+  if (we) 
+  mem[addr] <= wdata; 
+ end 
+ endmodule

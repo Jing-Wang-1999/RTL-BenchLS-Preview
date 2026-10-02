@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.f77d56931a4f95780670.e9c3712e5a89",
+  "compile_check": {
+    "case_id": "s1derived.f77d56931a4f95780670.e9c3712e5a89",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_098224",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_098224.569a10cff07c7248/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.f77d56931a4f95780670",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "f77d56931a4f95780670845ee08f2deb641107ceeaeda9188d56df2798569325",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.f77d56931a4f95780670.e9c3712e5a89",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_098224.569a10cff07c7248/private/commercial_positive.log",
+    "commercial_log_sha256": "82aa490d3edb63c6df61a610ee98ef82d39fff74a0ab7c4188280f60ba9ede58",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_098224.569a10cff07c7248/private/historical_harness/00_sec_origen_098224.tcl",
+    "executed_script_sha256": "82d70ed4cd0f939a64e48ca7e559667a554c8b0f32e73718c8bf8c08b3e2d890",
+    "golden_tops": [
+      "origen_098224"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.origen_098224.569a10cff07c7248",
+    "parent_id": "s1p.f77d56931a4f95780670",
+    "revised_tops": [
+      "origen_098224"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_098224",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.f77d56931a4f95780670.e9c3712e5a89",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Input staging, maximum count12391 within14 bits, reload priority and old-zero PWM clear match. The write applies one edge after its input sample.",
+        "rtl_excerpt": "assign num_ticks = {3'b0, SPEED_ff} * 3 + 14'h186A;",
+        "specification_excerpt": "clears one edge after the counter first becomes zero"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.f77d56931a4f95780670",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "7f2e01e83d32e44b5f5dd27b822097ecdf009fe6be82445a56e2324e02ee4806",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "f77d56931a4f95780670845ee08f2deb641107ceeaeda9188d56df2798569325",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_098224.569a10cff07c7248/private/historical_harness/00_sec_origen_098224.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_098224.569a10cff07c7248/private/historical_harness/01_sec_origen_098224.tcl"
+  ],
+  "parent_id": "s1p.f77d56931a4f95780670",
+  "primary_review": {
+    "case_id": "s1derived.f77d56931a4f95780670.e9c3712e5a89",
+    "checks": {
+      "behavior": "The pulse duration and delayed write timing are truncated.",
+      "boundaries": "Repair covers delayed flags, FIFO full, pulse length, and priority.",
+      "interface": "Repair supplies full interface and defaults.",
+      "rtl_reasonableness": "Circuit is coherent hardware.",
+      "sequential_and_reset": "Repair states pre-edge timing, reset, hold, and latency."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The pulse duration and delayed write timing are truncated.",
+        "rtl_excerpt": "wrt_ff delays load/set one edge; PWM clears on an edge seeing pre-edge q1==0, one edge after q1 reaches zero.",
+        "spec_excerpt": "It ends while describing countdown to zero."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The pulse duration and delayed write timing are truncated.",
+        "rtl_evidence": "wrt_ff delays load/set one edge; PWM clears on an edge seeing pre-edge q1==0, one edge after q1 reaches zero.",
+        "spec_evidence": "It ends while describing countdown to zero.",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.f77d56931a4f95780670",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_10/s1derived.f77d56931a4f95780670.e9c3712e5a89.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "f77d56931a4f95780670845ee08f2deb641107ceeaeda9188d56df2798569325",
+    "source_group": "S2",
+    "specification_sha256": "e9c3712e5a893e9a24d187091583065599b61fad155bd219dc06d314d23d18ff",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_10/s1derived.f77d56931a4f95780670.e9c3712e5a89.md",
+  "qualified_specification_sha256": "7f2e01e83d32e44b5f5dd27b822097ecdf009fe6be82445a56e2324e02ee4806",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_098224.569a10cff07c7248/private/golden_design.v",
+  "rtl_sha256": "f77d56931a4f95780670845ee08f2deb641107ceeaeda9188d56df2798569325",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.origen_098224.569a10cff07c7248/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "e9c3712e5a893e9a24d187091583065599b61fad155bd219dc06d314d23d18ff",
+  "top_module": "origen_098224"
+}

@@ -1,0 +1,34 @@
+**Module Specification: Keypad Debouncer and Decoder**
+
+**Overview**
+This module processes raw keypad inputs to produce stable, debounced key values with a synchronized flag. It is designed to interface with a 2-bit keypad matrix, removing contact bounce and providing clean outputs.
+
+**Interface**
+- **Clock and Reset**: Synchronous active-low reset (rst_n) and positive-edge clock (clk).
+- **Inputs**: 
+  - key_data[1:0]: Raw 2-bit keypad state (active-low encoding).
+- **Outputs**:
+  - key_flag: Single-cycle pulse indicating a new valid key press.
+  - key_value[1:0]: Debounced and inverted key code (active-high).
+
+**Functional Behavior**
+1. **Input Synchronization**: The raw key_data is registered on the clock edge to prevent metastability.
+
+2. **Debounce Logic**: 
+   - A 20-bit counter increments while the synchronized key input remains active (not 2'b11).
+   - The counter resets when keys are released (key_data_r == 2'b11).
+   - A key press is considered stable after 1,000,000 clock cycles of continuous assertion.
+
+3. **Output Generation**:
+   - key_trigger asserts for one cycle when the debounce counter reaches 999,999.
+   - key_value captures the inverted synchronized key data (~key_data_r) upon trigger.
+   - key_flag is a direct copy of key_trigger, signaling valid data.
+
+**Key Characteristics**
+- Active-low key encoding: keys press drive inputs low.
+- Output conversion: key_value presents active-high codes.
+- Debounce duration: Fixed at 1 million clock cycles.
+- Glitch-free operation through synchronous design.
+
+**Allowed Submodules**
+Only standard flip-flops and counters may be used. No complex external IP required.

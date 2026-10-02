@@ -1,0 +1,119 @@
+module autovcoder_090903 (
+    input  [31:0] in_data_0,
+    input  [31:0] in_data_1,
+    input  [31:0] in_data_2,
+    input  [31:0] in_data_3,
+    input  [31:0] in_data_4,
+    input  [31:0] in_data_5,
+    input  [31:0] in_data_6,
+    input  [31:0] in_data_7,
+    input  [ 2:0] in_sel,
+    output [31:0] out
+);
+
+
+  // Instancing generated Module: coreir.mux(width:32)
+  wire [31:0] _join__in0;
+  wire [31:0] _join__in1;
+  wire [31:0] _join__out;
+  wire _join__sel;
+  coreir_mux #(
+      .width(32)
+  ) _join (
+      .in0(_join__in0),
+      .in1(_join__in1),
+      .out(_join__out),
+      .sel(_join__sel)
+  );
+
+  // Instancing generated Module: commonlib.muxn(N:4, width:32)
+  wire [31:0] muxN_0__in_data_0;
+  wire [31:0] muxN_0__in_data_1;
+  wire [31:0] muxN_0__in_data_2;
+  wire [31:0] muxN_0__in_data_3;
+  wire [ 1:0] muxN_0__in_sel;
+  wire [31:0] muxN_0__out;
+  commonlib_muxn__N4__width32 muxN_0 (
+      .in_data_0(muxN_0__in_data_0),
+      .in_data_1(muxN_0__in_data_1),
+      .in_data_2(muxN_0__in_data_2),
+      .in_data_3(muxN_0__in_data_3),
+      .in_sel(muxN_0__in_sel),
+      .out(muxN_0__out)
+  );
+
+  // Instancing generated Module: commonlib.muxn(N:4, width:32)
+  wire [31:0] muxN_1__in_data_0;
+  wire [31:0] muxN_1__in_data_1;
+  wire [31:0] muxN_1__in_data_2;
+  wire [31:0] muxN_1__in_data_3;
+  wire [ 1:0] muxN_1__in_sel;
+  wire [31:0] muxN_1__out;
+  commonlib_muxn__N4__width32 muxN_1 (
+      .in_data_0(muxN_1__in_data_0),
+      .in_data_1(muxN_1__in_data_1),
+      .in_data_2(muxN_1__in_data_2),
+      .in_data_3(muxN_1__in_data_3),
+      .in_sel(muxN_1__in_sel),
+      .out(muxN_1__out)
+  );
+
+  // Instancing generated Module: coreir.slice(hi:2, lo:0, width:3)
+  wire [2:0] sel_slice0__in;
+  wire [1:0] sel_slice0__out;
+  coreir_slice #(
+      .hi(2),
+      .lo(0),
+      .width(3)
+  ) sel_slice0 (
+      .in (sel_slice0__in),
+      .out(sel_slice0__out)
+  );
+
+  // Instancing generated Module: coreir.slice(hi:2, lo:0, width:3)
+  wire [2:0] sel_slice1__in;
+  wire [1:0] sel_slice1__out;
+  coreir_slice #(
+      .hi(2),
+      .lo(0),
+      .width(3)
+  ) sel_slice1 (
+      .in (sel_slice1__in),
+      .out(sel_slice1__out)
+  );
+
+  assign _join__in0[31:0] = muxN_0__out[31:0];
+
+  assign _join__in1[31:0] = muxN_1__out[31:0];
+
+  assign out[31:0] = _join__out[31:0];
+
+  assign _join__sel = in_sel[2];
+
+  assign muxN_0__in_data_0[31:0] = in_data_0[31:0];
+
+  assign muxN_0__in_data_1[31:0] = in_data_1[31:0];
+
+  assign muxN_0__in_data_2[31:0] = in_data_2[31:0];
+
+  assign muxN_0__in_data_3[31:0] = in_data_3[31:0];
+
+  assign muxN_0__in_sel[1:0] = sel_slice0__out[1:0];
+
+  assign muxN_1__in_data_0[31:0] = in_data_4[31:0];
+
+  assign muxN_1__in_data_1[31:0] = in_data_5[31:0];
+
+  assign muxN_1__in_data_2[31:0] = in_data_6[31:0];
+
+  assign muxN_1__in_data_3[31:0] = in_data_7[31:0];
+
+  assign muxN_1__in_sel[1:0] = sel_slice1__out[1:0];
+
+  assign sel_slice0__in[2:0] = in_sel[2:0];
+
+  assign sel_slice1__in[2:0] = in_sel[2:0];
+
+
+endmodule
+

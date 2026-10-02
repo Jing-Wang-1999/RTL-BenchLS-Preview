@@ -1,0 +1,24 @@
+module autovcoder_061925 (
+    input wire clock,
+    input wire [54:0] io_d,
+    output reg [54:0] io_q
+);
+
+    reg [54:0] sync_0;
+
+    // Random initialization for simulation purposes
+    initial begin
+        `ifdef RANDOMIZE
+            sync_0 = $random;
+        `endif
+    end
+
+    always @(posedge clock) begin
+        sync_0 <= io_d;
+    end
+
+    always @(*) begin
+        io_q = sync_0;
+    end
+
+endmodule

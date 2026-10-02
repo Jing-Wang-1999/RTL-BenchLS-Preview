@@ -1,0 +1,17 @@
+always @ (posedge clk or negedge rst_n) begin
+	if (!rst_n) begin
+		mcause_irq <= 1'b0;
+		mcause_code <= 4'h0;
+	end else if (!CSR_M_TRAP) begin
+		// Explicit tie-off when unimplemented
+		mcause_irq <= 1'b0;
+		mcause_code <= 4'h0;
+	end else begin
+		if (trapreg_update_enter) begin
+			mcause_irq <= mcause_irq_next;
+			mcause_code <= mcause_code_next;
+		end else if (wen_m_mode && addr == MCAUSE) begin
+			{mcause_irq, mcause_code} <= {wdata_update[31], wdata_update[3:0]};
+		end
+	end
+end

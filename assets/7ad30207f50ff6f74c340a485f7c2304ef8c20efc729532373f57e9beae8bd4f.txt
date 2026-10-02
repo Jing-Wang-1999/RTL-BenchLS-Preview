@@ -1,0 +1,23 @@
+**Specification for Module: origen_183750**
+
+**Overview**
+This module implements a 5-to-32 decoder. It takes a 5-bit input and activates exactly one corresponding output line, setting it high while all other outputs remain low.
+
+**Interface**
+- **Input:** `in` – a 5-bit unsigned input signal. Bits are labeled from `in[0]` (least significant) to `in[4]` (most significant).
+- **Output:** `out` – a 32-bit unsigned output signal. Each bit `out[0]` through `out[31]` corresponds to one decoded value of the input.
+
+**Function**
+The decoder interprets the 5-bit input `in` as an unsigned integer. The output bit whose index matches this integer is set to logic high (1). All other output bits are set to logic low (0). For example:
+- If `in` is 0 (`00000` in binary), then `out[0]` is 1 and `out[1]` through `out[31]` are 0.
+- If `in` is 17 (`10001` in binary), then `out[17]` is 1 and all other outputs are 0.
+- This pattern continues for all input values from 0 to 31.
+
+**Internal Logic (Conceptual)**
+The function is implemented by generating the logical AND of the appropriate true or complemented forms of each input bit for every output. Each output is driven by a dedicated combinational logic gate (or equivalent structure) that checks for the exact binary pattern corresponding to its index.
+
+**Allowed Sub-modules**
+Only primitive combinational logic gates (AND, NOT) may be used. No sequential elements (flip-flops, latches), memories, or arithmetic operators are permitted. The implementation must be purely combinational with no internal state.
+
+**Timing**
+The output `out` is a combinatorial function of the input `in`. Changes on `in` propagate to `out` after the gate delays through the decoding logic.

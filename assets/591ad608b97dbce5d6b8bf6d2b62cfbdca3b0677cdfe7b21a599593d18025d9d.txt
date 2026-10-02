@@ -1,0 +1,49 @@
+module autovcoder_140722 (
+    input [3:0] key,      // 4-bit key
+    input [7:0] value,    // 8-bit value
+    input insert,         // signal to insert into the hash table
+    input retrieve,       // signal to retrieve from the hash table
+    output reg [7:0] out_value, // output value for retrieved key
+    output reg found       // indicates if the key was found
+);
+
+    // Define a table with 10 slots, each holding a linked list of (key, value) pairs
+    reg [3:0] keys[9:0][3:0];   // Each slot can hold up to 4 keys for separate chaining
+    reg [7:0] values[9:0][3:0]; // Corresponding values
+    reg [3:0] count[9:0];       // Count of current entries in each slot
+
+    integer i, j;
+
+    initial begin
+        for (i = 0; i < 10; i = i + 1) begin
+            count[i] = 0; // Initialize counts
+        end
+    end
+
+    always @(*) begin
+        found = 0; // Default: key not found
+        out_value = 8'b0; // Default output value
+        if (insert) begin
+            // Compute hash index
+            i = key % 10;
+            // Insert the key-value pair
+            j = count[i];
+            if (j < 4) begin // Check if space is available for chaining
+                keys[i][j] = key;
+                values[i][j] = value;
+                count[i] = count[i] + 1;
+            end
+        end else if (retrieve) begin
+            // Compute hash index
+            i = key % 10;
+            // Search for the key in the slot
+            for (j = 0; j < count[i]; j = j + 1) begin
+                if (keys[i][j] == key) begin
+                    out_value = values[i][j];
+                    found = 1; // Key found
+                end
+            end
+        end
+    end
+
+endmodule

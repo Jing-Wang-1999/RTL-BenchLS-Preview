@@ -1,0 +1,49 @@
+always @(posedge clk) begin
+		mem_portA_wen <= 0;
+		mem_portA_wdata <= in_axis_tdata;
+		mem_portA_addr <= mem_start;
+
+		if (request_remove_line && mem_start != mem_stop) begin
+			mem_portA_addr <= next_mem_start;
+			mem_start <= next_mem_start;
+			remove_line <= 1;
+		end
+
+		if (!resetn) begin
+			remove_line <= 0;
+			mem_start <= 0;
+			mem_stop <= 0;
+		end else begin
+			if (remove_line) begin
+				if (mem_portA_rdata == "\n" || mem_start == mem_stop) begin
+					remove_line <= 0;
+				end else begin
+					mem_portA_addr <= next_mem_start;
+					mem_start <= next_mem_start;
+				end
+			end else
+			if (next_mem_stop == mem_start) begin
+				if (mem_portA_addr == mem_start) begin
+					mem_portA_addr <= next_mem_start;
+					mem_start <= next_mem_start;
+					remove_line <= 1;
+				end
+			end else
+			if (in_axis_tvalid && in_axis_tready) begin
+				if (in_axis_tdata >= 32 || in_axis_tdata == "\n") begin
+					mem_stop <= next_mem_stop;
+					mem_portA_addr <= mem_stop;
+					mem_portA_wen <= 1;
+				end else
+				if (in_axis_tdata == 4) begin
+					// EOT clears the screen
+					mem_stop <= mem_start;
+				end else
+				if (in_axis_tdata == 8) begin
+					// BS removes the last char
+					if (mem_stop != mem_start)
+						mem_stop <= mem_stop == 0 ? MEM_DEPTH-1 : mem_stop-1;
+				end
+			end
+		end
+	end

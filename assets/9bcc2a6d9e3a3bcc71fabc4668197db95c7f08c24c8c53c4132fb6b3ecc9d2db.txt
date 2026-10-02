@@ -1,0 +1,143 @@
+module fpga_pong_game(
+    input clk,              
+    input reset,            
+    input [1:0] btn,        
+    output hsync,           
+    output vsync,           
+    output [11:0] rgb       
+    );
+
+    parameter newgame = 2'b00;
+    parameter play    = 2'b01;
+    parameter newball = 2'b10;
+    parameter over    = 2'b11;
+
+    reg [1:0] state_reg, state_next;
+    wire [9:0] w_x, w_y;
+    wire w_vid_on, w_p_tick, graph_on, hit, miss;
+    wire [3:0] text_on;
+    wire [11:0] graph_rgb, text_rgb;
+    reg [11:0] rgb_reg, rgb_next;
+    wire [3:0] dig0, dig1;
+    reg gra_still, d_inc, d_clr, timer_start;
+    wire timer_tick, timer_up;
+    reg [1:0] ball_reg, ball_next;
+
+    // VGA Controller (embedded)
+    reg [9:0] h_count_reg, h_count_next;
+    reg [9:0] v_count_reg, v_count_next;
+    wire h_end, v_end, visible_area;
+
+    assign h_end = (h_count_reg == 799);
+    assign v_end = (v_count_reg == 524);
+    assign visible_area = (h_count_reg < 640) && (v_count_reg < 480);
+    assign w_x = h_count_reg;
+    assign w_y = v_count_reg;
+    assign w_p_tick = (h_count_reg < 640) && (v_count_reg < 480);
+    assign w_vid_on = visible_area;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            h_count_reg <= 0;
+            v_count_reg <= 0;
+        end else begin
+            h_count_reg <= h_count_next;
+            v_count_reg <= v_count_next;
+        end
+    end
+
+    always @* begin
+        if (h_end)
+            h_count_next = 0;
+        else
+            h_count_next = h_count_reg + 1;
+
+        if (h_end) begin
+            if (v_end)
+                v_count_next = 0;
+            else
+                v_count_next = v_count_reg + 1;
+        end else
+            v_count_next = v_count_reg;
+    end
+
+    assign hsync = ~((h_count_reg >= 656) && (h_count_reg < 752));
+    assign vsync = ~((v_count_reg >= 490) && (v_count_reg < 492));
+
+    // Embedded pong_text logic (simplified)
+    assign text_rgb = 12'hF00;
+
+    // Embedded pong_graph logic (simplified)
+    assign hit = 0;
+    assign miss = 0;
+    assign graph_on = 0;
+    assign graph_rgb = 12'h0F0;
+
+    // Embedded timer logic
+    reg [19:0] timer_reg;
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            timer_reg <= 0;
+        else if (timer_start)
+            timer_reg <= 0;
+        else if (timer_tick)
+            timer_reg <= timer_reg + 1;
+    end
+    assign timer_up = (timer_reg == 1048575);
+
+    // Embedded m100_counter logic
+    reg [3:0] count0, count1;
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            count0 <= 0;
+            count1 <= 0;
+        end else if (d_clr) begin
+            count0 <= 0;
+            count1 <= 0;
+        end else if (d_inc) begin
+            if (count0 == 9) begin
+                count0 <= 0;
+                if (count1 == 9)
+                    count1 <= 0;
+                else
+                    count1 <= count1 + 1;
+            end else
+                count0 <= count0 + 1;
+        end
+    end
+
+    assign dig0 = count0;
+    assign dig1 = count1;
+
+    // Main state machine and logic
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            state_reg <= newgame;
+            ball_reg <= 0;
+            rgb_reg <= 0;
+        end else begin
+            state_reg <= state_next;
+            ball_reg <= ball_next;
+            if (w_p_tick)
+                rgb_reg <= rgb_next;
+        end
+    end
+
+    /* RTL_BENCHLS_MASK: restore missing process */
+
+    always @* begin
+        if (~w_vid_on)
+            rgb_next = 12'h000;
+        else if (text_on[3] || ((state_reg == newgame) && text_on[1]) || ((state_reg == over) && text_on[0]))
+            rgb_next = text_rgb;
+        else if (graph_on)
+            rgb_next = graph_rgb;
+        else if (text_on[2])
+            rgb_next = text_rgb;
+        else
+            rgb_next = 12'h0FF;
+    end
+
+    assign rgb = rgb_reg;
+
+endmodule

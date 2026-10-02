@@ -1,0 +1,69 @@
+module rtlpp_07029 (
+    input  wire x,
+    input  wire clk,
+    input  wire rst,
+    output reg  y
+);
+
+    // State encoding
+    localparam STATE_A = 2'b00;
+    localparam STATE_B = 2'b01;
+    localparam STATE_C = 2'b10;
+
+    // State registers
+    reg [1:0] current_state;
+    reg [1:0] next_state;
+
+    // State transition logic (combinational)
+    always @(*) begin
+        case (current_state)
+            STATE_A: begin
+                if (x)
+                    next_state = STATE_B;
+                else
+                    next_state = STATE_A;
+            end
+            
+            STATE_B: begin
+                if (x)
+                    next_state = STATE_C;
+                else
+                    next_state = STATE_A;
+            end
+            
+            STATE_C: begin
+                if (x)
+                    next_state = STATE_C;
+                else
+                    next_state = STATE_A;
+            end
+            
+            default: begin
+                next_state = STATE_A;
+            end
+        endcase
+    end
+
+    // State register update (sequential)
+    always @(posedge clk or posedge rst) begin
+        if (rst)
+            current_state <= STATE_A;
+        else
+            current_state <= next_state;
+    end
+
+    // Output logic (sequential for glitch-free output)
+    always @(posedge clk or posedge rst) begin
+        if (rst)
+            y <= 1'b0;
+        else begin
+            case (current_state)
+                STATE_A: y <= 1'b0;
+                STATE_B: y <= 1'b1;
+                STATE_C: y <= 1'b0;
+                default: y <= 1'b0;
+            endcase
+        end
+    end
+
+endmodule

@@ -1,0 +1,338 @@
+// Path: src/alu.sv
+module alu (
+    input wire clk,
+    input wire reset,
+    input wire enable, 
+
+    input reg [2:0] core_state,
+
+    input reg [1:0] decoded_alu_arithmetic_mux,
+    input reg decoded_alu_output_mux,
+
+    input reg [7:0] rs,
+    input reg [7:0] rt,
+    output wire [7:0] alu_out
+);
+endmodule
+
+// Path: src/controller.sv
+module controller #(
+    parameter ADDR_BITS = 8,
+    parameter DATA_BITS = 16,
+    parameter NUM_CONSUMERS = 4, 
+    parameter NUM_CHANNELS = 1,  
+    parameter WRITE_ENABLE = 1   
+) (
+    input wire clk,
+    input wire reset,
+
+    
+    input reg [NUM_CONSUMERS-1:0] consumer_read_valid,
+    input reg [ADDR_BITS-1:0] consumer_read_address [NUM_CONSUMERS-1:0],
+    output reg [NUM_CONSUMERS-1:0] consumer_read_ready,
+    output reg [DATA_BITS-1:0] consumer_read_data [NUM_CONSUMERS-1:0],
+    input reg [NUM_CONSUMERS-1:0] consumer_write_valid,
+    input reg [ADDR_BITS-1:0] consumer_write_address [NUM_CONSUMERS-1:0],
+    input reg [DATA_BITS-1:0] consumer_write_data [NUM_CONSUMERS-1:0],
+    output reg [NUM_CONSUMERS-1:0] consumer_write_ready,
+
+    
+    output reg [NUM_CHANNELS-1:0] mem_read_valid,
+    output reg [ADDR_BITS-1:0] mem_read_address [NUM_CHANNELS-1:0],
+    input reg [NUM_CHANNELS-1:0] mem_read_ready,
+    input reg [DATA_BITS-1:0] mem_read_data [NUM_CHANNELS-1:0],
+    output reg [NUM_CHANNELS-1:0] mem_write_valid,
+    output reg [ADDR_BITS-1:0] mem_write_address [NUM_CHANNELS-1:0],
+    output reg [DATA_BITS-1:0] mem_write_data [NUM_CHANNELS-1:0],
+    input reg [NUM_CHANNELS-1:0] mem_write_ready
+);
+endmodule
+
+// Path: src/core.sv
+module core #(
+    parameter DATA_MEM_ADDR_BITS = 8,
+    parameter DATA_MEM_DATA_BITS = 8,
+    parameter PROGRAM_MEM_ADDR_BITS = 8,
+    parameter PROGRAM_MEM_DATA_BITS = 16,
+    parameter THREADS_PER_BLOCK = 4
+) (
+    input wire clk,
+    input wire reset,
+
+    
+    input wire start,
+    output wire done,
+
+    
+    input wire [7:0] block_id,
+    input wire [$clog2(THREADS_PER_BLOCK):0] thread_count,
+
+    
+    output reg program_mem_read_valid,
+    output reg [PROGRAM_MEM_ADDR_BITS-1:0] program_mem_read_address,
+    input reg program_mem_read_ready,
+    input reg [PROGRAM_MEM_DATA_BITS-1:0] program_mem_read_data,
+
+    
+    output reg [THREADS_PER_BLOCK-1:0] data_mem_read_valid,
+    output reg [DATA_MEM_ADDR_BITS-1:0] data_mem_read_address [THREADS_PER_BLOCK-1:0],
+    input reg [THREADS_PER_BLOCK-1:0] data_mem_read_ready,
+    input reg [DATA_MEM_DATA_BITS-1:0] data_mem_read_data [THREADS_PER_BLOCK-1:0],
+    output reg [THREADS_PER_BLOCK-1:0] data_mem_write_valid,
+    output reg [DATA_MEM_ADDR_BITS-1:0] data_mem_write_address [THREADS_PER_BLOCK-1:0],
+    output reg [DATA_MEM_DATA_BITS-1:0] data_mem_write_data [THREADS_PER_BLOCK-1:0],
+    input reg [THREADS_PER_BLOCK-1:0] data_mem_write_ready
+);
+endmodule
+
+// Path: src/dcr.sv
+module dcr (
+    input wire clk,
+    input wire reset,
+
+    input wire device_control_write_enable,
+    input wire [7:0] device_control_data,
+    output wire [7:0] thread_count,
+);
+endmodule
+
+// Path: src/decoder.sv
+module decoder (
+    input wire clk,
+    input wire reset,
+
+    input reg [2:0] core_state,
+    input reg [15:0] instruction,
+    
+    
+    output reg [3:0] decoded_rd_address,
+    output reg [3:0] decoded_rs_address,
+    output reg [3:0] decoded_rt_address,
+    output reg [2:0] decoded_nzp,
+    output reg [7:0] decoded_immediate,
+    
+    
+    output reg decoded_reg_write_enable,           
+    output reg decoded_mem_read_enable,            
+    output reg decoded_mem_write_enable,           
+    output reg decoded_nzp_write_enable,           
+    output reg [1:0] decoded_reg_input_mux,        
+    output reg [1:0] decoded_alu_arithmetic_mux,   
+    output reg decoded_alu_output_mux,             
+    output reg decoded_pc_mux,                     
+
+    
+    output reg decoded_ret
+);
+endmodule
+
+// Path: src/dispatch.sv
+module dispatch #(
+    parameter NUM_CORES = 2,
+    parameter THREADS_PER_BLOCK = 4
+) (
+    input wire clk,
+    input wire reset,
+    input wire start,
+
+    
+    input wire [7:0] thread_count,
+
+    
+    input reg [NUM_CORES-1:0] core_done,
+    output reg [NUM_CORES-1:0] core_start,
+    output reg [NUM_CORES-1:0] core_reset,
+    output reg [7:0] core_block_id [NUM_CORES-1:0],
+    output reg [$clog2(THREADS_PER_BLOCK):0] core_thread_count [NUM_CORES-1:0],
+
+    
+    output reg done
+);
+endmodule
+
+// Path: src/fetcher.sv
+module fetcher #(
+    parameter PROGRAM_MEM_ADDR_BITS = 8,
+    parameter PROGRAM_MEM_DATA_BITS = 16
+) (
+    input wire clk,
+    input wire reset,
+    
+    
+    input reg [2:0] core_state,
+    input reg [7:0] current_pc,
+
+    
+    output reg mem_read_valid,
+    output reg [PROGRAM_MEM_ADDR_BITS-1:0] mem_read_address,
+    input reg mem_read_ready,
+    input reg [PROGRAM_MEM_DATA_BITS-1:0] mem_read_data,
+
+    
+    output reg [2:0] fetcher_state,
+    output reg [PROGRAM_MEM_DATA_BITS-1:0] instruction,
+);
+endmodule
+
+// Path: src/gpu.sv
+module gpu #(
+    parameter DATA_MEM_ADDR_BITS = 8,        
+    parameter DATA_MEM_DATA_BITS = 8,        
+    parameter DATA_MEM_NUM_CHANNELS = 4,     
+    parameter PROGRAM_MEM_ADDR_BITS = 8,     
+    parameter PROGRAM_MEM_DATA_BITS = 16,    
+    parameter PROGRAM_MEM_NUM_CHANNELS = 1,  
+    parameter NUM_CORES = 2,                 
+    parameter THREADS_PER_BLOCK = 4          
+) (
+    input wire clk,
+    input wire reset,
+
+    
+    input wire start,
+    output wire done,
+
+    
+    input wire device_control_write_enable,
+    input wire [7:0] device_control_data,
+
+    
+    output wire [PROGRAM_MEM_NUM_CHANNELS-1:0] program_mem_read_valid,
+    output wire [PROGRAM_MEM_ADDR_BITS-1:0] program_mem_read_address [PROGRAM_MEM_NUM_CHANNELS-1:0],
+    input wire [PROGRAM_MEM_NUM_CHANNELS-1:0] program_mem_read_ready,
+    input wire [PROGRAM_MEM_DATA_BITS-1:0] program_mem_read_data [PROGRAM_MEM_NUM_CHANNELS-1:0],
+
+    
+    output wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_read_valid,
+    output wire [DATA_MEM_ADDR_BITS-1:0] data_mem_read_address [DATA_MEM_NUM_CHANNELS-1:0],
+    input wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_read_ready,
+    input wire [DATA_MEM_DATA_BITS-1:0] data_mem_read_data [DATA_MEM_NUM_CHANNELS-1:0],
+    output wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_valid,
+    output wire [DATA_MEM_ADDR_BITS-1:0] data_mem_write_address [DATA_MEM_NUM_CHANNELS-1:0],
+    output wire [DATA_MEM_DATA_BITS-1:0] data_mem_write_data [DATA_MEM_NUM_CHANNELS-1:0],
+    input wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_ready
+);
+endmodule
+
+// Path: src/lsu.sv
+module lsu (
+    input wire clk,
+    input wire reset,
+    input wire enable, 
+
+    
+    input reg [2:0] core_state,
+
+    
+    input reg decoded_mem_read_enable,
+    input reg decoded_mem_write_enable,
+
+    
+    input reg [7:0] rs,
+    input reg [7:0] rt,
+
+    
+    output reg mem_read_valid,
+    output reg [7:0] mem_read_address,
+    input reg mem_read_ready,
+    input reg [7:0] mem_read_data,
+    output reg mem_write_valid,
+    output reg [7:0] mem_write_address,
+    output reg [7:0] mem_write_data,
+    input reg mem_write_ready,
+
+    
+    output reg [1:0] lsu_state,
+    output reg [7:0] lsu_out
+);
+endmodule
+
+// Path: src/pc.sv
+module pc #(
+    parameter DATA_MEM_DATA_BITS = 8,
+    parameter PROGRAM_MEM_ADDR_BITS = 8
+) (
+    input wire clk,
+    input wire reset,
+    input wire enable, 
+
+    
+    input reg [2:0] core_state,
+
+    
+    input reg [2:0] decoded_nzp,
+    input reg [DATA_MEM_DATA_BITS-1:0] decoded_immediate,
+    input reg decoded_nzp_write_enable,
+    input reg decoded_pc_mux, 
+
+    
+    input reg [DATA_MEM_DATA_BITS-1:0] alu_out,
+
+    
+    input reg [PROGRAM_MEM_ADDR_BITS-1:0] current_pc,
+    output reg [PROGRAM_MEM_ADDR_BITS-1:0] next_pc
+);
+endmodule
+
+// Path: src/registers.sv
+module registers #(
+    parameter THREADS_PER_BLOCK = 4,
+    parameter THREAD_ID = 0,
+    parameter DATA_BITS = 8
+) (
+    input wire clk,
+    input wire reset,
+    input wire enable, 
+
+    
+    input reg [7:0] block_id,
+
+    
+    input reg [2:0] core_state,
+
+    
+    input reg [3:0] decoded_rd_address,
+    input reg [3:0] decoded_rs_address,
+    input reg [3:0] decoded_rt_address,
+
+    
+    input reg decoded_reg_write_enable,
+    input reg [1:0] decoded_reg_input_mux,
+    input reg [DATA_BITS-1:0] decoded_immediate,
+
+    
+    input reg [DATA_BITS-1:0] alu_out,
+    input reg [DATA_BITS-1:0] lsu_out,
+
+    
+    output reg [7:0] rs,
+    output reg [7:0] rt
+);
+endmodule
+
+// Path: src/scheduler.sv
+module scheduler #(
+    parameter THREADS_PER_BLOCK = 4,
+) (
+    input wire clk,
+    input wire reset,
+    input wire start,
+    
+    
+    input reg decoded_mem_read_enable,
+    input reg decoded_mem_write_enable,
+    input reg decoded_ret,
+
+    
+    input reg [2:0] fetcher_state,
+    input reg [1:0] lsu_state [THREADS_PER_BLOCK-1:0],
+
+    
+    output reg [7:0] current_pc,
+    input reg [7:0] next_pc [THREADS_PER_BLOCK-1:0],
+
+    
+    output reg [2:0] core_state,
+    output reg done
+);
+endmodule

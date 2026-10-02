@@ -1,0 +1,7 @@
+# pack_ctrl
+
+Parameters default to `PORT_ADDRESS_WIDTH=2`, `MUX_ORDER=1`, `MIN_STAGE=0`, `NUM_STAGES=2`, and `PACK=0`. Inputs are `rotate[PORT_ADDRESS_WIDTH-1:0]` and packed per-port `prefix_count[2**PORT_ADDRESS_WIDTH*PORT_ADDRESS_WIDTH-1:0]`; output `ctrl` has `2**PORT_ADDRESS_WIDTH*MUX_ORDER*NUM_STAGES` bits.
+
+Let P=2^PORT_ADDRESS_WIDTH and z=2^MUX_ORDER. For stage i and port j, define `k0=2**(PORT_ADDRESS_WIDTH-MUX_ORDER*(i+1)-MIN_STAGE)`, `k1=2**(MUX_ORDER*(i+1)+MIN_STAGE)`, `s=(i*P+j)*MUX_ORDER`, `m=(j%k1)*k0`, and `n=j/k1`. Normally ctrl1 slice at s is `(j-(prefix_count element m+n-rotate)/k0)%z` using Verilog unsigned arithmetic. When MUX_ORDER=1 and j is even, ctrl1[s] is the complement of the following port's control bit instead.
+
+If PACK=0 or MUX_ORDER=1, ctrl equals ctrl1. Otherwise, each z-entry group is inverted by a priority encoder: output slot k initializes to all ones and is overwritten by every source index n whose ctrl1 value equals k, so the highest matching n wins. Valid configurations require nonnegative k0 exponents and loop/group dimensions consistent with the parameterized widths. There is no clock or reset.

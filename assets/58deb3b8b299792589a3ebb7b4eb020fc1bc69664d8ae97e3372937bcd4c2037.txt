@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.5f91585cff4efcf26887.e35f55865750",
+  "compile_check": {
+    "case_id": "s1derived.5f91585cff4efcf26887.e35f55865750",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "NV_NVDLA_SDP_CORE_Y_cvt_core_chn_out_rsci_chn_out_wait_dp",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.5f91585cff4efcf26887.e35f55865750/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "5f91585cff4efcf26887ce9131e28319be7c0cd3cd7dd2bb6c5f0fb170cd4be6",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.5f91585cff4efcf26887.e35f55865750",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.5f91585cff4efcf26887",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "NV_NVDLA_SDP_CORE_Y_cvt_core_chn_out_rsci_chn_out_wait_dp"
+  },
+  "independent_review": {
+    "case_id": "s1derived.5f91585cff4efcf26887.e35f55865750",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Both outputs and the bdwt-priority held-request update match completely.",
+        "rtl_excerpt": "`assign ...bawt=...biwt|...bcwt; assign ...wen_comp=(~...oswt)|...bawt;`",
+        "spec_excerpt": "\u201cbawt=biwt|bcwt and wen_comp=~oswt|bawt\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.5f91585cff4efcf26887",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "31373332482a87cc7c8d0ef83b125b35e38fc70d6dddbeb5b56133c9b2b1f601",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5f91585cff4efcf26887ce9131e28319be7c0cd3cd7dd2bb6c5f0fb170cd4be6",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.5f91585cff4efcf26887",
+  "primary_review": {
+    "case_id": "s1derived.5f91585cff4efcf26887.e35f55865750",
+    "checks": {
+      "behavior": "Behavior materially incomplete.",
+      "boundaries": "bdwt clear priority.",
+      "interface": "Ports match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Active-low asynchronous reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Behavior materially incomplete. Active-low asynchronous reset.",
+        "rtl_excerpt": "bawt=biwt|bcwt; wen_comp=~oswt|bawt; bcwt<=(bcwt|biwt)&~bdwt",
+        "spec_excerpt": "Final text ends after \u201clogical OR of the input wait signal\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification stops before completing even the bawt equation and omits wen_comp and state-update details.",
+        "rtl_evidence": "bawt=biwt|bcwt; wen_comp=~oswt|bawt; bcwt<=(bcwt|biwt)&~bdwt",
+        "spec_evidence": "Final text ends after \u201clogical OR of the input wait signal\u201d.",
+        "type": "truncated_state_update"
+      }
+    ],
+    "parent_id": "s1p.5f91585cff4efcf26887",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.5f91585cff4efcf26887.e35f55865750.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5f91585cff4efcf26887ce9131e28319be7c0cd3cd7dd2bb6c5f0fb170cd4be6",
+    "source_group": "S1",
+    "specification_sha256": "e35f55865750336b39e37c9bb883dde62c37974f426a440e19e04018398e9de8",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_01/s1derived.5f91585cff4efcf26887.e35f55865750.md",
+  "qualified_specification_sha256": "31373332482a87cc7c8d0ef83b125b35e38fc70d6dddbeb5b56133c9b2b1f601",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.5f91585cff4efcf26887.e35f55865750/private/golden_design.v",
+  "rtl_sha256": "5f91585cff4efcf26887ce9131e28319be7c0cd3cd7dd2bb6c5f0fb170cd4be6",
+  "source_corpus": "SEC-Flow-Star-repos-3.nvdia-hw",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.5f91585cff4efcf26887.e35f55865750/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "e35f55865750336b39e37c9bb883dde62c37974f426a440e19e04018398e9de8",
+  "top_module": "NV_NVDLA_SDP_CORE_Y_cvt_core_chn_out_rsci_chn_out_wait_dp"
+}

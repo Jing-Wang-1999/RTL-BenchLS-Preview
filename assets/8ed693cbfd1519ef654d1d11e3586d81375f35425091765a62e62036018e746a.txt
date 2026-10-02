@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.173c7c1aa3bd179aa617.0b86cac995f5",
+  "compile_check": {
+    "case_id": "s1derived.173c7c1aa3bd179aa617.0b86cac995f5",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "cntr_modulus",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.173c7c1aa3bd179aa617.0b86cac995f5/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "173c7c1aa3bd179aa6178c7fd857d3d9940a0cb3384ceb0356e2069507f3fca5",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.173c7c1aa3bd179aa617.0b86cac995f5",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.173c7c1aa3bd179aa617",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "cntr_modulus"
+  },
+  "independent_review": {
+    "case_id": "s1derived.173c7c1aa3bd179aa617.0b86cac995f5",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All controlsare gatedbyena except asyncresethigh. Clearthenload priority and modulo-WIDTH increment with exact equality MOD_VAL-1 match. Loaded out-ofrangevalues are not clamped, as the repaired text correctly explains. DefaultsWIDTH16/MOD50223 and buswidths are complete.",
+        "rtl_excerpt": "if (sclear) q <= 0;",
+        "specification_excerpt": "synchronous clear has priority, then synchronous load"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.173c7c1aa3bd179aa617",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "a02bb74d59bace17c1c9db337de9339fa1c7fc109bd33b1933a1474f5f2a929b",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "173c7c1aa3bd179aa6178c7fd857d3d9940a0cb3384ceb0356e2069507f3fca5",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.173c7c1aa3bd179aa617",
+  "primary_review": {
+    "case_id": "s1derived.173c7c1aa3bd179aa617.0b86cac995f5",
+    "checks": {
+      "behavior": "Compared full equations, lookup transforms, state transitions, handshakes, and dataflow.",
+      "boundaries": "Checked default/disabled cases, simultaneous controls, saturation, arithmetic widths, invalid addresses, and startup state.",
+      "interface": "Compared complete ports, widths, parameters, and defaults.",
+      "rtl_reasonableness": "The preserved repository RTL implements a coherent hardware function.",
+      "sequential_and_reset": "Checked reset polarity/timing, priority, enables, holds, initialization, and latency."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file semantic comparison supports revise.",
+        "rtl_excerpt": "RTL defaults WIDTH=16/MOD_VAL=50223 and prioritizes async reset, enabled sclear, sload, then modulo count.",
+        "spec_excerpt": "The prose truncates immediately after reset behavior and omits defaults and control priority."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose truncates immediately after reset behavior and omits defaults and control priority.",
+        "rtl_evidence": "RTL defaults WIDTH=16/MOD_VAL=50223 and prioritizes async reset, enabled sclear, sload, then modulo count.",
+        "spec_evidence": "The prose truncates immediately after reset behavior and omits defaults and control priority.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.173c7c1aa3bd179aa617",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.173c7c1aa3bd179aa617.0b86cac995f5.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "173c7c1aa3bd179aa6178c7fd857d3d9940a0cb3384ceb0356e2069507f3fca5",
+    "source_group": "S1",
+    "specification_sha256": "0b86cac995f52dd067eff7abf895d05b8166d64728f0e12372009a15854879da",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.173c7c1aa3bd179aa617.0b86cac995f5.md",
+  "qualified_specification_sha256": "a02bb74d59bace17c1c9db337de9339fa1c7fc109bd33b1933a1474f5f2a929b",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.173c7c1aa3bd179aa617.0b86cac995f5/private/golden_design.v",
+  "rtl_sha256": "173c7c1aa3bd179aa6178c7fd857d3d9940a0cb3384ceb0356e2069507f3fca5",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.173c7c1aa3bd179aa617.0b86cac995f5/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "0b86cac995f52dd067eff7abf895d05b8166d64728f0e12372009a15854879da",
+  "top_module": "cntr_modulus"
+}

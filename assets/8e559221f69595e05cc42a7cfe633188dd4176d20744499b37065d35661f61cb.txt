@@ -1,0 +1,113 @@
+{
+  "case_id": "s1derived.db3fa7a295cff73ff0d3.7da5af81e926",
+  "compile_check": {
+    "case_id": "s1derived.db3fa7a295cff73ff0d3.7da5af81e926",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "mg_02453",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_02453.f8a7d539153facf3/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.db3fa7a295cff73ff0d3",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "db3fa7a295cff73ff0d3562da623e4f4fad9568f974dc0fd1c8cb821450b94ca",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.db3fa7a295cff73ff0d3.7da5af81e926",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_02453.f8a7d539153facf3/private/commercial_positive.log",
+    "commercial_log_sha256": "93d4dc6522c1ac29b078eebb9513ffed3540850dd0edf6ff7b577689a4c42806",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_02453.f8a7d539153facf3/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "mg_02453"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.mg_02453.f8a7d539153facf3",
+    "parent_id": "s1p.db3fa7a295cff73ff0d3",
+    "revised_tops": [
+      "mg_02453"
+    ],
+    "source_group": "S5",
+    "status": "both_tops_matched",
+    "top_module": "mg_02453",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.db3fa7a295cff73ff0d3.7da5af81e926",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Signed net redeclarations and positive 9-bit extension make this unsigned-by-signed product fit the full signed 16-bit output.",
+        "rtl_excerpt": "assign out = $signed({1'b0, in0}) * in1;",
+        "specification_excerpt": "effectively unsigned 0 through 255"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.db3fa7a295cff73ff0d3",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "3ca1af21804f2c59c9d0cbff6acb467ef4dd39c28a6b5ff7864c9257f26f84e8",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "db3fa7a295cff73ff0d3562da623e4f4fad9568f974dc0fd1c8cb821450b94ca",
+    "source_group": "S5",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_02453.f8a7d539153facf3/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_02453.f8a7d539153facf3/private/historical_harness/01_conformal_rtl_mg_02453.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_02453.f8a7d539153facf3/private/historical_harness/02_fm_rtl_mg_02453.tcl"
+  ],
+  "parent_id": "s1p.db3fa7a295cff73ff0d3",
+  "primary_review": {
+    "case_id": "s1derived.db3fa7a295cff73ff0d3.7da5af81e926",
+    "checks": {
+      "behavior": "Calling both inputs signed conflicts with explicit zero-extension of in0.",
+      "boundaries": "Repair covers omitted signedness, scope, and terminal behavior.",
+      "interface": "Repair gives complete top interface.",
+      "rtl_reasonableness": "Circuit is coherent hardware.",
+      "sequential_and_reset": "Repair states exact timing and initialization."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Calling both inputs signed conflicts with explicit zero-extension of in0.",
+        "rtl_excerpt": "The expression uses $signed({1'b0,in0}), making in0 nonnegative.",
+        "spec_excerpt": "The prose calls two 8-bit inputs signed."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "Calling both inputs signed conflicts with explicit zero-extension of in0.",
+        "rtl_evidence": "The expression uses $signed({1'b0,in0}), making in0 nonnegative.",
+        "spec_evidence": "The prose calls two 8-bit inputs signed.",
+        "type": "signedness_mismatch"
+      }
+    ],
+    "parent_id": "s1p.db3fa7a295cff73ff0d3",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_09/s1derived.db3fa7a295cff73ff0d3.7da5af81e926.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "db3fa7a295cff73ff0d3562da623e4f4fad9568f974dc0fd1c8cb821450b94ca",
+    "source_group": "S5",
+    "specification_sha256": "7da5af81e926fae16d5e6d62f0ce0b55f8070a610e143a42dd3d979fda37044c",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_09/s1derived.db3fa7a295cff73ff0d3.7da5af81e926.md",
+  "qualified_specification_sha256": "3ca1af21804f2c59c9d0cbff6acb467ef4dd39c28a6b5ff7864c9257f26f84e8",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_02453.f8a7d539153facf3/private/golden_design.v",
+  "rtl_sha256": "db3fa7a295cff73ff0d3562da623e4f4fad9568f974dc0fd1c8cb821450b94ca",
+  "source_corpus": "RTL-Dataset-MG-Verilog",
+  "source_group": "S5",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.mg_02453.f8a7d539153facf3/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "7da5af81e926fae16d5e6d62f0ce0b55f8070a610e143a42dd3d979fda37044c",
+  "top_module": "mg_02453"
+}

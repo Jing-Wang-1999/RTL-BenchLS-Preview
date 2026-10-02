@@ -1,0 +1,43 @@
+**Instruction to Generate Verilog Code**
+
+Create a Verilog module named `dma_tdsp_bus_arbiter` that acts as an arbiter responsible for managing bus access between a DMA (Direct Memory Access) controller and a TDSP (Tightly Coupled Digital Signal Processor). The arbiter performs the following functions and operations:
+
+1. **Primary Function:**
+    - The module grants access to either the DMA or TDSP based on bus request signals (`dma_breq` and `tdsp_breq`).
+
+2. **State-Based Control Flow:**
+    - Use an always block triggered by a positive edge of `clk` or `reset` to manage state transitions.
+    - Define states for the arbiter using local parameters: `IDLE`, `GRANT_TDSP`, `GRANT_DMA`, `DMA_PRI`, and `CLEAR`.
+    - In the state transition always block, handle state transitions based on the current state and input bus request signals (`tdsp_breq`, `dma_breq`).
+
+3. **Data and Signal Interactions:**
+    - When in `IDLE` state, check if any bus requests are active and transition to the corresponding grant state (`GRANT_TDSP` or `GRANT_DMA`).
+    - `GRANT_TDSP` state keeps granting TDSP access as long as the `tdsp_breq` signal is high; otherwise, it transitions to `CLEAR`.
+    - `GRANT_DMA` state similarly keeps granting DMA access while `dma_breq` is high; otherwise, it transitions to `CLEAR`.
+    - `DMA_PRI` state gives priority back to the DMA if no TDSP bus request is active.
+    - `CLEAR` state ensures previous grants are cleared before transitioning back to grants, depending on new requests.
+
+4. **Output Control:**
+    - Use an always block triggered by `clk` or `reset` to manage output signals (`dma_grant` and `tdsp_grant`) based on the next state.
+    - Set `dma_grant` and `tdsp_grant` to their respective values depending on the state, ensuring only one entity gets bus access at a time.
+    - Ensure outputs are reset properly when in `IDLE` or the system is reset.
+
+Below is the detailed pseudo-code instruction to achieve the functionality described:
+
+**Verilog Module**
+
+This module implements a state machine to decide which bus request gets granted based on the input conditions and current state, aiming for efficient and orderly bus arbitration.
+
+Module Interface:
+module dma_tdsp_bus_arbiter (
+	reset,
+	clk,
+	dma_breq,
+	dma_grant,
+	tdsp_breq,
+	tdsp_grant
+	);
+
+Behavioral Clarifications:
+- States use 3-bit encoding: IDLE=3'b000, GRANT_TDSP=3'b001, GRANT_DMA=3'b010, DMA_PRI=3'b011, CLEAR=3'b100. Reset is asynchronous active-high; both state and grant registers use `posedge clk or posedge reset`.
+- In the CLEAR state, if tdsp_breq is asserted, next state is GRANT_TDSP; else if dma_breq, next state is DMA_PRI (not GRANT_DMA). In the output always block, the CLEAR state drives tdsp_grant=1 and dma_grant=0. Outputs use blocking assignments inside the sequential block.

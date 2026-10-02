@@ -1,0 +1,125 @@
+// Required path: rtl/axil_reg_if.v
+module axil_reg_if #
+(
+    
+    parameter DATA_WIDTH = 32,
+    
+    parameter ADDR_WIDTH = 32,
+    
+    parameter STRB_WIDTH = (DATA_WIDTH/8),
+    
+    parameter TIMEOUT = 4
+)
+(
+    input  wire                   clk,
+    input  wire                   rst,
+
+    
+    input  wire [ADDR_WIDTH-1:0]  s_axil_awaddr,
+    input  wire [2:0]             s_axil_awprot,
+    input  wire                   s_axil_awvalid,
+    output wire                   s_axil_awready,
+    input  wire [DATA_WIDTH-1:0]  s_axil_wdata,
+    input  wire [STRB_WIDTH-1:0]  s_axil_wstrb,
+    input  wire                   s_axil_wvalid,
+    output wire                   s_axil_wready,
+    output wire [1:0]             s_axil_bresp,
+    output wire                   s_axil_bvalid,
+    input  wire                   s_axil_bready,
+    input  wire [ADDR_WIDTH-1:0]  s_axil_araddr,
+    input  wire [2:0]             s_axil_arprot,
+    input  wire                   s_axil_arvalid,
+    output wire                   s_axil_arready,
+    output wire [DATA_WIDTH-1:0]  s_axil_rdata,
+    output wire [1:0]             s_axil_rresp,
+    output wire                   s_axil_rvalid,
+    input  wire                   s_axil_rready,
+
+    
+    output wire [ADDR_WIDTH-1:0]  reg_wr_addr,
+    output wire [DATA_WIDTH-1:0]  reg_wr_data,
+    output wire [STRB_WIDTH-1:0]  reg_wr_strb,
+    output wire                   reg_wr_en,
+    input  wire                   reg_wr_wait,
+    input  wire                   reg_wr_ack,
+    output wire [ADDR_WIDTH-1:0]  reg_rd_addr,
+    output wire                   reg_rd_en,
+    input  wire [DATA_WIDTH-1:0]  reg_rd_data,
+    input  wire                   reg_rd_wait,
+    input  wire                   reg_rd_ack
+);
+endmodule
+
+// Required path: rtl/axil_reg_if_rd.v
+module axil_reg_if_rd #
+(
+    
+    parameter DATA_WIDTH = 32,
+    
+    parameter ADDR_WIDTH = 32,
+    
+    parameter STRB_WIDTH = (DATA_WIDTH/8),
+    
+    parameter TIMEOUT = 4
+)
+(
+    input  wire                   clk,
+    input  wire                   rst,
+
+    
+    input  wire [ADDR_WIDTH-1:0]  s_axil_araddr,
+    input  wire [2:0]             s_axil_arprot,
+    input  wire                   s_axil_arvalid,
+    output wire                   s_axil_arready,
+    output wire [DATA_WIDTH-1:0]  s_axil_rdata,
+    output wire [1:0]             s_axil_rresp,
+    output wire                   s_axil_rvalid,
+    input  wire                   s_axil_rready,
+
+    
+    output wire [ADDR_WIDTH-1:0]  reg_rd_addr,
+    output wire                   reg_rd_en,
+    input  wire [DATA_WIDTH-1:0]  reg_rd_data,
+    input  wire                   reg_rd_wait,
+    input  wire                   reg_rd_ack
+);
+endmodule
+
+// Required path: rtl/axil_reg_if_wr.v
+module axil_reg_if_wr #
+(
+    
+    parameter DATA_WIDTH = 32,
+    
+    parameter ADDR_WIDTH = 32,
+    
+    parameter STRB_WIDTH = (DATA_WIDTH/8),
+    
+    parameter TIMEOUT = 4
+)
+(
+    input  wire                   clk,
+    input  wire                   rst,
+
+    
+    input  wire [ADDR_WIDTH-1:0]  s_axil_awaddr,
+    input  wire [2:0]             s_axil_awprot,
+    input  wire                   s_axil_awvalid,
+    output wire                   s_axil_awready,
+    input  wire [DATA_WIDTH-1:0]  s_axil_wdata,
+    input  wire [STRB_WIDTH-1:0]  s_axil_wstrb,
+    input  wire                   s_axil_wvalid,
+    output wire                   s_axil_wready,
+    output wire [1:0]             s_axil_bresp,
+    output wire                   s_axil_bvalid,
+    input  wire                   s_axil_bready,
+
+    
+    output wire [ADDR_WIDTH-1:0]  reg_wr_addr,
+    output wire [DATA_WIDTH-1:0]  reg_wr_data,
+    output wire [STRB_WIDTH-1:0]  reg_wr_strb,
+    output wire                   reg_wr_en,
+    input  wire                   reg_wr_wait,
+    input  wire                   reg_wr_ack
+);
+endmodule

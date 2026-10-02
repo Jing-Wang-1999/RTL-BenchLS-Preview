@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   processor_execution_stage.v0, processor_execution_stage.v1, processor_execution_stage, clk, rst_n
+set DESIGN_NAME_GOLDEN "processor_execution_stage.v0"
+set DESIGN_NAME "processor_execution_stage.v1"
+set TOP_NAME "processor_execution_stage"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_04b0a407b916b4df.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_04b0a407b916b4df.negative.v
+check_sec -elaborate -spec -top processor_execution_stage -disable_auto_bbox
+check_sec -elaborate -imp -top processor_execution_stage -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clk 
+reset rst_n
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

@@ -1,0 +1,3 @@
+# Specification
+
+`mg_02124` has `clk`, active-low asynchronous `rst_n`, `p_mosi[255:0]`, `p_valid`, and `sha_digest[255:0]`; outputs are `p_miso[255:0]`, `sha_reset_n`, `sha_init`, `sha_next`, `sha_mode`, and `sha_block[511:0]`. `p_miso=sha_digest`, `sha_next=0`, `sha_mode=1`, and `sha_block={p_mosi,1'b1,255'h100}`. A two-bit history register resets to 2'b11 and thereafter shifts in p_valid each rising edge. `sha_reset_n=~(p_valid & ~history[0])`; `sha_init=history[0] & ~history[1]`. There are no parameters or submodules.

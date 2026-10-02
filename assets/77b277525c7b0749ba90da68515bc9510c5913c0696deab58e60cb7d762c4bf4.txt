@@ -1,0 +1,44 @@
+# Implement the Wishbone-to-LPC host bridge
+Read the original bridge project specification. Implement wb_lpc_host in the
+required file. This selects the HOST configuration: the peripheral bridge is
+another configuration of the same project and is not required here. The defines
+header is resolved privately; the declaration-only interface is self-contained.
+
+Clarifications for the pinned host:
+- nrst_i is active-low asynchronous. Reset clears ACK, ERR, frame, LAD output
+  enable and read-data buffer. Hold Wishbone address/data/tag/select/direction
+  and cyc/stb until completion. ACK is a pulse; a held request after completion
+  is retired without starting another LPC transaction until cyc/stb is released.
+- wbs_tga_i: memory=0, I/O=1, firmware=2, DMA=3. Memory and I/O transfer one
+  byte in low data bits. Firmware/DMA select 1/2/4 bytes with sel=1/3/F.
+  Other select values default to one byte. Untouched read-data bytes retain
+  previous values (reset zero); no byte-lane address shifting is performed.
+- lframe_o is ACTIVE HIGH for the START nibble despite physical LPC conventions.
+  lad_oe=1 drives lad_o, zero releases it. Non-firmware START is nibble0 then
+  cycle type: memory read/write=4/6, I/O=0/2, DMA Wishbone read/write=A/8.
+  Firmware START is D for read, E for write and omits the cycle-type nibble.
+- Addresses are sent MS nibble first: memory/firmware32 bits, I/O low16 bits.
+  Firmware high address nibble carries IDSEL. DMA sends {dma_tc_i,dma_chan_i}
+  instead of address. Firmware/DMA then send size: 1 byte=0, 2=1, 4=2 (firmware)
+  or 3 (DMA). Payload data is low nibble first within low byte first.
+- Host turnaround drives F for one cycle, then releases for one cycle. Sync
+  READY=0 or MORE=9 proceeds, ERROR=A terminates with ERR; other values wait.
+  Short/long waits are 5/6. Read data follows successful sync; writes precede
+  turnaround/sync. Firmware data bytes are contiguous. DMA writes repeat
+  data-byte/host-turnaround/sync/peripheral-turnaround per byte; DMA reads get
+  another sync between data bytes, without an extra host-turnaround.
+- The peripheral turnaround cycle after the final data/sync completes the bus
+  access. This release asserts ACK together with ERR on a sync error; preserve
+  that interface behavior. A completion then retires until Wishbone release.
+  Internal state encoding is unrestricted. Cycle-level LPC pin waveforms matter.
+
+Private points exercise I/O, memory, firmware and DMA directions/sizes, inserted
+wait states and explicit error termination. The complete host is one RTL module.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

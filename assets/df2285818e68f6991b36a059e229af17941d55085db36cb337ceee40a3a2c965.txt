@@ -1,0 +1,10 @@
+always @(brate2 or t1_ow or t1_ow_buf or scon[7:6] or rclk)
+begin
+  if (scon[7:6]==8'b10) begin //mode 2
+    sc_clk_re = 1'b1;
+  end else if (rclk) begin //
+    sc_clk_re = brate2;
+  end else begin //
+    sc_clk_re = !t1_ow_buf & t1_ow;
+  end
+end

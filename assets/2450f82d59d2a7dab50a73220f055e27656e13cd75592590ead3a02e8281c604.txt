@@ -1,0 +1,153 @@
+module origen_131230 (
+    input wire sys_clk,
+    input wire sys_rst,
+    input wire pipe_stb_i,
+    input wire signed [11:0] x,
+    input wire signed [11:0] y,
+    input wire signed [17:0] tsx,
+    input wire signed [17:0] tsy,
+    input wire diff_x_positive,
+    input wire [16:0] diff_x_q,
+    input wire [16:0] diff_x_r,
+    input wire diff_y_positive,
+    input wire [16:0] diff_y_q,
+    input wire [16:0] diff_y_r,
+    input wire [10:0] dst_squarew,
+    
+    output reg busy,
+    output reg pipe_ack_o,
+    output reg signed [11:0] dx,
+    output reg signed [11:0] dy,
+    output reg signed [17:0] tx,
+    output reg signed [17:0] ty,
+    output reg pipe_stb_o
+);
+
+    // State machine states
+    localparam IDLE = 2'b00;
+    localparam LOAD = 2'b01;
+    localparam INTERPOLATE = 2'b10;
+    localparam OUTPUT = 2'b11;
+
+    reg [1:0] state, next_state;
+    reg load_values, interpolate, output_values;
+    
+    // Interpolator registers
+    reg signed [17:0] i_tx, i_ty;
+    reg [16:0] i_diff_x_q, i_diff_x_r, i_diff_y_q, i_diff_y_r;
+    reg i_diff_x_positive, i_diff_y_positive;
+    reg [10:0] i_dst_squarew;
+    reg [10:0] counter;
+
+    // State machine
+    always @(posedge sys_clk or posedge sys_rst) begin
+        if (sys_rst) begin
+            state <= IDLE;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    always @(*) begin
+        next_state = state;
+        load_values = 1'b0;
+        interpolate = 1'b0;
+        output_values = 1'b0;
+        
+        case (state)
+            IDLE: begin
+                if (pipe_stb_i) begin
+                    next_state = LOAD;
+                end
+            end
+            LOAD: begin
+                load_values = 1'b1;
+                next_state = INTERPOLATE;
+            end
+            INTERPOLATE: begin
+                interpolate = 1'b1;
+                if (counter == i_dst_squarew - 1) begin
+                    next_state = OUTPUT;
+                end
+            end
+            OUTPUT: begin
+                output_values = 1'b1;
+                next_state = IDLE;
+            end
+        endcase
+    end
+
+    // Load input values
+    always @(posedge sys_clk) begin
+        if (load_values) begin
+            i_tx <= tsx;
+            i_ty <= tsy;
+            i_diff_x_q <= diff_x_q;
+            i_diff_x_r <= diff_x_r;
+            i_diff_y_q <= diff_y_q;
+            i_diff_y_r <= diff_y_r;
+            i_diff_x_positive <= diff_x_positive;
+            i_diff_y_positive <= diff_y_positive;
+            i_dst_squarew <= dst_squarew;
+            counter <= 11'd0;
+        end
+    end
+
+    // Interpolation logic
+    always @(posedge sys_clk) begin
+        if (interpolate) begin
+            // X-coordinate interpolation
+            if (i_diff_x_positive) begin
+                i_tx <= i_tx + {1'b0, i_diff_x_q};
+                if (i_diff_x_r + counter >= i_dst_squarew) begin
+                    i_tx <= i_tx + 18'd1;
+                end
+            end else begin
+                i_tx <= i_tx - {1'b0, i_diff_x_q};
+                if (i_diff_x_r + counter >= i_dst_squarew) begin
+                    i_tx <= i_tx - 18'd1;
+                end
+            end
+
+            // Y-coordinate interpolation
+            if (i_diff_y_positive) begin
+                i_ty <= i_ty + {1'b0, i_diff_y_q};
+                if (i_diff_y_r + counter >= i_dst_squarew) begin
+                    i_ty <= i_ty + 18'd1;
+                end
+            end else begin
+                i_ty <= i_ty - {1'b0, i_diff_y_q};
+                if (i_diff_y_r + counter >= i_dst_squarew) begin
+                    i_ty <= i_ty - 18'd1;
+                end
+            end
+
+            counter <= counter + 11'd1;
+        end
+    end
+
+    // Output logic
+    always @(posedge sys_clk) begin
+        if (output_values) begin
+            tx <= i_tx;
+            ty <= i_ty;
+            dx <= i_tx[17:6];
+            dy <= i_ty[17:6];
+            pipe_stb_o <= 1'b1;
+        end else begin
+            pipe_stb_o <= 1'b0;
+        end
+    end
+
+    // Busy and pipe_ack_o logic
+    always @(posedge sys_clk or posedge sys_rst) begin
+        if (sys_rst) begin
+            busy <= 1'b0;
+            pipe_ack_o <= 1'b0;
+        end else begin
+            busy <= (state != IDLE);
+            pipe_ack_o <= (state == LOAD);
+        end
+    end
+
+endmodule

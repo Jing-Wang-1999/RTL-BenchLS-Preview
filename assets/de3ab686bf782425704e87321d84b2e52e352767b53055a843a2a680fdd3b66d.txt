@@ -1,0 +1,38 @@
+always @(posedge clk)
+  begin
+    if(!reset_n)
+      begin
+        rd_xfr_count    <= 8'b0;
+        wr_xfr_count    <= 8'b0;
+	saved_rd_data   <= 24'h0;
+      end
+    else begin
+
+	// During Write Phase
+        if(x2a_wrlast) begin
+           wr_xfr_count    <= 0;
+        end
+        else if(x2a_wrnext) begin
+           wr_xfr_count <= wr_xfr_count + 1'b1;
+        end
+
+	// During Read Phase
+        if(x2a_rdlast) begin
+           rd_xfr_count    <= 0;
+        end
+        else if(x2a_rdok) begin
+           rd_xfr_count   <= rd_xfr_count + 1'b1;
+	end
+
+	// Save Previous Data
+        if(x2a_rdok) begin
+	   if(sdr_width == 2'b01) // 16 Bit SDR Mode
+	      saved_rd_data[15:0]  <= x2a_rddt;
+            else begin// 8 bit SDR Mode - 
+	       if(rd_xfr_count[1:0] == 2'b00)      saved_rd_data[7:0]   <= x2a_rddt[7:0];
+	       else if(rd_xfr_count[1:0] == 2'b01) saved_rd_data[15:8]  <= x2a_rddt[7:0];
+	       else if(rd_xfr_count[1:0] == 2'b10) saved_rd_data[23:16] <= x2a_rddt[7:0];
+	    end
+        end
+    end
+end

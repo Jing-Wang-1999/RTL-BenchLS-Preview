@@ -1,0 +1,19 @@
+module baud_rate_gen (
+	input	wire			clk,			
+	output wire [7:0]	clk_baud		
+);
+
+	reg [7:0]	precnt;
+	reg [7:0]	clkcnt;
+
+	assign 		clk_baud = clkcnt;
+
+	always @( posedge clk) begin
+		if( precnt == 8'd77) begin
+			precnt <= 8'd0;
+			clkcnt <= &clkcnt ? 8'd0 : clkcnt + 8'd1;
+		end
+		else	precnt <= precnt + 8'd1;
+	end
+		
+endmodule

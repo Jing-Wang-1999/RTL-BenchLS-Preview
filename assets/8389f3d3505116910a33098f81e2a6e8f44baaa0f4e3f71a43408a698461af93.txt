@@ -1,0 +1,99 @@
+This Verilog module implements a 1-to-2 AXI crossbar switch designed to manage data transfers between a single master and two slaves. The primary function of this module is to route and arbitrate AXI transactions (reads and writes) from the master to the appropriate slave devices based on address decoding and other transaction attributes.
+
+Key points of control flow include:
+1. Monitoring and responding to transaction initiation signals (AWVALID, WVALID, ARVALID) from the master and determining the readiness of the slaves (AWREADY, WREADY, ARREADY).
+2. Implementing arbitration logic to resolve any contention between simultaneously active channels.
+3. Maintaining state information to manage transaction sequences and ensure AXI protocol compliance, such as keeping track of write responses and read data transfers.
+
+Important data handling and interactions involve:
+1. Decoding the address signals (AWADDR, ARADDR) to determine the target slave for each transaction.
+2. Managing data alignment and sizing (AWSIZE, ARSIZE) as per the AXI specifications.
+3. Handling write data (WDATA) and read data (RDATA) paths, ensuring data integrity and correct formatting.
+4. Generating appropriate responses (BRESP, RRESP) and signaling completion of transactions.
+
+This module ensures proper data flow from the master to the correct slave and back, adhering to the AXI protocol's timing and handshake requirements.
+
+Module Interface:
+module one_to_two_axi_crossbar_lite(
+  input aclk,
+  input aresetn,
+  input [3:0] s_axi_awid,
+  input [31:0] s_axi_awaddr,
+  input [3:0] s_axi_awlen,
+  input [2:0] s_axi_awsize,
+  input [1:0] s_axi_awburst,
+  input [1:0] s_axi_awlock,
+  input [3:0] s_axi_awcache,
+  input [2:0] s_axi_awprot,
+  input [3:0] s_axi_awqos,
+  input s_axi_awvalid,
+  output s_axi_awready,
+  input [3:0] s_axi_wid,
+  input [31:0] s_axi_wdata,
+  input [3:0] s_axi_wstrb,
+  input s_axi_wlast,
+  input s_axi_wvalid,
+  output s_axi_wready,
+  output [3:0] s_axi_bid,
+  output [1:0] s_axi_bresp,
+  output s_axi_bvalid,
+  input s_axi_bready,
+  input [3:0] s_axi_arid,
+  input [31:0] s_axi_araddr,
+  input [3:0] s_axi_arlen,
+  input [2:0] s_axi_arsize,
+  input [1:0] s_axi_arburst,
+  input [1:0] s_axi_arlock,
+  input [3:0] s_axi_arcache,
+  input [2:0] s_axi_arprot,
+  input [3:0] s_axi_arqos,
+  input s_axi_arvalid,
+  output s_axi_arready,
+  output [3:0] s_axi_rid,
+  output [31:0] s_axi_rdata,
+  output [1:0] s_axi_rresp,
+  output s_axi_rlast,
+  output s_axi_rvalid,
+  input s_axi_rready,
+  output [7:0] m_axi_awid,
+  output [63:0] m_axi_awaddr,
+  output [7:0] m_axi_awlen,
+  output [5:0] m_axi_awsize,
+  output [3:0] m_axi_awburst,
+  output [3:0] m_axi_awlock,
+  output [7:0] m_axi_awcache,
+  output [5:0] m_axi_awprot,
+  output [7:0] m_axi_awqos,
+  output [1:0] m_axi_awvalid,
+  input [1:0] m_axi_awready,
+  output [7:0] m_axi_wid,
+  output [63:0] m_axi_wdata,
+  output [7:0] m_axi_wstrb,
+  output [1:0] m_axi_wlast,
+  output [1:0] m_axi_wvalid,
+  input [1:0] m_axi_wready,
+  input [7:0] m_axi_bid,
+  input [3:0] m_axi_bresp,
+  input [1:0] m_axi_bvalid,
+  output [1:0] m_axi_bready,
+  output [7:0] m_axi_arid,
+  output [63:0] m_axi_araddr,
+  output [7:0] m_axi_arlen,
+  output [5:0] m_axi_arsize,
+  output [3:0] m_axi_arburst,
+  output [3:0] m_axi_arlock,
+  output [7:0] m_axi_arcache,
+  output [5:0] m_axi_arprot,
+  output [7:0] m_axi_arqos,
+  output [1:0] m_axi_arvalid,
+  input [1:0] m_axi_arready,
+  input [7:0] m_axi_rid,
+  input [63:0] m_axi_rdata,
+  input [3:0] m_axi_rresp,
+  input [1:0] m_axi_rlast,
+  input [1:0] m_axi_rvalid,
+  output [1:0] m_axi_rready
+);
+
+Behavioral Clarifications:
+- The golden implementation contains no internal logic — it is a port-declaration-only stub. The module body should implement only port declarations with no behavioral always blocks or assign statements beyond the interface.

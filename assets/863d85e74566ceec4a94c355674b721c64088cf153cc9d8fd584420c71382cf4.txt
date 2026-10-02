@@ -1,0 +1,57 @@
+module origen_139101 (
+    input [31:0] term_hits,
+    input clk,
+    input wrenb,
+    input din,
+    output reg hit
+);
+
+    wire [3:0] term_out1, term_out2, term_out3, term_out4;
+    wire [7:0] term_out32;
+    reg [3:0] term_in1, term_in2, term_in3, term_in4;
+    reg [31:0] term_in32;
+    reg [8:0] sum;
+
+    // Instantiate trigterm_4bit modules
+    trigterm_4bit term1 (.in(term_in1), .out(term_out1));
+    trigterm_4bit term2 (.in(term_in2), .out(term_out2));
+    trigterm_4bit term3 (.in(term_in3), .out(term_out3));
+    trigterm_4bit term4 (.in(term_in4), .out(term_out4));
+
+    // Instantiate trigterm_32bit module
+    trigterm_32bit term32 (.in(term_in32), .out(term_out32));
+
+    always @(posedge clk) begin
+        if (wrenb) begin
+            term_in1 <= term_hits[3:0];
+            term_in2 <= term_hits[7:4];
+            term_in3 <= term_hits[11:8];
+            term_in4 <= term_hits[15:12];
+            term_in32 <= term_hits;
+        end
+    end
+
+    always @(posedge clk) begin
+        sum <= term_out1 + term_out2 + term_out3 + term_out4 + term_out32;
+        hit <= din ^ (sum[8] | (sum == 9'b0));
+    end
+
+endmodule
+
+// Define trigterm_4bit module
+module trigterm_4bit (
+    input [3:0] in,
+    output [3:0] out
+);
+    // Implementation of trigterm_4bit module
+    // (Add your specific implementation here)
+endmodule
+
+// Define trigterm_32bit module
+module trigterm_32bit (
+    input [31:0] in,
+    output [7:0] out
+);
+    // Implementation of trigterm_32bit module
+    // (Add your specific implementation here)
+endmodule

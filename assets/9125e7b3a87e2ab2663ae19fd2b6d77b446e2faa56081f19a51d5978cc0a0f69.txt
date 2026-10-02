@@ -1,0 +1,58 @@
+module autovcoder_095127 (
+    input  [ 7:0] counter,
+    input  [23:0] fAddr,
+    output [ 3:0] fdo,
+    output [ 3:0] fdoe,
+    output        clken,
+    output        fcen
+);
+
+  reg clken;
+  reg [3:0] fdo, fdoe;
+  reg fcen;
+
+  always @*
+    case (counter)
+
+      8'd3: {fcen, clken, fdoe, fdo} = {1'b0, 1'b0, 4'b1101, 4'b1111};
+
+      // Address
+      8'd4:  {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b1111, fAddr[23:20]};
+      8'd5:  {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b1111, fAddr[19:16]};
+      8'd6:  {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b1111, fAddr[15:12]};
+      8'd7:  {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b1111, fAddr[11:8]};
+      8'd8:  {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b1111, fAddr[7:4]};
+      8'd9:  {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b1111, fAddr[3:0]};
+      8'd10: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b1111, 4'hA};
+      8'd11: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b1111, 4'h5};
+      // dummy
+      8'd12: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd13: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd14: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b1010};
+      8'd15: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0101};
+
+      // data (8 bytes to be used with the cache) -- Todo: clear the fdo nibbles
+      8'd16: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd17: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd18: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b1010};
+      8'd19: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0101};
+      8'd20: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd21: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd22: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b1010};
+      8'd23: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0101};
+
+      8'd24: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd25: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd26: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b1010};
+      8'd27: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0101};
+      8'd28: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd29: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0000};
+      8'd30: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b1010};
+      8'd31: {fcen, clken, fdoe, fdo} = {1'b0, 1'b1, 4'b0000, 4'b0101};
+
+      8'd32: {fcen, clken, fdoe, fdo} = {1'b1, 1'b0, 4'b1101, 4'b1110};
+
+      default: {fcen, clken, fdoe, fdo} = {1'b1, 1'b0, 4'b1101, 4'b1111};
+    endcase
+endmodule
+

@@ -1,0 +1,10 @@
+always @(posedge clk_i)
+	  if ( (burst_done & vmem_ack) | !vmem_acc)
+	    case (ctrl_vbl) // synopsis full_case parallel_case
+	      2'b00: burst_cnt <=  3'b000; // burst length 1
+	      2'b01: burst_cnt <=  3'b001; // burst length 2
+	      2'b10: burst_cnt <=  3'b011; // burst length 4
+	      2'b11: burst_cnt <=  3'b111; // burst length 8
+	    endcase
+	  else if(vmem_ack)
+	    burst_cnt <=  burst_cnt_val[2:0];

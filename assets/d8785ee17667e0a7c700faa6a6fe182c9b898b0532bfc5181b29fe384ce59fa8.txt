@@ -1,0 +1,7 @@
+module mg_03965(input [15:0] din,input clk_i,output reg dout);
+reg [16:0] PWM_accumulator; 
+  always @(posedge clk_i) begin 
+  PWM_accumulator[16:0] = PWM_accumulator[15:0] + {~din[15], din[14:0]}; 
+  dout = PWM_accumulator[16]; 
+  end 
+ endmodule

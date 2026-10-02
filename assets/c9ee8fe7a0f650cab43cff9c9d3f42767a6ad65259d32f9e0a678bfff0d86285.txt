@@ -1,0 +1,145 @@
+module autovcoder_018882 (
+    cbit,
+    cbitb,
+    b,
+    bl,
+    l,
+    r,
+    t,
+    pgate,
+    prog,
+    reset_b,
+    vdd_cntl,
+    wl
+);
+
+
+  input prog;
+
+  output [19:0] cbit;
+  output [19:0] cbitb;
+
+  inout [11:0] l;
+  inout [11:0] t;
+  inout [11:0] b;
+  inout [11:0] r;
+  inout [9:0] bl;
+
+  input [1:0] wl;
+  input [1:0] vdd_cntl;
+  input [1:0] pgate;
+  input [1:0] reset_b;
+  supply1 vdd_;
+  supply0 gnd_;
+  /* wire vddp_ = test.cds_globalsInst.vddp_; */ supply1 vddp_;
+  supply0 GND_;
+  supply1 VDD_;
+
+  // Buses in the design
+
+  wire [1:0] r_vdd;
+
+
+
+  cram2x2x5 I_cram2x2x5 (
+      .q(cbit[19:0]),
+      .r_gnd(r_vdd[1:0]),
+      .reset_b(reset_b[1:0]),
+      .wl(wl[1:0]),
+      .bl(bl[9:0]),
+      .q_b(cbitb[19:0]),
+      .pgate(pgate[1:0])
+  );
+  pch_hvt M1_1_ (
+      .D(r_vdd[1]),
+      .B(vdd_),
+      .G(vdd_cntl[1]),
+      .S(vdd_)
+  );
+  pch_hvt M1_0_ (
+      .D(r_vdd[0]),
+      .B(vdd_),
+      .G(vdd_cntl[0]),
+      .S(vdd_)
+  );
+  sbox7to1_220 I_l4 (
+      .prog(prog),
+      .in6(t[10]),
+      .in5(t[4]),
+      .in4(r[8]),
+      .in3(r[4]),
+      .in2(r[1]),
+      .in1(b[4]),
+      .in0(b[11]),
+      .out(l[4]),
+      .cb({cbitb[10], cbitb[11], cbitb[14]}),
+      .c({cbit[10], cbit[11], cbit[14]})
+  );
+  sbox7to1_220 I_t4 (
+      .prog(prog),
+      .in6(r[10]),
+      .in5(r[4]),
+      .in4(b[8]),
+      .in3(b[4]),
+      .in2(b[1]),
+      .in1(l[4]),
+      .in0(l[11]),
+      .out(t[4]),
+      .cb({cbitb[9], cbitb[8], cbitb[12]}),
+      .c({cbit[9], cbit[8], cbit[12]})
+  );
+  sbox7to1_220 I_t5 (
+      .prog(prog),
+      .in6(r[11]),
+      .in5(r[5]),
+      .in4(b[9]),
+      .in3(b[5]),
+      .in2(b[2]),
+      .in1(l[5]),
+      .in0(l[0]),
+      .out(t[5]),
+      .cb({cbitb[19], cbitb[16], cbitb[15]}),
+      .c({cbit[19], cbit[16], cbit[15]})
+  );
+  sbox7to1_220 I_t3 (
+      .prog(prog),
+      .in6(r[9]),
+      .in5(r[3]),
+      .in4(b[7]),
+      .in3(b[3]),
+      .in2(b[0]),
+      .in1(l[3]),
+      .in0(l[10]),
+      .out(t[3]),
+      .cb({cbitb[2], cbitb[1], cbitb[6]}),
+      .c({cbit[2], cbit[1], cbit[6]})
+  );
+  sbox7to1_220 I_l5 (
+      .prog(prog),
+      .in6(t[11]),
+      .in5(t[5]),
+      .in4(r[9]),
+      .in3(r[5]),
+      .in2(r[2]),
+      .in1(b[5]),
+      .in0(b[0]),
+      .out(l[5]),
+      .cb({cbitb[13], cbitb[18], cbitb[17]}),
+      .c({cbit[13], cbit[18], cbit[17]})
+  );
+  sbox7to1_220 I_l3 (
+      .prog(prog),
+      .in6(t[9]),
+      .in5(t[3]),
+      .in4(r[7]),
+      .in3(r[3]),
+      .in2(r[0]),
+      .in1(b[3]),
+      .in0(b[10]),
+      .out(l[3]),
+      .cb({cbitb[4], cbitb[3], cbitb[0]}),
+      .c({cbit[4], cbit[3], cbit[0]})
+  );
+
+endmodule
+

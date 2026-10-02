@@ -1,0 +1,131 @@
+// EtherCAT Master Module
+module origen_140005 (
+    input wire [7:0] frame_data,
+    input wire etx_en,
+    input wire erx_en,
+    input wire [15:0] frame_id,
+    input wire [7:0] slave_addr,
+    output reg [7:0] tx_data,
+    output reg tx_en,
+    input wire [7:0] rx_data,
+    output reg erx_en_out
+);
+
+    // State machine states
+    localparam IDLE = 2'b00;
+    localparam TRANSMIT = 2'b01;
+    localparam RECEIVE = 2'b10;
+
+    reg [1:0] state;
+    reg [7:0] frame_buffer [63:0];
+    reg [5:0] frame_index;
+
+    always @(posedge etx_en or posedge erx_en) begin
+        if (etx_en) begin
+            state <= TRANSMIT;
+            frame_index <= 0;
+            // Prepare frame buffer
+            frame_buffer[0] <= 8'h88; // EtherCAT frame type
+            frame_buffer[1] <= 8'hA4;
+            frame_buffer[2] <= frame_id[15:8];
+            frame_buffer[3] <= frame_id[7:0];
+            frame_buffer[4] <= slave_addr;
+            frame_buffer[5] <= frame_data;
+            // Add more frame data as needed
+        end else if (erx_en) begin
+            state <= RECEIVE;
+            frame_index <= 0;
+        end
+    end
+
+    always @(posedge tx_en) begin
+        case (state)
+            TRANSMIT: begin
+                tx_data <= frame_buffer[frame_index];
+                frame_index <= frame_index + 1;
+                if (frame_index == 63) begin
+                    state <= IDLE;
+                    tx_en <= 0;
+                end
+            end
+            RECEIVE: begin
+                // Process received data
+                if (frame_index == 0) begin
+                    erx_en_out <= 1;
+                end
+                frame_buffer[frame_index] <= rx_data;
+                frame_index <= frame_index + 1;
+                if (frame_index == 63) begin
+                    state <= IDLE;
+                    erx_en_out <= 0;
+                end
+            end
+            default: begin
+                tx_en <= 0;
+                erx_en_out <= 0;
+            end
+        endcase
+    end
+
+endmodule
+
+// EtherCAT Slave Module
+module ethercat_slave (
+    input wire [7:0] rx_data,
+    input wire rx_en,
+    input wire etx_en,
+    output reg [7:0] frame_data,
+    output reg [15:0] frame_id,
+    output reg [7:0] slave_addr,
+    output reg erx_en
+);
+
+    // State machine states
+    localparam IDLE = 2'b00;
+    localparam RECEIVE = 2'b01;
+    localparam TRANSMIT = 2'b10;
+
+    reg [1:0] state;
+    reg [7:0] frame_buffer [63:0];
+    reg [5:0] frame_index;
+
+    always @(posedge rx_en or posedge etx_en) begin
+        if (rx_en) begin
+            state <= RECEIVE;
+            frame_index <= 0;
+        end else if (etx_en) begin
+            state <= TRANSMIT;
+            frame_index <= 0;
+        end
+    end
+
+    always @(posedge rx_en) begin
+        case (state)
+            RECEIVE: begin
+                frame_buffer[frame_index] <= rx_data;
+                frame_index <= frame_index + 1;
+                if (frame_index == 63) begin
+                    state <= IDLE;
+                    // Process received frame
+                    frame_id <= {frame_buffer[2], frame_buffer[3]};
+                    slave_addr <= frame_buffer[4];
+                    frame_data <= frame_buffer[5];
+                    erx_en <= 1;
+                end
+            end
+            TRANSMIT: begin
+                // Prepare response frame
+                frame_data <= frame_buffer[frame_index];
+                frame_index <= frame_index + 1;
+                if (frame_index == 63) begin
+                    state <= IDLE;
+                    erx_en <= 0;
+                end
+            end
+            default: begin
+                erx_en <= 0;
+            end
+        endcase
+    end
+
+endmodule

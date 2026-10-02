@@ -1,0 +1,11 @@
+always @(posedge i_clk)
+	if (i_reset)
+		zero_baud_counter <= 1'b1;
+	else if ((state == RXUL_IDLE)&&(!ck_uart)&&(half_baud_time))
+		zero_baud_counter <= 1'b0;
+	else if (state == RXUL_WAIT)
+		zero_baud_counter <= 1'b1;
+	else if ((zero_baud_counter)&&(state < RXUL_STOP))
+		zero_baud_counter <= 1'b0;
+	else if (baud_counter == 1)
+		zero_baud_counter <= 1'b1;

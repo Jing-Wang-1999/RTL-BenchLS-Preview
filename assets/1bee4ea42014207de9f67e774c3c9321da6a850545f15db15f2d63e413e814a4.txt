@@ -1,0 +1,22 @@
+module HLS_cdp_icvt_core_staller (
+    input wire nvdla_core_clk,
+    input wire nvdla_core_rstn,
+    input wire chn_data_in_rsci_wen_comp,
+    input wire chn_data_out_rsci_wen_comp,
+    output wire core_wen,
+    output reg core_wten
+);
+
+    // Compute core_wen as the logical AND of the input signals
+    assign core_wen = chn_data_in_rsci_wen_comp & chn_data_out_rsci_wen_comp;
+
+    // Update core_wten on the rising edge of the clock or falling edge of reset
+    always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
+        if (!nvdla_core_rstn) begin
+            core_wten <= 1'b0; // Reset condition
+        end else begin
+            core_wten <= ~core_wen; // Logical NOT of core_wen
+        end
+    end
+
+endmodule

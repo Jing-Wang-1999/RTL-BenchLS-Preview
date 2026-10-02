@@ -1,0 +1,54 @@
+module origen_172320(
+    input display_clk,
+    input blink_clk,
+    input [1:0] mode,
+    input [7:0] digit0_display,
+    input [7:0] digit1_display,
+    input [7:0] digit2_display,
+    input [7:0] digit3_display,
+    input [1:0] digit,
+    output reg [7:0] seg,
+    output reg [3:0] an
+);
+
+    reg [1:0] counter;
+    reg [7:0] seg_t;
+    reg [3:0] an_t;
+
+    always @(posedge display_clk) begin
+        counter <= counter + 1'b1;
+        case (counter)
+            2'b00: begin
+                an_t <= 4'b1110;
+                seg_t <= digit0_display;
+            end
+            2'b01: begin
+                an_t <= 4'b1101;
+                seg_t <= digit1_display;
+            end
+            2'b10: begin
+                an_t <= 4'b1011;
+                seg_t <= digit2_display;
+            end
+            2'b11: begin
+                an_t <= 4'b0111;
+                seg_t <= digit3_display;
+            end
+        endcase
+
+        case (mode)
+            2'b01: begin
+                if (blink_clk && (counter == digit)) begin
+                    seg_t <= 8'b0;
+                end
+            end
+            default: begin
+                seg_t <= seg_t;
+            end
+        endcase
+
+        an <= an_t;
+        seg <= seg_t;
+    end
+
+endmodule

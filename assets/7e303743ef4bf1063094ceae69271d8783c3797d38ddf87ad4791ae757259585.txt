@@ -1,0 +1,35 @@
+**Module Name:** autovcoder_088563  
+
+**Overview**  
+This module is a programmable code address generator. It maintains a code address register that can be updated based on control inputs and fields extracted from an input code word. The module supports four update operations: no change, increment, modify by an offset, or set to a new value.  
+
+**Parameters**  
+- `DATA_BITWIDTH`: Bit width of the data input (default 8).  
+- `CODE_BITWIDTH`: Bit width of the code input (default 16).  
+- `ADDR_BITWIDTH`: Bit width of the code address (default 16).  
+- Four 2-bit constants define the address update operations:  
+  - `CADDR_NOP`: No operation.  
+  - `CADDR_INC`: Increment address by 1.  
+  - `CADDR_MOD`: Modify address by adding or subtracting an offset.  
+  - `CADDR_SET`: Set address to a new value.  
+
+**Inputs**  
+- `clk`: System clock.  
+- `rst_n`: Active-low reset.  
+- `flag_op_caddr` (2 bits): Selects the address update operation.  
+- `code` (`CODE_BITWIDTH` bits): Input code word used to extract control flags and offset/value fields.  
+- `data` (`DATA_BITWIDTH` bits): Data input (unused in this module).  
+- `dbg_clk`: Debug clock (unused).  
+
+**Outputs**  
+- `code_addr` (`ADDR_BITWIDTH` bits): Current code address.  
+- `dbg_local_f_pn`: Debug output for the PN flag extracted from `code[15]`.  
+- `dbg_local_f_mem`: Debug output for the MEM flag extracted from `code[13]`.  
+- `dbg_local_f_lh`: Debug output for the LH flag extracted from `code[12]`.  
+
+**Internal Signals**  
+- `_inst12`: Bits 15:4 of the code input.  
+- `_inst11`: Bits 14:4 of the code input.  
+- `_inst8`: Bits 11:4 of the code input.  
+- `_f_pn`: PN flag (`code[15]`).  
+- `_f_mem`: MEM flag (`

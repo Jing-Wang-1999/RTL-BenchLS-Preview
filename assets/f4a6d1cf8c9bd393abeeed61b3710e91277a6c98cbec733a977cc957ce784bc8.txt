@@ -1,0 +1,109 @@
+module origen_135675 (
+    input wire SYSCLK,
+    input wire CLKDIV,
+    input wire RST,
+    input wire I_DAT,
+    output wire O_DAT,
+    output wire T_DAT,
+    input wire [7:0] INPUTS,
+    output wire [7:0] OUTPUTS
+);
+
+    parameter DATA_RATE = "DDR";
+    parameter DATA_WIDTH = 8;
+    parameter DATA_RATE_TQ = "BUF";
+    parameter TRISTATE_WIDTH = 1;
+    parameter INTERFACE_TYPE = "NETWORKING";
+    parameter NUM_CE = 2;
+    parameter BUFR_DIVIDE = "4";
+    parameter SIM_DEVICE = "7SERIES";
+    parameter LOC = "BUFR_X0Y0";
+
+    wire clk_div;
+    wire [7:0] parallel_data;
+    wire [7:0] deserialized_data;
+
+    // BUFR instantiation
+    BUFR #(
+        .BUFR_DIVIDE(BUFR_DIVIDE),
+        .SIM_DEVICE(SIM_DEVICE)
+    ) BUFR_inst (
+        .I(SYSCLK),
+        .O(clk_div),
+        .CE(1'b1),
+        .CLR(1'b0)
+    );
+
+    // OSERDES instantiation
+    OSERDES2 #(
+        .DATA_RATE_OQ(DATA_RATE),
+        .DATA_RATE_TQ(DATA_RATE_TQ),
+        .DATA_WIDTH(DATA_WIDTH),
+        .TRISTATE_WIDTH(TRISTATE_WIDTH)
+    ) OSERDES_inst (
+        .OQ(O_DAT),
+        .TQ(T_DAT),
+        .CLK0(SYSCLK),
+        .CLK1(1'b0),
+        .CLKDIV(clk_div),
+        .D1(parallel_data[0]),
+        .D2(parallel_data[1]),
+        .D3(parallel_data[2]),
+        .D4(parallel_data[3]),
+        .D5(parallel_data[4]),
+        .D6(parallel_data[5]),
+        .D7(parallel_data[6]),
+        .D8(parallel_data[7]),
+        .OCE(1'b1),
+        .RST(RST),
+        .TRAIN(1'b0),
+        .T1(1'b0),
+        .T2(1'b0),
+        .T3(1'b0),
+        .T4(1'b0),
+        .TCE(1'b1),
+        .SHIFTIN1(1'b1),
+        .SHIFTIN2(1'b1),
+        .SHIFTIN3(1'b1),
+        .SHIFTIN4(1'b1),
+        .SHIFTOUT1(),
+        .SHIFTOUT2(),
+        .SHIFTOUT3(),
+        .SHIFTOUT4()
+    );
+
+    // ISERDES instantiation
+    ISERDES2 #(
+        .DATA_RATE(DATA_RATE),
+        .DATA_WIDTH(DATA_WIDTH),
+        .INTERFACE_TYPE(INTERFACE_TYPE)
+    ) ISERDES_inst (
+        .D(I_DAT),
+        .CE0(1'b1),
+        .CLK0(SYSCLK),
+        .CLK1(1'b0),
+        .IOCE(clk_div),
+        .RST(RST),
+        .CLKDIV(clk_div),
+        .SHIFTIN(1'b0),
+        .BITSLIP(1'b0),
+        .FABRICOUT(),
+        .Q1(deserialized_data[7]),
+        .Q2(deserialized_data[6]),
+        .Q3(deserialized_data[5]),
+        .Q4(deserialized_data[4]),
+        .Q5(deserialized_data[3]),
+        .Q6(deserialized_data[2]),
+        .Q7(deserialized_data[1]),
+        .Q8(deserialized_data[0]),
+        .SHIFTOUT(),
+        .CFB0(),
+        .CFB1(),
+        .DFB()
+    );
+
+    // Connect inputs and outputs
+    assign parallel_data = INPUTS;
+    assign OUTPUTS = deserialized_data;
+
+endmodule

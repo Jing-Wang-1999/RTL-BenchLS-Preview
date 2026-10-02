@@ -1,0 +1,126 @@
+// Required path: verilog/rtl/baud_gen.v
+module baud_gen 
+(
+	clock, reset, 
+	ce_16, baud_freq, baud_limit 
+);
+input 			clock;
+input 			reset;
+output			ce_16;
+input	[11:0]	baud_freq;
+input	[15:0]	baud_limit;
+endmodule
+
+// Required path: verilog/rtl/uart2bus_top.v
+module uart2bus_top 
+(
+	
+	clock, reset,
+	
+	ser_in, ser_out,
+	
+	int_address, int_wr_data, int_write,
+	int_rd_data, int_read, 
+	int_req, int_gnt 
+);
+input 			clock;
+input 			reset;
+input			ser_in;
+output			ser_out;
+output	[15:0]	int_address;
+output	[7:0]	int_wr_data;
+output			int_write;
+output			int_read;
+input	[7:0]	int_rd_data;
+output			int_req;
+input			int_gnt;
+endmodule
+
+// Required path: verilog/rtl/uart_parser.v
+module uart_parser 
+(
+	
+	clock, reset,
+	
+	rx_data, new_rx_data, 
+	tx_data, new_tx_data, tx_busy, 
+	
+	int_address, int_wr_data, int_write,
+	int_rd_data, int_read, 
+	int_req, int_gnt 
+);
+parameter		AW = 8;
+input 			clock;
+input 			reset;
+output	[7:0]	tx_data;
+output			new_tx_data;
+input 			tx_busy;
+input	[7:0]	rx_data;
+input 			new_rx_data;
+output	[AW-1:0] int_address;
+output	[7:0]	int_wr_data;
+output			int_write;
+output			int_read;
+input	[7:0]	int_rd_data;
+output			int_req;
+input			int_gnt;
+endmodule
+
+// Required path: verilog/rtl/uart_rx.v
+module uart_rx 
+(
+	clock, reset,
+	ce_16, ser_in, 
+	rx_data, new_rx_data 
+);
+input 			clock;
+input 			reset;
+input			ce_16;
+input			ser_in;
+output	[7:0]	rx_data;
+output 			new_rx_data;
+endmodule
+
+// Required path: verilog/rtl/uart_top.v
+module uart_top 
+(
+	
+	clock, reset,
+	
+	ser_in, ser_out,
+	
+	rx_data, new_rx_data, 
+	tx_data, new_tx_data, tx_busy, 
+	
+	baud_freq, baud_limit, 
+	baud_clk 
+);
+input 			clock;
+input 			reset;
+input			ser_in;
+output			ser_out;
+input	[7:0]	tx_data;
+input			new_tx_data;
+output 			tx_busy;
+output	[7:0]	rx_data;
+output 			new_rx_data;
+input	[11:0]	baud_freq;
+input	[15:0]	baud_limit;
+output			baud_clk;
+endmodule
+
+// Required path: verilog/rtl/uart_tx.v
+module uart_tx  
+(
+	clock, reset,
+	ce_16, tx_data, new_tx_data, 
+	ser_out, tx_busy
+);
+input 			clock;
+input 			reset;
+input			ce_16;
+input	[7:0]	tx_data;
+input			new_tx_data;
+output			ser_out;
+output 			tx_busy;
+endmodule

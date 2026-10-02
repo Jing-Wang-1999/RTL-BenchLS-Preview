@@ -1,0 +1,51 @@
+module NV_NVDLA_RT_SDP2NOCIF_pipe_p8 (
+   nvdla_core_clk
+  ,nvdla_core_rstn
+  ,cvif2sdp_rd_rsp_src_valid_d0
+  ,cvif2sdp_rd_rsp_src_ready_d0
+  ,cvif2sdp_rd_rsp_src_pd_d0
+  ,cvif2sdp_rd_rsp_src_valid_d1
+  ,cvif2sdp_rd_rsp_src_ready_d1
+  ,cvif2sdp_rd_rsp_src_pd_d1
+  );
+
+input          nvdla_core_clk;
+input          nvdla_core_rstn;
+input          cvif2sdp_rd_rsp_src_valid_d0;
+output         cvif2sdp_rd_rsp_src_ready_d0;
+input  [513:0] cvif2sdp_rd_rsp_src_pd_d0;
+output         cvif2sdp_rd_rsp_src_valid_d1;
+input          cvif2sdp_rd_rsp_src_ready_d1;
+output [513:0] cvif2sdp_rd_rsp_src_pd_d1;
+
+reg            p8_pipe_valid;
+reg    [513:0] p8_pipe_data;
+wire           p8_pipe_ready;
+wire           p8_pipe_ready_bc;
+wire           p8_pipe_valid_d0;
+
+assign p8_pipe_ready = cvif2sdp_rd_rsp_src_ready_d1;
+assign p8_pipe_ready_bc = !p8_pipe_valid || p8_pipe_ready;
+assign cvif2sdp_rd_rsp_src_ready_d0 = p8_pipe_ready_bc;
+assign p8_pipe_valid_d0 = cvif2sdp_rd_rsp_src_valid_d0 && p8_pipe_ready_bc;
+
+always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
+   if (!nvdla_core_rstn) begin
+       p8_pipe_valid <= 1'b0;
+   end else begin
+       if (p8_pipe_ready_bc) begin
+           p8_pipe_valid <= p8_pipe_valid_d0;
+       end
+   end
+end
+
+always @(posedge nvdla_core_clk) begin
+   if (p8_pipe_ready_bc && cvif2sdp_rd_rsp_src_valid_d0) begin
+       p8_pipe_data <= cvif2sdp_rd_rsp_src_pd_d0;
+   end
+end
+
+assign cvif2sdp_rd_rsp_src_valid_d1 = p8_pipe_valid;
+assign cvif2sdp_rd_rsp_src_pd_d1 = p8_pipe_data;
+
+endmodule

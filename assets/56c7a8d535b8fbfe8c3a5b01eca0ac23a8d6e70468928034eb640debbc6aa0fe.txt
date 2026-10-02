@@ -1,0 +1,63 @@
+**Module Name:** FP_SUM_BLOCK_pipe_p15  
+
+**Overview**  
+This module is a single-stage pipeline register with valid‑ready handshaking. It acts as a buffer stage within a larger floating‑point summation datapath, ensuring data flows correctly between pipeline stages while adhering to a ready‑valid flow‑control protocol.  
+
+**Primary Function**  
+The module receives a 32‑bit data payload along with a valid signal from an upstream stage. It stores the data internally and forwards it downstream only when both:  
+1. The module contains valid data.  
+2. The downstream stage indicates it is ready to accept new data.  
+
+When the downstream stage is not ready, the module holds the data until the downstream stage becomes ready.  
+
+**Interface Signals**  
+
+*Inputs*  
+- **nvdla_core_clk**: System clock.  
+- **nvdla_core_rstn**: Active‑low synchronous reset.  
+- **stage3_pipe_in_pd_d2**: 32‑bit data payload from the previous pipeline stage.  
+- **stage3_pipe_in_vld_d2**: Valid flag accompanying the input data.  
+- **stage3_pipe_in_rdy_d3**: Ready signal from the next pipeline stage, indicating it can accept data.  
+
+*Outputs*  
+- **stage3_pipe_in_pd_d3**: 32‑bit data payload forwarded to the next pipeline stage.  
+- **stage3_pipe_in_vld_d3**: Valid flag for the output data.  
+- **stage3_pipe_in_rdy_d2**: Ready signal sent to the previous stage, indicating this stage can accept new data.  
+
+**Internal Operation**  
+
+1. **Handshake Logic**  
+   - The output ready signal (`stage3_pipe_in_rdy_d2`) is asserted when either:  
+     a) The internal storage register is empty, or  
+     b) The downstream stage is ready (`stage3_pipe_in_rdy_d3` is high).  
+   - This “ready‑bubble‑collapse” behavior prevents unnecessary stalls by allowing new data to enter whenever the pipeline stage is idle or can immediately forward data.  
+
+2. **Data Storage**  
+   - A 32‑bit register (`p15_pipe_data`) holds the incoming data when both the input valid is high and the internal ready signal is asserted.  
+   - If the downstream stage is not ready, the register retains its current value.  
+
+3. **Valid Propagation**  
+   - The output valid (`stage3_pipe_in_vld_d3`) is asserted when the internal register contains valid data.  
+   - The internal valid flag is cleared on reset, and updated based on the handshake conditions: it remains set when data is held, and updates when new data is accepted.  
+
+4. **Reset Behavior**  
+   - On active‑low reset, the internal valid flag is cleared, making the stage empty.  
+
+**Key Timing/Protocol Rules**  
+- The module guarantees that once `stage3_pipe_in_vld_d2` is asserted and `stage3_pipe_in_rdy_d2` is low (i.e., data is transferred in), the valid flag will not be de‑asserted until the corresponding ready is asserted (data is forwarded). This ensures compliance with standard valid‑ready pipeline protocols.  
+- No combinational paths exist directly from inputs to outputs except for the ready signal; data passes through a clock‑edged register.  
+
+**Allowed Sub‑modules**  
+None. The module is a self‑contained pipeline register with handshake control logic.  
+
+**Error Handling & Assertions**  
+The design includes embedded assertions (disabled in synthesis) that check:  
+- No unknown values (X’s) on control signals during simulation.  
+- That a valid signal is not removed before the corresponding ready is asserted, preserving protocol integrity.  
+
+**Performance Notes**  
+- The stage introduces one clock cycle of latency when data flows through without stalls.  
+- The ready‑bubble‑collapse logic minimizes pipeline bubbles by allowing back‑to‑back transfers when possible.  
+
+**Use Case**  
+This stage is typically instantiated within a multi‑stage floating‑point adder or accumulator pipeline to balance timing and improve throughput.

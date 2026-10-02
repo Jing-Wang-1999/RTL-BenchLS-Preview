@@ -1,0 +1,44 @@
+always@(state or tdsp_breq or dma_breq)
+    begin
+      case (state)
+        IDLE:
+          begin
+          	if(tdsp_breq)
+            	next_state = GRANT_TDSP;
+          	else if(dma_breq)
+            	next_state = GRANT_DMA;
+			else next_state = IDLE;
+        	end
+        GRANT_TDSP:
+          begin
+            if(tdsp_breq == 1'b0)
+              next_state = CLEAR;
+			else next_state = GRANT_TDSP;
+          end
+        GRANT_DMA:
+          begin
+            if(dma_breq == 1'b0)
+              next_state = CLEAR;
+			else next_state = GRANT_DMA;
+          end
+        DMA_PRI:
+          begin
+            if(tdsp_breq)
+              next_state = GRANT_TDSP;
+            else if(dma_breq)
+              next_state = GRANT_DMA;
+            else if(!tdsp_breq && !dma_breq)
+              next_state = IDLE;
+			else next_state = DMA_PRI;
+          end
+        CLEAR:
+          begin
+            if(tdsp_breq == 1'b1)
+              next_state = GRANT_TDSP;
+            else if(dma_breq)
+              next_state = DMA_PRI;
+			else next_state = CLEAR;
+          end
+         default: next_state = IDLE;
+      endcase
+    end

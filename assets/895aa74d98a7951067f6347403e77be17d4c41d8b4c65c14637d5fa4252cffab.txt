@@ -1,0 +1,51 @@
+module mg_00145(clk,src,dst);
+input clk; 
+ input[63:0] src; 
+ output[63:0] dst; 
+ reg[12:0] exa; 
+ reg[12:0] exb; 
+ reg[52:0] fra; 
+ reg[52:0] frb; 
+ reg[52:0] tFr2; 
+ reg[52:0] tFr3; 
+ reg[63:0] tDst; 
+ assign dst = tDst; 
+ reg[15:0] rcpLut[255:0]; 
+ initial begin 
+  $readmemh("rcplut0.txt", rcpLut); 
+ end 
+ always @ (clk) 
+ begin 
+  exa[12:11]=0; 
+  exa[10:0]=src[62:52]; 
+  fra[52]=0; 
+  fra[51:0]=src[51:0]; 
+  tDst = 0; 
+  tFr2[52:37]=rcpLut[fra[51:44]]; 
+  tFr2[36:0]=0; 
+  tFr3[52:44]=0; 
+  tFr3[43:0]=(fra[43:0]>>1)-(fra[43:0]>>6); 
+  case(tFr2[52:49]) 
+  4'h8: frb=tFr2-(tFr3<<1); 
+  4'h7: frb=tFr2-(tFr3<<1); 
+  4'h6: frb=tFr2-(tFr3 ); 
+  4'h5: frb=tFr2-(tFr3 ); 
+  4'h4: frb=tFr2-(tFr3>>1); 
+  default: frb=tFr2; 
+  endcase 
+  if(frb[52]) 
+  begin 
+  exb=2046-exa; 
+  tDst[63]=src[63]; 
+  tDst[62:52]=exb[10:0]; 
+  tDst[51:0]=frb[51:0]; 
+  end 
+  else 
+  begin 
+  exb=2045-exa; 
+  tDst[63]=src[63]; 
+  tDst[62:52]=exb[10:0]; 
+  tDst[51:1]=frb[50:0]; 
+  end 
+ end 
+ endmodule

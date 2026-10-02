@@ -1,0 +1,15 @@
+always @(posedge clk) begin
+    if (reset) begin
+      div_counter <= 0;
+      pen <= 1;
+      old_pen <= 0;
+    end else begin
+      if (use_divider) begin
+        old_pen <= pen;
+        div_counter <= div_counter + 256;
+        if (div_counter >= div - 256)
+          div_counter <= div_counter - (div - 256);
+        pen <= div_counter < (div >> 1);
+      end
+    end
+  end

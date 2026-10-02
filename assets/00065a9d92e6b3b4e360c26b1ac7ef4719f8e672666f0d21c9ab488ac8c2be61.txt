@@ -1,0 +1,14 @@
+The primary function of the Verilog module `rtlpp_04967` is to verify the Frame Check Sequence (FCS) of Ethernet frames transmitted through the AXI-Stream interface. It ensures the integrity of data by comparing the calculated CRC of incoming data with the transmitted CRC and signals an error for any mismatch.
+
+Key control flow points include:
+1. Two states in the state machine: `STATE_IDLE` and `STATE_PAYLOAD`.
+   - **STATE_IDLE**: Awaits valid input data, initializes CRC calculation, and transitions to `STATE_PAYLOAD` once valid data is detected.
+   - **STATE_PAYLOAD**: Continuously updates the CRC as data is received, and if the last data byte is encountered, it checks for CRC mismatch, asserts the error flag if needed, and reverts to `STATE_IDLE`.
+   
+Important data processing steps involve:
+1. Calculation of the CRC using the `calc_crc_8` function, which processes each byte of input data.
+2. Sequential buffering of four incoming data words to facilitate CRC calculation and comparison.
+3. Decision-making based on the last data byte (`input_axis_tlast`), updating the CRC state and signaling the output data validity.
+4. Handling output data readiness and storing data temporarily in case the output is not ready to receive more data.
+
+This module also signals to external systems when it is busy processing data (`busy`) and flags an error if a bad FCS is detected (`error_bad_fcs`). Data is efficiently managed and moved through intermediate registers to ensure seamless flow and accurate CRC verification.

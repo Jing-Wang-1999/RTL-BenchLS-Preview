@@ -1,0 +1,57 @@
+module origen_129216 #(
+    parameter n = 8,  // Number of input bits
+    parameter m = 12, // Number of output bits
+    parameter p = 4   // Number of parity bits
+) (
+    input wire [n-1:0] in,
+    output reg [m-1:0] out
+);
+
+    // Calculate parity bits
+    function [p-1:0] calculate_parity;
+        input [n-1:0] data;
+        begin
+            calculate_parity[0] = ^(data & 8'b10101010);
+            calculate_parity[1] = ^(data & 8'b11001100);
+            calculate_parity[2] = ^(data & 8'b11110000);
+            calculate_parity[3] = ^data;
+        end
+    endfunction
+
+    // Error correction
+    function [n-1:0] correct_error;
+        input [m-1:0] received;
+        reg [p-1:0] syndrome;
+        integer i;
+        reg error_found;
+        begin
+            syndrome = calculate_parity(received[n-1:0]) ^ received[m-1:m-p];
+            correct_error = received[n-1:0];
+            error_found = 0;
+            if (syndrome != 0) begin
+                for (i = 0; i < n && !error_found; i = i + 1) begin
+                    if (syndrome == calculate_parity(1 << i)) begin
+                        correct_error[i] = ~correct_error[i];
+                        error_found = 1;
+                    end
+                end
+            end
+        end
+    endfunction
+
+    // Main logic
+    always @(*) begin
+        reg [p-1:0] parity;
+        reg [m-1:0] codeword;
+        
+        // Calculate parity and form codeword
+        parity = calculate_parity(in);
+        codeword = {parity, in};
+        
+        // Simulate transmission (no actual error introduced here)
+        
+        // Error detection and correction
+        out = {calculate_parity(correct_error(codeword)), correct_error(codeword)};
+    end
+
+endmodule

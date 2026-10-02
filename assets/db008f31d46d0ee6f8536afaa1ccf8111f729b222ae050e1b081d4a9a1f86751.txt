@@ -1,0 +1,47 @@
+# Module Specification: origen_103858
+
+## Overview
+This module implements a multiplexed display controller that selects and outputs data for up to 8 individual display digits based on a counter input. It is designed to drive multi-digit seven-segment or similar displays using time-division multiplexing.
+
+## Parameters
+The module has 8 configuration parameters (D7, D6, D5, D4, D3, D2, D1, D0), each representing an enable flag for the corresponding digit position:
+- D0 through D7: Binary flags (0 or 1) that determine whether each digit position is active
+- Default values: D1 and D0 are enabled (set to 1), all others are disabled (set to 0)
+
+## Inputs
+- **counter**: A 3-bit input signal that selects which digit position to activate (values 0 through 7)
+- **data_0 through data_7**: Eight separate 4-bit input buses, each carrying the data to be displayed on the corresponding digit position
+
+## Outputs
+- **anodos**: An 8-bit output bus that provides the digit selection signals (anode control). This is an active-low signal where a '0' bit enables the corresponding digit position
+- **DIG**: A 4-bit output bus that carries the data for the currently selected digit
+
+## Functional Behavior
+
+The module operates as a combinational multiplexer with enable control:
+
+1. **Counter-Based Selection**: The 3-bit counter input determines which of the 8 digit positions is being addressed in the current cycle
+
+2. **Enable Checking**: For each counter value, the module checks if the corresponding digit is enabled via its parameter (D0-D7)
+
+3. **Output Generation**:
+   - When a digit is enabled (parameter = 1):
+     - The anodos output activates only that specific digit position by setting the corresponding bit to '0' (active-low)
+     - The DIG output presents the 4-bit data from the corresponding data input
+   
+   - When a digit is disabled (parameter = 0):
+     - The anodos output is set to all '1's (all digits off)
+     - The DIG output is set to zero (4'b0000)
+
+4. **Mapping**: The counter-to-digit mapping is direct:
+   - Counter = 000 → Digit 0 (anodos bit 0, data_0)
+   - Counter = 001 → Digit 1 (anodos bit 1, data_1)
+   - Counter = 010 → Digit 2 (anodos bit 2, data_2)
+   - And so on through counter = 111 → Digit 7
+
+5. **Default Behavior**: If the counter somehow takes an undefined value, all digits are disabled (anodos = all 1's, DIG = 0000)
+
+## Typical Use Case
+This module is typically used in conjunction with:
+- A counter that cycles through values 0-7 at a high frequency
+- A seven-segment decoder that

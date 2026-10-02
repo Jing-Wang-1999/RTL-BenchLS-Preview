@@ -1,0 +1,71 @@
+module fir_stream_passthrough (
+	clk,
+	reset_n,
+	ast_sink_data,
+	ast_sink_valid,
+	ast_source_ready,
+	ast_sink_sop,
+	ast_sink_eop,
+	ast_sink_error,
+	ast_source_data,
+	ast_sink_ready,
+	ast_source_valid,
+	ast_source_sop,
+	ast_source_eop,
+	ast_source_channel,
+	ast_source_error
+);
+
+	input		clk;
+	input		reset_n;
+	input	[27:0]	ast_sink_data;
+	input		ast_sink_valid;
+	input		ast_source_ready;
+	input		ast_sink_sop;
+	input		ast_sink_eop;
+	input	[1:0]	ast_sink_error;
+	output	[27:0]	ast_source_data;
+	output		ast_sink_ready;
+	output		ast_source_valid;
+	output		ast_source_sop;
+	output		ast_source_eop;
+	output		ast_source_channel;
+	output	[1:0]	ast_source_error;
+
+	reg [27:0] ast_source_data;
+	reg ast_sink_ready;
+	reg ast_source_valid;
+	reg ast_source_sop;
+	reg ast_source_eop;
+	reg ast_source_channel;
+	reg [1:0] ast_source_error;
+
+	always @(posedge clk or negedge reset_n) begin
+		if (!reset_n) begin
+			ast_source_data <= 0;
+			ast_sink_ready <= 0;
+			ast_source_valid <= 0;
+			ast_source_sop <= 0;
+			ast_source_eop <= 0;
+			ast_source_channel <= 0;
+			ast_source_error <= 0;
+		end else begin
+			// Implement the logic that was supposed to be in fir10_spec_ast
+			// This is just a placeholder example and should be replaced by the real logic
+			if (ast_sink_valid || ast_source_ready) begin
+				ast_source_data <= ast_sink_data;
+				ast_sink_ready <= 1;
+				ast_source_valid <= 1;
+				ast_source_sop <= ast_sink_sop;
+				ast_source_eop <= ast_sink_eop;
+				ast_source_channel <= 0; // Placeholder, define appropriately
+				ast_source_error <= ast_sink_error;
+			end else begin
+				ast_sink_ready <= 0;
+				ast_source_valid <= 0;
+				ast_source_sop <= 0;
+				ast_source_eop <= 0;
+			end
+		end
+	end
+endmodule

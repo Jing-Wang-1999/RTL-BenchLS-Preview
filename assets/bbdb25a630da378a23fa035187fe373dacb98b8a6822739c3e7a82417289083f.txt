@@ -1,0 +1,84 @@
+// Required path: rtl/verilog/i2c_master_bit_ctrl.v
+module i2c_master_bit_ctrl (
+    input             clk,      
+    input             rst,      
+    input             nReset,   
+    input             ena,      
+
+    input      [15:0] clk_cnt,  
+
+    input      [ 3:0] cmd,      
+    output reg        cmd_ack,  
+    output reg        busy,     
+    output reg        al,       
+
+    input             din,
+    output reg        dout,
+
+    input             scl_i,    
+    output            scl_o,    
+    output reg        scl_oen,  
+    input             sda_i,    
+    output            sda_o,    
+    output reg        sda_oen   
+);
+endmodule
+
+// Required path: rtl/verilog/i2c_master_byte_ctrl.v
+module i2c_master_byte_ctrl (
+	clk, rst, nReset, ena, clk_cnt, start, stop, read, write, ack_in, din,
+	cmd_ack, ack_out, dout, i2c_busy, i2c_al, scl_i, scl_o, scl_oen, sda_i, sda_o, sda_oen );
+parameter [4:0] ST_IDLE  = 5'b0_0000;
+parameter [4:0] ST_START = 5'b0_0001;
+parameter [4:0] ST_READ  = 5'b0_0010;
+parameter [4:0] ST_WRITE = 5'b0_0100;
+parameter [4:0] ST_ACK   = 5'b0_1000;
+parameter [4:0] ST_STOP  = 5'b1_0000;
+input clk;
+input rst;
+input nReset;
+input ena;
+input [15:0] clk_cnt;
+input       start;
+input       stop;
+input       read;
+input       write;
+input       ack_in;
+input [7:0] din;
+output       cmd_ack;
+output       ack_out;
+output       i2c_busy;
+output       i2c_al;
+output [7:0] dout;
+input  scl_i;
+output scl_o;
+output scl_oen;
+input  sda_i;
+output sda_o;
+output sda_oen;
+endmodule
+
+// Required path: rtl/verilog/i2c_master_top.v
+module i2c_master_top(
+	wb_clk_i, wb_rst_i, arst_i, wb_adr_i, wb_dat_i, wb_dat_o,
+	wb_we_i, wb_stb_i, wb_cyc_i, wb_ack_o, wb_inta_o,
+	scl_pad_i, scl_pad_o, scl_padoen_o, sda_pad_i, sda_pad_o, sda_padoen_o );
+parameter ARST_LVL = 1'b0;
+input        wb_clk_i;
+input        wb_rst_i;
+input        arst_i;
+input  [2:0] wb_adr_i;
+input  [7:0] wb_dat_i;
+output [7:0] wb_dat_o;
+input        wb_we_i;
+input        wb_stb_i;
+input        wb_cyc_i;
+output       wb_ack_o;
+output       wb_inta_o;
+input  scl_pad_i;
+output scl_pad_o;
+output scl_padoen_o;
+input  sda_pad_i;
+output sda_pad_o;
+output sda_padoen_o;
+endmodule

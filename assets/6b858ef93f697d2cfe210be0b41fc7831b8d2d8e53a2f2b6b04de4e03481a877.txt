@@ -1,0 +1,7 @@
+# Clock divider
+
+`clkdivider` has single-bit inputs `clk` and active-high `reset`, and a single-bit registered output `clk_out`. No submodules are used.
+
+On every rising edge of `clk`, an asserted `reset` synchronously clears the internal 8-bit counter to 0 and sets `clk_out` to 0. Otherwise, if the counter is 127, the module clears the counter to 0 and complements `clk_out`. On all other rising edges it increments the counter by one and leaves `clk_out` unchanged.
+
+Thus `clk_out` toggles once per 128 input rising edges and, after reset, has a full-period frequency of `clk/256` with a 50% duty cycle.

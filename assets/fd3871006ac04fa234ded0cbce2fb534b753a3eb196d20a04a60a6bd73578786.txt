@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""Replay upstream Evensgn CPU Hello World benchmark with pinned simulation clock."""
+import argparse,json,shutil,subprocess,os,time,re
+from pathlib import Path
+
+def main():
+ a=argparse.ArgumentParser();a.add_argument('--payload',type=Path,required=True);a.add_argument('--candidate-dir',type=Path,required=True);a.add_argument('--output',type=Path,required=True);z=a.parse_args();m=json.loads((z.payload/'meta.json').read_text());z.output.mkdir(parents=True,exist_ok=False);s=z.output/'source';shutil.copytree(z.payload/'source',s)
+ for f in m['rtl_files']:shutil.copyfile(z.candidate_dir/f,s/f)
+ cmd=[m['iverilog'],'-g2005','-s','sim_cpu','-I','src/cpu','-I','src/cpu/library','-o',str((z.output/'sim.vvp').resolve())]+m['compile_files'];t=time.monotonic();c=subprocess.run(cmd,cwd=s,capture_output=True,text=True,timeout=90);(z.output/'compile.log').write_text(c.stdout+c.stderr);r=dict(compile_pass=c.returncode==0,compile_returncode=c.returncode,compile_command=cmd,timeout=False,passed_testpoints=0,total_testpoints=1,score=0)
+ if c.returncode==0:
+  try:
+   p=subprocess.run([m['vvp'],'-i','-n',str((z.output/'sim.vvp').resolve())],cwd=s,capture_output=True,text=True,timeout=180,env={**os.environ,'IVERILOG_DUMPER':'none'});txt=p.stdout+p.stderr;(z.output/'run.log').write_text(txt)
+   # Program main0x1098 loads Hello World! at0x10c4, writes bytes through MMIO0x104, then newline.
+   prefix=txt.split('test/sim_cpu.v:25: $stop called',1)[0];payload=''.join(line+'\n' for line in prefix.splitlines() if not line.startswith('WARNING:'))
+   expected=''.join(c+'\n' for c in 'Hello World!\n');ok=p.returncode==0 and payload==expected and '$stop called at 10001000000 (1ps)' in txt and 'ERROR:' not in txt
+   r.update(returncode=p.returncode,passed_testpoints=int(ok),score=int(ok),expected_output='Hello World!\n',uart_display_transcript=payload,normal_completion='$stop called at 10001000000 (1ps)' in txt)
+  except subprocess.TimeoutExpired as e:(z.output/'run.log').write_bytes((e.stdout or b'')+(e.stderr or b''));r['timeout']=True
+ r['elapsed_seconds']=round(time.monotonic()-t,3);(z.output/'result.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps(r))
+if __name__=='__main__':main()

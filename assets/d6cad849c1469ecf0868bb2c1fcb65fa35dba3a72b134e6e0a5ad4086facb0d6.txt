@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+"""Build/qualify the first six-module Task 2.1 case without model calls."""
+from __future__ import annotations
+import argparse
+import json
+import random
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+
+from evaluate_case import evaluate, write_json, TOOLCHAIN
+from validate_cases import digest, validate
+
+TASK = Path(__file__).resolve().parents[1]
+ROOT = TASK.parents[1]
+PROJECT = ROOT / 'scope2/common/projects/OpenCores_Small/crypto_core_present_cipher_encryption_core'
+CASE_ID = 'opencores_present80_v1'
+DRAFT = TASK / 'project_pool/drafts' / CASE_ID
+MODULES = ['sbox', 'substitution', 'permutation', 'sub_per', 'key_update', 'present_encryptor_top']
+S = [12, 5, 6, 11, 9, 0, 10, 13, 3, 14, 15, 8, 4, 7, 1, 2]
+M64, M80 = (1 << 64) - 1, (1 << 80) - 1
+
+
+def substitute(value):
+    return sum(S[(value >> (4*i)) & 15] << (4*i) for i in range(16))
+
+
+def permute(value):
+    return sum(((value >> i) & 1) << (63 if i == 63 else (16*i) % 63) for i in range(64))
+
+
+def update_key(key, counter):
+    key = ((key << 61) | (key >> 19)) & M80
+    key = (key & ((1 << 76) - 1)) | (S[key >> 76] << 76)
+    return key ^ ((counter & 31) << 15)
+
+
+def encrypt(key, state):
+    for counter in range(1, 32):
+        state = permute(substitute(state ^ (key >> 16)))
+        key = update_key(key, counter)
+    return state ^ (key >> 16)
+
+
+KATS = [(0, 0, 0x5579c1387b228445), (M80, 0, 0xe72c46c0f5945049),
+        (0, M64, 0xa112ffc72f68417b), (M80, M64, 0x3333dcd3213210d2)]
+
+
+def write_text(path, text):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+
+
+def comb_tb(module, vectors, in_width=64, out_width=64, counters=False):
+    declarations = f'reg [{in_width-1}:0] data_i; wire [{out_width-1}:0] data_o;'
+    ports = '.data_i(data_i), .data_o(data_o)'
+    if counters:
+        declarations += ' reg [4:0] round_counter;'
+        ports += ', .round_counter(round_counter)'
+    lines = ['`timescale 1ns/1ps', 'module tb;', declarations, f'{module} dut({ports});', 'initial begin']
+    for i, vector in enumerate(vectors):
+        value, expected = vector[:2]
+        if counters:
+            lines.append(f'round_counter=5\'d{vector[2]};')
+        lines += [f'data_i={in_width}\'h{value:x}; #1;',
+                  f'if(data_o !== {out_width}\'h{expected:x}) $fatal(1,"mismatch {i}");']
+    return '\n'.join(lines + ['$display("RTL_BENCHLS_PASS"); $finish(0); end endmodule\n'])
+
+
+def top_tb(transactions, controls=False):
+    lines = ['`timescale 1ns/1ps', 'module tb;',
+             'reg [79:0] data_i; reg key_load, data_load, clk_i=0; wire [63:0] data_o;',
+             'present_encryptor_top dut(.data_i(data_i),.data_o(data_o),.key_load(key_load),.data_load(data_load),.clk_i(clk_i));',
+             'initial begin']
+    key, state, counter = 0, 0, 1
+    initialized = False
+    def edge(value, kl, dl, check=True):
+        nonlocal key, state, counter, initialized
+        if kl:
+            key = value
+        elif dl:
+            state, counter, initialized = value & M64, 1, True
+        else:
+            state = permute(substitute(state ^ (key >> 16)))
+            key = update_key(key, counter)
+            counter = (counter + 1) & 31
+        lines.append(f'clk_i=0; data_i=80\'h{value:x}; key_load={kl}; data_load={dl}; #5; clk_i=1; #1;')
+        if initialized and check:
+            lines.append(f'if(data_o !== 64\'h{state ^ (key >> 16):016x}) $fatal(1,"cycle {len(lines)}");')
+        lines.append('#4;')
+    for k, d in transactions:
+        edge(k, 1, 0)
+        edge(d, 0, 1)
+        for _ in range(31):
+            edge(0, 0, 0)
+        if controls:
+            # Continue beyond the nominal completion and counter wrap, then
+            # test simultaneous loads, held key_load, and plaintext restarts.
+            for _ in range(39): edge(0, 0, 0)
+            edge(k ^ M80, 1, 1)
+            edge(k, 1, 0)
+            edge(d ^ M64, 0, 1)
+            for _ in range(7): edge(0, 0, 0)
+            edge((0xabcd << 64) | d, 0, 1)
+            for _ in range(31): edge(0, 0, 0)
+    return '\n'.join(lines + ['$display("RTL_BENCHLS_PASS"); $finish(0); end endmodule\n'])
+
+
+INSTRUCTION = '''# Implement the PRESENT-80 encryption project
+
+Read `specification/project.txt` (original project document) and
+`specification/algorithm.txt` (the accompanying cipher paper). PDFs are supplied
+alongside their text extractions. Implement all six modules and files declared
+in `output_contract.json`; exact interfaces are in `interfaces/modules.v`.
+Create the RTL under `rtl/verilog/` in this workspace. Do not submit chat code
+blocks instead of files. All six modules are evaluated, including integration.
+
+This is the fixed 80-bit-key, 64-bit-block encryption-only configuration.
+The implementation is synthesizable Verilog/SystemVerilog without simulation
+system tasks, initial/final blocks, delays, force/release, or external includes.
+No extra RTL files are collected. You may create scratch files and your own tests.
+
+## Required behavior and document corrections
+
+The following clarification is authoritative where the original PDF disagrees.
+Its architecture I/O table swaps data_load/key_load descriptions; the operation
+section gives the correct meanings. Its 30-clock completion statement is an
+off-by-one error for the supplied iterative architecture and PRESENT algorithm.
+
+- On each rising clk_i edge, key_load has first priority: load all 80 bits of
+  data_i into the key register; hold the state and round counter. This also
+  applies when both load signals are high.
+- Otherwise, data_load loads data_i[63:0] into the 64-bit state and sets the
+  5-bit round counter to 1. Hold the key. Ignore data_i[79:64] on this load.
+- Otherwise, perform one cipher round: new state is permutation(substitution
+  (old state XOR old key[79:16])); update the key with the old round counter;
+  increment the counter modulo 32. All these updates occur together.
+- data_o continuously equals current state XOR current key[79:16]. There is no
+  reset or done port. Values before key and plaintext initialization are undefined.
+- After loading the key, then the plaintext, apply exactly 31 normal rising
+  edges to obtain the ciphertext (33 rising edges including the two loads).
+  The core continues computing on later edges; it does not stop after round 31.
+  Reload a key and plaintext for each independent encryption.
+
+The combinational modules have these contracts:
+
+| Module | Behavior |
+|---|---|
+| sbox | Map hex inputs 0..F to C,5,6,B,9,0,A,D,3,E,F,8,4,7,1,2 |
+| substitution | Apply sbox independently to each of sixteen 4-bit nibbles |
+| permutation | Input bit i goes to output bit (16*i) mod 63 for i<63; bit 63 stays at 63 |
+| sub_per | Apply substitution followed by permutation |
+| key_update | Rotate the 80-bit input left by 61, apply sbox to bits 79:76, then XOR round_counter into bits 19:15 |
+
+Use the documented hierarchy: top uses sub_per and key_update; sub_per uses
+substitution and permutation; substitution and key_update use sbox. Internal
+signal and instance names are your choice.
+
+## Available development feedback
+
+You have terminal and file-editor tools and Icarus Verilog 12.0 (`iverilog`,
+`vvp`). Read files, implement modules, compile, write tests, inspect failures,
+and revise iteratively. Run `python3 checks/check.py` for project compilation
+and one public zero-key/zero-plaintext example. The private evaluator also
+checks the individual modules, other vectors, and cycle-level control behavior.
+Its tests, expected values, and reference RTL are not available during your run.
+
+The eight equally weighted verification points cover sbox, substitution,
+permutation, sub_per, key_update, published encryption vectors, additional
+encryption sequences, and load/restart/counter-wrap behavior. Missing required
+files, forbidden simulation constructs, or failed top compilation give 0/8.
+Otherwise each point contributes one point if all of its checks pass. Full
+project success requires 8/8 and all gates. Call finish after saving your files.
+'''
+
+
+def build():
+    if DRAFT.exists():
+        raise RuntimeError(f'refusing to overwrite draft: {DRAFT}')
+    project = json.loads((PROJECT / 'project.json').read_text())
+    source = PROJECT / 'source'
+    for original, name in [('present.pdf', 'project'), ('Present Block Cipher.pdf', 'algorithm')]:
+        target = DRAFT / 'public/specification' / f'{name}.pdf'
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source / 'doc' / original, target)
+        subprocess.run(['pdftotext', '-layout', str(target), str(target.with_suffix('.txt'))], check=True)
+    files = []
+    interfaces = []
+    for module in MODULES:
+        ports = [('data_o', 'output', 4 if module == 'sbox' else 80 if module == 'key_update' else 64),
+                 ('data_i', 'input', 4 if module == 'sbox' else 80 if module in ('key_update', 'present_encryptor_top') else 64)]
+        if module == 'key_update': ports.append(('round_counter', 'input', 5))
+        if module == 'present_encryptor_top': ports += [(p, 'input', 1) for p in ('data_load', 'key_load', 'clk_i')]
+        name = f'rtl/verilog/{module}.v'
+        files.append({'path': name, 'module': module, 'ports': [{'name': p, 'direction': d, 'width': w} for p,d,w in ports]})
+        interfaces += [f'module {module}(' + ', '.join(p for p,_,_ in ports) + ');']
+        interfaces += [f'  {d} wire ' + (f'[{w-1}:0] ' if w>1 else '') + p + ';' for p,d,w in ports]
+        interfaces += ['  // Interface only: implement the behavior in the required RTL path.', 'endmodule', '']
+        target = DRAFT / 'private/reference' / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source / name, target)
+    write_text(DRAFT / 'public/instruction.md', INSTRUCTION)
+    write_text(DRAFT / 'public/interfaces/modules.v', '\n'.join(interfaces))
+    write_json(DRAFT / 'public/output_contract.json', {'top_module':'present_encryptor_top', 'required_files':files})
+    rng = random.Random(210905)
+    tests = {
+        'sbox': comb_tb('sbox', [(x,S[x]) for x in range(16)],4,4),
+        'substitution': comb_tb('substitution', [(x,substitute(x)) for x in
+            [v << (4*n) for n in range(16) for v in range(16)] + [rng.getrandbits(64) for _ in range(128)]]),
+        'permutation': comb_tb('permutation', [(x,permute(x)) for x in
+            [1 << n for n in range(64)] + [rng.getrandbits(64) for _ in range(128)]]),
+        'sub_per': comb_tb('sub_per', [(x,permute(substitute(x))) for x in [rng.getrandbits(64) for _ in range(256)]]),
+        'key_update': comb_tb('key_update', [(k,update_key(k,c),c) for c in range(32)
+            for k in [0,M80] + [rng.getrandbits(80) for _ in range(8)]],80,80,True),
+        'top_known_vectors': top_tb([(k,p) for k,p,_ in KATS]),
+        'top_random_sequences': top_tb([(rng.getrandbits(80),rng.getrandbits(64)) for _ in range(64)]),
+        'top_load_restart_wrap': top_tb([(rng.getrandbits(80),rng.getrandbits(64)) for _ in range(8)],True),
+    }
+    for k,p,c in KATS:
+        assert encrypt(k,p) == c, 'independent Python oracle disagrees with published PRESENT vectors'
+    points=[]
+    for name,tb in tests.items():
+        write_text(DRAFT / 'private/verification' / f'{name}.v',tb)
+        points.append({'id':name,'target':name if name in MODULES else 'present_encryptor_top',
+            'weight':1,'timeout_seconds':20,'testbench':f'{name}.v',
+            'command':['iverilog','-g2012','-s','tb','<required_files>',f'{name}.v','then','vvp'],
+            'pass_criterion':'exit 0 and exactly RTL_BENCHLS_PASS; all comparisons use case inequality'})
+    write_json(DRAFT/'private/scoring.json',{'points':points,'gate_failure_score':0,
+        'aggregation':'equal-weight points; project macro-average across frozen projects',
+        'oracle':'independent Python PRESENT equations and precomputed cycle expectations',
+        'seed':210905,'known_vectors':[{'key':f'{k:020x}','plaintext':f'{p:016x}','ciphertext':f'{c:016x}'} for k,p,c in KATS],
+        'limits':'simulation samples, not an exhaustive proof of 80/64-bit inputs or arbitrary sequences'})
+    public_tb=top_tb([(0,0)])
+    write_text(DRAFT/'public/checks/example.v',public_tb)
+    write_text(DRAFT/'public/checks/check.py', '''import json, subprocess, tempfile
+from pathlib import Path
+root = Path(__file__).resolve().parents[1]
+files = [str(root / f['path']) for f in json.loads((root/'output_contract.json').read_text())['required_files']]
+with tempfile.TemporaryDirectory() as tmp:
+    out = str(Path(tmp)/'example.vvp')
+    subprocess.run(['iverilog','-g2012','-s','tb','-o',out,*files,str(root/'checks/example.v')],check=True)
+    subprocess.run(['vvp',out],check=True)
+''')
+    runtime={'isolation':'bubblewrap network namespace; private verifier separate from agent',
+             'toolchain_prefix':str(TOOLCHAIN),'tools':{}}
+    for tool in ('iverilog','vvp'):
+        path=TOOLCHAIN/'bin'/tool
+        p=subprocess.run([str(path),'-V'],capture_output=True,text=True)
+        runtime['tools'][tool]={'sha256':digest(path),'version_stdout':p.stdout,'version_stderr':p.stderr}
+    write_json(DRAFT/'environment/runtime.json',runtime)
+    case={'schema_version':'task2.1.case.v1','case_id':CASE_ID,'project_id':project['project_id'],
+          'configuration_id':'present80_documented_cycle_contract_v1','status':'draft',
+          'source':project['source'],'original_specification_sha256':digest(DRAFT/'public/specification/project.pdf'),
+          'clarification_provenance':'Original project operation section and pinned RTL interface/control audit; cipher equations from bundled paper. Explicit 31-round latency correction.',
+          'reference_hashes':{f['path']:digest(DRAFT/'private/reference'/f['path']) for f in files}}
+    write_json(DRAFT/'case.json',case)
+    shutil.copyfile(Path(__file__),DRAFT/'private/verification/build_present_case.py')
+    shutil.copyfile(Path(__file__).with_name('evaluate_case.py'),DRAFT/'private/verification/evaluate_case.py')
+    print(json.dumps({'draft':str(DRAFT),'modules':len(files),'verification_points':len(points)}))
+
+
+def qualify_and_freeze():
+    case=json.loads((DRAFT/'case.json').read_text())
+    out=DRAFT/'private/qualification'
+    golden=evaluate(DRAFT,DRAFT/'private/reference',out/'golden')
+    if not golden['full_project_pass']: raise RuntimeError(f'golden failed: {golden}')
+    mutations=[
+        ('wrong_sbox','sbox',"4'h0 : data_o = 4'hC", "4'h0 : data_o = 4'hD"),
+        ('wrong_permutation','permutation','data_o[16] = data_i[1 ]','data_o[16] = data_i[2 ]'),
+        ('wrong_key_counter','key_update','^(round_counter)','^(5\'b00000)'),
+        ('wrong_round_start','present_encryptor_top',"round_counter <= 5'b00001", "round_counter <= 5'b00000"),
+        ('wrong_load_priority','present_encryptor_top','if(key_load) // loading the key','if(key_load && !data_load) // loading the key'),
+        ('wrong_output','present_encryptor_top','assign data_o = sub_per_input;',"assign data_o = sub_per_input ^ 64'b1;"),
+    ]
+    controls=[]
+    for name,module,old,new in mutations:
+        with tempfile.TemporaryDirectory(prefix='present-control-') as tmp:
+            submission=Path(tmp)/'submission'
+            shutil.copytree(DRAFT/'private/reference',submission)
+            path=submission/f'rtl/verilog/{module}.v'
+            data=path.read_text()
+            assert data.count(old)==1,(name,'mutation anchor mismatch')
+            path.write_text(data.replace(old,new))
+            evidence=out/name
+            evidence.mkdir(parents=True)
+            shutil.copyfile(path,evidence/f'{module}.v')
+            result=evaluate(DRAFT,submission,evidence)
+            if not result['compile_pass'] or result['full_project_pass']:
+                raise RuntimeError(f'invalid/undetected control: {name}')
+            controls.append({'name':name,'compile_pass':True,'detected':True,'score':result['score'],
+                             'failed_points':[p['id'] for p in result['points'] if not p['passed']]})
+    write_json(out/'review.json',{'golden_score':golden['score'],'negative_controls':controls,
+        'specification_review':'Original PDFs and extracted equations/ports checked; load-label and latency corrections supplied publicly.',
+        'oracle_review':'Independent equations checked against four published known vectors; every cycle checked across loads, 31 rounds, restarts and wrap. Finite simulation coverage only.',
+        'public_private_review':'Only public/ is copied to agent; six reference sources and all final tests remain private.'})
+    case['status']='finalized'
+    case['readiness_review']={'approved':True,'reviewer':'Codex engineering qualification 2026-09-05',
+                             'evidence_paths':['private/qualification/review.json']}
+    case['artifacts']={str(p.relative_to(DRAFT)):digest(p) for p in sorted(DRAFT.rglob('*')) if p.is_file() and p != DRAFT/'case.json'}
+    write_json(DRAFT/'case.json',case)
+    final=TASK/'cases'/CASE_ID
+    if final.exists(): raise RuntimeError('refusing to overwrite frozen case')
+    DRAFT.rename(final)
+    row={key:case[key] for key in ('case_id','project_id','configuration_id')}
+    row.update(path=CASE_ID,manifest_sha256=digest(final/'case.json'))
+    with (TASK/'cases/index.jsonl').open('a') as f: f.write(json.dumps(row,sort_keys=True)+'\n')
+    print(json.dumps(validate(),indent=2))
+
+
+if __name__ == '__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--qualify-and-freeze',action='store_true')
+    args=parser.parse_args()
+    qualify_and_freeze() if args.qualify_and_freeze else build()

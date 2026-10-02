@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.e8fba8e62fbf9023c03f.23dab62a52ed",
+  "compile_check": {
+    "case_id": "s1derived.e8fba8e62fbf9023c03f.23dab62a52ed",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "oh_clockor",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_clockor.8a6ed99d21073fd6/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.e8fba8e62fbf9023c03f",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "e8fba8e62fbf9023c03f607c8cc726874e427c7b9a1837dc16192eb9a8c96f2d",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.e8fba8e62fbf9023c03f.23dab62a52ed",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_clockor.8a6ed99d21073fd6/private/commercial_positive.log",
+    "commercial_log_sha256": "01ae665eff561ab4b66a3e0b7f1fede3f3a53e29b3c4099dbe3237b0a3ab3863",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_clockor.8a6ed99d21073fd6/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "oh_clockor"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.oh_clockor.8a6ed99d21073fd6",
+    "parent_id": "s1p.e8fba8e62fbf9023c03f",
+    "revised_tops": [
+      "oh_clockor"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "oh_clockor",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.e8fba8e62fbf9023c03f.23dab62a52ed",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "RereadcurrentrepairandRTL. DefaultSYNTRUE/N2 is fullydefined, statelessreductionOR ofclockinputs, withTYPEbehaviorallyunused. NondefaultSYN explicitlyrequires the externalasic_clockor ratherthanpretending itis present. Qualification applies to the runnable defaultconfiguration anddoesnotassert nondefaulthelperavailability.",
+        "rtl_excerpt": "assign clkout = |(clkin[N-1:0]);",
+        "specification_excerpt": "When `SYN` is `\"TRUE\"`, `clkout` is the combinational reduction OR"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.e8fba8e62fbf9023c03f",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "c544198018d09e83b3006e6b4e9bf32bccd3757313164d162fa634f2e9cd51b8",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e8fba8e62fbf9023c03f607c8cc726874e427c7b9a1837dc16192eb9a8c96f2d",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_clockor.8a6ed99d21073fd6/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_clockor.8a6ed99d21073fd6/private/historical_harness/01_conformal_rtl_oh_clockor.do"
+  ],
+  "parent_id": "s1p.e8fba8e62fbf9023c03f",
+  "primary_review": {
+    "case_id": "s1derived.e8fba8e62fbf9023c03f.23dab62a52ed",
+    "checks": {
+      "behavior": "SYN=\"TRUE\" reduction-OR matches, but the alternate implementation is absent from prose.",
+      "boundaries": "Any SYN value other than exactly \"TRUE\" selects the external asic_clockor branch.",
+      "interface": "N-bit clkin and scalar clkout match; all three defaults are stated.",
+      "rtl_reasonableness": "The selectable clock combiner is reasonable when the required alternate cell is available.",
+      "sequential_and_reset": "No internal sequential state or reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "SYN=\"TRUE\" reduction-OR matches, but the alternate implementation is absent from prose. No internal sequential state or reset.",
+        "rtl_excerpt": "the else generate branch instantiates asic_clockor #(.TYPE(TYPE),.N(N))",
+        "spec_excerpt": "The text ends at \u201cIf\u201d after describing only SYN=\"TRUE\"."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification is truncated before defining the SYN != \"TRUE\" branch and its required submodule.",
+        "rtl_evidence": "the else generate branch instantiates asic_clockor #(.TYPE(TYPE),.N(N))",
+        "spec_evidence": "The text ends at \u201cIf\u201d after describing only SYN=\"TRUE\".",
+        "type": "missing_configuration_behavior"
+      }
+    ],
+    "parent_id": "s1p.e8fba8e62fbf9023c03f",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.e8fba8e62fbf9023c03f.23dab62a52ed.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "e8fba8e62fbf9023c03f607c8cc726874e427c7b9a1837dc16192eb9a8c96f2d",
+    "source_group": "S1",
+    "specification_sha256": "23dab62a52edd2aca33bbb44762f3f8401c214728ee18086ef0d7c19b70827f2",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_02/s1derived.e8fba8e62fbf9023c03f.23dab62a52ed.md",
+  "qualified_specification_sha256": "c544198018d09e83b3006e6b4e9bf32bccd3757313164d162fa634f2e9cd51b8",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_clockor.8a6ed99d21073fd6/private/golden_design.v",
+  "rtl_sha256": "e8fba8e62fbf9023c03f607c8cc726874e427c7b9a1837dc16192eb9a8c96f2d",
+  "source_corpus": "SEC-Flow-Star-repos-31.oh",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.oh_clockor.8a6ed99d21073fd6/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "23dab62a52edd2aca33bbb44762f3f8401c214728ee18086ef0d7c19b70827f2",
+  "top_module": "oh_clockor"
+}

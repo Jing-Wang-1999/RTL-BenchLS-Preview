@@ -1,0 +1,100 @@
+module origen_046462 (
+    input wire clk_50m,
+    input wire rst_n,
+    input wire [23:0] iic_data,
+    input wire iic_tr_go,
+    output wire iic_sclk,
+    output wire iic_ref_clk,
+    output reg iic_tr_done,
+    inout wire iic_sdata
+);
+
+reg [9:0] clk_div;
+reg clk_dev_iic;
+reg [5:0] iic_cnt;
+reg r_sdata;
+reg r_clk_en;
+reg [23:0] data_reg;
+
+always @(posedge clk_50m or negedge rst_n) begin
+    if (!rst_n)
+        clk_div <= 10'd0;
+    else
+        clk_div <= clk_div + 10'd1;
+end
+
+always @(posedge clk_50m or negedge rst_n) begin
+    if (!rst_n)
+        clk_dev_iic <= 1'b0;
+    else
+        clk_dev_iic <= clk_div[9];
+end
+
+always @(posedge clk_dev_iic or negedge rst_n) begin
+    if (!rst_n) begin
+        iic_cnt <= 6'd0;
+        r_sdata <= 1'b1;
+        r_clk_en <= 1'b0;
+        iic_tr_done <= 1'b0;
+        data_reg <= 24'd0;
+    end else begin
+        case (iic_cnt)
+            6'd0: begin
+                if (iic_tr_go) begin
+                    r_sdata <= 1'b0;
+                    r_clk_en <= 1'b1;
+                    data_reg <= iic_data;
+                    iic_cnt <= iic_cnt + 1'b1;
+                end
+            end
+            6'd1: begin
+                r_sdata <= 1'b0;
+                iic_cnt <= iic_cnt + 1'b1;
+            end
+            6'd2, 6'd3, 6'd4, 6'd5, 6'd6, 6'd7, 6'd8, 6'd9: begin
+                r_sdata <= data_reg[23];
+                data_reg <= {data_reg[22:0], 1'b0};
+                iic_cnt <= iic_cnt + 1'b1;
+            end
+            6'd10: begin
+                r_sdata <= 1'b1;
+                iic_cnt <= iic_cnt + 1'b1;
+            end
+            6'd11, 6'd12, 6'd13, 6'd14, 6'd15, 6'd16, 6'd17, 6'd18: begin
+                r_sdata <= data_reg[23];
+                data_reg <= {data_reg[22:0], 1'b0};
+                iic_cnt <= iic_cnt + 1'b1;
+            end
+            6'd19: begin
+                r_sdata <= 1'b1;
+                iic_cnt <= iic_cnt + 1'b1;
+            end
+            6'd20, 6'd21, 6'd22, 6'd23, 6'd24, 6'd25, 6'd26, 6'd27: begin
+                r_sdata <= data_reg[23];
+                data_reg <= {data_reg[22:0], 1'b0};
+                iic_cnt <= iic_cnt + 1'b1;
+            end
+            6'd28: begin
+                r_sdata <= 1'b1;
+                iic_cnt <= iic_cnt + 1'b1;
+            end
+            6'd29: begin
+                r_sdata <= 1'b0;
+                iic_cnt <= iic_cnt + 1'b1;
+            end
+            6'd30: begin
+                r_sdata <= 1'b1;
+                r_clk_en <= 1'b0;
+                iic_tr_done <= 1'b1;
+                iic_cnt <= 6'd0;
+            end
+            default: iic_cnt <= 6'd0;
+        endcase
+    end
+end
+
+assign iic_sclk = (r_clk_en) ? clk_dev_iic : 1'b1;
+assign iic_ref_clk = clk_dev_iic;
+assign iic_sdata = (r_sdata) ? 1'bz : 1'b0;
+
+endmodule

@@ -1,0 +1,54 @@
+The provided Verilog module facilitates bidirectional communication between upstream and downstream interfaces, ensuring synchronized data transactions with burst support.
+
+1. **Primary Function**: The module manages data transfer between upstream and downstream components, handling burst data transactions and ensuring synchronization through a wait request mechanism.
+
+2. **Key Control Flow Points**:
+   - Upon receiving a reset signal (`reset_n`), all internal registers are reset to their initial states to ensure a known starting condition.
+   - The `transactions_remaining` register tracks ongoing burst transactions, updating based on read and write signals and the downstream wait request status.
+   - The `registered_upstream_address` is updated to the current upstream address when no transactions are remaining, preserving the address during multi-cycle bursts.
+
+3. **Important Data Interactions**:
+   - The module passes data from upstream to downstream during a read, staying in sync through `upstream_readdatavalid` and `downstream_readdatavalid`.
+   - Data is directly transferred from `downstream_readdata` to `upstream_readdata` when available.
+   - For write operations, the module generates the downstream write signal if there is no concurrent read request, propagating `upstream_writedata` and `upstream_byteenable` to `downstream_writedata` and `downstream_byteenable`.
+   - Synchronization is maintained using `upstream_waitrequest` and `downstream_waitrequest`, ensuring that the upstream side is aware of downstream busy states or pending transactions.
+
+4. **Detailed Operation**:
+   - The module uses combinatorial and sequential logic to process input signals and generate appropriate output signals.
+   - The `sync_nativeaddress` signal is generated based on `upstream_nativeaddress` to help synchronize address-based operations.
+   - Address and control signal registers (`reg_downstream_*`) are only updated when the downstream wait request is inactive, ensuring stable outputs.
+   - Data flow is controlled to ensure upstream read and write operations are handled without conflicts, utilizing the `transactions_remaining` register to track and handle burst lengths.
+
+These operations ensure efficient and synchronized data handling between the upstream and downstream interfaces, accommodating burst transactions while managing control and data signaling effectively.
+
+Module Interface:
+module burst_transaction_bridge (
+    clk,
+    downstream_readdata,
+    downstream_readdatavalid,
+    downstream_waitrequest,
+    reset_n,
+    upstream_address,
+    upstream_burstcount,
+    upstream_byteenable,
+    upstream_debugaccess,
+    upstream_nativeaddress,
+    upstream_read,
+    upstream_write,
+    upstream_writedata,
+    reg_downstream_address,
+    reg_downstream_arbitrationshare,
+    reg_downstream_burstcount,
+    reg_downstream_byteenable,
+    reg_downstream_debugaccess,
+    reg_downstream_nativeaddress,
+    reg_downstream_read,
+    reg_downstream_write,
+    reg_downstream_writedata,
+    upstream_readdata,
+    upstream_readdatavalid,
+    upstream_waitrequest
+);
+
+Behavioral Clarifications:
+- Port widths: upstream_address and reg_downstream_address are 2 bits; upstream_burstcount is 4 bits; data and writedata are 8 bits; nativeaddress ports are 2 bits; reg_downstream_arbitrationshare is 6 bits. The transactions_remaining register is 3 bits wide. On upstream read (not stalled), transactions_remaining loads upstream_burstcount minus 1; it decrements by downstream_burstcount (fixed at 1) on each downstream read ack.

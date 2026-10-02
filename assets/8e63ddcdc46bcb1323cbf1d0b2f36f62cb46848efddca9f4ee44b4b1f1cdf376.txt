@@ -1,0 +1,142 @@
+always @* begin
+    axis_state_next = AXIS_STATE_IDLE;
+
+    m_axis_read_desc_status_tag_next = m_axis_read_desc_status_tag_reg;
+    m_axis_read_desc_status_error_next = m_axis_read_desc_status_error_reg;
+    m_axis_read_desc_status_valid_next = 1'b0;
+
+    m_axis_read_data_tdata_int = shift_axi_rdata;
+    m_axis_read_data_tkeep_int = {AXIS_KEEP_WIDTH{1'b1}};
+    m_axis_read_data_tlast_int = 1'b0;
+    m_axis_read_data_tvalid_int = 1'b0;
+    m_axis_read_data_tid_int = axis_id_reg;
+    m_axis_read_data_tdest_int = axis_dest_reg;
+    m_axis_read_data_tuser_int = axis_user_reg;
+
+    m_axi_rready_next = 1'b0;
+
+    transfer_in_save = 1'b0;
+    axis_cmd_ready = 1'b0;
+
+    offset_next = offset_reg;
+    last_cycle_offset_next = last_cycle_offset_reg;
+    input_cycle_count_next = input_cycle_count_reg;
+    output_cycle_count_next = output_cycle_count_reg;
+    input_active_next = input_active_reg;
+    output_active_next = output_active_reg;
+    bubble_cycle_next = bubble_cycle_reg;
+    first_cycle_next = first_cycle_reg;
+    output_last_cycle_next = output_last_cycle_reg;
+
+    tag_next = tag_reg;
+    axis_id_next = axis_id_reg;
+    axis_dest_next = axis_dest_reg;
+    axis_user_next = axis_user_reg;
+
+    if (m_axi_rready && m_axi_rvalid && (m_axi_rresp == AXI_RESP_SLVERR || m_axi_rresp == AXI_RESP_DECERR)) begin
+        rresp_next = m_axi_rresp;
+    end else begin
+        rresp_next = rresp_reg;
+    end
+
+    case (axis_state_reg)
+        AXIS_STATE_IDLE: begin
+            // idle state - load new descriptor to start operation
+            m_axi_rready_next = 1'b0;
+
+            // store transfer parameters
+            if (ENABLE_UNALIGNED) begin
+                offset_next = axis_cmd_offset_reg;
+            end else begin
+                offset_next = 0;
+            end
+            last_cycle_offset_next = axis_cmd_last_cycle_offset_reg;
+            input_cycle_count_next = axis_cmd_input_cycle_count_reg;
+            output_cycle_count_next = axis_cmd_output_cycle_count_reg;
+            bubble_cycle_next = axis_cmd_bubble_cycle_reg;
+            tag_next = axis_cmd_tag_reg;
+            axis_id_next = axis_cmd_axis_id_reg;
+            axis_dest_next = axis_cmd_axis_dest_reg;
+            axis_user_next = axis_cmd_axis_user_reg;
+
+            output_last_cycle_next = output_cycle_count_next == 0;
+            input_active_next = 1'b1;
+            output_active_next = 1'b1;
+            first_cycle_next = 1'b1;
+
+            if (axis_cmd_valid_reg) begin
+                axis_cmd_ready = 1'b1;
+                m_axi_rready_next = m_axis_read_data_tready_int;
+                axis_state_next = AXIS_STATE_READ;
+            end
+        end
+        AXIS_STATE_READ: begin
+            // handle AXI read data
+            m_axi_rready_next = m_axis_read_data_tready_int && input_active_reg;
+
+            if ((m_axi_rready && m_axi_rvalid) || !input_active_reg) begin
+                // transfer in AXI read data
+                transfer_in_save = m_axi_rready && m_axi_rvalid;
+
+                if (ENABLE_UNALIGNED && first_cycle_reg && bubble_cycle_reg) begin
+                    if (input_active_reg) begin
+                        input_cycle_count_next = input_cycle_count_reg - 1;
+                        input_active_next = input_cycle_count_reg > 0;
+                    end
+                    bubble_cycle_next = 1'b0;
+                    first_cycle_next = 1'b0;
+
+                    m_axi_rready_next = m_axis_read_data_tready_int && input_active_next;
+                    axis_state_next = AXIS_STATE_READ;
+                end else begin
+                    // update counters
+                    if (input_active_reg) begin
+                        input_cycle_count_next = input_cycle_count_reg - 1;
+                        input_active_next = input_cycle_count_reg > 0;
+                    end
+                    if (output_active_reg) begin
+                        output_cycle_count_next = output_cycle_count_reg - 1;
+                        output_active_next = output_cycle_count_reg > 0;
+                    end
+                    output_last_cycle_next = output_cycle_count_next == 0;
+                    bubble_cycle_next = 1'b0;
+                    first_cycle_next = 1'b0;
+
+                    // pass through read data
+                    m_axis_read_data_tdata_int = shift_axi_rdata;
+                    m_axis_read_data_tkeep_int = {AXIS_KEEP_WIDTH_INT{1'b1}};
+                    m_axis_read_data_tvalid_int = 1'b1;
+
+                    if (output_last_cycle_reg) begin
+                        // no more data to transfer, finish operation
+                        if (last_cycle_offset_reg > 0) begin
+                            m_axis_read_data_tkeep_int = {AXIS_KEEP_WIDTH_INT{1'b1}} >> (AXIS_KEEP_WIDTH_INT - last_cycle_offset_reg);
+                        end
+                        m_axis_read_data_tlast_int = 1'b1;
+
+                        m_axis_read_desc_status_tag_next = tag_reg;
+                        if (rresp_next == AXI_RESP_SLVERR) begin
+                            m_axis_read_desc_status_error_next = DMA_ERROR_AXI_RD_SLVERR;
+                        end else if (rresp_next == AXI_RESP_DECERR) begin
+                            m_axis_read_desc_status_error_next = DMA_ERROR_AXI_RD_DECERR;
+                        end else begin
+                            m_axis_read_desc_status_error_next = DMA_ERROR_NONE;
+                        end
+                        m_axis_read_desc_status_valid_next = 1'b1;
+
+                        rresp_next = AXI_RESP_OKAY;
+
+                        m_axi_rready_next = 1'b0;
+                        axis_state_next = AXIS_STATE_IDLE;
+                    end else begin
+                        // more cycles in AXI transfer
+                        m_axi_rready_next = m_axis_read_data_tready_int && input_active_next;
+                        axis_state_next = AXIS_STATE_READ;
+                    end
+                end
+            end else begin
+                axis_state_next = AXIS_STATE_READ;
+            end
+        end
+    endcase
+end

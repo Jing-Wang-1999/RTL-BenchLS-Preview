@@ -1,0 +1,92 @@
+`timescale 1ns/1ps
+module trial_0(output reg completed=0);
+localparam W=8, A=4, DEPTH=16;
+reg wclk=0,rclk=0,wrst_n=1,rrst_n=1,winc=0,rinc=0;
+reg [W-1:0] wdata=0;
+wire [W-1:0] rdata;wire wfull,awfull,rempty,arempty;
+always #5 wclk=~wclk;
+initial begin #0;forever #5 rclk=~rclk;end
+async_fifo #(.DSIZE(W),.ASIZE(A),.FALLTHROUGH("TRUE")) dut
+(.wclk(wclk),.wrst_n(wrst_n),.winc(winc),.wdata(wdata),.wfull(wfull),.awfull(awfull),
+.rclk(rclk),.rrst_n(rrst_n),.rinc(rinc),.rdata(rdata),.rempty(rempty),.arempty(arempty));
+reg [W-1:0] expected[0:8191];integer writes=0,reads=0,wcycle=0,rcycle=0;
+reg active=0,automatic_traffic=0,drain=0;reg [31:0] rng=32'h2bc9137;
+always @(posedge wclk)if(active && wrst_n && winc && !wfull)begin
+expected[writes]=wdata;writes=writes+1;end
+always @(posedge rclk)if(active && rrst_n && rinc && !rempty)begin
+
+if(reads>=writes || rdata!==expected[reads])$fatal(1,"data order trial 0 read=%0d got=%h expected=%h",reads,rdata,expected[reads]);
+reads=reads+1;end
+always @(negedge wclk)if(automatic_traffic)begin
+wcycle=wcycle+1;rng=(rng>>1)^((rng&1)?32'hd0000001:0);
+winc=!drain && ((wcycle%7)!=0) && rng[0];
+wdata=(rng ^ (writes*32'h9e3779b9));end
+always @(negedge rclk)if(automatic_traffic)begin
+rcycle=rcycle+1;rinc=drain || ((rcycle%5)!=0);end
+task wt;begin @(posedge wclk);#2;end endtask
+task rt;begin @(posedge rclk);#2;end endtask
+task settle;begin repeat(5)wt;repeat(5)rt;end endtask
+task reset_both;begin
+active=0;automatic_traffic=0;winc=0;rinc=0;wrst_n=0;rrst_n=0;
+settle;if(wfull!==0 || awfull!==0 || rempty!==1 || arempty!==0)$fatal(1,"reset flags");
+@(negedge wclk);wrst_n=1;rrst_n=1;writes=0;reads=0;settle;active=1;end endtask
+integer i,epoch,target;
+initial begin
+reset_both;
+
+automatic_traffic=1;repeat(1600)wt;
+@(negedge wclk);drain=1;winc=0;target=writes;
+repeat(DEPTH*8+30)rt;
+@(negedge rclk);automatic_traffic=0;rinc=0;settle;
+if(writes!=target || reads!=writes || reads<50 || rempty!==1 || wfull!==0)$fatal(1,"traffic incomplete %d %d",writes,reads);
+completed=1;end
+initial begin #5000000;$fatal(1,"trial timeout 0");end
+endmodule
+`timescale 1ns/1ps
+module trial_1(output reg completed=0);
+localparam W=13, A=3, DEPTH=8;
+reg wclk=0,rclk=0,wrst_n=1,rrst_n=1,winc=0,rinc=0;
+reg [W-1:0] wdata=0;
+wire [W-1:0] rdata;wire wfull,awfull,rempty,arempty;
+always #5 wclk=~wclk;
+initial begin #3;forever #5 rclk=~rclk;end
+async_fifo #(.DSIZE(W),.ASIZE(A),.FALLTHROUGH("TRUE")) dut
+(.wclk(wclk),.wrst_n(wrst_n),.winc(winc),.wdata(wdata),.wfull(wfull),.awfull(awfull),
+.rclk(rclk),.rrst_n(rrst_n),.rinc(rinc),.rdata(rdata),.rempty(rempty),.arempty(arempty));
+reg [W-1:0] expected[0:8191];integer writes=0,reads=0,wcycle=0,rcycle=0;
+reg active=0,automatic_traffic=0,drain=0;reg [31:0] rng=32'h2bc9137;
+always @(posedge wclk)if(active && wrst_n && winc && !wfull)begin
+expected[writes]=wdata;writes=writes+1;end
+always @(posedge rclk)if(active && rrst_n && rinc && !rempty)begin
+
+if(reads>=writes || rdata!==expected[reads])$fatal(1,"data order trial 1 read=%0d got=%h expected=%h",reads,rdata,expected[reads]);
+reads=reads+1;end
+always @(negedge wclk)if(automatic_traffic)begin
+wcycle=wcycle+1;rng=(rng>>1)^((rng&1)?32'hd0000001:0);
+winc=!drain && ((wcycle%7)!=0) && rng[0];
+wdata=(rng ^ (writes*32'h9e3779b9));end
+always @(negedge rclk)if(automatic_traffic)begin
+rcycle=rcycle+1;rinc=drain || ((rcycle%5)!=0);end
+task wt;begin @(posedge wclk);#2;end endtask
+task rt;begin @(posedge rclk);#2;end endtask
+task settle;begin repeat(5)wt;repeat(5)rt;end endtask
+task reset_both;begin
+active=0;automatic_traffic=0;winc=0;rinc=0;wrst_n=0;rrst_n=0;
+settle;if(wfull!==0 || awfull!==0 || rempty!==1 || arempty!==0)$fatal(1,"reset flags");
+@(negedge wclk);wrst_n=1;rrst_n=1;writes=0;reads=0;settle;active=1;end endtask
+integer i,epoch,target;
+initial begin
+reset_both;
+
+automatic_traffic=1;repeat(1600)wt;
+@(negedge wclk);drain=1;winc=0;target=writes;
+repeat(DEPTH*8+30)rt;
+@(negedge rclk);automatic_traffic=0;rinc=0;settle;
+if(writes!=target || reads!=writes || reads<50 || rempty!==1 || wfull!==0)$fatal(1,"traffic incomplete %d %d",writes,reads);
+completed=1;end
+initial begin #5000000;$fatal(1,"trial timeout 1");end
+endmodule
+module tb;wire [1:0] completed;
+trial_0 dut_0(completed[0]);
+trial_1 dut_1(completed[1]);
+initial begin wait(&completed);$display("RTL_BENCHLS_PASS");$finish(0);end endmodule

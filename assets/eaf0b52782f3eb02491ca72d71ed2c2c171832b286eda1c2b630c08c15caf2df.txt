@@ -1,0 +1,39 @@
+always @(posedge clk_i or negedge nrst_i)
+	  if (!nrst_i)
+	    begin
+	        cyc_o <=  1'b0;
+	        stb_o <=  1'b0;
+	        sel_o <=  4'b1111;
+	        cti_o <=  3'b000;
+	        bte_o <=  2'b00;
+	        we_o  <=  1'b0;
+	    end
+	  else
+	    if (rst_i)
+	      begin
+	          cyc_o <=  1'b0;
+	          stb_o <=  1'b0;
+	          sel_o <=  4'b1111;
+	          cti_o <=  3'b000;
+	          bte_o <=  2'b00;
+	          we_o  <=  1'b0;
+	      end
+	    else
+	      begin
+	          cyc_o <=  wb_cycle;
+	          stb_o <=  wb_cycle;
+	          sel_o <=  4'b1111;   // only 32bit accesses are supported
+
+	          if (wb_cycle) begin
+	            if (cur_acc)
+	              cti_o <=  &next_cursor_adr[8:0] ? 3'b111 : 3'b010;
+	            else if (ctrl_vbl == 2'b00)
+	              cti_o <=  3'b000;
+	            else if (vmem_ack)
+	              cti_o <=  (burst_cnt == 3'h1) ? 3'b111 : 3'b010;
+	          end else
+	            cti_o <=  (ctrl_vbl == 2'b00) ? 3'b000 : 3'b010;
+
+	          bte_o <=  2'b00;     // linear burst
+	          we_o  <=  1'b0;      // read only
+	      end

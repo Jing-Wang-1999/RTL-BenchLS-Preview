@@ -1,0 +1,38 @@
+Module Specification: Main Control Unit
+
+Overview
+This module functions as the central control unit for a processor datapath compatible with a subset of the MIPS instruction set architecture. It operates combinationally, translating a 32-bit machine instruction into specific control signals that govern the ALU, register file, data memory, and program counter units. There are no internal sub-modules; all logic is contained within this unit.
+
+Inputs
+The module accepts a single 32-bit input representing the current instruction word. This input contains the operation code, register indices, shift amounts, and function codes required for execution.
+
+Outputs
+The module generates ten distinct control signals:
+1. ALU Function Select: A 4-bit signal specifying the arithmetic or logic operation for the ALU.
+2. Immediate Flag: A 1-bit signal indicating if an immediate value is used as an operand.
+3. ALU Multiplexer Select: A 1-bit signal choosing the second input source for the ALU.
+4. Destination Address: A 5-bit signal indicating the target register index for write-back operations.
+5. Register Write Enable: A 1-bit signal enabling updates to the general-purpose register file.
+6. Register Multiplexer Select: A 2-bit signal selecting the data source for register writes.
+7. Branch Function Select: A 4-bit signal defining the condition for branch comparisons.
+8. PC Multiplexer Select: A 2-bit signal determining the source for the next program counter value.
+9. Data Memory Write Enable: A 1-bit signal enabling writes to data memory.
+10. Shift Type: A 3-bit signal specifying the variety of shift operation.
+
+Operational Behavior
+Upon receiving an instruction, the module decodes the upper bits to identify the opcode and the lower bits to identify the function code. All outputs default to inactive or zero states unless explicitly asserted by the instruction logic.
+
+R-Type Instructions
+When the opcode indicates an R-type operation, the destination address is derived from the destination register field. Register write is enabled. The ALU function and shift type are determined by the function code. Supported operations include addition, subtraction, logical AND, logical OR, set less than, and various shift operations. A specific function code triggers the jump register behavior, updating the PC multiplexer select.
+
+Immediate Instructions
+For immediate arithmetic and logic operations, the immediate flag and ALU multiplexer select are asserted. The destination address is derived from the target register field. Register write is enabled. The ALU function is set to match the specific operation, such as add immediate, AND immediate, or OR immediate.
+
+Load and Store Instructions
+Load and store operations assert the immediate flag and ALU multiplexer select for address calculation. For load operations, the destination address is the target register field, register write is enabled, and the register multiplexer selects data originating from memory. For store operations, the data memory write enable signal is asserted.
+
+Branch and Jump Instructions
+Branch operations set the branch function select based on equality conditions and update the PC multiplexer select to allow conditional branching. Jump operations update the PC multiplexer select for unconditional jumps. The jump and link operation additionally enables register write to save the return address to a specific link register, selecting the updated PC value as the write data source.
+
+Timing
+All output signals change combinationally in response to changes in the instruction input. There is no internal state storage or clock dependency within this module.

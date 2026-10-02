@@ -1,0 +1,28 @@
+The Verilog module implements a simplified CPU architecture that processes instructions, controls different ALU operations, and interfaces with external switches and LEDs. Its primary function is executing instructions and controlling the flow of data through various components of the CPU, including the ALU, instruction decoder, and storage units.
+
+Key control flow points involve:
+1. Clock and reset signals initialization.
+2. Instruction fetch: retrieving the instruction using the program counter.
+3. Instruction decode: extracting operation codes, function codes, and other relevant bits.
+4. ALU operations: performing arithmetic and logic operations based on control signals, setting the zero flag.
+5. Branch and jump operations: modifying the program counter based on specific conditions.
+6. Memory and I/O operations: reading from and writing to memory or I/O ports.
+
+Important data processing involves:
+1. ALU results for arithmetic and logic operations.
+2. Sign extension for immediate values.
+3. Read and write operations in the register file.
+4. Interfacing with external switch inputs and LED outputs, updating the LED state based on processed data.
+
+To implement this module, manage signal assignments for clock, reset, and switch inputs to corresponding internal signals. Then define the behavior of the five essential components: ALU, instruction decoder, instruction fetch unit, storage top unit, and control unit, integrating them to coordinate instruction execution and data flow within the CPU.
+
+Module Interface:
+module cpu_execution_core
+   (clk,
+    led_port,
+    reset,
+    switch_port);
+
+Behavioral Clarifications:
+- This is a structural top-level wrapper module. The led_port output is 24-bit driven by the StorageTop component, and switch_port input is 24-bit. Each of the six subcomponents (ALU, instruction decoder, instruction fetch, storage top, control unit, and clock wizard) is represented by a separate combinational always block with placeholder logic.
+- All five CPU submodule interfaces are connected via internal wires; no registers are used at the top level — all signal routing is done through continuous wire assignments.

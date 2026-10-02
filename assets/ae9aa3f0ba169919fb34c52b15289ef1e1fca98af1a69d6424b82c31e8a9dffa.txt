@@ -1,0 +1,17 @@
+always @(posedge clk_i)
+  begin
+    if (rst_i)
+    begin
+      icr_o <= 5'b0;
+    end
+    else if (clr_pls)
+    begin
+      // clear flags but keep new interrupts occurring in same cycle
+      icr_o <= { flg_i, sp_i, alrm_i, tb_i, ta_i };
+    end
+    else
+    begin
+      // accumulate interrupt flags
+      icr_o <= icr_o | { flg_i, sp_i, alrm_i, tb_i, ta_i };
+    end
+  end

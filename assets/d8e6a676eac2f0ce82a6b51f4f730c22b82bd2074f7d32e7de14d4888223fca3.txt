@@ -1,0 +1,113 @@
+module origen_147221(
+    input [15:0] a,
+    input [15:0] b,
+    input sub,
+    output out
+);
+
+    wire [31:0] mult_result;
+    wire [31:0] adder_result;
+    wire [31:0] xor_result;
+
+    multiplier mult_inst (
+        .a(a),
+        .b(b),
+        .result(mult_result)
+    );
+
+    adder adder_inst (
+        .a(a),
+        .b(b),
+        .sub(sub),
+        .result(adder_result)
+    );
+
+    bitwise_xor xor_inst (
+        .a(mult_result),
+        .b({adder_result, 16'b0}),
+        .result(xor_result)
+    );
+
+    assign out = ^xor_result;
+
+endmodule
+
+module multiplier(
+    input [15:0] a,
+    input [15:0] b,
+    output [31:0] result
+);
+
+    reg [31:0] product;
+    reg [15:0] multiplier;
+    integer i;
+
+    always @(*) begin
+        product = 32'b0;
+        multiplier = b;
+        
+        for (i = 0; i < 16; i = i + 1) begin
+            if (multiplier[0])
+                product = product + (a << i);
+            multiplier = multiplier >> 1;
+        end
+    end
+
+    assign result = product;
+
+endmodule
+
+module adder(
+    input [15:0] a,
+    input [15:0] b,
+    input sub,
+    output [31:0] result
+);
+
+    wire [15:0] b_xor;
+    wire [15:0] sum_low, sum_high;
+    wire carry;
+
+    assign b_xor = b ^ {16{sub}};
+
+    adder_16bit adder_low (
+        .a(a),
+        .b(b_xor),
+        .cin(sub),
+        .sum(sum_low),
+        .cout(carry)
+    );
+
+    adder_16bit adder_high (
+        .a(16'b0),
+        .b(16'b0),
+        .cin(carry),
+        .sum(sum_high),
+        .cout()
+    );
+
+    assign result = {sum_high, sum_low};
+
+endmodule
+
+module adder_16bit(
+    input [15:0] a,
+    input [15:0] b,
+    input cin,
+    output [15:0] sum,
+    output cout
+);
+
+    assign {cout, sum} = a + b + cin;
+
+endmodule
+
+module bitwise_xor(
+    input [31:0] a,
+    input [31:0] b,
+    output [31:0] result
+);
+
+    assign result = a ^ b;
+
+endmodule

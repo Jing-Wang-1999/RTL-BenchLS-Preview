@@ -1,0 +1,31 @@
+module autovcoder_087667 (
+    input [7:0] a,
+    input [7:0] b,
+    output [15:0] p
+);
+
+    wire [15:0] first_addend, second_addend, third_addend, fourth_addend;
+    wire [15:0] fifth_addend, sixth_addend, seventh_addend, eighth_addend;
+
+    assign first_addend  = {8'b0, a & {8{b[0]}}};
+    assign second_addend = {7'b0, a & {8{b[1]}}, 1'b0};
+    assign third_addend  = {6'b0, a & {8{b[2]}}, 2'b0};
+    assign fourth_addend = {5'b0, a & {8{b[3]}}, 3'b0};
+    assign fifth_addend  = {4'b0, a & {8{b[4]}}, 4'b0};
+    assign sixth_addend  = {3'b0, a & {8{b[5]}}, 5'b0};
+    assign seventh_addend = {2'b0, a & {8{b[6]}}, 6'b0};
+    assign eighth_addend = {1'b0, a & {8{b[7]}}, 7'b0};
+
+    wire [15:0] first_l1, second_l1, third_l1, fourth_l1;
+    assign first_l1 = first_addend + second_addend;
+    assign second_l1 = third_addend + fourth_addend;
+    assign third_l1 = fifth_addend + sixth_addend;
+    assign fourth_l1 = seventh_addend + eighth_addend;
+
+    wire [15:0] first_l2, second_l2;
+    assign first_l2 = first_l1 + second_l1;
+    assign second_l2 = third_l1 + fourth_l1;
+
+    assign p = first_l2 + second_l2;
+
+endmodule

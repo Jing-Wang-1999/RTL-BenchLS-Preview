@@ -1,0 +1,86 @@
+The provided Verilog RTL describes several hardware modules, each with specific functionalities and interfaces. Below is a plain-English specification for each module:
+
+1. **Origen_101100 Module**:
+   - **Purpose**: This module is a flip-flop with additional control signals for clear, set, and enable operations.
+   - **Inputs**:
+     - `clk`: Clock signal for synchronization.
+     - `rst_n`: Active-low reset signal to initialize the output.
+     - `clr`: Clear signal to reset the output to zero.
+     - `set`: Set signal to force the output to one.
+     - `en`: Enable signal to allow data input to affect the output.
+     - `d`: Data input to be stored in the flip-flop when enabled.
+   - **Output**:
+     - `q`: Output of the flip-flop, reflecting the stored data or control signal effects.
+   - **Behavior**: On a rising clock edge or a falling reset, the module updates the output based on the control signals. If reset is active, the output is set to one. If clear is active, the output is set to zero. If set is active, the output is set to one. If enable is active, the output follows the data input.
+
+2. **SIPO_Register Module**:
+   - **Purpose**: This module implements a Serial-In Parallel-Out (SIPO) shift register.
+   - **Inputs**:
+     - `clk`: Clock signal for synchronization.
+     - `rst_n`: Active-low reset signal to initialize the register.
+     - `en`: Enable signal to allow shifting.
+     - `left`: Direction control for shifting (left or right).
+     - `sin`: Serial input data.
+   - **Output**:
+     - `pout`: Parallel output representing the current state of the register.
+   - **Behavior**: On a rising clock edge or a falling reset, the register shifts data based on the direction control and enable signal. If reset is active, the register is cleared. If enabled, data shifts left or right, inserting the serial input at the appropriate end.
+
+3. **Gen_DFF Module**:
+   - **Purpose**: This module is a general-purpose flip-flop with clear, set, and enable controls.
+   - **Inputs**: Same as the Origen_101100 module.
+   - **Output**: Same as the Origen_101100 module.
+   - **Behavior**: Similar to the Origen_101100 module, but the reset initializes the output to zero.
+
+4. **PISO_Register Module**:
+   - **Purpose**: This module implements a Parallel-In Serial-Out (PISO) shift register.
+   - **Inputs**:
+     - `clk`: Clock signal for synchronization.
+     - `rst_n`: Active-low reset signal.
+     - `load`: Load signal to capture parallel input data.
+     - `clr`: Clear signal to reset the register.
+     - `shift`: Shift signal to enable serial output.
+     - `pin`: Parallel input data.
+   - **Output**:
+     - `sout`: Serial output representing the most significant bit of the register.
+   - **Behavior**: On a rising clock edge or a falling reset, the register loads, clears, or shifts data based on control signals. If reset or clear is active, the register is set to a default value. If load is active, the register captures the parallel input. If shift is active, data shifts right, outputting the most significant bit.
+
+5. **Counter Module**:
+   - **Purpose**: This module implements a binary counter.
+   - **Inputs**:
+     - `clk`: Clock signal for synchronization.
+     - `rst_n`: Active-low reset signal.
+     - `clr`: Clear signal to reset the counter.
+     - `en`: Enable signal to allow counting.
+   - **Output**:
+     - `count`: Current count value.
+   - **Behavior**: On a rising clock edge or a falling reset, the counter increments if enabled. If reset or clear is active, the counter is reset to zero.
+
+6. **Register Module**:
+   - **Purpose**: This module is a simple data register with load and clear controls.
+   - **Inputs**:
+     - `clk`: Clock signal for synchronization.
+     - `rst_n`: Active-low reset signal.
+     - `load`: Load signal to capture input data.
+     - `clr`: Clear signal to reset the register.
+     - `d`: Data input to be stored.
+   - **Output**:
+     - `q`: Output reflecting the stored data.
+   - **Behavior**: On a rising clock edge or a falling reset, the register captures or clears data based on control signals. If reset or clear is active, the register is cleared. If load is active, the register captures the input data.
+
+7. **Mux2to1 Module**:
+   - **Purpose**: This module is a 2-to-1 multiplexer.
+   - **Inputs**:
+     - `sel`: Select signal to choose between inputs.
+     - `in0`, `in1`: Data inputs.
+   - **Output**:
+     - `out`: Output reflecting the selected input.
+   - **Behavior**: The output is determined by the select signal, choosing between the two inputs.
+
+8. **BsMux Module**:
+   - **Purpose**: This module is a 3-input multiplexer with specific control values.
+   - **Inputs**:
+     - `sel`: 2-bit select signal to choose between inputs.
+     - `in0`, `in1`, `in2`: Data inputs.
+   - **Output**:
+     - `out`: Output reflecting the selected input based on predefined cases.
+   - **Behavior**: The output is determined by the select signal, with specific cases for zero, one, and data input.

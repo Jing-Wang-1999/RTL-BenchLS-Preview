@@ -1,0 +1,54 @@
+module autovcoder_065266 (
+    output HC_write_enable,
+    input HC_write_ready,
+    output HC_lookup_enable,
+    input HC_lookup_ready,
+    input HC_match,
+    input HC_full,
+    output [15:0] HC_key_in,
+    output [7:0] HC_value_in,
+    input [7:0] HC_value_out,
+    input clk,
+    input reset
+);
+  reg HashCAM_matched;
+  reg HashCAM_is_full;
+  wire [31:0] ktop16;
+  wire [31:0] ktop14;
+  reg System_BitConverter_IsLittleEndian;
+  wire [31:0] ktop12;
+  reg [63:0] KiwiSystem_Kiwi_tnow;
+  reg [31:0] KiwiSystem_Kiwi_old_pausemode_value;
+  wire [31:0] ktop10;
+  reg xpc10;
+  always @(posedge clk) begin
+    //Start structure HPR anontop
+    if (reset) begin
+      xpc10 <= 32'd0;
+      KiwiSystem_Kiwi_tnow <= 64'd0;
+      KiwiSystem_Kiwi_old_pausemode_value <= 32'd0;
+      System_BitConverter_IsLittleEndian <= 32'd0;
+      HashCAM_is_full <= 32'd0;
+      HashCAM_matched <= 32'd0;
+    end else if ((xpc10 == 1'sd0  /*0:xpc10*/)) begin
+      xpc10 <= 1'sd1  /*1:xpc10*/;
+      KiwiSystem_Kiwi_tnow <= 64'h0;
+      KiwiSystem_Kiwi_old_pausemode_value <= 32'h2;
+      System_BitConverter_IsLittleEndian <= 1'h1;
+      HashCAM_is_full <= 1'h0;
+      HashCAM_matched <= 1'h0;
+    end
+    //End structure HPR anontop
+
+
+  end
+
+
+  // 4 vectors of width 1
+  // 1 vectors of width 32
+  // 1 vectors of width 64
+  // Total state bits in module = 100 bits.
+  // 128 continuously assigned (wire/non-state) bits 
+  // Total number of leaf cells = 0
+endmodule
+

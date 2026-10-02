@@ -1,0 +1,109 @@
+module origen_062909(
+    input wire clk,
+    input wire reset,
+    input wire EN,
+    input wire [3:0] C,
+    output reg [3:0] D
+);
+    always @(posedge clk) begin
+        if (reset)
+            D <= 4'b0000;
+        else if (EN)
+            D <= C;
+    end
+endmodule
+
+module FETCH(
+    input wire clk,
+    input wire reset,
+    input wire EN,
+    input wire [7:0] D,
+    output wire [3:0] instr,
+    output wire [3:0] oprnd
+);
+    FFD4 ff_instr (
+        .clk(clk),
+        .reset(reset),
+        .EN(EN),
+        .C(D[7:4]),
+        .D(instr)
+    );
+
+    FFD4 ff_oprnd (
+        .clk(clk),
+        .reset(reset),
+        .EN(EN),
+        .C(D[3:0]),
+        .D(oprnd)
+    );
+endmodule
+
+module contador(
+    input wire clk,
+    input wire rst,
+    input wire EN,
+    input wire blo,
+    input wire [11:0] load,
+    output reg [11:0] val
+);
+    always @(posedge clk) begin
+        if (rst)
+            val <= 12'b0;
+        else if (blo)
+            val <= load;
+        else if (EN)
+            val <= val + 1;
+    end
+endmodule
+
+module Mrom(
+    input wire [11:0] address,
+    output reg [7:0] D
+);
+    reg [7:0] memory [0:4095];
+
+    initial begin
+        $readmemh("Mrom.list", memory);
+    end
+
+    always @(*) begin
+        D = memory[address];
+    end
+endmodule
+
+module integrador(
+    input wire clk,
+    input wire reset,
+    input wire ENPC,
+    input wire ENF,
+    input wire blo,
+    input wire [11:0] load,
+    output wire [7:0] P_B,
+    output wire [3:0] instr,
+    output wire [3:0] oprnd
+);
+    wire [11:0] address;
+
+    contador program_counter (
+        .clk(clk),
+        .rst(reset),
+        .EN(ENPC),
+        .blo(blo),
+        .load(load),
+        .val(address)
+    );
+
+    Mrom instruction_memory (
+        .address(address),
+        .D(P_B)
+    );
+
+    FETCH fetch_unit (
+        .clk(clk),
+        .reset(reset),
+        .EN(ENF),
+        .D(P_B),
+        .instr(instr),
+        .oprnd(oprnd)
+    );
+endmodule

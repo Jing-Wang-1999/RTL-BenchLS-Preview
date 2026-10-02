@@ -1,0 +1,38 @@
+module rtlpp_08203 (
+    Q,
+    CLK,
+    CEN,
+    WEN,
+    A,
+    D,
+    EMA
+);
+    parameter BITS = 128;
+    parameter WORD_DEPTH = 2048;
+    parameter ADDR_WIDTH = 11;
+    parameter RED_COLUMNS = 2;
+    
+    output [127:0] Q;
+    input CLK;
+    input CEN;
+    input WEN;
+    input [ADDR_WIDTH-1:0] A;
+    input [BITS-1:0] D;
+    input [2:0] EMA;
+   
+    reg [BITS+RED_COLUMNS-1:0] mem [0:WORD_DEPTH-1];
+    reg [127:0] latched_DO;
+
+    always @(posedge CLK) begin
+        if (~CEN) begin
+            if (~WEN) begin
+                mem[A] <= D;
+            end else begin
+                latched_DO <= mem[A];
+            end
+        end
+    end
+
+    assign Q = latched_DO;
+
+endmodule

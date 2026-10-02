@@ -1,0 +1,16 @@
+--- golden/rtl/host_interface.v
++++ mutant/rtl/host_interface.v
+@@ -213,11 +213,11 @@
+ assign crc_cr_rd = {24'h0, crc_cr_ff[4:0], 3'h0};
+ 
+ //Mux to HRDATA
+-assign HRDATA = ({32{crc_dr_sel  }} & crc_out             ) |
++assign HRDATA = ( ({32{crc_dr_sel  }} & crc_out             ) |
+                 ({32{crc_init_sel}} & crc_init_out        ) |
+                 ({32{crc_idr_sel }} & {24'h0, crc_idr_out}) |
+                 ({32{crc_poly_sel}} & crc_poly_out        ) |
+-                ({32{crc_cr_sel  }} & crc_cr_rd           ) ;
++                ({32{crc_cr_sel  }} & crc_cr_rd           ) ) ^ 32'h1;
+ 
+ //Control Register
+ always @(posedge HCLK)

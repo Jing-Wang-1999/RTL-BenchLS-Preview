@@ -1,0 +1,17 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Auto-generated for design riscv_xilinx_2r1w
+set DESIGN_NAME_GOLDEN "riscv_xilinx_2r1w.v0"
+set DESIGN_NAME "riscv_xilinx_2r1w.v1"
+set TOP_NAME "RAM16X1D"
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/${DESIGN_NAME_GOLDEN}.v
+check_sec -analyze -imp -sv ./input/rtl/${DESIGN_NAME}.v
+check_sec -elaborate -spec -top ${TOP_NAME} -disable_auto_bbox
+check_sec -elaborate -imp -top ${TOP_NAME} -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock WCLK
+reset -none
+check_sec -gen
+check_sec -prove -strategy proof

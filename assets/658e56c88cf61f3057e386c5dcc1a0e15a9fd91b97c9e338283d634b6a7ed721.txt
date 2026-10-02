@@ -1,0 +1,49 @@
+{
+  "additions": 4,
+  "base_commit": "a34c6ded0df822575e962c6fddd1be54cebe2755",
+  "base_ref": "master",
+  "deletions": 2,
+  "head_commit": "eee73cea0190aa2c184acffcab5e952493fbeafc",
+  "issue_info": {
+    "body": "### Hierarchy of regression failure\n\nChip Level\n\n### Failure Description\n\n      Offending '$past(dst_update_i, 1)'\r\n  UVM_ERROR @ 2167.719000 us: (prim_reg_cdc_arb.sv:169) [ASSERT FAILED] HwIdSelCheck_A\r\n  UVM_INFO @ 2167.719000 us: (uvm_report_catcher.svh:705) [UVM/REPORT/CATCHER]\r\n\r\n\r\n\n\n### Steps to Reproduce\n\n- https://github.com/lowrisc/opentitan/tree/e7fcdad95951dc92314348fd4661757f17bd04cd\r\n- ./util/dvsim/dvsim.py -t vcs -w fsdb hw/top_earlgrey/dv/chip_sim_cfg.hjson -i chip_csr_bit_bash  -s 2855080962 -r 1\r\n\n\n### Tests with similar or related failures\n\n- [ ] chip_sw_clkmgr_escalation_reset\r\n- [ ] chip_sw_flash_ctrl_idle_low_power\r\n- [ ] chip_sw_aon_timer_irq\r\n- [ ] chip_sw_aon_timer_sleep_wdog_sleep_pause\r\n-\r\n",
+    "created_at": "2022-08-23T21:32:37Z",
+    "labels": [
+      "Component:TestTriage"
+    ],
+    "state": "closed",
+    "title": "[test-triage] chip_csr_bit_bash",
+    "updated_at": "2022-08-24T17:53:04Z"
+  },
+  "issue_number": 14526,
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/14526",
+  "lec_status": "useless_pass",
+  "patches": [
+    {
+      "additions": 4,
+      "changes": 6,
+      "deletions": 2,
+      "filename": "hw/ip/prim/rtl/prim_reg_cdc_arb.sv",
+      "patch": "@@ -165,8 +165,10 @@ module prim_reg_cdc_arb #(\n       clk_dst_i, !rst_dst_ni)\n \n     // if hw select was chosen, then it must be the case there was a destination update\n-    // indication\n-    `ASSERT(HwIdSelCheck_A, $rose(id_q == SelHwReq) |-> $past(dst_update_i, 1),\n+    // indication or there was a difference between the transit register and the\n+    // latest incoming value.\n+    `ASSERT(HwIdSelCheck_A, $rose(id_q == SelHwReq) |-> $past(dst_update_i, 1) ||\n+      $past(dst_lat_q, 1),\n       clk_dst_i, !rst_dst_ni)\n \n "
+    }
+  ],
+  "pr_info": {
+    "body": "- should fix #14526\r\n\r\n- The assertion forgot to account for the case where a hardware update\r\n  request was received while there is already an ongoing handshake\r\n  either from software or from a previous hardware update.\r\n\r\nSigned-off-by: Timothy Chen <timothytim@google.com>",
+    "created_at": "2022-08-24T15:14:50Z",
+    "merged_at": "2022-08-24T17:53:03Z",
+    "state": "closed",
+    "title": "[prim] Fix missing case from prim_reg_cdc_arb assert",
+    "updated_at": "2022-08-24T18:00:26Z",
+    "user": "tjaychen"
+  },
+  "pr_number": 14543,
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/14543",
+  "repository": "lowRISC/opentitan",
+  "source_info": {
+    "line_number": 1830,
+    "source_file": "12.txt"
+  },
+  "task_id": "lowRISC_opentitan_14543_14526",
+  "verilog_files": [
+    "hw/ip/prim/rtl/prim_reg_cdc_arb.sv"
+  ]
+}

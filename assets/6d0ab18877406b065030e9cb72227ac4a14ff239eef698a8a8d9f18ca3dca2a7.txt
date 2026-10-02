@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.b1eeefc8838f7c90b61c.410e0377176e",
+  "compile_check": {
+    "case_id": "s1derived.b1eeefc8838f7c90b61c.410e0377176e",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_05296",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.rtlpp_05296.78bd996532479e64/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.b1eeefc8838f7c90b61c",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "b1eeefc8838f7c90b61cc097ded55a18cdc64672b75191a7686cefde925584ea",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.b1eeefc8838f7c90b61c.410e0377176e",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.rtlpp_05296.78bd996532479e64/private/commercial_positive.log",
+    "commercial_log_sha256": "ef30655422a5b98626e1702202cfba1659be36f383a10a0ad4eb362ed0e8adcc",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.rtlpp_05296.78bd996532479e64/private/historical_harness/00_sec_rtlpp_05296.tcl",
+    "executed_script_sha256": "e23c3b76fdd664e794c08b95f67b3785ffc86851cbbb8a5a92ec7890a673b2ff",
+    "golden_tops": [
+      "rtlpp_05296"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.rtlpp_05296.78bd996532479e64",
+    "parent_id": "s1p.b1eeefc8838f7c90b61c",
+    "revised_tops": [
+      "rtlpp_05296"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_05296",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.b1eeefc8838f7c90b61c.410e0377176e",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Run-state quit priority, delayed stall edge detection, reset-event equations and four-stage reset propagation all match, including asynchronous initial values.",
+        "rtl_excerpt": "wire start_reset = cpu_start & ~cpu_run_state;",
+        "specification_excerpt": "captures their OR"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.b1eeefc8838f7c90b61c",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "2baefecd20d74f0fcd37ebbda912ca95643f14726f8d2e7b0498eddfdc0b8f34",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "b1eeefc8838f7c90b61cc097ded55a18cdc64672b75191a7686cefde925584ea",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.rtlpp_05296.78bd996532479e64/private/historical_harness/00_sec_rtlpp_05296.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.rtlpp_05296.78bd996532479e64/private/historical_harness/01_sec_rtlpp_05296.tcl"
+  ],
+  "parent_id": "s1p.b1eeefc8838f7c90b61c",
+  "primary_review": {
+    "case_id": "s1derived.b1eeefc8838f7c90b61c.410e0377176e",
+    "checks": {
+      "behavior": "The description truncates before completing the reset-pipeline timing contract.",
+      "boundaries": "The repair covers observable truncation, wrap, initialization, and boundary behavior.",
+      "interface": "The repair states the complete actual interface and defaults.",
+      "rtl_reasonableness": "The circuit is coherent hardware for its stated role.",
+      "sequential_and_reset": "The repair states actual clock, reset, priority, and hold behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The description truncates before completing the reset-pipeline timing contract.",
+        "rtl_excerpt": "rst_pipe_id/ex/ma/wb shift prior reset values by one edge per stage.",
+        "spec_excerpt": "\u201cThis rst_pipe signal is then propagated through the pipeline\u201d ends the file."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The description truncates before completing the reset-pipeline timing contract.",
+        "rtl_evidence": "rst_pipe_id/ex/ma/wb shift prior reset values by one edge per stage.",
+        "spec_evidence": "\u201cThis rst_pipe signal is then propagated through the pipeline\u201d ends the file.",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.b1eeefc8838f7c90b61c",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_06/s1derived.b1eeefc8838f7c90b61c.410e0377176e.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "b1eeefc8838f7c90b61cc097ded55a18cdc64672b75191a7686cefde925584ea",
+    "source_group": "S4",
+    "specification_sha256": "410e0377176e228c051e2fdee76a1f3e61a04e4dd84c1c6a9c9f440db8064079",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_06/s1derived.b1eeefc8838f7c90b61c.410e0377176e.md",
+  "qualified_specification_sha256": "2baefecd20d74f0fcd37ebbda912ca95643f14726f8d2e7b0498eddfdc0b8f34",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.rtlpp_05296.78bd996532479e64/private/golden_design.v",
+  "rtl_sha256": "b1eeefc8838f7c90b61cc097ded55a18cdc64672b75191a7686cefde925584ea",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.rtlpp_05296.78bd996532479e64/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "410e0377176e228c051e2fdee76a1f3e61a04e4dd84c1c6a9c9f440db8064079",
+  "top_module": "rtlpp_05296"
+}

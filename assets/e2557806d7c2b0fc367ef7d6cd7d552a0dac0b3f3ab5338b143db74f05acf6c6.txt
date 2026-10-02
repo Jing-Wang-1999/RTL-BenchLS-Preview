@@ -1,0 +1,112 @@
+module origen_196040 (
+    input wire go,
+    input wire Ao,
+    input wire Qo,
+    input wire clck,
+    input wire rst,
+    output reg initP,
+    output reg ldP,
+    output reg ldB,
+    output reg one_selB,
+    output reg zero_selB,
+    output reg ldQ,
+    output reg initQ,
+    output reg ldA,
+    output reg done
+);
+
+    // State encoding
+    localparam S0  = 4'b0000;
+    localparam S1  = 4'b0001;
+    localparam S2  = 4'b0010;
+    localparam S3  = 4'b0011;
+    localparam S4  = 4'b0100;
+    localparam S5  = 4'b0101;
+    localparam S6  = 4'b0110;
+    localparam S7  = 4'b0111;
+    localparam S8  = 4'b1000;
+    localparam S9  = 4'b1001;
+    localparam S10 = 4'b1010;
+
+    reg [3:0] state, next_state;
+
+    // State transition logic
+    always @(posedge clck or posedge rst) begin
+        if (rst)
+            state <= S0;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            S0: begin
+                if (go)
+                    next_state = S1;
+                else
+                    next_state = S0;
+            end
+            S1: begin
+                if (go)
+                    next_state = S1;
+                else
+                    next_state = S2;
+            end
+            S2: next_state = S3;
+            S3: next_state = S4;
+            S4: next_state = S5;
+            S5: next_state = S6;
+            S6: next_state = S7;
+            S7: next_state = S8;
+            S8: next_state = S9;
+            S9: next_state = S10;
+            S10: next_state = S0;
+            default: next_state = S0;
+        endcase
+    end
+
+    // Output logic
+    always @(*) begin
+        // Default outputs
+        initP = 0;
+        ldP = 0;
+        ldB = 0;
+        one_selB = 0;
+        zero_selB = 0;
+        ldQ = 0;
+        initQ = 0;
+        ldA = 0;
+        done = 0;
+
+        case (state)
+            S0: begin
+                done = 1;
+            end
+            S1: begin
+                initP = 1;
+                one_selB = 1;
+            end
+            S2: begin
+                ldP = 1;
+                ldB = 1;
+            end
+            S3: begin
+                if (Ao)
+                    ldQ = 1;
+            end
+            S4: begin
+                if (Qo)
+                    initQ = 1;
+            end
+            S5: begin
+                ldA = 1;
+            end
+            // S6 to S9: No outputs activated
+            S10: begin
+                // No outputs activated, transition to S0
+            end
+        endcase
+    end
+
+endmodule

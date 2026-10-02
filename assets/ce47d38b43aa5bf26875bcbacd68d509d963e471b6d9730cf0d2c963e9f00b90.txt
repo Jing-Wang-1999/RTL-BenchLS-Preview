@@ -1,0 +1,62 @@
+module ct_spsram_512x44(
+  A,
+  CEN,
+  CLK,
+  D,
+  GWEN,
+  Q,
+  WEN
+);
+
+// &Ports; @23
+input   [8 :0]  A;   
+input           CEN; 
+input           CLK; 
+input   [43:0]  D;   
+input           GWEN; 
+input   [43:0]  WEN; 
+output  [43:0]  Q;   
+
+// &Regs; @24
+
+// &Wires; @25
+wire    [8 :0]  A;   
+wire            CEN; 
+wire            CLK; 
+wire    [43:0]  D;   
+wire            GWEN; 
+wire    [43:0]  Q;   
+wire    [43:0]  WEN; 
+
+
+//**********************************************************
+//                  Parameter Definition
+//**********************************************************
+parameter ADDR_WIDTH = 9;
+parameter DATA_WIDTH = 44;
+parameter WE_WIDTH   = 44;
+
+// &Force("bus","Q",DATA_WIDTH-1,0); @34
+// &Force("bus","WEN",WE_WIDTH-1,0); @35
+// &Force("bus","A",ADDR_WIDTH-1,0); @36
+// &Force("bus","D",DATA_WIDTH-1,0); @37
+
+  //********************************************************
+  //*                        FPGA memory                   *
+  //********************************************************
+  //{WEN[43,22],WEN[21:0}}
+//   &Instance("ct_f_spsram_512x44"); @44
+ct_f_spsram_512x44  x_ct_f_spsram_512x44 (
+  .A    (A   ),
+  .CEN  (CEN ),
+  .CLK  (CLK ),
+  .D    (D   ),
+  .GWEN (GWEN),
+  .Q    (Q   ),
+  .WEN  (WEN )
+);
+
+//   &Instance("ct_tsmc_spsram_512x44"); @50
+
+// &ModuleEnd; @66
+endmodule

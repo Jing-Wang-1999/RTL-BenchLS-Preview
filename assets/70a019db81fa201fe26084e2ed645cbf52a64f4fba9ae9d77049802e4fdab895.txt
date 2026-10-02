@@ -1,0 +1,48 @@
+module origen_006067 (
+    input [3:0] fil,
+    input [3:0] col,
+    output reg [3:0] tecla
+);
+
+    always @(*) begin
+        tecla = 4'b1111; // default no key
+
+        if (col[0]) begin
+            case (fil)
+                4'b0001: tecla = 4'b0000;
+                4'b0010: tecla = 4'b0100;
+                4'b0100: tecla = 4'b1000;
+                4'b1000: tecla = 4'b1100;
+                default: tecla = 4'b1111;
+            endcase
+        end
+        else if (col[1]) begin
+            case (fil)
+                4'b0001: tecla = 4'b0001;
+                4'b0010: tecla = 4'b0101;
+                4'b0100: tecla = 4'b1001;
+                4'b1000: tecla = 4'b1101;
+                default: tecla = 4'b1111;
+            endcase
+        end
+        else if (col[2]) begin
+            case (fil)
+                4'b0001: tecla = 4'b0010;
+                4'b0010: tecla = 4'b0110;
+                4'b0100: tecla = 4'b1010;
+                4'b1000: tecla = 4'b1110;
+                default: tecla = 4'b1111;
+            endcase
+        end
+        else if (col[3]) begin
+            case (fil)
+                4'b0001: tecla = 4'b0011;
+                4'b0010: tecla = 4'b0111;
+                4'b0100: tecla = 4'b1011;
+                4'b1000: tecla = 4'b1111;
+                default: tecla = 4'b1111;
+            endcase
+        end
+    end
+
+endmodule

@@ -1,0 +1,53 @@
+always @(posedge clk_i)
+    if (~spe)
+      begin
+          state <=  2'b00; // idle
+          bcnt  <=  3'h0;
+          treg  <=  8'h00;
+          wfre  <=  1'b0;
+          rfwe  <=  1'b0;
+          sck_o <=  1'b0;
+      end
+    else
+      begin
+         wfre <=  1'b0;
+         rfwe <=  1'b0;
+
+         case (state) //synopsys full_case parallel_case
+           2'b00: // idle state
+              begin
+                  bcnt  <=  3'h7;   // set transfer counter
+                  treg  <=  wfdout; // load transfer register
+                  sck_o <=  cpol;   // set sck
+
+                  if (~wfempty) begin
+                    wfre  <=  1'b1;
+                    state <=  2'b01;
+                    if (cpha) sck_o <=  ~sck_o;
+                  end
+              end
+
+           2'b01: // clock-phase2, next data
+              if (ena) begin
+                sck_o   <=  ~sck_o;
+                state   <=  2'b11;
+              end
+
+           2'b11: // clock phase1
+              if (ena) begin
+                treg <=  {treg[6:0], miso_i};
+                bcnt <=  bcnt -3'h1;
+
+                if (~|bcnt) begin
+                  state <=  2'b00;
+                  sck_o <=  cpol;
+                  rfwe  <=  1'b1;
+                end else begin
+                  state <=  2'b01;
+                  sck_o <=  ~sck_o;
+                end
+              end
+
+           2'b10: state <=  2'b00;
+         endcase
+      end

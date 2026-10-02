@@ -1,0 +1,30 @@
+module rtlpp_10291 (
+    output Q      ,
+    output Q_N    ,
+    input  D      ,
+    input  CLK    ,
+    input  SET_B  ,
+    input  RESET_B,
+    input  VPWR   ,
+    input  VGND   ,
+    input  VPB    ,
+    input  VNB
+);
+    // Internal logic from sky130_fd_sc_hd__dfbbp module
+    reg Q_internal;
+    reg QN_internal;
+
+    always @(posedge CLK or negedge SET_B or negedge RESET_B) begin
+        if (!RESET_B) begin
+            Q_internal <= 1'b0;
+        end else if (!SET_B) begin
+            Q_internal <= 1'b1;
+        end else begin
+            Q_internal <= D;
+        end
+    end
+
+    assign Q = Q_internal;
+    assign Q_N = ~Q_internal;
+
+endmodule

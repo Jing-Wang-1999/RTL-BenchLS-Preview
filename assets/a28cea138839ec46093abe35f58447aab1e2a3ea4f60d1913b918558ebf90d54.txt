@@ -1,0 +1,9 @@
+always @ (posedge clock or posedge reset)
+begin
+	if (reset) 
+		data_buf <= 9'b0;
+	else if (~tx_busy)
+		data_buf <= {tx_data, 1'b0};
+	else if (tx_busy & ce_1)
+		data_buf <= {1'b1, data_buf[8:1]};
+end

@@ -1,0 +1,68 @@
+module autovcoder_031114 (
+    /*input  wire [DEVNUM-1:0]*/ reqs,
+    /*input  wire [DEVNUM-1:0]*/ prev,
+
+    /*output wire [DEVNUM-1:0]*/ next
+);
+  parameter DEVNUM = 4;
+
+
+  input wire [DEVNUM-1:0] reqs;
+  input wire [DEVNUM-1:0] prev;
+
+  output wire [DEVNUM-1:0] next;
+
+
+
+  genvar i;
+
+
+
+  // arbitration if there was previous actives
+  //
+  wire [DEVNUM-1:0] loop;
+  wire [DEVNUM-1:0] next_arb;
+
+  generate
+    for (i = 0; i < DEVNUM; i = i + 1) begin : gen_forwarders
+
+      if (i == 0)
+        rr_fwd forwarder (
+            .prev(prev[i]),
+            .req(reqs[i]),
+            .next(next_arb[i]),
+            .loop_in(loop[DEVNUM-1]),
+            .loop_out(loop[i])
+        );
+      else
+        rr_fwd forwarder (
+            .prev(prev[i]),
+            .req(reqs[i]),
+            .next(next_arb[i]),
+            .loop_in(loop[i-1]),
+            .loop_out(loop[i])
+        );
+    end
+  endgenerate
+
+
+  // arbitration if there was no actives prior to requests
+  //
+  wire [DEVNUM-1:0] next_empty;
+
+  generate
+    for (i = 0; i < DEVNUM; i = i + 1) begin : pri_enc
+      if (i == 0) begin : pri_zero
+        assign next_empty[0] = reqs[0];
+      end else begin : pri_nonzero
+        assign next_empty[i] = reqs[i] & (~|reqs[i-1:0]);
+      end
+    end
+  endgenerate
+
+
+  // select between prev-busy and prev-free cases
+  assign next = (prev) ? next_arb : next_empty;
+
+endmodule
+

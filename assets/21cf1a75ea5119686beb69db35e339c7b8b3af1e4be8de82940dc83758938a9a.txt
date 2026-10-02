@@ -1,0 +1,70 @@
+### Instruction for Generating Verilog Code
+
+Create a Verilog module named `axi_crossbar_transaction_router` that serves as an AXI crossbar interface, managing the routing of AXI transactions between master and slave interfaces. This module facilitates read and write operations by handling various AXI signals and propagating them appropriately to support multiple master devices. Here's the detailed functionality:
+
+1. **Primary Function**:
+   Design an AXI crossbar module that connects a single slave interface to multiple master interfaces. The module should ensure proper handshaking and signal translation between the connected devices, supporting both read and write AXI operations.
+
+2. **Key Control Flow**:
+   - The module should use AXI handshaking signals (`valid`, `ready`) to determine when transactions can proceed.
+   - When `s_axi_awvalid` or `s_axi_arvalid` is asserted, the corresponding `s_axi_awready` or `s_axi_arready` should also be asserted, signaling readiness to accept new write or read addresses.
+   - Similarly, for write data (`s_axi_wvalid`) and write response (`s_axi_bready`), asserts the respective ready signals to indicate transaction progression.
+
+3. **Important Data Processing**:
+   - The module should replicate input AXI signals (address, data, protection, etc.) appropriately for each master interface by repeating these signals across their respective widths.
+   - For write operations, respond with an "OKAY" response (`s_axi_bresp = 2'b00`) and validate it when the write data is valid (`s_axi_bvalid = s_axi_wvalid`).
+   - For read operations, respond with dummy data (`s_axi_rdata = s_axi_araddr`) and an "OKAY" response (`s_axi_rresp = 2'b00`), validating the response when the read address is valid (`s_axi_rvalid = s_axi_arvalid`).
+
+4. **Signal Interactions**:
+   - Ensure that multi-width signals for master interfaces (`m_axi_*`) are extended by repeating the 32-bit or smaller slave signals across the 256-bit or wider bus as required.
+   - Ensure ready signals (`m_axi_*ready`) for downstream master interfaces reflect incoming ready signals from the single slave interface to handle multiple outstanding transactions efficiently.
+
+This structured design allows the crossbar to facilitate multiple concurrent AXI transactions while maintaining protocol integrity and efficiency.
+
+Module Interface:
+module axi_crossbar_transaction_router(
+  input wire aclk,
+  input wire aresetn,
+  input wire [31:0]s_axi_awaddr,
+  input wire [2:0]s_axi_awprot,
+  input wire [0:0]s_axi_awvalid,
+  output wire [0:0]s_axi_awready,
+  input wire [31:0]s_axi_wdata,
+  input wire [3:0]s_axi_wstrb,
+  input wire [0:0]s_axi_wvalid,
+  output wire [0:0]s_axi_wready,
+  output wire [1:0]s_axi_bresp,
+  output wire [0:0]s_axi_bvalid,
+  input wire [0:0]s_axi_bready,
+  input wire [31:0]s_axi_araddr,
+  input wire [2:0]s_axi_arprot,
+  input wire [0:0]s_axi_arvalid,
+  output wire [0:0]s_axi_arready,
+  output wire [31:0]s_axi_rdata,
+  output wire [1:0]s_axi_rresp,
+  output wire [0:0]s_axi_rvalid,
+  input wire [0:0]s_axi_rready,
+  output wire [255:0]m_axi_awaddr,
+  output wire [23:0]m_axi_awprot,
+  output wire [7:0]m_axi_awvalid,
+  input wire [7:0]m_axi_awready,
+  output wire [255:0]m_axi_wdata,
+  output wire [31:0]m_axi_wstrb,
+  output wire [7:0]m_axi_wvalid,
+  input wire [7:0]m_axi_wready,
+  input wire [15:0]m_axi_bresp,
+  input wire [7:0]m_axi_bvalid,
+  output wire [7:0]m_axi_bready,
+  output wire [255:0]m_axi_araddr,
+  output wire [23:0]m_axi_arprot,
+  output wire [7:0]m_axi_arvalid,
+  input wire [7:0]m_axi_arready,
+  input wire [255:0]m_axi_rdata,
+  input wire [15:0]m_axi_rresp,
+  input wire [7:0]m_axi_rvalid,
+  output wire [7:0]m_axi_rready
+);
+
+Behavioral Clarifications:
+- The module is fully combinational (all assign statements, no sequential logic). There are 8 master ports; each 256-bit master address bus is formed by replicating the 32-bit slave address 8 times using the replication operator.
+- Slave ready/valid outputs are driven directly from the corresponding slave valid/ready inputs; master valid and ready vectors replicate the single slave bit across all 8 positions.

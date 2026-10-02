@@ -1,0 +1,11 @@
+always @ *
+begin
+    tag0_write_r = 1'b0;
+
+    // Cache flush
+    if (state_q == STATE_FLUSH)
+        tag0_write_r = 1'b1;
+    // Line refill
+    else if (state_q == STATE_REFILL)
+        tag0_write_r = axi_rvalid_i && axi_rlast_i && (replace_way_q == 0);
+end

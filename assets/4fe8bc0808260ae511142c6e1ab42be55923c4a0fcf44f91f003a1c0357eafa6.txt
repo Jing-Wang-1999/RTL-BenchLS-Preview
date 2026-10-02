@@ -1,0 +1,53 @@
+module origen_051344(
+    input wire Uart_CLK,
+    input wire [7:0] Data_Tx,
+    input wire Wrsig,
+    output reg Idle,
+    output reg Signal_Tx
+);
+
+parameter paritymode = 0; // 0 for even parity, 1 for odd parity
+
+reg [7:0] Tx_Data;
+reg [7:0] Tx_Cnt;
+reg parity;
+
+always @(posedge Uart_CLK) begin
+    if (Idle && Wrsig) begin
+        Idle <= 0;
+        Tx_Data <= Data_Tx;
+        Tx_Cnt <= 0;
+        parity <= paritymode;
+    end else if (!Idle) begin
+        case (Tx_Cnt)
+            8'd0: begin
+                Signal_Tx <= 0; // Start bit
+                Tx_Cnt <= Tx_Cnt + 1;
+            end
+            8'd16, 8'd32, 8'd48, 8'd64, 8'd80, 8'd96, 8'd112, 8'd128: begin
+                Signal_Tx <= Tx_Data[0];
+                parity <= parity ^ Tx_Data[0];
+                Tx_Data <= {1'b0, Tx_Data[7:1]};
+                Tx_Cnt <= Tx_Cnt + 1;
+            end
+            8'd144: begin
+                Signal_Tx <= parity; // Parity bit
+                Tx_Cnt <= Tx_Cnt + 1;
+            end
+            8'd160: begin
+                Signal_Tx <= 1; // Stop bit
+                Tx_Cnt <= Tx_Cnt + 1;
+            end
+            8'd168: begin
+                Idle <= 1;
+                Signal_Tx <= 1;
+                Tx_Cnt <= 0;
+            end
+            default: begin
+                Tx_Cnt <= Tx_Cnt + 1;
+            end
+        endcase
+    end
+end
+
+endmodule

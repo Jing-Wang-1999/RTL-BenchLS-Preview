@@ -1,0 +1,13 @@
+always @(posedge clk_i)
+  begin
+    if (rst_i)
+    begin
+      spo_s <= 2'b11;
+      spi_o <= 1'b0;
+    end
+    else
+    begin
+      spi_o <= spi_done & ~spmd_i & cnt_i;
+      spo_s <= {spo_s[0], spo_rdy ? spo_done : 1'b1};
+    end
+  end

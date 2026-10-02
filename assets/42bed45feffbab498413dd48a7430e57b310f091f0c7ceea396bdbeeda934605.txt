@@ -1,0 +1,53 @@
+module origen_177314(
+    input [24:0] VGA_Ctrl,
+    input [1:0] state,
+    input [39:0] dead,
+    input playerdead,
+    output reg [1:0] phase,
+    output reg [10:0] movementX,
+    output reg [10:0] movementY
+);
+
+reg Xway, Yway;
+reg [3:0] round;
+
+always @(posedge VGA_Ctrl[0]) begin
+    if (!state || dead == 40'hFFFFFFFFFF) begin
+        movementX <= 194;
+        movementY <= 1;
+        phase <= 1;
+    end
+    else if (VGA_Ctrl[21:11] == 11'd1030 && VGA_Ctrl[10:1] == 10'd770 && state == 1 && !playerdead) begin
+        case (phase)
+            0: begin
+                movementX <= movementX + 1;
+                movementY <= movementY + 1;
+            end
+            1: begin
+                if (!Xway) movementX <= movementX + 2;
+                else movementX <= movementX - 2;
+                if (!Yway) movementY <= movementY + 1;
+                else movementY <= movementY - 1;
+                if (movementX >= 384) Xway <= 1;
+                else if (movementX <= 0) Xway <= 0;
+                if (movementY >= 192) Yway <= 1;
+                else if (movementY <= 0) Yway <= 0;
+                round <= round + 1;
+                if (round == 6) phase <= 2;
+            end
+            2: begin
+                movementY <= movementY + 4;
+                if (movementX < 38 && round < 14) movementX <= movementX + 1;
+                round <= round + 1;
+                if (round == 15) begin
+                    phase <= 1;
+                    movementX <= 194;
+                    movementY <= 1;
+                    round <= 0;
+                end
+            end
+        endcase
+    end
+end
+
+endmodule

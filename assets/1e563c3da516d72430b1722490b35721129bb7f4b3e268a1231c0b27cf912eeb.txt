@@ -1,0 +1,34 @@
+// This file is based on Zhekai Zhang's code
+
+`include "utility.v"
+`include "simple_ram.v"
+
+//Address (32-bit):
+//	TAG INDEX WORD_SELECT 00
+module cache #(
+	parameter WORD_SELECT_BIT = 3, 
+	parameter INDEX_BIT       = 2, 
+	parameter NASSOC          = 4
+) (
+	input             clk           ,
+	input             rst           ,
+	
+	input      [ 1:0] rw_flag_      , 
+	input      [31:0] addr_         ,
+	output     [31:0] read_data     ,
+	input      [31:0] write_data_   ,
+	input      [ 3:0] write_mask_   ,
+	output reg        busy          ,
+	output reg        done          ,
+	input             flush_flag    ,
+	input      [31:0] flush_addr    ,
+	
+	output reg [ 1:0] mem_rw_flag   ,
+	output reg [31:0] mem_addr      ,
+	input      [31:0] mem_read_data ,
+	output reg [31:0] mem_write_data,
+	output reg [ 3:0] mem_write_mask,
+	input             mem_busy      ,
+	input             mem_done
+);
+endmodule // cache

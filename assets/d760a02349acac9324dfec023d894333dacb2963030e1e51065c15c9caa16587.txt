@@ -1,0 +1,31 @@
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        tmra <= 16'h0;
+        tmra_buf <= 16'h0;
+        tmra_flag <= 1'b0;
+    end
+    else if (clk7_en) begin
+        if (wr && talo) begin
+            tmra <= {tmra[15:8], data_in};
+        end
+        if (wr && tahi) begin
+            tmra <= {data_in, tmra[7:0]};
+        end
+        if (wr && (talo || tahi)) begin
+            tmra_flag <= 1'b0;
+        end
+        if (eclk && !tmra_flag) begin
+            if (tmra == 16'h0001) begin
+                tmra_flag <= 1'b1;
+                tmra <= tmra_buf;
+            end
+            else begin
+                tmra <= tmra - 16'h0001;
+            end
+        end
+        if (wr && cra) begin
+            tmra_flag <= data_in[0];
+        end
+        tmra_buf <= tmra;
+    end
+end

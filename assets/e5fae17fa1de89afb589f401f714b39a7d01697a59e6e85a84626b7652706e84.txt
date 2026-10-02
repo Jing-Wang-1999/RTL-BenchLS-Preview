@@ -1,0 +1,99 @@
+module rtlpp_02618 (
+    input clock,
+    input reset,
+    input pulso,
+    input tick,
+    output reg zera_tick,
+    output reg conta_tick,
+    output reg zera_bcd,
+    output reg conta_bcd,
+    output reg pronto
+);
+
+    localparam [2:0] INITIAL   = 3'b000,
+                     PREPARE   = 3'b001,
+                     COUNT     = 3'b010,
+                     COUNT_CM  = 3'b011,
+                     FINAL     = 3'b100;
+
+    reg [2:0] estado_atual, estado_proximo;
+
+    always @(posedge clock or posedge reset) begin
+        if (reset) begin
+            estado_atual <= INITIAL;
+        end else begin
+            estado_atual <= estado_proximo;
+        end
+    end
+
+    always @(*) begin
+        estado_proximo = estado_atual;
+        case (estado_atual)
+            INITIAL: begin
+                if (pulso) begin
+                    estado_proximo = PREPARE;
+                end else begin
+                    estado_proximo = INITIAL;
+                end
+            end
+            PREPARE: begin
+                if (pulso) begin
+                    estado_proximo = COUNT;
+                end else begin
+                    estado_proximo = FINAL;
+                end
+            end
+            COUNT: begin
+                if (!pulso) begin
+                    estado_proximo = FINAL;
+                end else if (tick) begin
+                    estado_proximo = COUNT_CM;
+                end else begin
+                    estado_proximo = COUNT;
+                end
+            end
+            COUNT_CM: begin
+                if (!pulso) begin
+                    estado_proximo = FINAL;
+                end else begin
+                    estado_proximo = COUNT;
+                end
+            end
+            FINAL: begin
+                estado_proximo = INITIAL;
+            end
+            default: begin
+                estado_proximo = INITIAL;
+            end
+        endcase
+    end
+
+    always @(*) begin
+        zera_tick  = 1'b0;
+        conta_tick = 1'b0;
+        zera_bcd   = 1'b0;
+        conta_bcd  = 1'b0;
+        pronto     = 1'b0;
+
+        case (estado_atual)
+            PREPARE: begin
+                zera_tick = 1'b1;
+                zera_bcd  = 1'b1;
+            end
+            COUNT: begin
+                conta_tick = 1'b1;
+            end
+            COUNT_CM: begin
+                conta_tick = 1'b1;
+                conta_bcd  = 1'b1;
+            end
+            FINAL: begin
+                pronto = 1'b1;
+            end
+            default: begin
+                // outputs remain default (0)
+            end
+        endcase
+    end
+
+endmodule

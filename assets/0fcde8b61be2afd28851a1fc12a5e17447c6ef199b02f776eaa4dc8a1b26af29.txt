@@ -1,0 +1,106 @@
+module origen_146442 (
+    input wire clk,
+    input wire reset,
+    input wire [15:0] matrix_a,
+    input wire [15:0] matrix_b,
+    input wire load_a,
+    input wire load_b,
+    output reg [15:0] matrix_out,
+    output reg ready
+);
+
+reg [15:0] a [0:3][0:3];
+reg [15:0] b [0:3][0:3];
+reg [15:0] c [0:3][0:3];
+reg [1:0] a_row, a_col, b_row, b_col;
+reg a_loaded, b_loaded;
+reg [2:0] state;
+integer i, j, k;
+
+localparam IDLE = 3'd0, LOAD_A = 3'd1, LOAD_B = 3'd2, MULTIPLY = 3'd3, OUTPUT = 3'd4;
+
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        state <= IDLE;
+        a_row <= 0; a_col <= 0;
+        b_row <= 0; b_col <= 0;
+        a_loaded <= 0; b_loaded <= 0;
+        ready <= 1;
+    end else begin
+        case (state)
+            IDLE: begin
+                if (load_a) begin
+                    state <= LOAD_A;
+                    ready <= 0;
+                end else if (load_b) begin
+                    state <= LOAD_B;
+                    ready <= 0;
+                end
+            end
+            LOAD_A: begin
+                a[a_row][a_col] <= matrix_a;
+                if (a_col == 3) begin
+                    a_col <= 0;
+                    if (a_row == 3) begin
+                        a_row <= 0;
+                        a_loaded <= 1;
+                        state <= IDLE;
+                    end else begin
+                        a_row <= a_row + 1;
+                    end
+                end else begin
+                    a_col <= a_col + 1;
+                end
+            end
+            LOAD_B: begin
+                b[b_row][b_col] <= matrix_b;
+                if (b_col == 3) begin
+                    b_col <= 0;
+                    if (b_row == 3) begin
+                        b_row <= 0;
+                        b_loaded <= 1;
+                        state <= IDLE;
+                    end else begin
+                        b_row <= b_row + 1;
+                    end
+                end else begin
+                    b_col <= b_col + 1;
+                end
+            end
+            MULTIPLY: begin
+                for (i = 0; i < 4; i = i + 1) begin
+                    for (j = 0; j < 4; j = j + 1) begin
+                        c[i][j] <= 0;
+                        for (k = 0; k < 4; k = k + 1) begin
+                            c[i][j] <= c[i][j] + a[i][k] * b[k][j];
+                        end
+                    end
+                end
+                state <= OUTPUT;
+            end
+            OUTPUT: begin
+                matrix_out <= c[a_row][a_col];
+                if (a_col == 3) begin
+                    a_col <= 0;
+                    if (a_row == 3) begin
+                        a_row <= 0;
+                        state <= IDLE;
+                        ready <= 1;
+                        a_loaded <= 0;
+                        b_loaded <= 0;
+                    end else begin
+                        a_row <= a_row + 1;
+                    end
+                end else begin
+                    a_col <= a_col + 1;
+                end
+            end
+        endcase
+
+        if (a_loaded && b_loaded && state == IDLE) begin
+            state <= MULTIPLY;
+        end
+    end
+end
+
+endmodule

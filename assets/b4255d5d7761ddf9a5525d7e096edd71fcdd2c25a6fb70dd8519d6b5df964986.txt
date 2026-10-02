@@ -1,0 +1,45 @@
+always @(state or TxValid_i or data_done or sft_done_e or eop_done or fs_ce)
+   begin
+	next_state = state;
+	tx_ready_d = 1'b0;
+
+	ld_sop_d = 1'b0;
+	ld_data_d = 1'b0;
+	ld_eop_d = 1'b0;
+
+	case(state)	// synopsys full_case parallel_case
+	   IDLE:
+			if(TxValid_i)
+			   begin
+				ld_sop_d = 1'b1;
+				next_state = SOP;
+			   end
+	   SOP:
+			if(sft_done_e)
+			   begin
+				tx_ready_d = 1'b1;
+				ld_data_d = 1'b1;
+				next_state = DATA;
+			   end
+	   DATA:
+		   begin
+			if(!data_done && sft_done_e)
+			   begin
+				ld_eop_d = 1'b1;
+				next_state = EOP1;
+			   end
+			
+			if(data_done && sft_done_e)
+			   begin
+				tx_ready_d = 1'b1;
+				ld_data_d = 1'b1;
+			   end
+		   end
+	   EOP1:
+			if(eop_done)		next_state = EOP2;
+	   EOP2:
+			if(!eop_done && fs_ce)	next_state = WAIT;
+	   WAIT:
+			if(fs_ce)		next_state = IDLE;
+	endcase
+   end

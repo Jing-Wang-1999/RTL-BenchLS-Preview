@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.40ecc7880d970761ab28.6f6e4492251c",
+  "compile_check": {
+    "case_id": "s1derived.40ecc7880d970761ab28.6f6e4492251c",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "oh_nor4",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.oh_nor4.194931433f06c10b/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.40ecc7880d970761ab28",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "40ecc7880d970761ab28b15e319713a0d030385b6864143a8fe9caada9b08f90",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.40ecc7880d970761ab28.6f6e4492251c",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.oh_nor4.194931433f06c10b/private/commercial_positive.log",
+    "commercial_log_sha256": "2c42a7f0ce91f2547077ae4d070d4ef30ddf5b1b8ec9a14de17c620126eccdde",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.oh_nor4.194931433f06c10b/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "bb07688996d61dbbc9529c8487f92b149f3e5b0c72a64e135d4bbb2563c55c2a",
+    "golden_tops": [
+      "oh_nor4"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_15.oh_nor4.194931433f06c10b",
+    "parent_id": "s1p.40ecc7880d970761ab28",
+    "revised_tops": [
+      "oh_nor4"
+    ],
+    "source_group": "S1",
+    "status": "both_tops_matched",
+    "top_module": "oh_nor4",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.40ecc7880d970761ab28.6f6e4492251c",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The four inputs and output are all widthDW, default1. Continuous bitwise NOR has no timing state or dependencies; the complete repaired gate contract matches.",
+        "rtl_excerpt": "assign z = ~(a | b | c | d);",
+        "specification_excerpt": "For every bit position, `z = ~(a | b | c | d)`."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.40ecc7880d970761ab28",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "508de837b96299d8ec42d27cc37891505787db83dbc6eba6ead38585f6163d9f",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "40ecc7880d970761ab28b15e319713a0d030385b6864143a8fe9caada9b08f90",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.oh_nor4.194931433f06c10b/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.oh_nor4.194931433f06c10b/private/historical_harness/01_conformal_rtl_oh_nor4.do"
+  ],
+  "parent_id": "s1p.40ecc7880d970761ab28",
+  "primary_review": {
+    "case_id": "s1derived.40ecc7880d970761ab28.6f6e4492251c",
+    "checks": {
+      "behavior": "Bitwise four-input NOR matches.",
+      "boundaries": "Each output bit is one exactly when all four corresponding inputs are zero.",
+      "interface": "Four DW-bit inputs and one DW-bit output match.",
+      "rtl_reasonableness": "The gate array is reasonable.",
+      "sequential_and_reset": "No sequential logic or reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Bitwise four-input NOR matches. No sequential logic or reset.",
+        "rtl_excerpt": "parameter DW = 1; assign z = ~(a | b | c | d)",
+        "spec_excerpt": "\u201cconfigurable width\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The NOR function is correct, but the behavioral parameter default DW=1 is absent.",
+        "rtl_evidence": "parameter DW = 1; assign z = ~(a | b | c | d)",
+        "spec_evidence": "\u201cconfigurable width\u201d",
+        "type": "missing_parameter_default"
+      }
+    ],
+    "parent_id": "s1p.40ecc7880d970761ab28",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.40ecc7880d970761ab28.6f6e4492251c.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "40ecc7880d970761ab28b15e319713a0d030385b6864143a8fe9caada9b08f90",
+    "source_group": "S1",
+    "specification_sha256": "6f6e4492251ca8265b715f8ce5415fead9e457300a9bbf9255d89f90ab2f0e74",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_01/s1derived.40ecc7880d970761ab28.6f6e4492251c.md",
+  "qualified_specification_sha256": "508de837b96299d8ec42d27cc37891505787db83dbc6eba6ead38585f6163d9f",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.oh_nor4.194931433f06c10b/private/golden_design.v",
+  "rtl_sha256": "40ecc7880d970761ab28b15e319713a0d030385b6864143a8fe9caada9b08f90",
+  "source_corpus": "SEC-Flow-Star-repos-31.oh",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_15.oh_nor4.194931433f06c10b/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "6f6e4492251ca8265b715f8ce5415fead9e457300a9bbf9255d89f90ab2f0e74",
+  "top_module": "oh_nor4"
+}

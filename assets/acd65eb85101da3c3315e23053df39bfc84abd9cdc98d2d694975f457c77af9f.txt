@@ -1,0 +1,99 @@
+module origen_022108(
+    input wire CLK50,
+    input wire DIN,
+    output reg CLK,
+    output reg CS,
+    output reg SerialBit,
+    output reg [7:0] LEDS
+);
+
+    // State definitions
+    localparam Inicio = 2'b00;
+    localparam Flag = 2'b01;
+    localparam Conv = 2'b10;
+    localparam Transf = 2'b11;
+
+    reg [1:0] state, next_state;
+    reg [11:0] counter;
+    reg [7:0] OutB1;
+    reg [3:0] OutB2;
+    reg [4:0] bit_counter;
+    reg [9:0] flag_data;
+    reg [19:0] transfer_data;
+
+    // Clock generation
+    always @(posedge CLK50) begin
+        if (counter == 2602) begin
+            counter <= 0;
+            CLK <= ~CLK;
+        end else begin
+            counter <= counter + 1;
+        end
+    end
+
+    // State machine
+    always @(posedge CLK50) begin
+        if (counter == 0) begin
+            state <= next_state;
+        end
+    end
+
+    // Next state logic and output control
+    always @(*) begin
+        case (state)
+            Inicio: begin
+                CS = 1;
+                SerialBit = 1;
+                next_state = Flag;
+                bit_counter = 0;
+                flag_data = 10'b1100000000; // 96 in decimal
+            end
+
+            Flag: begin
+                CS = 0;
+                SerialBit = flag_data[9-bit_counter];
+                if (bit_counter == 9) begin
+                    next_state = Conv;
+                    bit_counter = 0;
+                end else begin
+                    next_state = Flag;
+                    bit_counter = bit_counter + 1;
+                end
+            end
+
+            Conv: begin
+                CS = 0;
+                SerialBit = 0;
+                if (bit_counter < 8) begin
+                    OutB1[7-bit_counter] = DIN;
+                end else if (bit_counter < 12) begin
+                    OutB2[11-bit_counter] = DIN;
+                end
+
+                if (bit_counter == 11) begin
+                    next_state = Transf;
+                    bit_counter = 0;
+                    transfer_data = {OutB1, OutB2, 2'b00};
+                    LEDS = OutB1;
+                end else begin
+                    next_state = Conv;
+                    bit_counter = bit_counter + 1;
+                end
+            end
+
+            Transf: begin
+                CS = 0;
+                SerialBit = transfer_data[19-bit_counter];
+                if (bit_counter == 19) begin
+                    next_state = Inicio;
+                end else begin
+                    next_state = Transf;
+                    bit_counter = bit_counter + 1;
+                end
+            end
+
+            default: next_state = Inicio;
+        endcase
+    end
+
+endmodule

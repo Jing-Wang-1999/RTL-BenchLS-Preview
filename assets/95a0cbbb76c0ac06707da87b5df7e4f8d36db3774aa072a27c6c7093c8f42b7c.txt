@@ -1,0 +1,9 @@
+always @(posedge wb_rst_i or posedge wb_clk_i) begin
+   if(wb_rst_i) begin
+       pending_read <= 1'b0;
+   end else begin
+      //pending_read <=  wb_stb_i & wb_cyc_i & !wb_we_i & !wb_ack_o;
+      pending_read <=   (cmdfifo_wr && !wb_we_i) ? 1'b1:
+	                (wb_stb_i & wb_cyc_i & !wb_we_i & wb_ack_o) ? 1'b0: pending_read;
+   end
+end

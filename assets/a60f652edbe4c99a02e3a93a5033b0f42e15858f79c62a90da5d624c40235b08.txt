@@ -1,0 +1,233 @@
+always @ *
+begin
+    // CSR - Machine
+    csr_mip_next_r  = csr_mip_next_q;
+    csr_mepc_r      = csr_mepc_q;
+    csr_sr_r        = csr_sr_q;
+    csr_mcause_r    = csr_mcause_q;
+    csr_mtval_r     = csr_mtval_q;
+    csr_mtvec_r     = csr_mtvec_q;
+    csr_mip_r       = csr_mip_q;
+    csr_mie_r       = csr_mie_q;
+    csr_mpriv_r     = csr_mpriv_q;
+    csr_mscratch_r  = csr_mscratch_q;
+    csr_mcycle_r    = csr_mcycle_q + 32'd1;
+    csr_mtimecmp_r  = csr_mtimecmp_q;
+    csr_mtime_ie_r  = csr_mtime_ie_q;
+    csr_medeleg_r   = csr_medeleg_q;
+    csr_mideleg_r   = csr_mideleg_q;
+
+    // CSR - Super
+    csr_sepc_r      = csr_sepc_q;
+    csr_stvec_r     = csr_stvec_q;
+    csr_scause_r    = csr_scause_q;
+    csr_stval_r     = csr_stval_q;
+    csr_satp_r      = csr_satp_q;
+    csr_sscratch_r  = csr_sscratch_q;
+
+    // Interrupts
+    if ((exception_i & 6'h30) == 6'h20)
+    begin
+        // Machine mode interrupts
+        if (irq_priv_q == 2'd3)
+        begin
+            // Save interrupt / supervisor state
+            csr_sr_r[7] = csr_sr_r[3];
+            csr_sr_r[12:11]  = csr_mpriv_q;
+
+            // Disable interrupts and enter supervisor mode
+            csr_sr_r[3]  = 1'b0;
+
+            // Raise priviledge to machine level
+            csr_mpriv_r          = 2'd3;
+
+            // Record interrupt source PC
+            csr_mepc_r           = exception_pc_i;
+            csr_mtval_r          = 32'b0;
+
+            // Piority encoded interrupt cause
+            if (interrupt_o[3])
+                csr_mcause_r = (1 << 31) + 32'd3;
+            else if (interrupt_o[7])
+                csr_mcause_r = (1 << 31) + 32'd7;
+            else if (interrupt_o[11])
+                csr_mcause_r = (1 << 31) + 32'd11;
+        end
+        // Supervisor mode interrupts
+        else
+        begin
+            // Save interrupt / supervisor state
+            csr_sr_r[5] = csr_sr_r[1];
+            csr_sr_r[8]  = (csr_mpriv_q == 2'd1);
+
+            // Disable interrupts and enter supervisor mode
+            csr_sr_r[1]  = 1'b0;
+
+            // Raise priviledge to machine level
+            csr_mpriv_r  = 2'd1;
+
+            // Record fault source PC
+            csr_sepc_r   = exception_pc_i;
+            csr_stval_r  = 32'b0;
+
+            // Piority encoded interrupt cause
+            if (interrupt_o[1])
+                csr_scause_r = (1 << 31) + 32'd1;
+            else if (interrupt_o[5])
+                csr_scause_r = (1 << 31) + 32'd5;
+            else if (interrupt_o[9])
+                csr_scause_r = (1 << 31) + 32'd9;
+        end
+    end
+    // Exception return
+    else if (exception_i >= 6'h30 && exception_i <= 6'h33)
+    begin
+        // MRET (return from machine)
+        if (exception_i[1:0] == 2'd3)
+        begin
+            // Set privilege level to previous MPP
+            csr_mpriv_r          = csr_sr_r[12:11];
+
+            // Interrupt enable pop
+            csr_sr_r[3]  = csr_sr_r[7];
+            csr_sr_r[7] = 1'b1;
+
+            // TODO: Set next MPP to user mode??
+            csr_sr_r[12:11] = 2'd0;
+        end
+        // SRET (return from supervisor)
+        else
+        begin
+            // Set privilege level to previous privilege level
+            csr_mpriv_r          = csr_sr_r[8] ? 2'd1 : 2'd0;
+
+            // Interrupt enable pop
+            csr_sr_r[1]  = csr_sr_r[5];
+            csr_sr_r[5] = 1'b1;
+
+            // Set next SPP to user mode
+            csr_sr_r[8] = 1'b0;
+        end
+    end
+    // Exception - handled in super mode
+    else if (is_exception_w && exception_s_w)
+    begin
+        // Save interrupt / supervisor state
+        csr_sr_r[5] = csr_sr_r[1];
+        csr_sr_r[8]  = (csr_mpriv_q == 2'd1);
+
+        // Disable interrupts and enter supervisor mode
+        csr_sr_r[1]  = 1'b0;
+
+        // Raise priviledge to machine level
+        csr_mpriv_r  = 2'd1;
+
+        // Record fault source PC
+        csr_sepc_r   = exception_pc_i;
+
+        // Bad address / PC
+        case (exception_i)
+        6'h10,
+        6'h11,
+        6'h1c:     csr_stval_r = exception_pc_i;
+        6'h12,
+        6'h14,
+        6'h15,
+        6'h16,
+        6'h17,
+        6'h1d,
+        6'h1f:    csr_stval_r = exception_addr_i;
+        default:                        csr_stval_r = 32'b0;
+        endcase
+
+        // Fault cause
+        csr_scause_r = {28'b0, exception_i[3:0]};
+    end
+    // Exception - handled in machine mode
+    else if (is_exception_w)
+    begin
+        // Save interrupt / supervisor state
+        csr_sr_r[7] = csr_sr_r[3];
+        csr_sr_r[12:11]  = csr_mpriv_q;
+
+        // Disable interrupts and enter supervisor mode
+        csr_sr_r[3]  = 1'b0;
+
+        // Raise priviledge to machine level
+        csr_mpriv_r  = 2'd3;
+
+        // Record fault source PC
+        csr_mepc_r   = exception_pc_i;
+
+        // Bad address / PC
+        case (exception_i)
+        6'h10,
+        6'h11,
+        6'h1c:     csr_mtval_r = exception_pc_i;
+        6'h12,
+        6'h14,
+        6'h15,
+        6'h16,
+        6'h17,
+        6'h1d,
+        6'h1f:    csr_mtval_r = exception_addr_i;
+        default:                        csr_mtval_r = 32'b0;
+        endcase        
+
+        // Fault cause
+        csr_mcause_r = {28'b0, exception_i[3:0]};
+    end
+    else
+    begin
+        case (csr_waddr_i)
+        // CSR - Machine
+        12'h340: csr_mscratch_r = csr_wdata_i & 32'hFFFFFFFF;
+        12'h341:     csr_mepc_r     = csr_wdata_i & 32'hFFFFFFFF;
+        12'h305:    csr_mtvec_r    = csr_wdata_i & 32'hFFFFFFFF;
+        12'h342:   csr_mcause_r   = csr_wdata_i & 32'h8000000F;
+        12'h343:    csr_mtval_r    = csr_wdata_i & 32'hFFFFFFFF;
+        12'h300:  csr_sr_r       = csr_wdata_i & 32'hFFFFFFFF;
+        12'h344:      csr_mip_r      = csr_wdata_i & ((1 << 11)   | (1 << 9)   |                       (1 << 7) | (1 << 5) |                       (1 << 3)  | (1 << 1));
+        12'h304:      csr_mie_r      = csr_wdata_i & ((1 << 11)   | (1 << 9)   |                       (1 << 7) | (1 << 5) |                       (1 << 3)  | (1 << 1));
+        12'h302:  csr_medeleg_r  = csr_wdata_i & 32'h0000FFFF;
+        12'h303:  csr_mideleg_r  = csr_wdata_i & 32'h0000FFFF;
+        // Non-std behaviour
+        12'h7c0:
+        begin
+            csr_mtimecmp_r = csr_wdata_i & 32'hFFFFFFFF;
+            csr_mtime_ie_r = 1'b1;
+        end
+        // CSR - Super
+        12'h141:     csr_sepc_r     = csr_wdata_i & 32'hFFFFFFFF;
+        12'h105:    csr_stvec_r    = csr_wdata_i & 32'hFFFFFFFF;
+        12'h142:   csr_scause_r   = csr_wdata_i & 32'h8000000F;
+        12'h143:    csr_stval_r    = csr_wdata_i & 32'hFFFFFFFF;
+        12'h180:     csr_satp_r     = csr_wdata_i & 32'hFFFFFFFF;
+        12'h140: csr_sscratch_r = csr_wdata_i & 32'hFFFFFFFF;
+        12'h100:  csr_sr_r       = (csr_sr_r & ~((1 << 0) | (1 << 1) | (1 << 4) | (1 << 5) | (1 << 8) | (1 << 18))) | (csr_wdata_i & ((1 << 0) | (1 << 1) | (1 << 4) | (1 << 5) | (1 << 8) | (1 << 18)));
+        12'h144:      csr_mip_r      = (csr_mip_r & ~((1 << 9) | (1 << 5) | (1 << 1))) | (csr_wdata_i & ((1 << 9) | (1 << 5) | (1 << 1)));
+        12'h104:      csr_mie_r      = (csr_mie_r & ~((1 << 9) | (1 << 5) | (1 << 1))) | (csr_wdata_i & ((1 << 9) | (1 << 5) | (1 << 1)));
+        default:
+            ;
+        endcase
+    end
+ 
+    // External interrupts
+    // NOTE: If the machine level interrupts are delegated to supervisor, route the interrupts there instead..
+    if (ext_intr_i   &&  csr_mideleg_q[11]) csr_mip_next_r[9] = 1'b1;
+    if (ext_intr_i   && ~csr_mideleg_q[11]) csr_mip_next_r[11] = 1'b1;
+    if (timer_intr_i &&  csr_mideleg_q[7]) csr_mip_next_r[5] = 1'b1;
+    if (timer_intr_i && ~csr_mideleg_q[7]) csr_mip_next_r[7] = 1'b1;
+
+    // Optional: Internal timer compare interrupt
+    if (SUPPORT_MTIMECMP && csr_mcycle_q == csr_mtimecmp_q)
+    begin
+        if (csr_mideleg_q[7])
+            csr_mip_next_r[5] = csr_mtime_ie_q;
+        else
+            csr_mip_next_r[7] = csr_mtime_ie_q;
+        csr_mtime_ie_r  = 1'b0;
+    end
+
+    csr_mip_r = csr_mip_r | csr_mip_next_r;
+end

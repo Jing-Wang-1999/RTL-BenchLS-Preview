@@ -1,0 +1,12 @@
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/pcf_8b2c9c7b19671eb7ea.v0.v
+check_sec -analyze -imp -sv ./input/rtl/pcf_8b2c9c7b19671eb7ea.negative.v
+check_sec -elaborate -spec -top axil_reg_if_wr -disable_auto_bbox
+check_sec -elaborate -imp -top axil_reg_if_wr -disable_auto_bbox
+check_sec -setup
+check_sec -map -auto
+clock clk
+reset -expression {rst}
+check_sec -gen
+check_sec -prove -strategy proof
+exit

@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.4201f423662f79e88d91.958ea060476b",
+  "compile_check": {
+    "case_id": "s1derived.4201f423662f79e88d91.958ea060476b",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "autovcoder_103973",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_103973.5c8a54abbb2c05d3/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.4201f423662f79e88d91",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "4201f423662f79e88d91c42900513fd0fa0ce088e4957232f130981c6eddca35",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.4201f423662f79e88d91.958ea060476b",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_103973.5c8a54abbb2c05d3/private/commercial_positive.log",
+    "commercial_log_sha256": "07bdcae801bd96b6fc50941175657fed84c8f2fc7203edc15d072de84ba95b19",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_103973.5c8a54abbb2c05d3/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "autovcoder_103973"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.autovcoder_103973.5c8a54abbb2c05d3",
+    "parent_id": "s1p.4201f423662f79e88d91",
+    "revised_tops": [
+      "autovcoder_103973"
+    ],
+    "source_group": "S3",
+    "status": "both_tops_matched",
+    "top_module": "autovcoder_103973",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.4201f423662f79e88d91.958ea060476b",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "For binary inputs, all four8/4/2/1 stages use the same original low-bit-controlled fill and discard upper overflow. Zero shift bypass and combinational widths match.",
+        "rtl_excerpt": "shiftOutput[0+0-:1]   = 1'h1;",
+        "specification_excerpt": "original `x[0]=1`"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.4201f423662f79e88d91",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "45e1ff35c8962a2381aca313e0a7ecb74900ef22f7cd94c307374275b4c25e56",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "4201f423662f79e88d91c42900513fd0fa0ce088e4957232f130981c6eddca35",
+    "source_group": "S3",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_103973.5c8a54abbb2c05d3/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_103973.5c8a54abbb2c05d3/private/historical_harness/01_conformal_rtl_autovcoder_103973.do"
+  ],
+  "parent_id": "s1p.4201f423662f79e88d91",
+  "primary_review": {
+    "case_id": "s1derived.4201f423662f79e88d91.958ea060476b",
+    "checks": {
+      "behavior": "The network shifts left by unsigned b with a uniform zero/one fill chosen from original x[0] and alufn.",
+      "boundaries": "b=0 passes x; shifted-out high bits discard; all vacated low bits share the selected fill.",
+      "interface": "The 16-bit input/output, 4-bit shift amount, and mode bit match.",
+      "rtl_reasonableness": "The staged barrel shifter is reasonable.",
+      "sequential_and_reset": "Purely combinational."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The network shifts left by unsigned b with a uniform zero/one fill chosen from original x[0] and alufn. Purely combinational.",
+        "rtl_excerpt": "four cascaded shifts by 8/4/2/1; fill is (alufn & x[0]) at every selected stage",
+        "spec_excerpt": "The final text ends at \u201cStage 3 (b[1])\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends partway through mode 1 and omits its final two stages and the compact total-shift semantics.",
+        "rtl_evidence": "four cascaded shifts by 8/4/2/1; fill is (alufn & x[0]) at every selected stage",
+        "spec_evidence": "The final text ends at \u201cStage 3 (b[1])\u201d.",
+        "type": "truncated_shift_mode"
+      }
+    ],
+    "parent_id": "s1p.4201f423662f79e88d91",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.4201f423662f79e88d91.958ea060476b.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "4201f423662f79e88d91c42900513fd0fa0ce088e4957232f130981c6eddca35",
+    "source_group": "S3",
+    "specification_sha256": "958ea060476b80643c7c38e23baf64a345cdd1014e0a0a79f5d1f7f04db8e4c2",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.4201f423662f79e88d91.958ea060476b.md",
+  "qualified_specification_sha256": "45e1ff35c8962a2381aca313e0a7ecb74900ef22f7cd94c307374275b4c25e56",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_103973.5c8a54abbb2c05d3/private/golden_design.v",
+  "rtl_sha256": "4201f423662f79e88d91c42900513fd0fa0ce088e4957232f130981c6eddca35",
+  "source_corpus": "AutoVCoder-processed",
+  "source_group": "S3",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.autovcoder_103973.5c8a54abbb2c05d3/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "958ea060476b80643c7c38e23baf64a345cdd1014e0a0a79f5d1f7f04db8e4c2",
+  "top_module": "autovcoder_103973"
+}

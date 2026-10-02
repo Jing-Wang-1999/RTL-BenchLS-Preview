@@ -1,0 +1,16 @@
+always @(posedge i_clk)
+	if (i_reset)
+	begin
+		pre_wr <= 1'b0;
+		o_data <= 8'h00;
+	end else if ((zero_baud_counter)&&(state == RXU_STOP))
+	begin
+		pre_wr <= 1'b1;
+		case (data_bits)
+		2'b00: o_data <= data_reg;
+		2'b01: o_data <= { 1'b0, data_reg[7:1] };
+		2'b10: o_data <= { 2'b0, data_reg[7:2] };
+		2'b11: o_data <= { 3'b0, data_reg[7:3] };
+		endcase
+	end else if ((zero_baud_counter)||(state == RXU_IDLE))
+		pre_wr <= 1'b0;

@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""Supply only pinned helper includes to the unchanged original native evaluator."""
+import argparse,shutil,subprocess,sys
+from pathlib import Path
+p=argparse.ArgumentParser();p.add_argument('--payload',type=Path,required=True);p.add_argument('--candidate',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+for rel in ['library/axi_dmac/inc_id.vh','library/axi_dmac/resp.vh']:
+ dest=a.candidate/rel;assert not dest.exists();dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(a.payload/'source'/rel,dest)
+raise SystemExit(subprocess.run([sys.executable,str(a.payload/'run.py'),'--candidate-dir',str(a.candidate),'--output',str(a.output)]).returncode)

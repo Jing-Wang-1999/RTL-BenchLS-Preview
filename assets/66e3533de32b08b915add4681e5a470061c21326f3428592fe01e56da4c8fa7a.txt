@@ -1,0 +1,13 @@
+always @ (posedge aclk or negedge aresetn) begin
+        if (aresetn == 1'b0) begin
+            wrptr <= {(ADDR_WIDTH+1){1'b0}};
+        end
+        else if (srst || flush) begin
+            wrptr <= {(ADDR_WIDTH+1){1'b0}};
+        end
+        else begin
+            if (push == 1'b1 && full_flag == 1'b0 && pass_thru==1'b0) begin
+                wrptr <= wrptr + 1'b1;
+            end
+        end
+    end

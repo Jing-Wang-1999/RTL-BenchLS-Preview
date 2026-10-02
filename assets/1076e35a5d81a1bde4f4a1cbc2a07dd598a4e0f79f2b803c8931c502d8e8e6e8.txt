@@ -1,0 +1,37 @@
+The primary function of this Verilog module is to synchronize and process various JTAG signals such as data, instruction registers, and generate control signals for debugging operations.
+
+- It synchronizes the `vs_udr` and `vs_uir` signals with the clock for stable operation.
+- Upon detecting changes in synchronized `vs_udr`, it updates the `jdo` register with the value from input `sr` and sets `update_jdo_strobe`.
+- When `sync_uir` signal is detected, the `ir` register is updated with the input `ir_in`.
+- Based on the value of `ir` and specific bits in `jdo`, the module generates several action and non-action signals for operations like OCI memory, trace memory, and break points.
+
+Key control flow points include the detection of updates in UDR and UIR signals and their subsequent effects on registers and action strobes. Important data interactions involve transferring values from `sr` to `jdo` and generating control signals based on particular conditions involving `ir` and bits of `jdo`.
+
+Module Interface:
+module nios_jtag_debug_bridge_b (
+                                                   clk,
+                                                   ir_in,
+                                                   sr,
+                                                   vs_udr,
+                                                   vs_uir,
+
+                                                   jdo,
+                                                   take_action_break_a,
+                                                   take_action_break_b,
+                                                   take_action_break_c,
+                                                   take_action_ocimem_a,
+                                                   take_action_ocimem_b,
+                                                   take_action_tracectrl,
+                                                   take_action_tracemem_a,
+                                                   take_action_tracemem_b,
+                                                   take_no_action_break_a,
+                                                   take_no_action_break_b,
+                                                   take_no_action_break_c,
+                                                   take_no_action_ocimem_a,
+                                                   take_no_action_tracemem_a
+                                                 )
+;
+
+Behavioral Clarifications:
+- jdo is a 38-bit register; ir is a 2-bit register; ir_in is 2-bit input. sync_udr and sync_uir are combinational wires directly assigned from vs_udr and vs_uir; sync2_udr and sync2_uir are 1-cycle delayed registered versions.
+- update_jdo_strobe fires on the rising edge of sync_udr (posedge detection). enable_action_strobe is update_jdo_strobe delayed by one more cycle. All action/no-action outputs are purely combinational, decoded from enable_action_strobe, ir value, and specific jdo bits.

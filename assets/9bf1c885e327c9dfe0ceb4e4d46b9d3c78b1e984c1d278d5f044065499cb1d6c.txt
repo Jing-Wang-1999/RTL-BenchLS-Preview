@@ -1,0 +1,63 @@
+// Synchronous ROM module
+module origen_106965 (
+    input wire clk,
+    input wire [7:0] addr,
+    output reg [3:0] data
+);
+
+    reg [3:0] rom [0:255];
+    reg [3:0] data_reg;
+
+    initial begin
+        $readmemh("C:/Users/Acer/Desktop/signMagAdd_256x4.txt", rom);
+    end
+
+    always @(posedge clk) begin
+        data_reg <= rom[addr];
+    end
+
+    always @(*) begin
+        data = data_reg;
+    end
+
+endmodule
+
+// Testbench for Synchronous ROM
+module sync_rom_testbench;
+
+    reg clk;
+    reg [7:0] addr;
+    wire [3:0] data;
+
+    // Instantiate the Device Under Test (DUT)
+    sync_rom dut (
+        .clk(clk),
+        .addr(addr),
+        .data(data)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #50 clk = ~clk;
+    end
+
+    // Test stimulus
+    initial begin
+        addr = 8'h00;
+        #100;
+
+        for (int i = 1; i <= 12; i++) begin
+            #100 addr = i;
+            #10;
+        end
+
+        #100 $finish;
+    end
+
+    // Monitor
+    initial begin
+        $monitor("Time=%0t addr=%h data=%h", $time, addr, data);
+    end
+
+endmodule

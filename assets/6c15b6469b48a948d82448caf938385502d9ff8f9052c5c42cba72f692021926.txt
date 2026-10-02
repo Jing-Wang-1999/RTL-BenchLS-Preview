@@ -1,0 +1,82 @@
+always @(posedge clk) begin
+    ctrl_reg_wr_ack_reg <= 1'b0;
+    ctrl_reg_rd_data_reg <= {AXIL_DATA_WIDTH{1'b0}};
+    ctrl_reg_rd_ack_reg <= 1'b0;
+
+    if (ctrl_reg_wr_en && !ctrl_reg_wr_ack_reg) begin
+        // write operation
+        ctrl_reg_wr_ack_reg <= 1'b1;
+        case ({ctrl_reg_wr_addr >> 2, 2'b00})
+            // Interface control
+            RBB+8'h28: tx_mtu_reg <= ctrl_reg_wr_data;                      // IF ctrl: TX MTU
+            RBB+8'h2C: rx_mtu_reg <= ctrl_reg_wr_data;                      // IF ctrl: RX MTU
+            default: ctrl_reg_wr_ack_reg <= 1'b0;
+        endcase
+    end
+
+    if (ctrl_reg_rd_en && !ctrl_reg_rd_ack_reg) begin
+        // read operation
+        ctrl_reg_rd_ack_reg <= 1'b1;
+        case ({ctrl_reg_rd_addr >> 2, 2'b00})
+            // Interface control
+            RBB+8'h00: ctrl_reg_rd_data_reg <= 32'h0000C001;                // IF ctrl: Type
+            RBB+8'h04: ctrl_reg_rd_data_reg <= 32'h00000400;                // IF ctrl: Version
+            RBB+8'h08: ctrl_reg_rd_data_reg <= RB_BASE_ADDR+8'h40;          // IF ctrl: Next header
+            RBB+8'h0C: begin
+                // IF ctrl: features
+                ctrl_reg_rd_data_reg[0] <= RX_HASH_ENABLE;
+                ctrl_reg_rd_data_reg[4] <= PTP_TS_ENABLE;
+                ctrl_reg_rd_data_reg[8] <= TX_CHECKSUM_ENABLE;
+                ctrl_reg_rd_data_reg[9] <= RX_CHECKSUM_ENABLE;
+                ctrl_reg_rd_data_reg[10] <= RX_HASH_ENABLE;
+                ctrl_reg_rd_data_reg[11] <= LFC_ENABLE;
+                ctrl_reg_rd_data_reg[12] <= PFC_ENABLE;
+            end
+            RBB+8'h10: ctrl_reg_rd_data_reg <= PORTS;                       // IF ctrl: Port count
+            RBB+8'h14: ctrl_reg_rd_data_reg <= SCHEDULERS;                  // IF ctrl: Scheduler count
+            RBB+8'h20: ctrl_reg_rd_data_reg <= MAX_TX_SIZE;                 // IF ctrl: Max TX MTU
+            RBB+8'h24: ctrl_reg_rd_data_reg <= MAX_RX_SIZE;                 // IF ctrl: Max RX MTU
+            RBB+8'h28: ctrl_reg_rd_data_reg <= tx_mtu_reg;                  // IF ctrl: TX MTU
+            RBB+8'h2C: ctrl_reg_rd_data_reg <= rx_mtu_reg;                  // IF ctrl: RX MTU
+            RBB+8'h30: ctrl_reg_rd_data_reg <= TX_FIFO_DEPTH;               // IF ctrl: TX FIFO depth
+            RBB+8'h34: ctrl_reg_rd_data_reg <= RX_FIFO_DEPTH;               // IF ctrl: RX FIFO depth
+            // Event queue manager
+            RBB+8'h40: ctrl_reg_rd_data_reg <= 32'h0000C010;                // Event QM: Type
+            RBB+8'h44: ctrl_reg_rd_data_reg <= 32'h00000400;                // Event QM: Version
+            RBB+8'h48: ctrl_reg_rd_data_reg <= RB_BASE_ADDR+8'h60;          // Event QM: Next header
+            RBB+8'h4C: ctrl_reg_rd_data_reg <= AXIL_EQM_BASE_ADDR;          // Event QM: Offset
+            RBB+8'h50: ctrl_reg_rd_data_reg <= 2**EQN_WIDTH;                // Event QM: Count
+            RBB+8'h54: ctrl_reg_rd_data_reg <= 16;                          // Event QM: Stride
+            // Completion queue manager
+            RBB+8'h60: ctrl_reg_rd_data_reg <= 32'h0000C020;                // CPL QM: Type
+            RBB+8'h64: ctrl_reg_rd_data_reg <= 32'h00000400;                // CPL QM: Version
+            RBB+8'h68: ctrl_reg_rd_data_reg <= RB_BASE_ADDR+8'h80;          // CPL QM: Next header
+            RBB+8'h6C: ctrl_reg_rd_data_reg <= AXIL_CQM_BASE_ADDR;          // CPL QM: Offset
+            RBB+8'h70: ctrl_reg_rd_data_reg <= 2**CQN_WIDTH;                // CPL QM: Count
+            RBB+8'h74: ctrl_reg_rd_data_reg <= 16;                          // CPL QM: Stride
+            // Queue manager (TX)
+            RBB+8'h80: ctrl_reg_rd_data_reg <= 32'h0000C030;                // TX QM: Type
+            RBB+8'h84: ctrl_reg_rd_data_reg <= 32'h00000400;                // TX QM: Version
+            RBB+8'h88: ctrl_reg_rd_data_reg <= RB_BASE_ADDR+8'hA0;          // TX QM: Next header
+            RBB+8'h8C: ctrl_reg_rd_data_reg <= AXIL_TX_QM_BASE_ADDR;        // TX QM: Offset
+            RBB+8'h90: ctrl_reg_rd_data_reg <= 2**TX_QUEUE_INDEX_WIDTH;     // TX QM: Count
+            RBB+8'h94: ctrl_reg_rd_data_reg <= 32;                          // TX QM: Stride
+            // Queue manager (RX)
+            RBB+8'hA0: ctrl_reg_rd_data_reg <= 32'h0000C031;                // RX QM: Type
+            RBB+8'hA4: ctrl_reg_rd_data_reg <= 32'h00000400;                // RX QM: Version
+            RBB+8'hA8: ctrl_reg_rd_data_reg <= RX_RB_BASE_ADDR;             // RX QM: Next header
+            RBB+8'hAC: ctrl_reg_rd_data_reg <= AXIL_RX_QM_BASE_ADDR;        // RX QM: Offset
+            RBB+8'hB0: ctrl_reg_rd_data_reg <= 2**RX_QUEUE_INDEX_WIDTH;     // RX QM: Count
+            RBB+8'hB4: ctrl_reg_rd_data_reg <= 32;                          // RX QM: Stride
+            default: ctrl_reg_rd_ack_reg <= 1'b0;
+        endcase
+    end
+
+    if (rst) begin
+        ctrl_reg_wr_ack_reg <= 1'b0;
+        ctrl_reg_rd_ack_reg <= 1'b0;
+
+        tx_mtu_reg <= MAX_TX_SIZE;
+        rx_mtu_reg <= MAX_RX_SIZE;
+    end
+end

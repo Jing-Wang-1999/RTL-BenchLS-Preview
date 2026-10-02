@@ -1,0 +1,99 @@
+module autovcoder_102131 (
+    CA,
+    CI,
+    CO,
+    DX,
+    SUM
+);
+  input [6:0] CA;
+  input CI;
+  output CO;
+  input [6:0] DX;
+  output [6:0] SUM;
+
+  wire \MUXCO_0|COUT_net ;
+  wire \MUXCO_1|COUT_net ;
+  wire \MUXCO_2|COUT_net ;
+  wire \MUXCO_3|COUT_net ;
+  wire \MUXCO_4|COUT_net ;
+  wire \MUXCO_5|COUT_net ;
+
+  CS_MUXCO_PRIM MUXCO_0 (
+      .AIN (CA[0]),
+      .CIN (CI),
+      .COUT(\MUXCO_0|COUT_net ),
+      .CSEL(DX[0])
+  );
+  CS_MUXCO_PRIM MUXCO_1 (
+      .AIN (CA[1]),
+      .CIN (\MUXCO_0|COUT_net ),
+      .COUT(\MUXCO_1|COUT_net ),
+      .CSEL(DX[1])
+  );
+  CS_MUXCO_PRIM MUXCO_2 (
+      .AIN (CA[2]),
+      .CIN (\MUXCO_1|COUT_net ),
+      .COUT(\MUXCO_2|COUT_net ),
+      .CSEL(DX[2])
+  );
+  CS_MUXCO_PRIM MUXCO_3 (
+      .AIN (CA[3]),
+      .CIN (\MUXCO_2|COUT_net ),
+      .COUT(\MUXCO_3|COUT_net ),
+      .CSEL(DX[3])
+  );
+  CS_MUXCO_PRIM MUXCO_4 (
+      .AIN (CA[4]),
+      .CIN (\MUXCO_3|COUT_net ),
+      .COUT(\MUXCO_4|COUT_net ),
+      .CSEL(DX[4])
+  );
+  CS_MUXCO_PRIM MUXCO_5 (
+      .AIN (CA[5]),
+      .CIN (\MUXCO_4|COUT_net ),
+      .COUT(\MUXCO_5|COUT_net ),
+      .CSEL(DX[5])
+  );
+  CS_MUXCO_PRIM MUXCO_6 (
+      .AIN (CA[6]),
+      .CIN (\MUXCO_5|COUT_net ),
+      .COUT(CO),
+      .CSEL(DX[6])
+  );
+  CS_XORCI_PRIM XORCI_0 (
+      .CIN(CI),
+      .DIN(DX[0]),
+      .SUM(SUM[0])
+  );
+  CS_XORCI_PRIM XORCI_1 (
+      .CIN(\MUXCO_0|COUT_net ),
+      .DIN(DX[1]),
+      .SUM(SUM[1])
+  );
+  CS_XORCI_PRIM XORCI_2 (
+      .CIN(\MUXCO_1|COUT_net ),
+      .DIN(DX[2]),
+      .SUM(SUM[2])
+  );
+  CS_XORCI_PRIM XORCI_3 (
+      .CIN(\MUXCO_2|COUT_net ),
+      .DIN(DX[3]),
+      .SUM(SUM[3])
+  );
+  CS_XORCI_PRIM XORCI_4 (
+      .CIN(\MUXCO_3|COUT_net ),
+      .DIN(DX[4]),
+      .SUM(SUM[4])
+  );
+  CS_XORCI_PRIM XORCI_5 (
+      .CIN(\MUXCO_4|COUT_net ),
+      .DIN(DX[5]),
+      .SUM(SUM[5])
+  );
+  CS_XORCI_PRIM XORCI_6 (
+      .CIN(\MUXCO_5|COUT_net ),
+      .DIN(DX[6]),
+      .SUM(SUM[6])
+  );
+endmodule
+

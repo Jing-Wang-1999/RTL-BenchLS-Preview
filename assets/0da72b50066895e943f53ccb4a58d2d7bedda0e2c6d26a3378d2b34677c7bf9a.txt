@@ -1,0 +1,124 @@
+module autovcoder_028497 (
+    slowest_sync_clk,
+    ext_reset_in,
+    aux_reset_in,
+    mb_debug_sys_rst,
+    dcm_locked,
+    mb_reset,
+    bus_struct_reset,
+    peripheral_reset,
+    interconnect_aresetn,
+    peripheral_aresetn
+);
+  input slowest_sync_clk;
+  input ext_reset_in;
+  input aux_reset_in;
+  input mb_debug_sys_rst;
+  input dcm_locked;
+  output mb_reset;
+  output [0:0] bus_struct_reset;
+  output [0:0] peripheral_reset;
+  output [0:0] interconnect_aresetn;
+  output [0:0] peripheral_aresetn;
+
+  wire Bsr_out;
+  wire MB_out;
+  wire Pr_out;
+  wire SEQ_n_3;
+  wire SEQ_n_4;
+  wire aux_reset_in;
+  wire [0:0] bus_struct_reset;
+  wire dcm_locked;
+  wire ext_reset_in;
+  wire [0:0] interconnect_aresetn;
+  wire lpf_int;
+  wire mb_debug_sys_rst;
+  wire mb_reset;
+  wire [0:0] peripheral_aresetn;
+  wire [0:0] peripheral_reset;
+  wire slowest_sync_clk;
+
+  (* box_type = "PRIMITIVE" *)
+  FDRE #(
+      .INIT(1'b0),
+      .IS_C_INVERTED(1'b0),
+      .IS_D_INVERTED(1'b0),
+      .IS_R_INVERTED(1'b0)
+  ) \ACTIVE_LOW_BSR_OUT_DFF[0].FDRE_BSR_N (
+      .C (slowest_sync_clk),
+      .CE(1'b1),
+      .D (SEQ_n_3),
+      .Q (interconnect_aresetn),
+      .R (1'b0)
+  );
+  (* box_type = "PRIMITIVE" *)
+  FDRE #(
+      .INIT(1'b0),
+      .IS_C_INVERTED(1'b0),
+      .IS_D_INVERTED(1'b0),
+      .IS_R_INVERTED(1'b0)
+  ) \ACTIVE_LOW_PR_OUT_DFF[0].FDRE_PER_N (
+      .C (slowest_sync_clk),
+      .CE(1'b1),
+      .D (SEQ_n_4),
+      .Q (peripheral_aresetn),
+      .R (1'b0)
+  );
+  (* box_type = "PRIMITIVE" *)
+  FDRE #(
+      .INIT(1'b1),
+      .IS_C_INVERTED(1'b0),
+      .IS_D_INVERTED(1'b0),
+      .IS_R_INVERTED(1'b0)
+  ) \BSR_OUT_DFF[0].FDRE_BSR (
+      .C (slowest_sync_clk),
+      .CE(1'b1),
+      .D (Bsr_out),
+      .Q (bus_struct_reset),
+      .R (1'b0)
+  );
+  design_1_rst_ddr4_1_300M_0_lpf EXT_LPF (
+      .aux_reset_in(aux_reset_in),
+      .dcm_locked(dcm_locked),
+      .ext_reset_in(ext_reset_in),
+      .lpf_int(lpf_int),
+      .mb_debug_sys_rst(mb_debug_sys_rst),
+      .slowest_sync_clk(slowest_sync_clk)
+  );
+  (* box_type = "PRIMITIVE" *)
+  FDRE #(
+      .INIT(1'b1),
+      .IS_C_INVERTED(1'b0),
+      .IS_D_INVERTED(1'b0),
+      .IS_R_INVERTED(1'b0)
+  ) FDRE_inst (
+      .C (slowest_sync_clk),
+      .CE(1'b1),
+      .D (MB_out),
+      .Q (mb_reset),
+      .R (1'b0)
+  );
+  (* box_type = "PRIMITIVE" *)
+  FDRE #(
+      .INIT(1'b1),
+      .IS_C_INVERTED(1'b0),
+      .IS_D_INVERTED(1'b0),
+      .IS_R_INVERTED(1'b0)
+  ) \PR_OUT_DFF[0].FDRE_PER (
+      .C (slowest_sync_clk),
+      .CE(1'b1),
+      .D (Pr_out),
+      .Q (peripheral_reset),
+      .R (1'b0)
+  );
+  design_1_rst_ddr4_1_300M_0_sequence_psr SEQ (
+      .Bsr_out(Bsr_out),
+      .MB_out(MB_out),
+      .Pr_out(Pr_out),
+      .bsr_reg_0(SEQ_n_3),
+      .lpf_int(lpf_int),
+      .pr_reg_0(SEQ_n_4),
+      .slowest_sync_clk(slowest_sync_clk)
+  );
+endmodule
+

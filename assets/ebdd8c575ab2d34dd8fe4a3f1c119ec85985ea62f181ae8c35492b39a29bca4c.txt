@@ -1,0 +1,107 @@
+module origen_079632(
+    input pclk,
+    input bus_sync,
+    input himem,
+    output reg hs,
+    output reg vs,
+    output reg hblank,
+    output reg vblank,
+    output reg pix,
+    output reg [21:0] addr,
+    output reg rd
+);
+
+    // Parameters
+    parameter BASE = 22'h600000;
+    parameter BASE_HI = 22'h740000;
+    parameter H_RES = 1280;
+    parameter V_RES = 1024;
+    parameter H_TOTAL = 1536;
+    parameter V_TOTAL = 1046;
+    parameter H_SYNC = 112;
+    parameter H_BACK = 248;
+    parameter H_FRONT = 48;
+    parameter V_SYNC = 3;
+    parameter V_BACK = 38;
+    parameter V_FRONT = 1;
+
+    // Registers
+    reg [10:0] h_cnt;
+    reg [10:0] v_cnt;
+    reg [63:0] shift_reg;
+    reg [63:0] line [31:0];
+    reg [4:0] word_cnt;
+    reg [5:0] bit_cnt;
+    reg reading, shifting;
+    reg [21:0] base_addr;
+
+    // Counters
+    always @(posedge pclk) begin
+        if (h_cnt == H_TOTAL - 1) begin
+            h_cnt <= 0;
+            if (v_cnt == V_TOTAL - 1)
+                v_cnt <= 0;
+            else
+                v_cnt <= v_cnt + 1;
+        end else
+            h_cnt <= h_cnt + 1;
+    end
+
+    // Sync and blank signals
+    always @(posedge pclk) begin
+        hs <= (h_cnt >= H_RES + H_FRONT) && (h_cnt < H_RES + H_FRONT + H_SYNC);
+        vs <= (v_cnt >= V_RES + V_FRONT) && (v_cnt < V_RES + V_FRONT + V_SYNC);
+        hblank <= (h_cnt >= H_RES);
+        vblank <= (v_cnt >= V_RES);
+    end
+
+    // Memory read logic
+    always @(posedge pclk) begin
+        base_addr <= himem ? BASE_HI : BASE;
+        if (bus_sync && !reading && h_cnt == 0 && v_cnt < V_RES) begin
+            reading <= 1;
+            word_cnt <= 0;
+            addr <= base_addr + {v_cnt[9:0], 5'b0};
+            rd <= 1;
+        end else if (reading) begin
+            if (word_cnt == 19) begin
+                reading <= 0;
+                rd <= 0;
+            end else begin
+                word_cnt <= word_cnt + 1;
+                addr <= addr + 1;
+            end
+        end else
+            rd <= 0;
+    end
+
+    // Line buffer and shift register logic
+    always @(posedge pclk) begin
+        if (reading)
+            line[word_cnt] <= addr[0]; // Simulating data read
+        
+        if (h_cnt == H_TOTAL - 1) begin
+            shifting <= 1;
+            bit_cnt <= 0;
+            shift_reg <= line[0];
+        end else if (shifting) begin
+            if (bit_cnt == 63) begin
+                if (word_cnt == 19)
+                    shifting <= 0;
+                else begin
+                    word_cnt <= word_cnt + 1;
+                    shift_reg <= line[word_cnt + 1];
+                    bit_cnt <= 0;
+                end
+            end else begin
+                shift_reg <= {shift_reg[62:0], 1'b0};
+                bit_cnt <= bit_cnt + 1;
+            end
+        end
+    end
+
+    // Pixel output
+    always @(posedge pclk)
+        pix <= ~shift_reg[63];
+
+endmodule

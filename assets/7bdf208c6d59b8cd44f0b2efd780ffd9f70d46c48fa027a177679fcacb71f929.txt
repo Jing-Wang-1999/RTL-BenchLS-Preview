@@ -1,0 +1,115 @@
+module rtlpp_08931 (
+    input wire clk,
+    input wire rst_n,
+    input wire start_token,
+    input wire end_token,
+    input wire trigger,
+    input wire reStart,
+    output reg enable_start_out,
+    output reg enable_end_out
+);
+
+    parameter COUNTER_Width = 6;
+
+    reg [COUNTER_Width-1:0] outstanding_c;
+    reg [COUNTER_Width-1:0] outstanding_r;
+    reg [COUNTER_Width-1:0] outstanding_in;
+    reg enable_start;
+    reg enable_end;
+    reg [1:0] currentState, nextState;
+
+    localparam Idle   = 2'b00;
+    localparam Reset  = 2'b01;
+    localparam Filter = 2'b10;
+    localparam Bypass = 2'b11;
+
+    // State transition logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            currentState <= Reset;
+        end else begin
+            currentState <= nextState;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (currentState)
+            Idle: begin
+                if (trigger)
+                    nextState = Filter;
+                else
+                    nextState = Idle;
+            end
+            Reset: begin
+                nextState = Idle;
+            end
+            Filter: begin
+                if (trigger && outstanding_r == 0)
+                    nextState = Bypass;
+                else
+                    nextState = Filter;
+            end
+            Bypass: begin
+                if (trigger)
+                    nextState = Bypass;
+                else
+                    nextState = Reset;
+            end
+            default: begin
+                nextState = Idle;
+            end
+        endcase
+    end
+
+    // Output logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            enable_start <= 0;
+            enable_end <= 0;
+            outstanding_c <= 0;
+            outstanding_r <= 0;
+        end else begin
+            case (currentState)
+                Idle: begin
+                    enable_start <= 0;
+                    enable_end <= 0;
+                end
+                Reset: begin
+                    enable_start <= 0;
+                    enable_end <= 0;
+                    outstanding_c <= 0;
+                    outstanding_r <= 0;
+                end
+                Filter: begin
+                    enable_start <= start_token;
+                    enable_end <= 0;
+                    if (start_token)
+                        outstanding_c <= outstanding_c + 1;
+                    outstanding_r <= outstanding_c;
+                end
+                Bypass: begin
+                    enable_start <= start_token;
+                    enable_end <= end_token;
+                    if (start_token)
+                        outstanding_c <= outstanding_c + 1;
+                    if (end_token)
+                        outstanding_c <= outstanding_c - 1;
+                    outstanding_r <= outstanding_c;
+                end
+            endcase
+
+            if (reStart) begin
+                outstanding_c <= 0;
+                outstanding_r <= 0;
+            end
+        end
+    end
+
+    // Output assignments
+    always @(*) begin
+        enable_start_out = enable_start;
+        enable_end_out = enable_end;
+    end
+
+endmodule

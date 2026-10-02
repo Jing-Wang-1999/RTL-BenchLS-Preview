@@ -1,0 +1,76 @@
+module autovcoder_011153 (
+    input  wire       io_axiClk,
+    input  wire       resetCtrl_axiReset,
+    input  wire       io_push_valid,
+    output wire       io_push_ready,
+    input  wire       io_pop_ready,
+    output wire       io_pop_valid,
+    input  wire       io_flush,
+    output wire [2:0] io_occupancy
+);
+
+    // Internal registers
+    reg [1:0] push_ptr;
+    reg [1:0] pop_ptr;
+    reg       rising_occupancy;
+
+    // Buffer state signals
+    wire pointers_match;
+    wire buffer_empty;
+    wire buffer_full;
+    wire push_fire;
+    wire pop_fire;
+
+    // Pointer comparison
+    assign pointers_match = (push_ptr == pop_ptr);
+
+    // Buffer state determination
+    assign buffer_empty = pointers_match && !rising_occupancy;
+    assign buffer_full  = pointers_match && rising_occupancy;
+
+    // Handshaking signals
+    assign io_push_ready = !buffer_full;
+    assign io_pop_valid  = buffer_empty ? io_push_valid : 1'b1;
+
+    // Transaction fires
+    assign push_fire = io_push_valid && io_push_ready;
+    assign pop_fire  = io_pop_valid && io_pop_ready;
+
+    // Occupancy calculation
+    wire [1:0] ptr_diff;
+    assign ptr_diff = push_ptr - pop_ptr;
+    assign io_occupancy = buffer_full ? 3'd4 : {1'b0, ptr_diff};
+
+    // Sequential logic
+    always @(posedge io_axiClk or posedge resetCtrl_axiReset) begin
+        if (resetCtrl_axiReset) begin
+            push_ptr <= 2'b00;
+            pop_ptr  <= 2'b00;
+            rising_occupancy <= 1'b0;
+        end else begin
+            if (io_flush) begin
+                push_ptr <= 2'b00;
+                pop_ptr  <= 2'b00;
+                rising_occupancy <= 1'b0;
+            end else begin
+                // Update push pointer
+                if (push_fire) begin
+                    push_ptr <= push_ptr + 2'b01;
+                end
+
+                // Update pop pointer
+                if (pop_fire) begin
+                    pop_ptr <= pop_ptr + 2'b01;
+                end
+
+                // Update rising occupancy flag
+                if (push_fire && !pop_fire) begin
+                    rising_occupancy <= 1'b1;
+                end else if (!push_fire && pop_fire) begin
+                    rising_occupancy <= 1'b0;
+                end
+            end
+        end
+    end
+
+endmodule

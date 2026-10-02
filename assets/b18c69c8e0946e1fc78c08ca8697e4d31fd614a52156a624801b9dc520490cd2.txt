@@ -1,0 +1,29 @@
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+      write_ptr <= 0;
+      read_ptr <= 0;
+      fifo_full <= 0;
+      fifo_empty <= 1;
+    end else if (sw_reset) begin
+      write_ptr <= 0;
+      read_ptr <= 0;
+      fifo_full <= 0;
+      fifo_empty <= 1;
+    end else begin
+      if (done_strobe && !fifo_full) begin
+        fifo_memory[write_ptr] <= fifo_input;
+        write_ptr <= write_ptr + 1;
+        fifo_empty <= 0;
+        if (write_ptr + 1 == read_ptr)
+          fifo_full <= 1;
+      end
+      if (fifo_read && !fifo_empty) begin
+        fifo_output <= fifo_memory[read_ptr];
+        read_ptr <= read_ptr + 1;
+        fifo_full <= 0;
+        if (read_ptr + 1 == write_ptr)
+          fifo_empty <= 1;
+      end
+    end
+    fifo_used <= write_ptr - read_ptr;
+  end

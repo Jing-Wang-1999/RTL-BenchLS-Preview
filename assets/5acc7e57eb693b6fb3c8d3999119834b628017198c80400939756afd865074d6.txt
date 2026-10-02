@@ -1,0 +1,18 @@
+"""Packet-only simulator configuration: no host interfaces or route discovery.
+Scapy packet encoders/decoders are unchanged. No network interface is emulated.
+RTL benches must supply explicit packet addresses; no host network is consulted.
+"""
+import os
+if os.environ.get("RTL_BENCH_OFFLINE_PACKET_ONLY") == "1":
+    from scapy.config import conf
+    from scapy.interfaces import NetworkInterfaceDict
+    class OfflineInterfaces(NetworkInterfaceDict):
+        def register_provider(self, provider):
+            pass
+        def reload(self):
+            self.clear()
+        def load_confiface(self):
+            conf.iface = None
+    conf.route_autoload = False
+    conf.route6_autoload = False
+    conf.ifaces = OfflineInterfaces()

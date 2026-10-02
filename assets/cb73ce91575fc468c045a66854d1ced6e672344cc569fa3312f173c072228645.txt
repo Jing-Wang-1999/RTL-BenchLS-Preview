@@ -1,0 +1,37 @@
+### Verilog Module Purpose and Operation Instruction:
+
+#### Primary Function:
+This Verilog module implements a finite state machine (FSM) for zero-length encoding and control. It handles inputs and outputs related to valid and busy signals, and selects control and data paths based on the current state and conditions.
+
+#### Key Control Flow and Decision Points:
+1. **Initial State (state_start)**: When the input valid signal (i_v) is active, it checks an external flag signal (f). Depending on the flag (f), it transitions to either state_start_t or state_start_e.
+2. **Transition State (state_start_t)**: Prepares for zero detection by setting select controls and transitioning to state_zeros.
+3. **Data Emission State (state_start_e)**: If the output is not busy (o_b), it sets the appropriate select controls to emit data and transitions back to state_start.
+4. **Zero Handling State (state_zeros)**: On receiving valid input (i_v), it checks the flag (f) and transitions to zero-processing states (state_zeros_t or state_zeros_e).
+5. **Zero Processing (state_zeros_t and its sub-states)**: Involves handling database transition based on the flag (f) and setting appropriate signal controls based on receiving valid data or being busy.
+6. **Pending State (state_pending)**: Waits for the output to not be busy (o_b) to finalize operations and transition back to the initial state.
+
+#### Important Data Processing and Signal Interactions:
+- **State Transitions**: Controlled by evaluating input valid (i_v), output busy (o_b), and external flag (f) signals to set the next state.
+- **Signal Updates**: Depending on the state, updates internal registers like i_b_ (input busy), o_v_ (output valid), sel_o_d_ (select output data), sel_cnt_ (select count), and sel_f_ (select flag). These registers drive the respective outputs (i_b, o_v, sel_o_d, sel_cnt, sel_f).
+- **Feedback Mechanism**: The next state is continuously determined by the current state's conditions, guiding the FSM through its various operation phases.
+
+#### Concise Summary:
+Design the FSM to begin in the state_start state after a reset, transitioning based on the input valid signal and external flag to process zero-length encoding. It moves through states to handle data validity, busy conditions, and output emission, updating select control signals. Ensure proper state transitions and signal updates based on input, output, and flag conditions to manage the FSM's operations intricately.
+
+Module Interface:
+module zero_length_encoding_fsm (
+    clock,
+    reset,
+    i_v,
+    i_b,
+    o_v,
+    o_b,
+    sel_o_d,
+    sel_cnt,
+    sel_f,
+    f
+);
+
+Behavioral Clarifications:
+- FSM uses 4-bit state register with 9 named states (0-8): state_start=0, state_start_t=1, state_start_e=2, state_zeros=3, state_zeros_t=4, state_zeros_t_t=5, state_zeros_t_e=6, state_zeros_e=7, state_pending=8. Reset is active-low (negedge), state register clocked on posedge clock. The combinational always block is sensitive to (state, i_v, o_b, f). sel_cnt is 2 bits; sel_o_d and sel_f are 1 bit each.

@@ -1,0 +1,71 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/337",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/335",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 337,
+  "issue_number": 335,
+  "verilog_files": [
+    "rtl/include/riscv_defines.sv",
+    "rtl/riscv_core.sv",
+    "rtl/riscv_cs_registers.sv",
+    "rtl/riscv_decoder.sv"
+  ],
+  "deletions": 13,
+  "additions": 42,
+  "patches": [
+    {
+      "filename": "rtl/include/riscv_defines.sv",
+      "patch": "@@ -209,6 +209,9 @@ parameter VEC_MODE8  = 2'b11;\n // imported form IBEX, some regs may be still not implemented\n typedef enum logic[11:0] {\n   // Machine information\n+  CSR_MVENDORID = 12'hF11,\n+  CSR_MARCHID   = 12'hF12,\n+  CSR_MIMPID    = 12'hF13,\n   CSR_MHARTID   = 12'hF14,\n \n   // Machine trap setup\n@@ -223,7 +226,9 @@ typedef enum logic[11:0] {\n   CSR_MSCRATCH  = 12'h340,\n   CSR_MEPC      = 12'h341,\n   CSR_MCAUSE    = 12'h342,\n+  CSR_MTVAL     = 12'h343,\n   CSR_MIP       = 12'h344,\n+  CSR_MCOUNTEREN= 12'h306,\n   CSR_MIPX      = 12'h7D2,\n \n   // User trap setup",
+      "additions": 5,
+      "deletions": 0,
+      "changes": 5
+    },
+    {
+      "filename": "rtl/riscv_core.sv",
+      "patch": "@@ -40,7 +40,8 @@ module riscv_core\n   parameter PULP_HWLP           =  0,\n   parameter PULP_CLUSTER        =  0,\n   parameter FPU                 =  0,\n-  parameter PULP_ZFINX          =  0\n+  parameter PULP_ZFINX          =  0,\n+  parameter PULP_HWLP           =  0                   // Hardware Loop (not supported ye; will be supported)\n )\n (\n   // Clock and Reset\n@@ -983,6 +984,7 @@ module riscv_core\n     .PULP_SECURE      ( PULP_SECURE           ),\n     .USE_PMP          ( USE_PMP               ),\n     .N_PMP_ENTRIES    ( N_PMP_ENTRIES         ),\n+    .PULP_HWLP        ( PULP_HWLP             ),\n     .DEBUG_TRIGGER_EN ( DEBUG_TRIGGER_EN      )\n   )\n   cs_registers_i",
+      "additions": 3,
+      "deletions": 1,
+      "changes": 4
+    },
+    {
+      "filename": "rtl/riscv_cs_registers.sv",
+      "patch": "@@ -46,6 +46,7 @@ module riscv_cs_registers\n   parameter PULP_SECURE   = 0,\n   parameter USE_PMP       = 0,\n   parameter N_PMP_ENTRIES = 16,\n+  parameter PULP_HWLP     = 0,\n   parameter DEBUG_TRIGGER_EN = 1\n )\n (\n@@ -426,6 +427,14 @@ if(PULP_SECURE==1) begin\n       // mhartid: unique hardware thread id\n       CSR_MHARTID: csr_rdata_int = hart_id_i;\n \n+      // unimplemented, read 0 CSRs\n+      CSR_MVENDORID,\n+        CSR_MARCHID,\n+        CSR_MIMPID,\n+        CSR_MTVAL,\n+        CSR_MCOUNTEREN :\n+          csr_rdata_int = 'b0;\n+\n       CSR_TSELECT,\n         CSR_TDATA3,\n         CSR_MCONTEXT,\n@@ -446,12 +455,12 @@ if(PULP_SECURE==1) begin\n                csr_rdata_int = dscratch1_q;//\n \n       // hardware loops  (not official)\n-      HWLoop0_START  : csr_rdata_int = hwlp_start_i[0];\n-      HWLoop0_END    : csr_rdata_int = hwlp_end_i[0]  ;\n-      HWLoop0_COUNTER: csr_rdata_int = hwlp_cnt_i[0]  ;\n-      HWLoop1_START  : csr_rdata_int = hwlp_start_i[1];\n-      HWLoop1_END    : csr_rdata_int = hwlp_end_i[1]  ;\n-      HWLoop1_COUNTER: csr_rdata_int = hwlp_cnt_i[1]  ;\n+      HWLoop0_START  : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_start_i[0];\n+      HWLoop0_END    : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_end_i[0]  ;\n+      HWLoop0_COUNTER: csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_cnt_i[0]  ;\n+      HWLoop1_START  : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_start_i[1];\n+      HWLoop1_END    : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_end_i[1]  ;\n+      HWLoop1_COUNTER: csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_cnt_i[1]  ;\n \n       // PMP config registers\n       CSR_PMPCFG0: csr_rdata_int = USE_PMP ? pmp_reg_q.pmpcfg_packed[0] : '0;\n@@ -548,6 +557,14 @@ end else begin //PULP_SECURE == 0\n       // mhartid: unique hardware thread id\n       CSR_MHARTID: csr_rdata_int = hart_id_i;\n \n+      // unimplemented, read 0 CSRs\n+      CSR_MVENDORID,\n+        CSR_MARCHID,\n+        CSR_MIMPID,\n+        CSR_MTVAL,\n+        CSR_MCOUNTEREN :\n+          csr_rdata_int = 'b0;\n+\n       CSR_TSELECT,\n         CSR_TDATA3,\n         CSR_MCONTEXT,\n@@ -568,12 +585,12 @@ end else begin //PULP_SECURE == 0\n                csr_rdata_int = dscratch1_q;//\n \n       // hardware loops  (not official)\n-      HWLoop0_START: csr_rdata_int = hwlp_start_i[0];\n-      HWLoop0_END: csr_rdata_int = hwlp_end_i[0];\n-      HWLoop0_COUNTER: csr_rdata_int = hwlp_cnt_i[0];\n-      HWLoop1_START: csr_rdata_int = hwlp_start_i[1];\n-      HWLoop1_END: csr_rdata_int = hwlp_end_i[1];\n-      HWLoop1_COUNTER: csr_rdata_int = hwlp_cnt_i[1];\n+      HWLoop0_START   : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_start_i[0] ;\n+      HWLoop0_END     : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_end_i[0]   ;\n+      HWLoop0_COUNTER : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_cnt_i[0]   ;\n+      HWLoop1_START   : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_start_i[1] ;\n+      HWLoop1_END     : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_end_i[1]   ;\n+      HWLoop1_COUNTER : csr_rdata_int = !PULP_HWLP ? 'b0 : hwlp_cnt_i[1]   ;\n \n       /* USER CSR */\n       // dublicated mhartid: unique hardware thread id (not official)",
+      "additions": 29,
+      "deletions": 12,
+      "changes": 41
+    },
+    {
+      "filename": "rtl/riscv_decoder.sv",
+      "patch": "@@ -2425,9 +2425,14 @@ module riscv_decoder\n               CSR_MSCRATCH,\n               CSR_MEPC,\n               CSR_MCAUSE,\n+              CSR_MTVAL,\n               CSR_MIP,\n               CSR_MIPX,\n+              CSR_MVENDORID,\n+              CSR_MARCHID,\n+              CSR_MIMPID,\n               CSR_MHARTID,\n+              CSR_MCOUNTEREN,\n \n               UHARTID,\n               PRIVLV,",
+      "additions": 5,
+      "deletions": 0,
+      "changes": 5
+    }
+  ],
+  "pr_info": {
+    "title": "fix issue where some CSRs were incorrectly causing illegal instruction",
+    "body": "This resolves the issue #335 where some CSRs were incorrectly causing an illegal instruction exception. These are now returning a value of 0.\r\n\r\nAlso ensured that implemented HWLOOP CSRs return 0 if PULP_HWLP is not enabled.",
+    "state": "closed",
+    "created_at": "2020-05-13T14:33:31Z",
+    "updated_at": "2020-07-15T21:51:31Z",
+    "merged_at": "2020-05-28T14:45:18Z",
+    "user": "silabs-PaulZ"
+  },
+  "issue_info": {
+    "title": "CSR access",
+    "body": "The following CSRs cause an illegal instruction exception when being accessed. These CSRs must return a value of 0 if not implemented.\r\n\r\n- mvendorid\r\n- marchid\r\n- mimpid\r\n- mtval\r\n\r\nNote: medeleg and mideleg should cause an illegal instruction exception when not implemented.\r\n\r\n\r\n",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2020-05-12T21:50:03Z",
+    "updated_at": "2020-06-03T11:33:03Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 106
+  },
+  "base_commit": "c93905138bfd46384f5614a3c512618d793c1f6a",
+  "head_commit": "534cfa6c204b9a6863d5a254d756f940cd8cc34f",
+  "base_ref": "master",
+  "task_id": "openhwgroup_cv32e40p_337_335",
+  "lec_status": "useful_pass"
+}

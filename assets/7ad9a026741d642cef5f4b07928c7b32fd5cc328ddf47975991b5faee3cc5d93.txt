@@ -1,0 +1,24 @@
+always @(posedge clk or negedge resetn) begin
+    if (~resetn) begin
+      dma_wr_en <= 1'b0;
+    end else if (~processing_resetn || channel_enable[count] == 1'b0) begin
+      dma_wr_en <= 1'b0;
+    end else begin
+      case (count)
+        4'h0: dma_wr_en <= phase_valid;
+        4'h1: dma_wr_en <= data_valid;
+        4'h2: dma_wr_en <= data_filtered_valid;
+        4'h3: dma_wr_en <= i_q_valid;
+        4'h4: dma_wr_en <= i_q_valid;
+        4'h5: dma_wr_en <= i_q_filtered_valid;
+        4'h6: dma_wr_en <= i_q_filtered_valid;
+        4'h7: dma_wr_en <= phase_valid;
+        4'h8: dma_wr_en <= data_valid;
+        4'h9: dma_wr_en <= data_filtered_valid;
+        4'ha: dma_wr_en <= i_q_valid;
+        4'hb: dma_wr_en <= i_q_valid;
+        4'hc: dma_wr_en <= i_q_filtered_valid;
+        4'hd: dma_wr_en <= i_q_filtered_valid;
+      endcase
+    end
+  end

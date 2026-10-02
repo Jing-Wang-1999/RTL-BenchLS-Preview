@@ -1,0 +1,109 @@
+module origen_141145 (
+    input wire clk,
+    input wire start,
+    input wire [3:0] multiplier_address,
+    input wire [3:0] multiplicand_address,
+    output reg [7:0] p,
+    output reg done
+);
+
+reg [3:0] multiplier;
+reg [3:0] multiplicand;
+reg [3:0] adder_out;
+reg [7:0] shift_reg;
+reg [2:0] count;
+reg add_en;
+
+// 4-bit binary adder
+always @(*) begin
+    if (add_en)
+        adder_out = shift_reg[7:4] + multiplicand;
+    else
+        adder_out = shift_reg[7:4];
+end
+
+// Main state machine
+always @(posedge clk) begin
+    if (start) begin
+        multiplier <= multiplier_address;
+        multiplicand <= multiplicand_address;
+        shift_reg <= 8'b0;
+        count <= 3'b0;
+        done <= 1'b0;
+        add_en <= 1'b0;
+    end else if (!done) begin
+        if (count < 4) begin
+            add_en <= multiplier[0];
+            shift_reg <= {adder_out, shift_reg[3:1]};
+            multiplier <= {1'b0, multiplier[3:1]};
+            count <= count + 1;
+        end else begin
+            p <= shift_reg;
+            done <= 1'b1;
+        end
+    end
+end
+
+endmodule
+
+// Testbench
+module binary_multiplier_tb;
+    reg clk;
+    reg start;
+    reg [3:0] multiplier_address;
+    reg [3:0] multiplicand_address;
+    wire [7:0] p;
+    wire done;
+
+    binary_multiplier uut (
+        .clk(clk),
+        .start(start),
+        .multiplier_address(multiplier_address),
+        .multiplicand_address(multiplicand_address),
+        .p(p),
+        .done(done)
+    );
+
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
+
+    initial begin
+        start = 0;
+        multiplier_address = 0;
+        multiplicand_address = 0;
+        #10;
+
+        // Test case 1: 5 * 3
+        start = 1;
+        multiplier_address = 4'b0101;
+        multiplicand_address = 4'b0011;
+        #10 start = 0;
+        wait(done);
+        #10;
+
+        // Test case 2: 15 * 7
+        start = 1;
+        multiplier_address = 4'b1111;
+        multiplicand_address = 4'b0111;
+        #10 start = 0;
+        wait(done);
+        #10;
+
+        // Test case 3: 0 * 9
+        start = 1;
+        multiplier_address = 4'b0000;
+        multiplicand_address = 4'b1001;
+        #10 start = 0;
+        wait(done);
+        #10;
+
+        $finish;
+    end
+
+    initial begin
+        $monitor("Time=%0t multiplier=%b multiplicand=%b product=%b done=%b",
+                 $time, multiplier_address, multiplicand_address, p, done);
+    end
+endmodule

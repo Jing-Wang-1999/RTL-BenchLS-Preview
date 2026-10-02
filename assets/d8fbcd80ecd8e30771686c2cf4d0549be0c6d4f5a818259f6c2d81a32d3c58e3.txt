@@ -1,0 +1,47 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/10696",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/10680",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 10696,
+  "issue_number": 10680,
+  "verilog_files": [
+    "hw/ip/spi_host/rtl/spi_host.sv"
+  ],
+  "deletions": 1,
+  "additions": 1,
+  "patches": [
+    {
+      "filename": "hw/ip/spi_host/rtl/spi_host.sv",
+      "patch": "@@ -186,7 +186,7 @@ module spi_host\n         test_speed_inval = 1'b0;\n       end\n       Dual, Quad: begin\n-        test_dir_inval   = (reg2hw.command.direction.q != Bidir);\n+        test_dir_inval   = (reg2hw.command.direction.q == Bidir);\n         test_speed_inval = 1'b0;\n       end\n       default: begin",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "[spi_host] Fix bug around invalid direction detection.",
+    "body": "Dual and Qual mode transactions are invalid if the are bidirectional.\r\nPreviously this code flagged an error if such segments were anything\r\nbut bidirectional.\r\n\r\nBug first noted in #10680.\r\n\r\nSigned-off-by: Martin Lueker-Boden <martin.lueker-boden@wdc.com>",
+    "state": "closed",
+    "created_at": "2022-02-08T20:30:53Z",
+    "updated_at": "2022-07-10T14:17:15Z",
+    "merged_at": "2022-02-09T19:39:03Z",
+    "user": "martin-lueker"
+  },
+  "issue_info": {
+    "title": "SPI HOST Direction and Speed - CMDINVAL",
+    "body": "\r\nScenario: Speed is DualSPI or QuadSPI and Direction is \"1\" RX Only\r\n\r\nSTATUS.CMDINVAL asserted when above scenario appears.\r\n\r\nRTL: hw/ip/spi_host/rtl/spi_host.sv - line 188 \r\n      Dual, Quad: begin\r\n        test_dir_inval   = (reg2hw.command.direction.q != Bidir);\r\n        test_speed_inval = 1'b0;\r\n      end\r\n\r\nExpecting :     test_dir_inval   = (reg2hw.command.direction.q == Bidir); as per specification.\r\n\r\nReproduce: \r\nPR number : #10649\r\nSimulation Tool : Xcelium\r\nTest Sequence: spi_host_speed.sv\r\nCommand : util/dvsim/dvsim.py hw/ip/spi_host/dv/spi_host_sim_cfg.hjson -i spi_host_speed --waves --fixed-seed 3395033865",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2022-02-08T16:53:44Z",
+    "updated_at": "2022-02-10T23:55:46Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 1932
+  },
+  "base_commit": "cdc4bd4c821fce7a32367ee7450358d0f9a7f0d2",
+  "head_commit": "7685242b79f0dcd033a8254583bf742a745ebe75",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_10696_10680",
+  "lec_status": "useful_pass"
+}

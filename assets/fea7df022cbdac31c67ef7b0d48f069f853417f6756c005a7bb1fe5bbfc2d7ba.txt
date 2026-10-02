@@ -1,0 +1,7 @@
+# `mg_09035`
+
+This module contains two arrays `RegsH[0:7]` and `RegsL[0:7]`, each holding eight 8-bit values. Inputs are `clk`, `CEN`, byte write enables `WEH` and `WEL`, write/read address `AddrA[2:0]`, read addresses `AddrB[2:0]` and `AddrC[2:0]`, and write data `DIH[7:0]` and `DIL[7:0]`. The six 8-bit outputs are `DOAH`, `DOAL`, `DOBH`, `DOBL`, `DOCH`, and `DOCL`.
+
+On each rising clock edge with `CEN` high, `WEH` writes `DIH` to `RegsH[AddrA]` and independently `WEL` writes `DIL` to `RegsL[AddrA]`. Otherwise storage holds. There is no reset or initialization, so unread-written entries begin unspecified. All reads are asynchronous: the A, B, and C output pairs continuously show their selected high and low entries. A same-address read changes after the nonblocking write update in the same simulation time step.
+
+Internal aliases name high/low entries 0 as B/C, entries 1 as D/E, entries 2 as H/L, concatenate entry 3 as IX, and entry 7 as IY. These aliases are not output ports and do not alter behavior.

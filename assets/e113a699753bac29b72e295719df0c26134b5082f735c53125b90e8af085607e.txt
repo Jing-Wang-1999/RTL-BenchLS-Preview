@@ -1,0 +1,138 @@
+module origen_074147 (
+    input [2:0] Op,
+    output reg RegWrite,
+    output reg [1:0] RegDst,
+    output reg ALUSrc,
+    output reg Branch,
+    output reg MemWrite,
+    output reg MemToReg,
+    output reg [1:0] ALUOp,
+    output reg Jump,
+    output reg JAL,
+    output reg JumpReg,
+    output reg RegRA
+);
+
+    always @(*) begin
+        case (Op)
+            3'b000: begin // R-type Arithmetic/Logic
+                RegWrite = 1'b1;
+                RegDst = 2'b01; // selects rd
+                ALUSrc = 1'b0;
+                Branch = 1'b0;
+                MemWrite = 1'b0;
+                MemToReg = 1'b0;
+                ALUOp = 2'b10; // arithmetic/logic
+                Jump = 1'b0;
+                JAL = 1'b0;
+                JumpReg = 1'b0;
+                RegRA = 1'b0;
+            end
+            3'b001: begin // Load Word
+                RegWrite = 1'b1;
+                RegDst = 2'b00; // selects rt
+                ALUSrc = 1'b1;
+                Branch = 1'b0;
+                MemWrite = 1'b0;
+                MemToReg = 1'b1;
+                ALUOp = 2'b00; // addition
+                Jump = 1'b0;
+                JAL = 1'b0;
+                JumpReg = 1'b0;
+                RegRA = 1'b0;
+            end
+            3'b010: begin // Store Word
+                RegWrite = 1'b0;
+                RegDst = 2'b00; // unused
+                ALUSrc = 1'b1;
+                Branch = 1'b0;
+                MemWrite = 1'b1;
+                MemToReg = 1'b0; // unused
+                ALUOp = 2'b00; // addition
+                Jump = 1'b0;
+                JAL = 1'b0;
+                JumpReg = 1'b0;
+                RegRA = 1'b0;
+            end
+            3'b011: begin // Jump
+                RegWrite = 1'b0;
+                RegDst = 2'b00; // unused
+                ALUSrc = 1'b0;
+                Branch = 1'b0;
+                MemWrite = 1'b0;
+                MemToReg = 1'b0;
+                ALUOp = 2'b00; // unused
+                Jump = 1'b1;
+                JAL = 1'b0;
+                JumpReg = 1'b0;
+                RegRA = 1'b0;
+            end
+            3'b100: begin // Branch
+                RegWrite = 1'b0;
+                RegDst = 2'b00; // unused
+                ALUSrc = 1'b0;
+                Branch = 1'b1;
+                MemWrite = 1'b0;
+                MemToReg = 1'b0;
+                ALUOp = 2'b01; // subtraction/comparison
+                Jump = 1'b0;
+                JAL = 1'b0;
+                JumpReg = 1'b0;
+                RegRA = 1'b0;
+            end
+            3'b101: begin // Immediate Arithmetic
+                RegWrite = 1'b1;
+                RegDst = 2'b00; // selects rt
+                ALUSrc = 1'b1;
+                Branch = 1'b0;
+                MemWrite = 1'b0;
+                MemToReg = 1'b0;
+                ALUOp = 2'b10; // arithmetic/logic
+                Jump = 1'b0;
+                JAL = 1'b0;
+                JumpReg = 1'b0;
+                RegRA = 1'b0;
+            end
+            3'b110: begin // Jump-and-Link
+                RegWrite = 1'b1;
+                RegDst = 2'b10; // dedicated link register
+                ALUSrc = 1'b0;
+                Branch = 1'b0;
+                MemWrite = 1'b0;
+                MemToReg = 1'b0;
+                ALUOp = 2'b00; // unused
+                Jump = 1'b1;
+                JAL = 1'b1;
+                JumpReg = 1'b0;
+                RegRA = 1'b1;
+            end
+            3'b111: begin // Jump-Register
+                RegWrite = 1'b0;
+                RegDst = 2'b00; // unused
+                ALUSrc = 1'b0;
+                Branch = 1'b0;
+                MemWrite = 1'b0;
+                MemToReg = 1'b0;
+                ALUOp = 2'b00; // unused
+                Jump = 1'b1;
+                JAL = 1'b0;
+                JumpReg = 1'b1;
+                RegRA = 1'b0;
+            end
+            default: begin // Invalid Op Code
+                RegWrite = 1'bx;
+                RegDst = 2'bx;
+                ALUSrc = 1'bx;
+                Branch = 1'bx;
+                MemWrite = 1'bx;
+                MemToReg = 1'bx;
+                ALUOp = 2'bx;
+                Jump = 1'bx;
+                JAL = 1'bx;
+                JumpReg = 1'bx;
+                RegRA = 1'bx;
+            end
+        endcase
+    end
+
+endmodule

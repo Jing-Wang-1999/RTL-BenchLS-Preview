@@ -1,0 +1,22 @@
+`timescale 1ns/1ps
+module tb;
+reg clk=0,rst=1,rxd=1,ready=0; always #5 clk=~clk;
+wire [7:0] data; wire valid,busy,overrun,frame;
+uart_rx dut(.clk(clk),.rst(rst),.rxd(rxd),.prescale(16'd4),.m_axis_tdata(data),.m_axis_tvalid(valid),.m_axis_tready(ready),.busy(busy),.overrun_error(overrun),.frame_error(frame));
+integer oc=0,fc=0;
+always @(negedge clk) if(!rst)begin if(overrun)oc=oc+1;if(frame)fc=fc+1;end
+task serial;input[7:0]v;input good;integer b;begin
+@(negedge clk);rxd=0;#320;
+for(b=0;b<8;b=b+1)begin rxd=v[b];#320;end
+rxd=good;#320;rxd=1;#640;
+end endtask
+initial begin
+repeat(4)@(negedge clk);rst=0;repeat(4)@(negedge clk);
+serial(8'h53,1);if(valid!==1 || data!==8'h53 || oc!=0 || fc!=0)$fatal(1,"first frame");
+serial(8'hac,1);if(valid!==1 || data!==8'hac || oc!=1 || fc!=0)$fatal(1,"overrun replaces unread word");
+serial(8'h35,0);if(valid!==1 || data!==8'hac || oc!=1 || fc!=1)$fatal(1,"bad stop preserves unread word");
+ready=1;repeat(4)@(negedge clk);if(valid!==0)$fatal(1,"consume");
+rst=1;repeat(4)@(negedge clk);if(valid!==0 || busy!==0 || overrun!==0 || frame!==0)$fatal(1,"reset");
+$display("RTL_BENCHLS_PASS");$finish(0);end
+initial begin #100000;$fatal(1,"watchdog");end
+endmodule

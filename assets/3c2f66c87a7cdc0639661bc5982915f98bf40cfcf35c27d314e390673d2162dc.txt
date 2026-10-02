@@ -1,0 +1,287 @@
+always @(*) begin
+    
+        if (state == W_NEUR) begin 
+            CTRL_SYNARRAY_ADDR  = 13'b0;
+            CTRL_SYNARRAY_CS    = 1'b0;
+            CTRL_SYNARRAY_WE    = 1'b0;
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_EVENT     = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_PRE_EN         = 8'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            AERIN_ACK           = 1'b0;
+            neur_cnt_inc        = 1'b0;  
+            
+            CTRL_NEURMEM_ADDR   = CTRL_SPI_ADDR[M-1:0];
+            CTRL_NEURMEM_CS     = 1'b1;
+            if (ctrl_cnt == 32'd0) begin
+                CTRL_NEURMEM_WE = 1'b0;
+            end else begin
+                CTRL_NEURMEM_WE = 1'b1;
+            end 
+            
+        end else if (state == R_NEUR) begin
+            CTRL_SYNARRAY_ADDR  = 13'b0;
+            CTRL_SYNARRAY_CS    = 1'b0;
+            CTRL_SYNARRAY_WE    = 1'b0;
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_EVENT     = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_PRE_EN         = 8'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            AERIN_ACK           = 1'b0;
+            neur_cnt_inc        = 1'b0;  
+            
+            CTRL_NEURMEM_ADDR   = CTRL_SPI_ADDR[M-1:0];
+            CTRL_NEURMEM_CS     = 1'b1;
+            CTRL_NEURMEM_WE     = 1'b0; 
+            
+        end else if (state == W_SYN) begin
+            CTRL_NEURMEM_ADDR   = 8'b0;
+            CTRL_NEURMEM_CS     = 1'b0;
+            CTRL_NEURMEM_WE     = 1'b0;
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_EVENT     = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_PRE_EN         = 8'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            AERIN_ACK           = 1'b0;
+            neur_cnt_inc        = 1'b0;  
+            
+            CTRL_SYNARRAY_ADDR  = CTRL_SPI_ADDR[12:0];
+            CTRL_SYNARRAY_CS    = 1'b1;
+            if (ctrl_cnt == 32'd0) begin
+                CTRL_SYNARRAY_WE = 1'b0;
+            end else begin
+                CTRL_SYNARRAY_WE = 1'b1;
+            end 
+            
+        end else if (state == R_SYN) begin  
+            CTRL_NEURMEM_ADDR   = 8'b0;
+            CTRL_NEURMEM_CS     = 1'b0;
+            CTRL_NEURMEM_WE     = 1'b0;
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_EVENT     = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_PRE_EN         = 8'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            AERIN_ACK           = 1'b0;
+            neur_cnt_inc        = 1'b0;  
+            
+            CTRL_SYNARRAY_ADDR   = CTRL_SPI_ADDR[12:0];
+            CTRL_SYNARRAY_CS     = 1'b1;
+            CTRL_SYNARRAY_WE     = 1'b0;
+            
+        end else if (state == TREF) begin
+            CTRL_SYNARRAY_ADDR  = 13'b0;
+            CTRL_SYNARRAY_CS    = 1'b0;
+            CTRL_SYNARRAY_WE    = 1'b0;
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_PRE_EN         = 8'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            AERIN_ACK           = 1'b0;
+            
+            CTRL_NEURMEM_ADDR   = AERIN_ADDR[M-1] ? AERIN_ADDR[2*M-1:M] : neur_cnt;
+            CTRL_NEUR_EVENT     = 1'b1;
+            CTRL_NEUR_TREF      = 1'b1;
+            CTRL_NEURMEM_CS     = 1'b1;
+            if (ctrl_cnt[0] == 1'd0) begin
+                CTRL_NEURMEM_WE = 1'b0;
+                neur_cnt_inc    = 1'b0;
+            end else begin
+                CTRL_NEURMEM_WE = 1'b1;
+                neur_cnt_inc    = ~AERIN_ADDR[M-1];
+            end
+            
+        end else if (state == BIST) begin
+            CTRL_NEURMEM_ADDR   = 8'b0;
+            CTRL_NEURMEM_CS     = 1'b0;
+            CTRL_NEURMEM_WE     = 1'b0;
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_EVENT     = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            AERIN_ACK           = 1'b0;
+            
+            CTRL_SYNARRAY_ADDR  = AERIN_ADDR[M-1] ? {AERIN_ADDR[2*M-1:M],ctrl_cnt[5:1]} : {neur_cnt,ctrl_cnt[5:1]};
+            CTRL_PRE_EN         = 8'hFF;
+            CTRL_BIST_REF       = 1'b1;
+            CTRL_SYNARRAY_CS    = 1'b1;
+            if (ctrl_cnt[0] == 1'd0) begin
+                CTRL_SYNARRAY_WE = 1'b0;
+                neur_cnt_inc     = 1'b0;
+            end else begin
+                CTRL_SYNARRAY_WE = 1'b1;
+                neur_cnt_inc     = AERIN_ADDR[M-1] ? 1'b0 : &ctrl_cnt[5:1];
+            end 
+            
+        end else if (state == SYNAPSE) begin 
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            AERIN_ACK           = 1'b0;
+            neur_cnt_inc        = 1'b0;
+            
+            CTRL_SYNARRAY_ADDR  = AERIN_ADDR[2*M-1:3];
+            CTRL_NEURMEM_ADDR   = AERIN_ADDR[M-1:0];
+            CTRL_PRE_EN         = {7'b0, SPI_SDSP_ON_SYN_STIM} << AERIN_ADDR[2:0];
+            CTRL_NEUR_EVENT     = 1'b1;
+            CTRL_SYNARRAY_CS    = 1'b1;
+            CTRL_NEURMEM_CS     = 1'b1;
+            if (ctrl_cnt == 32'd0) begin
+                CTRL_SYNARRAY_WE = 1'b0;
+                CTRL_NEURMEM_WE  = 1'b0;
+            end else begin
+                CTRL_SYNARRAY_WE = 1'b1;
+                CTRL_NEURMEM_WE  = 1'b1;
+            end
+        
+        end else if (state == PUSH) begin
+            CTRL_SYNARRAY_ADDR  = 13'b0;
+            CTRL_SYNARRAY_CS    = 1'b0;
+            CTRL_SYNARRAY_WE    = 1'b0;
+            CTRL_NEURMEM_ADDR   = 8'b0;
+            CTRL_NEURMEM_CS     = 1'b0;
+            CTRL_NEURMEM_WE     = 1'b0;
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_EVENT     = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_PRE_EN         = 8'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            AERIN_ACK           = 1'b0;
+            neur_cnt_inc        = 1'b0;
+            
+            CTRL_SCHED_VIRTS    = AERIN_ADDR[M-1:M-5];
+            CTRL_SCHED_ADDR     = AERIN_ADDR[2*M-1:M];
+            CTRL_SCHED_EVENT_IN = 7'h40;
+
+        end else if (state == POP_NEUR) begin  
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            AERIN_ACK           = 1'b0;
+            
+            CTRL_SYNARRAY_ADDR  = {SCHED_DATA_OUT[M-1:0],neur_cnt[7:3]};
+            CTRL_PRE_EN         = (ctrl_cnt[3:0] == 4'b0001) ? 8'hFF : 8'b0;
+            CTRL_SYNARRAY_CS    = ~|neur_cnt[2:0];
+            CTRL_SYNARRAY_WE    = (ctrl_cnt[3:0] == 4'b0001);
+            CTRL_NEURMEM_ADDR   = neur_cnt;  
+            CTRL_NEUR_BURST_END = (SCHED_DATA_OUT[M-1:0] == neur_cnt) && SCHED_BURST_END;
+            CTRL_SCHED_POP_N    = ~&ctrl_cnt[8:0];
+            CTRL_NEUR_EVENT     = 1'b1;
+            CTRL_NEURMEM_CS     = 1'b1;
+            if (ctrl_cnt[0] == 1'b0) begin
+                CTRL_NEURMEM_WE = 1'b0;
+                neur_cnt_inc    = 1'b0;
+            end else begin
+                CTRL_NEURMEM_WE = 1'b1;
+                neur_cnt_inc    = 1'b1;    
+            end 
+        
+        end else if (state == POP_VIRT) begin  
+            CTRL_SYNARRAY_ADDR  = 13'b0;
+            CTRL_SYNARRAY_CS    = 1'b0;
+            CTRL_SYNARRAY_WE    = 1'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_PRE_EN         = 8'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            AERIN_ACK           = 1'b0;
+            neur_cnt_inc        = 1'b0;
+            
+            CTRL_NEURMEM_ADDR   = SCHED_DATA_OUT[M-1:0];
+            CTRL_NEUR_VIRTS     = SCHED_DATA_OUT[ 12:M];
+            CTRL_NEUR_EVENT     = 1'b1;
+            CTRL_NEURMEM_CS     = 1'b1;
+            if (ctrl_cnt == 32'd0) begin
+                CTRL_NEURMEM_WE  = 1'b0;
+                CTRL_SCHED_POP_N = 1'b1;
+            end else begin
+                CTRL_NEURMEM_WE  = 1'b1;
+                CTRL_SCHED_POP_N = 1'b0;
+            end
+        
+        end else if (state == WAIT_REQDN) begin
+            CTRL_SYNARRAY_ADDR  = 13'b0;
+            CTRL_SYNARRAY_CS    = 1'b0;
+            CTRL_SYNARRAY_WE    = 1'b0;
+            CTRL_NEURMEM_ADDR   = 8'b0;
+            CTRL_NEURMEM_CS     = 1'b0;
+            CTRL_NEURMEM_WE     = 1'b0;
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_EVENT     = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_PRE_EN         = 8'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            neur_cnt_inc        = 1'b0;
+            
+            AERIN_ACK           = 1'b1;
+
+        end else begin
+            CTRL_SYNARRAY_ADDR  = 13'b0;
+            CTRL_SYNARRAY_CS    = 1'b0;
+            CTRL_SYNARRAY_WE    = 1'b0;
+            CTRL_NEURMEM_ADDR   = 8'b0;
+            CTRL_NEURMEM_CS     = 1'b0;
+            CTRL_NEURMEM_WE     = 1'b0;
+            CTRL_NEUR_VIRTS     = 5'b0;
+            CTRL_NEUR_BURST_END = 1'b0;
+            CTRL_NEUR_EVENT     = 1'b0;
+            CTRL_NEUR_TREF      = 1'b0;
+            CTRL_PRE_EN         = 8'b0;
+            CTRL_BIST_REF       = 1'b0;
+            CTRL_SCHED_VIRTS    = 5'b0;
+            CTRL_SCHED_ADDR     = 8'b0;
+            CTRL_SCHED_EVENT_IN = 7'b0;
+            CTRL_SCHED_POP_N    = 1'b1;
+            AERIN_ACK           = 1'b0;
+            neur_cnt_inc        = 1'b0;
+        end
+    end

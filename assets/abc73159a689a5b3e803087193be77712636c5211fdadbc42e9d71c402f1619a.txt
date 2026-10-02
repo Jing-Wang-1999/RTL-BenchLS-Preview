@@ -1,0 +1,10 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+    flush_addr_q <= {(ICACHE_TAG_REQ_LINE_W){1'b0}};
+else if (state_q == STATE_FLUSH)
+    flush_addr_q <= flush_addr_q + 1;
+// Invalidate specified line
+else if (req_invalidate_i && req_accept_o)
+    flush_addr_q <= req_line_addr_w;
+else
+    flush_addr_q <= {(ICACHE_TAG_REQ_LINE_W){1'b0}};

@@ -1,0 +1,108 @@
+module origen_144900(
+    input [99:0] a,
+    input [99:0] b,
+    input cin,
+    input fa_a,
+    input fa_b,
+    input fa_cin,
+    output [99:0] final_sum,
+    output cout
+);
+
+    wire [99:0] adder_sum;
+    wire adder_cout;
+    wire fa_sum, fa_cout;
+
+    // 100-bit Carry-Lookahead Adder
+    carry_lookahead_adder cla(
+        .a(a),
+        .b(b),
+        .cin(cin),
+        .sum(adder_sum),
+        .cout(adder_cout)
+    );
+
+    // Full Adder using transmission gates and inverters
+    full_adder_tg fa(
+        .a(fa_a),
+        .b(fa_b),
+        .cin(fa_cin),
+        .sum(fa_sum),
+        .cout(fa_cout)
+    );
+
+    // Combine results
+    final_output_module fom(
+        .adder_sum(adder_sum),
+        .fa_sum(fa_sum),
+        .final_sum(final_sum)
+    );
+
+    assign cout = /* RTL_BENCHLS_MASK: restore expression */;
+
+endmodule
+
+module carry_lookahead_adder(
+    input [99:0] a,
+    input [99:0] b,
+    input cin,
+    output [99:0] sum,
+    output cout
+);
+
+    wire [99:0] g, p;
+    wire [100:0] c;
+
+    assign c[0] = cin;
+
+    genvar i;
+    generate
+        for (i = 0; i < 100; i = i + 1) begin : cla_logic
+            assign g[i] = a[i] & b[i];
+            assign p[i] = a[i] | b[i];
+            assign c[i+1] = g[i] | (p[i] & c[i]);
+            assign sum[i] = a[i] ^ b[i] ^ c[i];
+        end
+    endgenerate
+
+    assign cout = c[100];
+
+endmodule
+
+module full_adder_tg(
+    input a,
+    input b,
+    input cin,
+    output sum,
+    output cout
+);
+
+    wire w1, w2, w3, w4;
+    wire not_a, not_b, not_cin;
+
+    // Inverters
+    assign not_a = ~a;
+    assign not_b = ~b;
+    assign not_cin = ~cin;
+
+    // Transmission gates for sum
+    assign w1 = (a & b & cin) | (not_a & not_b & cin) | (not_a & b & not_cin) | (a & not_b & not_cin);
+    assign w2 = (not_a & not_b & not_cin) | (a & b & not_cin) | (a & not_b & cin) | (not_a & b & cin);
+    assign sum = w1 | w2;
+
+    // Transmission gates for carry-out
+    assign w3 = (a & b) | (b & cin);
+    assign w4 = (a & cin);
+    assign cout = w3 | w4;
+
+endmodule
+
+module final_output_module(
+    input [99:0] adder_sum,
+    input fa_sum,
+    output [99:0] final_sum
+);
+
+    assign final_sum = {adder_sum[99:1], fa_sum};
+
+endmodule

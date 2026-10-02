@@ -1,0 +1,54 @@
+module rtlpp_00214 (
+    input wire clk,
+    input wire rst_n,
+    input wire write_enable,
+    input wire [3:0] write_select,
+    input wire [31:0] write_value,
+    input wire read_a_enable,
+    input wire [3:0] read_a_select,
+    input wire read_b_enable,
+    input wire [3:0] read_b_select,
+    output reg [31:0] read_a_value,
+    output reg [31:0] read_b_value
+);
+
+    reg [31:0] registers [0:15];
+    integer i;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            for (i = 0; i < 16; i = i + 1) begin
+                registers[i] <= 32'b0;
+            end
+        end else if (write_enable) begin
+            if (write_select != 4'b0) begin
+                registers[write_select] <= write_value;
+            end
+        end
+    end
+
+    always @(*) begin
+        if (read_a_enable) begin
+            if (read_a_select == 4'b0) begin
+                read_a_value = 32'b0;
+            end else begin
+                read_a_value = registers[read_a_select];
+            end
+        end else begin
+            read_a_value = 32'bz;
+        end
+    end
+
+    always @(*) begin
+        if (read_b_enable) begin
+            if (read_b_select == 4'b0) begin
+                read_b_value = 32'b0;
+            end else begin
+                read_b_value = registers[read_b_select];
+            end
+        end else begin
+            read_b_value = 32'bz;
+        end
+    end
+
+endmodule

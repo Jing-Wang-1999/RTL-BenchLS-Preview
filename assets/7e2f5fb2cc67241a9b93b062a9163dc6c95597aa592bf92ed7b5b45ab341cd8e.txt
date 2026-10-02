@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""Explicit reviewed protocols, golden replay and compile-valid RTL controls."""
+import importlib.util
+import json
+from pathlib import Path
+import re
+import shutil
+import difflib
+import hashlib
+
+HERE=Path(__file__).resolve().parent
+BASE=HERE.parents[4]
+spec=importlib.util.spec_from_file_location('initial',BASE/'scope2/task2_3_specification_round_trip/pipeline/qualify_github_b_20260909.py')
+initial=importlib.util.module_from_spec(spec);spec.loader.exec_module(initial)
+IV='/home/jwangjw/anaconda3/envs/securitylab/bin/iverilog'
+VVP='/home/jwangjw/anaconda3/envs/securitylab/bin/vvp'
+VER='/home/jwangjw/anaconda3/envs/securitylab/bin/verilator'
+
+CONFIGS=[
+ {'root':'github__pconst__basic_verilog','case':'cookbook_des_crypt','top':'passwd_crypt','test_index':40,'rule':'des',
+  'mutants':[('Advanced Synthesis Cookbook/crypto/des/des.v',b'assign out = d15;',b'assign out = ~d15;'),
+             ('Advanced Synthesis Cookbook/crypto/des/round.v',b'assign keyd = exp ^ round_key;',b'assign keyd = exp | round_key;')]},
+ {'root':'github__nonarkitten__amiga_replacement_project','case':'cia8520','top':'cia','test_index':0,'rule':'cia',
+  'mutants':[('cia/cia_timer.v',b'cnt_n = cnt_o - tick_n;',b'cnt_n = cnt_o + tick_n;'),
+             ('cia/cia_timer.v',b'assign prb_o = omd_i ? tgl_r : pls_w;',b'assign prb_o = omd_i ? ~tgl_r : ~pls_w;')]},
+ {'root':'github__t-k-233__risc-v-single-cycle-cpu','case':'riscv_core','top':'Core','test_index':2,'rule':'core',
+  'mutants':[('verilog/rtl/alu.v',b'out_add  = io_in_a + io_in_b;',b'out_add  = io_in_a - io_in_b;'),
+             ('verilog/rtl/alu.v',b'out_and  = io_in_a & io_in_b;',b'out_and  = io_in_a | io_in_b;')]},
+ {'root':'github__t-k-233__risc-v-single-cycle-cpu','case':'riscv_core','top':'Core','test_index':1,'rule':'alu','simulator':'verilator',
+  'mutants':[('verilog/rtl/alu.v',b'out_add  = io_in_a + io_in_b;',b'out_add  = io_in_a - io_in_b;')]},
+ {'root':'github__wangxuan95__fpga-ftdi245fifo','case':'ftdi245fifo','top':'ftdi_245fifo_top','test_index':0,'rule':'ftdi','standard':'-g2001',
+  'mutants':[('RTL/ftdi_245fifo/ftdi_245fifo_top.v',b'ftdi_master_oe ? ftdi_data_out :',b'ftdi_master_oe ? ~ftdi_data_out :'),
+             ('RTL/ftdi_245fifo/ftdi_245fifo_top.v',b'{tx_tlast, tx_tkeep, tx_tdata}',b'{tx_tlast, tx_tkeep, ~tx_tdata}')]}]
+
+RULES={
+ 'des':{'success':'normal upstream $stop completion with standalone PASS line and no mismatch/not as expected/FAIL diagnostics',
+        'failure':'DES mismatch, Encrypt/Decrypt not as expected, passwd FAIL, missing PASS, nonzero exit or timeout','limitations':[]},
+ 'cia':{'success':'normal exit, 86 upstream OK reports and no case-insensitive error/fatal/timeout; the bench invokes all tasks then $finish',
+        'failure':'read error or ERROR mismatch/timeout printed by unchanged upstream tasks, nonzero exit, or external timeout',
+        'limitations':['The upstream testbench references internal ciaa.ciai hierarchy; preserve those tested hierarchy names in the generation interface contract.','Upstream cia_read_check uses != and may not reject unknown values; this limitation is preserved.']},
+ 'core':{'success':'normal exit and exactly the 65 upstream Test ... passed! reports, with no Failed/Error/timeout',
+         'failure':'upstream [Failed] Timeout ... expected_result ... got ... or execution failure/incomplete report count',
+         'limitations':['The upstream test writes and reads internal register-file hierarchy; preserve tested hierarchy names in the generation interface contract.']},
+ 'alu':{'success':'normal exit, [TEST] All tests passed. and no Test Failed/Error/timeout, with Verilator --assert enabled',
+        'failure':'upstream ... Test Failed ... report, absent success marker, nonzero exit or timeout','limitations':[]},
+ 'ftdi':{'success':'normal finite 100-us upstream run, at least one returned byte, and no *** error message; returned bytes must follow upstream expected increasing sequence',
+         'failure':'*** error : data incorrect or upstream AXI-stream checker errors, no returned bytes, nonzero exit or timeout',
+         'limitations':['This upstream bench checks observed loopback bytes and protocol, but does not enforce a minimum transfer count beyond nonempty activity. Helper chip model is not an independent testbench.']}}
+
+def evaluate(rule, output, execution):
+    if execution['timeout'] or execution['exit_code']!=0:return False
+    if re.search(r'error|failed|fatal|timeout',output,re.I):return False
+    if rule=='des':return bool(re.search(r'^PASS$',output,re.M)) and not re.search(r'mismatch|not as expected|FAIL',output,re.I)
+    if rule=='cia':return len(re.findall(r'^OK @',output,re.M))==86
+    if rule=='core':return len(re.findall(r'Test\s+.*?passed!',output))==65
+    if rule=='alu':return bool(re.search(r'All tests passed\.',output,re.I))
+    if rule=='ftdi':
+        output=re.sub(r'^VCD info:.*\n','',output)
+        # Icarus 12 appends source:line $finish diagnostics without a newline
+        # after the last upstream $write byte; do not parse its line number.
+        prefix=re.match(r'((?:\s+[0-9a-fA-F]{2})+)',output)
+        values=prefix.group(1).split() if prefix else []
+        return bool(values) and all(int(v,16)==i%256 for i,v in enumerate(values))
+    raise ValueError(rule)
+
+def main():
+  reviewed=[]
+  selected=__import__('sys').argv[1:]
+  if selected:
+    old=json.loads((HERE/'reviewed_testpoints.json').read_text()) if (HERE/'reviewed_testpoints.json').exists() else []
+    reviewed=[x for x in old if x['case_id'] not in selected]
+  for c in CONFIGS:
+    if selected and c['case'] not in selected:continue
+    root=HERE/'roots'/c['root'];r=json.loads((root/'result.json').read_text());t=r['testbenches'][c['test_index']]
+    run=root/'reviewed'/str(c['test_index']);stage=run/'golden';run.mkdir(parents=True,exist_ok=True)
+    oldstage=BASE/t['evidence']/'source'
+    if c['rule']=='alu':
+        shutil.copytree(root/'testbenches/2/source',stage,dirs_exist_ok=True)
+        q=stage/t['path'];q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(oldstage/t['path'],q)
+        files=[t['path'],'verilog/rtl/alu.v'];top='TB_ALU'
+    else:
+        shutil.copytree(oldstage,stage,dirs_exist_ok=True);files=t['compiled_files'];top=t['top']
+    if c['rule']=='ftdi':files=sorted(files)
+    hashes={str(p.relative_to(stage)):hashlib.sha256(p.read_bytes()).hexdigest() for p in stage.rglob('*') if p.is_file()}
+    def replay(staged,folder):
+        folder.mkdir(parents=True,exist_ok=True)
+        includes=sorted({str((staged/f).parent) for f in hashes})
+        if c.get('simulator')=='verilator':
+            cmd=[VER,'--binary','--timing','--assert','-Wno-fatal','--top-module',top,'--Mdir',str(folder/'obj_dir'),*[ '-I'+x for x in includes],*[str(staged/f) for f in files]]
+            compiled=initial.command(cmd,staged,folder/'compile.log',60)
+            simcmd=[str(folder/'obj_dir'/('V'+top))]
+        else:
+            cmd=[IV,c.get('standard','-g2012'),'-s',top,'-o',str(folder/'sim.vvp'),*[x for d in includes for x in ['-I',d]],*[str(staged/f) for f in files]]
+            compiled=initial.command(cmd,staged,folder/'compile.log',20);simcmd=[VVP,'-n',str(folder/'sim.vvp')]
+        result={'compile':compiled}
+        if compiled['exit_code']==0:
+            simulation=initial.command(simcmd,(staged/t['path']).parent,folder/'simulation.log',20)
+            result.update(simulation=simulation,pass_rule_result=evaluate(c['rule'],(folder/'simulation.log').read_text(errors='replace'),simulation))
+        else:result['pass_rule_result']=False
+        return result
+    golden=replay(stage,run/'golden_run');mutants=[]
+    for i,(path,before,after) in enumerate(c['mutants']):
+        mdir=run/'mutants'/str(i); mstage=mdir/'source';shutil.copytree(stage,mstage,dirs_exist_ok=True)
+        original=(mstage/path).read_bytes();assert original.count(before)==1,(path,before,original.count(before))
+        changed=original.replace(before,after,1);(mstage/path).write_bytes(changed)
+        diff=''.join(difflib.unified_diff(original.decode().splitlines(True),changed.decode().splitlines(True),fromfile='golden/'+path,tofile='mutant/'+path))
+        (mdir/'mutation.diff').write_text(diff)
+        result=replay(mstage,mdir/'run');result.update(path=path,before=before.decode(),after=after.decode(),diff=str((mdir/'mutation.diff').relative_to(BASE)),
+                compile_valid=result['compile']['exit_code']==0,detected=result['compile']['exit_code']==0 and not result['pass_rule_result'])
+        mutants.append(result)
+    point={'id':t['id'],'target':c['top'] if c['rule']!='alu' else 'ALU','tb_top':top,'testbench':t['path'],
+           'compiled_files':files,'source_revision':r['source']['revision'],'source_hashes':hashes,'rule_id':c['rule'],'evaluation_rule':RULES[c['rule']],
+           'golden':golden,'mutants':mutants,'qualified':golden['pass_rule_result'] and all(m['compile_valid'] and m['detected'] for m in mutants),
+           'score_unit':'one entire upstream testbench','evidence':str(run.relative_to(BASE))}
+    initial.dump(run/'qualification.json',point)
+    reviewed.append({'root':c['root'],'project_id':r['project_id'],'case_id':c['case'],'project_top':c['top'],'point':point})
+    print(c['case'],c['rule'],'golden',golden['pass_rule_result'],'mutants',[m['detected'] for m in mutants],flush=True)
+  initial.dump(HERE/'reviewed_testpoints.json',reviewed)
+
+if __name__=='__main__':main()

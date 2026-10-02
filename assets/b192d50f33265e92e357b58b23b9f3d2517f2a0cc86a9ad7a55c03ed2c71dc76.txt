@@ -1,0 +1,59 @@
+module origen_134492 (
+    input [3:0] a,
+    input [3:0] b,
+    output [3:0] final_output
+);
+    // CLA signals
+    wire [3:0] p, g;
+    wire [4:0] c;
+    wire [3:0] sum;
+    wire cout;
+    
+    // Priority encoder signals
+    wire [4:0] sum_carry;
+    wire [1:0] sel;
+    
+    // Multiplexer signals
+    wire [4:0] mux_out;
+    
+    // Functional module signals
+    wire [3:0] xor_result, and_result;
+    
+    // CLA: Generate propagate and generate signals
+    assign p = a ^ b;
+    assign g = a & b;
+    
+    // CLA: Carry lookahead logic
+    assign c[0] = 1'b0;
+    assign c[1] = g[0] | (p[0] & c[0]);
+    assign c[2] = g[1] | (p[1] & g[0]) | (p[1] & p[0] & c[0]);
+    assign c[3] = g[2] | (p[2] & g[1]) | (p[2] & p[1] & g[0]) | (p[2] & p[1] & p[0] & c[0]);
+    assign c[4] = g[3] | (p[3] & g[2]) | (p[3] & p[2] & g[1]) | (p[3] & p[2] & p[1] & g[0]) | (p[3] & p[2] & p[1] & p[0] & c[0]);
+    
+    // CLA: Sum calculation
+    assign sum = p ^ c[3:0];
+    assign cout = c[4];
+    
+    // Priority encoder input
+    assign sum_carry = {cout, sum};
+    
+    // Priority encoder logic
+    assign sel = sum_carry[4] ? 2'b11 :
+                 sum_carry[3] ? 2'b10 :
+                 sum_carry[2] ? 2'b01 :
+                 2'b00;
+    
+    // 3-to-1 Multiplexer
+    assign mux_out = (sel == 2'b00) ? {1'b0, a} :
+                     (sel == 2'b01) ? {1'b0, b} :
+                     sum_carry;
+    
+    // Functional module: XOR path
+    assign xor_result = (mux_out[3:0] ^ a) ^ b;
+    
+    // Functional module: AND path
+    assign and_result = (sum_carry[3:0] & a) & b;
+    
+    // Final output selection based on MSB of mux_out
+    assign final_output = mux_out[4] ? and_result : xor_result;
+endmodule

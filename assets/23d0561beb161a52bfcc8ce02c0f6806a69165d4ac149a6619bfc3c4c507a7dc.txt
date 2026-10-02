@@ -1,0 +1,85 @@
+module dma_tdsp_bus_arbiter (
+	reset,
+	clk,
+	dma_breq,
+	dma_grant,
+	tdsp_breq,
+	tdsp_grant
+	);
+  
+  input
+  	reset,
+  	clk,
+  	dma_breq,
+  	tdsp_breq;
+  
+  output reg
+  	dma_grant,
+  	tdsp_grant;
+
+  // Define the states and associated IDs
+  localparam IDLE = 3'b000;
+  localparam GRANT_TDSP = 3'b001;
+  localparam GRANT_DMA = 3'b010;
+  localparam DMA_PRI = 3'b011;
+  localparam CLEAR = 3'b100;
+
+  reg [2:0] state; 
+  reg [2:0] next_state;
+
+  always@(posedge clk or posedge reset)
+    begin
+      if(reset)
+        begin
+          state <= IDLE;
+        end
+      else
+        state <= next_state;
+    end
+
+  /* RTL_BENCHLS_MASK: restore missing process */
+
+  always@(posedge clk or posedge reset)
+    begin
+		if(reset)
+			begin
+				dma_grant <= 1'b0;
+				tdsp_grant <= 1'b0;
+			end
+		else
+			begin
+				case(next_state)
+				  IDLE:
+					 begin
+						dma_grant = 1'b0;
+						tdsp_grant = 1'b0;
+					 end
+				  GRANT_TDSP:
+					 begin
+						dma_grant = 1'b0;
+						tdsp_grant = 1'b1;
+					 end
+				  GRANT_DMA:
+					 begin
+						dma_grant = 1'b1;
+						tdsp_grant = 1'b0;
+					 end
+				  DMA_PRI:
+					 begin
+						dma_grant = 1'b0;
+						tdsp_grant = 1'b0;
+					 end
+				  CLEAR:
+					 begin
+						dma_grant = 1'b0;
+						tdsp_grant = 1'b1;
+					 end
+				  default:
+					 begin
+						dma_grant = 1'b0;
+						tdsp_grant = 1'b0;
+					 end
+				endcase
+		end
+    end
+endmodule

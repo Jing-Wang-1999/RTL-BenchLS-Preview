@@ -1,0 +1,67 @@
+// distributed under the mit license
+// https://opensource.org/licenses/mit-license.php
+
+`timescale 1 ns / 1 ps
+`default_nettype none
+
+module axicb_mst_switch_wr
+
+    #(
+        
+        parameter AXI_ID_W = 8,
+        
+        parameter AXI_DATA_W = 8,
+
+        
+        parameter MST_NB = 4,
+
+        
+        parameter NUM_PRIORITY_LVL = 4,
+
+        
+        parameter TIMEOUT_ENABLE = 1,
+
+        
+        parameter [AXI_ID_W*MST_NB-1:0] MST_ID_MASK = 'h30_20_10_00,
+
+        
+        parameter PRIORITY_W = 2,
+        parameter [PRIORITY_W*MST_NB-1:0] MST_PRIORITY = 0,
+
+        
+        parameter AWCH_W = 8,
+        parameter WCH_W = 8,
+        parameter BCH_W = 8,
+        parameter ARCH_W = 8,
+        parameter RCH_W = 8
+    )(
+        
+        input  wire                           aclk,
+        input  wire                           aresetn,
+        input  wire                           srst,
+        
+        input  wire  [MST_NB            -1:0] i_awvalid,
+        output logic [MST_NB            -1:0] i_awready,
+        input  wire  [MST_NB*AWCH_W     -1:0] i_awch,
+        input  wire  [MST_NB            -1:0] i_wvalid,
+        output logic [MST_NB            -1:0] i_wready,
+        input  wire  [MST_NB            -1:0] i_wlast,
+        input  wire  [MST_NB*WCH_W      -1:0] i_wch,
+        output logic [MST_NB            -1:0] i_bvalid,
+        input  wire  [MST_NB            -1:0] i_bready,
+        output logic [BCH_W             -1:0] i_bch,
+        
+        output logic                          o_awvalid,
+        input  wire                           o_awready,
+        output logic [AWCH_W            -1:0] o_awch,
+        output logic                          o_wvalid,
+        input  wire                           o_wready,
+        output logic                          o_wlast,
+        output logic [WCH_W             -1:0] o_wch,
+        input  wire                           o_bvalid,
+        output logic                          o_bready,
+        input  wire  [BCH_W             -1:0] o_bch
+    );
+endmodule
+
+`resetall

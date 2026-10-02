@@ -1,0 +1,84 @@
+{
+  "pr_url": "https://github.com/lowRISC/opentitan/pull/12505",
+  "issue_url": "https://github.com/lowRISC/opentitan/issues/12502",
+  "repository": "lowRISC/opentitan",
+  "pr_number": 12505,
+  "issue_number": 12502,
+  "verilog_files": [
+    "hw/ip/spi_device/rtl/spi_device_pkg.sv",
+    "hw/ip/spi_device/rtl/spi_passthrough.sv",
+    "hw/ip/spi_host/dv/env/spi_passthrough_if.sv",
+    "hw/ip/spi_host/dv/tb.sv",
+    "hw/ip/spi_host/rtl/spi_host.sv"
+  ],
+  "deletions": 12,
+  "additions": 14,
+  "patches": [
+    {
+      "filename": "hw/ip/spi_device/rtl/spi_device_pkg.sv",
+      "patch": "@@ -16,7 +16,6 @@ package spi_device_pkg;\n     // Passthrough includes SCK also. The sck_en is pad out enable not CG\n     // enable. The CG is placed in SPI_DEVICE IP.\n     logic       sck;\n-    logic       sck_gate_en; // TBD: place for CG?\n     logic       sck_en;\n \n     // CSb should be pull-up pad. In passthrough mode, CSb is directly connected\n@@ -38,7 +37,6 @@ package spi_device_pkg;\n   parameter passthrough_req_t PASSTHROUGH_REQ_DEFAULT = '{\n     passthrough_en: 1'b 0,\n     sck:            1'b 0,\n-    sck_gate_en:    1'b 0,\n     sck_en:         1'b 0,\n     csb:            1'b 1,\n     csb_en:         1'b 0,",
+      "additions": 0,
+      "deletions": 2,
+      "changes": 2
+    },
+    {
+      "filename": "hw/ip/spi_device/rtl/spi_passthrough.sv",
+      "patch": "@@ -639,9 +639,19 @@ module spi_passthrough\n     else         host_s_en_o <= host_s_en_inclk;\n   end\n \n-  assign passthrough_o.sck_gate_en = sck_gate_en;\n-  assign passthrough_o.sck         = host_sck_i;\n-  assign passthrough_o.sck_en      = 1'b 1;\n+  logic pt_gated_sck;\n+  prim_clock_gating #(\n+    .NoFpgaGate    (1'b 0),\n+    .FpgaBufGlobal (1'b 1) // Going outside of chip\n+  ) u_pt_sck_cg (\n+    .clk_i     (host_sck_i  ),\n+    .en_i      (sck_gate_en ),\n+    .test_en_i (1'b 0       ), // No FF connected to this gated SCK\n+    .clk_o     (pt_gated_sck)\n+  );\n+\n+  assign passthrough_o.sck    = pt_gated_sck;\n+  assign passthrough_o.sck_en = 1'b 1;\n \n   // CSb propagation:  csb_deassert signal should be an output of FF or latch to\n   // make CSb glitch-free.",
+      "additions": 13,
+      "deletions": 3,
+      "changes": 16
+    },
+    {
+      "filename": "hw/ip/spi_host/dv/env/spi_passthrough_if.sv",
+      "patch": "@@ -9,7 +9,6 @@ interface spi_passthrough_if\n \n   bit       passthrough_en;\n   bit       sck;\n-  bit       sck_gate_en;\n   bit       sck_en;\n   bit       csb;\n   bit       csb_en;",
+      "additions": 0,
+      "deletions": 1,
+      "changes": 1
+    },
+    {
+      "filename": "hw/ip/spi_host/dv/tb.sv",
+      "patch": "@@ -83,22 +83,20 @@ module tb;\n       passthrough_i.sck_en <= 1'b0;\n       passthrough_i.csb_en <= 1'b0;\n       passthrough_i.s_en   <= 1'b0;\n-      passthrough_i.sck_gate_en <= 1'b0;\n       passthrough_i.csb    <= 1'b1;\n     end else begin\n       passthrough_i.passthrough_en <= spi_passthrough_if.passthrough_en;\n       passthrough_i.sck_en         <= spi_passthrough_if.sck_en;\n       passthrough_i.csb_en         <= spi_passthrough_if.csb_en;\n       passthrough_i.s_en           <= spi_passthrough_if.s_en;\n-      passthrough_i.sck_gate_en    <= spi_passthrough_if.sck_gate_en;\n       passthrough_i.csb            <= spi_passthrough_if.csb;\n   end\n   end\n \n   assign passthrough_i.s      = spi_passthrough_if.is;\n   assign spi_passthrough_if.os = passthrough_o.s;\n   assign spi_passthrough_if.cio_sd_o = cio_sd_o;\n-  \n+\n   assign cio_sd_i =  spi_passthrough_if.passthrough_en ? spi_passthrough_if.cio_sd_i : si_pulldown;\n \n   // configure spi_if i/o",
+      "additions": 1,
+      "deletions": 3,
+      "changes": 4
+    },
+    {
+      "filename": "hw/ip/spi_host/rtl/spi_host.sv",
+      "patch": "@@ -153,9 +153,6 @@ module spi_host\n \n   end                   : gen_passthrough_ignore\n \n-  logic unused_pt_sck_gate_en;\n-  assign unused_pt_sck_gate_en = passthrough_i.sck_gate_en;\n-\n   assign passthrough_o.s = cio_sd_i;\n   assign sd_i            = cio_sd_i;\n ",
+      "additions": 0,
+      "deletions": 3,
+      "changes": 3
+    }
+  ],
+  "pr_info": {
+    "title": "fix(spi_device): Placed CG on Passthrough SCK",
+    "body": "This commit places a clock gating cell on the passthrough SCK path. The\r\ngated SCK clock does not drive any logic inside the chip but goes out to\r\nthe PAD and downstream SPI Flash device.\r\n\r\nIssue #12502 ",
+    "state": "closed",
+    "created_at": "2022-05-05T23:18:55Z",
+    "updated_at": "2022-05-06T03:23:15Z",
+    "merged_at": "2022-05-06T03:23:13Z",
+    "user": "eunchan"
+  },
+  "issue_info": {
+    "title": "[spi_device] Insert Clock Gating for passthrough SCK",
+    "body": "SCK in the passthrough is expected to be gated by `passthrough_req_t.sck_gate_en`. In the current design, neither SPI_DEVICE nor SPI_HOST has a clock gating cell to create gated SCK.\r\n\r\nI will revise SPI_DEVICE to have clock gating cell and connect gated clock to `passthrough_req_t.sck`. Thanks for finding this @tjaychen !!\r\n\r\nCC: @tjaychen @martin-lueker @arnonsha ",
+    "labels": [
+      "Priority:P1",
+      "Type:Bug",
+      "Component:RTL",
+      "IP:spi_device"
+    ],
+    "state": "closed",
+    "created_at": "2022-05-05T22:44:29Z",
+    "updated_at": "2022-05-06T16:45:52Z"
+  },
+  "source_info": {
+    "source_file": "12.txt",
+    "line_number": 2060
+  },
+  "base_commit": "bb6cc576b612d859452caeaf4f851e87761fa434",
+  "head_commit": "d8c19ccc57e371a9651ebf9340e9adc94604fbdd",
+  "base_ref": "master",
+  "task_id": "lowRISC_opentitan_12505_12502",
+  "lec_status": "useful_pass"
+}

@@ -1,0 +1,25 @@
+always @ (posedge clk or posedge reset)
+begin
+   if (reset)
+   begin
+      sbox_in_valid <= 1'b0;
+      sbox_in[31:0] <= 32'b0;
+   end
+   else if (state[1:0] == START) // rotword
+   begin
+      sbox_in_valid <= 1'b1;
+      if (key_mode == 2'b00) //128
+         sbox_in[31:0] <= {w3[23:0],w3[31:24]};
+      else if (key_mode == 2'b01) //192
+         sbox_in[31:0] <= {w5[23:0],w5[31:24]};
+      else //256
+         sbox_in[31:0] <= {w7[23:0],w7[31:24]};
+   end
+   else if ((state[1:0] == GENKEY_256) && (pstate[1:0] ==GENKEY1))
+   begin
+      sbox_in_valid <= 1'b1;
+      sbox_in[31:0] <= w3[31:0];
+   end
+   else
+      sbox_in_valid <= 1'b0;
+end

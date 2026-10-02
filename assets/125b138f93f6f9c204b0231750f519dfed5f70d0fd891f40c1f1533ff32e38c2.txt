@@ -1,0 +1,26 @@
+The module is a 32-bit result selector with associated flag outputs. It chooses one of fourteen 32-bit input values based on a 4-bit control code and outputs the selected value along with a carry flag and an overflow flag.
+
+**Inputs:**
+- Fourteen 32-bit data inputs: `t0` through `t13`.
+- A 4-bit ALU control code: `aluc`.
+- A 6-bit configuration vector: `c`.
+- A 2-bit overflow configuration vector: `o`.
+
+**Outputs:**
+- A 32-bit result: `r`.
+- A 1-bit carry flag: `carry`.
+- A 1-bit overflow flag: `overflow`.
+
+**Behavior:**
+The module continuously (combinatorially) selects an output based on the value of `aluc`. For each specific `aluc` value from 0 to 13, the corresponding `t` input is assigned to the result output `r`. For any `aluc` value outside the range 0-13, the result `r` is set to zero.
+
+The carry flag is always driven by bit 0 (`c[0]`) of the configuration input, regardless of the selected operation, except in the default case.
+
+The overflow flag is determined as follows:
+- For `aluc` = 0, overflow is forced to 0.
+- For `aluc` = 1 or 2, overflow is driven by bit 0 (`o[0]`) of the overflow configuration input.
+- For `aluc` = 3 through 13, overflow is driven by bit 1 (`c[1]`) of the configuration input.
+- In the default case (invalid `aluc`), overflow is forced to 0.
+
+**Allowed Sub-modules:**
+None. The function is implemented as a pure combinational multiplexer and logic.

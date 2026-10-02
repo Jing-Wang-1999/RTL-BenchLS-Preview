@@ -1,0 +1,54 @@
+module origen_040381 (
+    input wire clk,
+    input wire mem_read,
+    input wire mem_write,
+    input wire [31:0] address,
+    input wire [31:0] data_in,
+    output reg [31:0] data_out
+);
+
+    parameter BASE_ADDRESS = 25'h0;
+
+    reg [31:0] mem_array [0:31];
+    wire [4:0] mem_offset;
+    wire address_select;
+
+    assign mem_offset = address[6:2];
+    assign address_select = (address[31:7] == BASE_ADDRESS);
+
+    initial begin
+        mem_array[0] = 32'd0;
+        mem_array[1] = 32'd1;
+        mem_array[2] = 32'd2;
+        mem_array[3] = 32'd3;
+        mem_array[4] = 32'd4;
+        mem_array[5] = 32'd5;
+        mem_array[6] = 32'd6;
+    end
+
+    always @(*) begin
+        if (mem_read && address_select) begin
+            if (address[1:0] != 2'b00) begin
+                $display("Error: Unaligned memory read at address %h", address);
+                data_out = 32'bx;
+            end else begin
+                data_out = mem_array[mem_offset];
+                $display("Memory read: Address = %h, Data = %h", address, data_out);
+            end
+        end else begin
+            data_out = 32'bx;
+        end
+    end
+
+    always @(posedge clk) begin
+        if (mem_write && address_select) begin
+            if (address[1:0] != 2'b00) begin
+                $display("Error: Unaligned memory write at address %h", address);
+            end else begin
+                mem_array[mem_offset] <= data_in;
+                $display("Memory write: Address = %h, Data = %h", address, data_in);
+            end
+        end
+    end
+
+endmodule

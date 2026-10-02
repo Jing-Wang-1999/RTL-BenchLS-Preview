@@ -1,0 +1,150 @@
+module __formal113_core_387b4807b478 (
+    MonDReg,
+    break_readreg,
+    clk,
+    dbrk_hit0_latch,
+    dbrk_hit1_latch,
+    dbrk_hit2_latch,
+    dbrk_hit3_latch,
+    debugack,
+    monitor_error,
+    monitor_ready,
+    reset_n,
+    resetlatch,
+    tracemem_on,
+    tracemem_trcdata,
+    tracemem_tw,
+    trc_im_addr,
+    trc_on,
+    trc_wrap,
+    trigbrktype,
+    trigger_state_1,
+    jdo,
+    jrst_n,
+    st_ready_test_idle,
+    take_action_break_a,
+    take_action_break_b,
+    take_action_break_c,
+    take_action_ocimem_a,
+    take_action_ocimem_b,
+    take_action_tracectrl,
+    take_no_action_break_a,
+    take_no_action_break_b,
+    take_no_action_break_c,
+    take_no_action_ocimem_a
+);
+
+output [37:0] jdo;
+output jrst_n;
+output st_ready_test_idle;
+output take_action_break_a;
+output take_action_break_b;
+output take_action_break_c;
+output take_action_ocimem_a;
+output take_action_ocimem_b;
+output take_action_tracectrl;
+output take_no_action_break_a;
+output take_no_action_break_b;
+output take_no_action_break_c;
+output take_no_action_ocimem_a;
+
+input [31:0] MonDReg;
+input [31:0] break_readreg;
+input clk;
+input dbrk_hit0_latch;
+input dbrk_hit1_latch;
+input dbrk_hit2_latch;
+input dbrk_hit3_latch;
+input debugack;
+input monitor_error;
+input monitor_ready;
+input reset_n;
+input resetlatch;
+input tracemem_on;
+input [35:0] tracemem_trcdata;
+input tracemem_tw;
+input [6:0] trc_im_addr;
+input trc_on;
+input trc_wrap;
+input trigbrktype;
+input trigger_state_1;
+
+wire [37:0] sr;
+wire vji_cdr, vji_sdr, vji_tck, vji_tdi, vji_tdo, vji_rti, vji_udr, vji_uir;
+wire [1:0] vji_ir_in, vji_ir_out;
+
+// Embed the logic previously in nios_soc_nios2_gen2_0_cpu_debug_slave_tck
+
+// --- (simplified internal logic for nios_soc_nios2_gen2_0_cpu_debug_slave_tck)
+assign jrst_n = reset_n & ~resetlatch;
+assign sr = {tracemem_trcdata, tracemem_tw, trc_im_addr, trc_on, trc_wrap};
+
+// -- (simplified control logic)
+assign vji_tdo = 1'b0;
+assign st_ready_test_idle = monitor_ready & ~monitor_error;
+assign take_action_break_a = ~trigbrktype & trigger_state_1;
+assign take_action_break_b = trigbrktype & ~trigger_state_1;
+assign take_action_break_c = trigbrktype & trigger_state_1;
+assign take_action_ocimem_a = tracemem_on;
+assign take_action_ocimem_b = tracemem_tw;
+assign take_action_tracectrl = tracemem_on & tracemem_tw;
+assign take_no_action_break_a = ~(trigger_state_1);
+assign take_no_action_break_b = ~(trigbrktype);
+assign take_no_action_break_c = ~(tracemem_on);
+assign take_no_action_ocimem_a = ~(tracemem_tw);
+
+// Embed the logic previously in nios_soc_nios2_gen2_0_cpu_debug_slave_sysclk
+
+// --- (simplified internal logic for nios_soc_nios2_gen2_0_cpu_debug_slave_sysclk)
+assign jdo = sr;
+
+// --- default assignments to constant wire signals
+assign vji_tck = 1'b0;
+assign vji_tdi = 1'b0;
+assign vji_sdr = 1'b0;
+assign vji_cdr = 1'b0;
+assign vji_rti = 1'b0;
+assign vji_uir = 1'b0;
+assign vji_udr = 1'b0;
+assign vji_ir_in = 2'b0;
+
+endmodule
+module nios_debug_slave_bridge_c(
+  input wire [31:0] MonDReg,
+  input wire [31:0] break_readreg,
+  input wire [0:0] clk,
+  input wire [0:0] dbrk_hit0_latch,
+  input wire [0:0] dbrk_hit1_latch,
+  input wire [0:0] dbrk_hit2_latch,
+  input wire [0:0] dbrk_hit3_latch,
+  input wire [0:0] debugack,
+  input wire [0:0] monitor_error,
+  input wire [0:0] monitor_ready,
+  input wire [0:0] reset_n,
+  input wire [0:0] resetlatch,
+  input wire [0:0] tracemem_on,
+  input wire [35:0] tracemem_trcdata,
+  input wire [0:0] tracemem_tw,
+  input wire [6:0] trc_im_addr,
+  input wire [0:0] trc_on,
+  input wire [0:0] trc_wrap,
+  input wire [0:0] trigbrktype,
+  input wire [0:0] trigger_state_1,
+  output wire [37:0] jdo,
+  output wire [0:0] jrst_n,
+  output wire [0:0] st_ready_test_idle,
+  output wire [0:0] take_action_break_a,
+  output wire [0:0] take_action_break_b,
+  output wire [0:0] take_action_break_c,
+  output wire [0:0] take_action_ocimem_a,
+  output wire [0:0] take_action_ocimem_b,
+  output wire [0:0] take_action_tracectrl,
+  output wire [0:0] take_no_action_break_a,
+  output wire [0:0] take_no_action_break_b,
+  output wire [0:0] take_no_action_break_c,
+  output wire [0:0] take_no_action_ocimem_a
+);
+wire [37:0] __negative_output;
+__formal113_core_387b4807b478 dut(.MonDReg(MonDReg), .break_readreg(break_readreg), .clk(clk), .dbrk_hit0_latch(dbrk_hit0_latch), .dbrk_hit1_latch(dbrk_hit1_latch), .dbrk_hit2_latch(dbrk_hit2_latch), .dbrk_hit3_latch(dbrk_hit3_latch), .debugack(debugack), .monitor_error(monitor_error), .monitor_ready(monitor_ready), .reset_n(reset_n), .resetlatch(resetlatch), .tracemem_on(tracemem_on), .tracemem_trcdata(tracemem_trcdata), .tracemem_tw(tracemem_tw), .trc_im_addr(trc_im_addr), .trc_on(trc_on), .trc_wrap(trc_wrap), .trigbrktype(trigbrktype), .trigger_state_1(trigger_state_1), .jdo(__negative_output), .jrst_n(jrst_n), .st_ready_test_idle(st_ready_test_idle), .take_action_break_a(take_action_break_a), .take_action_break_b(take_action_break_b), .take_action_break_c(take_action_break_c), .take_action_ocimem_a(take_action_ocimem_a), .take_action_ocimem_b(take_action_ocimem_b), .take_action_tracectrl(take_action_tracectrl), .take_no_action_break_a(take_no_action_break_a), .take_no_action_break_b(take_no_action_break_b), .take_no_action_break_c(take_no_action_break_c), .take_no_action_ocimem_a(take_no_action_ocimem_a));
+assign jdo = __negative_output ^ 38'd1;
+endmodule

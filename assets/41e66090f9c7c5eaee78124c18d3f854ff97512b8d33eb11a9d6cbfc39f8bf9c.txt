@@ -1,0 +1,32 @@
+always @(posedge clk)
+   if(cs_le)
+     begin
+	if(!bas)
+		casex({bus_width, mem_size})		// synopsys full_case parallel_case
+		   {2'h0, 2'h0}:		bank_adr <=  wb_addr_i[12:11];
+		   {2'h0, 2'h1}:	bank_adr <=  wb_addr_i[13:12];
+		   {2'h0, 2'h2}:	bank_adr <=  wb_addr_i[13:12];
+	
+		   {2'h1, 2'h0}:	bank_adr <=  wb_addr_i[11:10];
+		   {2'h1, 2'h1}:	bank_adr <=  wb_addr_i[12:11];
+		   {2'h1, 2'h2}:	bank_adr <=  wb_addr_i[12:11];
+	
+		   {2'h2, 2'h0}:	bank_adr <=  wb_addr_i[11:10];
+		   {2'h2, 2'h1}:	bank_adr <=  wb_addr_i[11:10];
+		   {2'h2, 2'h2}:	bank_adr <=  wb_addr_i[11:10];
+		endcase
+	else
+		casex({bus_width, mem_size})		// synopsys full_case parallel_case
+		   {2'h0, 2'h0}:		bank_adr <=  wb_addr_i[24:23];
+		   {2'h0, 2'h1}:	bank_adr <=  wb_addr_i[25:24];
+		   {2'h0, 2'h2}:	bank_adr <=  wb_addr_i[26:25];
+	
+		   {2'h1, 2'h0}:	bank_adr <=  wb_addr_i[23:22];
+		   {2'h1, 2'h1}:	bank_adr <=  wb_addr_i[24:23];
+		   {2'h1, 2'h2}:	bank_adr <=  wb_addr_i[25:24];
+	
+		   {2'h2, 2'h0}:	bank_adr <=  wb_addr_i[22:21];
+		   {2'h2, 2'h1}:	bank_adr <=  wb_addr_i[23:22];
+		   {2'h2, 2'h2}:	bank_adr <=  wb_addr_i[24:23];
+		endcase
+     end

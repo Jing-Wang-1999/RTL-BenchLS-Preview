@@ -1,0 +1,50 @@
+module autovcoder_102974 #(
+    parameter CDBITS     = 18,  // clock divider bits
+                                // Clock freq.  bits
+                                //       12MHz  16
+                                //       25MHz  17
+                                //       50MHz  18
+                                //      100MHz  19
+                                //      200MHz  20  etc.
+    parameter POL        = 0,   // polarization
+                                //   0 - common anode (output active low)
+                                //   1 - common cathode (output active high)
+    parameter SELECT_POL = 0    // output select signal polarization
+                                //   0 - active low
+                                //   1 - active high
+) (
+    input  wire        clk,     // system clock
+    input  wire [15:0] d,       // display digits, from left to right
+    input  wire [ 3:0] dp_in,   // decimal point input vector
+    input  wire        sign,    // sign
+    output wire [ 0:6] seg,     // 7-segment output
+    output wire [ 3:0] select,  // select output (controls common anode/cathode)
+    output wire        dp       // decimal point output vector
+);
+
+  wire [3:0] on_mask;
+  wire [3:0] sign_mask;
+
+  seg7_4d_ctrl_raw #(
+      .CDBITS(CDBITS),
+      .POL(POL),
+      .SELECT_POL(SELECT_POL)
+  ) seg7_4d_ctrl_raw (
+      .clk(clk),
+      .d(d),
+      .on_mask(on_mask),
+      .dp_in(dp_in),
+      .sign_mask(sign_mask),
+      .seg(seg),
+      .select(select),
+      .dp(dp)
+  );
+
+  seg7_4d_pad seg7_4d_pad (
+      .d        (d[15:4]),   // input digits
+      .sign     (sign),      // input sign (0 +, 1 -)
+      .on_mask  (on_mask),   // on-digits mask
+      .sign_mask(sign_mask)
+  );
+endmodule
+

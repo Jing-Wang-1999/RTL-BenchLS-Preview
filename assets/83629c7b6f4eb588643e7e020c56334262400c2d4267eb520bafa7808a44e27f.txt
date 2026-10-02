@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   pulse_per_second_receiver.v0, pulse_per_second_receiver.v1, pulse_per_second_receiver, clk, rst
+set DESIGN_NAME_GOLDEN "pulse_per_second_receiver.v0"
+set DESIGN_NAME "pulse_per_second_receiver.v1"
+set TOP_NAME "pulse_per_second_receiver"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_f30e91b926e48c90.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_f30e91b926e48c90.negative.v
+check_sec -elaborate -spec -top pulse_per_second_receiver -disable_auto_bbox
+check_sec -elaborate -imp -top pulse_per_second_receiver -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clk 
+reset rst
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof

@@ -1,0 +1,30 @@
+always @(*) begin
+	  case (currentState)
+	    Reset: begin
+	     nextState <= Idle;
+	    end
+	    Idle: begin
+	     if (trigger) begin 
+		   nextState <= Filter;
+	     end else 
+	       nextState <= Idle;
+	    end
+	    Filter: begin
+	     if (trigger == 1) begin 
+	       if (outstanding_r == 0)
+		     nextState <= Bypass;
+	       else
+		     nextState <= Filter;
+	     end else
+	      nextState <= Reset;
+	    end
+	    Bypass: begin
+	     if (trigger)
+	       nextState <= Bypass;
+	     else
+	       nextState <= Reset;
+	    end
+	    default:
+	     nextState <= Reset;
+	endcase 
+   end

@@ -1,0 +1,16 @@
+# mor1kx_dcache.v check_way_tag bus size
+
+https://github.com/openrisc/mor1kx/blob/master/rtl/verilog/mor1kx_dcache.v#L243
+
+``` verilog
+wire [TAG_WIDTH-1:0] check_way_tag [OPTION_DCACHE_WAYS-1:0];
+...
+assign check_way_tag[i] = tag_way_out[i][TAGMEM_WAY_WIDTH-1:0];
+```
+
+Though won't affect the design functionality, I suspect the assignment should read
+
+``` verilog
+assign check_way_tag[i] = tag_way_out[i][TAG_WIDTH-1:0];
+```
+

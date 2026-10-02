@@ -1,0 +1,5 @@
+# rtlpp_08205
+
+Inputs are `clk`, active-low asynchronous `rst_n`, `seg[7:0]`, and `sel[5:0]`. Registered outputs are `shcp`, `stcp`, and `ds`; output `oe` is continuously zero. Data is `{seg,sel}` with `sel[0]` at bit 0 and `seg[7]` at bit 13.
+
+Reset clears the two-bit phase counter, four-bit bit index, and all registered outputs. Each rising edge increments phase modulo four. At old phase 0, `ds` samples the currently indexed data bit and `shcp` clears; at old phase 2, `shcp` sets. At old phase 3, the bit index advances modulo 14. `stcp` sets at old phase 0/index 0 and clears at old phase 2/index 0, otherwise holding. Consequently bits are sampled in ascending order 0 through 13, one per four system clocks. Inputs are read live and are not latched as a word. No submodule exists.

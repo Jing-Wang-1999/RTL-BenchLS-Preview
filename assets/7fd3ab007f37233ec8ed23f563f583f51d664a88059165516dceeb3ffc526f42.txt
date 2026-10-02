@@ -1,0 +1,5 @@
+# autovcoder_032806
+
+This combinational MD5-style round block has unused one-bit input `clk`, round index `i_input[5:0]`, operands `A_input`, `B_input`, `C_input`, `D_input`, `Xk_plus_Ti_input`, and `input_shifter_base`, each 32 bits, shift amount `s_input[4:0]`, and result `int_B_output[31:0]`.
+
+Rounds 0–15 select `(B&C)|(~B&D)`, 16–31 select `(B&D)|(C&~D)`, 32–47 select `B^C^D`, and 48–63 select `C^(B|~D)`. Add the selected value, A, and Xk_plus_Ti modulo 2^32 to form F. The shift network sets `mask=~(input_shifter_base >> s_input)`, takes `lower=(F & mask) >> (32-s_input)`, and forms `rotated=(F << s_input)+lower`, all at 32-bit width. The output is `B_input+rotated` modulo 2^32. There is no state or reset.

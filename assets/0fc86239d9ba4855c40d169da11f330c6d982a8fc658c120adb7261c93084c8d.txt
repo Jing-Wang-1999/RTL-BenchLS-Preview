@@ -1,0 +1,24 @@
+module rtlpp_05301 (
+	address,
+	clock,
+	q
+);
+
+	input	[11:0]  address;
+	input	  clock;
+	output	[7:0]  q;
+	
+	reg [7:0] memory [0:4095];
+	reg [7:0] q_reg;
+	
+	assign q = q_reg;
+
+	initial begin
+		$readmemh("font.mif", memory);  // Read the memory initialization file (MIF) content
+	end
+
+	always @(posedge clock) begin
+		q_reg <= memory[address];
+	end
+
+endmodule

@@ -1,0 +1,63 @@
+module autovcoder_031602 (
+    input advanced_sw,
+    input [11:0] VGA_HORZ_COORD,
+    input [11:0] VGA_VERT_COORD,
+    output reg [3:0] VGA_Red_Grid,
+    output reg [3:0] VGA_Green_Grid,
+    output reg [3:0] VGA_Blue_Grid
+);
+
+    // Fixed parameters
+    localparam SCALE = 6;
+    localparam SCALE2 = 6;
+    localparam XADJUST = 30;
+    localparam YADJUST = 750;
+    localparam XADJUST2 = 1280 - 30 - (1280 / SCALE2);
+    localparam YADJUST2 = 750;
+    
+    // Box dimensions
+    localparam BOX1_WIDTH = 1280 / SCALE;
+    localparam BOX1_HEIGHT = 1024 / SCALE;
+    localparam BOX2_WIDTH = 1280 / SCALE2;
+    localparam BOX2_HEIGHT = 1024 / SCALE2;
+    
+    // Box boundaries
+    localparam BOX1_LEFT = XADJUST;
+    localparam BOX1_RIGHT = XADJUST + BOX1_WIDTH;
+    localparam BOX1_TOP = 1024 - YADJUST - BOX1_HEIGHT;
+    localparam BOX1_BOTTOM = 1024 - YADJUST;
+    
+    localparam BOX2_LEFT = XADJUST2;
+    localparam BOX2_RIGHT = XADJUST2 + BOX2_WIDTH;
+    localparam BOX2_TOP = 1024 - YADJUST2 - BOX2_HEIGHT;
+    localparam BOX2_BOTTOM = 1024 - YADJUST2;
+    
+    always @(*) begin
+        // Default black
+        VGA_Red_Grid = 4'b0;
+        VGA_Green_Grid = 4'b0;
+        VGA_Blue_Grid = 4'b0;
+        
+        if (advanced_sw) begin
+            // Check if pixel is on any box edge
+            if (
+                // Box 1 edges
+                (VGA_HORZ_COORD == BOX1_LEFT && VGA_VERT_COORD >= BOX1_TOP && VGA_VERT_COORD <= BOX1_BOTTOM) ||
+                (VGA_HORZ_COORD == BOX1_RIGHT && VGA_VERT_COORD >= BOX1_TOP && VGA_VERT_COORD <= BOX1_BOTTOM) ||
+                (VGA_VERT_COORD == BOX1_TOP && VGA_HORZ_COORD >= BOX1_LEFT && VGA_HORZ_COORD <= BOX1_RIGHT) ||
+                (VGA_VERT_COORD == BOX1_BOTTOM && VGA_HORZ_COORD >= BOX1_LEFT && VGA_HORZ_COORD <= BOX1_RIGHT) ||
+                // Box 2 edges
+                (VGA_HORZ_COORD == BOX2_LEFT && VGA_VERT_COORD >= BOX2_TOP && VGA_VERT_COORD <= BOX2_BOTTOM) ||
+                (VGA_HORZ_COORD == BOX2_RIGHT && VGA_VERT_COORD >= BOX2_TOP && VGA_VERT_COORD <= BOX2_BOTTOM) ||
+                (VGA_VERT_COORD == BOX2_TOP && VGA_HORZ_COORD >= BOX2_LEFT && VGA_HORZ_COORD <= BOX2_RIGHT) ||
+                (VGA_VERT_COORD == BOX2_BOTTOM && VGA_HORZ_COORD >= BOX2_LEFT && VGA_HORZ_COORD <= BOX2_RIGHT)
+            ) begin
+                // White
+                VGA_Red_Grid = 4'b1111;
+                VGA_Green_Grid = 4'b1111;
+                VGA_Blue_Grid = 4'b1111;
+            end
+        end
+    end
+
+endmodule

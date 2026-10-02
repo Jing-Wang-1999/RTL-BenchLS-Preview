@@ -1,0 +1,7 @@
+# rtlpp_03278 serial CRC controller
+
+Ports are scalar inputs data, enable, shift, rst, sync_rst and clk, and scalar outputs crc_out and crc_match. Maintain a 32-bit CRC state. rst is active-high asynchronous reset; sync_rst is active-high synchronous reset. Either reset loads all 32 bits with ones, with rst having highest priority. Normal state updates occur at rising clk edges.
+
+After reset priority, enable takes priority over shift. On enable, compute feedback as data XOR the old state bit 31. Shift the old state left by one, inserting zero at bit zero, then XOR feedback into bits {0,1,2,4,5,7,8,10,11,12,16,22,23,26}. Equivalently XOR the shifted state with 32'h04c11db7 when feedback is one. All update expressions use the pre-edge state; retain 32 bits. If enable is low and shift is high, shift state left by one inserting zero without polynomial feedback. If neither is high, retain the state.
+
+crc_out continuously equals state bit 31. crc_match continuously equals the logical comparison of the complete state to 32'h00000000. No external submodules or initial state beyond the reset contract are required.

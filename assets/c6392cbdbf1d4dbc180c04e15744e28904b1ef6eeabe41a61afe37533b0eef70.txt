@@ -1,0 +1,43 @@
+Instruction for LLM:
+
+Create a Verilog module named `lcd_reset_output_register` that is designed to manage an LCD reset signal. The primary function of this module is to hold and control a single bit output `out_port` based on the input `writedata` when write operations are performed. This module operates with the following specifics:
+
+1. The module has several inputs: `address`, `chipselect`, `clk`, `reset_n`, `write_n`, and `writedata`. It has two outputs: `out_port` and `readdata`.
+
+2. The module continuously enables its clock by setting `clk_en` to 1.
+
+3. The key operation takes place in an always block that is triggered on the rising edge of the clock (`clk`) or the falling edge of the reset (`reset_n`).
+   - If the reset signal (`reset_n`) is low, the output register `data_out` is reset to 0.
+   - Otherwise, if the `chipselect` is enabled, `write_n` is low (indicating a write operation), and `address` is 2'b00, the `data_out` is updated with the least significant bit (LSB) of `writedata`.
+
+4. The output `readdata` is a 32-bit wide bus where only the least significant bit reflects the `data_out` value, and the rest remain zeros.
+
+5. The output `out_port` is directly driven by `data_out`, so it reflects the same value as `data_out`.
+
+Make sure to capture the control flow with the conditions for resetting and writing to `data_out`, and ensure the appropriate signal interactions are maintained for updating `out_port` and `readdata`. The always block must handle the rising edge of `clk` and the falling edge of `reset_n`, with specific conditions for updating `data_out`.
+
+Here is the functional description needed for the Verilog module:
+
+- The module holds a reset signal for an LCD.
+- It updates a single bit output (`out_port`) based on a write operation determined by `chipselect`, `write_n`, and `address`.
+- The module resets `data_out` to 0 when `reset_n` is low.
+- The `data_out` is set to the LSB of `writedata` if the address is 2'b00, `chipselect` is high, and `write_n` is low.
+- `readdata` reflects the value of `data_out` in its least significant bit.
+
+This should provide enough detail for an LLM to generate the required Verilog code accurately.
+
+Module Interface:
+module lcd_reset_output_register (
+  address,
+  chipselect,
+  clk,
+  reset_n,
+  write_n,
+  writedata,
+  out_port,
+  readdata
+);
+
+Behavioral Clarifications:
+- The internal data register and out_port are 1 bit wide (single-bit scalar); readdata is 32 bits wide with upper 31 bits always zero. A combinational read_mux_out selects data_out only when address is 2'b00, otherwise 0.
+- clk_en is a wire assigned constant 1 but does not gate the sequential always block; reads and writes are not conditioned on clk_en in the always block.

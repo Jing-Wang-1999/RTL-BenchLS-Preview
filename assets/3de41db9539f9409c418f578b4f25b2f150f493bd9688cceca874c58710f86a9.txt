@@ -1,0 +1,75 @@
+module mg_10069 (
+    input wire clock,
+    input wire reset,
+    input wire req_0,
+    input wire req_1,
+    output reg gnt_0,
+    output reg gnt_1
+);
+
+    // State encoding
+    localparam IDLE = 3'b000,
+               GNT0 = 3'b001,
+               GNT1 = 3'b010;
+
+    reg [2:0] current_state, next_state;
+
+    // State transition logic
+    always @(posedge clock or posedge reset) begin
+        if (reset) begin
+            current_state <= IDLE;
+        end else begin
+            current_state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (current_state)
+            IDLE: begin
+                if (req_0)
+                    next_state = GNT0;
+                else if (req_1)
+                    next_state = GNT1;
+                else
+                    next_state = IDLE;
+            end
+            GNT0: begin
+                if (req_0)
+                    next_state = GNT0;
+                else
+                    next_state = IDLE;
+            end
+            GNT1: begin
+                if (req_1)
+                    next_state = GNT1;
+                else
+                    next_state = IDLE;
+            end
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Output logic
+    always @(*) begin
+        case (current_state)
+            IDLE: begin
+                gnt_0 = 0;
+                gnt_1 = 0;
+            end
+            GNT0: begin
+                gnt_0 = 1;
+                gnt_1 = 0;
+            end
+            GNT1: begin
+                gnt_0 = 0;
+                gnt_1 = 1;
+            end
+            default: begin
+                gnt_0 = 0;
+                gnt_1 = 0;
+            end
+        endcase
+    end
+
+endmodule

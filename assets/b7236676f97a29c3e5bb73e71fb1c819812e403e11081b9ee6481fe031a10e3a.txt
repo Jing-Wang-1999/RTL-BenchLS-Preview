@@ -1,0 +1,70 @@
+module origen_205408 (
+    input wire rst,
+    input wire clk,
+    input wire dispen,
+    input wire [15:0] cntr,
+    output reg [7:0] seg,
+    output reg [3:0] an
+);
+
+    reg [1:0] sel;
+    reg [3:0] seg_dig;
+
+    // 7-segment display decoder for hexadecimal digits
+    always @(*) begin
+        case (seg_dig)
+            4'h0: seg = 8'b11000000; // 0
+            4'h1: seg = 8'b11111001; // 1
+            4'h2: seg = 8'b10100100; // 2
+            4'h3: seg = 8'b10110000; // 3
+            4'h4: seg = 8'b10011001; // 4
+            4'h5: seg = 8'b10010010; // 5
+            4'h6: seg = 8'b10000010; // 6
+            4'h7: seg = 8'b11111000; // 7
+            4'h8: seg = 8'b10000000; // 8
+            4'h9: seg = 8'b10010000; // 9
+            4'hA: seg = 8'b10001000; // A
+            4'hB: seg = 8'b10000011; // B
+            4'hC: seg = 8'b11000110; // C
+            4'hD: seg = 8'b10100001; // D
+            4'hE: seg = 8'b10000110; // E
+            4'hF: seg = 8'b10001110; // F
+            default: seg = 8'b11111111; // Blank
+        endcase
+    end
+
+    // Digit selection and segment extraction
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            sel <= 2'b00;
+        end else if (dispen) begin
+            sel <= sel + 1;
+        end
+    end
+
+    always @(*) begin
+        case (sel)
+            2'b00: begin
+                seg_dig = cntr[3:0];
+                an = 4'b1110;
+            end
+            2'b01: begin
+                seg_dig = cntr[7:4];
+                an = 4'b1101;
+            end
+            2'b10: begin
+                seg_dig = cntr[11:8];
+                an = 4'b1011;
+            end
+            2'b11: begin
+                seg_dig = cntr[15:12];
+                an = 4'b0111;
+            end
+            default: begin
+                seg_dig = 4'b0000;
+                an = 4'b1111;
+            end
+        endcase
+    end
+
+endmodule

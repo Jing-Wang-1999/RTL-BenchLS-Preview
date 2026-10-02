@@ -1,0 +1,57 @@
+module mg_05942(
+    input clk,
+    input rst,
+    input stall,
+    input [31:0] ex_aluresult,
+    input [31:0] ex_d2,
+    input [4:0] ex_td,
+    input ex_WREG,
+    input ex_WMEM,
+    input ex_LW,
+    input [31:0] ex_instr,
+    input [31:0] ex_pc,
+    
+    output reg [31:0] me_aluresult,
+    output reg [31:0] me_d2,
+    output reg [4:0] me_td,
+    output reg me_WREG,
+    output reg me_WMEM,
+    output reg me_LW,
+    output reg [31:0] me_instr,
+    output reg [31:0] me_pc
+);
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            me_aluresult <= 32'b0;
+            me_d2 <= 32'b0;
+            me_td <= 5'b0;
+            me_WREG <= 1'b0;
+            me_WMEM <= 1'b0;
+            me_LW <= 1'b0;
+            me_instr <= 32'b100000;
+            me_pc <= 32'b0;
+        end
+        else if (stall) begin
+            me_aluresult <= 32'b0;
+            me_d2 <= 32'b0;
+            me_td <= 5'b0;
+            me_WREG <= 1'b0;
+            me_WMEM <= 1'b0;
+            me_LW <= 1'b0;
+            me_instr <= 32'b100000;
+            me_pc <= ex_pc;
+        end
+        else begin
+            me_aluresult <= ex_aluresult;
+            me_d2 <= ex_d2;
+            me_td <= ex_td;
+            me_WREG <= ex_WREG;
+            me_WMEM <= ex_WMEM;
+            me_LW <= ex_LW;
+            me_instr <= ex_instr;
+            me_pc <= ex_pc;
+        end
+    end
+
+endmodule

@@ -1,0 +1,52 @@
+module autovcoder_126939(
+    input wire clk,
+    input wire rst,
+    input wire [3:0] request_size,  // size of memory requested (1-15)
+    input wire malloc_req,           // malloc request signal
+    input wire free_req,             // free request signal
+    output reg [3:0] allocated_index, // index of the allocated memory block
+    output reg error                 // error flag
+);
+
+    reg [15:0] memory_pool; // 16 bits of memory pool
+    reg [3:0] free_blocks [0:15]; // track free memory blocks
+    reg [3:0] block_count; // number of free blocks
+    integer i;
+
+    initial begin
+        memory_pool = 16'b1111111111111111; // all blocks free
+        block_count = 16;
+        allocated_index = 4'b0000;
+        error = 1'b0;
+        for (i = 0; i < 16; i = i + 1)
+            free_blocks[i] = i; // initialize free blocks
+    end
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            memory_pool <= 16'b1111111111111111;
+            block_count <= 16;
+            allocated_index <= 4'b0000;
+            error <= 1'b0;
+        end else begin
+            if (malloc_req) begin
+                if (block_count >= request_size) begin
+                    error <= 1'b0;
+                    allocated_index <= free_blocks[0]; // allocate first free block
+                    memory_pool[free_blocks[0]] = 1'b0; // mark as used
+                    for (i = 0; i < request_size; i = i + 1) begin
+                        free_blocks[i] = free_blocks[i + 1]; // update free blocks
+                    end
+                    block_count = block_count - request_size;
+                end else begin
+                    error <= 1'b1; // allocation error
+                end
+            end else if (free_req) begin
+                memory_pool[allocated_index] = 1'b1; // mark block as free
+                free_blocks[block_count] = allocated_index; // add back to free list
+                block_count = block_count + 1;
+                allocated_index <= 4'b0000; // reset allocation
+            end
+        end
+    end
+endmodule

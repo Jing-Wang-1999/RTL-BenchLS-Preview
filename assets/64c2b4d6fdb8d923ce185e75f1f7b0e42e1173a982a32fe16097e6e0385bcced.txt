@@ -1,0 +1,56 @@
+module origen_015235 #(
+    parameter CLOCKFREQ = 50_000_000
+) (
+    input wire clk,
+    output reg s,
+    output reg t,
+    output reg h,
+    output reg m
+);
+
+    reg [$clog2(CLOCKFREQ/2)-1:0] counter_s = 0;
+    reg [$clog2(CLOCKFREQ/20)-1:0] counter_t = 0;
+    reg [$clog2(CLOCKFREQ/200)-1:0] counter_h = 0;
+    reg [$clog2(CLOCKFREQ/2000)-1:0] counter_m = 0;
+
+    // 1 Hz clock generation (seconds)
+    always @(posedge clk) begin
+        if (counter_s == CLOCKFREQ/2 - 1) begin
+            counter_s <= 0;
+            s <= ~s;
+        end else begin
+            counter_s <= counter_s + 1;
+        end
+    end
+
+    // 10 Hz clock generation (tenths of a second)
+    always @(posedge clk) begin
+        if (counter_t == CLOCKFREQ/20 - 1) begin
+            counter_t <= 0;
+            t <= ~t;
+        end else begin
+            counter_t <= counter_t + 1;
+        end
+    end
+
+    // 100 Hz clock generation (hundredths of a second)
+    always @(posedge clk) begin
+        if (counter_h == CLOCKFREQ/200 - 1) begin
+            counter_h <= 0;
+            h <= ~h;
+        end else begin
+            counter_h <= counter_h + 1;
+        end
+    end
+
+    // 1 kHz clock generation (milliseconds)
+    always @(posedge clk) begin
+        if (counter_m == CLOCKFREQ/2000 - 1) begin
+            counter_m <= 0;
+            m <= ~m;
+        end else begin
+            counter_m <= counter_m + 1;
+        end
+    end
+
+endmodule

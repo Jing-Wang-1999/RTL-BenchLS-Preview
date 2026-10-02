@@ -1,0 +1,58 @@
+module origen_057846 (
+    input wire clk,
+    input wire sclk,
+    input wire din,
+    input wire load_en,
+    input wire [15:0] dout_word,
+    output reg lclk,
+    output reg [7:0] din_word,
+    output wire dout,
+    output reg done,
+    output reg [3:0] aux
+);
+
+    reg [7:0] reg_in;
+    reg [15:0] reg_out;
+    reg [3:0] in_state;
+    reg [4:0] out_state;
+    reg dout_en;
+
+    // Input state machine
+    always @(posedge sclk) begin
+        if (in_state == 8) begin
+            in_state <= 1;
+            din_word <= reg_in;
+        end else begin
+            in_state <= in_state + 1;
+            reg_in <= {reg_in[6:0], din};
+        end
+    end
+
+    // Output state machine
+    always @(negedge sclk) begin
+        if (out_state == 15) begin
+            out_state <= 0;
+        end else begin
+            out_state <= out_state + 1;
+        end
+        
+        if (load_en) begin
+            reg_out <= dout_word;
+        end else begin
+            reg_out <= {reg_out[14:0], 1'b0};
+        end
+        
+        dout_en <= (out_state != 0);
+    end
+
+    // Control signals
+    always @(posedge clk) begin
+        lclk <= (in_state == 8);
+        done <= (in_state == 0 || in_state == 8);
+        aux <= in_state;
+    end
+
+    // Output assignment
+    assign dout = dout_en ? reg_out[15] : 1'bz;
+
+endmodule

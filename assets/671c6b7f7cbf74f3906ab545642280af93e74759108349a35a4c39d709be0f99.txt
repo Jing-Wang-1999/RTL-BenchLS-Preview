@@ -1,0 +1,65 @@
+module __formal113_core_ff6544299ea3
+(
+ input             clk,
+ input             rst_n,
+ input [7:0]       data,
+ input             crc_en,
+ output reg [31:0] crc32
+);
+  always@(posedge clk or negedge rst_n)
+    if(!rst_n)
+      crc32 <= 32'hFFFFFFFF;
+    else begin
+      crc32 <= crc_en ? crc32_byte(crc32, data) : crc32;
+    end
+
+  function [31:0] crc32_bit;
+    input [31:0]   crc;
+    input          data;
+    reg [31:0] crc_intermediate;
+    begin
+      crc_intermediate = crc << 1;
+      crc_intermediate[0]  = crc[31] ^ data;
+      crc_intermediate[1]  = crc[31] ^ data ^ crc[0];
+      crc_intermediate[2]  = crc[31] ^ data ^ crc[1];
+      crc_intermediate[4]  = crc[31] ^ data ^ crc[3];
+      crc_intermediate[5]  = crc[31] ^ data ^ crc[4];
+      crc_intermediate[7]  = crc[31] ^ data ^ crc[6];
+      crc_intermediate[8]  = crc[31] ^ data ^ crc[7];
+      crc_intermediate[10] = crc[31] ^ data ^ crc[9];
+      crc_intermediate[11] = crc[31] ^ data ^ crc[10];
+      crc_intermediate[12] = crc[31] ^ data ^ crc[11];
+      crc_intermediate[16] = crc[31] ^ data ^ crc[15];
+      crc_intermediate[22] = crc[31] ^ data ^ crc[21];
+      crc_intermediate[23] = crc[31] ^ data ^ crc[22];
+      crc_intermediate[26] = crc[31] ^ data ^ crc[25];
+      crc32_bit = crc_intermediate;
+    end
+  endfunction 
+
+  function [31:0] crc32_byte;
+    input [31:0] crc;
+    input [7:0]  data;
+    integer      i;
+    reg [31:0] intermediate_crc;
+    begin
+      intermediate_crc = crc;
+      for(i=0; i<8; i=i+1)begin
+        intermediate_crc = crc32_bit(intermediate_crc, data[7-i]);
+      end
+      crc32_byte = intermediate_crc;
+    end
+  endfunction 
+  
+endmodule
+module crc32_enabled_byte_update(
+  input wire [0:0] clk,
+  input wire [0:0] rst_n,
+  input wire [7:0] data,
+  input wire [0:0] crc_en,
+  output wire [31:0] crc32
+);
+wire [31:0] __negative_output;
+__formal113_core_ff6544299ea3 dut(.clk(clk), .rst_n(rst_n), .data(data), .crc_en(crc_en), .crc32(__negative_output));
+assign crc32 = __negative_output ^ 32'd1;
+endmodule

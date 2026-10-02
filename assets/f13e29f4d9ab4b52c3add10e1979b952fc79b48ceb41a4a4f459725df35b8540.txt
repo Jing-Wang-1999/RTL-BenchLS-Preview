@@ -1,0 +1,27 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+begin
+    count   <= {(COUNT_W) {1'b0}};
+    rd_ptr  <= {(ADDR_W) {1'b0}};
+    wr_ptr  <= {(ADDR_W) {1'b0}};
+end
+else
+begin
+    // Push
+    if (push_i & accept_o)
+    begin
+        ram[wr_ptr] <= data_in_i;
+        wr_ptr      <= wr_ptr + 1;
+    end
+
+    // Pop
+    if (pop_i & valid_o)
+        rd_ptr      <= rd_ptr + 1;
+
+    // Count up
+    if ((push_i & accept_o) & ~(pop_i & valid_o))
+        count <= count + 1;
+    // Count down
+    else if (~(push_i & accept_o) & (pop_i & valid_o))
+        count <= count - 1;
+end

@@ -1,0 +1,106 @@
+module pit_top #(parameter ARST_LVL = 1'b0,      
+                 parameter PRE_COUNT_SIZE = 15,  
+                 parameter COUNT_SIZE = 16,      
+                 parameter DECADE_CNTR = 1'b1,   
+                 parameter NO_PRESCALE = 1'b0,   
+                 parameter SINGLE_CYCLE = 1'b0,  
+		 parameter DWIDTH = 16)          
+  (
+  
+  output [DWIDTH-1:0] wb_dat_o,     
+  output              wb_ack_o,     
+  input               wb_clk_i,     
+  input               wb_rst_i,     
+  input               arst_i,       
+  input         [2:0] wb_adr_i,     
+  input  [DWIDTH-1:0] wb_dat_i,     
+  input               wb_we_i,      
+  input               wb_stb_i,     
+  input               wb_cyc_i,     
+  input         [1:0] wb_sel_i,     
+  
+  output              pit_o,        
+  output              pit_irq_o,    
+  output              cnt_flag_o,   
+  output              cnt_sync_o,   
+  input               ext_sync_i    
+  );
+endmodule
+
+module pit_wb_bus #(parameter ARST_LVL = 1'b0,    
+  		    parameter DWIDTH = 16,
+                    parameter SINGLE_CYCLE = 1'b0)
+  (
+  
+  output reg  [DWIDTH-1:0] wb_dat_o,     
+  output                   wb_ack_o,     
+  input                    wb_clk_i,     
+  input                    wb_rst_i,     
+  input                    arst_i,       
+  input             [ 2:0] wb_adr_i,     
+  input       [DWIDTH-1:0] wb_dat_i,     
+  input                    wb_we_i,      
+  input                    wb_stb_i,     
+  input                    wb_cyc_i,     
+  input              [1:0] wb_sel_i,     
+  
+  output reg        [ 3:0] write_regs,   
+  output                   async_rst_b,  
+  output                   sync_reset,   
+  input                    irq_source,   
+  input             [47:0] read_regs     
+  );
+endmodule
+
+module pit_regs #(parameter ARST_LVL = 1'b0,  
+                  parameter COUNT_SIZE = 16,
+                  parameter NO_PRESCALE = 1'b0,
+                  parameter DWIDTH = 16)
+  (
+  output reg [COUNT_SIZE-1:0] mod_value,    
+  output               [ 3:0] pit_pre_scl,  
+  output reg                  pit_slave,    
+  output reg                  pit_flg_clr,  
+  output reg                  pit_ien,      
+  output reg                  cnt_sync_o,   
+  output reg                  pit_irq_o,    
+  input                       bus_clk,      
+  input                       async_rst_b,  
+  input                       sync_reset,   
+  input                       pit_flag,     
+  input          [DWIDTH-1:0] write_bus,    
+  input                [ 3:0] write_regs,   
+  input                       cnt_flag_o    
+  );
+endmodule
+
+module pit_prescale #(parameter COUNT_SIZE = 15,
+                      parameter DECADE_CNTR = 1,
+		      parameter NO_PRESCALE = 0)
+  (
+  output                      prescale_out,  
+  output                      counter_sync,  
+  input                       async_rst_b,   
+  input                       sync_reset,    
+  input                       bus_clk,       
+  input                       cnt_sync_o,    
+  input                       ext_sync_i,    
+  input                       pit_slave,     
+  input                 [3:0] divisor        
+  );
+endmodule
+
+module pit_count #(parameter COUNT_SIZE = 16)
+  (
+  output reg [COUNT_SIZE-1:0] cnt_n,         
+  output reg                  cnt_flag_o,    
+  output reg                  pit_o,         
+  input                       async_rst_b,   
+  input                       sync_reset,    
+  input                       bus_clk,       
+  input                       counter_sync,  
+  input                       prescale_out,  
+  input                       pit_flg_clr,   
+  input      [COUNT_SIZE-1:0] mod_value      
+  );
+endmodule

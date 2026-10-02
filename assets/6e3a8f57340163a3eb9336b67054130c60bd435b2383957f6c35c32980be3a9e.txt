@@ -1,0 +1,48 @@
+module autovcoder_136406 (
+    input clk,           // System clock
+    input start,         // Start signal
+    input [7:0] data_in, // Data to be transmitted
+    output reg MOSI,     // Master Out Slave In
+    output reg SCK,      // Serial Clock
+    output reg CS,       // Chip Select
+    output reg [7:0] data_out // Received data from slave
+);
+    reg [2:0] state; // State variable
+    reg [2:0] bit_count; // Counter for bits
+    reg transmit; // Transmission flag
+
+    parameter IDLE = 3'd0, TRANSMIT = 3'd1, RECEIVED = 3'd2;
+
+    always @(posedge clk) begin
+        case (state)
+            IDLE: begin
+                if (start) begin
+                    CS <= 0; // Activate chip select
+                    MOSI <= data_in[7]; // Load the first bit
+                    SCK <= 0; // Clock low
+                    bit_count <= 3'd0; // Reset bit counter
+                    transmit <= 1; // Set transmit flag
+                    state <= TRANSMIT;
+                end
+            end
+            TRANSMIT: begin
+                if (bit_count < 3'd8) begin
+                    SCK <= 1; // Clock high
+                    // Shift out the next bit
+                    MOSI <= data_in[7 - bit_count];
+                    bit_count <= bit_count + 1;
+                end else if (bit_count == 3'd8) begin
+                    SCK <= 0; // Clock low
+                    CS <= 1; // Deactivate chip select
+                    state <= RECEIVED; // Move to receive state
+                end
+            end
+            RECEIVED: begin
+                // Here we can simulate receiving data from the slave
+                // For example purposes, we'll just load data_out with 8'b10101010
+                data_out <= 8'b10101010; // Mock received data
+                state <= IDLE; // Go back to idle
+            end
+        endcase
+    end
+endmodule

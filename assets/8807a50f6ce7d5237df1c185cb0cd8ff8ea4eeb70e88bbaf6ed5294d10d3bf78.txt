@@ -1,0 +1,54 @@
+module origen_195921 (
+    input clk,
+    input miso,
+    input measure_start,
+    output reg sck,
+    output reg cs,
+    output reg [15:0] data_out,
+    output reg enable
+);
+
+    reg [9:0] count;
+    reg [2:0] countsck;
+    reg [4:0] countdatai;
+    reg [4:0] i;
+    reg [15:0] datain;
+    reg flag, flag_d;
+
+    always @(posedge clk) begin
+        if (measure_start) begin
+            flag <= 1;
+        end
+
+        if (flag) begin
+            if (count < 100) begin
+                cs <= 0;
+                sck <= 1;
+                count <= count + 1;
+            end else if (countsck < 4) begin
+                sck <= ~sck;
+                countsck <= countsck + 1;
+                if (countsck == 3) begin
+                    flag_d <= 1;
+                end
+            end else if (i < 16) begin
+                sck <= 0;
+                datain[i] <= miso;
+                i <= i + 1;
+            end else if (i == 16) begin
+                sck <= 1;
+                i <= i + 1;
+            end else begin
+                cs <= 1;
+                data_out <= datain;
+                enable <= 1;
+                flag <= 0;
+                count <= 0;
+                countsck <= 0;
+                countdatai <= 0;
+                i <= 0;
+            end
+        end
+    end
+
+endmodule

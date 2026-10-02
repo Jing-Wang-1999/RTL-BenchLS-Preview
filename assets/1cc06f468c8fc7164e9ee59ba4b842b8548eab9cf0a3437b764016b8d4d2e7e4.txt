@@ -1,0 +1,11 @@
+always @(hgate_cnt or hgate_div_cnt or ctrl_cd)
+	  begin
+	      hgate_div_val = {1'b0, hgate_div_cnt} - 3'h1;
+
+	      if (ctrl_cd != 2'b10)
+	        hgate_cnt_val = {1'b0, hgate_cnt} - 17'h1;
+	      else if ( hgate_div_val[2] )
+	        hgate_cnt_val = {1'b0, hgate_cnt} - 17'h1;
+	      else
+	        hgate_cnt_val = {1'b0, hgate_cnt};
+	  end

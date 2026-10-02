@@ -1,0 +1,40 @@
+always @(posedge clk) begin
+    active_reg <= active_next;
+    ptr_reg <= ptr_next;
+
+    eth_type_reg <= eth_type_next;
+    ihl_reg <= ihl_next;
+
+    hash_data_reg <= hash_data_next;
+    hash_data_ipv4_reg <= hash_data_ipv4_next;
+    hash_data_tcp_reg <= hash_data_tcp_next;
+    hash_data_udp_reg <= hash_data_udp_next;
+    hash_data_type_reg <= hash_data_type_next;
+    hash_data_valid_reg <= hash_data_valid_next;
+
+    hash_part_ipv4_ip_reg <= hash_part_ipv4_ip;
+    hash_part_ipv4_port_reg <= hash_part_ipv4_port;
+    hash_part_ipv4_reg <= hash_data_ipv4_reg;
+    hash_part_tcp_reg <= hash_data_tcp_reg;
+    hash_part_udp_reg <= hash_data_udp_reg;
+    hash_part_type_reg <= hash_data_type_reg;
+    hash_part_valid_reg <= hash_data_valid_reg;
+
+    if (hash_part_ipv4_reg) begin
+        if (hash_part_tcp_reg || hash_part_udp_reg) begin
+            hash_reg <= hash_part_ipv4_ip_reg ^ hash_part_ipv4_port_reg;
+        end else begin
+            hash_reg <= hash_part_ipv4_ip_reg;
+        end
+    end else begin
+        hash_reg <= 0;
+    end
+    hash_type_reg <= hash_part_type_reg;
+    hash_valid_reg <= hash_part_valid_reg;
+
+    if (rst) begin
+        active_reg <= 1'b1;
+        ptr_reg <= 0;
+        hash_data_valid_reg <= 0;
+    end
+end

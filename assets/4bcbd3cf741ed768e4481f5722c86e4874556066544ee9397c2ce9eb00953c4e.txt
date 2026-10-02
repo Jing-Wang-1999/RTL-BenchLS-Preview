@@ -1,0 +1,98 @@
+module origen_151608 (
+    input wire clk, rst,
+    input wire req_in, ack_in,
+    input wire signed [DWIDTH-1:0] data_in,
+    output reg req_out, ack_out,
+    output reg signed [DWIDTH-1:0] data_out
+);
+
+    parameter DWIDTH = 16;
+    parameter DDWIDTH = 2*DWIDTH;
+    parameter L = 160;
+    parameter L_LOG = 8;
+    parameter M = 147;
+    parameter M_LOG = 8;
+    parameter CWIDTH = 4*L;
+
+    reg req_out_buf, req_in_buf;
+    reg signed [DDWIDTH-1:0] sum;
+    reg signed [DWIDTH-1:0] data_out_buf;
+    reg signed [DWIDTH-1:0] mem [3:0];
+    reg signed [CWIDTH-1:0] coef_buf;
+    reg signed [CWIDTH-1:0] coef [M-1:0];
+    reg [L_LOG-1:0] lookup_coefIdx [L-1:0];
+    reg [L-1:0] lookup_shift;
+    reg [3:0] state;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            req_out_buf <= 1'b0;
+            req_in_buf <= 1'b0;
+            sum <= 0;
+            data_out_buf <= 0;
+            mem[0] <= 0; mem[1] <= 0; mem[2] <= 0; mem[3] <= 0;
+            coef_buf <= 0;
+            state <= 0;
+        end
+        else begin
+            case (state)
+                4'd0: begin
+                    req_in_buf <= req_in;
+                    if (ack_in) begin
+                        mem[3] <= mem[2];
+                        mem[2] <= mem[1];
+                        mem[1] <= mem[0];
+                        mem[0] <= data_in;
+                        state <= 4'd1;
+                    end
+                end
+                4'd1: begin
+                    coef_buf <= coef[lookup_coefIdx[0]];
+                    sum <= 0;
+                    state <= 4'd2;
+                end
+                4'd2: begin
+                    sum <= sum + (mem[0] * coef_buf) >>> lookup_shift[0];
+                    state <= 4'd3;
+                end
+                4'd3: begin
+                    coef_buf <= coef[lookup_coefIdx[1]];
+                    state <= 4'd4;
+                end
+                4'd4: begin
+                    sum <= sum + (mem[1] * coef_buf) >>> lookup_shift[1];
+                    state <= 4'd5;
+                end
+                4'd5: begin
+                    coef_buf <= coef[lookup_coefIdx[2]];
+                    state <= 4'd6;
+                end
+                4'd6: begin
+                    sum <= sum + (mem[2] * coef_buf) >>> lookup_shift[2];
+                    state <= 4'd7;
+                end
+                4'd7: begin
+                    coef_buf <= coef[lookup_coefIdx[3]];
+                    state <= 4'd8;
+                end
+                4'd8: begin
+                    sum <= sum + (mem[3] * coef_buf) >>> lookup_shift[3];
+                    data_out_buf <= sum[DDWIDTH-1:DDWIDTH-DWIDTH];
+                    req_out_buf <= 1'b1;
+                    state <= 4'd9;
+                end
+                4'd9: begin
+                    if (ack_out) begin
+                        req_out_buf <= 1'b0;
+                        data_out <= data_out_buf;
+                        state <= 4'd0;
+                    end
+                end
+            endcase
+        end
+    end
+
+    assign req_out = req_out_buf;
+    assign ack_out = ack_out;
+
+endmodule

@@ -1,0 +1,117 @@
+always_comb begin
+      buf_nxtstate   = IDLE;
+      buf_state_en   = 1'b0;
+      buf_wr_en      = 1'b0;
+      buf_data_wr_en = 1'b0;
+      slvbuf_error_in   = 1'b0;
+      slvbuf_error_en   = 1'b0;
+      buf_write_in   = 1'b0;
+      cmd_done       = 1'b0;
+      trxn_done      = 1'b0;
+      buf_cmd_byte_ptr_en = 1'b0;
+      buf_cmd_byte_ptr[2:0] = '0;
+      slave_valid_pre   = 1'b0;
+      master_ready   = 1'b0;
+      ahb_htrans[1:0]  = 2'b0;
+      slvbuf_wr_en     = 1'b0;
+      bypass_en        = 1'b0;
+      rd_bypass_idle   = 1'b0;
+
+      case (buf_state)
+         IDLE: begin
+                  master_ready   = 1'b1;
+                  buf_write_in = (master_opc[2:1] == 2'b01);
+                  buf_nxtstate = buf_write_in ? CMD_WR : CMD_RD;
+                  buf_state_en = master_valid & master_ready;
+                  buf_wr_en    = buf_state_en;
+                  buf_data_wr_en = buf_state_en & (buf_nxtstate == CMD_WR);
+                  buf_cmd_byte_ptr_en   = buf_state_en;
+                  buf_cmd_byte_ptr[2:0] = buf_write_in ? get_nxtbyte_ptr(3'b0,buf_byteen_in[7:0],1'b0) : master_addr[2:0];
+                  bypass_en       = buf_state_en;
+                  rd_bypass_idle  = bypass_en & (buf_nxtstate == CMD_RD);
+                  ahb_htrans[1:0] = {2{bypass_en}} & 2'b10;
+          end
+         CMD_RD: begin
+                  buf_nxtstate    = (master_valid & (master_opc[2:0] == 3'b000))? STREAM_RD : DATA_RD;
+                  buf_state_en    = ahb_hready_q & (ahb_htrans_q[1:0] != 2'b0) & ~ahb_hwrite_q;
+                  cmd_done        = buf_state_en & ~master_valid;
+                  slvbuf_wr_en    = buf_state_en;
+                  master_ready  = buf_state_en & (buf_nxtstate == STREAM_RD);
+                  buf_wr_en       = master_ready;
+                  bypass_en       = master_ready & master_valid;
+                  buf_cmd_byte_ptr[2:0] = bypass_en ? master_addr[2:0] : buf_addr[2:0];
+                  ahb_htrans[1:0] = 2'b10 & {2{~buf_state_en | bypass_en}};
+         end
+         STREAM_RD: begin
+                  master_ready  =  (ahb_hready_q & ~ahb_hresp_q) & ~(master_valid & master_opc[2:1] == 2'b01);
+                  buf_wr_en       = (master_valid & master_ready & (master_opc[2:0] == 3'b000)); // update the fifo if we are streaming the read commands
+                  buf_nxtstate    = ahb_hresp_q ? STREAM_ERR_RD : (buf_wr_en ? STREAM_RD : DATA_RD);            // assuming that the master accpets the slave response right away.
+                  buf_state_en    = (ahb_hready_q | ahb_hresp_q);
+                  buf_data_wr_en  = buf_state_en;
+                  slvbuf_error_in = ahb_hresp_q;
+                  slvbuf_error_en = buf_state_en;
+                  slave_valid_pre  = buf_state_en & ~ahb_hresp_q;             // send a response right away if we are not going through an error response.
+                  cmd_done        = buf_state_en & ~master_valid;                     // last one of the stream should not send a htrans
+                  bypass_en       = master_ready & master_valid & (buf_nxtstate == STREAM_RD) & buf_state_en;
+                  buf_cmd_byte_ptr[2:0] = bypass_en ? master_addr[2:0] : buf_addr[2:0];
+                  ahb_htrans[1:0] = 2'b10 & {2{~((buf_nxtstate != STREAM_RD) & buf_state_en)}};
+                  slvbuf_wr_en    = buf_wr_en;                                         // shifting the contents from the buf to slv_buf for streaming cases
+         end // case: STREAM_RD
+         STREAM_ERR_RD: begin
+                  buf_nxtstate = DATA_RD;
+                  buf_state_en = ahb_hready_q & (ahb_htrans_q[1:0] != 2'b0) & ~ahb_hwrite_q;
+                  slave_valid_pre = buf_state_en;
+                  slvbuf_wr_en   = buf_state_en;     // Overwrite slvbuf with buffer
+                  buf_cmd_byte_ptr[2:0] = buf_addr[2:0];
+                  ahb_htrans[1:0] = 2'b10 & {2{~buf_state_en}};
+         end
+         DATA_RD: begin
+                  buf_nxtstate   = DONE;
+                  buf_state_en   = (ahb_hready_q | ahb_hresp_q);
+                  buf_data_wr_en = buf_state_en;
+                  slvbuf_error_in= ahb_hresp_q;
+                  slvbuf_error_en= buf_state_en;
+                  slvbuf_wr_en   = buf_state_en;
+         end
+         CMD_WR: begin
+                  buf_nxtstate = DATA_WR;
+                  trxn_done    = ahb_hready_q & ahb_hwrite_q & (ahb_htrans_q[1:0] != 2'b0);
+                  buf_state_en = trxn_done;
+                  buf_cmd_byte_ptr_en = buf_state_en;
+                  slvbuf_wr_en    = buf_state_en;
+                  buf_cmd_byte_ptr    = trxn_done ? get_nxtbyte_ptr(buf_cmd_byte_ptrQ[2:0],buf_byteen[7:0],1'b1) : buf_cmd_byte_ptrQ;
+                  cmd_done            = trxn_done & (buf_aligned | (buf_cmd_byte_ptrQ == 3'b111) |
+                                                     (buf_byteen[get_nxtbyte_ptr(buf_cmd_byte_ptrQ[2:0],buf_byteen[7:0],1'b1)] == 1'b0));
+                  ahb_htrans[1:0] = {2{~(cmd_done | cmd_doneQ)}} & 2'b10;
+         end
+         DATA_WR: begin
+                  buf_state_en = (cmd_doneQ & ahb_hready_q) | ahb_hresp_q;
+                  master_ready = buf_state_en & ~ahb_hresp_q & slave_ready;   // Ready to accept new command if current command done and no error
+                  buf_nxtstate = (ahb_hresp_q | ~slave_ready) ? DONE :
+                                  ((master_valid & master_ready) ? ((master_opc[2:1] == 2'b01) ? CMD_WR : CMD_RD) : IDLE);
+                  slvbuf_error_in = ahb_hresp_q;
+                  slvbuf_error_en = buf_state_en;
+
+                  buf_write_in = (master_opc[2:1] == 2'b01);
+                  buf_wr_en = buf_state_en & ((buf_nxtstate == CMD_WR) | (buf_nxtstate == CMD_RD));
+                  buf_data_wr_en = buf_wr_en;
+
+                  cmd_done     = (ahb_hresp_q | (ahb_hready_q & (ahb_htrans_q[1:0] != 2'b0) &
+                                 ((buf_cmd_byte_ptrQ == 3'b111) | (buf_byteen[get_nxtbyte_ptr(buf_cmd_byte_ptrQ[2:0],buf_byteen[7:0],1'b1)] == 1'b0))));
+                  bypass_en       = buf_state_en & buf_write_in & (buf_nxtstate == CMD_WR);   // Only bypass for writes for the time being
+                  ahb_htrans[1:0] = {2{(~(cmd_done | cmd_doneQ) | bypass_en)}} & 2'b10;
+                  slave_valid_pre  = buf_state_en & (buf_nxtstate != DONE);
+
+                  trxn_done = ahb_hready_q & ahb_hwrite_q & (ahb_htrans_q[1:0] != 2'b0);
+                  buf_cmd_byte_ptr_en = trxn_done | bypass_en;
+                  buf_cmd_byte_ptr = bypass_en ? get_nxtbyte_ptr(3'b0,buf_byteen_in[7:0],1'b0) :
+                                                 trxn_done ? get_nxtbyte_ptr(buf_cmd_byte_ptrQ[2:0],buf_byteen[7:0],1'b1) : buf_cmd_byte_ptrQ;
+            end
+         DONE: begin
+                  buf_nxtstate = IDLE;
+                  buf_state_en = slave_ready;
+                  slvbuf_error_en = 1'b1;
+                  slave_valid_pre = 1'b1;
+         end
+      endcase
+   end

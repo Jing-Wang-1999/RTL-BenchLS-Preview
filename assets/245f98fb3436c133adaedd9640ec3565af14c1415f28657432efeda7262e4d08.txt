@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.1349f14d3b6da9b99e31.294f68439a06",
+  "compile_check": {
+    "case_id": "s1derived.1349f14d3b6da9b99e31.294f68439a06",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_154623",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_154623.cf9da1bc7099efd2/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.1349f14d3b6da9b99e31",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "1349f14d3b6da9b99e31aba6371086857ee8abdc3349d586cf23ab5f439f77e9",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.1349f14d3b6da9b99e31.294f68439a06",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_154623.cf9da1bc7099efd2/private/commercial_positive.log",
+    "commercial_log_sha256": "49efcfc8ec5833a3e3d7af6330b40d0a25d13a05991406ff93f29a1656a0ff57",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_154623.cf9da1bc7099efd2/private/historical_harness/00_sec_origen_154623.tcl",
+    "executed_script_sha256": "761610f38fa75f3b1829a642a65e40a15dc4ecf98c66699164d26852ac633638",
+    "golden_tops": [
+      "origen_154623"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_05.origen_154623.cf9da1bc7099efd2",
+    "parent_id": "s1p.1349f14d3b6da9b99e31",
+    "revised_tops": [
+      "origen_154623"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_154623",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.1349f14d3b6da9b99e31.294f68439a06",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All four state transitions, all five output patterns, reset polarity and completion-over-next priority match.",
+        "rtl_excerpt": "if (all)",
+        "specification_excerpt": "WAIT gives `all` priority"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.1349f14d3b6da9b99e31",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "aec1343da7f5918941a88aafd180543d1926d91f7dcd62ef971898d4ac3fbe22",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "1349f14d3b6da9b99e31aba6371086857ee8abdc3349d586cf23ab5f439f77e9",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_154623.cf9da1bc7099efd2/private/historical_harness/00_sec_origen_154623.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_154623.cf9da1bc7099efd2/private/historical_harness/01_sec_origen_154623.tcl"
+  ],
+  "parent_id": "s1p.1349f14d3b6da9b99e31",
+  "primary_review": {
+    "case_id": "s1derived.1349f14d3b6da9b99e31.294f68439a06",
+    "checks": {
+      "behavior": "All transitions and Moore outputs match.",
+      "boundaries": "In WAIT, all wins if all and next are both high; invalid state returns IDLE.",
+      "interface": "Six scalar inputs and five scalar outputs match; the prose incorrectly says five inputs before listing six.",
+      "rtl_reasonableness": "The four-state controller is reasonable.",
+      "sequential_and_reset": "Active-high asynchronous reset selects IDLE; outputs are combinational from state."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "All transitions and Moore outputs match. Active-high asynchronous reset selects IDLE; outputs are combinational from state.",
+        "rtl_excerpt": "IDLE requires rts & send for START; WAIT prioritizes all over next; state outputs match the table.",
+        "spec_excerpt": "The final sentence ends \u201cWhen both rts and send are\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The detailed state and output tables are correct, but the behavior paragraph ends mid-sentence, making the task non-standalone.",
+        "rtl_evidence": "IDLE requires rts & send for START; WAIT prioritizes all over next; state outputs match the table.",
+        "spec_evidence": "The final sentence ends \u201cWhen both rts and send are\u201d.",
+        "type": "truncated_specification"
+      }
+    ],
+    "parent_id": "s1p.1349f14d3b6da9b99e31",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.1349f14d3b6da9b99e31.294f68439a06.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "1349f14d3b6da9b99e31aba6371086857ee8abdc3349d586cf23ab5f439f77e9",
+    "source_group": "S2",
+    "specification_sha256": "294f68439a0628699ffe1602d1085368dedb16378690d0966866c9313434be26",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.1349f14d3b6da9b99e31.294f68439a06.md",
+  "qualified_specification_sha256": "aec1343da7f5918941a88aafd180543d1926d91f7dcd62ef971898d4ac3fbe22",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_154623.cf9da1bc7099efd2/private/golden_design.v",
+  "rtl_sha256": "1349f14d3b6da9b99e31aba6371086857ee8abdc3349d586cf23ab5f439f77e9",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_05.origen_154623.cf9da1bc7099efd2/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "294f68439a0628699ffe1602d1085368dedb16378690d0966866c9313434be26",
+  "top_module": "origen_154623"
+}

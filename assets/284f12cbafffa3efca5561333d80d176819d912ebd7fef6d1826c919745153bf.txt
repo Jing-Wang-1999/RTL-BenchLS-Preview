@@ -1,0 +1,55 @@
+module origen_111455 #(
+    parameter WIDTH = 24,
+    parameter WIDTHR = $clog2(WIDTH),
+    parameter REGISTERED = 1
+) (
+    input wire clock,
+    input wire [WIDTH-1:0] data,
+    output wire [WIDTHR-1:0] distance,
+    output wire [WIDTH-1:0] result
+);
+
+    reg [WIDTH-1:0] data_reg;
+    reg [WIDTHR-1:0] distance_bits;
+    reg [WIDTH-1:0] node;
+    reg [WIDTHR-1:0] shift;
+    integer i;
+
+    always @(*) begin
+        data_reg = data;
+        distance_bits = {WIDTHR{1'b0}};
+        node = data;
+        shift = WIDTH >> 1;
+
+        for (i = WIDTHR-1; i >= 0; i = i - 1) begin
+            if (shift != 0) begin
+                if (node[WIDTH-1:shift] == {(WIDTH-shift){1'b0}}) begin
+                    distance_bits[i] = 1'b1;
+                    node = node << shift;
+                end else begin
+                    distance_bits[i] = 1'b0;
+                end
+            end
+            shift = shift >> 1;
+        end
+    end
+
+    generate
+        if (REGISTERED) begin
+            reg [WIDTH-1:0] result_reg;
+            reg [WIDTHR-1:0] distance_reg;
+
+            always @(posedge clock) begin
+                result_reg <= node;
+                distance_reg <= distance_bits;
+            end
+
+            assign result = result_reg;
+            assign distance = distance_reg;
+        end else begin
+            assign result = node;
+            assign distance = distance_bits;
+        end
+    endgenerate
+
+endmodule

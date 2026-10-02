@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+"""Replay the three upstream WBUART32 C++ benches, both full/lite configurations."""
+import argparse, hashlib, json, os, re, shutil, signal, subprocess, time
+from pathlib import Path
+VERILATOR='/home/jwangjw/anaconda3/envs/securitylab/bin/verilator'
+VROOT='/home/jwangjw/anaconda3/envs/securitylab/share/verilator'
+BENCHES={'linetest':['linetest','linetestlite'],'speechtest':['speechtest','speechtestlite'],'helloworld':['helloworld','helloworldlite']}
+def run(cmd,cwd,log,timeout=240):
+    start=time.monotonic()
+    env={**os.environ,'PATH':str(Path(VERILATOR).parent)+':'+os.environ['PATH']}
+    with log.open('w') as f:
+        p=subprocess.Popen(cmd,cwd=cwd,env=env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+        try:rc=p.wait(timeout=timeout);timed=False
+        except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait();rc=None;timed=True
+    return {'command':cmd,'exit_code':rc,'timeout':timed,'seconds':round(time.monotonic()-start,3),'log':str(log),'log_sha256':hashlib.sha256(log.read_bytes()).hexdigest()}
+def main():
+    ap=argparse.ArgumentParser();ap.add_argument('package',type=Path);ap.add_argument('--rtl-dir',type=Path);ap.add_argument('--output',required=True,type=Path);a=ap.parse_args()
+    a.package=a.package.resolve();a.output=a.output.resolve();a.output.mkdir(parents=True,exist_ok=False)
+    meta=json.loads((a.package/'meta.json').read_text());tree=a.output/'work';shutil.copytree(a.package/'source',tree)
+    if a.rtl_dir:
+        for rel in meta['rtl_files']:
+            src=a.rtl_dir.resolve()/rel
+            if not src.is_file():raise FileNotFoundError('Missing candidate RTL '+str(src))
+            shutil.copy2(src,tree/rel)
+    variables=['VERILATOR_ROOT='+VROOT,'VERILATOR='+VERILATOR+' -Wno-fatal']
+    builds=[run(['make','-j2','test',*variables],tree/'bench/verilog',a.output/'build_rtl.log')]
+    if builds[0]['exit_code']==0:
+        builds.append(run(['make','-j2',*[n for ns in BENCHES.values() for n in ns],*variables],tree/'bench/cpp',a.output/'build_cpp.log'))
+    compile_valid=len(builds)==2 and all(b['exit_code']==0 and not b['timeout'] for b in builds)
+    rows=[]
+    for bench,names in BENCHES.items():
+        configurations=[]
+        for name in names:
+            if compile_valid:
+                r=run(['./'+name],tree/'bench/cpp',a.output/(name+'.log'),30);txt=(a.output/(name+'.log')).read_text(errors='replace')
+                success=(bool(re.search(r'^PASS!?\s*$',txt,re.M)) if bench!='helloworld' else txt.count('Hello, World!')==1 and 'Simulation complete' in txt)
+                r['passed']=r['exit_code']==0 and not r['timeout'] and success and not re.search(r'\b(FAIL|FAILED|FAILURE|ERROR|MISMATCH)\b',txt,re.I)
+                r['configuration']='lite' if name.endswith('lite') else 'full';configurations.append(r)
+        rows.append({'id':'bench/cpp/'+bench+'.cpp','configurations':configurations,'passed':compile_valid and all(c['passed'] for c in configurations)})
+    result={'compile_valid':compile_valid,'builds':builds,'testpoints':rows,'passed_testpoints':sum(r['passed'] for r in rows),'total_testpoints':len(rows),'score':sum(r['passed'] for r in rows)/len(rows)}
+    (a.output/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({'passed':result['passed_testpoints'],'total':len(rows),'compile_valid':compile_valid}))
+if __name__=='__main__':main()

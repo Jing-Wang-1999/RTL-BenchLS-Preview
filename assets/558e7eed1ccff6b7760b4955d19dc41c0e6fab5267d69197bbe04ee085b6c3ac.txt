@@ -1,0 +1,23 @@
+The module named "origen_063143" is a digital hardware component designed to manage data transfer between a bus and multiple registers. It operates based on clock signals and a clear signal, and its primary function is to conditionally load data from a bus into specific registers.
+
+### Inputs:
+1. **clk (Clock Signal):** A periodic signal used to synchronize operations within the module. The module responds to the rising edge of this signal.
+2. **clr (Clear Signal):** An active-low signal used to reset the registers. When this signal is low, all registers are cleared to zero.
+3. **R0_in to R15_in (Register Select Signals):** Sixteen individual signals, each corresponding to one of the sixteen registers. These signals determine whether the data from the bus should be loaded into the respective register.
+4. **BusMuxOut (Bus Data):** A 32-bit data input representing the data available on the bus that can be loaded into the registers.
+
+### Outputs:
+1. **BusMuxIn_R0 to BusMuxIn_R15 (Register Outputs):** Sixteen 32-bit outputs, each corresponding to one of the sixteen registers. These outputs hold the current data stored in the respective registers.
+
+### Behavior:
+- **Reset Operation:** When the clear signal (`clr`) is low, all sixteen registers are reset to zero. This operation is asynchronous and occurs regardless of the clock signal.
+- **Data Loading:** On the rising edge of the clock signal (`clk`), if the clear signal is high, the module checks each register select signal (`R0_in` to `R15_in`). If a select signal is high, the corresponding register is loaded with the 32-bit data from `BusMuxOut`. This allows selective loading of data into registers based on the active select signals.
+
+### Functionality:
+The module facilitates controlled data transfer from a bus to a set of registers. It ensures that data is only loaded into registers when specific conditions are met, such as the presence of a high select signal and the absence of a clear signal. This design allows for efficient data management and storage within digital systems, enabling selective updates to register values based on external control signals.
+
+### Allowed Sub-modules:
+The module does not explicitly specify any sub-modules. It operates independently, relying on external signals for its functionality. However, it can be integrated into larger systems where it interfaces with other components, such as bus controllers or data processing units.
+
+### Use Cases:
+This module is suitable for applications requiring conditional data storage in registers, such as microprocessor register files, data buffers, or memory-mapped I/O systems. It provides a straightforward mechanism for managing data flow in digital circuits, ensuring that only desired data is captured and stored based on external control signals.

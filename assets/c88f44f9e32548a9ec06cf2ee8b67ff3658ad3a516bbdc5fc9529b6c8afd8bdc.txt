@@ -1,0 +1,54 @@
+module origen_022173 (
+    input wire clk,
+    input wire [7:0] data_in,
+    input wire send_sig,
+    output reg idle,
+    output reg txd
+);
+
+    parameter parity_mode = 1'b0; // 0 for even parity, 1 for odd parity
+
+    reg [7:0] tx_data;
+    reg [7:0] cnt;
+    reg parity;
+    reg sending;
+
+    always @(posedge clk) begin
+        if (!sending && send_sig) begin
+            sending <= 1'b1;
+            tx_data <= data_in;
+            cnt <= 8'd0;
+            idle <= 1'b1;
+            parity <= ^data_in ^ parity_mode;
+        end else if (sending) begin
+            if (cnt < 8'd175) begin
+                cnt <= cnt + 8'd1;
+            end else begin
+                sending <= 1'b0;
+                idle <= 1'b0;
+            end
+        end
+    end
+
+    always @(posedge clk) begin
+        if (!sending) begin
+            txd <= 1'b1;
+        end else begin
+            case (cnt[7:4])
+                4'd0: txd <= 1'b0; // Start bit
+                4'd1: txd <= tx_data[0];
+                4'd2: txd <= tx_data[1];
+                4'd3: txd <= tx_data[2];
+                4'd4: txd <= tx_data[3];
+                4'd5: txd <= tx_data[4];
+                4'd6: txd <= tx_data[5];
+                4'd7: txd <= tx_data[6];
+                4'd8: txd <= tx_data[7];
+                4'd9: txd <= parity; // Parity bit
+                4'd10: txd <= 1'b1; // Stop bit
+                default: txd <= 1'b1;
+            endcase
+        end
+    end
+
+endmodule

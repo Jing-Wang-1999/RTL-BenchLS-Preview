@@ -1,0 +1,50 @@
+module autovcoder_141910 (
+    input wire clk,
+    input wire start,
+    input wire [7:0] data,
+    output reg tx,
+    output reg busy
+);
+    reg [3:0] state;
+    reg [3:0] bit_count;
+    reg [7:0] shift_reg;
+
+    localparam IDLE = 0,
+               START_BIT = 1,
+               DATA_BITS = 2,
+               STOP_BIT = 3;
+
+    always @(posedge clk) begin
+        case (state)
+            IDLE: begin
+                tx <= 1; // Idle state is high
+                busy <= 0;
+                if (start) begin
+                    shift_reg <= data;
+                    bit_count <= 0;
+                    state <= START_BIT;
+                    busy <= 1;
+                end
+            end
+            
+            START_BIT: begin
+                tx <= 0; // Start bit is low
+                state <= DATA_BITS;
+            end
+            
+            DATA_BITS: begin
+                if (bit_count < 8) begin
+                    tx <= shift_reg[bit_count];
+                    bit_count <= bit_count + 1;
+                end else begin
+                    state <= STOP_BIT;
+                end
+            end
+            
+            STOP_BIT: begin
+                tx <= 1; // Stop bit is high
+                state <= IDLE;
+            end
+        endcase
+    end
+endmodule

@@ -1,0 +1,177 @@
+module autovcoder_023853 (
+    crc_in,
+    dat_in,
+    crc_out
+);
+  input [15:0] crc_in;
+  input [7:0] dat_in;
+  output [15:0] crc_out;
+
+  wire [15:0] crc_out;
+
+  wire x7, x6, x5, x4, x3, x2, x1, x0, x15, x14, x13, x12, x11, x10, x9, x8;
+
+  assign crc_out = {x15, x14, x13, x12, x11, x10, x9, x8, x7, x6, x5, x4, x3, x2, x1, x0};
+
+  wire d0, d1, d2, d3, d4, d5, d6, d7;
+
+  assign {d7, d6, d5, d4, d3, d2, d1, d0} = dat_in[7:0];
+
+  wire c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15;
+
+  assign {c15, c14, c13, c12, c11, c10, c9, c8, c7, c6, c5, c4, c3, c2, c1, c0} = crc_in[15:0];
+
+  xor6 x7i (
+      .out(x7),
+      .a  (c10),
+      .b  (d6),
+      .c  (c14),
+      .d  (d2),
+      .e  (c15),
+      .f  (d7)
+  );  // 6 ins 1 outs
+
+  xor6 x6i (
+      .out(x6),
+      .a  (c9),
+      .b  (d5),
+      .c  (c13),
+      .d  (d1),
+      .e  (c14),
+      .f  (d6)
+  );  // 6 ins 1 outs
+
+  xor6 x5i (
+      .out(x5),
+      .a  (c8),
+      .b  (d4),
+      .c  (c12),
+      .d  (d0),
+      .e  (c13),
+      .f  (d5)
+  );  // 6 ins 1 outs
+
+  xor6 x4i (
+      .out(x4),
+      .a  (c12),
+      .b  (d4),
+      .c  (1'b0),
+      .d  (1'b0),
+      .e  (1'b0),
+      .f  (1'b0)
+  );  // 2 ins 1 outs
+
+  xor6 x3i (
+      .out(x3),
+      .a  (c11),
+      .b  (d7),
+      .c  (c15),
+      .d  (d3),
+      .e  (1'b0),
+      .f  (1'b0)
+  );  // 4 ins 1 outs
+
+  xor6 x2i (
+      .out(x2),
+      .a  (c10),
+      .b  (d6),
+      .c  (c14),
+      .d  (d2),
+      .e  (1'b0),
+      .f  (1'b0)
+  );  // 4 ins 1 outs
+
+  xor6 x1i (
+      .out(x1),
+      .a  (c9),
+      .b  (d5),
+      .c  (c13),
+      .d  (d1),
+      .e  (1'b0),
+      .f  (1'b0)
+  );  // 4 ins 1 outs
+
+  xor6 x0i (
+      .out(x0),
+      .a  (c8),
+      .b  (d4),
+      .c  (c12),
+      .d  (d0),
+      .e  (1'b0),
+      .f  (1'b0)
+  );  // 4 ins 1 outs
+
+  xor6 x15i (
+      .out(x15),
+      .a  (c11),
+      .b  (d7),
+      .c  (c15),
+      .d  (d3),
+      .e  (c7),
+      .f  (1'b0)
+  );  // 5 ins 1 outs
+
+  xor6 x14i (
+      .out(x14),
+      .a  (c10),
+      .b  (d6),
+      .c  (c14),
+      .d  (d2),
+      .e  (c6),
+      .f  (1'b0)
+  );  // 5 ins 1 outs
+
+  xor6 x13i (
+      .out(x13),
+      .a  (c9),
+      .b  (d5),
+      .c  (c13),
+      .d  (d1),
+      .e  (c5),
+      .f  (1'b0)
+  );  // 5 ins 1 outs
+
+  assign x12 = c8 ^ d4 ^ c12 ^ d0 ^ c15 ^ d7 ^ c4;  // 7 ins 1 outs
+
+  xor6 x11i (
+      .out(x11),
+      .a  (c14),
+      .b  (d6),
+      .c  (c3),
+      .d  (1'b0),
+      .e  (1'b0),
+      .f  (1'b0)
+  );  // 3 ins 1 outs
+
+  xor6 x10i (
+      .out(x10),
+      .a  (c13),
+      .b  (d5),
+      .c  (c2),
+      .d  (1'b0),
+      .e  (1'b0),
+      .f  (1'b0)
+  );  // 3 ins 1 outs
+
+  xor6 x9i (
+      .out(x9),
+      .a  (c12),
+      .b  (d4),
+      .c  (c1),
+      .d  (1'b0),
+      .e  (1'b0),
+      .f  (1'b0)
+  );  // 3 ins 1 outs
+
+  xor6 x8i (
+      .out(x8),
+      .a  (c11),
+      .b  (d7),
+      .c  (c15),
+      .d  (d3),
+      .e  (c0),
+      .f  (1'b0)
+  );  // 5 ins 1 outs
+
+endmodule
+

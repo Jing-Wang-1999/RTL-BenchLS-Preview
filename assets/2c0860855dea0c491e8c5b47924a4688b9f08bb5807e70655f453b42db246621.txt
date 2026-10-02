@@ -1,0 +1,71 @@
+always @(posedge clk)
+begin
+  if (reset_n == 1'b0)
+  begin
+    rd                                 <=  4'h0;
+    load                               <=  1'b0;
+    store                              <=  1'b0;
+    update_pc                          <=  1'b0;
+    ld_width                           <=  3'b000;
+    retired_instr                      <=  1'b0;
+  end
+  else
+  begin
+    retired_instr                      <= ~stall & ~cancelled;
+
+    if (extm_update_rd)
+    begin
+      c                                <= extm_rd_val;
+    end
+    else if (load)
+    begin
+      c                                <= (ld_data_shift & {{16{ld_width[1]}}, {8{|ld_width[1:0]}}, 8'hff}) |
+                                          {{16{~ld_width[2] & ~ld_width[1] &  ld_width[0] & ld_data_shift[15]}}, 16'h0} |
+                                          {{24{~ld_width[2] & ~ld_width[1] & ~ld_width[0] & ld_data_shift[7]}},   8'h0};
+    end
+    else if (arith)
+    begin
+      c                                <= add_sub;
+    end
+    else if (bit_is_and | bit_is_or | bit_is_xor)
+    begin
+      c                                <= bitop;
+    end
+    else if (cmp_is_lt | cmp_is_ge | cmp_is_eq | cmp_is_ne)
+    begin
+      c                                <= cmp;
+    end
+    else if (shift_left | shift_right)
+    begin
+      c                                <= shift;
+    end
+    else if (jump_in)
+    begin
+      c                                <= pc_in + 32'h4;
+    end
+    else if (store_in)
+    begin
+      c                                <= b << {next_addr[1:0] & {~ld_store_width[1], ~ld_store_width[0]}, 3'b000};
+    end
+
+    if (load_in | store_in)
+    begin
+      addr                             <= stall ? addr          : {next_addr[31:2], 2'b00};
+      addr_lo                          <= stall ? addr_lo [1:0] : next_addr[1:0];
+    end
+
+    rd                                 <= next_rd;
+
+    pc                                 <= stall ? pc : next_pc;
+    update_pc                          <= stall ? update_pc : ((jump_in | system_in | branch_taken) & ~update_pc);
+
+    load                               <= (stall ? load : (load_in  & ~update_pc)) & ~clr_load_op & ~misaligned_load;
+    store                              <= store_in & ~update_pc & ~misaligned_store;
+
+    st_be                              <= ld_store_width[1] ? 4'b1111 :
+                                          ld_store_width[0] ? (4'b0011 << {next_addr[1], 1'b0}):
+                                                              (4'b0001 <<  next_addr[1:0]);
+
+    ld_width                           <= stall ? ld_width : ld_store_width;
+  end
+end

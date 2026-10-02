@@ -1,0 +1,163 @@
+module autovcoder_081389 (
+    field,
+    block,
+    blockX,
+    blockY,
+    opOK,
+    bottomTouch
+);
+
+  input [0:399] field;
+  input [0:15] block;
+  input [4:0] blockX, blockY;
+  output wire opOK, bottomTouch;
+
+
+
+  // Down prediction
+  wire downBottomTouch;
+  wire [4:0] downBlockX, downBlockY;
+  assign downBlockX = blockX;
+  assign downBlockY = blockY + 16'b1;
+
+  bottomTouchCheck down_bTC (
+      field,
+      block,
+      downBlockX,
+      downBlockY,
+      downBottomTouch
+  );
+
+
+
+  //Left prediction
+  wire leftOK, leftBottomTouch;
+  wire [4:0] leftBlockX, leftBlockY;
+  assign leftBlockX = blockX - 16'd1;
+  assign leftBlockY = blockY;
+
+  wire leftConflictTrue, leftOutTrue;
+  wire [0:15] leftRotateBlock;
+  wire [ 1:0] leftEdgeX;
+  conflictCheck left_cC (
+      field,
+      block,
+      leftBlockX,
+      leftBlockY,
+      leftConflictTrue
+  );
+  rotateAntiClock left_rAC (
+      block,
+      leftRotateBlock
+  );
+  blockBottom left_bB (
+      leftRotateBlock,
+      leftEdgeX
+  );
+  assign leftOutTrue = ((blockX % 'd20 == 'd0) && (leftEdgeX == 2'b0)) ? 1'b1 : 1'b0;
+  assign leftOK = (~leftConflictTrue && ~leftOutTrue) ? 1'b1 : 1'b0;
+
+  bottomTouchCheck left_bTC (
+      field,
+      block,
+      leftBlockX,
+      leftBlockY,
+      leftBottomTouch
+  );
+
+
+
+  // Right prediction
+  wire rightOK, rightBottomTouch;
+  wire [4:0] rightBlockX, rightBlockY;
+  assign rightBlockX = blockX + 16'd1;
+  assign rightBlockY = blockY;
+
+  wire rightConflictTrue, rightOutTrue;
+  wire [0:15] rightRotateBlock;
+  wire [ 1:0] rightEdgeX;
+  conflictCheck right_cC (
+      field,
+      block,
+      rightBlockX,
+      rightBlockY,
+      rightConflictTrue
+  );
+  rotateClockWise right_rCW (
+      block,
+      rightRotateBlock
+  );
+  blockBottom right_bB (
+      rightRotateBlock,
+      rightEdgeX
+  );
+  assign rightOutTrue = (((blockX - 'd16) % 'd20 == 'd0) && (rightEdgeX == 2'b0)) ? 1'b1 : 1'b0;
+  assign rightOK = (~rightConflictTrue && ~rightOutTrue) ? 1'b1 : 1'b0;
+
+  bottomTouchCheck right_bTC (
+      field,
+      block,
+      rightBlockX,
+      rightBlockY,
+      rightBottomTouch
+  );
+
+
+
+  // Rotate prediction
+  wire rotateOK, rotateBottomTouch;
+  wire [4:0] rotateBlockX, rotateBlockY;
+  assign rotateBlockX = blockX;
+  assign rotateBlockY = blockY;
+
+  wire [0:15] rotateNewBlock;
+  rotateClockWise rotate_rCW (
+      block,
+      rotateNewBlock
+  );
+
+  wire rotateConflictTrue, rotateRightOutTrue, rotateLeftOutTrue;
+  wire [0:15] rotateClockWiseBlock, rotateAntiClockBlock;
+  wire [1:0] rotateRightEdgeX, rotateLeftEdgeX;
+
+  conflictCheck rotate_cC (
+      field,
+      rotateNewBlock,
+      rotateBlockX,
+      rotateBlockY,
+      rotateConflictTrue
+  );
+
+  rotateClockWise rotate_rCW2 (
+      rotateNewBlock,
+      rotateClockWiseBlock
+  );
+  blockBottom rotateRight_bB (
+      rotateClockWiseBlock,
+      rotateRightEdgeX
+  );
+
+  rotateAntiClock rotate_rAC (
+      rotateNewBlock,
+      rotateAntiClockBlock
+  );
+  blockBottom rotateLeft_bB (
+      rotateAntiClockBlock,
+      rotateLeftEdgeX
+  );
+
+  assign rotateRightOutTrue = (((rotateBlockX - 'd16) % 'd20 == 'd0) && (rotateRightEdgeX == 2'b0))? 1'b1 : 1'b0;
+  assign rotateLeftOutTrue = ((rotateBlockX % 'd20 == 'd0) && (rotateLeftEdgeX == 2'b0))? 1'b1 : 1'b0;
+  assign rotateOK = (~rotateConflictTrue && ~rotateRightOutTrue && ~rotateLeftOutTrue)? 1'b1 : 1'b0;
+
+  bottomTouchCheck rotate_bTC (
+      field,
+      rotateNewBlock,
+      rotateBlockX,
+      rotateBlockY,
+      rotateBottomTouch
+  );
+
+
+endmodule
+

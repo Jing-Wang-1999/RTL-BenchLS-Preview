@@ -1,0 +1,66 @@
+always @(*)
+    case( state )
+      STATE_IDLE:       if( start_detected )
+                          next_state = STATE_ADDR_BYTE;
+                        else
+                          next_state = STATE_IDLE;
+
+      STATE_ADDR_BYTE:  if( xmt_byte_done )
+                          next_state = STATE_ADDR_ACK;
+                        else if( stop_detected )
+                          next_state = STATE_ERROR;
+                        else
+                          next_state = STATE_ADDR_BYTE;
+
+      STATE_ADDR_ACK:   if(i2c_ack_out)
+                          next_state = STATE_IDLE;
+                        else
+                          if( i2c_ack_done )
+                            if( i2c_r_w_bit )
+                              next_state = STATE_READ;
+                            else
+                              next_state = STATE_WRITE;
+                          else if( start_detected | stop_detected )
+                            next_state = STATE_ERROR;
+                          else
+                            next_state = STATE_ADDR_ACK;
+
+      STATE_WRITE:      if( xmt_byte_done )
+                          next_state = STATE_WR_ACK;
+                        else if( start_detected )
+                          next_state = STATE_ADDR_BYTE;
+                        else if( stop_detected )
+                          next_state = STATE_IDLE;
+                        else
+                          next_state = STATE_WRITE;
+
+      STATE_WR_ACK:     if( i2c_ack_done )
+                          next_state = STATE_WRITE;
+                        else if( start_detected | stop_detected )
+                          next_state = STATE_ERROR;
+                        else
+                          next_state = STATE_WR_ACK;
+
+      STATE_READ:       if( xmt_byte_done )
+                          next_state = STATE_RD_ACK;
+                        else if( start_detected )
+                          next_state = STATE_ADDR_BYTE;
+                        else if( stop_detected )
+                          next_state = STATE_IDLE;
+                        else
+                          next_state = STATE_READ;
+
+      STATE_RD_ACK:     if( i2c_ack_done )
+                          if(i2c_data)
+                            next_state = STATE_IDLE;
+                          else
+                            next_state = STATE_READ;
+                        else if( start_detected | stop_detected )
+                          next_state = STATE_ERROR;
+                        else
+                          next_state = STATE_RD_ACK;
+
+      STATE_ERROR:      next_state = STATE_IDLE;
+
+      default:          next_state = STATE_ERROR;
+    endcase

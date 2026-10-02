@@ -1,0 +1,56 @@
+module rtlpp_03901 (
+    areset,
+    inclk0,
+    c0,
+    locked
+);
+
+input   areset;
+input   inclk0;
+output  c0;
+output  locked;
+
+tri0    areset;
+
+reg locked_reg;
+wire [4:0] clk;
+assign c0 = clk[0];
+assign locked = locked_reg;
+
+// Dummy signal for configuration inputs
+wire [5:0] clk_ena = 6'b111111;
+wire [3:0] extclk_ena = 4'b1111;
+wire fbin = 1'b1;
+wire pfdena = 1'b1;
+wire [3:0] phase_counter_select = 4'b1111;
+wire phasedone;
+wire phase_step = 1'b1;
+wire phase_updown = 1'b1;
+wire pllena = 1'b1;
+wire scan_clr = 1'b0;
+wire scan_clk = 1'b0;
+wire scan_clkena = 1'b1;
+wire scandata = 1'b0;
+wire scandataout;
+wire scandone;
+wire scanread = 1'b0;
+wire scanwrite = 1'b0;
+wire sclkout0;
+wire sclkout1;
+wire vcooverrange;
+wire vcounderrange;
+
+// PLL Logic (simplified for illustration purposes)
+always @(posedge inclk0 or posedge areset)
+begin
+    if (areset) begin
+        locked_reg <= 0;
+    end else begin
+        // Simple logic to mock PLL locking mechanism
+        locked_reg <= 1;
+    end
+end
+
+assign clk = {4'b0000, inclk0};
+
+endmodule

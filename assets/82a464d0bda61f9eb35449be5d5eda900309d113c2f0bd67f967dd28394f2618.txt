@@ -1,0 +1,9 @@
+always @ (posedge clock or posedge reset)
+begin
+	if (reset) 
+		count16 <= 4'b0;
+	else if (tx_busy & ce_16)
+		count16 <= count16 + 4'b1;
+	else if (~tx_busy)
+		count16 <= 4'b0;
+end

@@ -1,0 +1,69 @@
+`timescale 1ns/1ps
+module tb;
+reg clk=0,reset_n=1; always #5 clk=~clk;
+task tick; begin @(posedge clk); #1; end endtask
+task reset; begin @(negedge clk); reset_n=0; repeat(4) tick; @(negedge clk); reset_n=1; end endtask
+initial begin #10000000; $fatal(1,"timeout"); end
+wire txavail,ready;wire [7:0] txdata;reg txrd=0,rxwr=0;reg [7:0] rxdata=0;
+wire [15:0] addr;wire [31:0] wdata;wire req,wr;reg ack=0;reg [31:0] rdata=0;
+integer cyc=0;always @(negedge clk) begin cyc=cyc+1;txrd=(cyc%8==0);end
+uart_msg_handler dut(reset_n,clk,txavail,txrd,txdata,ready,rxwr,rxdata,addr,wr,wdata,req,ack,rdata);
+task charin;input [7:0] c;begin @(negedge clk);rxdata=c;rxwr=1;tick;@(negedge clk);rxwr=0;repeat(6)tick;end endtask
+task request_check;input iswrite;input [15:0] a;input [31:0] d;integer k;
+begin k=0;while(req!==1 && k<40)begin tick;k=k+1;end
+if(req!==1 || wr!==iswrite || addr!==a || (iswrite && wdata!==d)) $fatal(1,"parser request");
+repeat(7)begin tick;if(req!==1 || addr!==a) $fatal(1,"request hold");end
+@(negedge clk);ack=1;tick;@(negedge clk);ack=0;repeat(300)tick;
+if(req!==0 || ready!==1) $fatal(1,"request completion");end endtask
+initial begin reset;repeat(600)tick;
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h64);charin(8'h32);charin(8'h66);charin(8'h65);charin(8'h20);charin(8'h20);charin(8'h31);charin(8'h45);charin(8'h31);charin(8'h34);charin(8'h35);charin(8'h42);charin(8'h45);charin(8'h46);charin(8'h0a);
+request_check(1'b1,16'hd2fe,32'h1e145bef);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h45);charin(8'h36);charin(8'h42);charin(8'h46);charin(8'h0a);
+request_check(1'b0,16'he6bf,32'h6bd22b3b);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h31);charin(8'h36);charin(8'h36);charin(8'h31);charin(8'h20);charin(8'h20);charin(8'h42);charin(8'h35);charin(8'h31);charin(8'h34);charin(8'h35);charin(8'h41);charin(8'h43);charin(8'h32);charin(8'h0a);
+request_check(1'b1,16'h1661,32'hb5145ac2);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h32);charin(8'h35);charin(8'h43);charin(8'h41);charin(8'h0a);
+request_check(1'b0,16'h25ca,32'h98c870d7);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h32);charin(8'h30);charin(8'h36);charin(8'h33);charin(8'h20);charin(8'h20);charin(8'h32);charin(8'h42);charin(8'h35);charin(8'h43);charin(8'h43);charin(8'h31);charin(8'h42);charin(8'h38);charin(8'h0a);
+request_check(1'b1,16'h2063,32'h2b5cc1b8);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h32);charin(8'h30);charin(8'h35);charin(8'h38);charin(8'h0a);
+request_check(1'b0,16'h2058,32'hbbb97b41);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h31);charin(8'h36);charin(8'h65);charin(8'h33);charin(8'h20);charin(8'h20);charin(8'h36);charin(8'h34);charin(8'h31);charin(8'h39);charin(8'h38);charin(8'h36);charin(8'h30);charin(8'h44);charin(8'h0a);
+request_check(1'b1,16'h16e3,32'h6419860d);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h39);charin(8'h32);charin(8'h42);charin(8'h44);charin(8'h0a);
+request_check(1'b0,16'h92bd,32'h3ba7dd98);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h31);charin(8'h37);charin(8'h33);charin(8'h34);charin(8'h20);charin(8'h20);charin(8'h45);charin(8'h39);charin(8'h34);charin(8'h32);charin(8'h38);charin(8'h44);charin(8'h41);charin(8'h34);charin(8'h0a);
+request_check(1'b1,16'h1734,32'he9428da4);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h37);charin(8'h36);charin(8'h30);charin(8'h45);charin(8'h0a);
+request_check(1'b0,16'h760e,32'h41f68766);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h31);charin(8'h63);charin(8'h61);charin(8'h66);charin(8'h20);charin(8'h20);charin(8'h38);charin(8'h44);charin(8'h38);charin(8'h33);charin(8'h35);charin(8'h43);charin(8'h45);charin(8'h42);charin(8'h0a);
+request_check(1'b1,16'h1caf,32'h8d835ceb);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h36);charin(8'h46);charin(8'h46);charin(8'h42);charin(8'h0a);
+request_check(1'b0,16'h6ffb,32'h24d1862c);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h30);charin(8'h32);charin(8'h35);charin(8'h36);charin(8'h20);charin(8'h20);charin(8'h33);charin(8'h35);charin(8'h41);charin(8'h32);charin(8'h35);charin(8'h33);charin(8'h46);charin(8'h46);charin(8'h0a);
+request_check(1'b1,16'h0256,32'h35a253ff);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h37);charin(8'h39);charin(8'h38);charin(8'h37);charin(8'h0a);
+request_check(1'b0,16'h7987,32'h3d194443);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h63);charin(8'h32);charin(8'h66);charin(8'h36);charin(8'h20);charin(8'h20);charin(8'h43);charin(8'h46);charin(8'h31);charin(8'h39);charin(8'h30);charin(8'h44);charin(8'h41);charin(8'h37);charin(8'h0a);
+request_check(1'b1,16'hc2f6,32'hcf190da7);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h33);charin(8'h45);charin(8'h45);charin(8'h32);charin(8'h0a);
+request_check(1'b0,16'h3ee2,32'hb08eff64);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h36);charin(8'h61);charin(8'h62);charin(8'h32);charin(8'h20);charin(8'h20);charin(8'h42);charin(8'h45);charin(8'h45);charin(8'h37);charin(8'h35);charin(8'h42);charin(8'h36);charin(8'h31);charin(8'h0a);
+request_check(1'b1,16'h6ab2,32'hbee75b61);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h31);charin(8'h31);charin(8'h41);charin(8'h43);charin(8'h0a);
+request_check(1'b0,16'h11ac,32'h42f1d6fb);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h34);charin(8'h36);charin(8'h62);charin(8'h33);charin(8'h20);charin(8'h20);charin(8'h41);charin(8'h36);charin(8'h30);charin(8'h45);charin(8'h31);charin(8'h45);charin(8'h39);charin(8'h38);charin(8'h0a);
+request_check(1'b1,16'h46b3,32'ha60e1e98);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h41);charin(8'h39);charin(8'h31);charin(8'h46);charin(8'h0a);
+request_check(1'b0,16'ha91f,32'h9df0f471);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h36);charin(8'h64);charin(8'h32);charin(8'h66);charin(8'h20);charin(8'h20);charin(8'h46);charin(8'h36);charin(8'h35);charin(8'h43);charin(8'h42);charin(8'h41);charin(8'h46);charin(8'h37);charin(8'h0a);
+request_check(1'b1,16'h6d2f,32'hf65cbaf7);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h31);charin(8'h33);charin(8'h31);charin(8'h39);charin(8'h0a);
+request_check(1'b0,16'h1319,32'hcc704d94);
+charin(8'h77);charin(8'h6d);charin(8'h20);charin(8'h20);charin(8'h64);charin(8'h33);charin(8'h64);charin(8'h35);charin(8'h20);charin(8'h20);charin(8'h46);charin(8'h41);charin(8'h39);charin(8'h38);charin(8'h42);charin(8'h42);charin(8'h32);charin(8'h41);charin(8'h0a);
+request_check(1'b1,16'hd3d5,32'hfa98bb2a);
+charin(8'h72);charin(8'h6d);charin(8'h20);charin(8'h33);charin(8'h30);charin(8'h35);charin(8'h42);charin(8'h0a);
+request_check(1'b0,16'h305b,32'h08982b33);
+
+$display("RTL_BENCHLS_PASS"); $finish(0); end
+endmodule

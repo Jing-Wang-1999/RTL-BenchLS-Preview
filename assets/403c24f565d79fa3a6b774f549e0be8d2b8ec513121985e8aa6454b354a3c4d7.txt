@@ -1,0 +1,55 @@
+always @ (posedge clk) begin
+    j_sof <= h_sof & rstn;
+    j_e    <= 1'b0;
+    j_last <= 1'b0;
+    j_data <= 16'h0;
+    if(~rstn | h_sof) begin
+        j_bbuf <= 248'd0;
+        j_bcnt <= 8'd8;
+        state_footer <= 2'd0;
+    end else begin
+        bbuf = j_bbuf | ({h_bb,191'h0} >> j_bcnt);
+        bcnt = j_bcnt + {2'd0,h_bn};
+        if(bcnt >= 8'd16) begin
+            j_e <= 1'b1;
+            j_data[15:8] <= bbuf[247:240];
+            if(bbuf[247:240] == 8'hFF) begin
+                bbuf = {1'h0, bbuf[239:0], 7'h0};
+                bcnt = bcnt - 8'd7;
+            end else begin
+                bbuf = {      bbuf[239:0], 8'h0};
+                bcnt = bcnt - 8'd8;
+            end
+            j_data[ 7:0] <= bbuf[247:240];
+            if(bbuf[247:240] == 8'hFF) begin
+                bbuf = {1'h0, bbuf[239:0], 7'h0};
+                bcnt = bcnt - 8'd7;
+            end else begin
+                bbuf = {      bbuf[239:0], 8'h0};
+                bcnt = bcnt - 8'd8;
+            end
+        end else if(h_eof) begin
+            if (bcnt > 8'd0) begin
+                j_e <= 1'b1;
+                j_data[15:8] <= bbuf[247:240];
+                if (bbuf[247:240] == 8'hFF) begin
+                    j_data[ 7:0] <= {1'b0,bbuf[239:233]};
+                end else if (bcnt > 8'd8) begin
+                    j_data[ 7:0] <= bbuf[239:232];
+                end else begin
+                    j_data[ 7:0] <= jls_footer[15:8];
+                    state_footer <= 2'd1;
+                end
+            end else if (state_footer < 2'd2) begin
+                j_e    <= 1'b1;
+                j_last <= 1'b1;
+                j_data <= (state_footer==2'd0) ? jls_footer : {jls_footer[7:0], 8'd0};
+                state_footer <= 2'd2;
+            end
+            bbuf = 248'd0;
+            bcnt = 8'd0;
+        end
+        j_bbuf <= bbuf;
+        j_bcnt <= bcnt;
+    end
+end

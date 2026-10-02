@@ -1,0 +1,45 @@
+# Implement the simple SPI controller project
+Read specification/project.txt and the original PDF. Implement both required
+files, fifo4 and simple_spi_top, using the declared ports and hierarchy.
+The top contains independent four-byte transmit/receive FIFOs. Only master mode
+is supported. Reset rst_i/rst is active low. The default FIFO width is eight.
+
+Contract clarifications from the pinned interface/RTL audit:
+- Wishbone address 0 is SPCR, 1 SPSR, 2 transmit-write/receive-read data, 3 SPER.
+  SPCR resets to 0x10; its master bit 4 always reads one. SPER resets to zero.
+  ack_o registers cyc_i & stb_i & !old_ack_o. A data FIFO operation occurs at
+  an edge with old ack_o=1 and an active access; hold a request across two
+  rising edges and then release. Register writes accept active write accesses.
+  dat_o registers the selected read value every rising edge, even when idle.
+- SPCR fields are interrupt-enable[7], enable[6], reserved/open-drain[5],
+  forced-master[4], CPOL[3], CPHA[2], divider-low[1:0]. SPER[1:0] extends
+  the divider; SPER[7:6] selects interrupt after 1..4 completed bytes.
+  With enable=0, FIFO pointers, serial state, completion/collision flags and
+  interrupt transfer count are cleared/reloaded by rising clocks. Give reset
+  and disable several clocks to settle; idle FIFO memory/data is unspecified.
+- SPSR[7] is sticky completion, [6] sticky transmit FIFO collision, [5:4]=0,
+  [3] TX full, [2] TX empty, [1] RX full, [0] RX empty. Write one to bits 7/6
+  to clear the corresponding flag. irq is registered completion & enable-IRQ.
+- Transfers are eight bits MSB first; all four CPOL/CPHA modes are required.
+  Divider codes {SPER[1:0],SPCR[1:0]} 0..11 give full SCK periods
+  2,4,8,32,64,16,128,256,512,1024,2048,4096 input clocks respectively.
+  These values correct inconsistent comments/tables in the old release.
+  Codes 12..15 are outside this case. No automatic slave-select output exists.
+- fifo4 has asynchronous read of its oldest entry, rising-edge write/read,
+  active-low reset and synchronous clr of pointers/flags. Legal accesses never
+  read empty or write full. Concurrent legal read/write preserves occupancy;
+  clear has priority for pointers/flags. Empty dout is unspecified.
+
+Use synthesizable logic without simulation delays or includes. The private
+reference removes only #1 nonblocking simulation annotations and the timescale
+include. Internal state encodings are free. Private points check FIFO behavior,
+register transactions, and actual serial data, RX, divider and IRQ behavior in
+all four modes. Public checks compile only; write your own behavioral tests.
+
+Implement every required path in output_contract.json. Declaration-only ports
+are in interfaces/modules.v. No initial/final, delays, simulation system tasks,
+force/release or external includes are permitted. Only declared RTL is collected.
+Missing files, forbidden constructs or failed top compilation score zero. Each
+private point has equal weight and requires all of its checks to pass. Use
+terminal/file_editor, iverilog, vvp and Python iteratively; finish by saving RTL.
+Run `python3 checks/check.py` for public compilation feedback.

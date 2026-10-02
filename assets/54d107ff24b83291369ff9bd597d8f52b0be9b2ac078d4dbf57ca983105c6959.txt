@@ -1,0 +1,112 @@
+module rtlpp_04214(
+input wire clk,
+input wire rst,
+input wire phy_tx_mode,
+output wire usb_rst,
+input wire rxd,
+input wire rxdp,
+input wire rxdn,
+output wire txdp,
+output wire txdn,
+output wire txoe,
+output wire ce_o,
+output wire sync_err_o,
+output wire bit_stuff_err_o,
+output wire byte_err_o,
+input wire LineCtrl_i,
+input wire [7:0] DataOut_i,
+input wire TxValid_i,
+output wire TxReady_o,
+output wire [7:0] DataIn_o,
+output wire RxValid_o,
+output wire RxActive_o,
+output wire RxError_o,
+output wire [1:0] LineState_o
+);
+
+parameter usb_rst_det = 1'b1;
+
+wire [1:0] LineState;
+wire fs_ce;
+reg [4:0] rst_cnt;
+wire txoe_out;
+reg usb_rst_out = 1'b0;
+wire reset;
+
+assign usb_rst = usb_rst_out;
+assign LineState_o = LineState;
+assign txoe = txoe_out;
+
+assign reset = ~rst;
+assign RxError_o = 1'b0;
+assign ce_o = fs_ce;
+
+// Internal logic of usb_tx_phy module
+reg tx_ready_internal;
+assign TxReady_o = tx_ready_internal;
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        tx_ready_internal <= 1'b0;
+    end else begin
+        // Simple transmission logic example
+        if (TxValid_i) begin
+            tx_ready_internal <= 1'b1;
+        end else begin
+            tx_ready_internal <= 1'b0;
+        end
+    end
+end
+
+// txdp, txdn, and txoe_out assignment logic
+assign txdp = (TxValid_i && phy_tx_mode) ? DataOut_i[0] : 1'bz;
+assign txdn = (TxValid_i && phy_tx_mode) ? ~DataOut_i[0] : 1'bz;
+assign txoe_out = TxValid_i;
+
+// Internal logic of usb_rx_phy module
+reg [7:0] data_internal;
+assign DataIn_o = data_internal;
+
+always @(posedge clk or negedge reset) begin
+    if (!reset) begin
+        data_internal <= 8'b0;
+    end else begin
+        // Simple reception logic example
+        if (rxdp == 1'b1 && rxdn == 1'b0) begin
+            data_internal <= 8'b10101010; // Example data
+        end else begin
+            data_internal <= 8'b01010101; // Example data
+        end
+    end
+end
+
+assign fs_ce = (rxd) ? 1'b1 : 1'b0;
+assign LineState = {rxdp, rxdn};
+assign RxValid_o = (LineState == 2'b01 || LineState == 2'b10) ? 1'b1 : 1'b0;
+assign RxActive_o = RxValid_o;
+
+// USB reset detection logic
+generate if (usb_rst_det == 1'b1) begin: usb_rst_g
+    always @(posedge clk) begin
+        if (rst == 1'b0) begin
+            rst_cnt <= {5{1'b0}};
+        end else begin
+            if (LineState != 2'b00) begin
+                rst_cnt <= {5{1'b0}};
+            end else if (usb_rst_out == 1'b0 && fs_ce == 1'b1) begin
+                rst_cnt <= rst_cnt + 1;
+            end
+        end
+    end
+
+    always @(posedge clk) begin
+        if (rst_cnt == 5'b11111) begin
+            usb_rst_out <= 1'b1;
+        end else begin
+            usb_rst_out <= 1'b0;
+        end
+    end
+end
+endgenerate
+
+endmodule

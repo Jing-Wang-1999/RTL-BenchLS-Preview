@@ -1,0 +1,66 @@
+always @(posedge clk)
+	  if (rst)
+	    begin
+	        state   <=  idle_state;
+	        cnt     <=  16'h0;
+	        cnt_len <=  16'b0;
+	        Sync    <=  1'b0;
+	        Gate    <=  1'b0;
+	        Done    <=  1'b0;
+	    end
+	  else if (ena)
+	    begin
+	        cnt     <=  cnt_nxt[15:0];
+	        cnt_len <=  cnt_len_nxt[15:0];
+
+	        Done    <=  1'b0;
+
+	        case (state) // synopsys full_case parallel_case
+	          idle_state:
+	            begin
+	                state   <=  sync_state;
+	                cnt     <=  Tsync;
+	                cnt_len <=  Tlen;
+
+	                Sync    <=  1'b1;
+	            end
+
+	          sync_state:
+	            if (cnt_done)
+	              begin
+	                  state <=  gdel_state;
+	                  cnt   <=  Tgdel;
+
+	                  Sync  <=  1'b0;
+	              end
+
+	          gdel_state:
+	            if (cnt_done)
+	              begin
+	                  state <=  gate_state;
+	                  cnt   <=  Tgate;
+
+	                  Gate  <=  1'b1;
+	              end
+
+	          gate_state:
+	            if (cnt_done)
+	              begin
+	                  state <=  len_state;
+
+	                  Gate  <=  1'b0;
+	              end
+
+	          len_state:
+	            if (cnt_len_done)
+	              begin
+	                  state   <=  sync_state;
+	                  cnt     <=  Tsync;
+	                  cnt_len <=  Tlen;
+
+	                  Sync    <=  1'b1;
+	                  Done    <=  1'b1;
+	              end
+
+	        endcase
+	    end

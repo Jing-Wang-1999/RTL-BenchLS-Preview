@@ -1,0 +1,7 @@
+# `zet_othop`
+
+The combinational top module `zet_othop` has 16-bit inputs `x`, `y`, `seg`, `off`, and `iflags`, 3-bit input `func`, scalar input `word_op`, 20-bit output `out`, and 9-bit output `oflags`. It requires the included combinational helper `zet_mux8_16`, whose `sel=0..7` selects `in0..in7` respectively.
+
+Define 16-bit wraparound values `deff=x+y+off`, `deff2=x+y+off+2`, `outf=y`, and 20-bit values `dcmp=(seg<<4)+deff`, `dcmp2=(seg<<4)+deff2`. For `func=0..7`, `out[15:0]` is respectively `dcmp[15:0]`, `dcmp2[15:0]`, `deff`, `outf`, `clcm`, `setf`, `intf`, or `strf`. `out[19:16]` is `dcmp[19:16]` for `func=0` and `dcmp2[19:16]` otherwise.
+
+`clcm` selects by `{y[2],y[1]}`: 11 clears flag bit 0, 10 clears bit 10, 01 clears bit 9, and 00 toggles bit 0. `setf` uses the same selector: 11 sets bit 0, 10 sets bit 10, 01 sets bit 9, and 00 passes `iflags`. `intf={iflags[15:10],2'b00,iflags[7:0]}`. `strf=x-y` when `iflags[10]=1`, otherwise `x+y`, with 16-bit wraparound. If `word_op=1`, `oflags={out[11:6],out[4],out[2],out[0]}`; otherwise `oflags={iflags[11:8],out[7:6],out[4],out[2],out[0]}`. There is no clock, reset, storage, or other dependency.

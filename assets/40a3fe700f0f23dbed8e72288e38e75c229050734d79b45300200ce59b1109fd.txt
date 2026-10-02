@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.ea5f8230fbd5f381748a.44fdbad1c9d1",
+  "compile_check": {
+    "case_id": "s1derived.ea5f8230fbd5f381748a.44fdbad1c9d1",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_150263",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_150263.866874a5e0aca612/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.ea5f8230fbd5f381748a",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "ea5f8230fbd5f381748a8ae26fcd5db72217c7c706646ae082f5730df83a9492",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.ea5f8230fbd5f381748a.44fdbad1c9d1",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_150263.866874a5e0aca612/private/commercial_positive.log",
+    "commercial_log_sha256": "764387bca23448e846fa7b04c86476a55abf917d2f812a5fd23b172dc954db91",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_150263.866874a5e0aca612/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "origen_150263"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.origen_150263.866874a5e0aca612",
+    "parent_id": "s1p.ea5f8230fbd5f381748a",
+    "revised_tops": [
+      "origen_150263"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_150263",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.ea5f8230fbd5f381748a.44fdbad1c9d1",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The repair lists every parameter, exact interface, asynchronous reset, all eleven registered comparisons, fixed literal sizing, and repeated-match behavior.",
+        "rtl_excerpt": "else begin o_mpi_init_rank <= ...; ... o_mpi_reduce <= ...; end",
+        "specification_excerpt": "On each rising edge of `i_clk`, replace every output with its current decode condition"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.ea5f8230fbd5f381748a",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "699f40fe95870ed3255d6315d2cec7ed8ff8085249b6ddc174c11b9d3a5d0038",
+    "reviewer": "final_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "ea5f8230fbd5f381748a8ae26fcd5db72217c7c706646ae082f5730df83a9492",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_150263.866874a5e0aca612/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_150263.866874a5e0aca612/private/historical_harness/01_conformal_rtl_origen_150263.do"
+  ],
+  "parent_id": "s1p.ea5f8230fbd5f381748a",
+  "primary_review": {
+    "case_id": "s1derived.ea5f8230fbd5f381748a.44fdbad1c9d1",
+    "checks": {
+      "behavior": "All eleven decode predicates match RTL once behavior is defined as unconditional per-edge sampling.",
+      "boundaries": "Checked strict greater-than bad-message threshold, equality at 0x100/0x101, consecutive matches, and parameter sizing/truncation.",
+      "interface": "Widths and names match individually, but the output count and implied write interface are incorrect in prose; parameter defaults were checked.",
+      "rtl_reasonableness": "Reasonable registered command decoder; NODE_ADDR is harmlessly unused.",
+      "sequential_and_reset": "Verified active-high asynchronous reset and registered replacement of every output each rising edge."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "No qualifier distinguishes a write from any sampled bus value, so the original transaction claim is unsupported.",
+        "rtl_excerpt": "input [IWIDTH-1:0] i_pe_writedata, input [AWIDTH-1:0] i_pe_address",
+        "specification_excerpt": "The module only reacts to write transactions; it does not implement a read interface."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose calls the sampled values write transactions and says twelve outputs, but RTL has no write-enable and exposes eleven outputs; it decodes inputs on every clock edge.",
+        "rtl_evidence": "ports contain no write enable and list eleven o_mpi_* outputs; always @(posedge i_clk or posedge i_reset)",
+        "spec_evidence": "The module only reacts to write transactions ... Twelve single-bit outputs",
+        "type": "interface_behavior_mismatch"
+      }
+    ],
+    "parent_id": "s1p.ea5f8230fbd5f381748a",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_10/s1derived.ea5f8230fbd5f381748a.44fdbad1c9d1.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "last_primary_review",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "ea5f8230fbd5f381748a8ae26fcd5db72217c7c706646ae082f5730df83a9492",
+    "source_group": "S2",
+    "specification_sha256": "44fdbad1c9d1dd9e2094088aa8f19e99aec1a729734f7db42e9c39981446ade7",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_3_new_10/s1derived.ea5f8230fbd5f381748a.44fdbad1c9d1.md",
+  "qualified_specification_sha256": "699f40fe95870ed3255d6315d2cec7ed8ff8085249b6ddc174c11b9d3a5d0038",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_150263.866874a5e0aca612/private/golden_design.v",
+  "rtl_sha256": "ea5f8230fbd5f381748a8ae26fcd5db72217c7c706646ae082f5730df83a9492",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.origen_150263.866874a5e0aca612/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "44fdbad1c9d1dd9e2094088aa8f19e99aec1a729734f7db42e9c39981446ade7",
+  "top_module": "origen_150263"
+}

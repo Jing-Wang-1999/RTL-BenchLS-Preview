@@ -1,0 +1,53 @@
+module origen_019174 (
+    input wire clk,
+    input wire rst,
+    input wire [31:0] memory_address,
+    input wire [511:0] write_data_block,
+    input wire [31:0] write_data_word,
+    input wire we_block,
+    input wire we_word,
+    output wire [511:0] read_data_block,
+    output wire [31:0] read_data_word,
+    output wire [31:0] addout,
+    output wire hit,
+    output wire dirty
+);
+
+    reg [539:0] cache_data; // 512 data + 26 tag + 1 dirty + 1 valid
+
+    wire [25:0] tag;
+    wire [3:0] block_offset;
+    wire [25:0] stored_tag;
+    wire stored_valid;
+    wire [511:0] stored_data;
+
+    assign tag = memory_address[31:6];
+    assign block_offset = memory_address[5:2];
+    assign stored_tag = cache_data[538:513];
+    assign stored_valid = cache_data[539];
+    assign stored_data = cache_data[511:0];
+
+    assign hit = (tag == stored_tag) && stored_valid;
+    assign dirty = cache_data[512];
+    assign addout = {stored_tag, 6'b0};
+    assign read_data_block = stored_data;
+    assign read_data_word = stored_data[block_offset*32 +: 32];
+
+    always @(negedge rst or posedge clk) begin
+        if (!rst) begin
+            cache_data[539] <= 1'b0; // Clear valid bit
+            cache_data[538:513] <= tag; // Set tag
+        end else if (we_block) begin
+            cache_data[511:0] <= write_data_block;
+            cache_data[539] <= 1'b1; // Set valid bit
+            cache_data[512] <= 1'b0; // Clear dirty bit
+            cache_data[538:513] <= tag;
+        end else if (we_word) begin
+            cache_data[block_offset*32 +: 32] <= write_data_word;
+            cache_data[539] <= 1'b1; // Set valid bit
+            cache_data[512] <= 1'b1; // Set dirty bit
+            cache_data[538:513] <= tag;
+        end
+    end
+
+endmodule

@@ -1,0 +1,24 @@
+module oh_aoi222 #(
+    parameter DW = 1
+) (
+    input  [DW-1:0] a0,
+    input  [DW-1:0] a1,
+    input  [DW-1:0] b0,
+    input  [DW-1:0] b1,
+    input  [DW-1:0] c0,
+    input  [DW-1:0] c1,
+    output [DW-1:0] z
+);
+
+    wire [DW-1:0] and_a;
+    wire [DW-1:0] and_b;
+    wire [DW-1:0] and_c;
+    wire [DW-1:0] or_abc;
+
+    assign and_a = a0 & a1;
+    assign and_b = b0 & b1;
+    assign and_c = c0 & c1;
+    assign or_abc = and_a | and_b | and_c;
+    assign z = ~or_abc;
+
+endmodule

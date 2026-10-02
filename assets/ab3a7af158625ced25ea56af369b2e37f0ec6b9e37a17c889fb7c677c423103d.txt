@@ -1,0 +1,104 @@
+This Verilog module functions as an AXI (Advanced eXtensible Interface) bus functional model (BFM), assembled to facilitate data transfer and control communication between a master and multiple slaves within a hardware system.
+
+### Purpose and Operation:
+
+1. **Primary Function:**
+   - The BFM module interfaces with the AXI protocol to manage data transactions, including reads and writes, while handling system restarts, chip select, clock signals, and status flags from connected devices. The module supports various control signals and data paths required for AXI communication and direct interaction with the connected slaves.
+
+2. **Key Control Flow/Decision Points:**
+   - **Reset Handling**: The module takes into account the reset signals (`SYS_RST_N`, `SL_RST_N`, and `ARESETn`) to initialize or reset the system states.
+   - **State Management**: Utilizes an internal finite state machine (FSM) to manage the transitions between different states of data transfer operations, ensuring synchronization with the provided system clock (`SYS_CLK`) and the AXI clock (`ACLK`).
+
+3. **Important Data Processing/Signal Interactions:**
+   - **Clock & Reset Signals**: Processes system and AXI-specific clock signals (`SYS_CLK`, `ACLK`) and handles asynchronous reset inputs (`ARESETn`).
+   - **Data Transactions**: Facilitates bidirectional data transfer between master and slave through AXI signals such as:
+     - Write Address Channel (`AWID`, `AWADDR`, `AWLEN`, etc.)
+     - Write Data Channel (`WID`, `WDATA`, `WSTRB`, etc.)
+     - Write Response Channel (`BID`, `BRESP`, etc.)
+     - Read Address Channel (`ARID`, `ARADDR`, `ARLEN`, etc.)
+     - Read Data Channel (`RID`, `RDATA`, `RRESP`, etc.)
+   - **Signal Handling**: Manages multiple miscellaneous signals (`IRQ`, `FIQ`, `GPIN`, `GPOUT`) to ensure efficient interrupt handling and general-purpose input/output functions.
+   - **Slave Communication**: Directly controls slave select signals (`SL_CS_N`, `SL_PCLK`, etc.), read/write enables (`SL_RD_N`, `SL_WR_N`), and data lines (`SL_DT_I`, `SL_DT_O`, etc.).
+
+### Instruction Summary:
+   - Develop a Verilog module functioning as an AXI Bus Functional Model (`axi_bus_functional_master`) responsible for enabling and managing data transactions and control signals between an AXI master and slaves.
+   - Incorporate necessary clock signals and handle asynchronous resets upon system restart or reset signals.
+   - Implement state management to control the data transfer process, ensuring synchronization with the system and AXI clocks.
+   - Orchestrate read/write operations by interfacing with respective address, data, and response channels in the AXI protocol.
+   - Control slave-specific operations including chip select, pixel clock, status flags, read/write enables, and packet end signals.
+   - Manage interrupts and general-purpose I/O interactions through dedicated signal lines.
+   - Ensure effective data and control flow management to support AXI compliant transactions and external device interactions.
+
+Module Interface:
+module axi_bus_functional_master(
+  input SYS_CLK_STABLE,
+  input SYS_CLK,
+  output SYS_RST_N,
+  input SL_RST_N,
+  output SL_CS_N,
+  output SL_PCLK,
+  output [1:0] SL_AD,
+  input SL_FLAGA,
+  input SL_FLAGB,
+  input SL_FLAGC,
+  input SL_FLAGD,
+  output SL_RD_N,
+  output SL_WR_N,
+  output SL_OE_N,
+  output SL_PKTEND_N,
+  input [31:0] SL_DT_I,
+  output [31:0] SL_DT_O,
+  output SL_DT_T,
+  input [1:0] SL_MODE,
+  input ARESETn,
+  input ACLK,
+  input [3:0] MID,
+  output [3:0] AWID,
+  output [31:0] AWADDR,
+  output [7:0] AWLEN,
+  output AWLOCK,
+  output [2:0] AWSIZE,
+  output [1:0] AWBURST,
+  output [3:0] AWCACHE,
+  output [2:0] AWPROT,
+  output AWVALID,
+  input AWREADY,
+  output [3:0] AWQOS,
+  output [3:0] AWREGION,
+  output [3:0] WID,
+  output [31:0] WDATA,
+  output [3:0] WSTRB,
+  output WLAST,
+  output WVALID,
+  input WREADY,
+  input [3:0] BID,
+  input [1:0] BRESP,
+  input BVALID,
+  output BREADY,
+  output [3:0] ARID,
+  output [31:0] ARADDR,
+  output [7:0] ARLEN,
+  output ARLOCK,
+  output [2:0] ARSIZE,
+  output [1:0] ARBURST,
+  output [3:0] ARCACHE,
+  output [2:0] ARPROT,
+  output ARVALID,
+  input ARREADY,
+  output [3:0] ARQOS,
+  output [3:0] ARREGION,
+  input [3:0] RID,
+  input [31:0] RDATA,
+  input [1:0] RRESP,
+  input RLAST,
+  input RVALID,
+  output RREADY,
+  input IRQ,
+  input FIQ,
+  output [15:0] GPOUT,
+  input [15:0] GPIN
+);
+
+Behavioral Clarifications:
+- The golden RTL is an empty stub with no internal logic; all output ports are left undriven (no assign statements or always blocks present).
+- Generate a module that declares all ports as specified and leaves all outputs at their default (0) values, matching the empty stub implementation.

@@ -1,0 +1,104 @@
+module FP32_ADD_mgc_shift_bl_v4 (
+  input [3:0] a,
+  input [1:0] s,
+  output [7:0] z
+);
+
+  parameter width_a = 4;
+  parameter signd_a = 1;
+  parameter width_s = 2;
+  parameter width_z = 8;
+
+  function [7:0] fshl_u;
+    input [3:0] a_val;
+    input [1:0] s_val;
+    input sign_bit;
+    reg [7:0] extended;
+    reg [7:0] result;
+    integer i;
+    integer shift_amt;
+    begin
+      // Extend input to output width
+      for (i = 0; i < width_z; i = i + 1) begin
+        if (i < width_a) begin
+          extended[i] = a_val[i];
+        end else begin
+          if (signd_a) begin
+            extended[i] = sign_bit;
+          end else begin
+            extended[i] = 1'b0;
+          end
+        end
+      end
+      
+      // Perform left shift
+      shift_amt = s_val;
+      result = extended << shift_amt;
+      fshl_u = result;
+    end
+  endfunction
+
+  function [7:0] fshr_u;
+    input [3:0] a_val;
+    input [1:0] s_val;
+    input sign_bit;
+    reg [7:0] extended;
+    reg [7:0] result;
+    integer i;
+    integer shift_amt;
+    begin
+      // Extend input to output width
+      for (i = 0; i < width_z; i = i + 1) begin
+        if (i < width_a) begin
+          extended[i] = a_val[i];
+        end else begin
+          if (signd_a) begin
+            extended[i] = sign_bit;
+          end else begin
+            extended[i] = 1'b0;
+          end
+        end
+      end
+      
+      // Perform right shift (arithmetic)
+      shift_amt = s_val;
+      result = extended >> shift_amt;
+      
+      // For arithmetic right shift with sign extension
+      if (signd_a && sign_bit) begin
+        for (i = width_z - 1; i >= width_z - shift_amt && i >= 0; i = i - 1) begin
+          result[i] = 1'b1;
+        end
+      end
+      
+      fshr_u = result;
+    end
+  endfunction
+
+  function [7:0] fshl_s;
+    input [3:0] a_val;
+    input [1:0] s_val;
+    reg [7:0] result;
+    reg sign_bit;
+    reg [1:0] shift_magnitude;
+    begin
+      sign_bit = a_val[width_a - 1];
+      
+      // Check if shift is left (MSB of s is 0) or right (MSB of s is 1)
+      if (s_val[width_s - 1] == 1'b0) begin
+        // Left shift
+        shift_magnitude = s_val;
+        result = fshl_u(a_val, shift_magnitude, sign_bit);
+      end else begin
+        // Right shift - compute two's complement magnitude
+        shift_magnitude = (~s_val) + 1'b1;
+        result = fshr_u(a_val, shift_magnitude, sign_bit);
+      end
+      
+      fshl_s = result;
+    end
+  endfunction
+
+  assign z = fshl_s(a, s);
+
+endmodule

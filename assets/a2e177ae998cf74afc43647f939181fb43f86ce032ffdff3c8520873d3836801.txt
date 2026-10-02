@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+import json,importlib.util,shutil,re
+from pathlib import Path
+BASE=Path(__file__).resolve().parent
+BASE_BUILDER=BASE.parent/'direct50_axi_20260911_v1/build_packages.py'
+source=BASE_BUILDER.read_text().replace("for rel in m['source_closure']:\n", "for rel in m['source_closure']:\n  if rel.endswith('.vh'):continue\n")
+local=BASE/'base_builder.py';local.write_text(source)
+spec=importlib.util.spec_from_file_location('adi_base',local);b=importlib.util.module_from_spec(spec);spec.loader.exec_module(b);b.OUT=BASE
+b.CONTRACTS['axi_dmac_transfer']='''# ADI DMA transfer-engine project
+Implement the complete axi_dmac_transfer engine and every module at the required paths. The original AXI DMAC documentation describes the complete peripheral; this case's boundary is its independent transfer engine with request, AXI, AXI-stream, FIFO and diagnostic interfaces. The software AXI-Lite register front-end and board wrappers are outside the case. Consult original documentation, declaration-only interfaces and the reviewed boundary clarifications below. Files provided under support/ are fixed helper includes, not generated module targets.
+
+## Reviewed transfer-engine contract
+- Preserve declared clock domains and active-low reset inputs. ctrl_clk/ctrl_resetn own request control; memory source/destination interfaces use their respective AXI clocks/resets, and ADI FIFO interfaces their declared fifo clocks. Synchronize transfers across domains using the documented ASYNC_CLK parameters. Initial reset is required.
+- DMA_TYPE=0 is AXI memory mapped, 1 AXI stream, 2 ADI FIFO. Source and destination select independently. Bytes flow in increasing-address/little-endian lane order with proper ready/valid and byte-enable behavior. AXI requests obey burst length, size, cache/protection fields, backpressure and completion responses. AXI-stream and ADI FIFO semantics are described in the original manual, including overflow/underflow reporting.
+- A req_valid/req_ready handshake admits a transfer. req_src_address/req_dest_address ports omit their low byte-offset bits; supply word-indexed values according to their declared BYTES_PER_BEAT_WIDTH. req_x_length is bytes minus one; req_y_length is rows minus one when 2D is enabled. Strides advance each row. The request fields remain stable through acceptance. Request completion, measured partial length and end-of-transfer outputs describe drained work, not mere command acceptance.
+- ctrl_enable enables the DMA. Deasserting it must stop new work and eventually drain every AXI request already issued, returning the engine and transaction queues to idle; do not simply gate off an outstanding response. ctrl_pause stalls initiation while preserving active work. Preserve declared request/reset/debug ports; no internal hierarchy names are imposed by this case.
+- Qualification uses both original read- and write-shutdown benches: 32-bit AXI↔ADI-FIFO, FIFO_SIZE=8, DMA_LENGTH_ALIGN=2, aligned address 0x80000000, req_x_length=0x2ff, no 2D/SG/framelock features, independent FIFO clock at twice the AXI clock. After disable, dbg_status must represent drained reset-manager/interface state as exercised by the original bench; responses outstanding in the trusted bus model must be accepted. Preserve parameter interfaces for the rest of the declared closure, but these two benches do not establish exhaustive data, feature or configuration coverage.
+- The exact debug bit definitions are provided in diagnostic_fields.md. This diagnostic contract is externally visible and used by the original shutdown tests. Do not substitute internal implementation names as output requirements.
+- inc_id.vh supplies fixed binary/Gray helper functions and resp.vh supplies AXI response constants. They are retained unchanged and supplied to compilation; implement all31 module files, not these two includes. No arbitrary includes or simulator file/network/process I/O are allowed. Constant elaboration helpers and synthesizable initialization are permitted.
+
+Original docs are retained verbatim. These curator clarifications distinguish the transfer engine from its software control front-end and declare the finite evaluated envelope. Score is passed whole testbenches /2; individual transactions are not extra cases or points. The reference RTL and original benches remain private.
+'''
+if __name__=='__main__':
+ b.build('axi_dmac_transfer','upstream172_20260909_v1/cases/001*')
+ p=BASE/'packages/github_alexforencich_axi_dmac_transfer_direct_v1'
+ # The shared builder's case-id prefix is source-specific; correct it for ADI.
+ cid='github_analogdevicesinc_axi_dmac_transfer_direct_v1';dest=p.with_name(cid);p.rename(dest);p=dest
+ m=json.loads((p/'case.json').read_text());m['case_id']=cid;b.write(p/'case.json',m)
+ src=Path(m['source']['local_path'])
+ for rel in ['docs/library/axi_dmac/index.rst','docs/library/axi_dmac/block_diagram.svg','docs/regmap/adi_regmap_dmac.txt','LICENSE_GPL2','LICENSE_ADIBSD']:
+  if (src/rel).is_file():q=p/'public/specification'/rel;q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(src/rel,q)
+ headers=['library/axi_dmac/inc_id.vh','library/axi_dmac/resp.vh']
+ for rel in headers:
+  q=p/'public/support'/rel;q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(src/rel,q)
+ top=(src/'library/axi_dmac/axi_dmac_reset_manager.v').read_text()
+ # Original named wiring is documentation of a public diagnostic bus only.
+ match=re.search(r'assign\s+dbg_status\s*=\s*\{.*?\};',top,re.S)
+ assert match,'Find diagnostic definition before publishing'
+ (p/'public/specification/diagnostic_fields.md').write_text('''# Reviewed public diagnostic-port mapping
+Derived from the original reset-manager public-port definition; internal names and state encoding are not required, but the public debug values are.
+
+| Bits | Meaning |
+|---|---|
+| 11 | Reset pending |
+| 10 / 9 / 8 / 7 | Request / source / destination / SG internal active-low resets |
+| 6 / 5 / 4 / 3 | Request / synchronized source / destination / SG enabled state |
+| 2:0 | Externally reported state: 0 resetting, 1 reset, 2 disabled, 3 startup, 4 enabled, 5 shutdown |
+
+When disabled and drained in the qualified non-SG configuration, the original tests expect 0x701. This requirement is a public diagnostic encoding, not a requirement to reuse internal hierarchy names.
+''')
+ cfg=json.loads((p/'private/direct_adapter.json').read_text());cfg.update(entrypoint='private/verification/run_with_headers.py',argv=['{python}','{entrypoint}','--payload','{payload}','--candidate','{candidate}','--output','{output}'],allowed_includes=['inc_id.vh','resp.vh'],iverilog='/home/jwangjw/anaconda3/envs/securitylab/bin/iverilog',timeout_seconds=1200);b.write(p/'private/direct_adapter.json',cfg)
+ review=json.loads((p/'private/specification_review.json').read_text());review.update(complete_design_boundary='axi_dmac_transfer; software register front-end excluded',original_specification={'path':'docs/library/axi_dmac/index.rst','sha256':b.digest(src/'docs/library/axi_dmac/index.rst')},material_findings=['Full peripheral manual narrowed to transfer-engine ports','Fixed binary/Gray helpers and response constants are supplied, not generated targets','Both existing benches qualify shutdown/draining, not exhaustive datapath behavior']);b.write(p/'private/specification_review.json',review)
+ for file in ['build_adi.py','base_builder.py','run_with_headers.py']:shutil.copy2(BASE/file,p/'private/verification'/file)
+ for name in ['qualify_packages.py','seal_packages.py']:
+  text=(BASE.parent/'direct50_axi_20260911_v1'/name).read_text()
+  if name=='qualify_packages.py':
+   start=text.index('MUTATIONS=');end=text.index('\ndef run',start);text=text[:start]+'''MUTATIONS={'axi_dmac_transfer':('library/axi_dmac/src_axi_mm.v',"assign m_axi_rready = 1'b1;","assign m_axi_rready = 1'b0;")}'''+text[end:]
+  (BASE/name).write_text(text)

@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""Replay pinned Corundum whole benches against a replaceable RTL closure."""
+import argparse,concurrent.futures,json,os,re,shutil,signal,subprocess,time,xml.etree.ElementTree as ET
+from pathlib import Path
+p=argparse.ArgumentParser();p.add_argument('--payload',type=Path,required=True);p.add_argument('--candidate-dir',type=Path);p.add_argument('--output',type=Path,required=True);p.add_argument('--jobs',type=int,default=6);p.add_argument('--only',nargs='*');a=p.parse_args()
+a.payload=a.payload.resolve();a.output=a.output.resolve();cfg=json.loads((a.payload/'case.json').read_text())
+if a.output.exists():raise SystemExit('Output must not exist')
+a.output.mkdir(parents=True);stage=a.output/'source';shutil.copytree(a.payload/'source',stage)
+if a.candidate_dir:
+ for f in cfg['rtl_files']:
+  candidate=a.candidate_dir/f
+  if not candidate.is_file():raise SystemExit('Missing candidate '+str(candidate))
+  shutil.copyfile(candidate,stage/f)
+for target, canonical in cfg.get('rtl_duplicate_paths', {}).items():
+ shutil.copyfile(stage/canonical,stage/target)
+for f in stage.rglob('*.py'):
+ if f.read_bytes().startswith(b'#!'):f.chmod(0o755)
+for alias,target in cfg['library_aliases'].items():
+ dest=stage/alias;dest.parent.mkdir(parents=True,exist_ok=True);dest.symlink_to(target,target_is_directory=True)
+binpath=a.output/'bin';binpath.mkdir();(binpath/'vvp').write_text('#!/bin/sh\nexec '+cfg['tools']['vvp']+' -M '+cfg['tools']['vpi_directory']+' "$@"\n');(binpath/'vvp').chmod(0o755)
+compiler=binpath/'iverilog'
+compiler.write_text('#!'+cfg['tools']['python']+'\nimport os,sys,json\nraw=sys.argv[1:];args=[];i=0\nwhile i<len(raw):\n if raw[i]=="-P" and i+1<len(raw):args.append("-P"+raw[i+1]);i+=2\n else:args.append(raw[i]);i+=1\ndrop='+repr(['-Paxil_crossbar_wrap_4x4.S_COUNT=4','-Paxil_crossbar_wrap_4x4.M_COUNT=4','-Pdma_client_axis_sink.RAM_DATA_WIDTH=128','-Pdma_client_axis_source.RAM_DATA_WIDTH=128'])+'\nremoved=[x for x in args if x in drop]\nif removed:print("RTL_BENCH_REDUNDANT_BUILD_OPTIONS "+json.dumps(removed),flush=True)\nos.execv('+repr(cfg['tools']['iverilog'])+',['+repr(cfg['tools']['iverilog'])+']+[x for x in args if x not in drop])\n')
+compiler.chmod(0o755)
+env={**os.environ,'PATH':str(binpath)+':'+str(Path(cfg['tools']['python']).parent)+':'+str(Path(cfg['tools']['iverilog']).parent)+':'+os.environ['PATH'],'PYTHONPATH':':'.join([str(a.payload/'offline_python')]+[str(stage/x) for x in cfg['python_paths']]+[cfg['tools']['python_vendor']]),'RTL_BENCH_OFFLINE_PACKET_ONLY':'1','IVERILOG_DUMPER':'none','PYTHONDONTWRITEBYTECODE':'1','RANDOM_SEED':'1','COCOTB_LOG_LEVEL':'WARNING'}
+for k in list(env):
+ if k in ['TESTCASE','TEST_FILTER','COCOTB_TEST_FILTER','TESTS','PYTEST_ADDOPTS','PYTEST_PLUGINS','MAKEFLAGS','MFLAGS','COCOTB_RESULTS_FILE','SIM_BUILD','MODULE','TOPLEVEL'] or k.startswith('PARAM_'):env.pop(k,None)
+def run(tp):
+ cwd=stage/Path(tp['testbench']).parent; log=a.output/(tp['id']+'.log'); xml=cwd/'results.xml'; artifact=cwd/(Path(tp['testbench']).stem+'.vvp') if tp['framework']=='myhdl' else cwd/'sim_build/sim.vvp';cmd=[cfg['tools']['python'],'-m','pytest','-q',Path(tp['testbench']).name] if tp['framework']=='myhdl' else ['make','SIM=icarus','WAVES=0'];start=time.monotonic()
+ for f in [xml,artifact]:
+  if f.exists():f.unlink()
+ with log.open('w') as fh:
+  q=subprocess.Popen(cmd,cwd=cwd,env=env,stdout=fh,stderr=subprocess.STDOUT,start_new_session=True)
+  try:rc=q.wait(timeout=tp.get('timeout_seconds',600));timeout=False
+  except subprocess.TimeoutExpired:os.killpg(q.pid,signal.SIGKILL);q.wait();rc=None;timeout=True
+ text=log.read_text(errors='replace');checks=0;failed=0;skipped=0
+ if tp['framework']=='myhdl':passed=rc==0 and bool(re.search(r'\b1 passed\b',text))
+ else:
+  passed=False
+  if xml.exists():
+   shutil.copyfile(xml,a.output/(tp['id']+'.xml'))
+   try:
+    cases=ET.parse(xml).getroot().findall('.//testcase');checks=len(cases);failed=sum(c.find('failure') is not None or c.find('error') is not None for c in cases);skipped=sum(c.find('skipped') is not None for c in cases);passed=rc==0 and checks>0 and failed==0 and skipped==0
+   except ET.ParseError:pass
+ result={'id':tp['id'],'passed':passed,'compile_valid':artifact.is_file(),'timeout':timeout,'exit_code':rc,'seconds':round(time.monotonic()-start,3),'command':cmd,'log':str(log),'internal_checks_evidence_only':checks,'internal_failures':failed,'internal_skipped':skipped}
+ (a.output/(tp['id']+'.json')).write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result),flush=True);return result
+points=[x for x in cfg['testpoints'] if a.only is None or x['id'] in a.only]
+with concurrent.futures.ThreadPoolExecutor(max_workers=a.jobs) as pool:results=list(pool.map(run,points))
+r={'parent_case_id':cfg['case_id'],'passed_testpoints':sum(x['passed'] for x in results),'total_testpoints':len(results),'testpoints':results};r['score']=r['passed_testpoints']/r['total_testpoints'];(a.output/'result.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps({k:v for k,v in r.items() if k!='testpoints'}))

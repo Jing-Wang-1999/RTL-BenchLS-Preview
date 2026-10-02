@@ -1,0 +1,33 @@
+always @ (posedge clk or negedge reset_n)
+    begin : reg_update
+      integer i;
+
+      if (!reset_n)
+        begin
+          for (i = 0 ; i < 16 ; i = i + 1)
+            block_reg[i] <= 32'h0;
+
+          init_reg         <= 0;
+          next_reg         <= 0;
+          ready_reg        <= 0;
+          mode_reg         <= MODE_SHA_256;
+          digest_reg       <= 256'h0;
+          digest_valid_reg <= 0;
+        end
+      else
+        begin
+          ready_reg        <= core_ready;
+          digest_valid_reg <= core_digest_valid;
+          init_reg         <= init_new;
+          next_reg         <= next_new;
+
+          if (mode_we)
+            mode_reg <= mode_new;
+
+          if (core_digest_valid)
+            digest_reg <= core_digest;
+
+          if (block_we)
+            block_reg[address[3 : 0]] <= write_data;
+        end
+    end

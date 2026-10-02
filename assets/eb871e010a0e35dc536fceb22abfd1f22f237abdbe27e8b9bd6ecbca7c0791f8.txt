@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.56e37d72b0df386d9cce.fc033d11c5ed",
+  "compile_check": {
+    "case_id": "s1derived.56e37d72b0df386d9cce.fc033d11c5ed",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "origen_189240",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_189240.85aa33d4229b0212/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.56e37d72b0df386d9cce",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "56e37d72b0df386d9ccef282f376d1fadfb72ca10de9137ceb7f1d4e71867ed5",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.56e37d72b0df386d9cce.fc033d11c5ed",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_189240.85aa33d4229b0212/private/commercial_positive.log",
+    "commercial_log_sha256": "d23e9a5df601a27c70c651b89a4b4b6696b843ba478cdf8d7faa17d3db2d82ed",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_189240.85aa33d4229b0212/private/historical_harness/00_conformal_rtl.do",
+    "executed_script_sha256": "dd8b1000a78ac66c341329a48fd92aff425d8f3df5afa4582eadc2f1e41e6f70",
+    "golden_tops": [
+      "origen_189240"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.origen_189240.85aa33d4229b0212",
+    "parent_id": "s1p.56e37d72b0df386d9cce",
+    "revised_tops": [
+      "origen_189240"
+    ],
+    "source_group": "S2",
+    "status": "both_tops_matched",
+    "top_module": "origen_189240",
+    "verification_tool": "conformal"
+  },
+  "independent_review": {
+    "case_id": "s1derived.56e37d72b0df386d9cce.fc033d11c5ed",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All ten signed 26-bit comparisons and ascending branch priorities produce the stated zero-based argmax, including ties and the default.",
+        "rtl_excerpt": "out2 >= out1 && out2 >= out3",
+        "specification_excerpt": "ties choose the lowest-numbered input"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.56e37d72b0df386d9cce",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "32834a08d52bef4360b61306ff663b724f9386b1874c1ca6979f568d48148953",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "56e37d72b0df386d9ccef282f376d1fadfb72ca10de9137ceb7f1d4e71867ed5",
+    "source_group": "S2",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_189240.85aa33d4229b0212/private/historical_harness/00_conformal_rtl.do",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_189240.85aa33d4229b0212/private/historical_harness/01_conformal_rtl_origen_189240.do"
+  ],
+  "parent_id": "s1p.56e37d72b0df386d9cce",
+  "primary_review": {
+    "case_id": "s1derived.56e37d72b0df386d9cce.fc033d11c5ed",
+    "checks": {
+      "behavior": "The truncated specification omits the observable tie priority.",
+      "boundaries": "The repair covers observable truncation, wrap, initialization, and boundary behavior.",
+      "interface": "The repair states the complete actual interface and defaults.",
+      "rtl_reasonableness": "The circuit is coherent hardware for its stated role.",
+      "sequential_and_reset": "The repair states actual clock, reset, priority, and hold behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The truncated specification omits the observable tie priority.",
+        "rtl_excerpt": "The ordered >= chain selects the lowest-numbered input among equal maxima.",
+        "spec_excerpt": "It ends at \u201cif multiple inputs have\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The truncated specification omits the observable tie priority.",
+        "rtl_evidence": "The ordered >= chain selects the lowest-numbered input among equal maxima.",
+        "spec_evidence": "It ends at \u201cif multiple inputs have\u201d.",
+        "type": "incomplete_spec"
+      }
+    ],
+    "parent_id": "s1p.56e37d72b0df386d9cce",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_06/s1derived.56e37d72b0df386d9cce.fc033d11c5ed.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "56e37d72b0df386d9ccef282f376d1fadfb72ca10de9137ceb7f1d4e71867ed5",
+    "source_group": "S2",
+    "specification_sha256": "fc033d11c5ed165a466248e8fe2eb4dae3cf5a08e2e64084a3e8f5aec661d33f",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_06/s1derived.56e37d72b0df386d9cce.fc033d11c5ed.md",
+  "qualified_specification_sha256": "32834a08d52bef4360b61306ff663b724f9386b1874c1ca6979f568d48148953",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_189240.85aa33d4229b0212/private/golden_design.v",
+  "rtl_sha256": "56e37d72b0df386d9ccef282f376d1fadfb72ca10de9137ceb7f1d4e71867ed5",
+  "source_corpus": "OriGen-processed",
+  "source_group": "S2",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.origen_189240.85aa33d4229b0212/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "fc033d11c5ed165a466248e8fe2eb4dae3cf5a08e2e64084a3e8f5aec661d33f",
+  "top_module": "origen_189240"
+}

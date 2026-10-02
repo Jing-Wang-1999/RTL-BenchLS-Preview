@@ -1,0 +1,58 @@
+module autovcoder_076370 (
+    count,
+    edp_alu_m,
+    cl_vl
+);
+  /*AUTOARG()*/
+
+  output [31:0] count;
+
+  input [31:0] edp_alu_m;
+
+  input cl_vl;
+
+  // BEGIN Wire declarations made by MVP
+  // END Wire declarations made by MVP
+
+
+  /*AUTOWIRE*/
+  // Beginning of automatic wires (for undeclared instantiated-module outputs)
+  // Beginning of automatic wires (for undeclared assign signals)
+  wire [31:0] count;
+  wire [5:0] smallcount;
+  // End of automatics
+
+  wire [3:0] lscount;
+  wire [3:0] mscount;
+  wire lszeron;
+  wire mszeron;
+
+  // Instantiate 4bit cl0's with lscount unknown - ignore lower 2 bits of their count.
+  // For synthesis, this module should be flattened, but not restructured.
+  m14k_edp_clz_16b lscounti (
+      // Outputs
+      .count(lscount[3:0]),
+      .allzeron(lszeron),
+      // Inputs
+      .a(edp_alu_m[15:0])
+  );
+
+  m14k_edp_clz_16b mscounti (
+      // Outputs
+      .count(mscount[3:0]),
+      .allzeron(mszeron),
+      // Inputs
+      .a(edp_alu_m[31:16])
+  );
+
+  assign 	 smallcount[5:0] = (mszeron ? {2'b00,mscount[3:0]} 
+				    : (lszeron ? {2'b01,lscount[3:0]}
+				       : (cl_vl ? {6'h12}
+					  : 6'b100000))
+				            )
+		                            ;
+
+  assign count[31:0] = {26'b0, smallcount};
+
+endmodule
+

@@ -1,0 +1,161 @@
+always @(posedge clk) begin
+    s_axis_tx_req_ready_reg <= s_axis_tx_req_ready_next;
+
+    m_axis_tx_req_status_len_reg <= m_axis_tx_req_status_len_next;
+    m_axis_tx_req_status_tag_reg <= m_axis_tx_req_status_tag_next;
+    m_axis_tx_req_status_valid_reg <= m_axis_tx_req_status_valid_next;
+
+    m_axis_desc_req_queue_reg <= m_axis_desc_req_queue_next;
+    m_axis_desc_req_tag_reg <= m_axis_desc_req_tag_next;
+    m_axis_desc_req_valid_reg <= m_axis_desc_req_valid_next;
+
+    s_axis_desc_tready_reg <= s_axis_desc_tready_next;
+
+    m_axis_cpl_req_queue_reg <= m_axis_cpl_req_queue_next;
+    m_axis_cpl_req_tag_reg <= m_axis_cpl_req_tag_next;
+    m_axis_cpl_req_data_reg <= m_axis_cpl_req_data_next;
+    m_axis_cpl_req_valid_reg <= m_axis_cpl_req_valid_next;
+
+    m_axis_tx_desc_addr_reg <= m_axis_tx_desc_addr_next;
+    m_axis_tx_desc_len_reg <= m_axis_tx_desc_len_next;
+    m_axis_tx_desc_tag_reg <= m_axis_tx_desc_tag_next;
+    m_axis_tx_desc_id_reg <= m_axis_tx_desc_id_next;
+    m_axis_tx_desc_dest_reg <= m_axis_tx_desc_dest_next;
+    m_axis_tx_desc_user_reg <= m_axis_tx_desc_user_next;
+    m_axis_tx_desc_valid_reg <= m_axis_tx_desc_valid_next;
+
+    s_axis_tx_cpl_ready_reg <= s_axis_tx_cpl_ready_next;
+
+    m_axis_tx_csum_cmd_csum_enable_reg <= m_axis_tx_csum_cmd_csum_enable_next;
+    m_axis_tx_csum_cmd_csum_start_reg <= m_axis_tx_csum_cmd_csum_start_next;
+    m_axis_tx_csum_cmd_csum_offset_reg <= m_axis_tx_csum_cmd_csum_offset_next;
+    m_axis_tx_csum_cmd_valid_reg <= m_axis_tx_csum_cmd_valid_next;
+
+    buf_wr_ptr_reg <= buf_wr_ptr_next;
+    buf_rd_ptr_reg <= buf_rd_ptr_next;
+
+    desc_start_reg <= desc_start_next;
+    desc_len_reg <= desc_len_next;
+
+    early_tx_req_status_tag_reg <= early_tx_req_status_tag_next;
+    early_tx_req_status_valid_reg <= early_tx_req_status_valid_next;
+
+    finish_tx_req_status_len_reg <= finish_tx_req_status_len_next;
+    finish_tx_req_status_tag_reg <= finish_tx_req_status_tag_next;
+    finish_tx_req_status_valid_reg <= finish_tx_req_status_valid_next;
+
+    active_desc_req_count_reg <= active_desc_req_count_reg + inc_active_desc_req - dec_active_desc_req_1 - dec_active_desc_req_2;
+
+    // descriptor table operations
+    if (desc_table_start_en) begin
+        desc_table_active[desc_table_start_ptr_reg & DESC_PTR_MASK] <= 1'b1;
+        desc_table_invalid[desc_table_start_ptr_reg & DESC_PTR_MASK] <= 1'b0;
+        desc_table_desc_fetched[desc_table_start_ptr_reg & DESC_PTR_MASK] <= 1'b0;
+        desc_table_data_fetched[desc_table_start_ptr_reg & DESC_PTR_MASK] <= 1'b0;
+        desc_table_tx_done_a[desc_table_start_ptr_reg & DESC_PTR_MASK] <= desc_table_tx_done_b[desc_table_start_ptr_reg & DESC_PTR_MASK];
+        desc_table_cpl_write_done[desc_table_start_ptr_reg & DESC_PTR_MASK] <= 1'b0;
+        desc_table_queue[desc_table_start_ptr_reg & DESC_PTR_MASK] <= desc_table_start_queue;
+        desc_table_tag[desc_table_start_ptr_reg & DESC_PTR_MASK] <= desc_table_start_tag;
+        desc_table_dest[desc_table_start_ptr_reg & DESC_PTR_MASK] <= desc_table_start_dest;
+        desc_table_start_ptr_reg <= desc_table_start_ptr_reg + 1;
+    end
+
+    if (desc_table_dequeue_en) begin
+        desc_table_queue_ptr[desc_table_dequeue_ptr & DESC_PTR_MASK] <= desc_table_dequeue_queue_ptr;
+        desc_table_cpl_queue[desc_table_dequeue_ptr & DESC_PTR_MASK] <= desc_table_dequeue_cpl_queue;
+        if (desc_table_dequeue_invalid) begin
+            desc_table_invalid[desc_table_dequeue_ptr & DESC_PTR_MASK] <= 1'b1;
+        end
+    end
+
+    if (desc_table_desc_ctrl_en) begin
+        desc_table_buf_ptr[desc_table_desc_ctrl_ptr & DESC_PTR_MASK] <= desc_table_desc_ctrl_buf_ptr;
+        desc_table_csum_start[desc_table_desc_ctrl_ptr & DESC_PTR_MASK] <= desc_table_desc_ctrl_csum_start;
+        desc_table_csum_offset[desc_table_desc_ctrl_ptr & DESC_PTR_MASK] <= desc_table_desc_ctrl_csum_offset;
+        desc_table_csum_enable[desc_table_desc_ctrl_ptr & DESC_PTR_MASK] <= desc_table_desc_ctrl_csum_enable;
+    end
+
+    if (desc_table_desc_fetched_en) begin
+        desc_table_len[desc_table_desc_fetched_ptr & DESC_PTR_MASK] <= desc_table_desc_fetched_len;
+        desc_table_desc_fetched[desc_table_desc_fetched_ptr & DESC_PTR_MASK] <= 1'b1;
+    end
+
+    if (desc_table_data_fetched_en) begin
+        desc_table_data_fetched[desc_table_data_fetched_ptr & DESC_PTR_MASK] <= 1'b1;
+    end
+
+    if (desc_table_tx_start_en) begin
+        desc_table_data_fetched[desc_table_tx_start_ptr_reg & DESC_PTR_MASK] <= 1'b0;
+        desc_table_tx_start_ptr_reg <= desc_table_tx_start_ptr_reg + 1;
+    end
+
+    if (desc_table_tx_finish_en) begin
+        if (PTP_TS_ENABLE) begin
+            desc_table_ptp_ts[desc_table_tx_finish_ptr] <= desc_table_tx_finish_ts;
+        end
+        desc_table_tx_done_b[desc_table_tx_finish_ptr] <= !desc_table_tx_done_a[desc_table_tx_finish_ptr];
+    end
+
+    if (desc_table_cpl_enqueue_start_en) begin
+        desc_table_cpl_enqueue_start_ptr_reg <= desc_table_cpl_enqueue_start_ptr_reg + 1;
+    end
+
+    if (desc_table_cpl_write_done_en) begin
+        desc_table_cpl_write_done[desc_table_cpl_write_done_ptr] <= 1'b1;
+    end
+
+    if (desc_table_finish_en) begin
+        desc_table_active[desc_table_finish_ptr_reg & DESC_PTR_MASK] <= 1'b0;
+        desc_table_finish_ptr_reg <= desc_table_finish_ptr_reg + 1;
+    end
+
+    if (desc_table_read_start_en) begin
+        desc_table_read_commit[desc_table_read_start_ptr] <= desc_table_read_start_commit;
+        if (desc_table_read_start_init) begin
+            desc_table_read_count_start[desc_table_read_start_ptr] <= desc_table_read_count_finish[desc_table_read_start_ptr] + 1;
+        end else begin
+            desc_table_read_count_start[desc_table_read_start_ptr] <= desc_table_read_count_start[desc_table_read_start_ptr] + 1;
+        end
+    end else if (desc_table_read_start_commit || desc_table_read_start_init) begin
+        desc_table_read_commit[desc_table_read_start_ptr] <= desc_table_read_start_commit;
+        if (desc_table_read_start_init) begin
+            desc_table_read_count_start[desc_table_read_start_ptr] <= desc_table_read_count_finish[desc_table_read_start_ptr];
+        end
+    end
+
+    if (desc_table_read_finish_en) begin
+        desc_table_read_count_finish[desc_table_read_finish_ptr] <= desc_table_read_count_finish[desc_table_read_finish_ptr] + 1;
+    end
+
+    if (rst) begin
+        s_axis_tx_req_ready_reg <= 1'b0;
+        m_axis_tx_req_status_valid_reg <= 1'b0;
+        m_axis_desc_req_valid_reg <= 1'b0;
+        s_axis_desc_tready_reg <= 1'b0;
+        m_axis_cpl_req_valid_reg <= 1'b0;
+        m_axis_tx_desc_valid_reg <= 1'b0;
+        s_axis_tx_cpl_ready_reg <= 1'b0;
+        m_axis_tx_csum_cmd_valid_reg <= 1'b0;
+
+        buf_wr_ptr_reg <= 0;
+        buf_rd_ptr_reg <= 0;
+
+        desc_start_reg <= 1'b1;
+        desc_len_reg <= 0;
+
+        early_tx_req_status_valid_reg <= 1'b0;
+        finish_tx_req_status_valid_reg <= 1'b0;
+
+        active_desc_req_count_reg <= 0;
+
+        desc_table_active <= 0;
+        desc_table_invalid <= 0;
+        desc_table_desc_fetched <= 0;
+        desc_table_data_fetched <= 0;
+
+        desc_table_start_ptr_reg <= 0;
+        desc_table_tx_start_ptr_reg <= 0;
+        desc_table_cpl_enqueue_start_ptr_reg <= 0;
+        desc_table_finish_ptr_reg <= 0;
+    end
+end

@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.3694bcaf68f7b2f9593e.62fbae3caabb",
+  "compile_check": {
+    "case_id": "s1derived.3694bcaf68f7b2f9593e.62fbae3caabb",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "pcie_ptile_fc_counter",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.3694bcaf68f7b2f9593e.62fbae3caabb/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "3694bcaf68f7b2f9593e16c650b5a48e48eaf666d507e1ebc329840422445b49",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.3694bcaf68f7b2f9593e.62fbae3caabb",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.3694bcaf68f7b2f9593e",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "pcie_ptile_fc_counter"
+  },
+  "independent_review": {
+    "case_id": "s1derived.3694bcaf68f7b2f9593e.62fbae3caabb",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Reread the correctedcontract: restricting WIDTH1..30 keeps the signed32-bitcomparison sumrepresentable and retainsdefault16. ExplicitTDMnonmatchholds, moduloWIDTHlimitdelta, preedgeavailability/capacitydependencies andsynchronousresetpriority match. The wideroverflowbehavior isnotmisrepresented as idealsaturation; noRTLwas changed.",
+        "rtl_excerpt": "if ($signed({1'b0, fc_av_reg}) - $signed({1'b0, fc_dec}) + $signed({1'b0, fc_inc_reg}) < 0)",
+        "specification_excerpt": "Supported `WIDTH` values are 1 through 30."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.3694bcaf68f7b2f9593e",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "64701c92c41629f0519c920176e071dd1cdcb3549934d192ca855edeacac72e8",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3694bcaf68f7b2f9593e16c650b5a48e48eaf666d507e1ebc329840422445b49",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.3694bcaf68f7b2f9593e",
+  "primary_review": {
+    "case_id": "s1derived.3694bcaf68f7b2f9593e.62fbae3caabb",
+    "checks": {
+      "behavior": "Compared full equations, lookup transforms, state transitions, handshakes, and dataflow.",
+      "boundaries": "Checked default/disabled cases, simultaneous controls, saturation, arithmetic widths, invalid addresses, and startup state.",
+      "interface": "Compared complete ports, widths, parameters, and defaults.",
+      "rtl_reasonableness": "The preserved repository RTL implements a coherent hardware function.",
+      "sequential_and_reset": "Checked reset polarity/timing, priority, enables, holds, initialization, and latency."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file semantic comparison supports revise.",
+        "rtl_excerpt": "RTL saturates old fc_av-fc_dec+old fc_inc against old capacity and applies a newly computed limit increment one edge later; rst overrides last.",
+        "spec_excerpt": "The prose truncates before saturation and omits WIDTH=16, INDEX=0, reset priority, and delayed increment use."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose truncates before saturation and omits WIDTH=16, INDEX=0, reset priority, and delayed increment use.",
+        "rtl_evidence": "RTL saturates old fc_av-fc_dec+old fc_inc against old capacity and applies a newly computed limit increment one edge later; rst overrides last.",
+        "spec_evidence": "The prose truncates before saturation and omits WIDTH=16, INDEX=0, reset priority, and delayed increment use.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.3694bcaf68f7b2f9593e",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.3694bcaf68f7b2f9593e.62fbae3caabb.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "3694bcaf68f7b2f9593e16c650b5a48e48eaf666d507e1ebc329840422445b49",
+    "source_group": "S1",
+    "specification_sha256": "62fbae3caabb6a15758ccc2f27981c3893929205aaf6a1efbad007796a0e0f2a",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_2_01/s1derived.3694bcaf68f7b2f9593e.62fbae3caabb.md",
+  "qualified_specification_sha256": "64701c92c41629f0519c920176e071dd1cdcb3549934d192ca855edeacac72e8",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.3694bcaf68f7b2f9593e.62fbae3caabb/private/golden_design.v",
+  "rtl_sha256": "3694bcaf68f7b2f9593e16c650b5a48e48eaf666d507e1ebc329840422445b49",
+  "source_corpus": "SEC-Flow-Star-repos-5.corundum",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.3694bcaf68f7b2f9593e.62fbae3caabb/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "62fbae3caabb6a15758ccc2f27981c3893929205aaf6a1efbad007796a0e0f2a",
+  "top_module": "pcie_ptile_fc_counter"
+}

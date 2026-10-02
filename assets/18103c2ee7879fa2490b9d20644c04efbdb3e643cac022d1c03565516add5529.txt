@@ -1,0 +1,248 @@
+module autovcoder_055224 (
+    A32,
+    TYPESEL,
+    R32,
+    FE_OFN1592_intermediate_circ_data_0_out_6,
+    FE_OFN16196_intermediate_circ_data_0_out_3,
+    FE_OFN16197_intermediate_circ_data_0_out_3
+);
+  input [31:0] A32;
+  input [2:0] TYPESEL;
+  output [31:0] R32;
+  input FE_OFN1592_intermediate_circ_data_0_out_6;
+  input FE_OFN16196_intermediate_circ_data_0_out_3;
+  input FE_OFN16197_intermediate_circ_data_0_out_3;
+
+  // Internal wires
+  wire FE_RN_1;
+  wire [15:0] mux0out;
+  wire [15:0] mux1out;
+  wire [15:0] sgninv_0_out;
+  wire [15:0] sgninv_1_out;
+
+  BUFX4 FE_OFC20372_intermediate_circ_data_0_out_18 (
+      .A(A32[18]),
+      .Y(R32[18])
+  );
+  mux_2_to_1_DATA_WIDTH16_98 mux_2_to_1_inst0 (
+      .D0({
+        A32[31],
+        A32[30],
+        A32[29],
+        A32[28],
+        A32[27],
+        A32[26],
+        A32[25],
+        A32[24],
+        A32[23],
+        A32[22],
+        A32[21],
+        A32[20],
+        A32[19],
+        A32[18],
+        A32[17],
+        A32[16]
+      }),
+      .D1({
+        A32[15],
+        A32[14],
+        A32[13],
+        A32[12],
+        A32[11],
+        A32[10],
+        A32[9],
+        A32[8],
+        A32[7],
+        A32[6],
+        A32[5],
+        A32[4],
+        A32[3],
+        A32[2],
+        A32[1],
+        A32[0]
+      }),
+      .S(TYPESEL[2]),
+      .Y({
+        mux0out[15],
+        mux0out[14],
+        mux0out[13],
+        mux0out[12],
+        mux0out[11],
+        mux0out[10],
+        mux0out[9],
+        mux0out[8],
+        mux0out[7],
+        mux0out[6],
+        mux0out[5],
+        mux0out[4],
+        mux0out[3],
+        FE_UNCONNECTEDZ_0,
+        mux0out[1],
+        mux0out[0]
+      })
+  );
+  mux_2_to_1_DATA_WIDTH16_97 mux_2_to_1_inst1 (
+      .D0({
+        A32[15],
+        A32[14],
+        A32[13],
+        A32[12],
+        A32[11],
+        A32[10],
+        A32[9],
+        A32[8],
+        A32[7],
+        FE_OFN1592_intermediate_circ_data_0_out_6,
+        A32[5],
+        A32[4],
+        A32[3],
+        A32[2],
+        A32[1],
+        A32[0]
+      }),
+      .D1({
+        A32[31],
+        A32[30],
+        A32[29],
+        A32[28],
+        A32[27],
+        A32[26],
+        A32[25],
+        A32[24],
+        A32[23],
+        A32[22],
+        A32[21],
+        A32[20],
+        A32[19],
+        A32[18],
+        A32[17],
+        A32[16]
+      }),
+      .S(TYPESEL[2]),
+      .Y(mux1out),
+      .FE_OFN16196_intermediate_circ_data_0_out_3(FE_OFN16196_intermediate_circ_data_0_out_3)
+  );
+  sgninv_16b_86 sgninv_16b_inst0 (
+      .A16({
+        mux0out[15],
+        mux0out[14],
+        mux0out[13],
+        mux0out[12],
+        mux0out[11],
+        mux0out[10],
+        mux0out[9],
+        mux0out[8],
+        mux0out[7],
+        mux0out[6],
+        mux0out[5],
+        mux0out[4],
+        mux0out[3],
+        R32[18],
+        A32[17],
+        A32[16]
+      }),
+      .R16(sgninv_0_out)
+  );
+  sgninv_16b_85 sgninv_16b_inst1 (
+      .A16({
+        mux1out[15],
+        mux1out[14],
+        mux1out[13],
+        mux1out[12],
+        mux1out[11],
+        mux1out[10],
+        mux1out[9],
+        mux1out[8],
+        mux1out[7],
+        mux1out[6],
+        mux1out[5],
+        mux1out[4],
+        FE_OFN16197_intermediate_circ_data_0_out_3,
+        mux1out[2],
+        mux1out[1],
+        mux1out[0]
+      }),
+      .R16(sgninv_1_out)
+  );
+  mux_2_to_1_DATA_WIDTH16_96 mux_2_to_1_inst2 (
+      .D0({
+        mux0out[15],
+        mux0out[14],
+        mux0out[13],
+        mux0out[12],
+        mux0out[11],
+        mux0out[10],
+        mux0out[9],
+        mux0out[8],
+        mux0out[7],
+        mux0out[6],
+        mux0out[5],
+        mux0out[4],
+        mux0out[3],
+        R32[18],
+        mux0out[1],
+        mux0out[0]
+      }),
+      .D1(sgninv_0_out),
+      .S(TYPESEL[1]),
+      .Y({
+        R32[31],
+        R32[30],
+        R32[29],
+        R32[28],
+        R32[27],
+        R32[26],
+        R32[25],
+        R32[24],
+        R32[23],
+        R32[22],
+        R32[21],
+        R32[20],
+        R32[19],
+        FE_RN_1,
+        R32[17],
+        R32[16]
+      })
+  );
+  mux_2_to_1_DATA_WIDTH16_95 mux_2_to_1_inst3 (
+      .D0({
+        mux1out[15],
+        mux1out[14],
+        mux1out[13],
+        mux1out[12],
+        mux1out[11],
+        mux1out[10],
+        mux1out[9],
+        mux1out[8],
+        mux1out[7],
+        mux1out[6],
+        mux1out[5],
+        mux1out[4],
+        FE_OFN16197_intermediate_circ_data_0_out_3,
+        mux1out[2],
+        mux1out[1],
+        mux1out[0]
+      }),
+      .D1(sgninv_1_out),
+      .S(TYPESEL[0]),
+      .Y({
+        R32[15],
+        R32[14],
+        R32[13],
+        R32[12],
+        R32[11],
+        R32[10],
+        R32[9],
+        R32[8],
+        R32[7],
+        R32[6],
+        R32[5],
+        R32[4],
+        R32[3],
+        R32[2],
+        R32[1],
+        R32[0]
+      })
+  );
+endmodule
+

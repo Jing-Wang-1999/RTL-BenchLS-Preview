@@ -1,0 +1,5 @@
+# Falling-edge serial pattern FSM (`origen_075780`)
+
+Inputs are scalar `din`, `clk`, and active-low asynchronous `rst_n`; scalar output `flag` is combinational. There are no parameters. Nine one-hot states are IDLE, A, B, C, D, E, F, G, and H.
+
+Reset immediately selects IDLE. Otherwise each falling `clk` edge selects: IDLE→A/B, A→C/B, B→A/D, C→E/D, D→G/B, E→F/D, F→C/B, G→H/B, and H→C/B, where each pair is chosen by `din=1/0`. An illegal state recovers to IDLE on the next falling edge. `flag` is high exactly while the current state is F or H and low in all other states. The `$monitor` initial block only prints simulation diagnostics and does not affect hardware behavior.

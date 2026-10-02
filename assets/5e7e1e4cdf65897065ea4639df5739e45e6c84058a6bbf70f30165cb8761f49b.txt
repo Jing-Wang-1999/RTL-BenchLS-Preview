@@ -1,0 +1,176 @@
+module autovcoder_076017 (
+    clk,  //ref_clk, global_reset_n,
+    start,
+    N,
+    offset,
+    done,
+    //mem_addr, mem_ba, mem_cas_n, mem_cke, mem_clk, mem_clk_n, mem_cs_n,
+    burst_begin,
+    mem_local_be,
+    mem_local_read_req,
+    mem_local_size,
+    mem_local_wdata,
+    mem_local_write_req,
+    mem_local_rdata,
+    mem_local_rdata_valid,
+    mem_local_ready,
+    mem_local_wdata_req,
+    reset_n,
+    mem_local_addr
+    //Cong: dummy output
+    //a_junk,
+    //w_junk,
+    //m_junk,
+    //r_junk,
+    //Cong:dummy output
+    //junk_r,
+    //junk_r1,
+    //junk_r2,
+    //junk_r3,
+    //junk_top
+);
+
+  input start;
+  input [`NWIDTH-1:0] N;
+  input [`DDRSIZEWIDTH-1:0] offset;
+  output done;
+  input clk;
+
+  output burst_begin;
+  output [`MEMCONNUMBYTES-1:0] mem_local_be;
+  output mem_local_read_req;
+  output [`BURSTLEN-1:0] mem_local_size;
+  output [`MEMCONWIDTH-1:0] mem_local_wdata;
+  output mem_local_write_req;
+  output [`DDRSIZEWIDTH-1:0] mem_local_addr;
+  input [`MEMCONWIDTH-1:0] mem_local_rdata;
+  input mem_local_rdata_valid;
+  input mem_local_ready;
+  input reset_n;
+  input mem_local_wdata_req;
+  wire [`BLOCKWIDTH-1:0] m, n, loop;
+  wire [1:0] mode;
+  wire comp_start, comp_done;
+  wire dtu_write_req, dtu_read_req, dtu_ack, dtu_done;
+  wire [`DDRSIZEWIDTH-1:0] dtu_mem_addr;
+  wire [`RAMSIZEWIDTH-1:0] dtu_ram_addr;
+  wire [`BLOCKWIDTH-1:0] dtu_size;
+  wire left_sel;
+
+  wire [`RAMWIDTH-1:0] curWriteDataMem, curReadDataMem;
+  wire [`RAMSIZEWIDTH-1:0] curWriteAddrMem, curReadAddrMem;
+  wire [`RAMNUMBYTES-1:0] curWriteByteEnMem;
+  wire curWriteEnMem;
+  wire [`RAMWIDTH-1:0] leftWriteDataMem;
+  wire [`RAMSIZEWIDTH-1:0] leftWriteAddrMem;
+  wire [`RAMNUMBYTES-1:0] leftWriteByteEnMem;
+  wire leftWriteEnMem;
+  wire curMemSel, leftMemSel;
+
+  wire burst_begin;
+  wire [`MEMCONNUMBYTES-1:0] mem_local_be;
+  wire mem_local_read_req;
+  wire [`BURSTLEN-1:0] mem_local_size;
+  wire [`MEMCONWIDTH-1:0] mem_local_wdata;
+  wire mem_local_write_req;
+  wire [`MEMCONWIDTH-1:0] mem_local_rdata;
+  wire mem_local_rdata_valid;
+  wire mem_local_ready;
+  wire mem_local_wdata_req;
+  wire reset_n;
+  wire [`DDRSIZEWIDTH-1:0] mem_local_addr;
+
+  wire [`RAMWIDTH-1:0] ram_write_data, ram_read_data;
+  wire [`RAMSIZEWIDTH-1:0] ram_write_addr, ram_read_addr;
+  wire [`RAMNUMBYTES-1:0] ram_write_byte_en;
+  wire ram_write_en;
+
+  MarshallerController MC (
+      clk,
+      start,
+      done,
+      N,
+      offset,
+      comp_start,
+      m,
+      n,
+      loop,
+      mode,
+      comp_done,
+      curMemSel,
+      leftMemSel,
+      dtu_write_req,
+      dtu_read_req,
+      dtu_mem_addr,
+      dtu_ram_addr,
+      dtu_size,
+      dtu_ack,
+      dtu_done,
+      left_sel
+  );
+
+  // block that computes the LU factorization, with answer stored back into ram block
+  LU compBlock (
+      clk,
+      comp_start,
+      m,
+      n,
+      loop,
+      mode,
+      comp_done,
+      curReadAddrMem,
+      curReadDataMem,
+      curWriteByteEnMem,
+      curWriteDataMem,
+      curWriteAddrMem,
+      curWriteEnMem,
+      curMemSel,
+      leftWriteByteEnMem,
+      leftWriteDataMem,
+      leftWriteAddrMem,
+      leftWriteEnMem,
+      leftMemSel
+  );
+
+  DataTransferUnit DTU (
+      .clk(clk),
+      .dtu_write_req(dtu_write_req),
+      .dtu_read_req(dtu_read_req),
+      .dtu_mem_addr(dtu_mem_addr),
+      .dtu_ram_addr(dtu_ram_addr),
+      .dtu_size(dtu_size),
+      .dtu_ack(dtu_ack),
+      .dtu_done(dtu_done),
+      .ram_read_addr(ram_read_addr),
+      .ram_read_data(ram_read_data),
+      .ram_write_byte_en(ram_write_byte_en),
+      .ram_write_data(ram_write_data),
+      .ram_write_addr(ram_write_addr),
+      .ram_write_en(ram_write_en),
+      .mem_rdata(mem_local_rdata),
+      .mem_rdata_valid(mem_local_rdata_valid),
+      .mem_ready(mem_local_ready),
+      .mem_wdata_req(mem_local_wdata_req),
+      .reset_n(reset_n),
+      .burst_begin(burst_begin),
+      .mem_local_addr(mem_local_addr),
+      .mem_be(mem_local_be),
+      .mem_read_req(mem_local_read_req),
+      .mem_size(mem_local_size),
+      .mem_wdata(mem_local_wdata),
+      .mem_write_req(mem_local_write_req)
+      //Cong: dummy output
+  );
+
+  assign curReadAddrMem = ram_read_addr;
+  assign curWriteByteEnMem = ram_write_byte_en;
+  assign curWriteDataMem = ram_write_data;
+  assign curWriteAddrMem = ram_write_addr;
+  assign curWriteEnMem = ram_write_en && (left_sel == 0);
+  assign leftWriteByteEnMem = ram_write_byte_en;
+  assign leftWriteDataMem = ram_write_data;
+  assign leftWriteAddrMem = ram_write_addr;
+  assign leftWriteEnMem = ram_write_en && (left_sel == 1);
+  assign ram_read_data = curReadDataMem;
+endmodule
+

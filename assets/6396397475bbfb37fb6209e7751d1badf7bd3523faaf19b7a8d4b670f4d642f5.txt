@@ -1,0 +1,82 @@
+/////////////////////////////////////////////////////////////////////
+////                                                             ////
+////  WISHBONE rev.B2 compliant VGA/LCD Core; Timing Generator   ////
+////  Video Timing Generator                                     ////
+////                                                             ////
+////  Author: Richard Herveille                                  ////
+////          richard@asics.ws                                   ////
+////          www.asics.ws                                       ////
+////                                                             ////
+////  Downloaded from: http://www.opencores.org/projects/vga_lcd ////
+////                                                             ////
+/////////////////////////////////////////////////////////////////////
+////                                                             ////
+//// Copyright (C) 2001 Richard Herveille                        ////
+////                    richard@asics.ws                         ////
+////                                                             ////
+//// This source file may be used and distributed without        ////
+//// restriction provided that this copyright statement is not   ////
+//// removed from the file and that any derivative work contains ////
+//// the original copyright notice and the associated disclaimer.////
+////                                                             ////
+////     THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY     ////
+//// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED   ////
+//// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS   ////
+//// FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL THE AUTHOR      ////
+//// OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,         ////
+//// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES    ////
+//// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE   ////
+//// GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR        ////
+//// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF  ////
+//// LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY, OR TORT  ////
+//// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT  ////
+//// OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         ////
+//// POSSIBILITY OF SUCH DAMAGE.                                 ////
+////                                                             ////
+/////////////////////////////////////////////////////////////////////
+
+//  CVS Log
+//
+//  $Id: vga_vtim.v,v 1.8 2003-05-07 09:48:54 rherveille Exp $
+//
+//  $Date: 2003-05-07 09:48:54 $
+//  $Revision: 1.8 $
+//  $Author: rherveille $
+//  $Locker:  $
+//  $State: Exp $
+//
+// Change History:
+//               $Log: not supported by cvs2svn $
+//               Revision 1.7  2003/03/19 12:50:45  rherveille
+//               Changed timing generator; made it smaller and easier.
+//
+//               Revision 1.6  2002/04/20 10:02:39  rherveille
+//               Changed video timing generator.
+//               Changed wishbone master vertical gate count code.
+//               Fixed a potential bug in the wishbone slave (cursor color register readout).
+//
+//               Revision 1.5  2002/01/28 03:47:16  rherveille
+//               Changed counter-library.
+//               Changed vga-core.
+//               Added 32bpp mode.
+//
+
+
+
+module vga_vtim(clk, ena, rst, Tsync, Tgdel, Tgate, Tlen, Sync, Gate, Done);
+parameter [4:0] idle_state = 5'b00001;
+parameter [4:0] sync_state = 5'b00010;
+parameter [4:0] gdel_state = 5'b00100;
+parameter [4:0] gate_state = 5'b01000;
+parameter [4:0] len_state  = 5'b10000;
+input clk;
+input ena;
+input rst;
+input [ 7:0] Tsync;
+input [ 7:0] Tgdel;
+input [15:0] Tgate;
+input [15:0] Tlen;
+output Sync;
+output Gate;
+output Done;
+endmodule

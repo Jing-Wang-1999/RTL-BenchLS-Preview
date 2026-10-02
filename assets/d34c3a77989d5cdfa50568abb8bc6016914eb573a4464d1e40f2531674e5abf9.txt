@@ -1,0 +1,104 @@
+module origen_093168 #(parameter STRLEN=0, parameter PS2FIFO=0)
+(
+	input [(8*STRLEN)-1:0] conf_str,
+	input                   clk_sys,
+	input                   SPI_CLK,
+	input                   SPI_SS_IO,
+	input                   SPI_MOSI,
+	output                  SPI_MISO,
+	output reg [5:0]        JOY0,
+	output reg [5:0]        JOY1,
+	output reg [1:0]        BUTTONS,
+	output reg [1:0]        SWITCHES,
+	output                  ps2_clk,
+	output reg              ps2_data
+);
+
+localparam CORE_TYPE = 8'ha4;
+
+reg [7:0] sbuf;
+reg [2:0] cnt;
+reg [2:0] cmd;
+
+always @(posedge SPI_CLK or posedge SPI_SS_IO) begin
+	if(SPI_SS_IO) begin
+		cnt <= 0;
+		cmd <= 0;
+	end else begin
+		sbuf <= {sbuf[6:0], SPI_MOSI};
+		cnt <= cnt + 1'd1;
+		if(cnt == 7) begin
+			cmd <= sbuf[2:0];
+			if(sbuf[6:3] != 0) cmd <= 0;
+		end
+	end
+end
+
+assign SPI_MISO = (cmd == 0) ? CORE_TYPE[~cnt[2:0]] : 1'b0;
+
+always @(posedge clk_sys) begin
+	if(cmd == 1 && cnt == 15) begin
+		BUTTONS <= {sbuf[1:0]};
+		SWITCHES <= {sbuf[3:2]};
+	end
+	if(cmd == 2 && cnt == 15) JOY0 <= {sbuf[5:0]};
+	if(cmd == 3 && cnt == 15) JOY1 <= {sbuf[5:0]};
+end
+
+// PS/2 keyboard
+reg [7:0] ps2_fifo [2:0];
+reg [1:0] ps2_wptr;
+reg [1:0] ps2_rptr;
+wire ps2_fifo_empty = (ps2_wptr == ps2_rptr);
+
+always @(posedge clk_sys) begin
+	if(cmd == 5 && cnt == 15) begin
+		ps2_fifo[ps2_wptr] <= sbuf;
+		ps2_wptr <= ps2_wptr + 1'd1;
+	end
+end
+
+reg [3:0] ps2_tx_state;
+reg [7:0] ps2_tx_byte;
+reg ps2_parity;
+
+assign ps2_clk = (ps2_tx_state == 0);
+
+always @(posedge clk_sys) begin
+	reg [15:0] ps2_tx_timeout;
+
+	if(ps2_tx_timeout) ps2_tx_timeout <= ps2_tx_timeout - 1'd1;
+
+	if(ps2_tx_timeout == 1) begin
+		ps2_tx_state <= 0;
+		ps2_data <= 1;
+	end else begin
+		case(ps2_tx_state)
+			0: if(!ps2_fifo_empty) begin
+				ps2_tx_byte <= ps2_fifo[ps2_rptr];
+				ps2_rptr <= ps2_rptr + 1'd1;
+				ps2_parity <= 1;
+				ps2_tx_state <= 1;
+				ps2_tx_timeout <= 16'd4000;
+				ps2_data <= 0;
+			end
+			1: begin
+				ps2_data <= ps2_tx_byte[0];
+				ps2_tx_byte <= {1'b0, ps2_tx_byte[7:1]};
+				ps2_parity <= ps2_parity ^ ps2_tx_byte[0];
+				ps2_tx_state <= ps2_tx_state + 1'd1;
+			end
+			9: begin
+				ps2_data <= ps2_parity;
+				ps2_tx_state <= ps2_tx_state + 1'd1;
+			end
+			10: begin
+				ps2_data <= 1;
+				ps2_tx_state <= ps2_tx_state + 1'd1;
+			end
+			11: ps2_tx_state <= 0;
+		endcase
+	end
+end
+
+endmodule

@@ -1,0 +1,57 @@
+module tb;
+localparam DATA_WIDTH=8,KEEP_WIDTH=1,ID_WIDTH=8,DEST_WIDTH=8,USER_WIDTH=1,DEPTH=4096,EMPTY_WIDTH=0,ERROR_WIDTH=0,CHANNEL_WIDTH=0,USE_STORE_FORWARD=0;
+reg clk;
+reg rst;
+reg [DATA_WIDTH-1:0]  s_axis_tdata;
+reg [KEEP_WIDTH-1:0]  s_axis_tkeep;
+reg s_axis_tvalid;
+wire s_axis_tready;
+reg s_axis_tlast;
+reg [ID_WIDTH-1:0]    s_axis_tid;
+reg [DEST_WIDTH-1:0]  s_axis_tdest;
+reg [USER_WIDTH-1:0]  s_axis_tuser;
+wire [DATA_WIDTH-1:0]  m_axis_tdata;
+wire [KEEP_WIDTH-1:0]  m_axis_tkeep;
+wire m_axis_tvalid;
+reg m_axis_tready;
+wire m_axis_tlast;
+wire [ID_WIDTH-1:0]    m_axis_tid;
+wire [DEST_WIDTH-1:0]  m_axis_tdest;
+wire [USER_WIDTH-1:0]  m_axis_tuser;
+reg pause_req;
+wire pause_ack;
+wire [$clog2(DEPTH):0] status_depth;
+wire [$clog2(DEPTH):0] status_depth_commit;
+wire status_overflow;
+wire status_bad_frame;
+wire status_good_frame;
+axis_fifo dut(.clk(clk),.rst(rst),.s_axis_tdata(s_axis_tdata),.s_axis_tkeep(s_axis_tkeep),.s_axis_tvalid(s_axis_tvalid),.s_axis_tready(s_axis_tready),.s_axis_tlast(s_axis_tlast),.s_axis_tid(s_axis_tid),.s_axis_tdest(s_axis_tdest),.s_axis_tuser(s_axis_tuser),.m_axis_tdata(m_axis_tdata),.m_axis_tkeep(m_axis_tkeep),.m_axis_tvalid(m_axis_tvalid),.m_axis_tready(m_axis_tready),.m_axis_tlast(m_axis_tlast),.m_axis_tid(m_axis_tid),.m_axis_tdest(m_axis_tdest),.m_axis_tuser(m_axis_tuser),.pause_req(pause_req),.pause_ack(pause_ack),.status_depth(status_depth),.status_depth_commit(status_depth_commit),.status_overflow(status_overflow),.status_bad_frame(status_bad_frame),.status_good_frame(status_good_frame));
+integer n,wr=0,rd=0;reg[7:0]q[0:30000];reg ql[0:30000];reg qu[0:30000];
+initial begin
+clk='0;
+rst='0;
+s_axis_tdata='0;
+s_axis_tkeep='0;
+s_axis_tvalid='0;
+s_axis_tlast='0;
+s_axis_tid='0;
+s_axis_tdest='0;
+s_axis_tuser='0;
+m_axis_tready='0;
+pause_req='0;
+rst=1;clk=0;#5;clk=1;#5;clk=0;rst=0;
+for(n=0;n<20000;n=n+1)begin
+ clk=0;s_axis_tvalid=(n<4118)?1:((n<14000)?($random&1):0);m_axis_tready=(n<4118)?0:((n<14000)?($random&1):1);s_axis_tdata=$random;
+ s_axis_tlast=n%3==0;s_axis_tuser=n%5==0;s_axis_tkeep=$random;s_axis_tid=$random;s_axis_tdest=$random;pause_req=$random;
+ #5;
+ if(m_axis_tvalid && m_axis_tready)begin
+ if(rd==wr || m_axis_tdata!==q[rd])$fatal(1,"queue mismatch cycle=%0d rd=%0d wr=%0d got=%h expect=%h",n,rd,wr,m_axis_tdata,q[rd]);
+ if(m_axis_tkeep!==1 || m_axis_tid!==0 || m_axis_tdest!==0 || pause_ack!==0 || status_overflow!==0 || status_bad_frame!==0 || status_good_frame!==0)$fatal(1,"sideband mismatch"); if(m_axis_tlast!==ql[rd] || m_axis_tuser!==qu[rd])$fatal(1,"stored sideband mismatch");
+ rd=rd+1;end
+ if(s_axis_tvalid && s_axis_tready)begin q[wr]=s_axis_tdata;ql[wr]=s_axis_tlast;qu[wr]=s_axis_tuser; wr=wr+1;end
+ if(n==4117 && (wr!=4098 || s_axis_tready!==0))$fatal(1,"capacity mismatch wr=%0d",wr);
+ clk=1;#5;
+end
+if(rd!=wr)$fatal(1,"did not drain");
+$display("PASS axis_fifo 20000 cycles; capacity 4098; randomized stalls and payload queue; accepted=%0d read=%0d",wr,rd);$finish;
+end endmodule

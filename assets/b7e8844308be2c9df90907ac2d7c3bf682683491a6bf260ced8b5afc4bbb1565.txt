@@ -1,0 +1,49 @@
+{
+  "pr_url": "https://github.com/openhwgroup/cv32e40p/pull/344",
+  "issue_url": "https://github.com/openhwgroup/cv32e40p/issues/187",
+  "repository": "openhwgroup/cv32e40p",
+  "pr_number": 344,
+  "issue_number": 187,
+  "verilog_files": [
+    "rtl/riscv_compressed_decoder.sv"
+  ],
+  "deletions": 0,
+  "additions": 2,
+  "patches": [
+    {
+      "filename": "rtl/riscv_compressed_decoder.sv",
+      "patch": "@@ -246,6 +246,8 @@ module riscv_compressed_decoder\n               if (instr_i[6:2] == 5'b0) begin\n                 // c.jr -> jalr x0, rd/rs1, 0\n                 instr_o = {12'b0, instr_i[11:7], 3'b0, 5'b0, OPCODE_JALR};\n+                // c.jr with rs1 = 0 is reserved\n+                if (instr_i[11:7] == 5'b0) illegal_instr_o = 1'b1;\n               end\n             end else begin\n               // c.add -> add rd, rd, rs2",
+      "additions": 2,
+      "deletions": 0,
+      "changes": 2
+    }
+  ],
+  "pr_info": {
+    "title": "Made c.jr x0 an illegal instruction (as per the RISC-V spec)",
+    "body": "Made c.jr x0 an illegal instruction (as per the RISC-V spec). This fixes the identical issues #137 and #187 \r\n\r\nSigned-off-by: Arjan Bink <Arjan.Bink@silabs.com>",
+    "state": "closed",
+    "created_at": "2020-05-19T09:38:24Z",
+    "updated_at": "2020-07-15T06:01:40Z",
+    "merged_at": "2020-05-21T09:00:55Z",
+    "user": "Silabs-ArjanB"
+  },
+  "issue_info": {
+    "title": "Different behavior of spike and design on c.jr zero instruction",
+    "body": "On processing this instruction, design performs jump operation to address 0x0. We can see it on the waveform.\r\nBut implementation of this instruction in the spike has additional require statement  which marks it as illegal instruction.\r\nThe link to c.jr instruction implementation in the github is: https://github.com/riscv/riscv-isa-sim/blob/master/riscv/insns/c_jr.h (shown here)\r\n   1 require_extension('C'); \r\n   2 require(insn.rvc_rs1() != 0); <<<< true?\r\n   3 set_pc(RVC_RS1 & ~reg_t(1)); \r\n\r\n \r\nWhat is the correct behavior  in this case? \r\n\u2022\tperform jump instruction to PC 0x0\r\n\u2022\tmark this instruction as illegal.\r\n",
+    "labels": [
+      "Type:Task"
+    ],
+    "state": "closed",
+    "created_at": "2019-10-22T05:08:17Z",
+    "updated_at": "2020-07-14T05:27:01Z"
+  },
+  "source_info": {
+    "source_file": "18.txt",
+    "line_number": 114
+  },
+  "base_commit": "dde01442d11123763dccdf030b4bd3fbf4d9b4fe",
+  "head_commit": "c1d6f27d27dd5be83701c4ea977079ceef585832",
+  "base_ref": "master",
+  "task_id": "openhwgroup_cv32e40p_344_187",
+  "lec_status": "useful_pass"
+}

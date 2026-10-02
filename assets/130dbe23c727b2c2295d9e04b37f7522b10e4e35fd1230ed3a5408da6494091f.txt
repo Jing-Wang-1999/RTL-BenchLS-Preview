@@ -1,0 +1,93 @@
+{
+  "case_id": "s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2",
+  "compile_check": {
+    "case_id": "s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "ad_addsub",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "04906601c0f23c8dfcc7b763496c6cc771b965ef9201ec2da9cee4d57a23d056",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.04906601c0f23c8dfcc7",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "ad_addsub"
+  },
+  "independent_review": {
+    "case_id": "s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The four pre-edge register stages, CE-only output gating, one-step wrap correction, defaults, and uninitialized output match.",
+        "rtl_excerpt": "`A_d <= A; ... out_d <= A_d - B_reg; ... out_d2 <= ...; if (CE) out <= out_d2; else out <= 0;`",
+        "spec_excerpt": "\u201cfour-edge pipeline ... CE does not stall preceding pipeline stages\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.04906601c0f23c8dfcc7",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "e4cca44c1151f6e6f775cd05cf8e914d1503d8da2e54c7bfc193cc5df68d360f",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "04906601c0f23c8dfcc7b763496c6cc771b965ef9201ec2da9cee4d57a23d056",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.04906601c0f23c8dfcc7",
+  "primary_review": {
+    "case_id": "s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2",
+    "checks": {
+      "behavior": "Arithmetic and correction intent broadly match, but observable pipeline timing and truncation are missing.",
+      "boundaries": "RTL uses A_DATA_WIDTH+1 intermediate results, corrects once, then truncates into out; these boundary rules are absent.",
+      "interface": "The parameter and port names and widths match the RTL.",
+      "rtl_reasonableness": "RTL compiles and is a coherent pipelined modular add/subtract unit with no unresolved dependencies.",
+      "sequential_and_reset": "RTL has three arithmetic pipeline stages plus the output register and no reset; the prose does not define initial observability precisely."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Multiple nonblocking stages make the accepted result emerge only after four rising edges, which the prose never states.",
+        "rtl_excerpt": "out <= out_d2;",
+        "specification_excerpt": "The inputs A and Amax are latched on the rising edge"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification omits the exact four-edge pipeline latency, declaration initialization versus uninitialized out, CE's non-stalling behavior, truncation, and single correction rule; it also ends mid-heading.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.04906601c0f23c8dfcc7",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "04906601c0f23c8dfcc7b763496c6cc771b965ef9201ec2da9cee4d57a23d056",
+    "source_group": "S1",
+    "specification_sha256": "6da9eeb31aa2b211d3db719fe1c603b9ef89713e551bebb40e899a51d83d421c",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2.md",
+  "qualified_specification_sha256": "e4cca44c1151f6e6f775cd05cf8e914d1503d8da2e54c7bfc193cc5df68d360f",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2/private/golden_design.v",
+  "rtl_sha256": "04906601c0f23c8dfcc7b763496c6cc771b965ef9201ec2da9cee4d57a23d056",
+  "source_corpus": "SEC-Flow-Star-repos-10.analog-hdl",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.04906601c0f23c8dfcc7.6da9eeb31aa2/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "6da9eeb31aa2b211d3db719fe1c603b9ef89713e551bebb40e899a51d83d421c",
+  "top_module": "ad_addsub"
+}

@@ -1,0 +1,24 @@
+module origen_144596 (
+    input [3:0] A,
+    input [3:0] B,
+    input [1:0] shift,
+    output [7:0] OUT
+);
+    wire [7:0] product;
+    reg [7:0] rotated;
+
+    // 4-bit unsigned multiplier
+    assign product = A * B;
+
+    // 8-bit barrel shifter for rotation
+    always @(*) begin
+        case (shift)
+            2'b00: rotated = product;
+            2'b01: rotated = {product[6:0], product[7]};
+            2'b10: rotated = {product[5:0], product[7:6]};
+            2'b11: rotated = {product[0], product[7:1]};
+        endcase
+    end
+
+    assign OUT = rotated;
+endmodule

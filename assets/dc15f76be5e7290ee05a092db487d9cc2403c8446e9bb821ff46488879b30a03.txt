@@ -1,0 +1,16 @@
+always @ (posedge clk or negedge rstn)
+    if (~rstn) begin
+        wptr_submit    <= 11'h0;
+        wptr_submit_d  <= 11'h0;
+        count          <= 11'd0;
+    end else begin
+        wptr_submit_d <= wptr_submit;
+        if ( (wptr-wptr_submit) > SUBMIT_CHUNK ) begin
+            wptr_submit <= wptr;
+            count <= 11'd0;
+        end else begin
+            count <= (i_en & i_rdy) ? 11'd0 : (count+11'd1);
+            if (count == 11'd2047)
+                wptr_submit <= wptr;
+        end
+    end

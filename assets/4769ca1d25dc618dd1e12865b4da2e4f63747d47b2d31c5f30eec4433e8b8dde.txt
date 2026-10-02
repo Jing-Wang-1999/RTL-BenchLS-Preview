@@ -1,0 +1,66 @@
+always @ (posedge clk_i or posedge rst_i)
+if (rst_i)
+begin
+    req_len_q     <= 8'b0;
+    req_addr_q    <= 32'b0;
+    req_wr_q      <= 1'b0;
+    req_rd_q      <= 1'b0;
+    req_id_q      <= 4'b0;
+    req_axburst_q <= 2'b0;
+    req_axlen_q   <= 8'b0;
+    req_prio_q    <= 1'b0;
+end
+else
+begin
+    // Burst continuation
+    if ((ram_wr_o != 4'b0 || ram_rd_o) && ram_accept_i)
+    begin
+        if (req_len_q == 8'd0)
+        begin
+            req_rd_q   <= 1'b0;
+            req_wr_q   <= 1'b0;
+        end
+        else
+        begin
+            req_addr_q <= calculate_addr_next(req_addr_q, req_axburst_q, req_axlen_q);
+            req_len_q  <= req_len_q - 8'd1;
+        end
+    end
+
+    // Write command accepted
+    if (axi_awvalid_i && axi_awready_o)
+    begin
+        // Data ready?
+        if (axi_wvalid_i && axi_wready_o)
+        begin
+            req_wr_q      <= !axi_wlast_i;
+            req_len_q     <= axi_awlen_i - 8'd1;
+            req_id_q      <= axi_awid_i;
+            req_axburst_q <= axi_awburst_i;
+            req_axlen_q   <= axi_awlen_i;
+            req_addr_q    <= calculate_addr_next(axi_awaddr_i, axi_awburst_i, axi_awlen_i);
+        end
+        // Data not ready
+        else
+        begin
+            req_wr_q      <= 1'b1;
+            req_len_q     <= axi_awlen_i;
+            req_id_q      <= axi_awid_i;
+            req_axburst_q <= axi_awburst_i;
+            req_axlen_q   <= axi_awlen_i;
+            req_addr_q    <= axi_awaddr_i;
+        end
+        req_prio_q    <= !req_prio_q;
+    end
+    // Read command accepted
+    else if (axi_arvalid_i && axi_arready_o)
+    begin
+        req_rd_q      <= (axi_arlen_i != 0);
+        req_len_q     <= axi_arlen_i - 8'd1;
+        req_addr_q    <= calculate_addr_next(axi_araddr_i, axi_arburst_i, axi_arlen_i);
+        req_id_q      <= axi_arid_i;
+        req_axburst_q <= axi_arburst_i;
+        req_axlen_q   <= axi_arlen_i;
+        req_prio_q    <= !req_prio_q;
+    end
+end

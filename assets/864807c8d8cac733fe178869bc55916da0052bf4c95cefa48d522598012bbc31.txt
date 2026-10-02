@@ -1,0 +1,80 @@
+module origen_082246 (
+    input clk,
+    input rst,
+    input Enable,
+    input Ready,
+    input Iniciar,
+    input Esc_Fin,
+    output reg Escribir,
+    output reg Leer,
+    output reg Estado_Lectura,
+    output reg Estado_Escritura,
+    output reg Estado_Iniciar,
+    output reg [2:0] state_reg,
+    output [2:0] state_next
+);
+
+    // State encoding
+    localparam [2:0] NULL       = 3'b000;
+    localparam [2:0] INITIALIZE = 3'b001;
+    localparam [2:0] READING    = 3'b010;
+    localparam [2:0] USER       = 3'b011;
+    localparam [2:0] WRITING    = 3'b100;
+
+    // Combinational next state logic
+    assign state_next = (rst) ? NULL :
+                       (state_reg == NULL && (Enable || Ready)) ? INITIALIZE :
+                       (state_reg == INITIALIZE && ~Iniciar) ? READING :
+                       (state_reg == READING && Enable) ? USER :
+                       (state_reg == USER && Ready) ? WRITING :
+                       (state_reg == WRITING && Esc_Fin) ? READING :
+                       state_reg;
+
+    // Sequential state register
+    always @(posedge clk) begin
+        if (rst) begin
+            state_reg <= NULL;
+        end else begin
+            state_reg <= state_next;
+        end
+    end
+
+    // Registered output generation (Moore machine)
+    always @(posedge clk) begin
+        if (rst) begin
+            Escribir <= 1'b0;
+            Leer <= 1'b0;
+            Estado_Lectura <= 1'b0;
+            Estado_Escritura <= 1'b0;
+            Estado_Iniciar <= 1'b0;
+        end else begin
+            // Default outputs
+            Escribir <= 1'b0;
+            Leer <= 1'b0;
+            Estado_Lectura <= 1'b0;
+            Estado_Escritura <= 1'b0;
+            Estado_Iniciar <= 1'b0;
+
+            // State-specific outputs
+            case (state_reg)
+                INITIALIZE: begin
+                    Escribir <= 1'b1;
+                    Estado_Iniciar <= 1'b1;
+                end
+                READING: begin
+                    Leer <= 1'b1;
+                    Estado_Lectura <= 1'b1;
+                end
+                WRITING: begin
+                    Escribir <= 1'b1;
+                    Estado_Escritura <= 1'b1;
+                end
+                // USER and NULL states have all outputs low (default)
+                default: begin
+                    // All outputs remain at default (0)
+                end
+            endcase
+        end
+    end
+
+endmodule

@@ -1,0 +1,5 @@
+# [dv/prim_one_hot_check] Fix coverage hole due to AddrCheck set to zero
+
+### Description
+
+Perhaps all ip blocks have a coverage hole for prim_onehot_check_if_proxy::onehot_fault_cg cp_onehot_addr_fault. This seems to be a direct consequence of AddrCheck set to zero in https://cs.opensource.google/opentitan/opentitan/+/master:hw/ip/prim/rtl/prim_reg_we_check.sv;drc=357d9fbc93d827812e22ea9350476cf210a80eb1;l=32. The comment indicates this is meant to be zero for ip blocks with very large address spaces. It seems AddrCheck should be set in the generated <ip block>_reg_top.sv module and passed down to prim_reg_we_check.

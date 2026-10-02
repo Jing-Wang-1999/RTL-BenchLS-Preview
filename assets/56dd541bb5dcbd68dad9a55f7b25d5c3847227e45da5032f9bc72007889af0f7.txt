@@ -1,0 +1,5 @@
+# `mg_05942` EX/ME pipeline register
+
+The module has rising-edge clock `clk`, active-high asynchronous `rst`, and `stall`. Execute-stage inputs are 32-bit `ex_aluresult`, `ex_d2`, `ex_instr`, and `ex_pc`, 5-bit `ex_td`, and one-bit `ex_WREG`, `ex_WMEM`, and `ex_LW`. Corresponding `me_` outputs are registered with the same widths.
+
+Reset clears every output to zero except `me_instr`, which becomes `32'b100000`. On a rising edge with `stall=1`, `me_aluresult`, `me_d2`, `me_td`, and the three control outputs clear; `me_instr` becomes `32'b100000`; and `me_pc` captures `ex_pc`. On any other rising edge, every output captures its corresponding Execute-stage input. Reset has priority over stall.

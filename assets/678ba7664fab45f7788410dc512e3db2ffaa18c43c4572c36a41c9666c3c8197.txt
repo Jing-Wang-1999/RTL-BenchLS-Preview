@@ -1,0 +1,55 @@
+module origen_023527(
+    input wire start,
+    input wire clockMul,
+    input wire [15:0] mult1,
+    input wire [15:0] mult2,
+    output reg done,
+    output reg [31:0] produto
+);
+
+    reg [32:0] register;
+    reg [16:0] soma;
+    reg load;
+    reg [1:0] estado;
+    reg [4:0] count;
+
+    always @(posedge clockMul) begin
+        case (estado)
+            2'b00: begin // Idle state
+                if (start) begin
+                    estado <= 2'b01;
+                    done <= 1'b0;
+                    load <= 1'b1;
+                    count <= 5'b00000;
+                end
+            end
+
+            2'b01: begin // Initialization state
+                register <= {17'b0, mult2};
+                estado <= 2'b10;
+                load <= 1'b0;
+            end
+
+            2'b10: begin // Add state
+                if (register[0]) begin
+                    soma <= register[32:16] + mult1;
+                    register[32:16] <= soma;
+                end
+                estado <= 2'b11;
+            end
+
+            2'b11: begin // Shift state
+                register <= {1'b0, register[32:1]};
+                count <= count + 1;
+                if (count == 5'b10000) begin // 16 iterations completed
+                    estado <= 2'b00;
+                    done <= 1'b1;
+                    produto <= register[31:0];
+                end else begin
+                    estado <= 2'b10;
+                end
+            end
+        endcase
+    end
+
+endmodule

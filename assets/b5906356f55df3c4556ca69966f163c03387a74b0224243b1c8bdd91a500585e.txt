@@ -1,0 +1,58 @@
+module origen_113123 (
+    input wire Clk,
+    input wire Reset,
+    input wire SR2MUX,
+    input wire [1:0] DRMUX,
+    input wire [1:0] SR1MUX,
+    input wire LD_REG,
+    input wire [15:0] IRout,
+    inout wire [15:0] Data,
+    output reg [15:0] SR1Out,
+    output reg [15:0] SR2Out
+);
+
+    reg [15:0] registers [0:7];
+    reg [2:0] DR, SR1, SR2;
+    reg [7:0] Reg;
+
+    always @(*) begin
+        case (DRMUX)
+            2'b00: DR = IRout[11:9];
+            2'b01: DR = 3'b110;
+            2'b10: DR = 3'b111;
+            default: DR = 3'b000;
+        endcase
+
+        case (SR1MUX)
+            2'b00: SR1 = IRout[11:9];
+            2'b01: SR1 = IRout[8:6];
+            2'b10: SR1 = 3'b110;
+            default: SR1 = 3'b000;
+        endcase
+
+        SR2 = SR2MUX ? 3'bzzz : IRout[2:0];
+
+        Reg = 8'b00000001 << DR;
+    end
+
+    always @(posedge Clk or posedge Reset) begin
+        if (Reset) begin
+            integer i;
+            for (i = 0; i < 8; i = i + 1) begin
+                registers[i] <= 16'b0;
+            end
+            SR1Out <= 16'b0;
+            SR2Out <= 16'b0;
+        end else if (LD_REG) begin
+            registers[DR] <= Data;
+        end
+    end
+
+    always @(*) begin
+        SR1Out = registers[SR1];
+        SR2Out = SR2MUX ? 16'bz : registers[SR2];
+    end
+
+    assign Data = (LD_REG) ? 16'bz : 16'b0;
+
+endmodule

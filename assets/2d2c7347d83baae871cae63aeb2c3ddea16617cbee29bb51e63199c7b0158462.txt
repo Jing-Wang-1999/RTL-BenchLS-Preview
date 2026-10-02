@@ -1,0 +1,13 @@
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+      fifo_wr_ptr <= 0;
+      fifo_count <= 0;
+    end else if (sw_reset) begin
+      fifo_wr_ptr <= 0;
+      fifo_count <= 0;
+    end else if (fifo_wr_en) begin
+      fifo_buffer[fifo_wr_ptr] <= fifo_input;
+      fifo_wr_ptr <= fifo_wr_ptr + 1;
+      fifo_count <= fifo_count + 1;
+    end
+  end

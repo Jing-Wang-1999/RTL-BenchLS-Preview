@@ -1,0 +1,86 @@
+# Six-master FML burst arbiter
+
+Implement `fmlarb` with the public declaration below. Qualify the declared default `fml_depth=26`; all addresses are 26 bits. Each master supplies address, strobe, write direction, two byte selects and 16 write-data bits, and receives an acknowledge and 16 read-data bits. The slave interface supplies acknowledge/read data and receives selected requests/write data. All sequential updates use rising `sys_clk`; active-high `sys_rst` is synchronous.
+
+## Arbitration and routing
+
+Maintain an address/control owner A, initially master 0. In each cycle the slave address, strobe and write direction are combinational copies of master A, even when its strobe is low. Every master's read-data output is continuously equal to `s_di`. Only master A receives `s_ack`; the acknowledge is not additionally gated by its strobe or write direction.
+
+Keep A while its strobe is asserted and `s_ack` is low. Otherwise select the first requesting alternative in this table. If none requests, retain A. The selection takes effect at the next rising edge. It is not a combinational priority mux and it is not ordinary round-robin arbitration.
+
+| Current A | Ordered alternative priorities |
+|---|---|
+| 0 | 1, 2, 3, 4, 5 |
+| 1 | 0, 3, 4, 5, 2 |
+| 2 | 0, 3, 4, 5, 1 |
+| 3 | 0, 4, 5, 1, 2 |
+| 4 | 0, 5, 1, 2, 3 |
+| 5 | 0, 1, 2, 3, 4 |
+
+## Write burst data ownership
+
+Maintain a separate write-data owner W, initially 0, and an unsigned three-bit hold counter C, initially 0. `s_do` and `s_sel` continuously select `mW_di` and `mW_sel`. The address/control owner may advance while W remains fixed to finish a write burst.
+
+Define a burst-start event as the current `s_we AND s_ack`, without strobe gating. On each non-reset edge: if that event is true, set C to 6; otherwise decrement nonzero C by one. Update W to the next address/control owner from the table only if both the event is false and the pre-edge C is zero. Otherwise W holds. Thus after a start edge the old W is retained on the six countdown edges; the following edge may transfer ownership. Another start reloads C to 6 and retains W. Reads do not start this hold interval. A synchronous reset overrides all updates and sets A=W=C=0.
+
+This contract includes arbitrary input/strobe/acknowledge combinations through the equations above. The surrounding FML controller is responsible for scheduling nonoverlapping physical bursts; no extra formal assumptions or fairness guarantee are imposed. There is no data storage in the arbiter.
+
+## Public declaration
+
+```verilog
+module fmlarb #(
+	parameter fml_depth = 26
+) (
+	input sys_clk,
+	input sys_rst,
+	input [fml_depth-1:0] m0_adr,
+	input m0_stb,
+	input m0_we,
+	output m0_ack,
+	input [1:0] m0_sel,
+	input [15:0] m0_di,
+	output [15:0] m0_do,
+	input [fml_depth-1:0] m1_adr,
+	input m1_stb,
+	input m1_we,
+	output m1_ack,
+	input [1:0] m1_sel,
+	input [15:0] m1_di,
+	output [15:0] m1_do,
+	input [fml_depth-1:0] m2_adr,
+	input m2_stb,
+	input m2_we,
+	output m2_ack,
+	input [1:0] m2_sel,
+	input [15:0] m2_di,
+	output [15:0] m2_do,
+	input [fml_depth-1:0] m3_adr,
+	input m3_stb,
+	input m3_we,
+	output m3_ack,
+	input [1:0] m3_sel,
+	input [15:0] m3_di,
+	output [15:0] m3_do,
+	input [fml_depth-1:0] m4_adr,
+	input m4_stb,
+	input m4_we,
+	output m4_ack,
+	input [1:0] m4_sel,
+	input [15:0] m4_di,
+	output [15:0] m4_do,
+	input [fml_depth-1:0] m5_adr,
+	input m5_stb,
+	input m5_we,
+	output m5_ack,
+	input [1:0] m5_sel,
+	input [15:0] m5_di,
+	output [15:0] m5_do,
+	output reg [fml_depth-1:0] s_adr,
+	output reg s_stb,
+	output reg s_we,
+	input s_ack,
+	output reg [1:0] s_sel,
+	input [15:0] s_di,
+	output reg [15:0] s_do
+);
+```

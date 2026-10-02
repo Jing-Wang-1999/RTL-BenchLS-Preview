@@ -1,0 +1,95 @@
+{
+  "case_id": "s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae",
+  "compile_check": {
+    "case_id": "s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "gearbox_20_67",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "70478ba33a5f80aeb9af93276fd4b9815eba4898e74af5299151a95671a26632",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.70478ba33a5f80aeb9af",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "gearbox_20_67"
+  },
+  "independent_review": {
+    "case_id": "s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The pre-edge extraction thresholds, schedule rotation, delayed hi/mid transfers, slip XNOR, reset, and concatenation match.",
+        "rtl_excerpt": "`top_ptr <= top_ptr + (!enough_bits ? 6'd20 : (schedule[2] ? -6'd3 : -6'd2));`",
+        "spec_excerpt": "\u201coccupancy gains 20 ... loses net 2 ... or net 3\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.70478ba33a5f80aeb9af",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "f3bfcef836d359bd57bdad190534b74efeec32f8a1e2c1c36871193dafe2b44f",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "70478ba33a5f80aeb9af93276fd4b9815eba4898e74af5299151a95671a26632",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.70478ba33a5f80aeb9af",
+  "primary_review": {
+    "case_id": "s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae",
+    "checks": {
+      "behavior": "Basic 22/22/23 concept matches, cycle behavior does not.",
+      "boundaries": "Enough thresholds are 22/23 and slip occurs for equal frame bits.",
+      "interface": "Ports match.",
+      "rtl_reasonableness": "RTL is reasonable.",
+      "sequential_and_reset": "Active-high asynchronous reset."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Basic 22/22/23 concept matches, cycle behavior does not. Active-high asynchronous reset.",
+        "rtl_excerpt": "loword_valid/mv_hi/mv_md are registered; enough_bits and top_ptr equations; slip tests ~loword[21]^loword[20]",
+        "spec_excerpt": "\u201cchecks specific bits ... and resetting schedule\u201d"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The overview omits delayed loword/phase flags, exact occupancy rules, output-valid alignment, and the actual equal-bit slip test.",
+        "rtl_evidence": "loword_valid/mv_hi/mv_md are registered; enough_bits and top_ptr equations; slip tests ~loword[21]^loword[20]",
+        "spec_evidence": "\u201cchecks specific bits ... and resetting schedule\u201d",
+        "type": "pipeline_alignment_underspecified"
+      }
+    ],
+    "parent_id": "s1p.70478ba33a5f80aeb9af",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "70478ba33a5f80aeb9af93276fd4b9815eba4898e74af5299151a95671a26632",
+    "source_group": "S1",
+    "specification_sha256": "ed0b2fce7aae519d7b55438c7d9f7f1fab931decfe6440ed35534aa903aafee5",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_1_02/s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae.md",
+  "qualified_specification_sha256": "f3bfcef836d359bd57bdad190534b74efeec32f8a1e2c1c36871193dafe2b44f",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae/private/golden_design.v",
+  "rtl_sha256": "70478ba33a5f80aeb9af93276fd4b9815eba4898e74af5299151a95671a26632",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.70478ba33a5f80aeb9af.ed0b2fce7aae/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "ed0b2fce7aae519d7b55438c7d9f7f1fab931decfe6440ed35534aa903aafee5",
+  "top_module": "gearbox_20_67"
+}

@@ -1,0 +1,59 @@
+module mg_06388 (input io_bus_cmd_valid,output io_bus_cmd_ready,input io_bus_cmd_payload_wr,input [31:0] io_bus_cmd_payload_address,input [31:0] io_bus_cmd_payload_data,input [3:0] io_bus_cmd_payload_mask,output io_bus_rsp_valid,output [31:0] io_bus_rsp_payload_data,input io_mainClk,input resetCtrl_systemReset);
+reg [31:0] _zz_4; 
+  wire _zz_5; 
+  wire [9:0] _zz_6; 
+  reg _zz_1; 
+  wire [29:0] _zz_2; 
+  wire [31:0] _zz_3; 
+  reg [7:0] ram_symbol0 [0:1023]; 
+  reg [7:0] ram_symbol1 [0:1023]; 
+  reg [7:0] ram_symbol2 [0:1023]; 
+  reg [7:0] ram_symbol3 [0:1023]; 
+  reg [7:0] _zz_7; 
+  reg [7:0] _zz_8; 
+  reg [7:0] _zz_9; 
+  reg [7:0] _zz_10; 
+  assign io_bus_cmd_ready = _zz_5; 
+  assign _zz_6 = _zz_2[9:0]; 
+  initial begin 
+  $readmemb("Murax.v_toplevel_system_ram_ram_symbol0.bin",ram_symbol0); 
+  $readmemb("Murax.v_toplevel_system_ram_ram_symbol1.bin",ram_symbol1); 
+  $readmemb("Murax.v_toplevel_system_ram_ram_symbol2.bin",ram_symbol2); 
+  $readmemb("Murax.v_toplevel_system_ram_ram_symbol3.bin",ram_symbol3); 
+  end 
+  always @ (*) begin 
+  _zz_4 = {_zz_10, _zz_9, _zz_8, _zz_7}; 
+  end 
+  always @ (posedge io_mainClk) begin 
+  if(io_bus_cmd_payload_mask[0] && io_bus_cmd_valid && io_bus_cmd_payload_wr ) begin 
+  ram_symbol0[_zz_6] <= _zz_3[7 : 0]; 
+  end 
+  if(io_bus_cmd_payload_mask[1] && io_bus_cmd_valid && io_bus_cmd_payload_wr ) begin 
+  ram_symbol1[_zz_6] <= _zz_3[15 : 8]; 
+  end 
+  if(io_bus_cmd_payload_mask[2] && io_bus_cmd_valid && io_bus_cmd_payload_wr ) begin 
+  ram_symbol2[_zz_6] <= _zz_3[23 : 16]; 
+  end 
+  if(io_bus_cmd_payload_mask[3] && io_bus_cmd_valid && io_bus_cmd_payload_wr ) begin 
+  ram_symbol3[_zz_6] <= _zz_3[31 : 24]; 
+  end 
+  if(io_bus_cmd_valid) begin 
+  _zz_7 <= ram_symbol0[_zz_6]; 
+  _zz_8 <= ram_symbol1[_zz_6]; 
+  _zz_9 <= ram_symbol2[_zz_6]; 
+  _zz_10 <= ram_symbol3[_zz_6]; 
+  end 
+  end 
+  assign io_bus_rsp_valid = _zz_1; 
+  assign _zz_2 = (io_bus_cmd_payload_address >>> 2); 
+  assign _zz_3 = io_bus_cmd_payload_data; 
+  assign io_bus_rsp_payload_data = _zz_4; 
+  assign _zz_5 = 1'b1; 
+  always @ (posedge io_mainClk or posedge resetCtrl_systemReset) begin 
+  if (resetCtrl_systemReset) begin 
+  _zz_1 <= 1'b0; 
+  end else begin 
+  _zz_1 <= ((io_bus_cmd_valid && _zz_5) && (! io_bus_cmd_payload_wr)); 
+  end 
+  end 
+ endmodule

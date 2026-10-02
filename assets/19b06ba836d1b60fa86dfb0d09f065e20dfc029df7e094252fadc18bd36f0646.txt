@@ -1,0 +1,125 @@
+module origen_140747 (
+    input wire clk50mhz,
+    input wire reset,
+    inout wire [15:0] DRAM_DQ,
+    output reg [11:0] DRAM_ADDR,
+    output reg DRAM_LDQM,
+    output reg DRAM_UDQM,
+    output reg DRAM_WE_N,
+    output reg DRAM_CAS_N,
+    output reg DRAM_RAS_N,
+    output reg DRAM_CS_N,
+    output reg DRAM_BA_0,
+    output reg DRAM_BA_1,
+    input wire [21:0] iaddr,
+    input wire [15:0] idata,
+    input wire rd,
+    input wire we_n,
+    output reg [15:0] odata
+);
+
+    localparam [3:0] 
+        INIT = 4'd0,
+        IDLE = 4'd1,
+        ACTIVATE = 4'd2,
+        READ = 4'd3,
+        WRITE = 4'd4,
+        PRECHARGE = 4'd5,
+        REFRESH = 4'd6;
+
+    reg [3:0] state, next_state;
+    reg [9:0] refresh_counter;
+    reg [3:0] init_counter;
+    reg [15:0] data_out_reg;
+    reg data_out_en;
+
+    wire [1:0] bank;
+    wire [11:0] row;
+    wire [7:0] col;
+
+    assign bank = iaddr[21:20];
+    assign row = iaddr[19:8];
+    assign col = iaddr[7:0];
+
+    always @(posedge clk50mhz or posedge reset) begin
+        if (reset) begin
+            state <= INIT;
+            refresh_counter <= 10'd0;
+            init_counter <= 4'd0;
+        end else begin
+            state <= next_state;
+            refresh_counter <= refresh_counter + 1'b1;
+            if (state == INIT) init_counter <= init_counter + 1'b1;
+        end
+    end
+
+    always @(*) begin
+        next_state = state;
+        DRAM_ADDR = 12'd0;
+        DRAM_BA_0 = 1'b0;
+        DRAM_BA_1 = 1'b0;
+        DRAM_CS_N = 1'b0;
+        DRAM_RAS_N = 1'b1;
+        DRAM_CAS_N = 1'b1;
+        DRAM_WE_N = 1'b1;
+        DRAM_LDQM = 1'b0;
+        DRAM_UDQM = 1'b0;
+        data_out_en = 1'b0;
+
+        case (state)
+            INIT: begin
+                if (init_counter == 4'd15) next_state = IDLE;
+                DRAM_ADDR = 12'b0010_0000_0000; // Mode register set
+                DRAM_RAS_N = 1'b0;
+                DRAM_CAS_N = 1'b0;
+                DRAM_WE_N = 1'b0;
+            end
+            IDLE: begin
+                if (refresh_counter >= 10'd750) next_state = REFRESH;
+                else if (rd || !we_n) next_state = ACTIVATE;
+            end
+            ACTIVATE: begin
+                DRAM_ADDR = row;
+                DRAM_BA_0 = bank[0];
+                DRAM_BA_1 = bank[1];
+                DRAM_RAS_N = 1'b0;
+                next_state = rd ? READ : WRITE;
+            end
+            READ: begin
+                DRAM_ADDR = {4'b0000, col};
+                DRAM_BA_0 = bank[0];
+                DRAM_BA_1 = bank[1];
+                DRAM_CAS_N = 1'b0;
+                next_state = PRECHARGE;
+            end
+            WRITE: begin
+                DRAM_ADDR = {4'b0000, col};
+                DRAM_BA_0 = bank[0];
+                DRAM_BA_1 = bank[1];
+                DRAM_CAS_N = 1'b0;
+                DRAM_WE_N = 1'b0;
+                data_out_en = 1'b1;
+                next_state = PRECHARGE;
+            end
+            PRECHARGE: begin
+                DRAM_ADDR = 12'b0100_0000_0000; // All banks
+                DRAM_RAS_N = 1'b0;
+                DRAM_WE_N = 1'b0;
+                next_state = IDLE;
+            end
+            REFRESH: begin
+                DRAM_RAS_N = 1'b0;
+                DRAM_CAS_N = 1'b0;
+                next_state = IDLE;
+            end
+        endcase
+    end
+
+    always @(posedge clk50mhz) begin
+        if (state == READ) odata <= DRAM_DQ;
+        if (state == WRITE) data_out_reg <= idata;
+    end
+
+    assign DRAM_DQ = data_out_en ? data_out_reg : 16'hzzzz;
+
+endmodule

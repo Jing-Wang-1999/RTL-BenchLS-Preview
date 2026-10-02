@@ -1,0 +1,103 @@
+module autovcoder_067485 (
+    input [7:0] multiplicand,
+    input [7:0] multiplier,
+    output reg [15:0] answer,
+    output reg [15:0] answer_temp
+);
+  wire [15:0] pp0;
+  wire [15:0] pp1;
+  wire [15:0] pp2;
+  wire [15:0] pp3;
+  wire [15:0] pp4;
+  wire [15:0] pp5;
+  wire [15:0] pp6;
+  wire [15:0] pp7;
+
+  wire [15:0] stage1_line1;
+  wire [15:0] stage1_line2;
+  wire [15:0] stage2_line1;
+  wire [15:0] stage2_line2;
+
+  wire [15:0] stage3_line1;
+  wire [15:0] stage3_line2;
+
+  wire multiplicand_negative;
+  wire multiplier_negative;
+  wire maxneg_multiplier;
+  wire maxneg_multiplicand;
+
+  //reg [15:0] answer_temp;
+
+  //wire [15:0] temp;
+
+  partial_product_generator mod1 (
+      multiplicand[7:0],
+      multiplier[7:0],
+      pp0[15:0],
+      pp1[15:0],
+      pp2[15:0],
+      pp3[15:0],
+      pp4[15:0],
+      pp5[15:0],
+      pp6[15:0],
+      pp7[15:0],
+      multiplicand_negative,
+      multiplier_negative,
+      maxneg_multiplicand,
+      maxneg_multiplier
+  );
+  stage1 mod2 (
+      pp0[15:0],
+      pp1[15:0],
+      pp2[15:0],
+      pp3[15:0],
+      stage1_line1[15:0],
+      stage1_line2[15:0]
+  );
+  stage2 mod3 (
+      pp4[15:0],
+      pp5[15:0],
+      pp6[15:0],
+      pp7[15:0],
+      stage2_line1[15:0],
+      stage2_line2[15:0]
+  );
+  stage3 mod4 (
+      stage1_line1[15:0],
+      stage1_line2[15:0],
+      stage2_line1[15:0],
+      stage2_line2[15:0],
+      stage3_line1[15:0],
+      stage3_line2[15:0]
+  );
+
+
+
+  always @(*) begin
+    answer_temp[15:0] = stage3_line1[15:0] + stage3_line2[15:0] + {5'b00000, 4'b1111, 7'b0000000};
+
+    if ((multiplicand_negative ^ multiplier_negative) == 1) begin
+      answer[15:0] = (~answer_temp[15:0]) + 15'b00000001;
+      /*if (maxneg_multiplier==1)
+begin
+answer[15:0]=(~answer_temp[15:0]) + 8'b00000001 + {};
+end
+if(maxneg_multiplicand==1)
+begin
+answer[15:0]=(~(answer_temp[15:0] + {8'b00000000,multiplier[7:0]})) + 8'b00000001;
+end*/
+
+    end else begin
+      /*if((maxneg_multiplier==1) & (maxneg_multiplicand==1))
+begin
+answer[15:0]=answer_temp[15:0] + 16'b0000000011111111;
+end
+else
+begin
+answer[15:0]=answer_temp[15:0];
+end*/
+      answer[15:0] = answer_temp[15:0];
+    end
+  end
+endmodule
+

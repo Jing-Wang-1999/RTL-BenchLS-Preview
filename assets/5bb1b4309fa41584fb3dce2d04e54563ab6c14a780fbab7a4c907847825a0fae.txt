@@ -1,0 +1,18 @@
+# popcount for INPUT_WIDTH=1
+
+`popcount.sv` contradicts itself in the description and this commit https://github.com/pulp-platform/common_cells/commit/bf4db7cfa01030f36a59c1a4d21ee233f6aee01e whether the case `INPUT_WIDTH=1` is supported.
+
+Furthermore, it seems like the https://github.com/pulp-platform/common_cells/commit/bf4db7cfa01030f36a59c1a4d21ee233f6aee01e doesn't properly add full support for `INPUT_WIDTH=1` since 
+
+```verilog
+logic [PopcountWidth-2:0]         left_child_result, right_child_result;
+```
+
+(from here https://github.com/pulp-platform/common_cells/blob/master/src/popcount.sv#L30)
+
+becomes negative causing at least VCS to crash. A simple hacky fix is to change the `-2`  to `-1` but I'm not sure if that works out well.
+
+Maybe @meggiman can you comment on this (since you seem to know the most being the designer of this module) ?
+
+
+@alex96295 fyi

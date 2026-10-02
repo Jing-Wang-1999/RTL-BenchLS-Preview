@@ -1,0 +1,36 @@
+The Verilog module `automatic_gain_controller` primarily functions as an Automatic Gain Control (AGC) unit with additional logic for level adjustments, error calculation, and signal amplification.
+
+### Primary Function
+The module controls the gain of input signals `dix` and `diy`, ensuring they stay within desired levels, adjusting automatically based on various settings and operational conditions.
+
+### Key Control Flow
+1. **Reset Control Flow**: On reset (`rst` signal high), key parameters such as the gain levels (`level`, `upg`, `dng`, `hlev`, `htime`, `maxg`) are initialized to predefined values.
+2. **Write Control Flow**: When `w0`, `w1`, or `w2` are high, respective parameters are set from 16-bit input `cin`.
+3. **Multiplication Control Flow**: When valid input (`iv` high), the module multiplies the 20-bit input signals (`dix` and `diy`) and saves the result in `product`.
+4. **Holding Time Control**: When the magnitude of output exceeds the hold level (`hlev`), the hold counter (`hctr`) is initialized or decremented accordingly.
+
+### Important Data Processing
+1. **Multiplication**: Inputs (`dix`, `diy`) are multiplied to generate a product, influencing output (`dox`, `doy`) based on the higher significant bits.
+2. **Magnitude Calculation**: Determines the magnitude of the product outputs (`dox`, `doy`) and compares them to the hold level.
+3. **Error Management**: The difference between magnitude and level is calculated, and an error signal is propagated and adjusted over time.
+4. **Gain Adjustment**: Uses a shift register and an accumulator with saturation to manage and adjust the amplification gain based on the computed error and hold status.
+
+### Instruction Summary for Generating Verilog Code
+Create a Verilog module `automatic_gain_controller` that:
+1. Accepts 20-bit inputs `dix` and `diy`, a valid signal `iv`, 16-bit configuration input `cin`, control signals `w0`, `w1`, `w2`, and reset `rst`.
+2. Outputs 16-bit signals `dox`, `doy`, an overflow signal `ov`, and a 16-bit output `cout`.
+3. Initializes parameters (`level`, `upg`, `dng`, `hlev`, `htime`, `maxg`) on reset or based on control signals.
+4. Multiplies `dix` and `diy` under valid input condition (`iv`), and assigns higher bits of the product to `dox`, `doy`.
+5. Calculates the magnitude of `dox`, `doy`, compares with the hold level, and updates the hold counter (`hctr`).
+6. Computes the difference between magnitude and level, generates an error signal, and adjusts an accumulator based on this error with saturation at `maxg`.
+7. Uses a shift register for timing control of the error application in gain adjustment logic.
+8. Outputs the controlled gain `cout` derived from the accumulator.
+
+This should guide in generating the Verilog code accurately reflecting the described operations and control structures.
+
+Module Interface:
+module automatic_gain_controller(dix,diy,iv,dox,doy,ov,cin,w0,w1,w2,cout,clk,rst);
+
+Behavioral Clarifications:
+- Default reset values: level=32, upg=5, dng=10, hlev=8, htime=64, maxg=223. product is 40 bits; dox=product[39:24], doy=product[23:8], ov=valid_mul. hctr is 16 bits, loaded with {htime,8'h00} when magnitude exceeds hlev.
+- The error shift register is 16 bits wide; the accumulator (acc) is 24 bits with saturation at maxg. cout = acc[23:8]. The gain selector lg is a 4-bit index from the shift register, selected by dng, upg, or 0 based on error sign, hold, and zero states.

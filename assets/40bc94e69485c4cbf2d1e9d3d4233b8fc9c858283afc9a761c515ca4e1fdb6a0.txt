@@ -1,0 +1,14 @@
+always @ *
+begin
+    data_addr_r = req_data_addr_w;
+
+    // Line refill
+    if (state_q == STATE_REFILL)
+        data_addr_r = data_write_addr_q;
+    // Lookup after refill
+    else if (state_q == STATE_RELOOKUP)
+        data_addr_r = lookup_addr_q[CACHE_DATA_ADDR_W+2-1:2];
+    // Lookup
+    else
+        data_addr_r = req_data_addr_w;
+end

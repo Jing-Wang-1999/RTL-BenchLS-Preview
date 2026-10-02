@@ -1,0 +1,54 @@
+module origen_100383(
+    input wire clk,
+    input wire reset,
+    input wire resetRound,
+    input wire L, U, D, R,
+    input wire NL, NU, ND, NR,
+    output reg lightOn
+);
+
+    // State definition
+    localparam OFF = 1'b0;
+    localparam ON = 1'b1;
+
+    reg state, next_state;
+
+    // State transition logic
+    always @(*) begin
+        case (state)
+            OFF: begin
+                if ((L && NR && !U && !D && !R) ||
+                    (R && NL && !U && !D && !L) ||
+                    (U && ND && !L && !D && !R) ||
+                    (D && NU && !L && !U && !R))
+                    next_state = ON;
+                else
+                    next_state = OFF;
+            end
+            ON: begin
+                if ((L && !U && !D && !R) ||
+                    (R && !U && !D && !L) ||
+                    (U && !L && !D && !R) ||
+                    (D && !L && !U && !R))
+                    next_state = OFF;
+                else
+                    next_state = ON;
+            end
+            default: next_state = OFF;
+        endcase
+    end
+
+    // State register
+    always @(posedge clk or posedge reset or posedge resetRound) begin
+        if (reset || resetRound)
+            state <= OFF;
+        else
+            state <= next_state;
+    end
+
+    // Output logic
+    always @(*) begin
+        lightOn = (state == ON);
+    end
+
+endmodule

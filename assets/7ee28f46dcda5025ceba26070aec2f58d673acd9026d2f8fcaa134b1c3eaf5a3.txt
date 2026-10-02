@@ -1,0 +1,30 @@
+The module `origen_089953` is designed to generate color outputs for a VGA display grid based on specific conditions related to horizontal and vertical coordinates. It takes several 12-bit inputs and produces three 4-bit outputs that represent the red, green, and blue color components for the VGA grid.
+
+### Inputs:
+1. **VGA_HORZ_COORD (12 bits):** This input represents the horizontal coordinate on the VGA display.
+2. **VGA_VERT_COORD (12 bits):** This input represents the vertical coordinate on the VGA display.
+3. **background (12 bits):** This input specifies the background color using three 4-bit segments for red, green, and blue.
+4. **axes (12 bits):** This input specifies the color of the axes using three 4-bit segments for red, green, and blue.
+5. **grid (12 bits):** This input specifies the grid color using three 4-bit segments for red, green, and blue.
+6. **ticks (12 bits):** This input specifies the tick marks color using three 4-bit segments for red, green, and blue.
+
+### Outputs:
+1. **VGA_Red_Grid (4 bits):** This output provides the red component of the VGA grid color.
+2. **VGA_Green_Grid (4 bits):** This output provides the green component of the VGA grid color.
+3. **VGA_Blue_Grid (4 bits):** This output provides the blue component of the VGA grid color.
+
+### Functionality:
+The module determines the color to be displayed at each pixel on the VGA grid based on the horizontal and vertical coordinates. It evaluates several conditions to decide which color to output:
+
+- **Axes Condition:** If the horizontal coordinate equals 640 or the vertical coordinate equals 512, the pixel is part of the axes. The color for axes is used for the output.
+
+- **Ticks Condition:** If the horizontal coordinate is a multiple of 64 and the vertical coordinate is between 507 and 517, or if the vertical coordinate is a multiple of 64 and the horizontal coordinate is between 635 and 645, the pixel is part of the tick marks. The color for ticks is used for the output.
+
+- **Small Ticks Condition:** If the horizontal coordinate is a multiple of 32 and the vertical coordinate is between 509 and 515, or if the vertical coordinate is a multiple of 32 and the horizontal coordinate is between 637 and 643, the pixel is part of the smaller tick marks. The color for ticks is used for the output.
+
+- **Grid Condition:** If the horizontal or vertical coordinate is a multiple of 32, the pixel is part of the grid. The color for the grid is used for the output.
+
+- **Background Condition:** If none of the above conditions are met, the pixel is part of the background. The background color is used for the output.
+
+### Color Assignment:
+The module assigns the red, green, and blue components of the output color based on the condition met. Each

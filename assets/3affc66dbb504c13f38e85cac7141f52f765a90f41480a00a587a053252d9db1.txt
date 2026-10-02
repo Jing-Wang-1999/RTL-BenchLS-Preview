@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.197c0ad70d41d1aac50d.4eda057199d0",
+  "compile_check": {
+    "case_id": "s1derived.197c0ad70d41d1aac50d.4eda057199d0",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "HT_dynamic_key",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.HT_dynamic_key.563772104f5aab0a/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.197c0ad70d41d1aac50d",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "197c0ad70d41d1aac50d2e4e957cccbe9526834fdc1abfad66a3f8e6c2db63bc",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.197c0ad70d41d1aac50d.4eda057199d0",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.HT_dynamic_key.563772104f5aab0a/private/commercial_positive.log",
+    "commercial_log_sha256": "7721125245aaa6c74c4bc50b8ee34ceafc792f9f3bae2d1dc58ccf7c5614e9f1",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.HT_dynamic_key.563772104f5aab0a/private/historical_harness/00_sec_HT_dynamic_key.tcl",
+    "executed_script_sha256": "6d7e52c4ca9ecb5c7222c39b29551ff5fbeb173712e17364361fabc2d677630c",
+    "golden_tops": [
+      "HT_dynamic_key"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_10.HT_dynamic_key.563772104f5aab0a",
+    "parent_id": "s1p.197c0ad70d41d1aac50d",
+    "revised_tops": [
+      "HT_dynamic_key"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "HT_dynamic_key",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.197c0ad70d41d1aac50d.4eda057199d0",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "The128-bitregistertestsitsownpreedgevalue, notthecurrentkey, toalternatecaptureandclear. Zero-keycaptureleavesitreadytocapturenextedge. Asynchighresetdominates,andnoenableorhelperisomitted.",
+        "rtl_excerpt": "else if(HT_key == 128'd0)",
+        "specification_excerpt": "if the old `HT_key` is zero it loads `key`; otherwise it clears to zero."
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.197c0ad70d41d1aac50d",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "4df474d3cb2805e59325d7124b0bacc8bab48ad0ee025da9ac69259b535f84f9",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "197c0ad70d41d1aac50d2e4e957cccbe9526834fdc1abfad66a3f8e6c2db63bc",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.HT_dynamic_key.563772104f5aab0a/private/historical_harness/00_sec_HT_dynamic_key.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.HT_dynamic_key.563772104f5aab0a/private/historical_harness/01_sec_HT_dynamic_key.tcl"
+  ],
+  "parent_id": "s1p.197c0ad70d41d1aac50d",
+  "primary_review": {
+    "case_id": "s1derived.197c0ad70d41d1aac50d.4eda057199d0",
+    "checks": {
+      "behavior": "Compared observable equations/state transitions. RTL uses posedge rst; HT_key==0 loads key, so a zero input leaves it zero and retries each edge.",
+      "boundaries": "Checked unsupported selector/opcode/state cases, simultaneous controls, arithmetic flags, zero values, and compile completeness as applicable.",
+      "interface": "Compared exact ports, widths, parameters, and defaults. The prose states the zero/load alternating behavior but omits that reset is asynchronous and the key=0 boundary.",
+      "rtl_reasonableness": "RTL describes a coherent hardware or deliberate simulation-checker function under the stated contract.",
+      "sequential_and_reset": "Compared edge sensitivity, reset polarity and synchrony, enables, holds, update ordering, and latency where sequential state exists; otherwise confirmed combinational behavior."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "Full-file comparison supports decision=revise; the excerpts identify the decisive semantic agreement or discrepancy.",
+        "rtl_excerpt": "RTL uses posedge rst; HT_key==0 loads key, so a zero input leaves it zero and retries each edge.",
+        "spec_excerpt": "The prose states the zero/load alternating behavior but omits that reset is asynchronous and the key=0 boundary."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The prose states the zero/load alternating behavior but omits that reset is asynchronous and the key=0 boundary.",
+        "rtl_evidence": "RTL uses posedge rst; HT_key==0 loads key, so a zero input leaves it zero and retries each edge.",
+        "spec_evidence": "The prose states the zero/load alternating behavior but omits that reset is asynchronous and the key=0 boundary.",
+        "type": "missing_or_inaccurate_observable_requirement"
+      }
+    ],
+    "parent_id": "s1p.197c0ad70d41d1aac50d",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.197c0ad70d41d1aac50d.4eda057199d0.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "197c0ad70d41d1aac50d2e4e957cccbe9526834fdc1abfad66a3f8e6c2db63bc",
+    "source_group": "S4",
+    "specification_sha256": "4eda057199d04275539eda208657f8335000d6f821c0a62c6cadf288636ebf04",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_2_sol_02/s1derived.197c0ad70d41d1aac50d.4eda057199d0.md",
+  "qualified_specification_sha256": "4df474d3cb2805e59325d7124b0bacc8bab48ad0ee025da9ac69259b535f84f9",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.HT_dynamic_key.563772104f5aab0a/private/golden_design.v",
+  "rtl_sha256": "197c0ad70d41d1aac50d2e4e957cccbe9526834fdc1abfad66a3f8e6c2db63bc",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_10.HT_dynamic_key.563772104f5aab0a/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "4eda057199d04275539eda208657f8335000d6f821c0a62c6cadf288636ebf04",
+  "top_module": "HT_dynamic_key"
+}

@@ -1,0 +1,14 @@
+# origen_033681
+
+This combinational decoder has input `OperationCode[5:0]` and outputs `RegisterDestination`, `ALUSource`, `MemoryToRegister`, `RegisterWrite`, `MemoryRead`, `MemoryWrite`, `Branch`, `Jump`, `ALUOperation[1:0]`, and `SignZero`.
+
+For opcodes R-type `000000`, LW `100011`, SW `101011`, BNE `000101`, XORI `001110`, and J `000010`, the output tuples in the order above are respectively:
+
+- `1,0,0,1,0,0,0,0,10,0`
+- `0,1,1,1,1,0,0,0,00,1`
+- `x,1,x,0,0,1,0,0,00,1`
+- `x,0,x,0,0,0,1,0,01,1`
+- `0,1,0,1,0,0,0,0,11,0`
+- `x,x,x,0,0,0,0,1,xx,x`
+
+Every other two-state opcode produces `0,0,0,0,0,0,0,0,00,0`. The `x` values are intentional simulation don't-cares. The implementation uses `casex`, so X/Z bits in `OperationCode` can wildcard-match an earlier listed opcode. There is no clock, reset, state, or submodule.

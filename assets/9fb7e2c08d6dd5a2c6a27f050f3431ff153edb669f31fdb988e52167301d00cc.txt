@@ -1,0 +1,39 @@
+module rtlpp_09011 (
+    address,
+    byteenable,
+    chipselect,
+    clk,
+    clken,
+    write,
+    writedata,
+    readdata
+);
+
+  output reg [31:0] readdata;
+  input  [9:0] address;
+  input  [3:0] byteenable;
+  input        chipselect;
+  input        clk;
+  input        clken;
+  input        write;
+  input  [31:0] writedata;
+
+  reg [31:0] ram [0:1023];
+  wire wren;
+  assign wren = chipselect & write;
+
+  always @(posedge clk) begin
+    if (clken) begin
+      if (wren) begin
+        if (byteenable[0]) ram[address][ 7: 0] <= writedata[ 7: 0];
+        if (byteenable[1]) ram[address][15: 8] <= writedata[15: 8];
+        if (byteenable[2]) ram[address][23:16] <= writedata[23:16];
+        if (byteenable[3]) ram[address][31:24] <= writedata[31:24];
+      end
+      else begin
+        readdata <= ram[address];
+      end
+    end
+  end
+
+endmodule

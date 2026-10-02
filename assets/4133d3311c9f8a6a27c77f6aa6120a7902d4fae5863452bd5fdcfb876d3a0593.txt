@@ -1,0 +1,27 @@
+The module named "origen_005369" is a control unit designed to generate various control signals based on the input operation code (`op`) and function code (`func`). It is typically used in a processor to manage data flow and operations for different instruction types. The module has two main inputs and several outputs:
+
+### Inputs:
+1. **op**: A 6-bit input representing the operation code of the instruction.
+2. **func**: A 6-bit input used for specifying the function code in R-type instructions.
+
+### Outputs:
+The module generates several control signals as outputs, each serving a specific purpose in instruction execution:
+
+1. **RegDst**: A 2-bit signal determining the destination register for writing data. It is set to `01` for R-type instructions and `10` for the `jal` instruction.
+2. **ALUSrc**: A 1-bit signal indicating the source of the second operand for the ALU. It is set to `1` for immediate-type instructions like `lw`, `sw`, `addi`, `andi`, `ori`, and `slti`.
+3. **MemtoReg**: A 2-bit signal controlling the source of data to be written to the register. It is set to `01` for `lw` and `10` for `jal`.
+4. **RegWrite**: A 1-bit signal enabling writing to the register file. It is activated for instructions that require writing results back to registers, such as R-type, `lw`, `addi`, `andi`, `ori`, `slti`, and `jal`.
+5. **MemRead**: A 1-bit signal enabling reading from memory, specifically for the `lw` instruction.
+6. **MemWrite**: A 1-bit signal enabling writing to memory, specifically for the `sw` instruction.
+7. **IfBeq**: A 1-bit signal used for branch instructions, specifically `beq`.
+8. **ExtOp**: A 2-bit signal controlling the sign extension of immediate values. It is set to `01` for instructions like `lw`, `sw`, `beq`, `addi`, and `slti`.
+9. **ALUOp**: A 2-bit signal determining the operation to be performed by the ALU. It is set to `10` for R-type instructions, `01` for `beq`, and `11` for `andi`, `ori`, and `slti`.
+10. **jr**: A 1-bit signal indicating a jump register operation, specifically for the `jr` instruction within R-type instructions.
+11. **jal**: A 1-bit signal indicating a jump and link operation, specifically for the `jal` instruction.
+
+### Behavior:
+The module operates by continuously monitoring the `op` and `func` inputs and updating the control signals accordingly. It uses a case statement to determine the appropriate control signals based on the `op` value. For R-type instructions, it further checks the `func` value to identify specific operations like `jr`.
+
+### Instruction Handling:
+- **R-type Instructions**: These instructions set `RegDst` to `01`, enable `RegWrite`, and set `ALUOp` to `10`. If the `func` code is `001000`, indicating a `jr` instruction, it sets `jr` to `1` and disables `RegWrite`.
+- **Load Word (`lw`)**: Sets `ALUSrc` to `1`, `MemtoReg` to `01`, enables `RegWrite`, `MemRead`, and sets `

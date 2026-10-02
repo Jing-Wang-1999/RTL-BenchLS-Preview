@@ -1,0 +1,142 @@
+module autovcoder_080777 (
+    reg_in,
+    reg_out,
+
+    reg_we,
+
+    reg_number,
+
+    op0_reg,
+    op0_is_valid,
+
+    wb_reg,
+    wb_is_valid,
+
+    next_stage_ready
+);
+
+  output [31:0] reg_in;
+
+  input [31:0] reg_out;
+
+  output reg_we;
+
+  input [2:0] reg_number;
+
+  input [2:0] op0_reg;
+  input op0_is_valid;
+
+  input [2:0] wb_reg;
+  input wb_is_valid;
+
+  input next_stage_ready;
+
+  // increment reg if (op0_reg == reg_number) && op0_is_valid
+  // decrement reg if (wb_reg == reg_number) && wb_is_valid
+  // stay the same if both are true
+
+  // see if op0_reg == reg_number using xnor
+  wire [2:0] op0_xnor_out;
+  xnor2$
+      op0_xnor_0 (
+          op0_xnor_out[0],
+          op0_reg[0],
+          reg_number[0]
+      ),
+      op0_xnor_1 (
+          op0_xnor_out[1],
+          op0_reg[1],
+          reg_number[1]
+      ),
+      op0_xnor_2 (
+          op0_xnor_out[2],
+          op0_reg[2],
+          reg_number[2]
+      );
+
+  // see if all match
+  wire increment;
+  and5$ op0_and (
+      increment,
+      op0_xnor_out[0],
+      op0_xnor_out[1],
+      op0_xnor_out[2],
+      op0_is_valid,
+      next_stage_ready
+  );
+
+  // see if wb_reg == reg_number
+  wire [2:0] wb_xnor_out;
+  xnor2$
+      wb_xnor_0 (
+          wb_xnor_out[0],
+          wb_reg[0],
+          reg_number[0]
+      ),
+      wb_xnor_1 (
+          wb_xnor_out[1],
+          wb_reg[1],
+          reg_number[1]
+      ),
+      wb_xnor_2 (
+          wb_xnor_out[2],
+          wb_reg[2],
+          reg_number[2]
+      );
+
+  // see if all match
+  wire decrement;
+  and4$ wb_and (
+      decrement,
+      wb_xnor_out[0],
+      wb_xnor_out[1],
+      wb_xnor_out[2],
+      wb_is_valid
+  );
+
+  // add to reg out
+  wire [31:0] reg_out_add;
+  CLA32 add_1 (
+      reg_out,
+      32'h1,
+      1'b0,
+      reg_out_add,
+  );
+  //slow_addr #(.WIDTH(32)) add_1 (reg_out, 32'h1, reg_out_add, );
+
+  // sub to reg out
+  wire [31:0] reg_out_sub;
+  CLA32 sub_1 (
+      reg_out,
+      32'hFFFFFFFF,
+      1'b0,
+      reg_out_sub,
+  );
+  //slow_addr #(.WIDTH(32)) sub_1 (reg_out, 32'hFFFFFFFF, reg_out_sub, );
+
+  // mux selecting which to use
+  ao_mux #(
+      .WIDTH  (32),
+      .NINPUTS(2)
+  ) reg_in_mux (
+      {reg_out_sub, reg_out_add},
+      reg_in,
+      {decrement, increment}
+  );
+
+  // set write enable only if we are adding or subtracting
+  // wire add_or_sub;
+  // xor2$ we_xor (add_or_sub, increment, decrement);
+
+  // only write if next stage is ready
+  // and2$ next_stage_and (reg_we, add_or_sub, next_stage_ready);
+
+  // we if we either add or subtract
+  xor2$ we_xor (
+      reg_we,
+      increment,
+      decrement
+  );
+
+endmodule
+

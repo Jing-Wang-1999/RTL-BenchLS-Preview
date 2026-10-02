@@ -1,0 +1,19 @@
+The module manages handshake signals for a data channel output during hardware-accelerated floating-point multiplication operations.
+
+**Interface**
+- **Clock and Reset**: A core clock and an active-low reset synchronize all operations.
+- **Inputs**:  
+  `oswt` indicates the original output channel write request.  
+  `biwt` signals the input channel is waiting, blocking the output.  
+  `bdwt` signals the output data is waiting to be consumed.
+- **Outputs**:  
+  `bawt` indicates the output channel is waiting (blocked).  
+  `wen_comp` indicates the write enable condition is complete, allowing data transfer.
+
+**Function**
+1.  The `bawt` (blocked-any-wait) output is asserted if either the input channel is currently waiting (`biwt`) OR if a blocking condition was registered on the previous clock cycle (`bcwt`).
+2.  The `wen_comp` (write-enable complete) output is asserted if either the original write request is inactive OR if the output channel is currently in a waiting state (`bawt`). This controls when data can be written to the output.
+3.  A flip-flop stores the `bcwt` (blocked-core-wait) state on every clock cycle. This state is set based on a combination of its previous value, the input wait signal (`biwt`), and the data wait signal (`bdwt`). The logic ensures the blocking state persists appropriately across cycles.
+
+**Purpose**
+It coordinates data flow between processing stages, preventing data loss by ensuring the output channel only accepts new data when the downstream logic is ready (`wen_comp`) and signaling upstream logic when it is blocked (`bawt`).

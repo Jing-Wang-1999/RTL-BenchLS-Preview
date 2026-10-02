@@ -1,0 +1,48 @@
+module autovcoder_024618 #(
+    parameter WIDTH = 8
+) (
+    input wire clk,
+    input wire sync,
+    input wire [WIDTH-1:0] d,
+    output reg [WIDTH-1:0] q
+);
+
+    reg [WIDTH-1:0] d_prev;
+    reg reset_pipe_0, reset_pipe_1;
+    reg [WIDTH-1:0] sync_pipe_0, sync_pipe_1;
+
+    always @(posedge clk) begin
+        d_prev <= d;
+    end
+
+`ifdef ARM_CDC_CHECK
+    always @(posedge clk) begin
+        if (sync) begin
+            q <= d;
+            reset_pipe_0 <= 1'b0;
+            reset_pipe_1 <= 1'b0;
+            sync_pipe_0 <= d;
+            sync_pipe_1 <= d;
+        end else begin
+            if (d != d_prev) begin
+                reset_pipe_0 <= 1'b1;
+            end else begin
+                reset_pipe_0 <= 1'b0;
+            end
+            reset_pipe_1 <= reset_pipe_0;
+            sync_pipe_0 <= d;
+            sync_pipe_1 <= sync_pipe_0;
+            if (reset_pipe_1) begin
+                q <= {WIDTH{1'bz}};
+            end else begin
+                q <= sync_pipe_1;
+            end
+        end
+    end
+`else
+    always @* begin
+        q = d;
+    end
+`endif
+
+endmodule

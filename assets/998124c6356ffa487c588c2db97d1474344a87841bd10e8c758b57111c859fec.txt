@@ -1,0 +1,58 @@
+module origen_220868 (
+    input I_clk,
+    inout I_O_sda,
+    output [3:0] O_num1, O_num2, O_num3, O_num4,
+    output [3:0] O_num5, O_num6, O_num7, O_num8
+);
+
+reg [31:0] counter;
+reg [31:0] temperature, humidity;
+reg out_en, sda_temp;
+reg sda_dly, sda_reg, sda_high;
+reg out_en_dly;
+reg sda_out;
+
+always @(posedge I_clk) begin
+    if (counter == 100_000_000) begin
+        counter <= 0;
+    end else begin
+        counter <= counter + 1;
+    end
+end
+
+always @(posedge I_clk) begin
+    sda_dly <= I_O_sda;
+    sda_reg <= sda_dly;
+    sda_high <= sda_reg;
+end
+
+always @(posedge I_clk) begin
+    if (out_en) begin
+        sda_out <= sda_temp;
+    end else begin
+        sda_out <= 1'bz;
+    end
+end
+
+always @(posedge I_clk) begin
+    out_en_dly <= out_en;
+    if (out_en_dly) begin
+        // Process the received data and update temperature and humidity
+        temperature <= 32'h12345678;
+        humidity <= 32'h87654321;
+    end
+end
+
+assign I_O_sda = sda_out;
+
+assign O_num1 = temperature[3:0];
+assign O_num2 = temperature[7:4];
+assign O_num3 = temperature[11:8];
+assign O_num4 = temperature[15:12];
+
+assign O_num5 = humidity[3:0];
+assign O_num6 = humidity[7:4];
+assign O_num7 = humidity[11:8];
+assign O_num8 = humidity[15:12];
+
+endmodule

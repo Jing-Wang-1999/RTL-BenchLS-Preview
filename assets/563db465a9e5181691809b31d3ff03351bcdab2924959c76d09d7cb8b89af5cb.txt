@@ -1,0 +1,114 @@
+module origen_093321 #(
+    parameter BLOCK_SIZE = 128,
+    parameter MEMORY_SIZE = 1024,
+    parameter ADDR_WIDTH = 10
+)(
+    input wire clk,
+    input wire rst,
+    input wire we,
+    input wire [ADDR_WIDTH-1:0] r_addr,
+    input wire [ADDR_WIDTH-1:0] w_addr,
+    input wire [BLOCK_SIZE-1:0] block,
+    output reg [BLOCK_SIZE-1:0] q,
+    output reg block_ready,
+    output wire fifo_full
+);
+
+    reg [BLOCK_SIZE-1:0] mm [0:MEMORY_SIZE-1];
+    reg [3:0] delay;
+    reg [ADDR_WIDTH-1:0] last_r_addr;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            integer i;
+            for (i = 0; i < MEMORY_SIZE; i = i + 1) begin
+                mm[i] <= {BLOCK_SIZE{1'b0}};
+            end
+            q <= {BLOCK_SIZE{1'b0}};
+            block_ready <= 1'b0;
+            delay <= 4'd0;
+            last_r_addr <= {ADDR_WIDTH{1'b0}};
+        end else begin
+            if (we) begin
+                mm[w_addr] <= block;
+            end
+
+            if (r_addr != last_r_addr) begin
+                delay <= 4'd1;
+                block_ready <= 1'b0;
+                last_r_addr <= r_addr;
+            end else if (delay > 4'd0 && delay < 4'd10) begin
+                delay <= delay + 4'd1;
+            end else if (delay == 4'd10) begin
+                q <= mm[r_addr];
+                block_ready <= 1'b1;
+                delay <= 4'd0;
+            end
+        end
+    end
+
+    assign fifo_full = 1'b0; // Not implemented in this version
+
+endmodule
+
+module mainmm_tb;
+    parameter BLOCK_SIZE = 128;
+    parameter MEMORY_SIZE = 1024;
+    parameter ADDR_WIDTH = 10;
+
+    reg clk, rst, we;
+    reg [ADDR_WIDTH-1:0] r_addr, w_addr;
+    reg [BLOCK_SIZE-1:0] block;
+    wire [BLOCK_SIZE-1:0] q;
+    wire block_ready, fifo_full;
+
+    mainmm #(
+        .BLOCK_SIZE(BLOCK_SIZE),
+        .MEMORY_SIZE(MEMORY_SIZE),
+        .ADDR_WIDTH(ADDR_WIDTH)
+    ) dut (
+        .clk(clk),
+        .rst(rst),
+        .we(we),
+        .r_addr(r_addr),
+        .w_addr(w_addr),
+        .block(block),
+        .q(q),
+        .block_ready(block_ready),
+        .fifo_full(fifo_full)
+    );
+
+    always #5 clk = ~clk;
+
+    initial begin
+        clk = 0;
+        rst = 1;
+        we = 0;
+        r_addr = 0;
+        w_addr = 0;
+        block = 0;
+
+        #10 rst = 0;
+
+        // Write to address 0x3
+        #10 we = 1;
+        w_addr = 10'h3;
+        block = {BLOCK_SIZE{1'b1}};
+        #10 we = 0;
+
+        // Write to address 0x4
+        #10 we = 1;
+        w_addr = 10'h4;
+        block = {BLOCK_SIZE{1'b0}};
+        #10 we = 0;
+
+        // Read from addresses 3 and 4 alternately
+        forever begin
+            #100 r_addr = 10'h3;
+            #100 r_addr = 10'h4;
+        end
+    end
+
+    initial #1000 $finish;
+
+endmodule

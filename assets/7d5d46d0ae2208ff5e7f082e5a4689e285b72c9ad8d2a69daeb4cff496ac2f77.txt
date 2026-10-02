@@ -1,0 +1,28 @@
+module autovcoder_011297 (
+    input  wire        iclk_i,
+    input  wire        iclk_reset_i,
+    input  wire        oclk_i,
+    input  wire [6:0]  iclk_data_i,
+    output reg  [6:0]  iclk_data_o,
+    output reg  [6:0]  oclk_data_o
+);
+
+    // Synchronizer registers
+    reg [6:0] bsg_SYNC_1_r;
+
+    // Primary clock domain register
+    always @(posedge iclk_i) begin
+        if (iclk_reset_i) begin
+            iclk_data_o <= 7'b0;
+        end else begin
+            iclk_data_o <= iclk_data_i;
+        end
+    end
+
+    // Two-stage synchronizer for cross-clock transfer
+    always @(posedge oclk_i) begin
+        bsg_SYNC_1_r <= iclk_data_o;
+        oclk_data_o  <= bsg_SYNC_1_r;
+    end
+
+endmodule

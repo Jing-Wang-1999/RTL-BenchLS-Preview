@@ -1,0 +1,52 @@
+module autovcoder_097098 #(
+    parameter NrOfBits = 1,
+    parameter ActiveLevel = 1
+)(
+    input Clock,
+    input ClockEnable,
+    input [NrOfBits-1:0] D,
+    input Reset,
+    input Tick,
+    input cs,
+    input pre,
+    output reg [NrOfBits-1:0] Q
+);
+
+    reg [NrOfBits-1:0] s_state_reg;
+    reg [NrOfBits-1:0] s_state_reg_neg_edge;
+
+    // Asynchronous reset and preset logic
+    always @(posedge Clock or posedge Reset or posedge pre) begin
+        if (Reset) begin
+            s_state_reg <= {NrOfBits{1'b0}};
+        end else if (pre) begin
+            s_state_reg <= {NrOfBits{1'b1}};
+        end else if (ClockEnable && Tick) begin
+            s_state_reg <= D;
+        end
+    end
+
+    always @(negedge Clock or posedge Reset or posedge pre) begin
+        if (Reset) begin
+            s_state_reg_neg_edge <= {NrOfBits{1'b0}};
+        end else if (pre) begin
+            s_state_reg_neg_edge <= {NrOfBits{1'b1}};
+        end else if (ClockEnable && Tick) begin
+            s_state_reg_neg_edge <= D;
+        end
+    end
+
+    // Output logic
+    always @(*) begin
+        if (cs) begin
+            Q = {NrOfBits{1'bz}};
+        end else begin
+            if (ActiveLevel) begin
+                Q = s_state_reg;
+            end else begin
+                Q = s_state_reg_neg_edge;
+            end
+        end
+    end
+
+endmodule

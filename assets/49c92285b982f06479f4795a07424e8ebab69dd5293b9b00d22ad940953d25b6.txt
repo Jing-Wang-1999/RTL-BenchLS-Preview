@@ -1,0 +1,16 @@
+module origen_087979 (
+    input clock,
+    input data,
+    input preset,
+    input reset,
+    output reg Q
+);
+    always @(posedge clock or negedge preset or negedge reset) begin
+        if (!preset)
+            Q <= 1'b1;
+        else if (!reset)
+            Q <= 1'b0;
+        else
+            Q <= data;
+    end
+endmodule

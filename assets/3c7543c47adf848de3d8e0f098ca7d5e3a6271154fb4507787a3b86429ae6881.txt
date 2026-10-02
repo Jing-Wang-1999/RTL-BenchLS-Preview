@@ -1,0 +1,8 @@
+always @(posedge clk or posedge rst)
+	if(rst)		wp_err <=  1'b0;
+	else
+	if(cs_le & wb_cyc_i & wb_stb_i)
+			wp_err <= 	wp_err7 | wp_err6 | wp_err5 | wp_err4 |
+					wp_err3 | wp_err2 | wp_err1 | wp_err0;
+	else
+	if(!wb_cyc_i)	wp_err <=  1'b0;

@@ -1,0 +1,58 @@
+module origen_119000 (
+    input wire clk,
+    input wire [63:0] Direccion,
+    input wire [63:0] DataWr,
+    input wire DMWr,
+    input wire DMRd,
+    input wire [7:0] Swi,
+    input wire [1:0] MuxSel,
+    output reg [63:0] Salida_LeSw,
+    output reg [7:0] Led
+);
+
+    reg [7:0] Memoria [0:63];
+    reg [63:0] DataRd;
+    wire AND1;
+
+    initial begin
+        $readmemb("memoria.mem", Memoria);
+    end
+
+    assign AND1 = DMWr & (Direccion[13:12] == 2'b01);
+
+    always @(posedge clk) begin
+        if (AND1) begin
+            Led <= DataWr[7:0];
+        end
+    end
+
+    always @(*) begin
+        if (DMRd) begin
+            DataRd = {Memoria[Direccion[5:0]+7], Memoria[Direccion[5:0]+6],
+                      Memoria[Direccion[5:0]+5], Memoria[Direccion[5:0]+4],
+                      Memoria[Direccion[5:0]+3], Memoria[Direccion[5:0]+2],
+                      Memoria[Direccion[5:0]+1], Memoria[Direccion[5:0]]};
+        end else begin
+            DataRd = 64'b0;
+        end
+
+        if (DMWr && Direccion[13:12] == 2'b00) begin
+            Memoria[Direccion[5:0]]   = DataWr[7:0];
+            Memoria[Direccion[5:0]+1] = DataWr[15:8];
+            Memoria[Direccion[5:0]+2] = DataWr[23:16];
+            Memoria[Direccion[5:0]+3] = DataWr[31:24];
+            Memoria[Direccion[5:0]+4] = DataWr[39:32];
+            Memoria[Direccion[5:0]+5] = DataWr[47:40];
+            Memoria[Direccion[5:0]+6] = DataWr[55:48];
+            Memoria[Direccion[5:0]+7] = DataWr[63:56];
+        end
+
+        case (MuxSel)
+            2'b00: Salida_LeSw = DataRd;
+            2'b01: Salida_LeSw = {{56{Led[7]}}, Led};
+            2'b10: Salida_LeSw = {{56{Swi[7]}}, Swi};
+            default: Salida_LeSw = DataRd;
+        endcase
+    end
+
+endmodule

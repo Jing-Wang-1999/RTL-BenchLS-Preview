@@ -1,0 +1,10 @@
+This module is a 16-bit linear feedback shift register (LFSR) with a polynomial-based update and a dump mode.
+
+Inputs: active-low reset (rst_n), clock (clk), clock enable (clken), data input (d), and dump control (dump).
+Outputs: the most significant bit of the register (out) and a valid flag.
+
+The 16-bit register updates on the rising clock edge when enabled. On reset, it initializes to all ones.
+
+The update logic has two modes. If dump is asserted or if the current output bit matches input d, the register shifts left, inserting a zero at the LSB. Otherwise, it performs a non-linear update: it inverts specific bits (bits 14 and 1) and inserts a one at the LSB.
+
+The valid flag is asserted when the next state equals the specific value 0x800D.

@@ -1,0 +1,243 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module vga_fifo (
+	clk,
+	aclr,
+	sclr,
+	wreq,
+	rreq,
+	d,
+	q,
+	nword,
+	empty,
+	full,
+	aempty,
+	afull
+	);
+
+	
+	
+	
+	parameter aw =  3;                         
+	parameter dw =  8;                         
+
+	
+	
+	
+	input             clk;                     
+	input             aclr;                    
+	input             sclr;                    
+
+	input             wreq;                    
+	input             rreq;                    
+	input  [dw:1]     d;                       
+	output [dw:1]     q;                       
+
+	output [aw:0]     nword;                   
+
+	output            empty;                   
+	output            full;                    
+
+	output            aempty;                  
+	output            afull;                   
+
+	reg [aw:0] nword;
+	reg        empty, full;
+
+	
+	
+	
+	reg  [aw:1] rp, wp;
+	wire [dw:1] ramq;
+	wire fwreq, frreq;
+
+
+	function lsb;
+	   input [aw:1] q;
+	   case (aw)
+	       2: lsb = ~q[2];
+	       3: lsb = &q[aw-1:1] ^ ~(q[3] ^ q[2]);
+	       4: lsb = &q[aw-1:1] ^ ~(q[4] ^ q[3]);
+	       5: lsb = &q[aw-1:1] ^ ~(q[5] ^ q[3]);
+	       6: lsb = &q[aw-1:1] ^ ~(q[6] ^ q[5]);
+	       7: lsb = &q[aw-1:1] ^ ~(q[7] ^ q[6]);
+	       8: lsb = &q[aw-1:1] ^ ~(q[8] ^ q[6] ^ q[5] ^ q[4]);
+	       9: lsb = &q[aw-1:1] ^ ~(q[9] ^ q[5]);
+	      10: lsb = &q[aw-1:1] ^ ~(q[10] ^ q[7]);
+	      11: lsb = &q[aw-1:1] ^ ~(q[11] ^ q[9]);
+	      12: lsb = &q[aw-1:1] ^ ~(q[12] ^ q[6] ^ q[4] ^ q[1]);
+	      13: lsb = &q[aw-1:1] ^ ~(q[13] ^ q[4] ^ q[3] ^ q[1]);
+	      14: lsb = &q[aw-1:1] ^ ~(q[14] ^ q[5] ^ q[3] ^ q[1]);
+	      15: lsb = &q[aw-1:1] ^ ~(q[15] ^ q[14]);
+	      16: lsb = &q[aw-1:1] ^ ~(q[16] ^ q[15] ^ q[13] ^ q[4]);
+	   endcase
+	endfunction
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  assign fwreq = wreq;
+  assign frreq = rreq;
+
+
+	
+	
+	
+	always @(posedge clk or negedge aclr)
+	  if (~aclr)      rp <=  0;
+	  else if (sclr)  rp <=  0;
+	  else if (frreq) rp <=  {rp[aw-1:1], lsb(rp)};
+
+	
+	
+	
+	always @(posedge clk or negedge aclr)
+	  if (~aclr)      wp <=  0;
+	  else if (sclr)  wp <=  0;
+	  else if (fwreq) wp <=  {wp[aw-1:1], lsb(wp)};
+
+
+	
+	
+	
+	reg [dw:1] mem [(1<<aw) -1:0];
+
+	
+	always @(posedge clk)
+	  if (fwreq)
+	    mem[wp] <=  d;
+
+	assign q = mem[rp];
+
+
+	
+	assign aempty = (rp[aw-1:1] == wp[aw:2]) & (lsb(rp) == wp[1]) & frreq & ~fwreq;
+	always @(posedge clk or negedge aclr)
+	  if (~aclr)
+	    empty <=  1'b1;
+	  else if (sclr)
+	    empty <=  1'b1;
+	  else
+	    empty <=  aempty | (empty & (~fwreq + frreq));
+
+	assign afull = (wp[aw-1:1] == rp[aw:2]) & (lsb(wp) == rp[1]) & fwreq & ~frreq;
+	always @(posedge clk or negedge aclr)
+	  if (~aclr)
+	    full <=  1'b0;
+	  else if (sclr)
+	    full <=  1'b0;
+	  else
+	    full <=  afull | ( full & (~frreq + fwreq) );
+
+	
+	always @(posedge clk or negedge aclr)
+	  if (~aclr)
+	    nword <=  0;
+	  else if (sclr)
+	    nword <=  0;
+	  else
+	    begin
+	        if (wreq & !rreq)
+	          nword <=  nword +1;
+	        else if (rreq & !wreq)
+	          nword <=  nword -1;
+	    end
+
+	
+	
+	
+	
+endmodule
+
+

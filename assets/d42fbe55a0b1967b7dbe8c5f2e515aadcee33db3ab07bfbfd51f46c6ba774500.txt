@@ -1,0 +1,16 @@
+read_verilog -sv golden.v
+hierarchy -check -top jtag_io_mm_interconnect_0_cmd_mux
+proc; opt; memory; opt; flatten; opt; check -assert
+select -assert-none t:$*ff* t:$*latch*
+design -stash gold
+read_verilog -sv revised.v
+hierarchy -check -top jtag_io_mm_interconnect_0_cmd_mux
+proc; opt; memory; opt; flatten; opt; check -assert
+select -assert-none t:$*ff* t:$*latch*
+design -stash gate
+design -copy-from gold -as gold jtag_io_mm_interconnect_0_cmd_mux
+design -copy-from gate -as gate jtag_io_mm_interconnect_0_cmd_mux
+miter -equiv -flatten gold gate miter
+hierarchy -check -top miter
+prep -top miter; check -assert
+sat -set-def-inputs -prove trigger 0 -verify -show-ports -dump_json witness.json

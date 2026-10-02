@@ -1,0 +1,17 @@
+module mg_04986(clk, clk_ena, addr_a, q_a);
+parameter DATA_WIDTH = 8; 
+  parameter ADDR_WIDTH = 8; 
+  input clk, clk_ena; 
+  input [ADDR_WIDTH-1:0] addr_a; 
+  output reg [DATA_WIDTH-1:0] q_a; 
+  reg [DATA_WIDTH-1:0] rom[2**ADDR_WIDTH-1:0]; 
+  initial 
+  begin 
+  $readmemb("rs_255_inv.vec", rom); 
+  end 
+  always @ (posedge clk) 
+  begin 
+  if(clk_ena) 
+  q_a <= rom[addr_a]; 
+  end 
+ endmodule

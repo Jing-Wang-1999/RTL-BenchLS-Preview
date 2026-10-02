@@ -1,0 +1,45 @@
+always @(posedge clk) begin
+    if (resetn == 1'b0) begin
+      state <= STATE_DO_RESET;
+    end else begin
+      case (state)
+      STATE_DO_RESET: begin
+        state <= STATE_RESET;
+      end
+      STATE_RESET: begin
+        /*
+         * Wait for the reset sequence to complete. Stay in this state when
+         * ctrl_enable == 1'b0, otherwise we'd go through the reset sequence
+         * again and again.
+         */
+        if (ctrl_enable == 1'b1 && req_resetn == 1'b1) begin
+          state <= STATE_DISABLED;
+        end
+      end
+      STATE_DISABLED: begin
+        if (needs_reset == 1'b1) begin
+          state <= STATE_DO_RESET;
+        end else if (ctrl_pause == 1'b0) begin
+          state <= STATE_STARTUP;
+        end
+      end
+      STATE_STARTUP: begin
+        /* Wait for all domains to be ready */
+        if (enabled_all == 1'b1) begin
+          state <= STATE_ENABLED;
+        end
+      end
+      STATE_ENABLED: begin
+        if (needs_reset == 1'b1 || ctrl_pause == 1'b1) begin
+          state <= STATE_SHUTDOWN;
+        end
+      end
+      STATE_SHUTDOWN: begin
+        /* Wait for all domains to complete outstanding transactions */
+        if (disabled_all == 1'b1) begin
+          state <= STATE_DISABLED;
+        end
+      end
+      endcase
+    end
+  end

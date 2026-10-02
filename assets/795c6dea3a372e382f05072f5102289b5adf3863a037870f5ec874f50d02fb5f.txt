@@ -1,0 +1,112 @@
+{
+  "case_id": "s1derived.2d090785045b4687aaca.7e5bfd644e70",
+  "compile_check": {
+    "case_id": "s1derived.2d090785045b4687aaca.7e5bfd644e70",
+    "command": [
+      "/home/jwangjw/anaconda3/bin/iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "rtlpp_10457",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_10457.792d74775fbf1e7c/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "parent_id": "s1p.2d090785045b4687aaca",
+    "qualification_role": "supporting_diagnostic_not_behavioral_proof",
+    "returncode": 0,
+    "rtl_sha256": "2d090785045b4687aacae252f4578ecbd62cc927ef4b447e17a066577c576c41",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.2d090785045b4687aaca.7e5bfd644e70",
+    "commercial_log": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_10457.792d74775fbf1e7c/private/commercial_positive.log",
+    "commercial_log_sha256": "f0d0aad6a6c4ea0d524e12041f0942a874b0c404a9e08cef4847441e614e2755",
+    "executed_script": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_10457.792d74775fbf1e7c/private/historical_harness/00_sec_rtlpp_10457.tcl",
+    "executed_script_sha256": "fc90f8effdd6e9d816399d1ce7a14d2edde58fd628c08060ff0b3d70fb0c77bf",
+    "golden_tops": [
+      "rtlpp_10457"
+    ],
+    "historical_result_covers_declared_golden_top": true,
+    "legacy_lineage_id": "t1.3.slice_01.rtlpp_10457.792d74775fbf1e7c",
+    "parent_id": "s1p.2d090785045b4687aaca",
+    "revised_tops": [
+      "rtlpp_10457"
+    ],
+    "source_group": "S4",
+    "status": "both_tops_matched",
+    "top_module": "rtlpp_10457",
+    "verification_tool": "jaspergold"
+  },
+  "independent_review": {
+    "case_id": "s1derived.2d090785045b4687aaca.7e5bfd644e70",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "Both partial products and truncated high-half addition match the explicitly narrowed unsigned product; clock/reset are unused.",
+        "rtl_excerpt": "assign A_mul_cell_result_part_2 = A_mul_src1_part2 * A_mul_src2_part2;",
+        "specification_excerpt": "low 32 bits"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.2d090785045b4687aaca",
+    "review_round": "independent_semantic_v2",
+    "reviewed_specification_sha256": "1016ebf8924e65401d23320d12cf37d4ca66099ee2c03a5f0f6e6c3c38a5e0be",
+    "reviewer": "root_independent_review",
+    "reviewer_model": "parent_assistant",
+    "rtl_reasonable": true,
+    "rtl_sha256": "2d090785045b4687aacae252f4578ecbd62cc927ef4b447e17a066577c576c41",
+    "source_group": "S4",
+    "supersedes": true
+  },
+  "oracle_script_paths": [
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_10457.792d74775fbf1e7c/private/historical_harness/00_sec_rtlpp_10457.tcl",
+    "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_10457.792d74775fbf1e7c/private/historical_harness/01_sec_rtlpp_10457.tcl"
+  ],
+  "parent_id": "s1p.2d090785045b4687aaca",
+  "primary_review": {
+    "case_id": "s1derived.2d090785045b4687aaca.7e5bfd644e70",
+    "checks": {
+      "behavior": "The RTL computes the low 32 bits of src1 times only src2[15:0].",
+      "boundaries": "Both partial-product overflow and the upper-half addition truncate to 16 bits.",
+      "interface": "Two 32-bit operands, clock/reset, and 32-bit output match.",
+      "rtl_reasonableness": "A deliberately reduced-precision combinational multiplier is reasonable if specified exactly.",
+      "sequential_and_reset": "There is no sequential logic; clk and reset_n do not affect output."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The RTL computes the low 32 bits of src1 times only src2[15:0]. There is no sequential logic; clk and reset_n do not affect output.",
+        "rtl_excerpt": "result={part1[31:16]+part2[15:0],part1[15:0]}; part2 wire truncates its 16x16 product; clk unused; reset only drives unused mul_clr.",
+        "spec_excerpt": "The final text ends after \u201cThe final 32-bit output is constructed by:\u201d."
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification ends before defining result concatenation, truncation, ignored source bits, and the fact that clock/reset have no effect.",
+        "rtl_evidence": "result={part1[31:16]+part2[15:0],part1[15:0]}; part2 wire truncates its 16x16 product; clk unused; reset only drives unused mul_clr.",
+        "spec_evidence": "The final text ends after \u201cThe final 32-bit output is constructed by:\u201d.",
+        "type": "truncated_approximation_formula"
+      }
+    ],
+    "parent_id": "s1p.2d090785045b4687aaca",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.2d090785045b4687aaca.7e5bfd644e70.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "semantic_review_1",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "2d090785045b4687aacae252f4578ecbd62cc927ef4b447e17a066577c576c41",
+    "source_group": "S4",
+    "specification_sha256": "7e5bfd644e70d30f3f4f751c75707dc2fdc1aa58dfdbf6e9f1959319805ed472",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_1_sol_03/s1derived.2d090785045b4687aaca.7e5bfd644e70.md",
+  "qualified_specification_sha256": "1016ebf8924e65401d23320d12cf37d4ca66099ee2c03a5f0f6e6c3c38a5e0be",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_10457.792d74775fbf1e7c/private/golden_design.v",
+  "rtl_sha256": "2d090785045b4687aacae252f4578ecbd62cc927ef4b447e17a066577c576c41",
+  "source_corpus": "RTL-Dataset-RTLPP",
+  "source_group": "S4",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/commercial_generation_20260908_v1/lineages/t1.3.slice_01.rtlpp_10457.792d74775fbf1e7c/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "7e5bfd644e70d30f3f4f751c75707dc2fdc1aa58dfdbf6e9f1959319805ed472",
+  "top_module": "rtlpp_10457"
+}

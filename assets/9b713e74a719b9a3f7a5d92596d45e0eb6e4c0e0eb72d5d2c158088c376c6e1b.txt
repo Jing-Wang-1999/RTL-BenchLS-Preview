@@ -1,0 +1,107 @@
+module origen_148873(
+    input CLK,
+    input [3:0] ROW,
+    output [3:0] COL,
+    output WS,
+    output OPEN,
+    output ERROR
+);
+
+    wire [7:0] CHALLENGE;
+    wire [7:0] RESPONSE;
+    wire VALID;
+    wire SUCCESS;
+    wire WS_asic;
+    wire OPENER;
+
+    reg [4:0] counter = 0;
+    reg slow_clk = 0;
+    reg [7:0] reset_counter = 0;
+    reg reset = 1;
+
+    // Counter for generating slow clock
+    always @(posedge CLK) begin
+        if (counter == 19) begin
+            counter <= 0;
+            slow_clk <= ~slow_clk;
+        end else begin
+            counter <= counter + 1;
+        end
+    end
+
+    // Reset signal generation
+    always @(posedge CLK) begin
+        if (reset_counter < 200) begin
+            reset_counter <= reset_counter + 1;
+        end else begin
+            reset <= 0;
+        end
+    end
+
+    // Placeholder for challenge_asic module
+    reg [7:0] challenge_reg;
+    always @(posedge slow_clk or posedge reset) begin
+        if (reset)
+            challenge_reg <= 8'b0;
+        else
+            challenge_reg <= challenge_reg + 1;
+    end
+    assign CHALLENGE = challenge_reg;
+
+    // Placeholder for keypad module
+    reg [7:0] keypad_value;
+    reg keypad_valid;
+    always @(posedge CLK) begin
+        keypad_value <= ROW;
+        keypad_valid <= ^ROW;
+    end
+    assign RESPONSE = keypad_value;
+    assign VALID = keypad_valid;
+    assign COL = 4'b1111;
+
+    // Placeholder for success module
+    reg success_reg;
+    always @(posedge slow_clk or posedge reset) begin
+        if (reset)
+            success_reg <= 0;
+        else if (VALID)
+            success_reg <= (CHALLENGE == RESPONSE);
+    end
+    assign SUCCESS = success_reg;
+
+    // Placeholder for ws2812b module
+    reg ws_reg;
+    always @(posedge slow_clk or posedge reset) begin
+        if (reset)
+            ws_reg <= 0;
+        else
+            ws_reg <= SUCCESS;
+    end
+    assign WS_asic = ws_reg;
+
+    // Assign WS output
+    assign WS = WS_asic;
+
+    // Placeholder for timer module
+    reg [7:0] timer_counter;
+    reg timer_open;
+    always @(posedge slow_clk or posedge reset) begin
+        if (reset) begin
+            timer_counter <= 0;
+            timer_open <= 0;
+        end else if (SUCCESS && !timer_open) begin
+            if (timer_counter == 255)
+                timer_open <= 1;
+            else
+                timer_counter <= timer_counter + 1;
+        end
+    end
+    assign OPENER = timer_open;
+
+    // Assign OPEN output
+    assign OPEN = OPENER;
+
+    // Assign ERROR output
+    assign ERROR = VALID & ~SUCCESS;
+
+endmodule

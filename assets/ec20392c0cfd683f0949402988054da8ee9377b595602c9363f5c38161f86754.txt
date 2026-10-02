@@ -1,0 +1,55 @@
+module origen_081330(
+    input CLK1, CLK2,
+    input [1:0] MODE,
+    input [1:0] DRIVER1, DRIVER2, DRIVER3,
+    output reg MOTOR, STEER
+);
+
+reg [24:0] pwm1, pwm2;
+reg [24:0] count1, count2;
+
+always @(posedge CLK1) begin
+    case (MODE)
+        2'b00: begin
+            case (DRIVER1)
+                2'b00: begin pwm1 <= 25'd100; pwm2 <= 25'd91; end
+                2'b01: begin pwm1 <= 25'd200; pwm2 <= 25'd91; end
+                2'b10: begin pwm1 <= 25'd300; pwm2 <= 25'd91; end
+                2'b11: begin pwm1 <= 25'd400; pwm2 <= 25'd91; end
+            endcase
+        end
+        2'b01: begin
+            case (DRIVER2)
+                2'b00: begin pwm1 <= 25'd500; pwm2 <= 25'd82; end
+                2'b01: begin pwm1 <= 25'd600; pwm2 <= 25'd82; end
+                2'b10: begin pwm1 <= 25'd700; pwm2 <= 25'd82; end
+                2'b11: begin pwm1 <= 25'd800; pwm2 <= 25'd82; end
+            endcase
+        end
+        2'b10: begin
+            case (DRIVER3)
+                2'b00: begin pwm1 <= 25'd900; pwm2 <= 25'd100; end
+                2'b01: begin pwm1 <= 25'd950; pwm2 <= 25'd100; end
+                2'b10: begin pwm1 <= 25'd980; pwm2 <= 25'd100; end
+                2'b11: begin pwm1 <= 25'd1000; pwm2 <= 25'd100; end
+            endcase
+        end
+        default: begin
+            pwm1 <= 25'd0;
+            pwm2 <= 25'd91;
+        end
+    endcase
+end
+
+always @(posedge CLK2) begin
+    if (count1 >= 25'd1000) count1 <= 25'd0;
+    else count1 <= count1 + 1;
+
+    if (count2 >= 25'd1000) count2 <= 25'd0;
+    else count2 <= count2 + 1;
+
+    MOTOR <= (count1 < pwm1);
+    STEER <= (count2 < pwm2);
+end
+
+endmodule

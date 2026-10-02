@@ -1,0 +1,35 @@
+The Verilog module is a Binary to BCD (Binary-Coded Decimal) Converter. It takes a 16-bit binary input, processes it through a series of shifts and adjustments, and outputs a 5-digit BCD representation.
+
+1. **Primary Function:**
+   - Converts a 16-bit binary number (`dat_binary_i`) into its equivalent BCD format (`dat_bcd_o`).
+
+2. **Key Control Flow / Decision Points:**
+   - The module starts the conversion process when `start_i` is asserted.
+   - It resets internal registers and states when `rst_i` is asserted.
+   - The conversion process is driven by the `clk_i` clock signal and progresses only when `ce_i` (clock enable) is asserted.
+   - The module tracks the progression of the conversion through `busy_bit` and `bit_count`.
+   - The conversion is considered complete when `bit_count` reaches `BITS_IN_PP-1`, and the `done_o` flag is set.
+
+3. **Important Data Processing / Signal Interactions:**
+   - Inputs are captured in registers `bin_reg` and `bcd_reg`.
+   - A function `bcd_asl` performs the necessary adjustments (arithmetic shift left) to convert binary to BCD, considering digit values above 4.
+   - `bin_next` represents the shifted value of `bin_reg`, while `bcd_next` holds the next potential BCD result.
+   - The status of `bit_count` determines if the conversion steps are completed.
+   - Once the conversion is done, the BCD result is transferred to the output register `dat_bcd_o`.
+
+The conversion process is iterative, with each clock cycle shifting and adjusting the BCD digits until the entire binary number is processed.
+
+Module Interface:
+module binary_to_bcd_converter_b (
+  clk_i,
+  ce_i,
+  rst_i,
+  start_i,
+  dat_binary_i,
+  dat_bcd_o,
+  done_o
+);
+
+Behavioral Clarifications:
+- Parameters are BITS_IN_PP=16, BCD_DIGITS_OUT_PP=5, BIT_COUNT_WIDTH_PP=4; dat_bcd_o is 20 bits wide, bit_count is 4 bits wide.
+- The main sequential block is sensitive to posedge clk_i only (rst_i is checked synchronously inside the always block, not asynchronously); the bcd_next combinational block is sensitive to bcd_reg and bin_reg.

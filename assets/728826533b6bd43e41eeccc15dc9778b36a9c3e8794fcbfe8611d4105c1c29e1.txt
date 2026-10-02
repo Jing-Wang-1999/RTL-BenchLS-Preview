@@ -1,0 +1,116 @@
+module origen_024081 #(
+    parameter NEG = 50,
+    parameter BOOT = 13350,
+    parameter WIDTH0 = 1115,
+    parameter WIDTH1 = 2230
+)(
+    input wire i_clk_1us,
+    input wire i_red,
+    output reg [31:0] o_data,
+    output reg o_intr
+);
+
+    reg [31:0] code;
+    reg [14:0] tick;
+    reg [5:0] state;
+    wire [5:0] next_state;
+    reg red_d, red_dd;
+    wire falling_edge;
+
+    localparam IDLE = 6'd0;
+    localparam BOOTSTART = 6'd1;
+    localparam BIT0START = 6'd2;
+    localparam DATAOK = 6'd35;
+
+    always @(posedge i_clk_1us) begin
+        red_d <= i_red;
+        red_dd <= red_d;
+    end
+
+    assign falling_edge = red_dd & ~red_d;
+
+    always @(posedge i_clk_1us) begin
+        if (falling_edge) begin
+            tick <= 0;
+        end else if (tick < 15'h7FFF) begin
+            tick <= tick + 1;
+        end
+    end
+
+    always @(posedge i_clk_1us) begin
+        state <= next_state;
+        if (next_state == DATAOK) begin
+            o_data <= {code[31:18], 18'b0};
+            o_intr <= 1'b1;
+        end else begin
+            o_intr <= 1'b0;
+        end
+        if (state >= BIT0START && state < DATAOK && next_state == state + 1) begin
+            code <= {code[30:0], (tick > (WIDTH0 + WIDTH1) / 2)};
+        end
+    end
+
+    caclstate #(
+        .NEG(NEG),
+        .BOOT(BOOT),
+        .WIDTH0(WIDTH0),
+        .WIDTH1(WIDTH1)
+    ) state_machine (
+        .state(state),
+        .tick(tick),
+        .falling_edge(falling_edge),
+        .next_state(next_state)
+    );
+
+endmodule
+
+module caclstate #(
+    parameter NEG = 50,
+    parameter BOOT = 13350,
+    parameter WIDTH0 = 1115,
+    parameter WIDTH1 = 2230
+)(
+    input wire [5:0] state,
+    input wire [14:0] tick,
+    input wire falling_edge,
+    output reg [5:0] next_state
+);
+
+    localparam IDLE = 6'd0;
+    localparam BOOTSTART = 6'd1;
+    localparam BIT0START = 6'd2;
+    localparam DATAOK = 6'd35;
+
+    always @(*) begin
+        case (state)
+            IDLE: next_state = falling_edge ? BOOTSTART : IDLE;
+            BOOTSTART: begin
+                if (falling_edge) begin
+                    if (tick >= BOOT - NEG && tick <= BOOT + NEG)
+                        next_state = BIT0START;
+                    else
+                        next_state = IDLE;
+                end else if (tick > BOOT + NEG) begin
+                    next_state = IDLE;
+                end else begin
+                    next_state = BOOTSTART;
+                end
+            end
+            DATAOK: next_state = IDLE;
+            default: begin // BIT0START to BIT31START
+                if (falling_edge) begin
+                    if ((tick >= WIDTH0 - NEG && tick <= WIDTH0 + NEG) ||
+                        (tick >= WIDTH1 - NEG && tick <= WIDTH1 + NEG))
+                        next_state = (state == 6'd33) ? DATAOK : state + 1;
+                    else
+                        next_state = IDLE;
+                end else if (tick > WIDTH1 + NEG) begin
+                    next_state = IDLE;
+                end else begin
+                    next_state = state;
+                end
+            end
+        endcase
+    end
+
+endmodule

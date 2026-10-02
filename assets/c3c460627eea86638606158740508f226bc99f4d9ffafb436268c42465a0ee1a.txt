@@ -1,0 +1,15 @@
+# Transposed 21-tap FIR (`rtlpp_10243`)
+
+## Interface and supported configuration
+
+Inputs are scalar `clk`, active-low asynchronous `reset`, and signed `X[word_size_in-1:0]`. Output `Y[word_size_out-1:0]` is signed and registered. Parameters default to `word_size_in=8` and `word_size_out=20`. The behavior below specifies that default configuration; the fixed internal datapath widths do not provide a general precision contract for parameter overrides.
+
+## Datapath
+
+For the default configuration, combinational tap values `SCM_0` through `SCM_20` represent coefficients `[-1,0,4,9,3,-19,-37,-16,64,174,249,237,147,39,-27,-35,-12,6,9,3,-1]` applied to the current signed eight-bit `X`, using the RTL's fixed-width signed shift/add network.
+
+The signed accumulator registers have these exact widths: `MAC_0` through `MAC_6` are 20 bits; `MAC_7` through `MAC_11` are 19 bits; `MAC_12` is 18 bits; `MAC_13` is 17 bits; `MAC_14` and `MAC_15` are 16 bits; `MAC_16` and `MAC_17` are 14 bits; `MAC_18` is 13 bits; `MAC_19` is 12 bits; and `MAC_20` is 10 bits. Each assignment follows Verilog signed expression sizing and then truncates or sign-extends to its destination width.
+
+On every rising edge with `reset=1`, all right-hand sides use pre-edge values. `Y` captures pre-edge `MAC_0`. Simultaneously, for indices 0 through 19, `MAC_i` captures pre-edge `MAC_(i+1) + SCM_i(current X)`, and `MAC_20` captures `SCM_20(current X)`. Consequently a sample first affects `MAC_0` through coefficient -1 at its sampling edge, but `Y` exposes that contribution on the following rising edge. Its coefficient-0 through coefficient-20 contributions reach `Y` after 1 through 21 rising edges, respectively. Once populated, the pipeline produces a continuous streaming convolution of differently delayed samples.
+
+Pulling `reset` low asynchronously clears all 21 accumulators and `Y` to zero. Reset has priority over clocked updates.

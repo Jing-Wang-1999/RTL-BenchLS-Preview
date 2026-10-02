@@ -1,0 +1,51 @@
+module autovcoder_006529 (
+    op1,
+    op0,
+    X,
+    Y,
+    out
+);
+  input wire op0, op1;
+  input wire [15:0] X, Y;
+  output wire [15:0] out;
+  wire [15:0] tempi, tempxor, tempor, tempa, sel1, sel0;
+
+  inv16 u0 (
+      .a(X),
+      .inv16_s(tempi)
+  );
+  xor16 u1 (
+      .a(X),
+      .b(Y),
+      .xor16_s(tempxor)
+  );
+  or16 u2 (
+      .a(X),
+      .b(Y),
+      .or16_s(tempor)
+  );
+  and16 u3 (
+      .a(X),
+      .b(Y),
+      .and16_s(tempa)
+  );
+  select16 u4 (
+      .s  (op0),
+      .d1 (tempor),
+      .d0 (tempa),
+      .out(sel0)
+  );
+  select16 u5 (
+      .s  (op0),
+      .d1 (tempi),
+      .d0 (tempxor),
+      .out(sel1)
+  );
+  select16 u6 (
+      .s  (op1),
+      .d1 (sel1),
+      .d0 (sel0),
+      .out(out)
+  );
+endmodule
+

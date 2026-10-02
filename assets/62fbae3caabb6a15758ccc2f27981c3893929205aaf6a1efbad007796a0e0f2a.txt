@@ -1,0 +1,23 @@
+The `pcie_ptile_fc_counter` module is designed to manage flow control credits in a PCI Express (PCIe) system. It is a parameterized module that can be configured with a specific bit width and an index value. The module primarily handles the calculation and management of available flow control credits based on input signals and internal registers.
+
+### Inputs:
+1. **clk (clock):** This is the clock signal that synchronizes the operations within the module.
+2. **rst (reset):** This signal resets the internal state of the module, clearing all registers to zero.
+3. **tx_cdts_limit:** A bus input that specifies the current limit of credits available for transmission. The width of this input is determined by the `WIDTH` parameter.
+4. **tx_cdts_limit_tdm_idx:** A 3-bit input that indicates the time-division multiplexing index. It is used to determine when to update the credit limit.
+5. **fc_dec:** A bus input representing the amount of flow control credits to be decremented. Its width is also determined by the `WIDTH` parameter.
+
+### Outputs:
+1. **fc_av:** A bus output that provides the current available flow control credits. The width of this output matches the `WIDTH` parameter.
+
+### Internal Registers:
+1. **fc_cap_reg:** This register holds the maximum capacity of flow control credits, initialized to zero.
+2. **fc_limit_reg:** This register stores the last known credit limit, initialized to zero.
+3. **fc_inc_reg:** This register calculates the increment in credits based on the difference between the current and previous credit limits.
+4. **fc_av_reg:** This register maintains the current available flow control credits, initialized to zero.
+
+### Behavior:
+- The module operates on the rising edge of the clock signal.
+- When the `tx_cdts_limit_tdm_idx` matches the `INDEX` parameter, the module updates the credit capacity and calculates the increment in credits.
+- The available credits (`fc_av_reg`) are adjusted by subtracting the decrement value (`fc_dec`) and adding the increment value (`fc_inc_reg`).
+- If the resulting available credits are less than zero,

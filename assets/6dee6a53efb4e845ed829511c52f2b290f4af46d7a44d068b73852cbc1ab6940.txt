@@ -1,0 +1,66 @@
+always @ (posedge clk or negedge rstn)
+    if (~rstn) begin
+        state      <= S_IDLE;
+        data       <= 0;
+        keep       <= 0;
+        byte_t_en  <= 1'b0;
+        byte_p_en  <= 1'b0;
+        txbits     <= 10'b0;
+        txcnt      <= 0;
+        cycle      <= 1;
+    end else begin
+        case (state)
+            S_IDLE : begin
+                state      <= f_tvalid ? S_PREPARE : S_IDLE;
+                data       <= f_tdata;
+                keep       <= f_tkeep;
+                byte_t_en  <= BYTE_T_EN;
+                byte_p_en  <= BYTE_B_EN & f_tlast;
+                txbits     <= 10'b0;
+                txcnt      <= 0;
+                cycle      <= 1;
+            end
+            
+            S_PREPARE : begin
+                data <= (data >> 8);
+                keep <= (keep >> 1);
+                if          ( keep[0] == 1'b1   ) begin
+                    txbits     <= {get_parity(data[7:0]), data[7:0], 1'b0};
+                    state      <= S_TX;
+                end else if ( keep != ZERO_KEEP ) begin
+                    state      <= S_PREPARE;
+                end else if ( byte_t_en         ) begin
+                    byte_t_en <= 1'b0;
+                    txbits     <= {get_parity(BYTE_T), BYTE_T, 1'b0};
+                    state      <= S_TX;
+                end else if ( byte_p_en         ) begin
+                    byte_p_en <= 1'b0;
+                    txbits     <= {get_parity(BYTE_P), BYTE_P, 1'b0};
+                    state      <= S_TX;
+                end else begin
+                    state      <= S_IDLE;
+                end
+                txcnt <= 0;
+                cycle <= 1;
+            end
+            
+            default : begin  // S_TX
+                if (keep[0] == 1'b0) begin
+                    data <= (data >> 8);
+                    keep <= (keep >> 1);
+                end
+                if ( cycle < ((txcnt<=9) ? cycles[txcnt] : STOP_BIT_CYCLES) ) begin      // cycle loop from 1 to ((txcnt<=9) ? cycles[txcnt] : STOP_BIT_CYCLES)
+                    cycle  <= cycle + 1;
+                end else begin
+                    cycle  <= 1;
+                    txbits <= {1'b1, txbits[9:1]};                                       // right shift txbits, and fill '1' to MSB
+                    if ( txcnt < (TOTAL_BITS-1) ) begin                                  // txcnt loop from 0 to (TOTAL_BITS-1)
+                        txcnt <= txcnt + 1;
+                    end else begin
+                        txcnt <= 0;
+                        state <= S_PREPARE;
+                    end
+                end
+            end
+        endcase
+    end

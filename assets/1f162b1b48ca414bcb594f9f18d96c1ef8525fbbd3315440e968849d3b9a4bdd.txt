@@ -1,0 +1,47 @@
+{
+  "pr_url": "https://github.com/lowRISC/ibex/pull/1824",
+  "issue_url": "https://github.com/lowRISC/ibex/issues/1765",
+  "repository": "lowRISC/ibex",
+  "pr_number": 1824,
+  "issue_number": 1765,
+  "verilog_files": [
+    "rtl/ibex_controller.sv"
+  ],
+  "deletions": 3,
+  "additions": 8,
+  "patches": [
+    {
+      "filename": "rtl/ibex_controller.sv",
+      "patch": "@@ -143,6 +143,7 @@ module ibex_controller #(\n   logic enter_debug_mode_prio_q;\n   logic enter_debug_mode;\n   logic ebreak_into_debug;\n+  logic irq_enabled;\n   logic handle_irq;\n   logic id_wb_pending;\n \n@@ -398,12 +399,16 @@ module ibex_controller #(\n   // ibex_core) source. For internal sources the cause is specified via irq_nm_int_cause.\n   assign irq_nm = irq_nm_ext_i | irq_nm_int;\n \n+  // MIE bit only applies when in M mode\n+  assign irq_enabled = csr_mstatus_mie_i | (priv_mode_i == PRIV_LVL_U);\n+\n   // Interrupts including NMI are ignored,\n   // - while in debug mode,\n   // - while in NMI mode (nested NMIs are not supported, NMI has highest priority and\n-  //   cannot be interrupted by regular interrupts).\n-  assign handle_irq = ~debug_mode_q & ~nmi_mode_q &\n-      (irq_nm | (irq_pending_i & csr_mstatus_mie_i));\n+  //   cannot be interrupted by regular interrupts),\n+  // - while single stepping.\n+  assign handle_irq = ~debug_mode_q & ~debug_single_step_i & ~nmi_mode_q &\n+      (irq_nm | (irq_pending_i & irq_enabled));\n \n   // generate ID of fast interrupts, highest priority to lowest ID\n   always_comb begin : gen_mfip_id",
+      "additions": 8,
+      "deletions": 3,
+      "changes": 11
+    }
+  ],
+  "pr_info": {
+    "title": "Irq fixes",
+    "body": "I had a go at adding interrupts to the single step test. I ran into various failures but I suspect I'm chasing the same bugs as @ctopal and @hcallahan-lowrisc are in https://github.com/lowRISC/ibex/issues/1765 so I won't continue that work until #1765 is resolved.",
+    "state": "closed",
+    "created_at": "2022-09-30T17:07:08Z",
+    "updated_at": "2022-10-13T16:30:09Z",
+    "merged_at": "2022-10-13T16:30:05Z",
+    "user": "GregAC"
+  },
+  "issue_info": {
+    "title": "[dv] Investigate issues in mixed interrupts/traps/debug tests",
+    "body": "> estimate 16\r\n> remaining 2022-09-28 8",
+    "labels": [],
+    "state": "closed",
+    "created_at": "2022-08-11T09:48:15Z",
+    "updated_at": "2022-12-08T18:28:16Z"
+  },
+  "source_info": {
+    "source_file": "14.txt",
+    "line_number": 34
+  },
+  "base_commit": "3943a4eca3917d0a00406abb36f4951304c0b394",
+  "head_commit": "e9a72bd34642a5101c529c453af77ed3c0fb8d32",
+  "base_ref": "master",
+  "task_id": "lowRISC_ibex_1824_1765",
+  "lec_status": "useful_pass"
+}

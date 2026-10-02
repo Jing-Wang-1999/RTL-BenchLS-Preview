@@ -1,0 +1,71 @@
+module autovcoder_103973 (
+    input [15:0] x,
+    input [3:0] b,
+    input alufn,
+    output reg [15:0] shiftOutput
+);
+    reg [15:0] w, y, z;
+
+    always @(*) begin
+        // Mode 0: alufn is 0 or alufn is 1 and LSB of x is 0
+        if (alufn == 0 || (alufn == 1 && x[0] == 0)) begin
+            // Stage 1
+            if (b[3] == 0) begin
+                w = x;
+            end else begin
+                w = {x[7:0], 8'b00000000};
+            end
+
+            // Stage 2
+            if (b[2] == 0) begin
+                y = w;
+            end else begin
+                y = {w[11:0], 4'b0000};
+            end
+
+            // Stage 3
+            if (b[1] == 0) begin
+                z = y;
+            end else begin
+                z = {y[13:0], 2'b00};
+            end
+
+            // Stage 4
+            if (b[0] == 0) begin
+                shiftOutput = z;
+            end else begin
+                shiftOutput = {z[14:0], 1'b0};
+            end
+        end
+        // Mode 1: alufn is 1 and LSB of x is 1
+        else begin
+            // Stage 1
+            if (b[3] == 0) begin
+                w = x;
+            end else begin
+                w = {x[7:0], 8'b11111111};
+            end
+
+            // Stage 2
+            if (b[2] == 0) begin
+                y = w;
+            end else begin
+                y = {w[11:0], 4'b1111};
+            end
+
+            // Stage 3
+            if (b[1] == 0) begin
+                z = y;
+            end else begin
+                z = {y[13:0], 2'b11};
+            end
+
+            // Stage 4
+            if (b[0] == 0) begin
+                shiftOutput = z;
+            end else begin
+                shiftOutput = {z[14:0], 1'b1};
+            end
+        end
+    end
+endmodule

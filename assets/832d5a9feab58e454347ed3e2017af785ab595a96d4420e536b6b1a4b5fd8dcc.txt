@@ -1,0 +1,171 @@
+module synchronized_adjustable_clock_timer
+(
+    input clk,
+    input clk__enable,
+
+    input timer_control__reset_counter,
+    input timer_control__enable_counter,
+    input timer_control__advance,
+    input timer_control__retard,
+    input timer_control__lock_to_master,
+    input [1:0] timer_control__lock_window_lsb,
+    input [1:0] timer_control__synchronize,
+    input [63:0] timer_control__synchronize_value,
+    input timer_control__block_writes,
+    input [7:0] timer_control__bonus_subfraction_add,
+    input [7:0] timer_control__bonus_subfraction_sub,
+    input [3:0] timer_control__fractional_adder,
+    input [7:0] timer_control__integer_adder,
+    input reset_n,
+
+    output [63:0] timer_value__value,
+    output timer_value__irq,
+    output timer_value__locked
+);
+
+reg [63:0] timer_value__value;
+reg timer_value__irq;
+reg timer_value__locked;
+
+reg [8:0] timer_state__bonus_subfraction_acc;
+reg [3:0] timer_state__fraction;
+reg [31:0] timer_state__timer_lower;
+reg [31:0] timer_state__timer_upper;
+reg timer_state__advance;
+reg timer_state__retard;
+reg timer_state__hold_adder;
+reg [3:0] timer_state__fractional_adder;
+reg [7:0] timer_state__integer_adder;
+
+reg timer_combs__fractional_bonus;
+reg [4:0] timer_combs__fractional_sum;
+reg [32:0] timer_combs__lower_sum;
+reg [31:0] timer_combs__upper_sum;
+reg [3:0] timer_combs__fractional_half_adder;
+reg [7:0] timer_combs__integer_half_adder;
+reg [4:0] timer_combs__fractional_one_and_half_adder;
+reg [7:0] timer_combs__integer_one_and_half_adder;
+
+always @(*) begin: bonus_fraction_logic__comb_code
+    reg timer_combs__fractional_bonus__var;
+    timer_combs__fractional_bonus__var = !(timer_state__bonus_subfraction_acc[8] != 1'h0);
+
+    if ((timer_control__bonus_subfraction_add == 8'h0) && (timer_control__bonus_subfraction_sub == 8'h0)) begin
+        timer_combs__fractional_bonus__var = 1'h0;
+    end
+
+    timer_combs__fractional_bonus = timer_combs__fractional_bonus__var;
+end 
+
+always @(posedge clk or negedge reset_n) begin: bonus_fraction_logic__posedge_clk_active_low_reset_n__code
+    if (reset_n == 1'b0) begin
+        timer_state__bonus_subfraction_acc <= 9'h0;
+    end else if (clk__enable) begin
+        if (timer_control__enable_counter != 1'h0) begin
+            if (timer_state__bonus_subfraction_acc[8] != 1'h0) begin
+                timer_state__bonus_subfraction_acc <= (timer_state__bonus_subfraction_acc + {1'h0, timer_control__bonus_subfraction_add}) + 9'h1;
+            end else begin
+                timer_state__bonus_subfraction_acc <= timer_state__bonus_subfraction_acc + {1'h1, ~timer_control__bonus_subfraction_sub};
+            end
+        end
+
+        if (timer_control__reset_counter != 1'h0) begin
+            timer_state__bonus_subfraction_acc <= 9'h0;
+        end
+
+        if ((timer_control__bonus_subfraction_add == 8'h0) && (timer_control__bonus_subfraction_sub == 8'h0)) begin
+            timer_state__bonus_subfraction_acc <= 9'h0;
+        end
+    end
+end
+
+always @(*) begin: timer_logic__comb_code
+    reg [3:0] timer_combs__fractional_half_adder__var;
+    reg [7:0] timer_combs__integer_one_and_half_adder__var;
+    reg [31:0] timer_combs__upper_sum__var;
+
+    timer_combs__fractional_half_adder__var = timer_control__fractional_adder >> 1;
+    timer_combs__fractional_half_adder__var[3] = timer_control__integer_adder[0];
+    timer_combs__fractional_one_and_half_adder = ({1'h0, timer_combs__fractional_half_adder__var} + {1'h0, timer_control__fractional_adder});
+    timer_combs__integer_half_adder = timer_control__integer_adder >> 1;
+    timer_combs__integer_one_and_half_adder__var = timer_combs__integer_half_adder + timer_control__integer_adder;
+
+    if (timer_combs__fractional_one_and_half_adder[4] != 1'h0) begin
+        timer_combs__integer_one_and_half_adder__var = timer_combs__integer_one_and_half_adder__var + 8'h1;
+    end
+
+    timer_combs__fractional_sum = ({1'h0, timer_state__fraction} + {1'h0, timer_state__fractional_adder}) - (timer_combs__fractional_bonus != 1'h0 ? 64'h1 : 64'h0);
+    timer_combs__lower_sum = ({1'h0, timer_state__timer_lower} + {25'h0, timer_state__integer_adder}) + (timer_combs__fractional_sum[4] != 1'h0 ? 64'h1 : 64'h0);
+    timer_combs__upper_sum__var = timer_state__timer_upper;
+
+    if (timer_combs__lower_sum[32] != 1'h0) begin
+        timer_combs__upper_sum__var = timer_state__timer_upper + 32'h1;
+    end
+    timer_value__value = {timer_state__timer_upper, timer_state__timer_lower};
+    timer_value__irq = 1'h0;
+    timer_value__locked = 1'h0;
+    timer_combs__fractional_half_adder = timer_combs__fractional_half_adder__var;
+    timer_combs__integer_one_and_half_adder = timer_combs__integer_one_and_half_adder__var;
+    timer_combs__upper_sum = timer_combs__upper_sum__var;
+end 
+
+always @(posedge clk or negedge reset_n) begin: timer_logic__posedge_clk_active_low_reset_n__code
+    if (reset_n == 1'b0) begin
+        timer_state__fractional_adder <= 4'h0;
+        timer_state__integer_adder <= 8'h0;
+        timer_state__hold_adder <= 1'h0;
+        timer_state__advance <= 1'h0;
+        timer_state__retard <= 1'h0;
+        timer_state__fraction <= 4'h0;
+        timer_state__timer_lower <= 32'h0;
+        timer_state__timer_upper <= 32'h0;
+    end else if (clk__enable) begin
+        if (!(timer_state__hold_adder != 1'h0) || (timer_control__reset_counter != 1'h0) || (timer_control__enable_counter != 1'h0)) begin
+            timer_state__fractional_adder <= timer_control__fractional_adder;
+            timer_state__integer_adder <= timer_control__integer_adder;
+            timer_state__hold_adder <= 1'h1;
+        end
+
+        if (timer_control__advance != 1'h0 && !(timer_state__advance != 1'h0)) begin
+            timer_state__fractional_adder <= timer_combs__fractional_one_and_half_adder[3:0];
+            timer_state__integer_adder <= timer_combs__integer_one_and_half_adder;
+            timer_state__hold_adder <= 1'h0;
+        end else if (timer_control__retard != 1'h0 && !(timer_state__retard != 1'h0)) begin
+            timer_state__fractional_adder <= timer_combs__fractional_half_adder;
+            timer_state__integer_adder <= timer_combs__integer_half_adder;
+            timer_state__hold_adder <= 1'h0;
+        end
+
+        if ((timer_control__advance != 1'h0) || (timer_state__advance != 1'h0)) begin
+            timer_state__advance <= timer_control__advance;
+        end
+
+        if ((timer_control__retard != 1'h0) || (timer_state__retard != 1'h0)) begin
+            timer_state__retard <= timer_control__retard;
+        end
+
+        if (timer_control__enable_counter != 1'h0) begin
+            timer_state__fraction <= timer_combs__fractional_sum[3:0];
+            timer_state__timer_lower <= timer_combs__lower_sum[31:0];
+            timer_state__timer_upper <= timer_combs__upper_sum;
+        end
+
+        if (timer_control__reset_counter != 1'h0) begin
+            timer_state__fraction <= 4'h0;
+            timer_state__timer_lower <= 32'h0;
+            timer_state__timer_upper <= 32'h0;
+        end
+
+        if (timer_control__synchronize[0] != 1'h0) begin
+            timer_state__timer_lower <= timer_control__synchronize_value[31:0];
+            timer_state__fraction <= 4'h0;
+        end
+
+        if (timer_control__synchronize[1] != 1'h0) begin
+            timer_state__timer_upper <= timer_control__synchronize_value[63:32];
+            timer_state__fraction <= 4'h0;
+        end
+    end
+end
+
+endmodule

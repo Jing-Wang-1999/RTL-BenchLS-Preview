@@ -1,0 +1,108 @@
+module origen_007363(
+    input wire iClk,
+    input wire iRst,
+    output wire oInt,
+    input wire [1:0] iAddr,
+    inout wire [31:0] bData,
+    input wire iWrite,
+    input wire iEnable,
+    input wire iDDat,
+    input wire iDClk
+);
+
+    // Internal registers
+    reg [31:0] rControl;
+    reg [31:0] rDataIn;
+    reg [31:0] rDataOut;
+
+    // Receive state machine
+    reg [3:0] rRecvState;
+    reg [3:0] rRecvNextState;
+    reg [3:0] rRecvPrevState;
+    reg [10:0] rRecvDataBuf;
+    reg [3:0] rRecvBitCount;
+
+    // Send state machine (not fully implemented)
+    reg [3:0] rSendState;
+    reg [3:0] rSendNextState;
+    reg [10:0] rSendDataBuf;
+    reg [3:0] rSendBitCount;
+
+    // Constants for state machine
+    localparam IDLE = 4'b0000;
+    localparam START = 4'b0001;
+    localparam DATA = 4'b0010;
+    localparam PARITY = 4'b0011;
+    localparam STOP = 4'b0100;
+
+    // Register access
+    always @(posedge iClk or posedge iRst) begin
+        if (iRst) begin
+            rControl <= 32'h0;
+            rDataIn <= 32'h0;
+        end else if (iEnable && iWrite) begin
+            case (iAddr)
+                2'b00: rControl <= bData;
+                2'b01: rDataIn <= bData;
+                default: ;
+            endcase
+        end
+    end
+
+    assign bData = (iEnable && !iWrite) ? 
+                   (iAddr == 2'b00) ? rControl :
+                   (iAddr == 2'b01) ? rDataIn :
+                   (iAddr == 2'b10) ? rDataOut :
+                   32'hz : 32'hz;
+
+    // PS/2 receive logic
+    always @(negedge iDClk or posedge iRst) begin
+        if (iRst) begin
+            rRecvState <= IDLE;
+            rRecvNextState <= IDLE;
+            rRecvPrevState <= IDLE;
+            rRecvDataBuf <= 11'h0;
+            rRecvBitCount <= 4'h0;
+        end else begin
+            rRecvState <= rRecvNextState;
+            case (rRecvState)
+                IDLE: begin
+                    if (!iDDat) begin
+                        rRecvNextState <= START;
+                        rRecvDataBuf <= {iDDat, 10'h0};
+                        rRecvBitCount <= 4'h0;
+                    end
+                end
+                START: begin
+                    rRecvNextState <= DATA;
+                    rRecvDataBuf <= {rRecvDataBuf[10:1], iDDat};
+                    rRecvBitCount <= rRecvBitCount + 1'b1;
+                end
+                DATA: begin
+                    if (rRecvBitCount == 4'h8) begin
+                        rRecvNextState <= PARITY;
+                    end
+                    rRecvDataBuf <= {rRecvDataBuf[10:1], iDDat};
+                    rRecvBitCount <= rRecvBitCount + 1'b1;
+                end
+                PARITY: begin
+                    rRecvNextState <= STOP;
+                    rRecvDataBuf <= {rRecvDataBuf[10:1], iDDat};
+                end
+                STOP: begin
+                    rRecvNextState <= IDLE;
+                    if (iDDat) begin
+                        rDataOut <= {rDataOut[23:0], rRecvDataBuf[8:1]};
+                        rControl[5] <= 1'b0;
+                    end
+                end
+                default: rRecvNextState <= IDLE;
+            endcase
+            rRecvPrevState <= rRecvState;
+        end
+    end
+
+    // Interrupt logic (not implemented)
+    assign oInt = 1'b0;
+
+endmodule

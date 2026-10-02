@@ -1,0 +1,19 @@
+module mg_06480 (
+    input wire clk,
+    input wire ce,
+    input wire signed [31:0] a,
+    input wire signed [31:0] b,
+    output reg signed [31:0] p
+);
+
+    wire signed [63:0] product;
+    
+    assign product = a * b;
+    
+    always @(posedge clk) begin
+        if (ce) begin
+            p <= product[31:0];
+        end
+    end
+
+endmodule

@@ -1,0 +1,25 @@
+always @(posedge CLK or negedge RESET_N) begin
+        if (RESET_N == 0) 
+        begin
+                timer           <= 0;
+                REF_REQ         <= 0;
+        end        
+        else 
+        begin
+                if (REF_ACK == 1)
+                begin
+                        timer <= REF_PER;
+                        REF_REQ <= 0;
+                end
+                else if (INIT_REQ == 1)
+                begin
+                        timer <= REF_PER + 200;
+                        REF_REQ <= 0;                    
+                end
+                else
+                        timer <= timer - 1'b1;
+
+                if (timer == 0)
+                        REF_REQ <= 1;
+        end
+end

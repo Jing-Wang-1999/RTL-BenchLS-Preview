@@ -1,0 +1,43 @@
+{
+  "gate_failure_score": 0,
+  "limitations": "Fixed documented configuration; sampled transactions, not universal equivalence.",
+  "oracle": "independent protocol/algorithm assertions; finite simulation",
+  "points": [
+    {
+      "command": [
+        "iverilog",
+        "-g2012",
+        "-s",
+        "tb",
+        "<required_files>",
+        "tb_sha256.v",
+        "then",
+        "vvp"
+      ],
+      "id": "tb_sha256",
+      "pass_criterion": "exit zero and exact RTL_BENCHLS_PASS; all assertions pass",
+      "target": "sha256",
+      "testbench": "tb_sha256.v",
+      "timeout_seconds": 30,
+      "weight": 1
+    },
+    {
+      "command": [
+        "iverilog",
+        "-g2012",
+        "-s",
+        "tb",
+        "<required_files>",
+        "tb_sha256_core.v",
+        "then",
+        "vvp"
+      ],
+      "id": "tb_sha256_core",
+      "pass_criterion": "exit zero and exact RTL_BENCHLS_PASS; all assertions pass",
+      "target": "sha256_core",
+      "testbench": "tb_sha256_core.v",
+      "timeout_seconds": 30,
+      "weight": 1
+    }
+  ]
+}

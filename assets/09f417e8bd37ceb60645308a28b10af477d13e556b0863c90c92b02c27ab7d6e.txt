@@ -1,0 +1,13 @@
+This module is an 8-bit two-stage pipeline register with asynchronous reset. It transfers data from the input `padd` to the output `out2_r` across two clock phases.
+
+**Inputs:**
+- `pla_ph1`: First phase clock.
+- `pla_ph2`: Second phase clock.
+- `dsp_reset`: Asynchronous active-high reset signal.
+- `padd[7:0]`: 8-bit input data bus.
+
+**Outputs:**
+- `out2_r[7:0]`: 8-bit registered output.
+
+**Behavior:**
+On the rising edge of `pla_ph1`, the input `padd` is sampled and stored in an internal first-stage register. On the rising edge of `pla_ph2`, the value from this first stage is transferred to the final output register `out2_r`. If `dsp_reset` is asserted high at any time, both internal registers and the output are immediately cleared to zero, overriding

@@ -1,0 +1,120 @@
+module origen_038171 (
+    input wire CLK,
+    input wire data_valid,
+    input wire data_ack,
+    input wire signed [16:0] in_real,
+    input wire signed [16:0] in_imag,
+    output reg data_req,
+    output reg data_ready,
+    output reg signed [16:0] out_real,
+    output reg signed [16:0] out_imag
+);
+
+    // Constants
+    localparam N = 16;
+    localparam M = 4;
+
+    // Internal registers
+    reg signed [16:0] sample_real [0:15][0:15];
+    reg signed [16:0] sample_imag [0:15][0:15];
+    reg signed [16:0] W_real [0:15][0:6];
+    reg signed [16:0] W_imag [0:15][0:6];
+
+    // State machine
+    reg [2:0] state;
+    localparam IDLE = 3'd0, INPUT = 3'd1, TWIDDLE = 3'd2, FFT = 3'd3, OUTPUT = 3'd4;
+
+    // Counters and indices
+    reg [4:0] input_count, output_count;
+    reg [4:0] stage, butterfly, k;
+
+    // Temporary variables for butterfly computation
+    reg signed [16:0] temp_real, temp_imag;
+    reg signed [33:0] mult_real, mult_imag;
+
+    // Initialize twiddle factors
+    initial begin
+        // Pre-computed twiddle factors (approximated)
+        W_real[0][0] = 17'h10000; W_imag[0][0] = 17'h00000;
+        W_real[1][0] = 17'h0EC83; W_imag[1][0] = 17'hF9B82;
+        W_real[2][0] = 17'h0B504; W_imag[2][0] = 17'hF4AFC;
+        W_real[3][0] = 17'h061F8; W_imag[3][0] = 17'hF137A;
+        W_real[4][0] = 17'h00000; W_imag[4][0] = 17'hF0000;
+        W_real[5][0] = 17'hF9E08; W_imag[5][0] = 17'hF137A;
+        W_real[6][0] = 17'hF4AFC; W_imag[6][0] = 17'hF4AFC;
+        W_real[7][0] = 17'hF137A; W_imag[7][0] = 17'hF9E08;
+    end
+
+    always @(posedge CLK) begin
+        case (state)
+            IDLE: begin
+                if (data_valid) begin
+                    state <= INPUT;
+                    input_count <= 0;
+                    data_req <= 1;
+                end
+            end
+
+            INPUT: begin
+                if (data_valid) begin
+                    sample_real[0][input_count] <= in_real;
+                    sample_imag[0][input_count] <= in_imag;
+                    input_count <= input_count + 1;
+                    if (input_count == N-1) begin
+                        state <= FFT;
+                        stage <= 0;
+                        butterfly <= 0;
+                        k <= 0;
+                        data_req <= 0;
+                    end
+                end
+            end
+
+            FFT: begin
+                // Butterfly computation
+                temp_real = sample_real[stage][butterfly] - sample_real[stage][butterfly + N/2**(stage+1)];
+                temp_imag = sample_imag[stage][butterfly] - sample_imag[stage][butterfly + N/2**(stage+1)];
+
+                mult_real = (temp_real * W_real[k][stage] - temp_imag * W_imag[k][stage]) >>> 16;
+                mult_imag = (temp_real * W_imag[k][stage] + temp_imag * W_real[k][stage]) >>> 16;
+
+                sample_real[stage+1][butterfly] <= sample_real[stage][butterfly] + sample_real[stage][butterfly + N/2**(stage+1)];
+                sample_imag[stage+1][butterfly] <= sample_imag[stage][butterfly] + sample_imag[stage][butterfly + N/2**(stage+1)];
+
+                sample_real[stage+1][butterfly + N/2**(stage+1)] <= mult_real[16:0];
+                sample_imag[stage+1][butterfly + N/2**(stage+1)] <= mult_imag[16:0];
+
+                // Update indices
+                if (k == N/2**(stage+2) - 1) begin
+                    k <= 0;
+                    butterfly <= butterfly + 1;
+                    if (butterfly == N/2 - 1) begin
+                        butterfly <= 0;
+                        stage <= stage + 1;
+                        if (stage == M-1) begin
+                            state <= OUTPUT;
+                            output_count <= 0;
+                        end
+                    end
+                end else begin
+                    k <= k + 1;
+                end
+            end
+
+            OUTPUT: begin
+                if (data_ack) begin
+                    // Bit-reversal output
+                    out_real <= sample_real[M][{output_count[0], output_count[1], output_count[2], output_count[3]}];
+                    out_imag <= sample_imag[M][{output_count[0], output_count[1], output_count[2], output_count[3]}];
+                    data_ready <= 1;
+                    output_count <= output_count + 1;
+                    if (output_count == N-1) begin
+                        state <= IDLE;
+                        data_ready <= 0;
+                    end
+                end
+            end
+        endcase
+    end
+
+endmodule

@@ -1,0 +1,133 @@
+module origen_060116 (
+    input [31:0] instruction,
+    output reg [3:0] ALU_Function_Select,
+    output reg Immediate_Flag,
+    output reg ALU_Mux_Select,
+    output reg [4:0] Destination_Address,
+    output reg Register_Write_Enable,
+    output reg [1:0] Register_Mux_Select,
+    output reg [3:0] Branch_Function_Select,
+    output reg [1:0] PC_Mux_Select,
+    output reg Data_Memory_Write_Enable,
+    output reg [2:0] Shift_Type
+);
+
+    wire [5:0] opcode;
+    wire [5:0] funct;
+    wire [4:0] rd;
+    wire [4:0] rt;
+
+    assign opcode = instruction[31:26];
+    assign funct = instruction[5:0];
+    assign rd = instruction[15:11];
+    assign rt = instruction[20:16];
+
+    always @(*) begin
+        ALU_Function_Select = 4'b0000;
+        Immediate_Flag = 1'b0;
+        ALU_Mux_Select = 1'b0;
+        Destination_Address = 5'b00000;
+        Register_Write_Enable = 1'b0;
+        Register_Mux_Select = 2'b00;
+        Branch_Function_Select = 4'b0000;
+        PC_Mux_Select = 2'b00;
+        Data_Memory_Write_Enable = 1'b0;
+        Shift_Type = 3'b000;
+
+        case (opcode)
+            6'b000000: begin
+                Destination_Address = rd;
+                Register_Write_Enable = 1'b1;
+                Register_Mux_Select = 2'b00;
+                Immediate_Flag = 1'b0;
+                ALU_Mux_Select = 1'b0;
+                
+                case (funct)
+                    6'b100000: ALU_Function_Select = 4'b0000;
+                    6'b100010: ALU_Function_Select = 4'b0001;
+                    6'b100100: ALU_Function_Select = 4'b0010;
+                    6'b100101: ALU_Function_Select = 4'b0011;
+                    6'b101010: ALU_Function_Select = 4'b0100;
+                    6'b000000: begin
+                        ALU_Function_Select = 4'b0101;
+                        Shift_Type = 3'b001;
+                    end
+                    6'b000010: begin
+                        ALU_Function_Select = 4'b0101;
+                        Shift_Type = 3'b010;
+                    end
+                    6'b000011: begin
+                        ALU_Function_Select = 4'b0101;
+                        Shift_Type = 3'b011;
+                    end
+                    6'b001000: begin
+                        Register_Write_Enable = 1'b0;
+                        PC_Mux_Select = 2'b11;
+                    end
+                    default: Register_Write_Enable = 1'b0;
+                endcase
+            end
+            6'b001000: begin
+                Immediate_Flag = 1'b1;
+                ALU_Mux_Select = 1'b1;
+                Destination_Address = rt;
+                Register_Write_Enable = 1'b1;
+                Register_Mux_Select = 2'b00;
+                ALU_Function_Select = 4'b0000;
+            end
+            6'b001100: begin
+                Immediate_Flag = 1'b1;
+                ALU_Mux_Select = 1'b1;
+                Destination_Address = rt;
+                Register_Write_Enable = 1'b1;
+                Register_Mux_Select = 2'b00;
+                ALU_Function_Select = 4'b0010;
+            end
+            6'b001101: begin
+                Immediate_Flag = 1'b1;
+                ALU_Mux_Select = 1'b1;
+                Destination_Address = rt;
+                Register_Write_Enable = 1'b1;
+                Register_Mux_Select = 2'b00;
+                ALU_Function_Select = 4'b0011;
+            end
+            6'b100011: begin
+                Immediate_Flag = 1'b1;
+                ALU_Mux_Select = 1'b1;
+                Destination_Address = rt;
+                Register_Write_Enable = 1'b1;
+                Register_Mux_Select = 2'b01;
+                ALU_Function_Select = 4'b0000;
+            end
+            6'b101011: begin
+                Immediate_Flag = 1'b1;
+                ALU_Mux_Select = 1'b1;
+                Register_Write_Enable = 1'b0;
+                Data_Memory_Write_Enable = 1'b1;
+                ALU_Function_Select = 4'b0000;
+            end
+            6'b000100: begin
+                Branch_Function_Select = 4'b0001;
+                PC_Mux_Select = 2'b01;
+                ALU_Function_Select = 4'b0001;
+            end
+            6'b000101: begin
+                Branch_Function_Select = 4'b0010;
+                PC_Mux_Select = 2'b01;
+                ALU_Function_Select = 4'b0001;
+            end
+            6'b000010: begin
+                PC_Mux_Select = 2'b10;
+            end
+            6'b000011: begin
+                PC_Mux_Select = 2'b10;
+                Register_Write_Enable = 1'b1;
+                Destination_Address = 5'b11111;
+                Register_Mux_Select = 2'b10;
+            end
+            default: begin
+            end
+        endcase
+    end
+
+endmodule

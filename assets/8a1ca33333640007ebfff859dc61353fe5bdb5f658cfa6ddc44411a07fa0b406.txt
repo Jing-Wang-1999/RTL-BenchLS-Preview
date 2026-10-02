@@ -1,0 +1,57 @@
+module origen_038711(
+    input [15:0] fetchoutput,
+    output reg [2:0] destination,
+    output reg [5:0] operationnumber,
+    output reg [2:0] source_1,
+    output reg [2:0] source_2,
+    output reg [2:0] unsigned_1,
+    output reg [5:0] unsigned_2,
+    output reg [8:0] unsigned_3
+);
+
+    reg [5:0] opcodemem [0:125];
+
+    initial begin
+        $readmemb("opcodemem.list", opcodemem);
+    end
+
+    always @(*) begin
+        if (fetchoutput[15] == 1'b0) begin
+            destination = fetchoutput[14:12];
+            source_1 = fetchoutput[11:9];
+            source_2 = fetchoutput[8:6];
+            unsigned_1 = fetchoutput[5:3];
+            unsigned_2 = fetchoutput[5:0];
+            unsigned_3 = fetchoutput[8:0];
+            operationnumber = opcodemem[fetchoutput[5:0]];
+        end
+        else begin
+            // No operation specified for MSB = 1
+        end
+    end
+endmodule
+
+module fetch(
+    output reg [15:0] fetchoutput
+);
+
+    reg [15:0] fetchvalue;
+
+    initial begin
+        fetchvalue = 16'd0;
+        #450 $finish;
+    end
+
+    always #10 begin
+        case (fetchvalue)
+            16'd0: fetchvalue = 16'd522;
+            16'd522: fetchvalue = 16'd578;
+            16'd578: fetchvalue = 16'd1218;
+            16'd1218: fetchvalue = 16'd1665;
+            16'd1665: fetchvalue = 16'd5142;
+            16'd5142: fetchvalue = 16'd6738;
+            default: fetchvalue = 16'd0;
+        endcase
+        fetchoutput = fetchvalue;
+    end
+endmodule

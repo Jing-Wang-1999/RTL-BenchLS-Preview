@@ -1,0 +1,14 @@
+always @ (posedge clk_i)
+        begin
+                if (rst_i)
+                        cmd <= 'b0;
+                else
+                if (cmd_w_i)
+                        cmd[2:0] <= cmd_i[2:0];         // busy bit can't write
+                else
+                begin
+                        cmd[3] <= busy;                 // update busy bit
+                        if (~busy)
+                                cmd[1:0] <= 2'b00;      // hardware auto clean R/W bits
+                end
+        end

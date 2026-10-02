@@ -1,0 +1,40 @@
+### Module Specification: Leading Sign Detector for 10-bit Mantissa
+
+#### Overview
+This module computes a 4-bit output that encodes information about the leading (most significant) non-zero bits in a 10-bit mantissa input. The output indicates the position and sign pattern of the first significant bits, focusing on detecting specific bit patterns and zero runs.
+
+#### Inputs
+- **mantissa**: A 10-bit unsigned input ([9:0]), representing a mantissa value to be analyzed.
+
+#### Outputs
+- **rtn**: A 4-bit output ([3:0]), where each bit encodes a distinct condition derived from the mantissa's bit patterns.
+
+#### Functional Behavior
+The module examines the mantissa by checking groups of bits (pairs and individual bits) to determine:
+1. Whether consecutive bit pairs (e.g., bits [9:8], [7:6], [5:4], [3:2], [1:0]) are all zero.
+2. Specific non-zero patterns in certain bit pairs, such as the pattern '01' in bits [8:7] and [4:3].
+3. The value of individual bits (e.g., bit 9, bit 5, bit 1) when combined with the zero-pair conditions.
+
+The output bits are constructed as follows:
+- **Bit 3 of rtn**: Indicates whether all five bit pairs ([9:8] down to [1:0]) are zero.
+- **Bit 2 of rtn**: Indicates whether the first four bit pairs ([9:8] down to [3:2]) are zero, but the last pair ([1:0]) is not zero.
+- **Bit 1 of rtn**: A combination of conditions, including:
+  - The first bit pair ([9:8]) is zero, and either the second pair ([7:6]) is non-zero or the third pair ([5:4]) is zero, but not all pairs are zero.
+  - All five bit pairs are zero.
+- **Bit 0 of rtn**: A complex condition that checks:
+  - Bit 9 is 1.
+  - Bits [8:7] are not the pattern '01'.
+  - Bits [5:4] are not the pattern '01', or bit 5 is 1, when combined with the zero condition of the first four pairs.
+  - Bit 1 is 1 when combined with the zero condition of all five pairs.
+  - All five bit pairs are zero.
+
+#### Key Operations
+- The module uses logical operations (AND, OR, NOT) and comparisons to evaluate bit pairs and individual bits.
+- It detects runs of zeros in bit pairs and specific patterns like '01'.
+- The output is derived hierarchically, starting from the most significant bit pairs down to the least significant.
+
+#### Allowed Sub-modules
+Only basic logical gates (AND, OR, NOT, XOR) and comparators for 2-bit values are permitted. No arithmetic units or multi-bit shifters are used.
+
+#### Performance Notes
+The design is combinatorial (no clocks or registers), providing the output directly from the input. It is optimized for speed and minimal logic depth, focusing on pattern detection in a 10-bit field.

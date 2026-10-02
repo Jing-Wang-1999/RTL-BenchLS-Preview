@@ -1,0 +1,124 @@
+module origen_113293 #(
+    parameter WIDTH = 32
+) (
+    input [WIDTH-1:0] a,
+    input [WIDTH-1:0] b,
+    output [WIDTH-1:0] result
+);
+    assign result = a + b;
+endmodule
+
+module fp_sub #(
+    parameter WIDTH = 32
+) (
+    input [WIDTH-1:0] a,
+    input [WIDTH-1:0] b,
+    output [WIDTH-1:0] result
+);
+    assign result = a - b;
+endmodule
+
+module fp_div #(
+    parameter WIDTH = 32
+) (
+    input [WIDTH-1:0] a,
+    input [WIDTH-1:0] b,
+    output reg [WIDTH-1:0] result
+);
+    reg [WIDTH-1:0] abs_a, abs_b;
+    reg sign;
+
+    always @* begin
+        abs_a = a[WIDTH-1] ? -a : a;
+        abs_b = b[WIDTH-1] ? -b : b;
+        sign = a[WIDTH-1] ^ b[WIDTH-1];
+        result = sign ? -(abs_a / abs_b) : (abs_a / abs_b);
+    end
+endmodule
+
+module big_subtractor #(
+    parameter WIDTH = 32
+) (
+    input [WIDTH-1:0] a,
+    input [WIDTH-1:0] b,
+    output [WIDTH:0] result
+);
+    assign result = {a[WIDTH-1], a} - {b[WIDTH-1], b};
+endmodule
+
+module big_adder #(
+    parameter WIDTH = 32
+) (
+    input [WIDTH-1:0] a,
+    input [WIDTH-1:0] b,
+    output [WIDTH:0] result
+);
+    assign result = {a[WIDTH-1], a} + {b[WIDTH-1], b};
+endmodule
+
+module big_multiplier #(
+    parameter WIDTH = 32
+) (
+    input signed [WIDTH-1:0] a,
+    input signed [WIDTH-1:0] b,
+    output signed [2*WIDTH-1:0] result
+);
+    assign result = a * b;
+endmodule
+
+module com_add_multiplier #(
+    parameter WIDTH_A = 32,
+    parameter WIDTH_B = 32
+) (
+    input signed [WIDTH_A-1:0] a,
+    input signed [WIDTH_B-1:0] b,
+    output signed [WIDTH_A+WIDTH_B-1:0] result
+);
+    assign result = a * b;
+endmodule
+
+module adder (
+    input [31:0] a,
+    input [31:0] b,
+    output [31:0] result
+);
+    fp_add #(.WIDTH(32)) add_inst (
+        .a(a),
+        .b(b),
+        .result(result)
+    );
+endmodule
+
+module subtractor (
+    input [31:0] a,
+    input [31:0] b,
+    output [31:0] result
+);
+    fp_sub #(.WIDTH(32)) sub_inst (
+        .a(a),
+        .b(b),
+        .result(result)
+    );
+endmodule
+
+module divider (
+    input [31:0] a,
+    input [31:0] b,
+    output [31:0] result
+);
+    fp_div #(.WIDTH(32)) div_inst (
+        .a(a),
+        .b(b),
+        .result(result)
+    );
+endmodule
+
+module truncate #(
+    parameter IN_WIDTH = 64,
+    parameter OUT_WIDTH = 32
+) (
+    input [IN_WIDTH-1:0] in,
+    output [OUT_WIDTH-1:0] out
+);
+    assign out = {in[IN_WIDTH-1], in[IN_WIDTH-2:IN_WIDTH-OUT_WIDTH]};
+endmodule

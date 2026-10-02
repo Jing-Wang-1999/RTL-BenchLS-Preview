@@ -1,0 +1,93 @@
+{
+  "case_id": "s1derived.5f415cec005c247d96d0.f82744631123",
+  "compile_check": {
+    "case_id": "s1derived.5f415cec005c247d96d0.f82744631123",
+    "command": [
+      "iverilog",
+      "-g2012",
+      "-tnull",
+      "-s",
+      "gf_mult_by_5f",
+      "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.5f415cec005c247d96d0.f82744631123/private/golden_design.v"
+    ],
+    "diagnostics": "",
+    "returncode": 0,
+    "rtl_sha256": "5f415cec005c247d96d0b0af2bb167b97b8bdf07e8e861444827e9280037cf1a",
+    "status": "compile_pass"
+  },
+  "historical_commercial_top_audit": {
+    "case_id": "s1derived.5f415cec005c247d96d0.f82744631123",
+    "historical_result_covers_declared_golden_top": false,
+    "parent_id": "s1p.5f415cec005c247d96d0",
+    "source_group": "S1",
+    "status": "no_historical_positive_witness_retained",
+    "top_module": "gf_mult_by_5f"
+  },
+  "independent_review": {
+    "case_id": "s1derived.5f415cec005c247d96d0.f82744631123",
+    "decision": "pass",
+    "evidence": [
+      {
+        "explanation": "All eight equations and absence of state match.",
+        "rtl_excerpt": "`assign o[0]=i[0]^i[2]^i[4]^i[5]; ... assign o[7]=i[1]^i[3]^i[4]^i[7];`",
+        "spec_excerpt": "\u201cexact XOR mapping ... o[0]=i[0]^i[2]^i[4]^i[5]\u201d"
+      }
+    ],
+    "flaws": [],
+    "parent_id": "s1p.5f415cec005c247d96d0",
+    "review_round": "calibrated_semantic_v2",
+    "reviewed_specification_sha256": "005ca4c640a32c1392756214b3858f2560537d6aeeee281c71b72718bbeac10b",
+    "reviewer": "semantic_review_2",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5f415cec005c247d96d0b0af2bb167b97b8bdf07e8e861444827e9280037cf1a",
+    "source_group": "S1",
+    "supersedes": true
+  },
+  "oracle_script_paths": [],
+  "parent_id": "s1p.5f415cec005c247d96d0",
+  "primary_review": {
+    "case_id": "s1derived.5f415cec005c247d96d0.f82744631123",
+    "checks": {
+      "behavior": "o[0] and the partial start of o[1] agree, but the complete output function is absent.",
+      "boundaries": "All eight exact XOR reductions are required to define every input vector.",
+      "interface": "i[7:0] and o[7:0] match.",
+      "rtl_reasonableness": "RTL compiles and every output bit has one continuous assignment.",
+      "sequential_and_reset": "No clock, reset, or storage is used."
+    },
+    "decision": "revise",
+    "evidence": [
+      {
+        "explanation": "The prose ends before most equations, including o[7].",
+        "rtl_excerpt": "assign o[7] = i[1]^i[3]^i[4]^i[7];",
+        "specification_excerpt": "o[1] is derived from XORing bits i[0], i[1], i[3], i[5], and"
+      }
+    ],
+    "flaws": [
+      {
+        "detail": "The specification truncates during o[1], leaving most of the fixed XOR transform unspecified.",
+        "type": "missing_logic"
+      }
+    ],
+    "parent_id": "s1p.5f415cec005c247d96d0",
+    "proposed_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.5f415cec005c247d96d0.f82744631123.md",
+    "review_round": "calibrated_semantic_v2",
+    "reviewer": "repository_review_3",
+    "reviewer_model": "gpt-5.6-sol",
+    "rtl_reasonable": true,
+    "rtl_sha256": "5f415cec005c247d96d0b0af2bb167b97b8bdf07e8e861444827e9280037cf1a",
+    "source_group": "S1",
+    "specification_sha256": "f827446311235cf10bbe91dd9bbb677fe0719807b474ac57a1219284f8174d4d",
+    "supersedes": true
+  },
+  "qualified_specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/results/spec_quality_review_20260908/proposed_repairs_repo_3_01/s1derived.5f415cec005c247d96d0.f82744631123.md",
+  "qualified_specification_sha256": "005ca4c640a32c1392756214b3858f2560537d6aeeee281c71b72718bbeac10b",
+  "rtl_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.5f415cec005c247d96d0.f82744631123/private/golden_design.v",
+  "rtl_sha256": "5f415cec005c247d96d0b0af2bb167b97b8bdf07e8e861444827e9280037cf1a",
+  "source_corpus": "SEC-Flow-Star-repos-6.basic_verilog",
+  "source_group": "S1",
+  "specification_path": "/home/jwangjw/project_3rd/ICLR-RTL-BenchLS/scope1/task1_1_spec_to_rtl/cases/recovered/repository_spec_pairs_20260908_v1/payloads/s1derived.5f415cec005c247d96d0.f82744631123/visible/specification.md",
+  "specification_provenance": "curator_revised_specification_independently_reviewed",
+  "specification_sha256": "f827446311235cf10bbe91dd9bbb677fe0719807b474ac57a1219284f8174d4d",
+  "top_module": "gf_mult_by_5f"
+}

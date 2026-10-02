@@ -1,0 +1,51 @@
+module autovcoder_122753 #(
+    parameter TOPOLOGY = "MESH",
+    parameter T1 = 4,
+    parameter T2 = 4,
+    parameter T3 = 4,
+    parameter EAw = 2,
+    parameter DISTw = 4
+
+) (
+    src_e_addr,
+    dest_e_addr,
+    distance
+);
+
+  input [EAw-1 : 0] src_e_addr;
+  input [EAw-1 : 0] dest_e_addr;
+  output [DISTw-1 : 0] distance;
+
+  generate
+    /* verilator lint_off WIDTH */
+    if (TOPOLOGY ==    "MESH" || TOPOLOGY ==  "TORUS" || TOPOLOGY == "RING" || TOPOLOGY == "LINE")begin : tori_noc
+      /* verilator lint_on WIDTH */
+
+      mesh_torus_distance_gen #(
+          .T1(T1),
+          .T2(T2),
+          .T3(T3),
+          .TOPOLOGY(TOPOLOGY),
+          .DISTw(DISTw),
+          .EAw(EAw)
+      ) distance_gen (
+          .src_e_addr(src_e_addr),
+          .dest_e_addr(dest_e_addr),
+          .distance(distance)
+      );
+      /* verilator lint_off WIDTH */
+    end else if (TOPOLOGY == "FATTREE" || TOPOLOGY == "TREE") begin : fat
+      /* verilator lint_on WIDTH */
+      fattree_distance_gen #(
+          .K(T1),
+          .L(T2)
+      ) distance_gen (
+          .src_addr_encoded(src_e_addr),
+          .dest_addr_encoded(dest_e_addr),
+          .distance(distance)
+      );
+    end
+  endgenerate
+
+endmodule
+

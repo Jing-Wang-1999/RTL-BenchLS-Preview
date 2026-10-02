@@ -1,0 +1,74 @@
+# afifo: default-configuration specification
+
+Implement the declared default asynchronous FIFO: LGFIFO3, WIDTH16, NFF2, WRITE_ON_POSEDGE1, OPT_REGISTER_READS1. FORMAL and AFIFO are undefined: embedded assumptions/properties and f_fill port are absent. Physical i_wclk and i_rclk are independent and must not be tied. Each domain has active-low asynchronous reset; establish both resets to discard prior contents. Memory is eight16-bit entries, addressed by low3 bits of4-bit binary pointers. A registered output entry provides an additional prefetched word. Memory and output DATA are unreset; no zero or power-up promise applies while empty.
+
+Write binary pointer and its Gray encoding reset0. On each rising i_wclk, advance the pointer modulo16 and update Gray=(new binary XOR new binary>>1) only if i_wr AND NOT o_wr_full. Under the same predicate write i_wr_data to the memory at the old pointer address, without an explicit reset gate in the memory process. Thus a write edge during reset can update memory while the pointer remains reset; data are not preserved across reset. Each rising write clock synchronizes read Gray through two stages, reset0 by i_wr_reset_n. o_wr_full is combinational equality of synchronized read Gray and local write Gray with its upper two bits inverted and lower two unchanged.
+
+Read binary pointer and its Gray encoding reset0. Each rising i_rclk synchronizes write Gray through two stages reset0 by i_rd_reset_n. Local-memory-empty is equality of synchronized write Gray and local read Gray. Define prefetch as old o_rd_empty OR i_rd. When prefetch and NOT local-memory-empty, advance read pointer modulo16 and update Gray from the new pointer. o_rd_empty asynchronously resets1; on each nonreset read edge with prefetch, replace it by old local-memory-empty; otherwise hold. When prefetch, capture memory at the old read pointer into o_rd_data, including reset edges, even if local-memory-empty. Otherwise DATA holds. An empty output therefore fetches the next word automatically after pointer synchronization; i_rd consumes/replaces the current output, and a consumer stall holds it. Full counts outstanding words remaining in RAM, while the separate output register can hold one additional prefetched word.
+
+No traffic assumptions are added for equivalence. Writes while full are ignored; reads while output empty merely continue attempting prefetch and may update invalid DATA. Independent reset of one domain can destroy prior FIFO ordering and is specified by the exact domain-local state resets, not as preserved data. Alternate parameter branches and FORMAL declarations are not part of this default case.
+
+Public interface declarations (parameter values and behavior are specified above):
+
+```verilog
+module afifo #(
+		
+		
+		
+		parameter	LGFIFO = 3,
+		
+		
+		parameter	WIDTH  = 16,
+		
+		
+		
+		parameter	NFF    = 2,
+		
+		
+		
+		
+		parameter [0:0]	WRITE_ON_POSEDGE = 1'b1,
+		
+		
+		
+		
+		
+		
+		parameter [0:0]	OPT_REGISTER_READS = 1'b1
+`ifdef	FORMAL
+		
+		
+		
+		
+		
+		
+		, parameter [0:0]	F_OPT_DATA_STB = 1'b1
+		
+`endif
+		
+	) (
+		
+		
+		
+		input	wire			i_wclk,
+		
+		input	wire			i_wr_reset_n,
+		
+		input	wire			i_wr,
+		input	wire	[WIDTH-1:0]	i_wr_data,
+		output	reg			o_wr_full,
+		
+		
+		input	wire			i_rclk,
+		
+		input	wire			i_rd_reset_n,
+		
+		input	wire			i_rd,
+		output	reg	[WIDTH-1:0]	o_rd_data,
+		output	reg			o_rd_empty
+`ifdef	FORMAL
+		, output reg	[LGFIFO:0]	f_fill
+`endif
+		
+	);
+```

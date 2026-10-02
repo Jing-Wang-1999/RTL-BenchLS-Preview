@@ -1,0 +1,169 @@
+always @* begin
+    req_state_next = REQ_STATE_IDLE;
+
+    s_axis_write_desc_ready_next = 1'b0;
+
+    stat_wr_op_start_tag_next = stat_wr_op_start_tag_reg;
+    stat_wr_op_start_len_next = stat_wr_op_start_len_reg;
+    stat_wr_op_start_valid_next = 1'b0;
+    stat_wr_req_start_tag_next = stat_wr_req_start_tag_reg;
+    stat_wr_req_start_len_next = stat_wr_req_start_len_reg;
+    stat_wr_req_start_valid_next = 1'b0;
+    stat_wr_op_table_full_next = !(!op_table_active[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] && ($unsigned(op_table_start_ptr_reg - op_table_finish_ptr_reg) < 2**OP_TAG_WIDTH));
+    stat_wr_tx_stall_next = (m_axi_awvalid && !m_axi_awready) || (m_axi_wvalid && !m_axi_wready);
+
+    tag_next = tag_reg;
+    req_axi_addr_next = req_axi_addr_reg;
+    ram_sel_next = ram_sel_reg;
+    ram_addr_next = ram_addr_reg;
+    imm_next = imm_reg;
+    imm_en_next = imm_en_reg;
+    op_count_next = op_count_reg;
+    zero_len_next = zero_len_reg;
+    tr_count_next = tr_count_reg;
+    tr_word_count_next = tr_word_count_reg;
+
+    read_cmd_axi_addr_next = read_cmd_axi_addr_reg;
+    read_cmd_ram_sel_next = read_cmd_ram_sel_reg;
+    read_cmd_ram_addr_next = read_cmd_ram_addr_reg;
+    read_cmd_imm_en_next = read_cmd_imm_en_reg;
+    read_cmd_len_next = read_cmd_len_reg;
+    read_cmd_cycle_count_next = read_cmd_cycle_count_reg;
+    read_cmd_last_cycle_next = read_cmd_last_cycle_reg;
+    read_cmd_valid_next = read_cmd_valid_reg && !read_cmd_ready;
+
+    op_table_start_axi_addr = req_axi_addr_reg;
+    op_table_start_imm = imm_reg;
+    op_table_start_imm_en = imm_en_reg;
+    op_table_start_len = 0;
+    op_table_start_zero_len = zero_len_reg;
+    op_table_start_cycle_count = 0;
+    op_table_start_offset = (req_axi_addr_reg & OFFSET_MASK)-ram_addr_reg[RAM_OFFSET_WIDTH-1:0];
+    op_table_start_tag = tag_reg;
+    op_table_start_last = 0;
+    op_table_start_en = 1'b0;
+
+    inc_active_op = 1'b0;
+
+    // TLP segmentation
+    case (req_state_reg)
+        REQ_STATE_IDLE: begin
+            // idle state, wait for incoming descriptor
+            s_axis_write_desc_ready_next = !op_table_active[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] && ($unsigned(op_table_start_ptr_reg - op_table_finish_ptr_reg) < 2**OP_TAG_WIDTH) && enable;
+
+            req_axi_addr_next = s_axis_write_desc_axi_addr;
+            if (IMM_ENABLE && s_axis_write_desc_imm_en) begin
+                ram_sel_next = 0;
+                ram_addr_next = 0;
+            end else begin
+                ram_sel_next = s_axis_write_desc_ram_sel;
+                ram_addr_next = s_axis_write_desc_ram_addr;
+            end
+            imm_next = s_axis_write_desc_imm;
+            imm_en_next = IMM_ENABLE && s_axis_write_desc_imm_en;
+            if (s_axis_write_desc_len == 0) begin
+                // zero-length operation
+                op_count_next = 1;
+                zero_len_next = 1'b1;
+            end else begin
+                op_count_next = s_axis_write_desc_len;
+                zero_len_next = 1'b0;
+            end
+            tag_next = s_axis_write_desc_tag;
+
+            if (op_count_next <= AXI_MAX_BURST_SIZE - (req_axi_addr_next & OFFSET_MASK) || AXI_MAX_BURST_SIZE >= 4096) begin
+                // packet smaller than max burst size
+                if (((req_axi_addr_next & 12'hfff) + (op_count_next & 12'hfff)) >> 12 != 0 || op_count_next >> 12 != 0) begin
+                    // crosses 4k boundary
+                    tr_word_count_next = 13'h1000 - req_axi_addr_next[11:0];
+                end else begin
+                    // does not cross 4k boundary
+                    tr_word_count_next = op_count_next;
+                end
+            end else begin
+                // packet larger than max burst size
+                if (((req_axi_addr_next & 12'hfff) + AXI_MAX_BURST_SIZE) >> 12 != 0) begin
+                    // crosses 4k boundary
+                    tr_word_count_next = 13'h1000 - req_axi_addr_next[11:0];
+                end else begin
+                    // does not cross 4k boundary
+                    tr_word_count_next = AXI_MAX_BURST_SIZE - (req_axi_addr_next & OFFSET_MASK);
+                end
+            end
+
+            if (s_axis_write_desc_ready & s_axis_write_desc_valid) begin
+                s_axis_write_desc_ready_next = 1'b0;
+
+                stat_wr_op_start_tag_next = stat_wr_op_start_tag_reg+1;
+                stat_wr_op_start_len_next = s_axis_write_desc_len;
+                stat_wr_op_start_valid_next = 1'b1;
+
+                req_state_next = REQ_STATE_START;
+            end else begin
+                req_state_next = REQ_STATE_IDLE;
+            end
+        end
+        REQ_STATE_START: begin
+            // start state, compute length
+            if (!op_table_active[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] && ($unsigned(op_table_start_ptr_reg - op_table_finish_ptr_reg) < 2**OP_TAG_WIDTH) && (!ram_rd_cmd_valid_reg || ram_rd_cmd_ready) && (!read_cmd_valid_reg || read_cmd_ready)) begin
+                read_cmd_axi_addr_next = req_axi_addr_reg;
+                read_cmd_ram_sel_next = ram_sel_reg;
+                read_cmd_ram_addr_next = ram_addr_reg;
+                read_cmd_imm_en_next = imm_en_reg;
+                read_cmd_len_next = tr_word_count_next;
+                read_cmd_cycle_count_next = (tr_word_count_next + (req_axi_addr_reg & OFFSET_MASK) - 1) >> AXI_BURST_SIZE;
+                op_table_start_cycle_count = read_cmd_cycle_count_next;
+                read_cmd_last_cycle_next = read_cmd_cycle_count_next == 0;
+                read_cmd_valid_next = 1'b1;
+
+                req_axi_addr_next = req_axi_addr_reg + tr_word_count_next;
+                ram_addr_next = ram_addr_reg + tr_word_count_next;
+                op_count_next = op_count_reg - tr_word_count_next;
+
+                op_table_start_axi_addr = req_axi_addr_reg;
+                op_table_start_imm = imm_reg;
+                op_table_start_imm_en = imm_en_reg;
+                op_table_start_len = tr_word_count_next;
+                op_table_start_zero_len = zero_len_reg;
+                op_table_start_offset = (req_axi_addr_reg & OFFSET_MASK)-ram_addr_reg[RAM_OFFSET_WIDTH-1:0];
+                op_table_start_tag = tag_reg;
+                op_table_start_last = op_count_reg == tr_word_count_next;
+                op_table_start_en = 1'b1;
+                inc_active_op = 1'b1;
+
+                stat_wr_req_start_tag_next = op_table_start_ptr_reg[OP_TAG_WIDTH-1:0];
+                stat_wr_req_start_len_next = zero_len_reg ? 0 : tr_word_count_next;
+                stat_wr_req_start_valid_next = 1'b1;
+
+                if (op_count_next <= AXI_MAX_BURST_SIZE - (req_axi_addr_next & OFFSET_MASK) || AXI_MAX_BURST_SIZE >= 4096) begin
+                    // packet smaller than max burst size
+                    if (((req_axi_addr_next & 12'hfff) + (op_count_next & 12'hfff)) >> 12 != 0 || op_count_next >> 12 != 0) begin
+                        // crosses 4k boundary
+                        tr_word_count_next = 13'h1000 - req_axi_addr_next[11:0];
+                    end else begin
+                        // does not cross 4k boundary
+                        tr_word_count_next = op_count_next;
+                    end
+                end else begin
+                    // packet larger than max burst size
+                    if (((req_axi_addr_next & 12'hfff) + AXI_MAX_BURST_SIZE) >> 12 != 0) begin
+                        // crosses 4k boundary
+                        tr_word_count_next = 13'h1000 - req_axi_addr_next[11:0];
+                    end else begin
+                        // does not cross 4k boundary
+                        tr_word_count_next = AXI_MAX_BURST_SIZE - (req_axi_addr_next & OFFSET_MASK);
+                    end
+                end
+
+                if (!op_table_start_last) begin
+                    req_state_next = REQ_STATE_START;
+                end else begin
+                    s_axis_write_desc_ready_next = !op_table_active[op_table_start_ptr_reg[OP_TAG_WIDTH-1:0]] && ($unsigned(op_table_start_ptr_reg - op_table_finish_ptr_reg) < 2**OP_TAG_WIDTH) && enable;
+                    req_state_next = REQ_STATE_IDLE;
+                end
+            end else begin
+                req_state_next = REQ_STATE_START;
+            end
+        end
+    endcase
+end

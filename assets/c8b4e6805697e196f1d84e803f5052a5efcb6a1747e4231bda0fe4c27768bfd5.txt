@@ -1,0 +1,56 @@
+module origen_052792 (
+    input wire clk_i,
+    input wire rst_i,
+    input wire [31:0] addr_i,
+    input wire sel_i,
+    output reg [31:0] data_o,
+    output reg ack_o
+);
+
+    reg [31:0] mem [0:4095];
+    reg [31:0] dato;
+    reg ack;
+
+    always @(posedge clk_i or posedge rst_i) begin
+        if (rst_i) begin
+            ack <= 1'b0;
+            dato <= 32'b0;
+        end else if (sel_i) begin
+            dato <= mem[addr_i[31:2]];
+            ack <= ~ack;
+        end else begin
+            ack <= 1'b0;
+        end
+    end
+
+    always @(*) begin
+        data_o = dato;
+        ack_o = ack;
+    end
+
+    initial begin
+        `ifdef USE_INIT_FILE
+            $readmemh("niox_irom.hex", mem);
+            if (mem[0] === 32'bx) begin
+                $display("Error: Failed to read memory initialization file");
+                $finish;
+            end
+        `else
+            integer i;
+            for (i = 0; i < 4096; i = i + 1)
+                mem[i] = 32'h0;
+        `endif
+
+        `ifdef DEBUG
+            $display("ROM initialized");
+        `endif
+    end
+
+    `ifdef DEBUG
+        always @(posedge clk_i) begin
+            if (sel_i)
+                $display("ROM Read - Address: %h, Data: %h", addr_i, dato);
+        end
+    `endif
+
+endmodule

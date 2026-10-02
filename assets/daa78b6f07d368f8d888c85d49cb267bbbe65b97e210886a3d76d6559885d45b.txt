@@ -1,0 +1,152 @@
+### Instruction for Verilog Code Generation
+
+The Verilog module defines a complex circuit that manages high-speed data reception and communicates with an AXI interface. Here's a detailed breakdown that captures its primary functions, control flow, and data interactions:
+
+1. **Summary of Primary Function:**
+   This module handles the reception of both high-speed (HS) and low-power (LP) data streams, processes them, and interfaces with an AXI bus for configuration and status reporting. The module also supports multiple data lanes (dl0 to dl3) for the HS data.
+
+2. **Control Flow and Decision Points:**
+   - The `core_rst` and `s_axi_aresetn` signals are used to reset the module and the AXI interface.
+   - The `cl_enable` activates the clock receiver and determines the operational state of data lanes.
+   - Each data lane (`dl0_enable`, `dl1_enable`, etc.) has control signals that enable their functionality and force them into specific operating modes (`dlx_forcerxmode`).
+   - Validity signals (`dlx_rxvalidhs`, `dlx_rxactivehs`, etc.) are used to determine if the received high-speed data and status are valid.
+
+3. **Important Data Processing and Signal Interactions:**
+   - **Clock and Reset:**
+     - `core_clk` is the primary clock signal driving the module.
+     - `core_rst` resets the core logic, while `s_axi_aresetn` is used for resetting the AXI interface.
+   - **Data Reception:**
+     - The module processes both high-speed (`hs`) and low-power (`lp`) data signals from four data lanes (`dl0` to `dl3`).
+     - Output signals like `dlx_rxdatahs`, `dlx_rxvalidhs`, and `dlx_rxtriggeresc` indicate received HS and LP data and status.
+   - **Error Handling:**
+     - Error signals (`dlx_errsoths`, `dlx_errsotsynchs`, etc.) capture various error states during data reception.
+   - **AXI Interface:**
+     - The AXI interface (`s_axi_...`) handles configuration and status reporting. Signals such as `s_axi_awvalid`, `s_axi_arvalid`, and `s_axi_wvalid` are used for handshake processes, and `s_axi_rdata`, `s_axi_rresp` for read operations and responses.
+   - **Output Signals:**
+     - `rxbyteclkhs`, `system_rst_out`, and `init_done` are key indications of the operational status of the module.
+
+### Detailed Functionality
+- The module manages the clock signals for high-speed (`clk_hs_rxp`, `clk_hs_rxn`) and low-power (`clk_lp_rxp`, `clk_lp_rxn`) data reception, maintaining data integrity and synchronization.
+- The interaction of control and data signals within each lane (`dl0` to `dl3`) ensures proper data flow and error detection mechanisms, enabling robust high-speed communication.
+
+This detailed overview captures the essence of the Verilog module, ensuring clarity in the control flow, data dependencies, and signal interactions without direct reference to CFG or DFG, making it ready for code generation by an LLM.
+
+Module Interface:
+module mipi_axi_receiver (
+    core_clk,
+    core_rst,
+    rxbyteclkhs,
+    system_rst_out,
+    init_done,
+    cl_rxclkactivehs,
+    cl_stopstate,
+    cl_enable,
+    cl_rxulpsclknot,
+    cl_ulpsactivenot,
+    dl0_rxdatahs,
+    dl0_rxvalidhs,
+    dl0_rxactivehs,
+    dl0_rxsynchs,
+    dl0_forcerxmode,
+    dl0_stopstate,
+    dl0_enable,
+    dl0_ulpsactivenot,
+    dl0_rxclkesc,
+    dl0_rxlpdtesc,
+    dl0_rxulpsesc,
+    dl0_rxtriggeresc,
+    dl0_rxdataesc,
+    dl0_rxvalidesc,
+    dl0_errsoths,
+    dl0_errsotsynchs,
+    dl0_erresc,
+    dl0_errsyncesc,
+    dl0_errcontrol,
+    dl1_rxdatahs,
+    dl1_rxvalidhs,
+    dl1_rxactivehs,
+    dl1_rxsynchs,
+    dl1_forcerxmode,
+    dl1_stopstate,
+    dl1_enable,
+    dl1_ulpsactivenot,
+    dl1_rxclkesc,
+    dl1_rxlpdtesc,
+    dl1_rxulpsesc,
+    dl1_rxtriggeresc,
+    dl1_rxdataesc,
+    dl1_rxvalidesc,
+    dl1_errsoths,
+    dl1_errsotsynchs,
+    dl1_erresc,
+    dl1_errsyncesc,
+    dl1_errcontrol,
+    dl2_rxdatahs,
+    dl2_rxvalidhs,
+    dl2_rxactivehs,
+    dl2_rxsynchs,
+    dl2_forcerxmode,
+    dl2_stopstate,
+    dl2_enable,
+    dl2_ulpsactivenot,
+    dl2_rxclkesc,
+    dl2_rxlpdtesc,
+    dl2_rxulpsesc,
+    dl2_rxtriggeresc,
+    dl2_rxdataesc,
+    dl2_rxvalidesc,
+    dl2_errsoths,
+    dl2_errsotsynchs,
+    dl2_erresc,
+    dl2_errsyncesc,
+    dl2_errcontrol,
+    dl3_rxdatahs,
+    dl3_rxvalidhs,
+    dl3_rxactivehs,
+    dl3_rxsynchs,
+    dl3_forcerxmode,
+    dl3_stopstate,
+    dl3_enable,
+    dl3_ulpsactivenot,
+    dl3_rxclkesc,
+    dl3_rxlpdtesc,
+    dl3_rxulpsesc,
+    dl3_rxtriggeresc,
+    dl3_rxdataesc,
+    dl3_rxvalidesc,
+    dl3_errsoths,
+    dl3_errsotsynchs,
+    dl3_erresc,
+    dl3_errsyncesc,
+    dl3_errcontrol,
+    s_axi_aclk,
+    s_axi_aresetn,
+    s_axi_awaddr,
+    s_axi_awready,
+    s_axi_awvalid,
+    s_axi_araddr,
+    s_axi_arready,
+    s_axi_arvalid,
+    s_axi_wdata,
+    s_axi_wstrb,
+    s_axi_wready,
+    s_axi_wvalid,
+    s_axi_rdata,
+    s_axi_rresp,
+    s_axi_rready,
+    s_axi_rvalid,
+    s_axi_bresp,
+    s_axi_bready,
+    s_axi_bvalid,
+    clk_hs_rxp,
+    clk_hs_rxn,
+    data_hs_rxp,
+    data_hs_rxn,
+    clk_lp_rxp,
+    clk_lp_rxn,
+    data_lp_rxp,
+    data_lp_rxn
+);
+
+Behavioral Clarifications:
+- The golden RTL is a stub module with no internal logic; all output ports are undriven. The AXI address ports s_axi_awaddr and s_axi_araddr are 7 bits wide. Data lane rxdatahs outputs are 8 bits wide; rxtriggeresc outputs are 4 bits wide; rxdataesc outputs are 8 bits wide. The module contains no always blocks or assign statements.

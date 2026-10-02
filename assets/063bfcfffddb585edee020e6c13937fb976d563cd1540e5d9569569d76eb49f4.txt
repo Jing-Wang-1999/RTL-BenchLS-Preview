@@ -1,0 +1,14 @@
+always_comb begin
+
+        // IDLE
+        if (slv_w_targeted == '0 & wch_empty)
+            i_wready = '0;
+        // Targets an undefined or forbidden memory space
+        else if (slv_w_targeted == '0 & !wch_empty)
+            i_wready = '1;
+        else
+            i_wready = '0;
+            for (int i = 0; i < SLV_NB; i++)
+                if (!wch_empty & slv_w_targeted[i])
+                    i_wready = o_wready[i];
+    end

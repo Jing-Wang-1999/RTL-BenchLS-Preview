@@ -1,0 +1,107 @@
+module origen_064231(
+    input wire clk,
+    input wire run_code,
+    input wire in_flag,
+    input wire out_flag,
+    input wire [7:0] in,
+    input wire [11:0] address,
+    input wire [15:0] code,
+    output reg [11:0] pc,
+    output reg [15:0] ac,
+    output reg fgo,
+    output reg fgi,
+    output reg [7:0] out,
+    output wire [15:0] test
+);
+
+    reg [15:0] ir, dr;
+    reg e;
+    reg [15:0] mem [0:4095];
+    reg if_hlt;
+
+    wire [2:0] opcode = ir[14:12];
+    wire i = ir[15];
+    wire [11:0] operand = ir[11:0];
+
+    assign test = ac;
+
+    always @(posedge clk) begin
+        if (!run_code) begin
+            mem[address] <= code;
+        end else if (!if_hlt) begin
+            // Fetch
+            ir <= mem[pc];
+            pc <= pc + 1;
+
+            // Execute
+            case (opcode)
+                3'b000: ac <= ac & mem[operand];  // AND
+                3'b001: {e, ac} <= ac + mem[operand] + e;  // ADD
+                3'b010: ac <= mem[operand];  // LOAD
+                3'b011: mem[operand] <= ac;  // STORE
+                3'b100: pc <= operand;  // JUMP
+                3'b101: begin  // CALL
+                    mem[operand] <= pc;
+                    pc <= operand + 1;
+                end
+                3'b110: begin  // ISZ
+                    dr <= mem[operand] + 1;
+                    mem[operand] <= dr;
+                    if (dr == 0) pc <= pc + 1;
+                end
+                3'b111: begin  // Register reference and I/O
+                    case (ir[11:0])
+                        12'h800: ac <= 0;  // CLA
+                        12'h400: e <= 0;  // CLE
+                        12'h200: ac <= ~ac;  // CMA
+                        12'h100: e <= ~e;  // CME
+                        12'h080: {ac, e} <= {e, ac};  // CIR
+                        12'h040: {e, ac} <= {ac, e};  // CIL
+                        12'h020: ac <= ac + 1;  // INC
+                        12'h010: if (ac[15] == 0) pc <= pc + 1;  // SPA
+                        12'h008: if (ac[15] == 1) pc <= pc + 1;  // SNA
+                        12'h004: if (ac == 0) pc <= pc + 1;  // SZA
+                        12'h002: if (e == 0) pc <= pc + 1;  // SZE
+                        12'h001: if_hlt <= 1;  // HLT
+                        12'hF800: begin  // INP
+                            if (in_flag) begin
+                                ac[7:0] <= in;
+                                fgi <= 0;
+                            end
+                        end
+                        12'hF400: begin  // OUT
+                            if (out_flag) begin
+                                out <= ac[7:0];
+                                fgo <= 0;
+                            end
+                        end
+                        12'hF200: if (fgi == 1) pc <= pc + 1;  // SKI
+                        12'hF100: if (fgo == 0) pc <= pc + 1;  // SKO
+                    endcase
+                end
+            endcase
+
+            // Indirect addressing
+            if (i) begin
+                case (opcode)
+                    3'b000, 3'b001, 3'b010, 3'b011: begin
+                        dr <= mem[operand];
+                        mem[operand] <= mem[dr];
+                    end
+                    3'b100, 3'b101: pc <= mem[operand];
+                    3'b110: begin
+                        dr <= mem[operand];
+                        mem[operand] <= mem[dr] + 1;
+                        if (mem[dr] + 1 == 0) pc <= pc + 1;
+                    end
+                endcase
+            end
+        end
+    end
+
+    always @(posedge clk) begin
+        if (in_flag) fgi <= 1;
+        if (out_flag) fgo <= 1;
+    end
+
+endmodule

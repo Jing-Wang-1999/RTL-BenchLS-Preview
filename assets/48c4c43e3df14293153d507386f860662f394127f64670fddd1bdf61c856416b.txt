@@ -1,0 +1,22 @@
+# JasperGold SEC: sequential equivalence (golden vs revised RTL).
+# Placeholders replaced by verification_tools.run_sec_remote:
+#   four_bit_pattern_sequence_generator.v0, four_bit_pattern_sequence_generator.v1, four_bit_pattern_sequence_generator, clk, -none
+set DESIGN_NAME_GOLDEN "four_bit_pattern_sequence_generator.v0"
+set DESIGN_NAME "four_bit_pattern_sequence_generator.v1"
+set TOP_NAME "four_bit_pattern_sequence_generator"
+
+
+clear -all
+check_sec -analyze -spec -sv ./input/rtl/task11_3af3350b2d09e5a5.v0.v
+check_sec -analyze -imp -sv ./input/rtl/task11_3af3350b2d09e5a5.negative.v
+check_sec -elaborate -spec -top four_bit_pattern_sequence_generator -disable_auto_bbox
+check_sec -elaborate -imp -top four_bit_pattern_sequence_generator -disable_auto_bbox
+# check_sec -setup clock -infer reset -none
+check_sec -setup 
+check_sec -map -auto
+clock clk 
+reset -none
+check_sec -gen
+# check_sec -prove -strategy design_style -design_style_type clock_gating
+# check_sec -prove
+check_sec -prove -strategy proof
