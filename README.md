@@ -1,14 +1,19 @@
 # RTL-BenchLS case preview
 
-This static website provides human review of 14 paper task entries and 18,851
-frozen case records. It preserves the internal reviewer's visual style, filters,
-agent contracts, round-trip stages, file browsing, and reference/oracle access.
+This website introduces RTL-BenchLS through the paper's benchmark overview and
+design-size figures. Its separate case browser provides human review of 14 task
+entries and 18,851 case records, with filters, agent contracts, round-trip stages,
+file browsing, and reference/oracle access.
 
 ## Open the website
 
-After GitHub Pages is enabled, the project URL is:
+The benchmark homepage is:
 
 <https://jing-wang-1999.github.io/RTL-BenchLS-Preview/>
+
+The case browser is:
+
+<https://jing-wang-1999.github.io/RTL-BenchLS-Preview/review.html>
 
 For initial setup, select **Settings → Pages → Deploy from a branch → main →
 /(root) → Save**. The `.nojekyll` file makes this a static-file deployment.
@@ -31,7 +36,9 @@ standalone prompt; those limitations remain visible.
 
 | Path | Purpose |
 | --- | --- |
-| `index.html`, `app.js`, `style.css` | Static review interface |
+| `index.html`, `home.css`, `home.js` | Benchmark homepage and compatibility redirects |
+| `figures/` | Vector exports of paper figures |
+| `review.html`, `app.js`, `style.css` | Case browser |
 | `catalog.json` | Task index and case membership |
 | `cases/` | Case-specific contracts and file lists |
 | `assets/` | Content-addressed specifications, RTL, scripts, and retained metadata |
@@ -46,6 +53,8 @@ preview grants no new blanket license over upstream designs.
 
 The source exporter is maintained in the engineering project under
 `benchmark/review/build_public.py` and `benchmark/review/export_case_assets.py`.
-Regenerate from the audited frozen indexes, validate the complete export, then
+Regenerate from the validated case indexes, validate the complete export, then
 update only this dedicated preview repository. Report bugs with the task ID,
-original case ID, preview ID, and page URL.
+original case ID, browser ID, and page URL. The homepage describes 12 task
+formulations; the browser has 14 entries because direct project debugging
+lists three subtypes separately.
