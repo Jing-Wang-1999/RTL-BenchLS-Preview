@@ -7,17 +7,8 @@ file browsing, and reference/oracle access.
 
 ## Open the website
 
-The benchmark homepage is:
-
-<https://jing-wang-1999.github.io/RTL-BenchLS-Preview/>
-
-The case browser is:
-
-<https://jing-wang-1999.github.io/RTL-BenchLS-Preview/review.html>
-
-For initial setup, select **Settings → Pages → Deploy from a branch → main →
-/(root) → Save**. The `.nojekyll` file makes this a static-file deployment.
-This repository is separate from the owner's personal profile repository.
+Open the [benchmark homepage](index.html) or the [case browser](review.html).
+These relative links use the website's current hosting address.
 
 ## Review a case
 
