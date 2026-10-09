@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ab5089848c46fa72b76376680eaea198703dd4ca9317187d9f10b3748e7c9e7f.txt","{\n  \"top\": {\n    \"module\": \"cntr_modulus\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/counter/cntr_modulus.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

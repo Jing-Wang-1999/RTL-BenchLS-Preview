@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/999a97d072c641ab786f885e753247eeb94a9bd72c68f2464a516bd7d2564199.txt","module rtlpp_07945 (input in, clock, load, output out);\n  reg q;\n  assign out = q;\n  always @(posedge clock) begin\n\t  if (load) q = in;\n  end\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/26b643f7fb13855fc46c966eb0053e1da118270b4298a8301a91cfa1f78c6d40.txt","module InvLatchPS (g, d, pre, q);\n\ninput        g, pre;\ninput  [3:0] d;\noutput reg [3:0] q;\n\nalways @(g or d or pre) begin\n  if (pre)\n    q <= 4'b1111;\n  else if (~g)\n    q <= d;\nend\n\nendmodule");

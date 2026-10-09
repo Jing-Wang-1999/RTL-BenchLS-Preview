@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4283b497512f9ec5146b0e6362498ca0ba550fc1bb4dc2dbf34fa6a0718c2c6e.txt","Describe the interface, parameters, and observable behavior of this clean design. Return a self-contained specification, not RTL implementation code. A separate isolated call will receive your specification.\n");

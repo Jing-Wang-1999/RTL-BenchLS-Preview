@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fb312c3483373aef6b592cec17381581442c93e653987d40a6607a139978c856.txt","{ \"signal\": [\n    { \"name\": \"trigger\", \"wave\": \"14\" },\n    { \"name\": \"in_mantissa\", \"wave\": \"=4\", \"data\": [\"0101010101010101000000000000000001010101010101010\", \"\"] }\n  ],\n  \"config\": {\n    \"hscale\": 12.25\n  }\n}\n");

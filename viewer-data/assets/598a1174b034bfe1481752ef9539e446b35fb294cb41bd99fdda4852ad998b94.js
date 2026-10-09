@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/598a1174b034bfe1481752ef9539e446b35fb294cb41bd99fdda4852ad998b94.txt","Check EDN output against all-zero, all-one and repeated data with meaningful sampling and reset behavior.\n\nEdit the target RTL in workspace/ and preserve hardware behavior.\n");

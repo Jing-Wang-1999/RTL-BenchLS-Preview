@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/64ddaac77049744fb41e4d396546cd2b04ec6572065296f4379841a936c0e639.txt","module mg_00187 (y,a,b,c);\noutput y; \n  input a; \n  input b; \n  input c; \n  assign #1 y = a | b | c; \n endmodule");

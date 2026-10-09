@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b7c2ed944c700a0a8415764f9cd99a0c7c61e7078e6c56ffad3f3d32507fce0e.txt","module DFF(CK, D, Q, QN);\n    input [0:0] CK;\n    input [0:0] D;\n    output [0:0] Q;\n    output [0:0] QN;\n    reg [0:0] Q;\n\n    assign QN = ~Q;\n\n    always @(posedge CK) begin\n        Q <= D;\n    end\nendmodule");

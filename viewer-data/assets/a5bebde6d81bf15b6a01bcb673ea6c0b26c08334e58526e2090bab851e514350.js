@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a5bebde6d81bf15b6a01bcb673ea6c0b26c08334e58526e2090bab851e514350.txt","The module mg_03606 has a 2-bit input called \"control\" and a single output \"dp\". Regardless of the \"control\" input value, the output \"dp\" is always set to 1. The module does not utilize any sub-modules.");

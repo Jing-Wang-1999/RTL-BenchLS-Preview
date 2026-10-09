@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6676b52b170eae61aba08466c1d7e1764a8372b3c95d80da7ef22d5d60576315.txt","module mg_07696(input clk,input ce,output ledalive);\nreg [9:0] counter = 0; \n  assign ledalive = counter[9]; \n  always @ (posedge clk) begin \n  if(ce) \n  counter <= counter + 1; \n  end \n endmodule");

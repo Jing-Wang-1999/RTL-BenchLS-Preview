@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/eb5baf443b1bceb4bf5d2573e1dba75c969ecfdb3308ee863e7745fcad99a183.txt","module mg_00569 (d, ena, q);\ninput d, ena; \n  output q; \n  reg q; \n  initial q = 1'b0; \n  always@ (d or ena) \n  begin \n  if (ena) \n  q <= d; \n  end \n endmodule");

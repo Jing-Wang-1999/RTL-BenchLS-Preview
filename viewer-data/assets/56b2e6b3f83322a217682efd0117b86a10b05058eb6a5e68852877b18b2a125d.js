@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/56b2e6b3f83322a217682efd0117b86a10b05058eb6a5e68852877b18b2a125d.txt","{\n  \"top\": {\n    \"module\": \"ct_idu_is_aiq_lch_rdy_2\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/32.openc910/C910_RTL_FACTORY/gen_rtl/idu/rtl/ct_idu_is_aiq_lch_rdy_2.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

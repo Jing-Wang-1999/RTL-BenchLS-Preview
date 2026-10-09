@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/508de837b96299d8ec42d27cc37891505787db83dbc6eba6ead38585f6163d9f.txt","# oh_nor4\n\n`oh_nor4` is a combinational four-input NOR array with parameter `DW = 1`. Inputs `a`, `b`, `c`, and `d` and output `z` are each `DW` bits wide. For every bit position, `z = ~(a | b | c | d)`. There is no clock, reset, state, or submodule.\n");

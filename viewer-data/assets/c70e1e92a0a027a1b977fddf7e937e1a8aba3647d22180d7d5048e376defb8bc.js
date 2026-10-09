@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c70e1e92a0a027a1b977fddf7e937e1a8aba3647d22180d7d5048e376defb8bc.txt","{\n  \"top_module\": \"hsci_mdec\",\n  \"mode\": \"sec\",\n  \"clock\": \"hsci_pclk\",\n  \"reset_expression\": \"!rstn\",\n  \"preprocessor_defines\": [],\n  \"ready_for_controls\": true,\n  \"notes\": \"Default parameters. Reset-first qualification.\"\n}\n");

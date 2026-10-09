@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/93ca83f1826de309dd35c264f1bbc37789727a8d90b0560857239f02df2b5ae0.txt","always @ *\nbegin\n    tag0_write_r = 1'b0;\n\n    // Cache flush\n    if (state_q == STATE_FLUSH)\n        tag0_write_r = 1'b1;\n    // Line refill\n    else if (state_q == STATE_REFILL)\n        tag0_write_r = axi_rvalid_i && axi_rlast_i && (replace_way_q == 0);\nend");

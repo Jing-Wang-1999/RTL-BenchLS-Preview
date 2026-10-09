@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/01174fae1507760e102ed1b688b402ef21b87f896309e05f56e7e87f6d6835da.txt","module DataMem (\n    input CLK,\n    input [31:0] DataAddress,\n    output reg [31:0] DataOut,\n    input [31:0] Datain,\n    input RD,\n    input WR\n);\n    // Data memory logic here\nendmodule");

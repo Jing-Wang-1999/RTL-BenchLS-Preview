@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d4fc06ecbd9beb81668b12be76da79763c74e9085d6ca3eb8fb9dafa400c8658.txt","module mg_00685 (output [(8 - 1):0] op,input clk,input ce,input clr);\nlocalparam [(8 - 1):0] const_value = 8'b00000000; \n  assign op = 8'b00000000; \n endmodule");

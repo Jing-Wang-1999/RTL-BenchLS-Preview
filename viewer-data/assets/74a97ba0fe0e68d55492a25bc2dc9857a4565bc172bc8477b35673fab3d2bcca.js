@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/74a97ba0fe0e68d55492a25bc2dc9857a4565bc172bc8477b35673fab3d2bcca.txt","{\n  \"top\": {\n    \"module\": \"sdspi\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/15.zet/cores/sdspi/rtl/sdspi.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

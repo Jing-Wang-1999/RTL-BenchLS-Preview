@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/342dab5f5eaecdf893baafcc6b65f64ceb30a99059898ab726f329d245af61f2.txt","{\n  \"top\": {\n    \"module\": \"mux4\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_06298.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

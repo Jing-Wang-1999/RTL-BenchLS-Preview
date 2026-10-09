@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2d9b641710e288736b29249cd81cd354e5d8f0f1fb4f566af229a1d0b3170c72.txt","module mg_00944 (output o,input a,input b);\nparameter [3:0] INIT = 4'h0; \n  parameter EQN = \"(A)\"; \n  wire [1:0] s1 = b ? INIT[ 3:2] : INIT[1:0]; \n  assign o = a ? s1[1] : s1[0]; \n endmodule");

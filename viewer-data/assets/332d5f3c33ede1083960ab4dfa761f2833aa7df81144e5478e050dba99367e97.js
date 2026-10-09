@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/332d5f3c33ede1083960ab4dfa761f2833aa7df81144e5478e050dba99367e97.txt","module mg_00770(a, b, c);\n(* LOC = \"P20 P19\" *) \n  input wire[1:0] a; \n  (* LOC = \"P18 P17\" *) \n  input wire[1:0] b; \n  (* LOC = \"P16 P15\" *) \n  output wire[1:0] c; \n  assign c = a & b; \n endmodule");

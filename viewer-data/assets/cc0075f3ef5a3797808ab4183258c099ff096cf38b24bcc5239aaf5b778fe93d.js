@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cc0075f3ef5a3797808ab4183258c099ff096cf38b24bcc5239aaf5b778fe93d.txt","always @(posedge wb_clk_i)\n    if( tip_addr_ack )\n      if(i2c_r_w_bit)\n        i2c_offset_r <= 8'h00;\n      else\n        i2c_offset_r <= 8'hff;\n    else if( i2c_ack_done )\n      i2c_offset_r <= i2c_offset_r + 1;");

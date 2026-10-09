@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/775bd58d5ac61d3f495db0bb0c3b2e7d654e5e9f41f59120b81b266f721a5d66.txt","module mg_01447 (input clk,output [1:0] count);\nwire clk; \n  reg[1:0] count; \n  initial \n  count = 0; \n  always @ ( negedge clk ) \n  count[0] <= ~count[0]; \n  always @ ( negedge count[0] ) \n  count[1] <= ~count[1]; \n endmodule");

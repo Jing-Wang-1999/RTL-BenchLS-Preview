@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4e3865ad54ba25accff7bd9999c38933b087cf6985fbdd86de7d6ab55664316e.txt","module mg_07580 (clk, d, q);\nparameter WIDTH = 32; \n  input clk; \n  input [WIDTH-1:0] d; \n  output [WIDTH-1:0] q; \n  reg [WIDTH-1:0] qr; \n  always @(posedge clk) \n  qr <= d; \n  assign q = qr; \n endmodule");

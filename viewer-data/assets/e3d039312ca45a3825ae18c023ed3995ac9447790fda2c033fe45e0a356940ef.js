@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e3d039312ca45a3825ae18c023ed3995ac9447790fda2c033fe45e0a356940ef.txt","module mg_07572 (\n    input wire in1,\n    input wire in2,\n    input wire in3,\n    output wire out\n);\n    parameter [7:0] PARAM = 8'b00000000;\n\n    assign out = PARAM[{in3, in2, in1}];\n\nendmodule");

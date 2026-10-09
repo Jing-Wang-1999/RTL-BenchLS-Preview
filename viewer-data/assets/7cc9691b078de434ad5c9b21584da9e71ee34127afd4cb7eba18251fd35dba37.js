@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7cc9691b078de434ad5c9b21584da9e71ee34127afd4cb7eba18251fd35dba37.txt","module csa(input a, b, c, output s, cout);\n    assign {cout, s} = a + b + c;\nendmodule");

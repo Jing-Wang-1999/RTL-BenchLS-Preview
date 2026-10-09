@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/014a3c2fd030b9a03d2a25f5a038be03c8556590bda26f193b3b3656bfcecd87.txt","module mg_06980(I, O);\ninput wire I; \n  output wire O; \n  parameter MODE=\"PASSTHROUGH\"; \n  generate if (MODE == \"PASSTHROUGH\") begin \n  assign O = I; \n  end else if (MODE == \"INVERT\") begin \n  NOT inverter(I, O); \n  end endgenerate \n endmodule");

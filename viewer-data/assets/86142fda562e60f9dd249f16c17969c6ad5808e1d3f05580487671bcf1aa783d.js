@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/86142fda562e60f9dd249f16c17969c6ad5808e1d3f05580487671bcf1aa783d.txt","The module outputs the logical OR of an isolation signal and an input signal. It has one parameter, PROP, which defaults to \"DEFAULT\". The module has two inputs: 'iso' for isolation and 'in' for the input signal. The output is 'out'. No sub-modules are allowed.");

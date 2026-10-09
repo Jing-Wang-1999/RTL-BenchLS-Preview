@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d96d2d05919ae445c83d4200cddf2e838c272cf18a6cd36752ce1bf7bc5a8e5b.txt","# SDP_Y_CORE_mgc_io_sync_v1\n\nThis combinational scalar pass-through has parameter `valid=0`, input `ld`, and output `lz`. At all times, `lz=ld`. The parameter has no effect. There is no clock, reset, state, latency, synchronization storage, or submodule.\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/93c935dd11ccc8b0b0d893e55d63351c79d42ad9784de13af672abaef7454ab7.txt","module mg_07121 (output reg Q0,output reg [1:0] Q1,input wire D0,input wire [1:0] D1,input wire CLK,input wire RST);\nalways @(posedge CLK or posedge RST) \n  if (RST) begin \n  Q0 <= 0; \n  Q1 <= 0; \n  end else begin \n  Q0 <= D0; \n  Q1 <= D1; \n  end \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4df0515d224acfdc2de0a217749ee818bfdbc54e472c5634de59c3ae920b2912.txt","Remove the stray semicolon after the IbexDuplicateInstrMatch ASSERT macro call.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8ffc0802dc8c9927a6a0625a86f4224815a002bb5dde4b08ec41a9403a7285e7.txt","module xor_gate(x, y, z);\n\tinput x, y;\n\toutput z;\n\tassign z = ~(x ^ y);\nendmodule");

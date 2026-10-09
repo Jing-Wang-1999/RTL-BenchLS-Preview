@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a37b0540399d329b1b4b8e0eaadfc6f6c753deedeab30d69dc25883f8c761859.txt","module mg_06077 (RST, VAL);\ninput RST; \n output VAL; \n reg VAL; \n always @ (RST or VAL) \n begin \n if (RST == 1) \n VAL=1'b0; \n end \n endmodule");

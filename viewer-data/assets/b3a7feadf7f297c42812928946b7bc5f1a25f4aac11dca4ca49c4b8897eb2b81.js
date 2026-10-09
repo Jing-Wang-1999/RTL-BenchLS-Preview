@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b3a7feadf7f297c42812928946b7bc5f1a25f4aac11dca4ca49c4b8897eb2b81.txt","module passwd_to_bin (in,out);\ninput [63:0] in;\noutput [63:0] out;\nwire [63:0] out;\nassign out = ((in & 64'h7f7f7f7f7f7f7f7f) << 1);\nendmodule");

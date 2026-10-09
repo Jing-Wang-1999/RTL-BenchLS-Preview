@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2df05874eadb9af999a9a00389855a463d61f5d0d6c3f1196e523a4d55bf3dc4.txt","{\n  \"top\": {\n    \"module\": \"compress_32\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/arithmetic/compress_32.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ea4c390a226ae5964ba7c202fa146e2b5fed220bce47142dad644fd9ad885511.txt","{\n  \"top\": {\n    \"module\": \"nios_system_cpu_jtag_debug_module_sysclk_logic\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_07311.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

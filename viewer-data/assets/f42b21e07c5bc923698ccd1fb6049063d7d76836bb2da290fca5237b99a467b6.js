@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f42b21e07c5bc923698ccd1fb6049063d7d76836bb2da290fca5237b99a467b6.txt","module SevenSegCA(\n    input [3:0] INPUTS,\n    output [6:0] OUTPUTS\n  );\n  // Seven segment display logic here\n  endmodule");

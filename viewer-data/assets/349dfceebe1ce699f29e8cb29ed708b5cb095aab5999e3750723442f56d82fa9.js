@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/349dfceebe1ce699f29e8cb29ed708b5cb095aab5999e3750723442f56d82fa9.txt","{\n  \"top\": {\n    \"module\": \"asc_hex_to_nybble\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/translation/asc_hex_to_nybble.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

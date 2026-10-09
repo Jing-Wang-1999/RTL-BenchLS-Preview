@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2b29ce701c6f74917b3d8a95d3069933aa817f41990878e6e323fb9e47e13a6c.txt","module i2s_transceiver (\n    input [7:0] l_data_tx,\n    input mclk,\n    input [7:0] r_data_tx,\n    input reset_n,\n    output sclk,\n    input sd_rx,\n    output sd_tx,\n    output ws\n);\n  // Add the logic in this module as required for your design.\nendmodule");

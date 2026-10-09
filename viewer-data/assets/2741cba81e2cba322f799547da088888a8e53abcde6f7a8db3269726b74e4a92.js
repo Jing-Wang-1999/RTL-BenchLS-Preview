@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2741cba81e2cba322f799547da088888a8e53abcde6f7a8db3269726b74e4a92.txt","module mg_06334(clk, setA, setB, y);\ninput clk, setA, setB; \n output y; \n reg mem [1:0]; \n always @(posedge clk) begin \n  if (setA) mem[0] <= 0; \n  if (setB) mem[0] <= 1; \n end \n assign y = mem[0]; \n endmodule");

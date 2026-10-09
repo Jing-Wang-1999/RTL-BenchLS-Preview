@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e1db6a306c23bc230f2067691361ae12ceabe782d1e1cb8398c560bdc49fe210.txt","module zet_fulladd16 (\n    input  [15:0] x,\n    input  [15:0] y,\n    input         ci,\n    output        co,\n    output [15:0] z,\n    input         s\n  );\n\n  // Continuous assignments\n  assign {co,z} = {1'b0, x} + {s, y} + ci;\nendmodule");

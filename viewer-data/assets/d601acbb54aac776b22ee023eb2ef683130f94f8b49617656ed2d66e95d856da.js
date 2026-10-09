@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d601acbb54aac776b22ee023eb2ef683130f94f8b49617656ed2d66e95d856da.txt","module mg_07291(clk, xstart, xend, realy, q);\nparameter SCREENWIDTH = 0; \n  parameter SCREENHEIGHT = 0; \n  input clk, xstart, xend; \n  input [9:0] realy; \n  output q; \n  assign q = xstart | xend | realy == 0 | realy == SCREENHEIGHT - 1; \n endmodule");

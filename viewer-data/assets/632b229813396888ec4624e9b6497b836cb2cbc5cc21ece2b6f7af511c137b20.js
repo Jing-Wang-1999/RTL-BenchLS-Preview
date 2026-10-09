@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/632b229813396888ec4624e9b6497b836cb2cbc5cc21ece2b6f7af511c137b20.txt","module rtlpp_02734(\n    input D0,\n    input D1,\n    input S0,\n    output O\n);\n\n    wire M0;\n    wire M1;\n\n    assign M0 = ~S0 & D0;\n    assign M1 = S0 & D1;\n    assign O = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

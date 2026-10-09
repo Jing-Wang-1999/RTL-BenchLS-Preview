@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e88f2d35beceb9c8e9a9aefb8344926ded54b1a161e241e10ebf310979750ac4.txt","module dff_se(input wire clk, input wire d, input wire se, input wire si, output reg q);\n    always @(posedge clk) begin\n        if (se)\n            q <= si;\n        else\n            q <= d;\n    end\nendmodule");

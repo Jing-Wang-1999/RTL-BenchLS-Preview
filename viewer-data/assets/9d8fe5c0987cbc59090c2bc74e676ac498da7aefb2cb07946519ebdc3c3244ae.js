@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9d8fe5c0987cbc59090c2bc74e676ac498da7aefb2cb07946519ebdc3c3244ae.txt","module rtlpp_01846 (\n   c_o, \n   a_i, b_i\n) ;\n   parameter dw = 8; // Assuming a default value for W_DATA\n   input [dw-1:0] a_i,b_i;\n   output [dw-1:0]  c_o;\n   assign c_o = a_i & b_i;\nendmodule");

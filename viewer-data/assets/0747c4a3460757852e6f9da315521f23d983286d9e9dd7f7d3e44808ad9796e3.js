@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0747c4a3460757852e6f9da315521f23d983286d9e9dd7f7d3e44808ad9796e3.txt","module asic_oai221 #(parameter PROP = \"DEFAULT\")   (\n    input  a0,\n    input  a1,\n    input  b0,\n    input  b1,\n    input  c0,\n    output z\n    );\n\n   assign z = ~((a0 | a1) & (b0 | b1) & (c0));\n\nendmodule");

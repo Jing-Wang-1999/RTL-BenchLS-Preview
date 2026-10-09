@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6079bcb75ef29042591d232175f7aeee2386265ed96406203f24fe18a8b3bc04.txt","module asic_mux2 #(parameter PROP = \"DEFAULT\")   (\n    input  d0,\n    input  d1,\n    input  s,\n    output z\n    );\n\n   assign z = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

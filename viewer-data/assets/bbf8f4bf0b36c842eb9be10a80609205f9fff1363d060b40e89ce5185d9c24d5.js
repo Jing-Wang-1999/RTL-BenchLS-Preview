@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bbf8f4bf0b36c842eb9be10a80609205f9fff1363d060b40e89ce5185d9c24d5.txt","module booth_radix4(\ninput\t[2:0]codes,\noutput\tzero,\noutput\tdouble,\noutput\tnegation\n);\nendmodule\n");

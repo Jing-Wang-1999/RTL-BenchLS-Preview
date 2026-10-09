@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c78a0db80a0d2dd5c200da9fd813b33ab96574bd3f4dd5b4ae2f2d84cc23cc88.txt","always @(posedge clk) begin\n    if (resetn == 1'b0) begin\n      enabled <= 1'b0;\n    end else if (enable == 1'b1) begin\n      enabled <= 1'b1;\n    end else if (addr_valid == 1'b0) begin\n      enabled <= 1'b0;\n    end\n  end");

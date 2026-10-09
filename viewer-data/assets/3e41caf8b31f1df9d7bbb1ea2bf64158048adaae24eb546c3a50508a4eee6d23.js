@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3e41caf8b31f1df9d7bbb1ea2bf64158048adaae24eb546c3a50508a4eee6d23.txt","{\n  \"top\": {\n    \"module\": \"fake_mario_nios2_gen2_0_cpu_debug_slave_tck_logic\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_09336.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ba17021ffbc018ccbb76eef606c0d3c3c29d6f2487a29a2bd4a694d2368058ee.txt","module mg_02623 (input wire [63:0]Data_A,input wire [63:0]Data_B,output reg [63:0]Result);\nalways @(*) \n  begin \n  Result <= Data_B + Data_A; \n  end \n endmodule");

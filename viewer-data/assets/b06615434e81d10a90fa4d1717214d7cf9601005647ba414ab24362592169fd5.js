@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b06615434e81d10a90fa4d1717214d7cf9601005647ba414ab24362592169fd5.txt","Make genvar-to-bin assignments explicitly match BIN_WIDTH to avoid strict VCS width errors.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

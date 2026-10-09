@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0298876c41302292cbdc2a707568a8cff8af6235d64cbc99a441c52a8d9ed57e.txt","This module performs a logical AND operation. It takes two inputs, 'a' and 'b', and produces an output 'y'. The output 'y' is true only if both inputs 'a' and 'b' are true. No sub-modules are allowed.");

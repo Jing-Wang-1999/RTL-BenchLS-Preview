@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2fb6f0ee1edc89c0e85c02069fc54e2121b4be5449b2ddb60ff0eb01ca245fac.txt","module carrier_mixer(if_sign, if_mag, carrier_sign, carrier_mag, mix_sign, mix_mag);\ninput if_sign;\ninput if_mag;\ninput carrier_sign;\ninput carrier_mag;\noutput mix_sign;\noutput [2:0] mix_mag;\n\n// Implement the logic of carrier_mixer here\nendmodule");

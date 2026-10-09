@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7b45b17a2383c4920fb70eebf29f3c59188773549b5f3c9c945043ef2d669130.txt","module mg_02118 (input d,clk,output reg q);\ninitial q <= 1'b0; \n  always @(negedge clk) q <= d; \n endmodule");

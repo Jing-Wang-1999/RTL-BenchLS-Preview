@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/76b5912d66ea4e40b3f4d751b324ed1be349a56e19ee2e6cad91082ea9257a90.txt","module mg_08849 (output [(1 - 1):0] op,input clk,input ce,input clr);\nassign op = 1'b1; \n endmodule");

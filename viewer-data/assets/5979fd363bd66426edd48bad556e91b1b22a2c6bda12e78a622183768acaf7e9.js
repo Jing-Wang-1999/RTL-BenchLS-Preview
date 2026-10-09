@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5979fd363bd66426edd48bad556e91b1b22a2c6bda12e78a622183768acaf7e9.txt","module mg_03605 (input d0, d1, d2, d3, d4,input [2:0] s,output reg y);\nalways @( * ) \n  case(s) \n  3'b000: y <= d0; \n  3'b001: y <= d1; \n  3'b010: y <= d2; \n  3'b011: y <= d3; \n  3'b100: y <= d4; \n  default: y <= 1'b0; \n  endcase \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b7f3062a784ab245baabad0f48484c1511e2ad3953fb08a871627b97abf24d3f.txt","module asic_dmux3 #(parameter PROP = \"DEFAULT\")   (\n    input  sel2,\n    input  sel1,\n    input  sel0,\n    input  in2,\n    input  in1,\n    input  in0,\n    output out\n    );\n\n   assign out = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

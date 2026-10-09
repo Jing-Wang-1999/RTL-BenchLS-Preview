@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6cb113b27e7ec6c57274c21972d8b5bd6acbd36a3f9ceadc111eae4b00791bae.txt","{\n  \"top\": {\n    \"module\": \"pattern_detect\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/pattern_detect.sv\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

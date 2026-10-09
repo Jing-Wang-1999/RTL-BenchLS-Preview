@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1416c5ff2060d9b41dc198f6ed182f32ec4edd301f4331006256f0ada74971dc.txt","{\n  \"top_module\": \"uart_rx\",\n  \"mode\": \"sec\",\n  \"clock\": \"clk_i\",\n  \"reset_expression\": \"!rstn_i\",\n  \"preprocessor_defines\": [],\n  \"ready_for_controls\": true,\n  \"notes\": \"Default parameters. Reset-first qualification.\"\n}\n");

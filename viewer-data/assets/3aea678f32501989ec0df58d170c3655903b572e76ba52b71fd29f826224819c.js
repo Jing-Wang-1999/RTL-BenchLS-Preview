@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3aea678f32501989ec0df58d170c3655903b572e76ba52b71fd29f826224819c.txt","module xor_gate(x, y, z);\n\tinput x, y;\n\toutput z;\n\tassign z = /* RTL_BENCHLS_MASK: restore expression */;\nendmodule");

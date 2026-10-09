@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1b3d9605b3c667b8bd512c1e51590ab0b267be6a98f498ee444841c623445d1f.txt","module autovcoder_034148(\n  input         clock,\n  input  [14:0] io_d,\n  output [14:0] io_q\n);\n\n  reg [14:0] sync_0;\n\n  always @(posedge clock) begin\n    sync_0 <= io_d;\n  end\n\n  assign io_q = sync_0;\n\nendmodule");

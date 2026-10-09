@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/945a40ca69392a9b01c22890e5fc7ad0b983bb1d940b41f65e4de5aa76361013.txt","module rtlpp_02734 (\n    input wire D0,\n    input wire D1,\n    input wire S0,\n    output wire O\n);\n    assign O = S0 ? D1 : D0;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/52f6aad1da2dc35f825f0d015f5aa30d4f560156de0fb8f750865568d1165c7f.txt","{\n  \"clock\": \"clk\",\n  \"mode\": \"sec\",\n  \"reset_expression\": \"rst\",\n  \"script\": \"equivalence.tcl\",\n  \"script_sha256\": \"4850c644b6afd1082fc74ad4188b471ca7ebb155ad13679a34a06064e501fb71\",\n  \"top_module\": \"adder\"\n}\n");

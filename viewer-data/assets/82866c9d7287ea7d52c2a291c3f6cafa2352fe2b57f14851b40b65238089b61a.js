@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/82866c9d7287ea7d52c2a291c3f6cafa2352fe2b57f14851b40b65238089b61a.txt","{\n  \"top\": {\n    \"module\": \"blockram\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/pacoblaze-2.2/pacoblaze/blockram.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

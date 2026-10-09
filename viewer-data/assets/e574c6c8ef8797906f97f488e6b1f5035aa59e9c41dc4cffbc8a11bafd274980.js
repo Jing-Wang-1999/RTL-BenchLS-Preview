@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e574c6c8ef8797906f97f488e6b1f5035aa59e9c41dc4cffbc8a11bafd274980.txt","module mg_05572(clk, rst, y);\ninput clk, rst; \n output y; \n reg [3:0] counter; \n always @(posedge clk) \n  case (1'b1) \n  rst, counter == 9: \n  counter <= 0; \n  default: \n  counter <= counter+1; \n  endcase \n assign y = counter == 12; \n endmodule");

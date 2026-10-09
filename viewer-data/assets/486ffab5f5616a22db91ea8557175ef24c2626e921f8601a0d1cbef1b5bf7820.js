@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/486ffab5f5616a22db91ea8557175ef24c2626e921f8601a0d1cbef1b5bf7820.txt","# oh_ao31\n\n`oh_ao31` is a combinational AND-OR array with parameter `DW = 1`. Inputs `a0`, `a1`, `a2`, and `b0` and output `z` are each `DW` bits wide. Its bitwise function is `z = (a0 & a1 & a2) | b0`. There is no clock, reset, state, or submodule.\n");

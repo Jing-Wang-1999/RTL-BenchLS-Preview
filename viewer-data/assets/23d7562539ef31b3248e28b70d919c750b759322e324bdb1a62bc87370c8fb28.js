@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/23d7562539ef31b3248e28b70d919c750b759322e324bdb1a62bc87370c8fb28.txt","module mg_10452 (out0,in0);\ninput in0; \n output [5:0] out0; \n parameter [5:0] ident0 = 0; \n parameter [5:0] ident1 = 5'h11; \n reg [5:0] out0; \n always @ (in0) \n  begin \n  if(in0) \n  out0 = ident0; \n  else \n  out0 = ident1; \n  end \n endmodule");

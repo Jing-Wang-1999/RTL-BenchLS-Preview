@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8667aec6ffa41b647c3a0ee288d961313b455da80b40e8fdc79812cb76eb7129.txt","module mg_01380 (input wire EX_MemRead,input wire [4:0] rs,input wire [4:0] rt,input wire [4:0] EX_rt,output reg Stall);\nalways @* \n  if (EX_MemRead && ((EX_rt == rs) || (EX_rt == rt))) begin \n  Stall = 1; \n  end \n  else begin \n  Stall = 0; \n  end \n endmodule");

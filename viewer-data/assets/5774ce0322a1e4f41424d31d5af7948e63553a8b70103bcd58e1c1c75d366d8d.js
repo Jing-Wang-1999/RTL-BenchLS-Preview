@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5774ce0322a1e4f41424d31d5af7948e63553a8b70103bcd58e1c1c75d366d8d.txt","module CDP_ICVT_chn_data_in_rsci_unreg (\n  in_0, outsig\n);\n  input in_0;\n  output outsig;\n\n\n\n  // Interconnect Declarations for Component Instantiations \n  assign outsig = /* RTL_BENCHLS_MASK: restore expression */;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/345da3c8054f5a553e047c72a88ba17132b753e1da7806fef8ff3a92b6f8ba1c.txt","{\n  \"top\": {\n    \"module\": \"gpio_slave\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/10.analog-hdl/projects/common/fm87/gpio_slave.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

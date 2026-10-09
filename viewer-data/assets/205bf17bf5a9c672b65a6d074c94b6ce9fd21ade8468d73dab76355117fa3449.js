@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/205bf17bf5a9c672b65a6d074c94b6ce9fd21ade8468d73dab76355117fa3449.txt","module sirv_aon_porrst(\n  output porrst_n\n);\n\n  `ifdef FPGA_SOURCE//{\n      // In FPGA, we have no PORRST circult\n      assign porrst_n = 1'b1;\n  `else //}{\n      assign porrst_n = 1'b1;\n\n  `endif//}\n\n\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/dbc8d81042389ef9d5e297209b4932786d71e82a7d446a51a2eeeccb5fdad879.txt","--- src/lab_10_tiny_os/boot_rom.v\n+++ src/lab_10_tiny_os/boot_rom.v\n@@ -4108,6 +4108,6 @@\n     end\n \n     always @(posedge clk) begin\n-        spo <= rom[a];\n+        spo <= ~rom[a];\n     end\n endmodule\n");

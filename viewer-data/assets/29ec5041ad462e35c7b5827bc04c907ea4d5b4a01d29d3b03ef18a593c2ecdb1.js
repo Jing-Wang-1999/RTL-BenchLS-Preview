@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/29ec5041ad462e35c7b5827bc04c907ea4d5b4a01d29d3b03ef18a593c2ecdb1.txt","{\n  \"top\": {\n    \"module\": \"frequency_monitor\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/debug/frequency_monitor.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

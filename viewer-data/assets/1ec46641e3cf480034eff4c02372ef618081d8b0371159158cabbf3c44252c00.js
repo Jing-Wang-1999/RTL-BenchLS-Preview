@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1ec46641e3cf480034eff4c02372ef618081d8b0371159158cabbf3c44252c00.txt","module mg_04586 (x, y);\ninput [31:0] x; \n  output [31:0] y; \n  assign y[31:29] = x[6:4] ^ x[17:15]; \n  assign y[28:0] = {x[3:0], x[31:7]} ^ {x[14:0],x[31:18]} ^ x[31:3]; \n endmodule");

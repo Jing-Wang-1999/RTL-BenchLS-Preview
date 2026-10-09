@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/12ead1e71e4867a46907e7617da1a3bd6c4657c37ef2e2b436611e66021db732.txt","{\n  \"top\": {\n    \"module\": \"vga_palette_regs\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/15.zet/cores/vga/rtl/vga_palette_regs.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7ada907a0eb8a2fa0178c0af2c0b2f4f6f3e78ca3656cfad8f60bb19d351c28b.txt","always @(posedge clk) begin\n    if (reset)\n      index <= 0;\n    else if (penable && !stalled) begin\n      if (jmp)\n        index <= din;\n      else\n        index <= index == pend ? wrap_target : index + 1;\n    end\n  end");

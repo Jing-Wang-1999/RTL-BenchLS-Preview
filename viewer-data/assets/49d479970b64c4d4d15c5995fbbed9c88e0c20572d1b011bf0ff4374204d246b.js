@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/49d479970b64c4d4d15c5995fbbed9c88e0c20572d1b011bf0ff4374204d246b.txt","module okTriggerIn(ok1, ok2, ep_addr, ep_clk, ep_trigger);\n\tinput  [30:0] ok1;\n\toutput [16:0] ok2;\n\tinput  [7:0]  ep_addr;\n\tinput         ep_clk;\n\toutput [15:0] ep_trigger;\n\n\t// Actual implementation\nendmodule");

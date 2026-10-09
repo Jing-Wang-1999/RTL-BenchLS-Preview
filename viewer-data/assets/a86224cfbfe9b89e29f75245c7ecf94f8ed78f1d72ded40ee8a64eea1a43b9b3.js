@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a86224cfbfe9b89e29f75245c7ecf94f8ed78f1d72ded40ee8a64eea1a43b9b3.txt","module mg_01465(input [4:0] a, input signed [7:0] b, output signed [15:0] p);\nwire signed [12:0] pt; \n wire signed [5:0] ta; \n assign ta = a; \n assign pt = b * ta; \n assign p=pt; \n endmodule");

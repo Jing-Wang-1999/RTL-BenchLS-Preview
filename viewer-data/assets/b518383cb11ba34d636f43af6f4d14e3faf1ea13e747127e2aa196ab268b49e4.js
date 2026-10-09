@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b518383cb11ba34d636f43af6f4d14e3faf1ea13e747127e2aa196ab268b49e4.txt","module mg_06107 (input wire logic clk, input wire logic inp,output wire logic[16:0] arr_out);\nlogic[16:0] arr; \n always begin \n  arr[15:0] <= arr[16:1]; \n  @(clk); wait(clk == 1'b1); \n end \n assign arr[16] = inp; \n assign arr_out = arr; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cdd2a0ad27a10ff3f2c5cd6870320159f7e75f8eff8764fef74d8c391c0d0609.txt","module mg_09311(input eai_csr_valid,output eai_csr_ready,input [31:0] eai_csr_addr,input eai_csr_wr,input [31:0] eai_csr_wdata,output [31:0] eai_csr_rdata,input clk,input rst_n);\nassign eai_csr_ready = 1'b1; \n  assign eai_csr_rdata = 32'b0; \n endmodule");

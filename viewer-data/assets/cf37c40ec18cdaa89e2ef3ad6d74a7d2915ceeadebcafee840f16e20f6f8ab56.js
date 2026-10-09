@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cf37c40ec18cdaa89e2ef3ad6d74a7d2915ceeadebcafee840f16e20f6f8ab56.txt","always @(posedge clk) begin\n    if (resetn == 1'b0) begin\n      id <= 'h0;\n    end else if (state == STATE_REWIND_ID) begin\n      id <= rew_id;\n    end else if (incr_id == 1'b1) begin\n      id <= id_next;\n    end\n  end");

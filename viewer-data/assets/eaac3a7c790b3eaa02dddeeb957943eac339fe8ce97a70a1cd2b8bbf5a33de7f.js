@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/eaac3a7c790b3eaa02dddeeb957943eac339fe8ce97a70a1cd2b8bbf5a33de7f.txt","module mg_01989 (\n    input signed [31:0] a,\n    input signed [31:0] b,\n    input clk,\n    input ce,\n    input clr,\n    output reg op\n);\n    always @* begin\n        op = (a > b);\n    end\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/645530295dcc55f118cff97af4d89266feb4f5aac5184eddc15d78b933395d59.txt","module baud_gen \n(\n\tclock, reset, \n\tce_16, baud_freq, baud_limit \n);\ninput \t\t\tclock;\ninput \t\t\treset;\noutput\t\t\tce_16;\ninput\t[11:0]\tbaud_freq;\ninput\t[15:0]\tbaud_limit;\nendmodule\n");

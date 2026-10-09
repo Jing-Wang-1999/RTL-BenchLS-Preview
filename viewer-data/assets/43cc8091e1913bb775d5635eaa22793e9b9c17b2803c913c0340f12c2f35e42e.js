@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/43cc8091e1913bb775d5635eaa22793e9b9c17b2803c913c0340f12c2f35e42e.txt","module mg_07159 (output Y,input A,input B,input C,input D);\nparameter [15:0] INIT = 16'h0; \n  assign Y = INIT >> {D, C, B, A}; \n endmodule");

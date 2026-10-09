@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b8759dd3295e08dcf905d045e694485fbf8969bcf5e2f1b453dd001d7ea9d9c4.txt","module dividor (clk, inp, rst, out);\ninput clk;\ninput [32-1:0] inp;\ninput rst;\noutput  reg [32-1:0] out;\nendmodule\n");

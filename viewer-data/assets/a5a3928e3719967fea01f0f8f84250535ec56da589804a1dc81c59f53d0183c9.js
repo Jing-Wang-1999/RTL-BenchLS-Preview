@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a5a3928e3719967fea01f0f8f84250535ec56da589804a1dc81c59f53d0183c9.txt","module asic_xnor4 #(parameter PROP = \"DEFAULT\")   (\n    input  a,\n    input  b,\n    input  c,\n    input  d,\n    output z\n    );\n\n   assign z =  /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

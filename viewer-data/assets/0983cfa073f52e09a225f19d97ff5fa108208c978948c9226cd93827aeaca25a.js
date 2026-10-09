@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0983cfa073f52e09a225f19d97ff5fa108208c978948c9226cd93827aeaca25a.txt","module mg_07248 ( clk, ld, d, q );\ninput clk; \n  input ld; \n  input [63:0] d; \n  output [63:0] q; \n  reg [63:0] q; \n `ifdef RANDOM_INIT \n  initial \n  $random_init(\"q\"); \n `endif \n  always @(posedge clk) begin \n  if (ld) \n  q <= d; \n  end \n endmodule");

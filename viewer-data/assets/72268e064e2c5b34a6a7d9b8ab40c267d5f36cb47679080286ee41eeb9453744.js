@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/72268e064e2c5b34a6a7d9b8ab40c267d5f36cb47679080286ee41eeb9453744.txt","{\n  \"top\": {\n    \"module\": \"memory\",\n    \"file\": \"<upstream-pool>/rtl_w_verification/4.fifo/rtl/fifo.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

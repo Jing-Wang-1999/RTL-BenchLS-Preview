@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c3256bb58faeebf86bddec8d9bb95b92d0c0949835c0292e75dd10b6d38aafe8.txt","{\n  \"top\": {\n    \"module\": \"rtlpp_00186\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_00186.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"UART\"\n  ]\n}");

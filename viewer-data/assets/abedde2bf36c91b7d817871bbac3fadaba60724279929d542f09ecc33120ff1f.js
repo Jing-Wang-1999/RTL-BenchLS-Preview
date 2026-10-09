@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/abedde2bf36c91b7d817871bbac3fadaba60724279929d542f09ecc33120ff1f.txt","module mg_06988 (clk,xvecin,xvecout);\ninput clk; \n  input wire [1:0] xvecin; \n  output wire [1:0] xvecout; \n  assign xvecout = {xvecin[0], clk}; \n endmodule");

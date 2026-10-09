@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7527b0b86436294d60e6efddfc9c0a9cfc0ea4b61c09627dbe54383adb030575.txt","always @(posedge clk) begin\n    if (reset)\n      val <= 0;\n    else if (penable && !stalled) begin\n      if (set)\n        val <= din;\n      else if (dec)\n        val <= val - 1;\n    end\n  end");

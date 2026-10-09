@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/667437d50b9b7dc374689421049a5a77cdb8739e7906f9e68919762bc2d0e659.txt","module CDMA_chn_alu_in_rsci_unreg (\n  in_0, outsig\n);\n  input in_0;\n  output outsig;\n\n\n\n  // Interconnect Declarations for Component Instantiations \n  assign outsig = in_0;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8a70d0764d92a7eca0cc2b36dad3aec67ccfc9c2b6507dd89761a7f8c1d0f701.txt","always @(posedge clk) begin\n    if (resetn == 1'b0) begin\n      active <= 1'b0;\n    end else if (req_valid == 1'b1) begin\n      active <= 1'b1;\n    end else if (fifo_eot_beat == 1'b1) begin\n      active <= 1'b0;\n    end\n  end");

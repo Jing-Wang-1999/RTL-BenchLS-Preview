@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/eb15593baefe0ace3ce1caf1e377b51730390a0de5511c05af88e174a743c4f1.txt","module rtlpp_03838 (input a, input b, output y);\n    assign y = /* RTL_BENCHLS_MASK: restore expression */;\nendmodule");

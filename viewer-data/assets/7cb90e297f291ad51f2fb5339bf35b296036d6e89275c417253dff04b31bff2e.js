@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7cb90e297f291ad51f2fb5339bf35b296036d6e89275c417253dff04b31bff2e.txt","module rtlpp_02523(X, Y, Z, S, C);\n  output C;\n  output S;\n  input X;\n  input Y;\n  input Z;\n  assign C = (X & Y) | (Y & Z) | (Z & X);\n  assign S = X ^ Y ^ Z;\nendmodule");

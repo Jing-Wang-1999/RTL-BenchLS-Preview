@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/45529e7de0cf30ada621e7a739ea3dd00eb6ddf38ecbc77daa389d8868c2bb46.txt","module oh_xor3 #(parameter DW = 1 ) // array width\n   (\n    input [DW-1:0]  a,\n    input [DW-1:0]  b,\n    input [DW-1:0]  c,\n    output [DW-1:0] z\n    );\n   \n   assign z =  a ^ b ^ c;\n   \nendmodule");

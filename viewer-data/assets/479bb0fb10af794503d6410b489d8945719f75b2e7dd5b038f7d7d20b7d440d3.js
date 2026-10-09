@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/479bb0fb10af794503d6410b489d8945719f75b2e7dd5b038f7d7d20b7d440d3.txt","module asic_muxi3 #(parameter PROP = \"DEFAULT\")   (\n    input  d0,\n    input  d1,\n    input  d2,\n    input  s0,\n    input  s1,\n    output z\n    );\n\n   assign z = ~((d0 & ~s0 & ~s1) |\n\t\t(d1 & s0  & ~s1) |\n\t\t(d2 & s1));\n\nendmodule");

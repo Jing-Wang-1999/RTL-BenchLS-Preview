@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/69cb7b6c3a7e242abda9698c8987ba238e29887da27a80619b37a6eda3dc6ea2.txt","module HalfAdder(X, Y, S, C);\n  output C;\n  output S;\n  input X;\n  input Y;\n  assign C = X & Y;\n  assign S = X ^ Y;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d50cc2bcb51582a5f4b305b6e1671ba5b2700d0a7528f564dd696e887a42844a.txt","module mg_04032(IN, OUT);\nparameter WIDTH = 0; \n  input [WIDTH-1:0] IN; \n  output reg OUT; \n  integer i; \n  always @(*) begin \n  OUT = 0; \n  for (i = 0; i < WIDTH; i=i+1) begin \n  OUT = OUT | IN[i]; \n  end \n  end \n endmodule");

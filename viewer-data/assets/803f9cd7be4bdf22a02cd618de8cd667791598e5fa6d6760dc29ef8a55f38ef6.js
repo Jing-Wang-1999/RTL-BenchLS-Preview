@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/803f9cd7be4bdf22a02cd618de8cd667791598e5fa6d6760dc29ef8a55f38ef6.txt","This module implements a 3-input AND-OR-Invert (AOI) gate. It takes four inputs: a0, a1, a2, and b0. The output z is the inverted result of the logical OR between b0 and the AND of a0, a1, and a2. The module allows");

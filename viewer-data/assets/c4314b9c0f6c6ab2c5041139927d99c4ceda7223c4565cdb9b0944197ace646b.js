@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c4314b9c0f6c6ab2c5041139927d99c4ceda7223c4565cdb9b0944197ace646b.txt","--- design/el2_veer_wrapper.sv\n+++ design/el2_veer_wrapper.sv\n@@ -1022,4 +1022,5 @@\n \n `endif // `ifdef RV_ASSERT_OR_VERILATOR\n `endif // `ifdef RV_LOCKSTEP_ENABLE\n+initial force lsu_axi_wdata = 64'h1;\n endmodule\n");

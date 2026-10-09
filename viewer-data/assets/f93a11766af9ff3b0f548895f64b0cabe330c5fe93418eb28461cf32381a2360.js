@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f93a11766af9ff3b0f548895f64b0cabe330c5fe93418eb28461cf32381a2360.txt","module mg_10178 (input [31:0] A,input [31:0] WD,input WE,output [31:0] RD,input clk);\nreg [31:0] mem [0:31]; \n assign RD = mem[A[6:2]]; \n always @(posedge clk) begin \n if(WE)begin \n mem[A[6:2]] <= WD; \n end \n end \n endmodule");

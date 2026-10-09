@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0492b524c0eccc320d0e19978c936437a6c513b4792ed94ebddfb81746ea53f1.txt","module NAND2(I0, I1, O);\n    input I0;\n    input I1;\n    output O;\n\n    assign O = ~(I0 & I1);\nendmodule");

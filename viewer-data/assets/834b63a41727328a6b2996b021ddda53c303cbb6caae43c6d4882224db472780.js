@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/834b63a41727328a6b2996b021ddda53c303cbb6caae43c6d4882224db472780.txt","{\n  \"top\": {\n    \"module\": \"mg_04237\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/MG-Verilog_sec_input/designs/mg_04237.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8ec3884820c609a31dd15a66ca8306972c57c9289f4b05fac7a17b578e921ce4.txt","This module maps specific bits from a 15-bit input to an 11-bit output. The output bit 0 is driven by input bit 2. Output bits 1 through 10 are driven by input bits 4 through 14, respectively. Input bits 0, 1, 3, and 7 are not used. The mapping is purely combinational.");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/33d31d59b24b2797a144e2b8add8ffd04552e9251b76ed6414a861877f276116.txt","module mg_01641 (input wire [31:0] pc,output wire [31:0] pc_plus_four);\nassign pc_plus_four = pc + 4; \n endmodule");

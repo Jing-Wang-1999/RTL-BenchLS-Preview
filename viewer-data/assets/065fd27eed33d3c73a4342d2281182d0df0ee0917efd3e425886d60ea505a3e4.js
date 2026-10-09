@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/065fd27eed33d3c73a4342d2281182d0df0ee0917efd3e425886d60ea505a3e4.txt","{\n  \"top\": {\n    \"module\": \"sim_clk_gen_0\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_07746.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0d4686340b2aeb25fa08672649e4827c2d6cefacb98865b077b32d78199ad368.txt","{\n  \"top\": {\n    \"module\": \"comparator2bit\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_01984.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

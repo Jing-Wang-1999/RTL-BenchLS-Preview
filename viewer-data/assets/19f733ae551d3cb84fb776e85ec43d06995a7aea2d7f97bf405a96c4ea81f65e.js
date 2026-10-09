@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/19f733ae551d3cb84fb776e85ec43d06995a7aea2d7f97bf405a96c4ea81f65e.txt","{\n  \"top\": {\n    \"module\": \"single_port_ram\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/dual_port_single_port_ram_templates/Verilog/single_port_ram.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"Write\"\n  ]\n}");

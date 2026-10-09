@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b220354a41707300694eae2ef1c4ff488f192beb63283dcd9120318ab482e7c9.txt","module SDP_Y_CORE_cfg_alu_src_rsc_triosy_obj_unreg (\n  in_0, outsig\n);\n  input in_0;\n  output outsig;\n\n\n\n  // Interconnect Declarations for Component Instantiations \n  assign outsig = in_0;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/22ed7c28ba21635bdaed3357888ec8b4cee75d09c652bef8afe7510f3518e3e2.txt","bram picorv32_regs\n  init 0\n  abits 5\n  dbits 32\n  groups 2\n  ports  2 1\n  wrmode 0 1\n  enable 0 1\n  transp 0 0\n  clocks 1 1\n  clkpol 1 1\nendbram\n\nmatch picorv32_regs\n  make_transp\nendmatch\n");

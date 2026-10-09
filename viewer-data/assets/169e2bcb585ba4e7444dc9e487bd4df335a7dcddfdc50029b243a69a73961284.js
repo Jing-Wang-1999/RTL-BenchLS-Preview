@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/169e2bcb585ba4e7444dc9e487bd4df335a7dcddfdc50029b243a69a73961284.txt","module mg_04477(DATA0X0,DATA1X0,RESULT0);\ninput DATA0X0; \n input DATA1X0; \n output RESULT0; \n assign RESULT0 = DATA1X0 ^ DATA0X0; \n endmodule");

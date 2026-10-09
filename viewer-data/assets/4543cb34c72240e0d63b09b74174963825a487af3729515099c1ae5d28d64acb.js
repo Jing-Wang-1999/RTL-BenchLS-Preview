@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4543cb34c72240e0d63b09b74174963825a487af3729515099c1ae5d28d64acb.txt","module mg_05748 (inout pad,input ena,input data);\nassign pad = ~(ena ? data : 1'bz); \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9f43fc9aa5077a2ae356c51c38cdb55f86ea0c783a60ee60ede9b26640167ef1.txt","Replace obsolete LSU grant/response assertions with checks for the states that can accept a response.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

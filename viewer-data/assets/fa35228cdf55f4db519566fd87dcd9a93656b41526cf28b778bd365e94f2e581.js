@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fa35228cdf55f4db519566fd87dcd9a93656b41526cf28b778bd365e94f2e581.txt","module blk_mem_gen_0_0 (\n        input [11:0] addra,\n        input clka,\n        output [7:0] douta,\n        input ena\n    );\n        // ROM memory logic for inimg\n    endmodule");

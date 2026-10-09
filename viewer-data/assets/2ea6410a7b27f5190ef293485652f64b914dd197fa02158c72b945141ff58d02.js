@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2ea6410a7b27f5190ef293485652f64b914dd197fa02158c72b945141ff58d02.txt","{\n  \"clock\": \"clk\",\n  \"mode\": \"sec\",\n  \"reset_expression\": \"!reset_n\",\n  \"script\": \"equivalence.tcl\",\n  \"script_sha256\": \"61eb0a0a70cb134e699f59fb0304d94215b5d2b4fccbb01bb9bf2b617c02ffa1\",\n  \"top_module\": \"rtlpp_10999\"\n}\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/60422a58bde2566a606257894c2880b7a261357ede215ce2613436322c8f776c.txt","{\n  \"passed\": true,\n  \"score\": 0.5,\n  \"fixed_total\": 2,\n  \"separate_session_descendants\": {\n    \"7\": \"absent\",\n    \"8\": \"absent\"\n  },\n  \"killed_pids\": [\n    6,\n    7,\n    8\n  ]\n}");

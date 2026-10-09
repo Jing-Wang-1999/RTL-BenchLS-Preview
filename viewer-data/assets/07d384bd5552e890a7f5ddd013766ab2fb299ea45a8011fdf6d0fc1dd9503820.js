@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/07d384bd5552e890a7f5ddd013766ab2fb299ea45a8011fdf6d0fc1dd9503820.txt","module mux_4to1(\n    input d0,\n    input d1,\n    input d2,\n    input d3,\n    input [1:0] sel,\n    output y\n    );\n\n    assign y = (sel == 2'b00) ? d0 :\n               (sel == 2'b01) ? d1 :\n               (sel == 2'b10) ? d2 :\n               d3;\nendmodule");

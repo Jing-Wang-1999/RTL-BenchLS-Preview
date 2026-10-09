@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/40356ba771c17cdb7f26191f385dd4953e154caae16ca0e936213c4734d07cbd.txt","Explicitly declare fifo_empty and remove the unused implicit fifo_full connection.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

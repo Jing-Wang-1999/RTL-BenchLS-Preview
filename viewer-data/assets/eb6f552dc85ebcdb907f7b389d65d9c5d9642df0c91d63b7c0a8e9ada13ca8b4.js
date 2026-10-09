@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/eb6f552dc85ebcdb907f7b389d65d9c5d9642df0c91d63b7c0a8e9ada13ca8b4.txt","{\n  \"top\": {\n    \"module\": \"mg_02411\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/MG-Verilog_sec_input/designs/mg_02411.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"altera_dpram_16x32\",\n    \"xilinx_dist_ram_16x32\"\n  ]\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bd580845184d65cf3c69fcce2d1578880d9d0cc7e7748bca850541bb443eed0d.txt","always @(*)\n  begin\n    if (run_s[0] & ~run_s[1])\n      // timer is starting, set toggle high\n      tgl_n = 1'b1;\n    else if (run_s[1])\n      // Toggle on underflow if timer still running\n      tgl_n = tgl_r ^ pls_o;\n    else\n      tgl_n = tgl_r;\n  end");

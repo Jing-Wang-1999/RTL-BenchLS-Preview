@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8a5c6b024dc3276778c3c4cb9ce41fb2c19b4cef82494ca2125707b115a9f98a.txt","module mg_10101(clock, counter);\ninput clock; \n output reg [7:0] counter; \n always @(posedge clock) \n  counter <= counter + 1; \n endmodule");

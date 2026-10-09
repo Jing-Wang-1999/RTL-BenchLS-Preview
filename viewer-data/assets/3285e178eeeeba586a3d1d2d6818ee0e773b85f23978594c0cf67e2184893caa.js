@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3285e178eeeeba586a3d1d2d6818ee0e773b85f23978594c0cf67e2184893caa.txt","module mg_00906 (in, out);\ninput in; \n  output out; \n  assign out = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

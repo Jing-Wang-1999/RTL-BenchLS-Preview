@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a89dab0907e2322c1f30b858da7f08d179379587f64d212be2273d6d535e1a6a.txt","module mg_01578 (op,din,dout);\ninput [1:0] op; \n  input [15:0] din; \n  output [31:0] dout; \n  assign dout=(op==2'b00)?{16'h0,din}: \n  (op==2'b01&&din[15]==1'b1)?{16'hffff,din}: \n  (op==2'b01&&din[15]==1'b0)?{16'h0000,din}: \n  {din,16'h0}; \n endmodule");

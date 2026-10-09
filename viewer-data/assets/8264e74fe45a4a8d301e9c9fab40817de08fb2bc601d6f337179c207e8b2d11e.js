@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8264e74fe45a4a8d301e9c9fab40817de08fb2bc601d6f337179c207e8b2d11e.txt","always @(posedge clk or posedge rst)\nbegin\n  if (rst) begin\n    cycle <= #1 2'b0;\n    tmp_mul <= #1 16'b0;\n  end else begin\n    if (enable) cycle <= #1 cycle + 2'b1;\n    tmp_mul <= #1 mul_result;\n  end\nend");

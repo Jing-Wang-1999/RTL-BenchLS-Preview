@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e4baefa887a5f629d0cc60e7c0b00579401ade6aae10c595a975fa652b491d15.txt","module oh_nand4 #(\n    parameter DW = 1\n) (\n    input  [DW-1:0] a,\n    input  [DW-1:0] b,\n    input  [DW-1:0] c,\n    input  [DW-1:0] d,\n    output [DW-1:0] z\n);\n    assign z = ~(a & b & c & d);\nendmodule");

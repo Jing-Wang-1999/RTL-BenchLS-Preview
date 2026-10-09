@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/10d9b5ab52bf2af114b6469cb8b367cc3a6d0bd4a20034791b845c638bd64b24.txt","module mg_07443( clk, iA, iC, ioS );\ninput clk, iA, iC ; \n  inout ioS ; \n  assign ioS = (iC) ? iA : 'bz ; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c26f10fce5513d48cb134e95c6a6e02ea801a457b77a162b5ec75dc26c5a2dc2.txt","Resolve the usbdev RX FIFO threshold width warning with an explicit correctly sized expression.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

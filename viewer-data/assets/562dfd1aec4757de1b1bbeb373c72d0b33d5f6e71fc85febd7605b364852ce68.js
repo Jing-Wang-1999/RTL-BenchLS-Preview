@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/562dfd1aec4757de1b1bbeb373c72d0b33d5f6e71fc85febd7605b364852ce68.txt","module ColorBin2Channels\n#(\n    parameter NUM_CHANNELS = 3,\n    parameter CHANNEL_WIDTH = 8\n)\n(\n    input  logic b,\n    output logic [NUM_CHANNELS*CHANNEL_WIDTH-1:0] channels\n);\n    assign channels = {NUM_CHANNELS*CHANNEL_WIDTH{b}};\nendmodule");

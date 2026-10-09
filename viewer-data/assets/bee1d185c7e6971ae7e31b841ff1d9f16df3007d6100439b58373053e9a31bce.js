@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bee1d185c7e6971ae7e31b841ff1d9f16df3007d6100439b58373053e9a31bce.txt","module mg_04680 ( a, b, soma, cout);\ninput a, b; \n  output soma, cout; \n  assign soma = a ^ b; \n  assign cout = ~(a * b); \n endmodule");

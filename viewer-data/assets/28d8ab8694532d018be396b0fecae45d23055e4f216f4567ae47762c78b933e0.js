@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/28d8ab8694532d018be396b0fecae45d23055e4f216f4567ae47762c78b933e0.txt","module mg_07357 (\n    input wire d0,\n    input wire d1,\n    input wire d2,\n    input wire clk,\n    input wire ce,\n    input wire clr,\n    output wire y\n);\n    assign y = d0 & d1 & d2;\nendmodule");

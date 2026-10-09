@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/67fb3608bca8ef343c061d3fe4fa46bfbe328f92efbbd06f25c9b5646e639392.txt","Use UCB-BAR's RISC-V Torture Test Generator to test PicoRV32.\n\nYou might need to install the following addition dependecies:\n\nsudo apt-get install python3-pip\npip3 install numpy\n");

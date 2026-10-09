@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/638fbb5ed4e9cdc0ac5f48827f3249aa1953909dd2ca18554259439b1c03b00d.txt","module SDP_X_cfg_mul_prelu_rsc_triosy_obj_unreg (\n  in_0, outsig\n);\n  input in_0;\n  output outsig;\n\n\n\n  // Interconnect Declarations for Component Instantiations \n  assign outsig = /* RTL_BENCHLS_MASK: restore expression */;\nendmodule");

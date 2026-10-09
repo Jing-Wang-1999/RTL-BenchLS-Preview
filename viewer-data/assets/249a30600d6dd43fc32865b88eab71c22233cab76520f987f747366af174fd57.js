@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/249a30600d6dd43fc32865b88eab71c22233cab76520f987f747366af174fd57.txt","module mg_01908(input clk_50mhz,output reg clk_1hz);\nreg [31:0] count; \n  always @(posedge clk_50mhz) \n  begin \n  count <= count + 1; \n  if(count == 2500000) begin \n  count <= 0; \n  clk_1hz <= ~clk_1hz; \n  end \n  end \n  endmodule");

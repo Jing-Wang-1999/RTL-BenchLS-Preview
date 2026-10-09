@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e53f3f1a08081796cefab7aa61b3d5aee1ab2ab41adc554bf421ef6c94efa878.txt","module MUX(A, B, MUX_Reg, MUX_Sel);\n  input [7:0] A;\n  input [7:0] B;\n  output [7:0] MUX_Reg;\n  input MUX_Sel;\n\n  // Define MUX behavior here...\nendmodule");

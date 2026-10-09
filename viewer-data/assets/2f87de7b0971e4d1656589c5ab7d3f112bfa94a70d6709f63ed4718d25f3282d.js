@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2f87de7b0971e4d1656589c5ab7d3f112bfa94a70d6709f63ed4718d25f3282d.txt","module mg_06576 (gated_clk, clk, clken);\noutput gated_clk; \n  input clk, clken; \n  reg clken_latched; \n  assign gated_clk = clk & clken_latched ; \n  wire clkb = ~clk; \n  always_latch @(clkb or clken) \n  if(clkb) clken_latched = clken; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6e15ab53106bc4b55c02992f817259a9140d7ab61b9b93d3f0e2e20d04568924.txt","module eth_xcvr_pll (\n    input  wire pll_refclk0,\n    output wire tx_serial_clk,\n    output wire pll_locked,\n    output wire pll_cal_busy\n);\n\n// Insert the internal logic of eth_xcvr_pll here\n\nendmodule");

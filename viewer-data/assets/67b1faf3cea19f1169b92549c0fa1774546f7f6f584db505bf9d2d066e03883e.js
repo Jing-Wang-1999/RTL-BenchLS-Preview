@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/67b1faf3cea19f1169b92549c0fa1774546f7f6f584db505bf9d2d066e03883e.txt","{\n  \"base_commit\": \"d4cadf5d2b74c0ae72a0f03d8130a519de1e2962\",\n  \"changed_paths\": [\n    \"hw/ip/otbn/rtl/otbn_loop_controller.sv\"\n  ],\n  \"provisioning_status\": \"pinned base available locally\",\n  \"repository\": \"lowRISC/opentitan\"\n}\n");

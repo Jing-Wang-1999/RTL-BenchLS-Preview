@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/35e44136b5a65011fe8f91fd12022fd60dccf6f8bcc6a03f3e8496237213889c.txt","module bd_0482_xsdbm(input clk, bscanid_en, capture, drck, reset, runtest, sel, shift, tck, tdi, tms, update, output tdo);\n  // The logic inside the xsdbm goes here\nendmodule");

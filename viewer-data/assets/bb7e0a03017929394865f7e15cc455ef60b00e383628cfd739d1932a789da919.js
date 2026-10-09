@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bb7e0a03017929394865f7e15cc455ef60b00e383628cfd739d1932a789da919.txt","module okWireOut(ok1, ok2, ep_addr, ep_datain);\n\tinput  [30:0] ok1;\n\toutput [16:0] ok2;\n\tinput  [7:0]  ep_addr;\n\tinput  [15:0] ep_datain;\n\n\t// Actual implementation\nendmodule");

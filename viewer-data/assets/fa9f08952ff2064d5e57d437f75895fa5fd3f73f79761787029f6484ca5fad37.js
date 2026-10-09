@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fa9f08952ff2064d5e57d437f75895fa5fd3f73f79761787029f6484ca5fad37.txt","module mg_02107(sctag_cpx_data_buf_pa,sctag_cpx_data_pa);\noutput [144:0] sctag_cpx_data_buf_pa; \n  input [144:0] sctag_cpx_data_pa; \n  assign sctag_cpx_data_buf_pa = sctag_cpx_data_pa; \n endmodule");

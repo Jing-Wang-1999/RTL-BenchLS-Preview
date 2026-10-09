@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/547a4b84cbf2d499bd0f4c9e373f867ecf770b20ee54d182eabc69b0feeb0cbd.txt","module design_1_rst_clk_wiz_100M_0(input aux_reset_in, input dcm_locked, input ext_reset_in, input mb_debug_sys_rst, output peripheral_reset, input slowest_sync_clk);\n  // Reset module logic here\nendmodule");

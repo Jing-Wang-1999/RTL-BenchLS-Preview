@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3ee9a35762ff023a58dfb74fc3bd613fbeabf2c256176586c3fa2566cfb0ae87.txt","module foo(z, a, b, c, d);\noutput reg z;\ninput a, b, c, d;\nreg q;\n\n  always @ (posedge d)\n    q <= a & b | c;\n\n  always @ (posedge d)\n    z <= q ^ c; \n\nendmodule");

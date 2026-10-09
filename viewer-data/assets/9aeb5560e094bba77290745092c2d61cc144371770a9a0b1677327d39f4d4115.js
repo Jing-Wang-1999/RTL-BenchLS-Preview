@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9aeb5560e094bba77290745092c2d61cc144371770a9a0b1677327d39f4d4115.txt","module sbox (data_o,data_i);\noutput reg [3:0] data_o;\ninput  wire [3:0] data_i;\nendmodule\n");

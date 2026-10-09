@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/eebe42b547b66107ddde9422257e2d4e1c9aa54c6ef939dc179870167ff09943.txt","module mg_10125(clock,eleventh,twelfth,out5);\ninput clock; \n input eleventh; \n input twelfth; \n output out5; \n reg out5; \n reg temp6; \n always @(posedge clock) \n begin \n  temp6 <= eleventh ^ twelfth; \n  out5 <= temp6 | twelfth; \n end \n endmodule");

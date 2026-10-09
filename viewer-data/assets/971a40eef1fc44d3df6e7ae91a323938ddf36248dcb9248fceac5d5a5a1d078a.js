@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/971a40eef1fc44d3df6e7ae91a323938ddf36248dcb9248fceac5d5a5a1d078a.txt","[\n  {\n    \"functional_pass\": false,\n    \"reason\": \"candidate compile failed\",\n    \"status\": \"invalid_model_output\",\n    \"unit_id\": \"hazard\"\n  }\n]\n");

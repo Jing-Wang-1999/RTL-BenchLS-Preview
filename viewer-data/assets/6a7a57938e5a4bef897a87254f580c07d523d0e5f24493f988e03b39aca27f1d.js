@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6a7a57938e5a4bef897a87254f580c07d523d0e5f24493f988e03b39aca27f1d.txt","# asic_clkor2\n\nThis combinational two-input OR gate has parameter `PROP=\"DEFAULT\"`, scalar inputs `a` and `b`, and scalar output `z`. At all times, `z=a|b`. PROP has no effect. There is no clock, reset, state, latency, or submodule.\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d7be622640d874b523f751dba4cf9122c3c442e39585d5e3a3f755b131d4a717.txt","A simple test firmware. This code is in the public domain. Simply copy whatever\nyou can use.\n");

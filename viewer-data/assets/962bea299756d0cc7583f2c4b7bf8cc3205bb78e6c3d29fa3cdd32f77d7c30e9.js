@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/962bea299756d0cc7583f2c4b7bf8cc3205bb78e6c3d29fa3cdd32f77d7c30e9.txt","{\n  \"base_commit\": \"719e263118cb7da28a295345d70868230ed39907\",\n  \"changed_paths\": [\n    \"hw/ip/rv_core_ibex/rtl/rv_core_ibex.sv\"\n  ],\n  \"provisioning_status\": \"pinned base available locally\",\n  \"repository\": \"lowRISC/opentitan\"\n}\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2a052cd8743909562f44c3253866890e3bd7b8df3b5f23c984d5fd55f31d5b02.txt","module oh_ao311 #(parameter DW = 1) (\n    input  [DW-1:0] a0,\n    input  [DW-1:0] a1,\n    input  [DW-1:0] a2,\n    input  [DW-1:0] b0,\n    input  [DW-1:0] c0,\n    output [DW-1:0] z\n);\n    assign z = (a0 & a1 & a2) | b0 | c0;\nendmodule");

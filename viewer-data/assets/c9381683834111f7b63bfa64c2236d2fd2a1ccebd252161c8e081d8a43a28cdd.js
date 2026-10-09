@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c9381683834111f7b63bfa64c2236d2fd2a1ccebd252161c8e081d8a43a28cdd.txt","module carrier_nco (\n    input clk, input rstn, input tic_enable,\n    input [28:0] f_control,\n    output [31:0] carrier_val,\n    output carrier_i_sign, output carrier_i_mag,\n    output carrier_q_sign, output carrier_q_mag\n  );\n    // NCO logic\n  endmodule");

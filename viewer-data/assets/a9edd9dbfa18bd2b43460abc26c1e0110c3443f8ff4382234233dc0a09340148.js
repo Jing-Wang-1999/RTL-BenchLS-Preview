@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a9edd9dbfa18bd2b43460abc26c1e0110c3443f8ff4382234233dc0a09340148.txt","read design ./rtl/golden.v -SystemVerilog -Golden\nset root module izh_neuron_state -Golden\nread design ./rtl/revised.v -SystemVerilog -Revised\nset root module izh_neuron_state -Revised\nset system mode lec\nadd compared points -all\ncompare\nexit -force\n");

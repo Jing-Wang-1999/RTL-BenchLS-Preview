@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e93fc29d8c2d870ff3d3b19ab3948de15824e3d7e84cb2d965a298944433a7b3.txt","module SEnter_2_32(input [2:0] BTN, input clk, input [4:0] Ctrl, input [4:0] Din, output D_ready, output [31:0] Ai, output [31:0] Bi, output [7:0] blink, output readn);\n   // Implement the logic for the SEnter_2_32 module\n   // ...\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e94e0dfbacd1ac418e200d0ef3e5d531f4f9ed91c37ca02b16a55b72bac42aba.txt","Avoid reporting coverage holes for checks disabled by AddrCheck/EnableCheck and other intentionally unsupported coverage items.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

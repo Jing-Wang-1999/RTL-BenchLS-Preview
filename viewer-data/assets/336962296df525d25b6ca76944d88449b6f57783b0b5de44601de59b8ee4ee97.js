@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/336962296df525d25b6ca76944d88449b6f57783b0b5de44601de59b8ee4ee97.txt","module SubBytes(\n    input [127:0] Inputs,\n    output [127:0] Outputs\n  );\n  // SubBytes logic here\n  endmodule");

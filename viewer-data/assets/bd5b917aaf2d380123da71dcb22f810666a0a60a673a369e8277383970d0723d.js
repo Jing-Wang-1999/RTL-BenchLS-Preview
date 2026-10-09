@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bd5b917aaf2d380123da71dcb22f810666a0a60a673a369e8277383970d0723d.txt","`timescale 1ns / 1ps\n\nmodule aludec(\n    input wire[5:0] funct,\n    input wire[2:0] aluop,\n    output reg[3:0] alucontrol,\n    output reg jr\n    );\nendmodule\n");

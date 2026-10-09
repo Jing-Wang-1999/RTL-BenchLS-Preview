@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/20c8a98bd09eb8b62f6b8373a4f879c877d1fdb69415c231293ece2eb10a1dd9.txt","{\n  \"top\": {\n    \"module\": \"gearbox_66_20\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/communication/gearbox_66_20.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

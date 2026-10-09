@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/79b3373e3a565c0c398bb3ad16bf1e2d36a94313a9dd652bdc573c49a86a70cf.txt","{\n  \"top\": {\n    \"module\": \"sbox4\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/crypto/des/sboxes.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/dd8b49d74bf2dcf5b193640ddaf66545fd1a91d9f7138542175254b46e953936.txt","module mg_05607 (\n    input [4:0] n,\n    input ena,\n    output reg [31:0] e\n);\n    always @(*) begin\n        if (ena) begin\n            e = 32'b0;\n            e[n] = 1'b1;\n        end else begin\n            e = 32'b0;\n        end\n    end\nendmodule");

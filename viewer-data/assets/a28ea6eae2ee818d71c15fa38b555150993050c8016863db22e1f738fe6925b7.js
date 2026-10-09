@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a28ea6eae2ee818d71c15fa38b555150993050c8016863db22e1f738fe6925b7.txt","module asic_aoi31 (\n    input wire a0,\n    input wire a1,\n    input wire a2,\n    input wire b0,\n    output wire z\n);\n    assign z = ~((a0 & a1 & a2) | b0);\nendmodule");

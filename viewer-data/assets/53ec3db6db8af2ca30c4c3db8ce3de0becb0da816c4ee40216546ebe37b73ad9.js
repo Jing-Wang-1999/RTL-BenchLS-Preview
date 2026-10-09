@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/53ec3db6db8af2ca30c4c3db8ce3de0becb0da816c4ee40216546ebe37b73ad9.txt","module sbox(data_o, data_i);\n  output wire [3:0] data_o;\n  input wire [3:0] data_i;\n  // Interface only: implement the behavior in the required RTL path.\nendmodule\n");

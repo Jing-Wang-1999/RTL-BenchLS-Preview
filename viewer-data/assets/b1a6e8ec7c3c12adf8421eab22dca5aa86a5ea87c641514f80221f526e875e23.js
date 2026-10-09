@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b1a6e8ec7c3c12adf8421eab22dca5aa86a5ea87c641514f80221f526e875e23.txt","# [dv,sensor_ctrl] Fix WE_ONEHOT_ERROR assertion\n\nThe ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT macro incorrectly uses alert_tx_o[0], which is for recoverable alerts. This causes top-level escalation tests to fail.\n");

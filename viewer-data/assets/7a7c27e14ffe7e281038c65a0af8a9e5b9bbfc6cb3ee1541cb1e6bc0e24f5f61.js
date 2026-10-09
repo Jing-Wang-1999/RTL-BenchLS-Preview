@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7a7c27e14ffe7e281038c65a0af8a9e5b9bbfc6cb3ee1541cb1e6bc0e24f5f61.txt","module DataCombin3(i0, i1, i2, o);\n\n\tparameter data_width = 1;\n\n\tinput[data_width - 1 : 0] i0, i1, i2;\n\toutput[3 * data_width - 1 : 0] o;\n\n\tassign o = {i2, i1, i0};\n\nendmodule");

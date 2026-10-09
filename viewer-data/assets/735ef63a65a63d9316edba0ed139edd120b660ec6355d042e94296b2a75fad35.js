@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/735ef63a65a63d9316edba0ed139edd120b660ec6355d042e94296b2a75fad35.txt","module asic_nor4 #(parameter PROP = \"DEFAULT\")   (\n    input  a,\n    input  b,\n    input  c,\n    input  d,\n    output z\n    );\n\n   assign z = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

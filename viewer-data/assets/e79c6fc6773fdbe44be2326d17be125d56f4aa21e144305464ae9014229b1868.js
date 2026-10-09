@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e79c6fc6773fdbe44be2326d17be125d56f4aa21e144305464ae9014229b1868.txt","module full_adds(a, b, c_ins, sums, c_outs);\n  input a, b, c_ins;\n  output sums, c_outs;\n\n  assign sums = a ^ b ^ c_ins;\n  assign c_outs = (a & b) | (c_ins & (a ^ b));\nendmodule");

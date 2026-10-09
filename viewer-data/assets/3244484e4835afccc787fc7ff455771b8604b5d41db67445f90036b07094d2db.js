@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3244484e4835afccc787fc7ff455771b8604b5d41db67445f90036b07094d2db.txt","module mg_07575(CLK_IN, PREEDGE, CLK_OUT);\ninput CLK_IN; \n  output PREEDGE; \n  output CLK_OUT; \n  wire CLK_OUT; \n  wire PREEDGE; \n  assign CLK_OUT = ! CLK_IN ; \n  assign PREEDGE = 1 ; \n endmodule");

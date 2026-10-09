@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/92adc2b6f03b7357f372b2cf794e992cfb313130aed6050e3901210feca0ca4b.txt","module asic_clkor2 #(parameter PROP = \"DEFAULT\")   (\n    input  a,\n    input  b,\n    output z\n    );\n\n   assign z = ~(a | b);\n\nendmodule");

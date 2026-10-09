@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b72094ee8a7996a3da1193422f0fa616b72f2dd783763d4061ed66e5d650f41c.txt","module CDP_ICVT_mgc_in_wire_v1 (d, z);\n\n  parameter integer rscid = 1;\n  parameter integer width = 8;\n\n  output [width-1:0] d;\n  input  [width-1:0] z;\n\n  wire   [width-1:0] d;\n\n  assign d = z;\n\nendmodule");

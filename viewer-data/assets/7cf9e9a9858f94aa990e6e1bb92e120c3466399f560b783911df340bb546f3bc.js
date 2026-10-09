@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7cf9e9a9858f94aa990e6e1bb92e120c3466399f560b783911df340bb546f3bc.txt","module epoch_counter (\n    input clk, input rstn, input tic_enable, input dump_enable,\n    input epoch_enable, input [10:0] epoch_load,\n    output [10:0] epoch, output [10:0] epoch_check\n  );\n    // Epoch counter logic\n  endmodule");

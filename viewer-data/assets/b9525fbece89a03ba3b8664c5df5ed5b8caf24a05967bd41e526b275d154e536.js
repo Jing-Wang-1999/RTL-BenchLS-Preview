@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b9525fbece89a03ba3b8664c5df5ed5b8caf24a05967bd41e526b275d154e536.txt","module mg_10397(op, leds);\ninput op; \n  output reg [0:6] leds; \n  always @(op) \n  if (op == 0) begin \n  leds = 7'b1111000; \n  end else begin \n  leds = 7'b1111110; \n  end \n endmodule");

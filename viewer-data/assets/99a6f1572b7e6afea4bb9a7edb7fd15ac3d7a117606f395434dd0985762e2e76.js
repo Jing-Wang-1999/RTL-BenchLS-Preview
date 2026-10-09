@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/99a6f1572b7e6afea4bb9a7edb7fd15ac3d7a117606f395434dd0985762e2e76.txt","{\n  \"top\": {\n    \"module\": \"time_slice_gen\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/24.openwifi-hw/ip/xpu/src/time_slice_gen.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

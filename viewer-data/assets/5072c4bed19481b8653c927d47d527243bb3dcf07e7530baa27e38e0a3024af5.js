@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5072c4bed19481b8653c927d47d527243bb3dcf07e7530baa27e38e0a3024af5.txt","module mg_07255 (vref_impctl, vddo);\noutput vref_impctl; \n  input vddo; \n assign vref_impctl = 1'b1; \n endmodule");

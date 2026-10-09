@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8b972161b5ceb817bff204e4a919752fb4c78d234a5ba8f1bf09fd8ec04af73d.txt","module  SDFQD1 (\n\t SI\n\t,D\n\t,SE\n\t,CP\n\t,Q\n\t);\n\ninput\t SI ;\ninput\t D ;\ninput\t SE ;\ninput\t CP ;\noutput\t Q ;\nreg Q;\n\nassign sel = SE ? SI : D;\n\nalways @(posedge CP)\nbegin\n    Q <= sel;\nend\nendmodule");

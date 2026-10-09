@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7bb21e8ba5d72fbffe8ca03d817b9c398871799f06fee28be2162b482d1f5c07.txt","module mg_00106(in,vrefcode,vdd18);\ninput vdd18; \n input [7:1] in; \n output [7:0] vrefcode; \n assign vrefcode[7:0] = {in[7:1],1'b0}; \n endmodule");

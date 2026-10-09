@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b8018190d23bd10ead33dbd6546d08f7ab94a6bc790d9510912c2180785c6e09.txt","module oks8_sra (\n   c_o, \n   a_i\n) ;\n   parameter dw = 8; // Assuming a default value for W_DATA\n   input [dw-1:0] a_i;\n   output [dw:0]  c_o;\n   assign c_o = /* RTL_BENCHLS_MASK: restore expression */;\nendmodule");

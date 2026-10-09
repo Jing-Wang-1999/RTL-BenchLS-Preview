@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/88b0242eae662c4833d6c1652ee2e05412ec354a29342903957ce0fcf7cb365b.txt","This module performs a logic operation on three inputs: a0, a1, and b0. It computes the output z by first OR-ing a0 and a1, then AND-ing the result with b0, and finally negating the entire expression. The module supports parameterized array width for inputs and output.");

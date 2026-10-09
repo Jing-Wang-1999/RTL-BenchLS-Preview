@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b222b030dc4a80fd64f76ee2e8ae686ffca989a801ee2bf76e3aced3d8662be6.txt","module mg_00377(pcx_spc_grant_bufpdl_pa,pcx_spc_grant_bufp1_pa_l);\noutput [4:0] pcx_spc_grant_bufpdl_pa; \n  input [4:0] pcx_spc_grant_bufp1_pa_l; \n  assign pcx_spc_grant_bufpdl_pa = ~pcx_spc_grant_bufp1_pa_l; \n endmodule");

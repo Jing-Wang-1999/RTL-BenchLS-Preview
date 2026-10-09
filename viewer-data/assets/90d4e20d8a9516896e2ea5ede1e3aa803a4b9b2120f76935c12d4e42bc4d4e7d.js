@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/90d4e20d8a9516896e2ea5ede1e3aa803a4b9b2120f76935c12d4e42bc4d4e7d.txt","module mg_07250(input wire IN0,input wire IN1,input wire IN2,input wire IN3,output wire OUT);\nparameter [15:0] INIT = 0; \n  assign OUT = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

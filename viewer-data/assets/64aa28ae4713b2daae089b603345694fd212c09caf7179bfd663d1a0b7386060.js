@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/64aa28ae4713b2daae089b603345694fd212c09caf7179bfd663d1a0b7386060.txt","module BUFG (\n    input I,\n    output O\n);\n    // Implementation for BUFG goes here\nendmodule");

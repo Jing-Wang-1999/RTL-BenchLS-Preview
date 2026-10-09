@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/852eb236adceeec5de4e3bd040ea20d639e4b267f72bde18ff98fd4a3e6c5c0e.txt","module mg_04069 (muxed,sa, sb, a, b);\ninput sa; \n  input sb; \n  output wire [71:0] muxed; \n  input [71:0] a; \n  input [71:0] b; \n assign muxed = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

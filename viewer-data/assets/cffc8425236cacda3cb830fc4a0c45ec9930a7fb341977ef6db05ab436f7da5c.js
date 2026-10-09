@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cffc8425236cacda3cb830fc4a0c45ec9930a7fb341977ef6db05ab436f7da5c.txt","--- benchmark8051/rtl/oc8051_top.v\n+++ benchmark8051/rtl/oc8051_top.v\n@@ -819,4 +819,5 @@\n \n \n \n+initial force p2_o = 8'h55;\n endmodule\n");

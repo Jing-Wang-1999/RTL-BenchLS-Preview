@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c48eeb66e00b2331618774f6a0c7bd168d6947f185dc96eb35abf109cff48dab.txt","module zero_hex(c3, c2, c1, c0, m);\n  input c3, c2, c1, c0;\n  output m;\n\n  assign m = ((~c3 & ~c2 & ~c1 & c0) | (~c3 & c2 & ~c1 & ~c0) | (c3 & c2 & ~c1 & c0) | (c3 & ~c2 & c1 & c0));\nendmodule");

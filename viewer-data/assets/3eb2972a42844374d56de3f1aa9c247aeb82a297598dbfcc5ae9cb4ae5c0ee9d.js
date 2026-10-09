@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3eb2972a42844374d56de3f1aa9c247aeb82a297598dbfcc5ae9cb4ae5c0ee9d.txt","module mg_07718 (input x_i,input y_i,input z_i,output c_o,output s_o);\nassign {c_o,s_o} = x_i + y_i + z_i; \n endmodule");

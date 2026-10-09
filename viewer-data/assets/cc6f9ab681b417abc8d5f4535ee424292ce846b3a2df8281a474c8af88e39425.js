@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cc6f9ab681b417abc8d5f4535ee424292ce846b3a2df8281a474c8af88e39425.txt","module mg_00492(input io_valid_0,output io_chosen,input io_ready);\nwire choose; \n  assign io_chosen = ~(choose); \n  assign choose = io_valid_0 ? 1'h0 : 1'h1; \n endmodule");

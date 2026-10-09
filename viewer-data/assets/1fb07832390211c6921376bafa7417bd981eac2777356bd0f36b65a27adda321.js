@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1fb07832390211c6921376bafa7417bd981eac2777356bd0f36b65a27adda321.txt","module sky130_fd_sc_ls__dlxtp (\n    input wire D,\n    input wire GATE,\n    output reg Q\n);\n\nalways @(posedge GATE) begin\n    Q <= D;\nend\n\nendmodule");

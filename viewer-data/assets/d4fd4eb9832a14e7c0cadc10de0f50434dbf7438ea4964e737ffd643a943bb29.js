@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d4fd4eb9832a14e7c0cadc10de0f50434dbf7438ea4964e737ffd643a943bb29.txt","module mg_07164(input CLK, input CE, input sr_input, output pushPop_out);\nparameter INSTANCE_NAME=\"INST\"; \n  assign pushPop_out = sr_input; \n endmodule");

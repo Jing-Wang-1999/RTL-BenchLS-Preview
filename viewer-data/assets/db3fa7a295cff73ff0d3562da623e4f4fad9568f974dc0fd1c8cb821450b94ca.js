@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/db3fa7a295cff73ff0d3562da623e4f4fad9568f974dc0fd1c8cb821450b94ca.txt","module mg_02453(in0, in1, out);\ninput [7:0] in0; \n  input [7:0] in1; \n  output [15:0] out; \n  wire signed [7:0] in1; \n  wire signed [7:0] in0; \n  wire signed [15:0] out; \n  assign out = $signed({1'b0, in0}) * in1; \n endmodule");

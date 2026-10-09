@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0b65eec5b3043c3ee9a2faac2a8531ce9aa8da3a91d8ae8458ce0898ae049e44.txt","This module is a basic arithmetic unit that performs addition. It takes two binary inputs, 'a' and 'b'. It outputs 'soma', the sum of 'a' and 'b', using XOR logic, and 'cout', the carry-out, using AND logic. No sub-modules are allowed.");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0251fcfd582c95d775f8e67619ba47c259026ccfc0bd07ebf274057eaa9b762a.txt","{\n  \"top\": {\n    \"module\": \"ready_skid\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/storage/ready_skid.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"sink\",\n    \"source\"\n  ]\n}");

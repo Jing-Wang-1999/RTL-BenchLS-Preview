@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d4f69077e9328bd7df6c6762a215b7fccd57ed79ba87ce86bbe380bc4ad7e4ea.txt","module mg_09365(input wire clk,output wire [8:0] cnt);\nreg [8:0] contador = 9'b0; \n  assign cnt = contador; \n  always @(negedge clk) \n  contador <= (contador==9'h19f)? 9'b0 : contador+1; \n endmodule");

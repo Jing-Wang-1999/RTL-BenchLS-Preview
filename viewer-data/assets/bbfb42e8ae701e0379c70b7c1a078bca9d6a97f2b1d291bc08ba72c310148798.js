@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bbfb42e8ae701e0379c70b7c1a078bca9d6a97f2b1d291bc08ba72c310148798.txt","module mg_08651(input clk,input cen,input zero,output reg [4:0] cnt);\nreg last_zero; \n always @(posedge clk) if(cen) begin : proc_cnt \n  last_zero <= zero; \n  cnt <= (zero&&!last_zero) ? 5'd1 : cnt + 5'b1; \n end \n endmodule");

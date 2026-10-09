@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/df38c1416a7a3a0d1402942bd19f36aede41379a9b46a01e40dd56958a01dd3b.txt","{\n  \"bench\": \"verification/top/test_pyuvm/Makefile\",\n  \"command\": [\n    \"make\",\n    \"WAVES=0\",\n    \"COVERAGE_TYPE=\",\n    \"BUILD_ARGS=-j2\"\n  ],\n  \"returncode\": 0,\n  \"timeout\": false,\n  \"seconds\": 2.3701083660125732\n}");

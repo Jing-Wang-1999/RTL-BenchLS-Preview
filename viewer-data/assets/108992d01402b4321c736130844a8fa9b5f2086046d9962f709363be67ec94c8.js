@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/108992d01402b4321c736130844a8fa9b5f2086046d9962f709363be67ec94c8.txt","module mg_01185(inout wire TO, input wire D, input wire E, input wire CLK);\nreg save; \n  assign TO = E? save : 2'bz; \n  always @(posedge CLK) \n  save <= D; \n endmodule");

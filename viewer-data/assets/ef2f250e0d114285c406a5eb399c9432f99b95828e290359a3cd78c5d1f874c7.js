@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ef2f250e0d114285c406a5eb399c9432f99b95828e290359a3cd78c5d1f874c7.txt","module comparator_0(\n   input [26:0] a,\n   input [26:0] b,\n   output c\n);\n  assign c = (a < b) ? 1'b1 : 1'b0;\nendmodule");

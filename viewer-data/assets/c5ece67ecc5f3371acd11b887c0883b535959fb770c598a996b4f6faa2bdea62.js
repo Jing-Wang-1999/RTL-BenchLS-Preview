@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c5ece67ecc5f3371acd11b887c0883b535959fb770c598a996b4f6faa2bdea62.txt","module mg_07448 (clk, rst, d, q, ena);\ninput clk, rst, ena; \n  output q; \n  reg q; \n  input d; \n  always @(posedge clk or posedge rst) begin \n  if (rst == 1) begin \n  q <= 0; \n  end else if (ena) begin \n  q <= d; \n  end \n  end \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d52df69414d52974a1b2202ca9153b59b9f0580fd36633a9093a8d4e92d4dd23.txt","{\n  \"top\": {\n    \"module\": \"oh_dpram\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/31.oh/stdlib/rtl/oh_dpram.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"Memory\",\n    \"macro\",\n    \"rd_count\"\n  ]\n}");

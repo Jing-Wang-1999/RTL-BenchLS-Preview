@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6eb1aa408da55ce99894974ef8c1fd285786d84145a2f304908c7760d7523fdb.txt","module mg_00364 (\n    input [3:0] din_a,\n    input [3:0] din_b,\n    input [3:0] din_c,\n    output [3:0] dout\n);\n    assign dout = din_a + din_b;\nendmodule");

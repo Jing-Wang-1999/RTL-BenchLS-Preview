@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/13ee8c5b4aaa5104cea467cf226551b464ba383e52887e5058da9df7edc85e24.txt","module cla_full_adder(\n\t\tinput\ta,\n\t\tinput\tb,\n\t\tinput\tc,\n\t\toutput\tg,\n\t\toutput\tp,\n\t\toutput\ts);\n\n\tassign g = a & b;\n\tassign p = a ^ b;\n\tassign s = a ^ (b ^ c);\n\nendmodule");

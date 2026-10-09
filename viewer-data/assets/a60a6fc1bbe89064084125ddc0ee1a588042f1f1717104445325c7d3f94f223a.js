@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a60a6fc1bbe89064084125ddc0ee1a588042f1f1717104445325c7d3f94f223a.txt","always @(posedge req_clk)\n  begin\n    if (state == STATE_ZERO_COMPL) begin\n      measured_burst_length <= {BYTES_PER_BURST_WIDTH{1'b1}};\n    end else if (state == STATE_ACC) begin\n      measured_burst_length <= req_response_dest_data_burst_length;\n    end\n  end");

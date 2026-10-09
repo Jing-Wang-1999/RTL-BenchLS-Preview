@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9a483ba9c76299c792fa8494e79484c064f0709636cfa8e4744dfc9124258655.txt","localparam RESP_OKAY = 2'b00;\nlocalparam RESP_EXOKAY = 2'b01;\nlocalparam RESP_SLVERR = 2'b10;\nlocalparam RESP_DECERR = 2'b11;\n");

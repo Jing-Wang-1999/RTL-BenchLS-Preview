@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ab370199fd264c776e575f82958fcb200847987829fdadb324c49aba39a965b2.txt","A simple example for how to use Yosys to \"pre-synthesize\" PicoRV32 in\na way that can utilize an external memory module for the register file.\n\nSee also:\nhttps://github.com/cliffordwolf/picorv32/issues/30\n");

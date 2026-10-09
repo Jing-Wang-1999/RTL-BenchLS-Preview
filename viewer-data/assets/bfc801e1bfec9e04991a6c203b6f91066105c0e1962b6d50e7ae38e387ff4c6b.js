@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bfc801e1bfec9e04991a6c203b6f91066105c0e1962b6d50e7ae38e387ff4c6b.txt","module right_shift_arithmetic(\n    input signed [31:0] n1,\n    input signed [31:0] n2,\n    output [31:0] out\n);\n\n    assign out = n1 >>> n2;\nendmodule");

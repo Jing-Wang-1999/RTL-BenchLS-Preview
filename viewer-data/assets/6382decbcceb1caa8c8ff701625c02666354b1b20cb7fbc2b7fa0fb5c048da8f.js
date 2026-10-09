@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6382decbcceb1caa8c8ff701625c02666354b1b20cb7fbc2b7fa0fb5c048da8f.txt","module mg_07253(input wire IN, output wire OUT);\nassign OUT = IN; \n  parameter BANDWIDTH_KHZ = 1; \n endmodule");

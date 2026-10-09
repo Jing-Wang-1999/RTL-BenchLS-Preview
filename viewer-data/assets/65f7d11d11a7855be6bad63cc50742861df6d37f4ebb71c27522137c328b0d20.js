@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/65f7d11d11a7855be6bad63cc50742861df6d37f4ebb71c27522137c328b0d20.txt","# Module Specification: mg_00600\n\nThis module is a constant output generator with control inputs. It continuously outputs the fixed 8-bit value 11001000 (binary) on the op port, regardless of input states. The module accepts a clock signal (clk), chip enable (ce),");

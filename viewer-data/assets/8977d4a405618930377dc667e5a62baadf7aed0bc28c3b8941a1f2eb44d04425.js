@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8977d4a405618930377dc667e5a62baadf7aed0bc28c3b8941a1f2eb44d04425.txt","module mg_02887(WGET, WVAL);\nparameter width = 1; \n  input [width - 1 : 0] WVAL; \n  output [width - 1 : 0] WGET; \n  assign WGET = WVAL; \n endmodule");

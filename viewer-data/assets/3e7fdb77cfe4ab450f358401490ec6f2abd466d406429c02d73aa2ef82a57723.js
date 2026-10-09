@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3e7fdb77cfe4ab450f358401490ec6f2abd466d406429c02d73aa2ef82a57723.txt","Allow simultaneous loop-stack push/pop only when the hardware raises the specified software error.\n\nEdit the target RTL in workspace/ and preserve hardware behavior.\n");

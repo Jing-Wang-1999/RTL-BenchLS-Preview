@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5709e9a3d4b6a687620bca5057fbf6a9790d5bb56593b127049f37def54bbb38.txt","module mg_02908( sel, a, b, c, y );\ninput [1:0] sel; \n  input [31:0] a, b, c; \n  output y; \n  reg [31:0] y; \n  always @(a or b or c or sel) \n  begin \n  case (sel) \n  2'b00:y = a; \n  2'b10:y = b; \n  2'b01:y = c; \n  endcase \n  end \n endmodule");

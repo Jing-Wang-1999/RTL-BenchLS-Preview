@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/785b5c83e631256c5dc1a690c0e9228a41988c56e09cc206fae3e1cac8ab3fe0.txt","--- verilog/rtl/aes.v\n+++ verilog/rtl/aes.v\n@@ -306,5 +306,6 @@\n    .key_ready(o_key_ready)\n );\n  \n+initial force o_data = '0;\n endmodule\n //---------------------------------------------------------------------------------------\n");

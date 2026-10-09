@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/734cf5ae2396190af473022944fe168f55ce09611d60e571d47edec1403f1683.txt","module mg_02967(o,oe);\noutput [31:0] o; \n  assign o = ~(32'h12345679); \n  output [31:0] oe; \n  assign oe = 32'hab345679; \n endmodule");

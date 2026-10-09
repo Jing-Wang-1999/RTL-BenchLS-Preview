@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7cdb0628369d2a30d166543294876be29a179306f82fe9fd90c9aef9939575e9.txt","always @(posedge clk_i)\n\t  if (sclr | dImDoneStrb)\n\t    if (!sel_VBA)\n\t      vmemA <=  VBAa;\n\t    else\n\t      vmemA <=  VBAb;\n\t  else if (vmem_ack)\n\t    vmemA <=  vmemA +30'h1;");

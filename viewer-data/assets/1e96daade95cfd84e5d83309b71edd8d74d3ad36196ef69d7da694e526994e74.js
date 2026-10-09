@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1e96daade95cfd84e5d83309b71edd8d74d3ad36196ef69d7da694e526994e74.txt","This module outputs two 32-bit constants. The first output, 'o', is set to the hexadecimal value 0x12345679. The second output, 'oe', is set to the hexadecimal value 0xAB345679. No inputs or sub-modules are involved.");

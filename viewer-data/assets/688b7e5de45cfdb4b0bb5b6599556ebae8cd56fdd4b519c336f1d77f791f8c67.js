@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/688b7e5de45cfdb4b0bb5b6599556ebae8cd56fdd4b519c336f1d77f791f8c67.txt","read design ./rtl/golden.v -SystemVerilog -Golden\nset root module fft_processing_chain -Golden\nread design ./rtl/revised.v -SystemVerilog -Revised\nset root module fft_processing_chain -Revised\nset system mode lec\nadd compared points -all\ncompare\nexit -force\n");

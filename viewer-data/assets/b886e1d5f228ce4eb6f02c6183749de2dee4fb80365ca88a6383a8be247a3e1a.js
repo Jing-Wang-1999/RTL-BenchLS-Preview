@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b886e1d5f228ce4eb6f02c6183749de2dee4fb80365ca88a6383a8be247a3e1a.txt","module mg_03826(sum, c_out, a, b, c_in);\noutput [3:0] sum; \n output c_out; \n input [3:0] a, b; \n input c_in; \n assign {c_out, sum} = a + b + c_in; \n endmodule");

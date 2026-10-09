@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1c48c2ddd46a9bb6a2888cd434f1999db1f900b022f6df6b22a9d6c2b75c0a26.txt","module mg_05864(one,two,sign,y2,y1,y0);\ninput y2,y1,y0; \n output one,two,sign; \n wire [1:0]k; \n xor x1(one,y0,y1); \n xor x2(k[1],y2,y1); \n not n1(k[0],one); \n and a1(two,k[0],k[1]); \n assign sign=~(y2); \n endmodule");

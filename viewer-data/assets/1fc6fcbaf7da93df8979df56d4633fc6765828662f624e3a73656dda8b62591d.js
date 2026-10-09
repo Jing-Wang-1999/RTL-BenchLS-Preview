@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1fc6fcbaf7da93df8979df56d4633fc6765828662f624e3a73656dda8b62591d.txt","always @ (posedge clk)\nbegin\n\tif (rst)\n\t\tcount_ready <= 0;\n\telse if (enable_reg_1) \n\t\tcount_ready <= 0;\n\telse if (count_busy)\n\t\tcount_ready <= count_ready + 1; \nend");

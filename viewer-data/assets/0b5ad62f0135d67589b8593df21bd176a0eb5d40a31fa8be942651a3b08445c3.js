@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0b5ad62f0135d67589b8593df21bd176a0eb5d40a31fa8be942651a3b08445c3.txt","module mg_04680 (\n    input wire a,\n    input wire b,\n    output wire soma,\n    output wire cout\n);\n\nassign soma = a ^ b;  // XOR logic for sum\nassign cout = a & b;  // AND logic for carry-out\n\nendmodule");

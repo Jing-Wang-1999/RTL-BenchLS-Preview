@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/19dd0ad1f57be6b38f49e199e1025933d6c9f1bb9da12a79e29a804ffd20dd7b.txt","module clk_40hz (\n    input CLK,\n    output reg clk_40hz,\n    input clr\n);\n    // 40Hz clock logic here\nendmodule");

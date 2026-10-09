@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/528a192cffacf6d2bc45a5f8c4c6f323b1b242be8839338e3d0f1f5b52590cbd.txt","module mg_00192 (In0,In1,dout);\ninput [0:0]In0; \n  input [0:0]In1; \n  output [1:0]dout; \n  wire [0:0]In0; \n  wire [0:0]In1; \n  assign dout[1] = In1; \n  assign dout[0] = In0; \n endmodule");

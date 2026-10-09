@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0f1786a634944f4ec9770b0527032f34c5dcf6580bf249fe0327306296cad5f8.txt","read_verilog synth_gates.v\nread_verilog ../../picorv32.v\n\nhierarchy -top top\nproc; flatten\n\nsynth\n\ndfflibmap -prepare -liberty synth_gates.lib\nabc -dff -liberty synth_gates.lib\ndfflibmap -liberty synth_gates.lib\n\nstat\nwrite_blif synth_gates.blif\n");

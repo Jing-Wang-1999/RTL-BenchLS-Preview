@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a3ea8e890e0e6a3f021442886cb215e1fbad60b40899149b552def6b3eb56fd3.txt","module mg_03627( I_SIG, ENABLE, O_SIG);\nparameter integer width = 8; \n  input [width-1:0] I_SIG; \n  input ENABLE; \n  inout [width-1:0] O_SIG; \n  assign O_SIG = (ENABLE) ? I_SIG : { width{1'bz}}; \n endmodule");

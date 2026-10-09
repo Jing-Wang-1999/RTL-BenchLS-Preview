@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3ce624820d21adeae746fe190ce442c6fbd476be5a2f510d4c8010ae0ba2a985.txt","module mg_09915 (input clk,input vconst,input b,output reg q);\nreg qmid; \n  always @ (posedge vconst or posedge clk) begin \n  qmid <= b; \n  end \n  always @ (posedge clk or posedge vconst) begin \n  q <= qmid; \n  end \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/aaf8b46f4e0231c87f8ff41c9215373f6c14e6091ea2cc06ea53f441d676be40.txt","This module is an inverter with one input and one output. It negates the input signal 'a' to produce the output 'z'. The module allows a parameter 'PROP' for customization, but it defaults to \"DEFAULT\". No sub-modules are specified.");

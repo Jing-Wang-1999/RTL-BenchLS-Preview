@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b28e6c74a4c64eec04680f188d1ac2565d2325c52850cc98acdb42d75deea73e.txt","module mg_09364(Clock,Data0, Data1, Data2, Data3,Q0, Q1, Q2, Q3);\ninput Clock; \n input Data0, Data1, Data2, Data3; \n output reg Q0, Q1, Q2, Q3; \n always @(posedge Clock) \n  {Q0, Q1, Q2, Q3} <= {Data0, Data1, Data2, Data3}; \n endmodule");

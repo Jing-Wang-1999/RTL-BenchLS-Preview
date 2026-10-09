@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6b3f919d4056f00f987d8ddf123abcb34c0e3deca05631cafee1e4eab851113e.txt","always @ (posedge clock or posedge reset)\nbegin \n\tif (reset)\n\t\tbit_count <= 4'h0;\n\telse if (~rx_busy) \n\t\tbit_count <= 4'h0;\n\telse if (rx_busy & ce_1_mid)\n\t\tbit_count <= bit_count + 4'h1;\nend");

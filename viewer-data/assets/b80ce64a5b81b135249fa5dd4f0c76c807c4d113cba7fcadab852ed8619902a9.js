@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b80ce64a5b81b135249fa5dd4f0c76c807c4d113cba7fcadab852ed8619902a9.txt","module mux_32(sel, src0, src1, z);\n\tinput [31:0] src0, src1;\n\tinput sel;\n\toutput [31:0] z;\n\tassign z = sel ? src1 : src0;\nendmodule");

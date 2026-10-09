@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ef16e6dffd66a5bdd2f915fce38e2adf7ffc2dce2381d027171a3fb54a6bd252.txt","module mg_02072(output [3:0] o, p);\nassign o = { 1'b1, 1'bx }; \n assign p = { 1'b1, 1'bx, 1'b0 }; \n endmodule");

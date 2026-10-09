@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f7498bd7c0f7a8e556cf0bcb8ff962b41973920d0c69a04cfc11bcaedd5275c6.txt","module sine_lut (quad, enable, degrees, data, rst, clk);\ninput [1:0] quad;\ninput enable;\ninput rst;\ninput [32-1:0] degrees ;\ninput clk;\noutput reg [63:0] data;\nendmodule\n");

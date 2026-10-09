@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fe0eab5eaa590101d5639bedacd3585261bd9ca15225979504c37110acfdd5cc.txt","module ConstantMemory (\n    input [11:0] addr,\n    input clk,\n    output [31:0] data_read\n);\n    reg [31:0] memory [0:4095];\n    assign data_read = memory[addr];\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/894ce45824e631dc783006c414ae02213c32b53f41ef33a2542424b2c4daaf08.txt","module asic_tiehi #(parameter PROP = \"DEFAULT\")   (\n    output z\n    );\n\n   assign z = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

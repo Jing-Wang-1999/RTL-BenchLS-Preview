@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/95aca63b2eb0865504c153a068ce9eafc3340b9fb6c923c67faace5739969032.txt","{\n  \"top\": {\n    \"module\": \"reg_cam_cell\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/storage/reg_cam_cell.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

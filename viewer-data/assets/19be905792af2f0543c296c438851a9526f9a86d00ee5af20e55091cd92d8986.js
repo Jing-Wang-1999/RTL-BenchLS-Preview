@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/19be905792af2f0543c296c438851a9526f9a86d00ee5af20e55091cd92d8986.txt","This module performs a 36-bit addition or subtraction. If the add_sub input is 1, it adds dataa and datab. If it is 0, it subtracts datab from dataa by adding dataa to the inverted datab plus a 1 correction. The 36-bit result is output.");

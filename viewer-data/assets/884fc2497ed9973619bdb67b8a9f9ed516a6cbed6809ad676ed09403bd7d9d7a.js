@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/884fc2497ed9973619bdb67b8a9f9ed516a6cbed6809ad676ed09403bd7d9d7a.txt","always @(posedge req_aclk) begin\n    if (req_aresetn == 1'b0) begin\n      prev_buf_done <= 1'b1;\n    end else if (out_req_valid && out_req_ready) begin\n      prev_buf_done <= 1'b0;\n    end else if (resp_eot) begin\n      prev_buf_done <= 1'b1;\n    end\n  end");

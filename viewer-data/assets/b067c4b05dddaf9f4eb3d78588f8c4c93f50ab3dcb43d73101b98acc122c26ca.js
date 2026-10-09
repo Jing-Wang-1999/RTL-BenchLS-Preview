@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b067c4b05dddaf9f4eb3d78588f8c4c93f50ab3dcb43d73101b98acc122c26ca.txt","module rtlpp_04366 (a, b);\n\noutput a, b;\n\n// Remove conditional compilation and set default parameters\nparameter OutputA = 1;\nparameter OutputB = 0;\n\nassign a = OutputA;\nassign b = OutputB;\n\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9126bb6c726cdd08d04effb943a6ee65fb8b94250a5a4fefd99d4846ed26ae1e.txt","module top( enable, degrees, data1, rst, actv, clk) ;\ninput enable;\ninput [32-1:0] degrees ;\ninput rst;\ninput [2:0] actv;\ninput clk;\noutput reg [63:0] data1;\nendmodule\n");

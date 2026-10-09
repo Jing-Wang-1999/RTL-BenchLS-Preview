@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ccc656c514ae55ee803d960d69b5d70ef258deaf22015b9cdba31c78983f2ec1.txt","module hdmi_generator (\n    input i_clk,\n    input i_reset_n,\n    output o_hdmi_hs,\n    output o_hdmi_vs,\n    output o_hdmi_de\n);\n    // Implementation here\nendmodule");

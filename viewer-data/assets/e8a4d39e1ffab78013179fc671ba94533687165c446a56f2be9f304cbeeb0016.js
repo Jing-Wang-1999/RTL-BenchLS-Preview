@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e8a4d39e1ffab78013179fc671ba94533687165c446a56f2be9f304cbeeb0016.txt","module oh_latnq #(parameter DW = 1) // array width\n   (\n    input [DW-1:0] \td,\n    input [DW-1:0] \tgn,\n    output reg [DW-1:0] q\n    );\n\n   always_latch\n     if(!gn)\n       q <= d;\n\t    \nendmodule");

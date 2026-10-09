@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6a10c596758ff753a710cf6a9550c7b75760e8f2ae1e045460c9ae7faed73718.txt","{\n  \"top\": {\n    \"module\": \"picorv32_regs\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/1.picorv32/picorv32.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

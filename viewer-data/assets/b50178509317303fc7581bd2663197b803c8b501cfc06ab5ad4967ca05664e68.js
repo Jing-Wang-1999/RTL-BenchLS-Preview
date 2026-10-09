@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b50178509317303fc7581bd2663197b803c8b501cfc06ab5ad4967ca05664e68.txt","module regn (R, L, Clock, Q); \n    parameter n = 8; \n    input [n-1:0] R; \n    input L, Clock; \n    output [n-1:0] Q; \n    reg [n-1:0] Q; \n    always @(posedge Clock) \n        if (L) \n            Q <= R; \nendmodule");

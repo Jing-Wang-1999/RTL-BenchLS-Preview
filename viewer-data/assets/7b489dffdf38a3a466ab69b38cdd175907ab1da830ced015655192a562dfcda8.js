@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7b489dffdf38a3a466ab69b38cdd175907ab1da830ced015655192a562dfcda8.txt","always @(posedge clk)\n\tif(!rst)\tdcnt <= #1 4'h0;\n\telse\n\tif(done)\tdcnt <= #1 4'h0;\n\telse\n\tif(ld)\t\tdcnt <= #1 4'h1;\n\telse\n\tif(go)\t\tdcnt <= #1 dcnt + 4'h1;");

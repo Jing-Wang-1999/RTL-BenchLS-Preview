@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bcb4a476c50806bbee7f9bcca048e4fafb8f54f47d5b6d7d3f9f9d9257b7785a.txt","module mg_09742(clk, ibus, ibusWire);\ninput [31:0] ibus; \n  input clk; \n  output [31:0] ibusWire; \n  reg [31:0] ibusWire; \n  always @(posedge clk) begin \n  ibusWire = ibus; \n  end \n endmodule");

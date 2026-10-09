@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/58a5bad52b8c4a39da5c6a476e8ea26e52b26871d5ec00911043edb04442586e.txt","module cycloneive_io_ibuf (\n    input  i,\n    input  ibar,\n    output o\n);\n\t// Module implementation (substitute with appropriate logic)\nendmodule");

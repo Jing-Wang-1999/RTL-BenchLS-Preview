@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c0b4f321d43bda05fde09d0b1351e96b537a4e15aa7f8490122d37b55e749f07.txt","always @(posedge i_clk)\n\tif (i_reset)\n\tbegin\n\t\trd_addr <= 0;\n\t\tr_next  <= 1;\n\tend else if (w_read)\n\tbegin\n\t\trd_addr <= rd_addr + 1;\n\t\tr_next  <= rd_addr + 2;\n\tend");

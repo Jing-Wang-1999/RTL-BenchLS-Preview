@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/038a6d05e8fbe88abb3fb854f52bba74b9c700f17c5d69bf43996e602ab0a7f1.txt","{\n  \"base_commit\": \"a34c6ded0df822575e962c6fddd1be54cebe2755\",\n  \"changed_paths\": [\n    \"hw/ip/prim/rtl/prim_reg_cdc_arb.sv\"\n  ],\n  \"provisioning_status\": \"pinned base available locally\",\n  \"repository\": \"lowRISC/opentitan\"\n}\n");

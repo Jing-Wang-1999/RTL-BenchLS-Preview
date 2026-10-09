@@ -5,10 +5,10 @@ design-size figures. Its separate case browser provides human review of 14 task
 entries and 18,851 case records, with filters, agent contracts, round-trip stages,
 file browsing, and reference/oracle access.
 
-## Open the website
+## Our website: [RTL-BenchLS overview and case browser](https://anonymous.4open.science/w/RTL-BenchLS-Preview-D301/)
 
-Open the [benchmark homepage](index.html) or the [case browser](review.html).
-These relative links use the website's current hosting address.
+Open the [benchmark homepage](https://anonymous.4open.science/w/RTL-BenchLS-Preview-D301/) or the
+[case browser](https://anonymous.4open.science/w/RTL-BenchLS-Preview-D301/review.html).
 
 ## Review a case
 

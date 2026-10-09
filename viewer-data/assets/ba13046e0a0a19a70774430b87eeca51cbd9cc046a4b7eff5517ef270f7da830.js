@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ba13046e0a0a19a70774430b87eeca51cbd9cc046a4b7eff5517ef270f7da830.txt","module mg_04069 (\n    input [71:0] a,\n    input [71:0] b,\n    input sa,\n    input sb,\n    output [71:0] muxed\n);\n\nassign muxed = (sa ? a : 72'b0) | (sb ? b : 72'b0);\n\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b1017446604f724de6b9477e7c3c93543cd45cebb09977d2505c2d0db8c1499e.txt","Replaces assignment-pattern arbiter port expression with named all-zero unpacked array tie-off for DC compatibility; expected same constant data and hardware.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

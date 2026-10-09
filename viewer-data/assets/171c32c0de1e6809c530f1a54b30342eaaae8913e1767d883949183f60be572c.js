@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/171c32c0de1e6809c530f1a54b30342eaaae8913e1767d883949183f60be572c.txt","{\n  \"top\": {\n    \"module\": \"parallel_to_serial\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_00126.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"encoding\"\n  ]\n}");

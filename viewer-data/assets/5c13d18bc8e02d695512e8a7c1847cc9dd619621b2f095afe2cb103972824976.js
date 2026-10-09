@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5c13d18bc8e02d695512e8a7c1847cc9dd619621b2f095afe2cb103972824976.txt","This module performs a 4-input NOR operation. It takes four inputs: a, b, c, and d. The output, z, is true only when all inputs are false. The module uses a parameter PROP for customization. No sub-modules are allowed.");

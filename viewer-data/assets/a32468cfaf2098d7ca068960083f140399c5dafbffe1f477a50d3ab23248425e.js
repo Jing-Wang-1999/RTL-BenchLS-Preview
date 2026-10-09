@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a32468cfaf2098d7ca068960083f140399c5dafbffe1f477a50d3ab23248425e.txt","module mg_06651 (input Reset,input IN,output reg OUT);\nalways @ (posedge IN or posedge Reset) \n  if (Reset) \n  OUT <=0; \n  else \n  OUT <=!OUT; \n endmodule");

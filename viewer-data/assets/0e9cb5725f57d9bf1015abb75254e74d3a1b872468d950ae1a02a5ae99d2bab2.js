@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0e9cb5725f57d9bf1015abb75254e74d3a1b872468d950ae1a02a5ae99d2bab2.txt","module mg_05943 (inout wire pad,input wire oe,input wire op);\nassign pad = oe ? op : 1'bz; \n endmodule");

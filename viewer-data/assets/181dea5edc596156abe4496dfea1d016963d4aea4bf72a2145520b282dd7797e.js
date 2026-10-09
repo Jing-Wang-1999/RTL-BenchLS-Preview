@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/181dea5edc596156abe4496dfea1d016963d4aea4bf72a2145520b282dd7797e.txt","module or_cell (\n    input a,\n    input b,\n    output out\n    );\n\n    assign out = ~(a | b);\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8166500f257a09088d3d1783b4b02223f169a0cc939925f67fa7252f7da605a7.txt","{\n  \"top\": {\n    \"module\": \"oh_latnq\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/31.oh/stdlib/rtl/oh_latnq.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"always_latch\",\n    \"array\"\n  ]\n}");

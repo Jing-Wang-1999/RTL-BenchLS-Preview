@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3c1046a06449283f5c96471a29374190f8ce0bf06022190942224bce229890b1.txt","read_verilog ../../picorv32.v\nread_xdc synth_area.xdc\n\nsynth_design -part xc7k70t-fbg676 -top picorv32_axi\nopt_design -resynth_seq_area\n\nreport_utilization\nreport_timing\n");

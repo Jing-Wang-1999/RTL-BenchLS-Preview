@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f319656d91e6ae24f536781e3b3083a027e570767bb7a202a16bbde9ef8f7535.txt","module mg_00290(output out, input in, output [1:0] vout, input [1:0] vin);\nassign out = ~in; \n assign vout = ~vin; \n endmodule");

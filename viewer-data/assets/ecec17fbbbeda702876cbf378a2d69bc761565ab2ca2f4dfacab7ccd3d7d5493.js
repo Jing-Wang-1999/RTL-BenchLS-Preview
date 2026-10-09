@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ecec17fbbbeda702876cbf378a2d69bc761565ab2ca2f4dfacab7ccd3d7d5493.txt","# oh_buf\n\n`oh_buf` is a combinational vector buffer with parameter `DW=1`. Input `a[DW-1:0]` and output `z[DW-1:0]` have the same width. For every bit and at all times, `z = a`. There is no clock, reset, state, latency, or submodule.\n");

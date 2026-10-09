@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/94f40a8fa3bd534c7b824316b04f82ce4c66a308aa34c494b9ff7bc76f9191aa.txt","# yosys synthesis script for post-synthesis simulation (make test_synth)\n\nread_verilog picorv32.v\nchparam -set ENABLE_IRQ 1 -set ENABLE_MUL 1 picorv32_axi\nhierarchy -top picorv32_axi\nsynth\nwrite_verilog synth.v\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9fcdda4c4cb8b346220e7c7c1e1210f6b2b3db07acaf5a9fc209da76ba6e1693.txt","Restore the masked expression in design.v using the specification and retained RTL context. Return the complete corrected RTL with the same top module. Only the default configuration is scored.\n");

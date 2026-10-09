@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8c8f831ff15cb5ee4ac369e1cd07c181904406509c00d9b118077377b014b0c5.txt","module SDP_Y_INP_mgc_in_wire_v1 (d, z);\n\n  parameter integer rscid = 1;\n  parameter integer width = 8;\n\n  output [width-1:0] d;\n  input  [width-1:0] z;\n\n  wire   [width-1:0] d;\n\n  assign d = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

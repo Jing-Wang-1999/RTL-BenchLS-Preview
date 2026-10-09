@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1d207d13ab966e5e2605215028d50a0cfb5dbd079fbe36c05f7960ea9d8fc708.txt","module mg_01418(clk, preset, clear, d, q);\ninput clk, preset, clear, d; \n output reg q; \n always @(posedge clk, posedge preset, posedge clear) begin \n  if (preset) \n  q <= 1; \n  else if (clear) \n  q <= 0; \n  else \n  q <= d; \n end \n endmodule");

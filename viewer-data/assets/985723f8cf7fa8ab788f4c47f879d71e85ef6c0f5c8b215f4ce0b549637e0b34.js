@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/985723f8cf7fa8ab788f4c47f879d71e85ef6c0f5c8b215f4ce0b549637e0b34.txt","Required native-harness hierarchy references (bench instance prefix dut/ciaa/ciab is outside generated RTL):\ndut.bus.ram.ram[131]\n");

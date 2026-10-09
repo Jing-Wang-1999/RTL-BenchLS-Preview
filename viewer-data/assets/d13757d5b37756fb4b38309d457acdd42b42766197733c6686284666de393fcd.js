@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d13757d5b37756fb4b38309d457acdd42b42766197733c6686284666de393fcd.txt","module mg_01159(clk,in,out);\ninput clk; \n  input in; \n  output out; \n  parameter NDELAY = 3; \n  reg [NDELAY-1:0] shiftreg; \n  wire out = shiftreg[NDELAY-1]; \n  always @(posedge clk) \n  shiftreg <= {shiftreg[NDELAY-2:0],in}; \n endmodule");

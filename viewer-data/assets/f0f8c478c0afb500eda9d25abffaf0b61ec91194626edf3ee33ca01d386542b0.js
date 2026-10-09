@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f0f8c478c0afb500eda9d25abffaf0b61ec91194626edf3ee33ca01d386542b0.txt","module rtlpp_00201 (a0, a1, q);\n\n   input a0, a1;\t\t\n   output q;\t\t\t\n\n   wire [2:0] m;\t\t\n\n   nand U1 (m[0], a0, a1);\n   nand U2 (m[1], a0, q);\n   nand U3 (m[2], a1, q);\n   assign q = ~&m;\n   \nendmodule");

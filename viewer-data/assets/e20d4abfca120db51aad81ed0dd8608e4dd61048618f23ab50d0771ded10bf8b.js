@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e20d4abfca120db51aad81ed0dd8608e4dd61048618f23ab50d0771ded10bf8b.txt","module rtlpp_04118 (\n    input D,\n    input Clock,\n    output reg Q,\n    output Qbar\n);\n\nalways @(negedge Clock) begin\n    Q <= D;\nend\n\nassign Qbar = ~Q;\n\nendmodule");

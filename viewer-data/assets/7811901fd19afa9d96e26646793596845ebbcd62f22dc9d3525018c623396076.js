@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7811901fd19afa9d96e26646793596845ebbcd62f22dc9d3525018c623396076.txt","module FD (Q, C, D);\n    parameter INIT = 1'b0;\n\n    output Q;\n    input  C, D;\n\n    reg Q;\n\n    always @(posedge C) begin\n        Q <= D;\n    end\nendmodule");

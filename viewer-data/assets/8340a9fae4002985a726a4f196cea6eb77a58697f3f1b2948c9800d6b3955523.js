@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8340a9fae4002985a726a4f196cea6eb77a58697f3f1b2948c9800d6b3955523.txt","This module takes three binary inputs and outputs a single binary value. It uses an 8-bit parameter to determine the output based on the combined state of the inputs. The output is selected from the parameter using the inputs as an index.");

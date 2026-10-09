@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b0bd9b1ab3842bdbebb5a9b03e896f6eb05ade0ad7064db891283f5e3941186c.txt","The OR2D1 module is a 2-input digital OR gate. It takes two input signals, A1 and A2, and produces a single output signal, Z. The output Z is true if either A1 or A2 is true. The module has no internal state or sub-modules.");

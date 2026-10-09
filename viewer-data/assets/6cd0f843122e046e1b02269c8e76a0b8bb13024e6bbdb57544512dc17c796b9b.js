@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6cd0f843122e046e1b02269c8e76a0b8bb13024e6bbdb57544512dc17c796b9b.txt","module mg_08619(input [31:0] Din,output [31:0] Dout,input CLK);\nreg [31:0]tmp_out [1:0]; \n reg CE; \n always @(posedge CLK) \n begin \n  tmp_out[0] <= Din; \n  tmp_out[1] <= tmp_out[0]; \n end \n assign Dout = tmp_out[1]; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/67439feac0ccff2d5c7e7a6fdb1e2261684b61dd0c377b4506bbb8c30a7c355d.txt","This module outputs a constant high signal. It has one output, 'z', which is always set to logical high (1). No inputs or sub-modules are involved.");

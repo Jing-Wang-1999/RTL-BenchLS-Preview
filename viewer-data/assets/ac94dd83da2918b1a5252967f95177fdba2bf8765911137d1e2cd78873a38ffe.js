@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ac94dd83da2918b1a5252967f95177fdba2bf8765911137d1e2cd78873a38ffe.txt","module mg_03606(control,dp);\ninput [1:0] control; \n  output dp; \n  assign dp = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

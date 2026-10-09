@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1cfe2b9b60cb6191a03d63e26603a02fb1aea90799321dbba648f8b373c3ca4d.txt","{\n  \"top\": {\n    \"module\": \"asic_clkbuf\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/31.oh/asiclib/hdl/asic_clkbuf.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

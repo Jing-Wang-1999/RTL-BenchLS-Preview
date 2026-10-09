@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/82973e1cc00bc33e2f40cc651ec2203e62b84c3d4549f8131b01081ee1ab3790.txt","{\n  \"top\": {\n    \"module\": \"synchronizer\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/synchronization/synchronizer.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

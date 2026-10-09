@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/42e25f160bf3673a60d94546fdb9de114fec821f797ec21a872ac9b544b1e0c2.txt","module mg_03518(input wire clk,input wire inclk,output wire outclk);\nreg [4:0] cnt = 0; \n  assign outclk = cnt == 16; \n  always @(posedge clk) \n  if(outclk) \n  cnt <= 0; \n  else if(inclk) \n  cnt <= cnt + 5'b1; \n endmodule");

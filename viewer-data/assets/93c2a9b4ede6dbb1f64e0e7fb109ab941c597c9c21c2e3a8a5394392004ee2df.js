@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/93c2a9b4ede6dbb1f64e0e7fb109ab941c597c9c21c2e3a8a5394392004ee2df.txt","module mg_06415(input clock,input ready,input x,output reg y);\nalways @(posedge clock) \n  y <= ready ? y | x : 0; \n endmodule");

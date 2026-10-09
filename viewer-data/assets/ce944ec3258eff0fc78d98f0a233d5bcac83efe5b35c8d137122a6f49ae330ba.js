@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ce944ec3258eff0fc78d98f0a233d5bcac83efe5b35c8d137122a6f49ae330ba.txt","--- src/lab_4/alu.v\n+++ src/lab_4/alu.v\n@@ -30,7 +30,7 @@\n \n \twire[31:0] s,bout;\n \tassign bout = op[2] ? ~b : b;\n-\tassign s = a + bout + op[2];\n+\tassign s = 32'b0;\n \talways @(*) begin\n \t\tcase (op[1:0])\n \t\t\t2'b00: y <= a & bout;\n");

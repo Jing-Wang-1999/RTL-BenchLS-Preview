@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e31a3220190c41c0725ce2adf94d2eb11a21b046e3ec75f85c1b7aecc26d1823.txt","module mg_02923 (output o,input a);\nparameter [1:0] INIT = 2'h0; \n  parameter EQN = \"(A)\"; \n  assign o = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

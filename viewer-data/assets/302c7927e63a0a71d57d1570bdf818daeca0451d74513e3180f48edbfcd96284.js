@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/302c7927e63a0a71d57d1570bdf818daeca0451d74513e3180f48edbfcd96284.txt","--- fpu_double.v\n+++ fpu_double.v\n@@ -299,4 +299,5 @@\n \t\tout <= except_enable ? out_except : out_round;\n \t\tend\n end \n+initial force out = '0;\n endmodule\n");

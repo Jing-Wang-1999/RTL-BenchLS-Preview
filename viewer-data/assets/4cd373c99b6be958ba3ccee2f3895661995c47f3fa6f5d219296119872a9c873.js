@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4cd373c99b6be958ba3ccee2f3895661995c47f3fa6f5d219296119872a9c873.txt","module big_sigma_0_512 (\n    input [63:0] x,\n    output [63:0] result\n);\n    assign result = (x >> 28 | x << (64 - 28)) ^ \n                    (x >> 34 | x << (64 - 34)) ^ \n                    (x >> 39 | x << (64 - 39));\nendmodule");

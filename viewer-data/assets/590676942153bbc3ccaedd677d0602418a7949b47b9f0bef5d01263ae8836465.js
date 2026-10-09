@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/590676942153bbc3ccaedd677d0602418a7949b47b9f0bef5d01263ae8836465.txt","module pwm_decode (\n    input data,\n    output [7:0] l,\n    input lrclk,\n    output lrsel,\n    input mclk,\n    output [7:0] r\n);\n  // Add the logic in this module as required for your design.\nendmodule");

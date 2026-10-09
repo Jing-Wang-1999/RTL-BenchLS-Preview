@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/14c8c33f6c3e8e25abe1283098960bf52d87c7de607d8fb5247c2693d0c1dd38.txt","module mg_05748 (\n    input  wire ena,\n    input  wire data,\n    inout  wire pad\n);\n\n    assign pad = ena ? data : 1'bz;\n\nendmodule");

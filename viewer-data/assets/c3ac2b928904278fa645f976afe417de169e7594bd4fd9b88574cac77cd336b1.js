@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c3ac2b928904278fa645f976afe417de169e7594bd4fd9b88574cac77cd336b1.txt","module NOR2_X1 (input A1, input A2, output Z);\n    assign Z = /* RTL_BENCHLS_MASK: restore expression */;\nendmodule");

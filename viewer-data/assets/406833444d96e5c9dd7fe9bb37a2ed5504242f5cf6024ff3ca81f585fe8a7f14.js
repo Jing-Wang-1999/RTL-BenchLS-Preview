@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/406833444d96e5c9dd7fe9bb37a2ed5504242f5cf6024ff3ca81f585fe8a7f14.txt","always @(posedge wclk)\n\t  if (wrst) begin\n\t      wptr      <=  0;\n\t      wptr_gray <=  0;\n\t  end else if (wreq) begin\n\t      wptr      <=  wptr +1'h1;\n\t      wptr_gray <=  bin2gray(wptr +1'h1);\n\t  end");

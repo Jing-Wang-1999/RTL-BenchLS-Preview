@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/caf7df201fb5c8bdfe0841dcd3d8d34a11b9d241b6ae1bdcbcb567da6c868f80.txt","module mg_03827 (in1, in2, out);\ninput in1, in2; \n output reg out; \n always @ ( in1 or in2) \n  if(in1 > in2) \n  out = in1; \n  else \n  out = in2; \n endmodule");

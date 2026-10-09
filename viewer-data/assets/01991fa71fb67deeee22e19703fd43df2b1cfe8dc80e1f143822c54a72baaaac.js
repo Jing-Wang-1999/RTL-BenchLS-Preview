@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/01991fa71fb67deeee22e19703fd43df2b1cfe8dc80e1f143822c54a72baaaac.txt","module mg_04353 (input Xin,input Yin,input BorrowIn,output Diff,output BorrowOut);\nassign Diff = Xin ^ Yin ^ BorrowIn; \n  assign BorrowOut = ~((~Xin & Yin) | (~Xin & BorrowIn) | (Yin & BorrowIn)); \n endmodule");

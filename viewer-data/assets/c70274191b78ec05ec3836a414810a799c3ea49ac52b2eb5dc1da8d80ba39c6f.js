@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c70274191b78ec05ec3836a414810a799c3ea49ac52b2eb5dc1da8d80ba39c6f.txt","module _GGCLOCK_P100_0_50 (Z);\n  output Z;\n  reg Z;\n\n  initial begin\n    Z = 0;\n    forever #5 Z = ~Z; // Example of a clock generator\n  end\n\nendmodule");

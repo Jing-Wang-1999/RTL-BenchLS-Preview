@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/68c1de6e92bff3382e80a0faf6a16632b9992c8c49de7409877cd8dd833b50d0.txt","module c_addsub_logic (\n    input [12:0] A,\n    input [12:0] B,\n    input CLK,\n    output [13:0] S\n);\n    // Place logic here\nendmodule");

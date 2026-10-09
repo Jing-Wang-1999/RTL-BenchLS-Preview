@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1d81d68aa8ef29f70c46f6ae0ccfaaee6c03920bc28ebd9c076342dc2e3d2243.txt","module mg_10561 ( ONEPOS, ONENEG, TWOPOS, TWONEG, INA, INB, PPBIT );\ninput ONEPOS; \n input ONENEG; \n input TWOPOS; \n input TWONEG; \n input INA; \n input INB; \n output PPBIT; \n  assign PPBIT = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

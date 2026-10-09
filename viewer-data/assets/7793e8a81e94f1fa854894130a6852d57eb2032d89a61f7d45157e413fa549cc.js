@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7793e8a81e94f1fa854894130a6852d57eb2032d89a61f7d45157e413fa549cc.txt","module rtlpp_00119 (g, d, q);\n\ninput  g, d;\noutput reg q;\n\nalways @(g or d) begin\n  if (g)\n    q <= d;\nend\n\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e41e9aa7973717793329f5d93031a916a543ff2cffd5f62872794d93b34bb223.txt","module mg_00627 (S,D,Y);\ninput [1:0] S; \n  input [3:0] D; \n  output Y; \n  reg Y; \n  wire [1:0] S; \n  wire [3:0] D; \n  always @* begin \n  case (S) \n  0: Y = D[0]; \n  1: Y = D[1]; \n  2: Y = D[2]; \n  3: Y = D[3]; \n  endcase \n  end \n endmodule");

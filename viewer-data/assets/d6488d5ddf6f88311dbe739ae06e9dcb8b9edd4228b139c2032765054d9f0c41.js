@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d6488d5ddf6f88311dbe739ae06e9dcb8b9edd4228b139c2032765054d9f0c41.txt","module  NV_BLKBOX_BUFFER (\n\t Y\n\t,A\n\t);\n\n\noutput\t Y ;\ninput\t A ;\n\nassign Y = /* RTL_BENCHLS_MASK: restore expression */;\nendmodule");

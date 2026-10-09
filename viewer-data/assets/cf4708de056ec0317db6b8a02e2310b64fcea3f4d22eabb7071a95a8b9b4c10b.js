@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cf4708de056ec0317db6b8a02e2310b64fcea3f4d22eabb7071a95a8b9b4c10b.txt","{\n  \"pass_identity\": true,\n  \"source_hashes\": {\n    \"rtl/sha256.v\": \"1e7d1e5bc962f56f9225e8284a3da4183c25d9c6193edf8fa934dac7a4b300b9\"\n  },\n  \"method\": \"raw byte equality across complete inherited source closure\"\n}\n");

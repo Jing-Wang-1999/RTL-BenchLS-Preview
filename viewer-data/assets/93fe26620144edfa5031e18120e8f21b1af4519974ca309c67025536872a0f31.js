@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/93fe26620144edfa5031e18120e8f21b1af4519974ca309c67025536872a0f31.txt","always @ *\nbegin\n    div_result_r = 32'b0;\n\n    if (div_inst_q)\n        div_result_r = invert_res_q ? -quotient_q : quotient_q;\n    else\n        div_result_r = invert_res_q ? -dividend_q : dividend_q;\nend");

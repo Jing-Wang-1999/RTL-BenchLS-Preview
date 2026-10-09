@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/53fd41e2d1a6f62ee2c05c5e752dce3129724dad42d4939bc479786f4a5cb28e.txt","module mg_05504 (w_bus_mux_out, w_bus_mux_in_0, w_bus_mux_in_1, w_channel);\noutput [7:0] w_bus_mux_out; \n  input [7:0] w_bus_mux_in_0, w_bus_mux_in_1; \n  input w_channel; \n  assign w_bus_mux_out = (w_channel) ? w_bus_mux_in_1 : w_bus_mux_in_0; \n endmodule");

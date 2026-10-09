@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3876a74cd040db9c51f97b099381d765bfebea35b43ec4fe2dc2e299f47d451d.txt","module mult_gen_logic (\n    input [13:0] A,\n    input [7:0] B,\n    input CLK,\n    output [12:0] P\n);\n    // Place logic here\nendmodule");

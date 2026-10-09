@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d8c7ec5b40780752e9c4090feb936e2efa76cc1ab8950a05100a2d8bf4484a26.txt","module RAM16K(input[15:0] in, input clock, load, input[13:0] address, output[15:0] out);\n  reg[15:0] m[0:2**13-1];\n  \n  assign out = m[address];\n  \n  always @(posedge clock) begin\n    if (load) m[address] = in;\n  end\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7be209f33cd3600047db713a9390c88e289822dc905a2ebcd873c7fad6580682.txt","{\n  \"top\": {\n    \"module\": \"pn2112_table\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/ethernet_fec/pn2112_table.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

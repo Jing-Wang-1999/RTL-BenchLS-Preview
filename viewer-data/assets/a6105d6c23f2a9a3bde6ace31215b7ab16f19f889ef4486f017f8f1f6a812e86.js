@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a6105d6c23f2a9a3bde6ace31215b7ab16f19f889ef4486f017f8f1f6a812e86.txt","module sub_bytes (in,out);\ninput [16*8-1 : 0] in;\noutput [16*8-1 : 0] out;\nwire [16*8-1 : 0] out;\n\ngenvar i;\ngenerate\n    for (i=0; i<16; i=i+1)\n    begin : sb\n        sbox s (.in(in[8*i+7:8*i]), .out(out[8*i+7:8*i]));\n    end\nendgenerate\nendmodule");

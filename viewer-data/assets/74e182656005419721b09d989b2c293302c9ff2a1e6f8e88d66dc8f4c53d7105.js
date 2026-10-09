@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/74e182656005419721b09d989b2c293302c9ff2a1e6f8e88d66dc8f4c53d7105.txt","module mg_07715(input OE, input A, inout Z1);\nassign Z1 = ~((OE) ? A : 1'bz); \n endmodule");

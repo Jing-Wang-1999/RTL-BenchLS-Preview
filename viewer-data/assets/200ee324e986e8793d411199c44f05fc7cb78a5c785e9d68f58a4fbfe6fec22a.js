@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/200ee324e986e8793d411199c44f05fc7cb78a5c785e9d68f58a4fbfe6fec22a.txt","module oh_buf #(parameter DW = 1) (\n  input  [DW-1:0] a,\n  output [DW-1:0] z\n);\n  assign z = a;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4cc778dd22a87f7b3c3b299b2edf27aba09702cc92721078e4de416a9acea986.txt","module mg_10625 (dataa, datab, add_sub, result);\ninput [35:0] dataa,datab; \n  input add_sub; \n  output [35:0] result; \n  assign result = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

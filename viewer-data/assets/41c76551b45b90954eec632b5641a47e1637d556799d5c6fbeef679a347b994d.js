@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/41c76551b45b90954eec632b5641a47e1637d556799d5c6fbeef679a347b994d.txt","Use TAG_WIDTH part-selects for cache tag comparisons instead of relying on assignment truncation.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

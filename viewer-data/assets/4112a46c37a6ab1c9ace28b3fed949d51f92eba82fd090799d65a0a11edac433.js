@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4112a46c37a6ab1c9ace28b3fed949d51f92eba82fd090799d65a0a11edac433.txt","module compress_32 (\n    input [15:0] a,\n    input [15:0] b,\n    input [15:0] c,\n    output [15:0] oo,\n    output [15:0] ot\n);\n    assign oo = a ^ b ^ c;\n    assign ot = (a & b) | (a & c) | (b & c);\nendmodule");

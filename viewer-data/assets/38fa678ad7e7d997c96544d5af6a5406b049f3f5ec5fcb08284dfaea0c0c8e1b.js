@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/38fa678ad7e7d997c96544d5af6a5406b049f3f5ec5fcb08284dfaea0c0c8e1b.txt","module mg_08050(clk,d,q);\ninput [31:0] d; \n input clk; \n output [31:0] q; \n wire unused; \n assign unused = clk; \n assign q=d; \n endmodule");

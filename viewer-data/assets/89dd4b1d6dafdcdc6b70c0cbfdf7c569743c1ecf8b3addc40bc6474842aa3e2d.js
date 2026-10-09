@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/89dd4b1d6dafdcdc6b70c0cbfdf7c569743c1ecf8b3addc40bc6474842aa3e2d.txt","module L_mac (\n    input [15:0] a, b,\n    input [31:0] c,\n    output overflow,\n    output [31:0] out\n);\n    assign {overflow, out} = (c + (a * b));\nendmodule");

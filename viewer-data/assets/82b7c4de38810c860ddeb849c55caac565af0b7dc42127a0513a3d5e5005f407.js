@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/82b7c4de38810c860ddeb849c55caac565af0b7dc42127a0513a3d5e5005f407.txt","Make the fetch-enable assertion account for the latched local fetch-disable state.\n\nEdit the target RTL in workspace/ and preserve hardware behavior.\n");

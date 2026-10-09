@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/671a3a5e083640d59da39a9741ce4d1cb647153db524cad906ce29ae5154e92b.txt","module MUX2_X1 (input A, input B, input S, output Z);\n    assign Z = S ? B : A;\nendmodule");

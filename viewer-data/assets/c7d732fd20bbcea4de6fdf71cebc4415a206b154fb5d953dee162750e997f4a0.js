@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c7d732fd20bbcea4de6fdf71cebc4415a206b154fb5d953dee162750e997f4a0.txt","{\n  \"top_module\": \"usbfs_transaction\",\n  \"mode\": \"sec\",\n  \"clock\": \"clk\",\n  \"reset_expression\": \"!rstn\",\n  \"preprocessor_defines\": [],\n  \"ready_for_controls\": true,\n  \"notes\": \"Default parameters. Reset-first qualification.\"\n}\n");

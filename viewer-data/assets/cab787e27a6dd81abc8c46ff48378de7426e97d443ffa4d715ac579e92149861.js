@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cab787e27a6dd81abc8c46ff48378de7426e97d443ffa4d715ac579e92149861.txt","{\n  \"top\": {\n    \"module\": \"remove_parity\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/storage/remove_parity.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

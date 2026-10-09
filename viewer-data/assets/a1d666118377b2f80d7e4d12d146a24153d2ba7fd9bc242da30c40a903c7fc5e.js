@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a1d666118377b2f80d7e4d12d146a24153d2ba7fd9bc242da30c40a903c7fc5e.txt","module mg_07150 (input wire d,input wire clk,input wire reset_b,output reg q);\nalways@(posedge clk or negedge reset_b) \n  if (~reset_b) q <= 1'b0; \n  else q <= d; \n endmodule");

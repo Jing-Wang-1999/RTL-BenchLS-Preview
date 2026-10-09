@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ed66c9abbef6e0387b6c1d59334ea9ce38755852dcc23c4bcaca42758f87cb0e.txt","always @(negedge ECLK)\n  begin\n    if (rst_i)\n    begin\n      ta_latch <= 16'hffff;\n    end\n    else if (sel_i & we_i)\n    begin\n      if (adr_talo)\n        ta_latch[7:0]  <= DBi;\n      if (adr_tahi)\n        ta_latch[15:8] <= DBi;\n    end\n  end");

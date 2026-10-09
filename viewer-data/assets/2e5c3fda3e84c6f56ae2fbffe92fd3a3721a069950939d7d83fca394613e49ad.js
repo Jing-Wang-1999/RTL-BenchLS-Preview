@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2e5c3fda3e84c6f56ae2fbffe92fd3a3721a069950939d7d83fca394613e49ad.txt","module choose (\n    input [25:0] AJshift,\n    input [31:0] Immediate,\n    input [31:0] Inputpc,\n    output reg [31:0] Outputpc,\n    input [1:0] PCSrc,\n    input PCWre\n);\n    // Choose logic here\nendmodule");

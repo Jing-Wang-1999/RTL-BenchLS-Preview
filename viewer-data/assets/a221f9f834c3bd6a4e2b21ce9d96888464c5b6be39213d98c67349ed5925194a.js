@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a221f9f834c3bd6a4e2b21ce9d96888464c5b6be39213d98c67349ed5925194a.txt","module OR2D1 (A1, A2, Z);\n  input A1;\n  input A2;\n  output Z;\n  assign Z = A1 | A2;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bfef1fcb7fae86a2727520c4366492ed8dabcb3e4014922a2842d4bae3411a02.txt","module mg_05756(in1, in2, cin, sum, cout);\ninput wire in1, in2, cin; \n  output wire sum, cout; \n  assign sum = in1 ^ in2 ^ cin; \n  assign cout = (in1 & in2) | (in2 & cin) | (cin & in1); \n endmodule");

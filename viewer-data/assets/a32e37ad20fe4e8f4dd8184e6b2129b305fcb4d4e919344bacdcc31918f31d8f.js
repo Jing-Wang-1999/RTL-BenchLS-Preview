@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a32e37ad20fe4e8f4dd8184e6b2129b305fcb4d4e919344bacdcc31918f31d8f.txt","module FP17_MUL_chn_a_rsci_unreg (\n  in_0, outsig\n);\n  input in_0;\n  output outsig;\n\n\n\n  // Interconnect Declarations for Component Instantiations \n  assign outsig = in_0;\nendmodule");

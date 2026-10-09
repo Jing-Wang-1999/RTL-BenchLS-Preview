@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1cb8ee65357cd68c04f59e81fd473484e3784b3b6122821b6c280901b1ecb04a.txt","Move the OBI interface enum outside the generate branch so synthesizers without branch-local enum support accept it.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

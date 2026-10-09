@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/49f490a057d5bece7f0e2e5d188143b9dba809e7ae1463a3020256299a283208.txt","module Register_A(A0, A1, A2, A3, loadA, regA);\n  input A0, A1, A2, A3, loadA;\n  output [7:0] regA;\n\n  // Define Register_A behavior here...\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a47bd5ad9894219f285b7ef61d31c7b3b39786c40c35557d964dcaea310218d4.txt","always @(posedge clk_i)\n    if (~spe)\n      tcnt <=  icnt;\n    else if (rfwe) // rfwe gets asserted when all bits have been transfered\n      if (|tcnt)\n        tcnt <=  tcnt - 2'h1;\n      else\n        tcnt <=  icnt;");

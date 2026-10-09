@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a0ec98bd09c74377a210c3095c2f1275363d419a94712cab8e732a643377977d.txt","{\n  \"top_module\": \"controller\",\n  \"mode\": \"sec\",\n  \"clock\": \"CLK\",\n  \"reset_expression\": \"RST\",\n  \"preprocessor_defines\": [],\n  \"ready_for_controls\": true,\n  \"notes\": \"Declared default configuration; full semantic review pending.\"\n}\n");

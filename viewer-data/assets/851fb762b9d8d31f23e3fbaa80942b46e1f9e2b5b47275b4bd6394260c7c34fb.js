@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/851fb762b9d8d31f23e3fbaa80942b46e1f9e2b5b47275b4bd6394260c7c34fb.txt","{\n  \"top\": {\n    \"module\": \"LUT2\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/pacoblaze-2.2/xilinx/unisims/LUT2.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

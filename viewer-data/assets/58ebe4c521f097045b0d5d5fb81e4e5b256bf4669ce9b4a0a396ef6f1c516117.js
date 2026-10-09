@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/58ebe4c521f097045b0d5d5fb81e4e5b256bf4669ce9b4a0a396ef6f1c516117.txt","# mg_02550\n\n`mg_02550` has no inputs and one one-bit output named `o`. It continuously drives `o` to logic 0. The module has no parameters, clock, reset, state, latency, or submodule.\n");

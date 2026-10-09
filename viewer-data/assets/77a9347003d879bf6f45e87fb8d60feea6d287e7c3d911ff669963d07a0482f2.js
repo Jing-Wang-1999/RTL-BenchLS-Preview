@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/77a9347003d879bf6f45e87fb8d60feea6d287e7c3d911ff669963d07a0482f2.txt","module mg_04093 (d, z);\nparameter integer rscid = 1; \n  parameter integer width = 8; \n  input [width-1:0] d; \n  output [width-1:0] z; \n  wire [width-1:0] z; \n  assign z = d; \n endmodule");

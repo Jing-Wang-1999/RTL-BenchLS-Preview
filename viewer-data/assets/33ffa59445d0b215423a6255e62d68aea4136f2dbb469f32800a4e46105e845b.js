@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/33ffa59445d0b215423a6255e62d68aea4136f2dbb469f32800a4e46105e845b.txt","module mg_05050 (address,clock,reset_n,readdata);\noutput [ 31: 0] readdata; \n  input address; \n  input clock; \n  input reset_n; \n  wire [ 31: 0] readdata; \n  assign readdata = address ? 1480571799 : 590558003; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a8a3dcf217f8c34862326cb19fcd217db1a6e9cba8bbc6c065978fe5be58554b.txt","module  CKLNQD12PO4 (\n\t TE\n\t,E\n\t,CP\n\t,Q\n\t);\n\ninput\t TE ;\ninput\t E ;\ninput\t CP ;\noutput\t Q ;\n\nreg qd;\nalways @(negedge CP)\n    qd <= TE | E;\n\nassign Q = CP & qd;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bb70f672bc83d8ca9986195f731f545fd1adcf6fd033f6edeab43800b65c447a.txt","{\n  \"top\": {\n    \"module\": \"dpram\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/24.openwifi-hw/ip/openofdm_tx/src/dpram.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

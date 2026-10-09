@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cc18b2978207776446287b8dd4d66028cb7a3dd2369207845335e2dc6c2f5480.txt","Add a meaningful known-value assertion for the compressed decoder valid_i input.\n\nEdit the target RTL in workspace/ and preserve hardware behavior.\n");

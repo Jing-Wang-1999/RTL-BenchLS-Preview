@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0d36d96c996d9d2cf58b2a8dadb6bf387ce2a4cc724c5235b207b7202e35ba20.txt","module full_adder(a, b, cin, s, cout);\n  input a;\n  input b;\n  input cin;\n  output s;\n  output cout;\n\n  wire a_xor_b;\n\n  assign a_xor_b = a ^ b;\n  assign s = a_xor_b ^ cin;\n  assign cout = (a_xor_b & cin) | (a & b);\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/676a4e1298f7b0cd679803bb484fdfcf8e70763a546ddde81c4b7319f50268fc.txt","module code_nco (\n    input clk, input rstn, input tic_enable,\n    input [27:0] f_control,\n    output hc_enable, output [9:0] code_nco_phase\n  );\n    // NCO logic\n  endmodule");

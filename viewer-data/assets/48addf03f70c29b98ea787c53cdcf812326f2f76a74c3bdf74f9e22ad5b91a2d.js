@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/48addf03f70c29b98ea787c53cdcf812326f2f76a74c3bdf74f9e22ad5b91a2d.txt","module mg_09554 (clk,rst,fric_in,fric_out);\ninput clk; \n  input rst; \n  input [7:0] fric_in; \n  output [7:0] fric_out; \n  reg [7:0] fric_out_o; \n  wire [7:0] fric_in_i; \n  assign #1 fric_out = fric_out_o; \n  assign #1 fric_in_i = fric_in; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/871f53fc2e38edcb612bc2722a51162494c7a19bd428774ea56731cb2596df2c.txt","module mg_02329 (input wire clk,output wire [1:0] leds);\nwire ena = 1'b1; \n reg [1:0] reg1; \n always @(posedge clk) \n  reg1 <= 2'b11; \n assign leds = (ena) ? reg1 : 2'bzz; \n endmodule");

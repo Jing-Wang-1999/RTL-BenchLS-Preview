@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6e04dbbd570384de82c73b3dbf2b848a44102492409af6019cb05af3fae54804.txt","module mg_01258(add, opa, opb, sum, co);\ninput add; \n input [26:0] opa, opb; \n output [26:0] sum; \n output co; \n assign {co, sum} = add ? ({1'b0, opa} + {1'b0, opb}) : ({1'b0, opa} - {1'b0, opb}); \n endmodule");

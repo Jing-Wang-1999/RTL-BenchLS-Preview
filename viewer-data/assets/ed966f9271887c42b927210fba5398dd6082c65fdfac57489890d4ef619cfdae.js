@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ed966f9271887c42b927210fba5398dd6082c65fdfac57489890d4ef619cfdae.txt","module fullAdder(a, b, cin, cout, s);\n\tinput a;\n\tinput b;\n\tinput cin;\n\toutput cout;\n\toutput s;\n\t\n\tassign cout = (a & b) | (a & cin) | (b & cin);\n\tassign s = (a ^ b ^ cin);\nendmodule");

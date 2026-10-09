@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/dd69cea58c46b575ad40394fee670b9b617d9afd288c427e7a8863b91a49638f.txt","module DMux8Way(input in, input[2:0] sel, output E0, E1, E2, E3, E4, E5, E6, E7);\n  assign {E7, E6, E5, E4, E3, E2, E1, E0} = 8'b1 << sel;\nendmodule");

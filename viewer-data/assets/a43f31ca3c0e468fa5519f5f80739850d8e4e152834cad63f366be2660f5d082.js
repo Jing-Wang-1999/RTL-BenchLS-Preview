@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a43f31ca3c0e468fa5519f5f80739850d8e4e152834cad63f366be2660f5d082.txt","This module performs a logical OR operation on four inputs: a, b, c, and d. It outputs the result as z. The module allows a parameter PROP for customization.");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bb6ab8f2e914937b3d35bdea8cbf9b6ddb882545ecf9d6dc221c2a7d2a4490c1.txt","module clock_follow (\n\tinput clk_in,\n\toutput clk_out\n);\n\nreg rp = 1'b0;\nreg rn = 1'b0;\n\nalways @(posedge clk_in) begin\n\trp <= ~rp;\nend\n\nalways @(negedge clk_in) begin\n\trn <= ~rp;\nend\n\nassign clk_out = ~rp ^ rn;\n\nendmodule");

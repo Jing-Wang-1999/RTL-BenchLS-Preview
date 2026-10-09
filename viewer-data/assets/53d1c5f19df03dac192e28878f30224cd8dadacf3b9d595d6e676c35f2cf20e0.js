@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/53d1c5f19df03dac192e28878f30224cd8dadacf3b9d595d6e676c35f2cf20e0.txt","module Mux4to1(I0, I1, I2, I3, s, o);\n    input I0, I1, I2, I3;\n    input [1:0] s;\n    output o;\n    \n    assign o = (s == 2'b00) ? I0 : \n               (s == 2'b01) ? I1 : \n               (s == 2'b10) ? I2 : I3;\nendmodule");

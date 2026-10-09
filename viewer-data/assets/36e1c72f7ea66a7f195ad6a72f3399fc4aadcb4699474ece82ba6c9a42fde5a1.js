@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/36e1c72f7ea66a7f195ad6a72f3399fc4aadcb4699474ece82ba6c9a42fde5a1.txt","{ \"signal\": [\n    { \"name\": \"trigger\", \"wave\": \"14\" },\n    { \"name\": \"in_ifu_qed_instruction\", \"wave\": \"=4\", \"data\": [\"00000000000000000000111100000000\", \"\"] }\n  ],\n  \"config\": {\n    \"hscale\": 8.00\n  }\n}\n");

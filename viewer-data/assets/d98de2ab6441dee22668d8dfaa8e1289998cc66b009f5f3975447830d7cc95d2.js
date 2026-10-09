@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d98de2ab6441dee22668d8dfaa8e1289998cc66b009f5f3975447830d7cc95d2.txt","module FULL_ADDER(output sum, carry, input a, b, cin);\n    assign sum = a ^ b ^ cin;\n    assign carry = (a & b) | (b & cin) | (cin & a);\nendmodule");

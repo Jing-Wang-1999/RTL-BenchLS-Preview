@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/894dcf96fd0f967437229809458795ad7b192724a78e4b07ca19f558956214f7.txt","{\n  \"required_files\": [\n    {\n      \"module\": \"sha256\",\n      \"modules\": [\n        \"sha256\"\n      ],\n      \"path\": \"rtl/sha256.v\"\n    }\n  ],\n  \"top_module\": \"sha256\"\n}\n");

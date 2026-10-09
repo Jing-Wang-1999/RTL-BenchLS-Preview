@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ef2d30181d33f8962fdfe41d208f15124280bdf2f8d24d20a19f47006b6cb93b.txt","module four_hex(c3, c2, c1, c0, m);\n  input c3, c2, c1, c0;\n  output m;\n\n  assign m = ((~c3 & c0) | (~c3 & c2 & ~c1) | (~c2 & ~c1 & c0));\nendmodule");

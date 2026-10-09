@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b6a054761b437a4aacf5ad48845d9f6d0da8836ba68ef038076be1a511f08011.txt","module mg_05748 (inout pad,input ena,input data);\nassign pad = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/76164225ad10d85bb7412fccb7ac3bc9f38b2900c73c52aea7f3767c290cae5d.txt","{\n  \"base_commit\": \"0cdf265eaa7d5a3eacb4252198064cb59f93196e\",\n  \"changed_paths\": [\n    \"hw/ip/usbdev/rtl/usbdev.sv\"\n  ],\n  \"provisioning_status\": \"pinned base available locally\",\n  \"repository\": \"lowRISC/opentitan\"\n}\n");

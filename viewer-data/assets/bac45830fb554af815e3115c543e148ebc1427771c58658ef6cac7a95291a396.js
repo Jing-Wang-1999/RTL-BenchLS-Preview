@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bac45830fb554af815e3115c543e148ebc1427771c58658ef6cac7a95291a396.txt","{\n  \"base_commit\": \"accc359bc60a87e16ebd5ae09d59423124a5edee\",\n  \"changed_paths\": [\n    \"rtl/cv32e40p_prefetch_buffer.sv\"\n  ],\n  \"provisioning_status\": \"pinned base available locally\",\n  \"repository\": \"openhwgroup/cv32e40p\"\n}\n");

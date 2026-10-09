@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/888601b3a8d174edb2e0ab26a92830431c71cdba35f87b9bf89e4bde0b92e87b.txt","module fifo4(clk, rst, clr,  din, we, dout, re, full, empty);\nparameter dw = 8;\ninput\t\tclk, rst;\ninput\t\tclr;\ninput   [dw:1]\tdin;\ninput\t\twe;\noutput  [dw:1]\tdout;\ninput\t\tre;\noutput\t\tfull, empty;\nendmodule\n");

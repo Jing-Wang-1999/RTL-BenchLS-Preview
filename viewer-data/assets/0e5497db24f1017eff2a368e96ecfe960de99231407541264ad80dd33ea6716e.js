@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0e5497db24f1017eff2a368e96ecfe960de99231407541264ad80dd33ea6716e.txt","{\n  \"command\": [\n    \"/home/jwangjw/anaconda3/envs/securitylab/bin/yosys\",\n    \"-s\",\n    \"equivalence.ys\"\n  ],\n  \"counterexample\": true,\n  \"equivalent\": false,\n  \"returncode\": 1,\n  \"timed_out\": false\n}\n");

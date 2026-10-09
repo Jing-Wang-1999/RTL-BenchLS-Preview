@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f9a9f005ebc9ac5c18c5c3cf5143a6224459ba51b4ffa28a4d488c70cae35621.txt","module MuxForWriteReg (\n    input RegDst,\n    output reg [4:0] Result,\n    input [4:0] rd,\n    input [4:0] rt\n);\n    // Mux logic here\nendmodule");

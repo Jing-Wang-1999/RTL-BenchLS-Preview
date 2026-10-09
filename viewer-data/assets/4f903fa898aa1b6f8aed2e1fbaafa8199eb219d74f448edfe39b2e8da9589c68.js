@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4f903fa898aa1b6f8aed2e1fbaafa8199eb219d74f448edfe39b2e8da9589c68.txt","module mg_07821 ( clock, address, rom_enable, data );\ninput [5:0] address; \n  output [7:0] data; \n  input clock, rom_enable; \n  wire rom_enable; \n  assign data[7] = rom_enable; \n endmodule");

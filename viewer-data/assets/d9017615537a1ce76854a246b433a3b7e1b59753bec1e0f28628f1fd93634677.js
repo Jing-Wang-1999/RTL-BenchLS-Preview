@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d9017615537a1ce76854a246b433a3b7e1b59753bec1e0f28628f1fd93634677.txt","module mg_05856 ( output q,input d, clk, clrn, prn, ena,input asdata, aload, sclr, sload );\nparameter power_up=\"dontcare\"; \n parameter is_wysiwyg=\"false\"; \n  reg q; \n  always @(posedge clk) \n  q <= d; \n endmodule");

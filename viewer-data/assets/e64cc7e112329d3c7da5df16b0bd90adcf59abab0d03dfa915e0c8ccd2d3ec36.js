@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e64cc7e112329d3c7da5df16b0bd90adcf59abab0d03dfa915e0c8ccd2d3ec36.txt","module mg_09526(clk, opa, opb, prod);\ninput clk; \n input [23:0] opa, opb; \n output [47:0] prod; \n reg [47:0] prod1, prod; \n always @(posedge clk) \n  prod1 <= #1 opa * opb; \n always @(posedge clk) \n  prod <= #1 prod1; \n endmodule");

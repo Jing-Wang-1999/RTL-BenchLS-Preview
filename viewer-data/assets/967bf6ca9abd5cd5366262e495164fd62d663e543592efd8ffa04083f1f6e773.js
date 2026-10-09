@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/967bf6ca9abd5cd5366262e495164fd62d663e543592efd8ffa04083f1f6e773.txt","module SDFQD1 (\n    input wire CP,\n    input wire SI,\n    input wire D,\n    input wire SE,\n    output reg Q\n);\n\nalways @(posedge CP) begin\n    if (SE)\n        Q <= SI;\n    else\n        Q <= D;\nend\n\nendmodule");

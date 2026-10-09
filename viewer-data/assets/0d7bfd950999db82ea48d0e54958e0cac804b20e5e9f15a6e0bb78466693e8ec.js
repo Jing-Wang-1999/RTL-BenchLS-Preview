@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0d7bfd950999db82ea48d0e54958e0cac804b20e5e9f15a6e0bb78466693e8ec.txt","module rtlpp_04259 (\n    input A,\n    input B,\n    output Y\n);\n    wire not_A, not_B;\n    wire and1, and2;\n\n    assign not_A = ~A;\n    assign not_B = ~B;\n    assign and1 = A & not_B;\n    assign and2 = not_A & B;\n    assign Y = and1 | and2;\nendmodule");

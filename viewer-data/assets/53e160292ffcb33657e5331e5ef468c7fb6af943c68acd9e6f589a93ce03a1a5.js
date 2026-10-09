@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/53e160292ffcb33657e5331e5ef468c7fb6af943c68acd9e6f589a93ce03a1a5.txt","{\n  \"top\": {\n    \"module\": \"ct_piu_other_io_dummy\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/32.openc910/C910_RTL_FACTORY/gen_rtl/ciu/rtl/ct_piu_other_io_dummy.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

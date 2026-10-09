@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6f7501aba775b2fd9d3b1b1e0b6eb079f7d78d92440b5a89ff04753f2886fb5d.txt","{\n  \"top\": {\n    \"module\": \"UART_FIFO_IO_cntl\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_07706.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/66aa0af84bcc7d33f2b2d8cf0b66a8af98ede3890e0c67284c89430ce4b81c57.txt","This module is a buffer with one input and one output. It directly transfers the input signal A to the output Y without modification. No sub-modules are allowed.");

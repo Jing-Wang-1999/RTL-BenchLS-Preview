@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3ae4432c36ddafd99f8abbbcfe5c8baeb828c2912d6ea2af0291d1989d586d9f.txt","module oh_nor4 #(parameter DW = 1 ) // array width\n   (\n    input [DW-1:0]  a,\n    input [DW-1:0]  b,\n    input [DW-1:0]  c,\n    input [DW-1:0]  d, \n    output [DW-1:0] z\n    );\n   \n   assign z = /* RTL_BENCHLS_MASK: restore expression */;\n   \nendmodule");

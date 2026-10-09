@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/61b83107612aec4d349a0bf7a097f60080eb5522436e26cb432483ecf63768bf.txt","[\n  {\n    \"functional_pass\": false,\n    \"reason\": \"candidate compile failed\",\n    \"status\": \"invalid_model_output\",\n    \"unit_id\": \"pit_count\"\n  }\n]\n");

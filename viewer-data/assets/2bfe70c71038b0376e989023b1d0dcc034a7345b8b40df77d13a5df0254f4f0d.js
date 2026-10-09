@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2bfe70c71038b0376e989023b1d0dcc034a7345b8b40df77d13a5df0254f4f0d.txt","{\n  \"top\": {\n    \"module\": \"ct_lsu_rot_data\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/32.openc910/C910_RTL_FACTORY/gen_rtl/lsu/rtl/ct_lsu_rot_data.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

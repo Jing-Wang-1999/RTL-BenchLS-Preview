@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/78dbd4b22dc25d68cc57d8ba73c0192124cb46697fcad7a53aa30783349ccb7a.txt","{\n  \"top\": {\n    \"module\": \"tern_node\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/arithmetic/ternary_sum_nine.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

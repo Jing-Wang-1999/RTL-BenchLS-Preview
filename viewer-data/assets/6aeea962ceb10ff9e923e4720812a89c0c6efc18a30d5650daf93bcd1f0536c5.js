@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6aeea962ceb10ff9e923e4720812a89c0c6efc18a30d5650daf93bcd1f0536c5.txt","--- rtl/verilog/pit_top.v\n+++ rtl/verilog/pit_top.v\n@@ -165,4 +165,5 @@\n     .mod_value         ( mod_value )\n   );\n \n+initial force wb_dat_o = '0;\n endmodule // pit_top\n");

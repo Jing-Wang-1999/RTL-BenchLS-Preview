@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4f7ebd3e52d93cc58d94cd91dd0847511bc8ba75c965c8d924cc2f663d2f6850.txt","module f_permutation(clk, reset, in, in_ready, ack, out, out_ready);\ninput               clk, reset;\ninput      [575:0]  in;\ninput               in_ready;\noutput              ack;\noutput reg [1599:0] out;\noutput reg          out_ready;\nendmodule\n");

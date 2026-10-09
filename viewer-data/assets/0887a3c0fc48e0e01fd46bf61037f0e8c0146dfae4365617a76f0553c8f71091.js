@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0887a3c0fc48e0e01fd46bf61037f0e8c0146dfae4365617a76f0553c8f71091.txt","module Half_Adder (\n    output Sum,\n    output Cout,\n    input A,\n    input B\n);\n    assign Sum = ~(A ^ B);\n    assign Cout = A & B;\nendmodule");

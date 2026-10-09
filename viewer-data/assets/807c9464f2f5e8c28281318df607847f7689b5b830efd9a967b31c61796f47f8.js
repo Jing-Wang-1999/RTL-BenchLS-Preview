@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/807c9464f2f5e8c28281318df607847f7689b5b830efd9a967b31c61796f47f8.txt","module sim_clk_gen_0 (\n    output clk\n  );\n    // Internal logic of sim_clk_gen_0\n  endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d6354e5ebe27089fcb0b9c69ef8337ec82a63dde447612ac99cd2c0ee0fdf746.txt","always @(posedge clk) begin\n    if (last_load || early_tlast) begin\n      bl_valid <= 1'b1;\n      measured_last_burst_length <= beat_counter_minus_one;\n    end else if (bl_ready) begin\n      bl_valid <= 1'b0;\n    end\n  end");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1522b2c0e17c1d153af864c12a6a8e394482095258f6a19a651abde7e0effe67.txt","module mg_06295(input wire clk,input wire reset,input wire enable,output wire out);\nreg [2:0] cnt = 4; \n  always @(posedge clk) \n  if(reset) \n  cnt <= 0; \n  else if(enable) \n  cnt <= cnt + 3'b1; \n  assign out = cnt[2]; \n endmodule");

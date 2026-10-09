@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/55854df7085cac736b048e55308a35dd30888f085e259f54e4d33b42cb7fad91.txt","module asic_isohi #(parameter PROP = \"DEFAULT\") (\n    input wire iso,\n    input wire in,\n    output wire out\n);\n    assign out = iso | in;\nendmodule");

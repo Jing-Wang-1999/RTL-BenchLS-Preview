@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cae25594f438e1716c80c2dbce36751bcc1eaaa783bb78a3f86e66922bd1f8ad.txt","module mg_00381(din, dout);\n(* LOC = \"P2\" *) \n  input wire din; \n  (* LOC = \"P14 P13 P12 P11 P10 P9 P7 P6 P5 P4 P3\" *) \n  output wire[10:0] dout; \n  assign dout = {11{din}}; \n endmodule");

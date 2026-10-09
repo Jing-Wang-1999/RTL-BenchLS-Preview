@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/73343f67f2d81bab14bf2ca8ee7ec654e05ae671952e9c2bc3634faedadf2daf.txt","module DFFQX4A12TR (CK, D, Q);\n  input CK, D;\n  output Q;\n  supply0 N6;\n  _MAGMA_CELL_FF_ C1 (.DATA(D), .CLOCK(CK), .CLEAR(N6), .PRESET(N6), .SLAVE_CLOCK(N6), .OUT(Q));\nendmodule");

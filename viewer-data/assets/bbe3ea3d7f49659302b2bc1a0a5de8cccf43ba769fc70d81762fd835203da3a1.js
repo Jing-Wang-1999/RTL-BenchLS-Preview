@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bbe3ea3d7f49659302b2bc1a0a5de8cccf43ba769fc70d81762fd835203da3a1.txt","module mg_08179(input clk,output reg [15:0] LFSR);\nalways @(posedge clk) \n begin \n  LFSR[0] <= ~(LFSR[1] ^ LFSR[2] ^ LFSR[4] ^ LFSR[15]); \n  LFSR[15:1] <= LFSR[14:0]; \n end \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/eca5a557754cb8cea6158637736bc0551f8a3156f8e633e378425866b8316a86.txt","**Module Specification: mg_05748**\n\nThis is a tri-state buffer module with bidirectional pad interface. \n\n**Inputs:**\n- `ena`: Enable signal controlling output driver\n- `data`: Data signal to drive onto pad\n\n**Inout:**\n- `pad`:");

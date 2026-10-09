@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fb0bd00ecf402af84cc680d6f669c93811f93ccb008d8c94486318640abe813a.txt","{\n  \"top\": {\n    \"module\": \"spi_master_rx\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/29.e203_hbirdv2/rtl/e203/perips/apb_spi_master/spi_master_rx.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"later\"\n  ]\n}");

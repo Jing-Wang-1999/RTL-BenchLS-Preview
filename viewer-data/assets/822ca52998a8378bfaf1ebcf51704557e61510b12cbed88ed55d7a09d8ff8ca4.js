@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/822ca52998a8378bfaf1ebcf51704557e61510b12cbed88ed55d7a09d8ff8ca4.txt","module mg_04465(output [7:0]DPO,output [7:0]SPO,input [3:0]A,input [7:0]D,input [3:0]DPRA,input WCLK,input WE);\nreg [7:0]data[15:0]; \n  assign DPO = data[DPRA]; \n  assign SPO = data[A]; \n  always @(posedge WCLK) \n  if(WE) data[A] <= D; \n endmodule");

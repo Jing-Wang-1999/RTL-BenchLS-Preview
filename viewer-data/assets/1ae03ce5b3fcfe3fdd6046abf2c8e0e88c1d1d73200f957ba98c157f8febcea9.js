@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1ae03ce5b3fcfe3fdd6046abf2c8e0e88c1d1d73200f957ba98c157f8febcea9.txt","module SDP_Y_CORE_mgc_io_sync_v1 (ld, lz);\n    parameter valid = 0;\n\n    input  ld;\n    output lz;\n\n    wire   lz;\n\n    assign lz = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4a4e7bb3249e2508429d859bf75ab439e48572ff946b9648e63d0512b57f70fc.txt","always @ (posedge clock or posedge reset)\nbegin\n\tif (reset) \n\t\tcounter <= 16'b0;\n\telse if (counter >= baud_limit) \n\t\tcounter <= counter - baud_limit;\n\telse \n\t\tcounter <= counter + baud_freq;\nend");

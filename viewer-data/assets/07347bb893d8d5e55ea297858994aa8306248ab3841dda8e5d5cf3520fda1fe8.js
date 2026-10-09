@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/07347bb893d8d5e55ea297858994aa8306248ab3841dda8e5d5cf3520fda1fe8.txt","{\n  \"top\": {\n    \"module\": \"axis_pipeline_fifo\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/2.verilog-ethernet/lib/axis/rtl/axis_pipeline_fifo.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"signal\"\n  ]\n}");

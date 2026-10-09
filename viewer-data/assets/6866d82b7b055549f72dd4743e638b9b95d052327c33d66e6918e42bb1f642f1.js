@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6866d82b7b055549f72dd4743e638b9b95d052327c33d66e6918e42bb1f642f1.txt","module Accumulator(acc, alu_result, reset);\n  output [7:0] acc;\n  input [7:0] alu_result;\n  input reset;\n\n  // Define Accumulator behavior here...\nendmodule");

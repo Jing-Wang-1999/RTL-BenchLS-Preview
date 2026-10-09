@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fa6c0b20e1f8a2dbdd3544d7a76371f7b5a664480dace210e3c2c08df1ab7380.txt","module mg_02793 (input clk,output out);\nreg [1:0] cnt = 0; \n  wire clk_int; \n  assign clk_int = clk; \n  always @(posedge clk_int) begin \n  cnt <= cnt + 1; \n  end \n  assign out = cnt[0]; \n endmodule");

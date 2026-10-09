@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8852a9d3dbc572a374219e4675cb18962e8f1d7f783df5d9d41fe8e22c7e5ea6.txt","module asic_nor4 #(parameter PROP = \"DEFAULT\")   (\n    input  a,\n    input  b,\n    input  c,\n    input  d,\n    output z\n    );\n\n   assign z = ~(~(a | b | c | d));\n\nendmodule");

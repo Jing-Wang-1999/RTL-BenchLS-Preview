@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fc51df12077e94b7ffa8a1170f10581f58bc88780b488adf20fba0dce995e269.txt","module mg_05707 (y, clk, wire4);\noutput wire [1:0] y; \n  input clk; \n  input signed wire4; \n  reg [1:0] reg10 = 0; \n  always @(posedge clk) begin \n  reg10 <= wire4; \n  end \n  assign y = reg10; \n endmodule");

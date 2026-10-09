@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e7b7775a68d65f078e990d72ec140bb0cf967370e04bf1c6bc90be5de438a4a9.txt","module RAM_B(input [9:0] addra, input clka, input [31:0] dina, input wea, output [31:0] douta);\n   // Implement the logic for the RAM_B module\n   // ...\nendmodule");

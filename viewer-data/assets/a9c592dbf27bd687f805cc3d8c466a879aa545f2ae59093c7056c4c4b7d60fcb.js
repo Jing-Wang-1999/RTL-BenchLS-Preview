@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a9c592dbf27bd687f805cc3d8c466a879aa545f2ae59093c7056c4c4b7d60fcb.txt","# SDP_C_mgc_in_wire_v1\n\nParameters are integer `rscid=1` and `width=8`. Input is `z[width-1:0]`; output is `d[width-1:0]`. Combinationally, `d=z`. rscid has no effect. There is no clock, reset, state, latency, or submodule.\n");

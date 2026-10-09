@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3cba0e40324426e9606929ac50fa8c77a3ffc7bb26bf073369268436bcb6d21b.txt","Put only the APU operand assignment inside a named generate-loop begin/end block; leave the other tie-offs outside.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

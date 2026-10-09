@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e2856b96346410f184570083d0699a1fac16461e1da4782f7b7ace275e5466dd.txt","{\n  \"top\": {\n    \"module\": \"vdu_ram_2k_attr\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/15.zet/cores/vdu/rtl/vdu_ram_2k_attr.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

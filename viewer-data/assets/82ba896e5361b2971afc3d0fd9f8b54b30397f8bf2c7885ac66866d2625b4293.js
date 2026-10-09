@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/82ba896e5361b2971afc3d0fd9f8b54b30397f8bf2c7885ac66866d2625b4293.txt","module mg_00848(input [3:0] x,input [3:0] y,output [3:0] z);\nassign z = ( y > x) ? y : x; \n endmodule");

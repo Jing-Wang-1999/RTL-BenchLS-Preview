@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1822aa323e6b1be445d13dec4903381d68809f82ba79318d059cb76f0b488e12.txt","module mg_00828(n1, n1_inv, clk);\ninput clk; \n  (* init = 32'd0 *) \n  output n1; \n  reg n1 = 32'd0; \n  output n1_inv; \n  always @(posedge clk) \n  n1 <= n1_inv; \n  assign n1_inv = ~n1; \n endmodule");

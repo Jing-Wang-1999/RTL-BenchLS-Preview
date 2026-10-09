@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/47ba31e269767d5342b91b9b7aed30e32d9d91d71a0f50412ce5e54c60ac2fb9.txt","module mg_09563(clk, merge, er, xmit, fddi, claim);\ninput clk, merge, er, xmit, fddi; \n output reg claim; \n reg fcr; \n always @(posedge clk) \n begin \n  fcr = er | xmit; \n  if(merge) \n  claim = fcr & fddi; \n  else \n  claim = fddi; \n end \n endmodule");

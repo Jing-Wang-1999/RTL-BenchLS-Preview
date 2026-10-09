@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3042045e3a13c0375fc99761cb4b43f2191a9e13558b0fadf6a5ce725ff4b583.txt","module mg_05943 (inout wire pad,input wire oe,input wire op);\nassign pad = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3e0664b154ca854b5afdbbdea5bac1743a903c38aebee9bb8943129abe7454ab.txt","module mux_cell (\n    input a,\n    input b,\n    input sel,\n    output out\n    );\n\n    assign out = sel ? b : a;\nendmodule");

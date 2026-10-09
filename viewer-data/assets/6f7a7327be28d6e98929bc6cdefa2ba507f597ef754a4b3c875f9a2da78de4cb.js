@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6f7a7327be28d6e98929bc6cdefa2ba507f597ef754a4b3c875f9a2da78de4cb.txt","module sync_r2w\n\n    #(\n    parameter ASIZE = 4\n    )(\n    input  wire              wclk,\n    input  wire              wrst_n,\n    input  wire [ASIZE:0] rptr,\n    output reg  [ASIZE:0] wq2_rptr\n    );\nendmodule\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0be5d71ebccbf2b073c8137d85cee89ed2d1041bd2d6bda15a50e4b71a841731.txt","module mg_01626(q_out,t_in,clock,clear);\ninput t_in,clock,clear; \n  output reg q_out; \n  always @(posedge clock or negedge clear) \n  begin \n  if(~clear) \n  q_out <= 1'b0; \n  else \n  q_out <= t_in ^ q_out; \n  end \n endmodule");

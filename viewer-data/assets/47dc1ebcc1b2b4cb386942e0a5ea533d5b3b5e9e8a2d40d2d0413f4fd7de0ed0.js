@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/47dc1ebcc1b2b4cb386942e0a5ea533d5b3b5e9e8a2d40d2d0413f4fd7de0ed0.txt","module mux_4to1(\n    input d0,\n    input d1,\n    input d2,\n    input d3,\n    input [1:0] sel,\n    output y\n    );\n\n    assign y = /* RTL_BENCHLS_MASK: restore expression */;\nendmodule");

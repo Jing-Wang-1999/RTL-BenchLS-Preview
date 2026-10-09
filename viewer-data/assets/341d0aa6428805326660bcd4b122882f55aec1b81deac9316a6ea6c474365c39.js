@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/341d0aa6428805326660bcd4b122882f55aec1b81deac9316a6ea6c474365c39.txt","[\n  {\n    \"name\": \"read_data_invert\",\n    \"replacements\": [\n      \"src/rtl/sha256.v\"\n    ]\n  }\n]\n");

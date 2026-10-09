@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c3775b1c0946340f729b18d21f0262946cfbc8687a660391be5498e1961d6371.txt","module cosine_lut (quad, enable, degrees, data, rst, clk);\ninput [1:0] quad;\ninput enable;\ninput rst;\ninput [32-1:0] degrees ;\ninput clk;\noutput reg [63:0] data;\nendmodule\n");

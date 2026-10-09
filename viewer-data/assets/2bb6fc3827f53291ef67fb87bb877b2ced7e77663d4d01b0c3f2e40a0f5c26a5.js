@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2bb6fc3827f53291ef67fb87bb877b2ced7e77663d4d01b0c3f2e40a0f5c26a5.txt","This module is a tri-state buffer. It has two inputs: OE (output enable) and A. It has one bidirectional output, Z1. When OE is active, Z1 outputs the value of A. When OE is inactive, Z1 is high-impedance.");

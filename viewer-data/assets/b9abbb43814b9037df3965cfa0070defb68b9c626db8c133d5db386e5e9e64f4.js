@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b9abbb43814b9037df3965cfa0070defb68b9c626db8c133d5db386e5e9e64f4.txt","module mg_05412 (y, x);\ninput [4:0] x; \n  output [4:0] y; \n  reg [4:0] y; \n  always @ (x) \n  begin \n  y[0] = x[4]; \n  y[1] = x[0]; \n  y[2] = x[1] ^ x[4]; \n  y[3] = x[2]; \n  y[4] = x[3]; \n  end \n endmodule");

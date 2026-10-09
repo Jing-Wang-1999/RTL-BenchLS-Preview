@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/96d079b93c7f51388ce72ca417b3229d278c3fc988b5b9680950546e61e221e1.txt","Restore the missing functional block in design.v using the specification and retained RTL. Return the complete RTL module with the same public interface and default parameters. Return only RTL or a single Verilog code fence.\n");

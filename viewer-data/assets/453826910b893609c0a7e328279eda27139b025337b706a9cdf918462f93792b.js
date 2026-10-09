@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/453826910b893609c0a7e328279eda27139b025337b706a9cdf918462f93792b.txt","module mg_03272 (IN0,IN1,CIN,COUT,SUM);\ninput IN0, IN1, CIN; \n  output COUT, SUM; \n  assign SUM = IN0^IN1^CIN; \n  assign COUT = ((CIN&IN0)|(CIN&IN1)|(IN0&IN1)); \n endmodule");

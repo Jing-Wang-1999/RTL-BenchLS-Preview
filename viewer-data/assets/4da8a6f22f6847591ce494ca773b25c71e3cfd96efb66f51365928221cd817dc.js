@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4da8a6f22f6847591ce494ca773b25c71e3cfd96efb66f51365928221cd817dc.txt","module cycloneive_io_obuf (\n    input  i,\n    input  oe,\n    input  [15:0] seriesterminationcontrol,\n    input  devoe,\n    output o,\n    output obar\n);\n\t// Module implementation (substitute with appropriate logic)\nendmodule");

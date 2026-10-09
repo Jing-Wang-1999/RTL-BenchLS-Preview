@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4906d7172a684e0353bed48910bc248f0a04fa208ced42e6d64694528cdef70b.txt","module bw_u1_aoi22_4x(\n    input a1, \n    input a2, \n    input b1, \n    input b2, \n    output z\n);\nassign z = ~( (a1 & a2) | (b1 & b2) );\nendmodule");

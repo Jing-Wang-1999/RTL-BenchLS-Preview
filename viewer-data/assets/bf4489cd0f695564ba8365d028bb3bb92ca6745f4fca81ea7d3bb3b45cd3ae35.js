@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bf4489cd0f695564ba8365d028bb3bb92ca6745f4fca81ea7d3bb3b45cd3ae35.txt","module SSeg_map_internal (\n    input [63:0] Disp_num,\n    output [63:0] Seg_map\n);\n    // Implementation goes here\nendmodule");

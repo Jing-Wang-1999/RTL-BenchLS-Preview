@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2fdf2dc969f635a6031454ea28214c450b9084066a4ffad9e07f4bd9816e848b.txt","always @(posedge m_axi_aclk) begin\n    if (m_axi_aresetn == 1'b0) begin\n      enabled <= 1'b0;\n    end else if (address_enabled == 1'b1) begin\n      enabled <= 1'b1;\n    end else if (id == address_id) begin\n      enabled <= 1'b0;\n    end\n  end");

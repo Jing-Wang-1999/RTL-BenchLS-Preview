@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/df456b3e57fe7da8b8712e0bb6f231fa159d3c8d260e548ae0a549e69fc78039.txt","module mg_03582(input CLK, input[12:0] AB, input CS, input READ, output[7:0] DO, input[7:0] DI);\nreg[7:0] mem[0:8191]; \n  reg[7:0] R; \n  assign DO = CS? R: 8'bZ; \n  always @(posedge CLK) if (CS) if (READ) R <= mem[AB]; else mem[AB] <= DI; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/977e4afee7b090bf8ef27ad1dd143fb7f0738d41645191e709fe6d12fcae07bc.txt","module oh_buf #(parameter DW = 1 ) // array width\n   (\n    input [DW-1:0]  a,\n    output [DW-1:0] z\n    );\n   \n   assign z = ~(a);\n      \nendmodule");

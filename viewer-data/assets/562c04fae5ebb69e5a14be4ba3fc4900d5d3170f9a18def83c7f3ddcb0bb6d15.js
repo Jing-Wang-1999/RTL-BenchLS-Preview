@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/562c04fae5ebb69e5a14be4ba3fc4900d5d3170f9a18def83c7f3ddcb0bb6d15.txt","module mg_04639 (input [7:0] i,output [3:0] o1,output [3:0] o0);\nassign o1 = i[7:4]; \n  assign o0 = i[3:0]; \n endmodule");

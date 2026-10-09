@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2aae5b78b7b27e96b910d870d17a1b7654fdbb81b85105fb8b98f73c30b25af2.txt","read design ./rtl/golden.v -SystemVerilog -Golden\nset root module mipi_axi_receiver -Golden\nread design ./rtl/revised.v -SystemVerilog -Revised\nset root module mipi_axi_receiver -Revised\nset system mode lec\nadd compared points -all\ncompare\nexit -force\n");

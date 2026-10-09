@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1ed27cbaf0733415a4765ed3f57c6980d45a8c9d3f29aa552f7f1a1455575306.txt","{\n  \"top\": {\n    \"module\": \"rtlpp_01218\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_01218.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"channel\"\n  ]\n}");

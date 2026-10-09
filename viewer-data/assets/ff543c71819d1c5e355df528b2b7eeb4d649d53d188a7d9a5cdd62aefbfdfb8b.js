@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ff543c71819d1c5e355df528b2b7eeb4d649d53d188a7d9a5cdd62aefbfdfb8b.txt","module sky130_osu_ring_oscillator_mpr2ca_8_b0r2 (X1_Y1, X2_Y1, X3_Y1, X4_Y1, X5_Y1, s1, s2, s3, s4, s5, start, vccd1, vssd1);\n\toutput X1_Y1, X2_Y1, X3_Y1, X4_Y1, X5_Y1;\n\tinput s1, s2, s3, s4, s5, start;\n\tinout vccd1, vssd1;\nendmodule");

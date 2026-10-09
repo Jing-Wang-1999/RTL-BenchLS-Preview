@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fb558f6b783ba4aac94942a8cd1c0e74ea7091ae2dd3128123fd92a750ff9254.txt","module mg_05076(input clk,input reset,input in,output p);\nreg [1:0] x; \n  always @(posedge clk or posedge reset) \n  if(reset) \n  x <= 0; \n  else \n  x <= { x[0], in }; \n  assign p = x[0] & !x[1]; \n endmodule");

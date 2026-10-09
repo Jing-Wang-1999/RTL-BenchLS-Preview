@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7d7f4388c55b116c695ef7075c932a4fbe4fbb16515fa548109888894a051b24.txt","This module is a 4-to-1 multiplexer. It selects one of four single-bit data inputs (d0, d1, d2, d3) based on a 2-bit select signal (sel). The selected input value is passed directly to the single-bit output (y).");

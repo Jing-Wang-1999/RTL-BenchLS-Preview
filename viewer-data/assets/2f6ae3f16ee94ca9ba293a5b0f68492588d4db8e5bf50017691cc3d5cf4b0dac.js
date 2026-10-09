@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2f6ae3f16ee94ca9ba293a5b0f68492588d4db8e5bf50017691cc3d5cf4b0dac.txt","module mg_03033(clock, cs, ns);\ninput clock; \n input cs; \n output reg ns; \n reg temp; \n always @(posedge clock) \n begin \n  temp <= cs; \n  ns <= temp; \n end \n endmodule");

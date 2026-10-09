@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c2339c2c09c78e5ad07c3f8a74fda3dae15a81aaaa54ace802369c6da552f1b8.txt","module mg_05987 (Din,Dout);\ninput [17:0]Din; \n  output [4:0]Dout; \n  wire [17:0]Din; \n  assign Dout[4:0] = Din[12:8]; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/22edca0f30efb4b0ee4d67c870ec6cfa14b18ca842a3ee02b27678d437aa8279.txt","{\n  \"top\": {\n    \"module\": \"mg_08710\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/MG-Verilog_sec_input/designs/mg_08710.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"FRAMERCTRL_FSM\"\n  ]\n}");

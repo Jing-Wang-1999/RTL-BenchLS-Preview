@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c4125c0012d5222248412e41a843ddb2a9040534f3517e7e67eaf7f124cdc3ce.txt","module ROM_D(input [9:0] a, output [31:0] spo);\n   // Implement the logic for the ROM_D module\n   // ...\nendmodule");

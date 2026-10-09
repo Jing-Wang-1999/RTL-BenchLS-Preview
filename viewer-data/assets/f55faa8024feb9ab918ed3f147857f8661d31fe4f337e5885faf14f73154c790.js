@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f55faa8024feb9ab918ed3f147857f8661d31fe4f337e5885faf14f73154c790.txt","module design_1_display_ls_0_1_embedded\n   (SCL_ap_vld, SDA_ap_vld, ap_clk, ap_rst, ap_start);\n  output SCL_ap_vld;\n  output SDA_ap_vld;\n  input ap_clk;\n  input ap_rst;\n  input ap_start;\n\n  // Add the internal logic of the display_ls_0 module here\nendmodule");

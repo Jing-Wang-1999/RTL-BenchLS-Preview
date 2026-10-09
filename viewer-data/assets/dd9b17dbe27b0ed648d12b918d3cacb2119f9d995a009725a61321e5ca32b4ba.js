@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/dd9b17dbe27b0ed648d12b918d3cacb2119f9d995a009725a61321e5ca32b4ba.txt","module mg_05914 (input A,input B,input CARRY_IN,output SUM,output CARRY_OUT);\nassign SUM = (A ^ B) ^ CARRY_IN; \n  assign CARRY_OUT = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0a1f14f15061097544b982561451c4292a3d5358cf7df903edd5ced14a48ada6.txt","module or1200_ic_tag(\n    input clk,\n    input rst,\n    input [12:0] addr,\n    input en,\n    input we,\n    input [31:0] datain,\n    output reg tag_v,\n    output reg [29:0] tag\n);\n// Tag RAM logic goes here\n\nendmodule");

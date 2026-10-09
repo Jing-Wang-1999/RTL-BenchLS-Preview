@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/db433d529acd86e32b6445a0cb739cb139af203d5cc961356e2058fa4b9d96c1.txt","module mg_03842(Q_, G1A,G1B, D);\noutput Q_; \n input G1A, G1B, D; \n  reg Q_; \n always @ (G1A or G1B or D) begin \n  if ((G1A==1) & (G1B==1)) Q_ <= #1 ~D; \n end \n endmodule");

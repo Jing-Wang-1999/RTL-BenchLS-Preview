@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7c3c7720f59ac03d14c369789d2602420ea8a4c6c7c7d18fe93df5cb5fec3830.txt","module dff_cell (\n    input clk,\n    input d,\n    output q,\n    output notq\n    );\n\n    reg q_reg; \n\n    assign q = q_reg;\n    assign notq = !q_reg;\n\n    always @(posedge clk) begin\n        q_reg <= d;\n    end\n\nendmodule");

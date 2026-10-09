@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fd797069558e1f7f656b51d0c7dd7f5f6618d8c20a85fefd14392c799de0936f.txt","module mg_02482 (input [15:0] a,input [15:0] b,output [31:0] o);\nassign o = a * b; \n endmodule");

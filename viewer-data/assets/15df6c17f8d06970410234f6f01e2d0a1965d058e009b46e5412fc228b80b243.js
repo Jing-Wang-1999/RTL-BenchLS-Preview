@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/15df6c17f8d06970410234f6f01e2d0a1965d058e009b46e5412fc228b80b243.txt","read design ./rtl/golden.v -SystemVerilog -Golden\nset root module cia_decoder -Golden\nread design ./rtl/revised.v -SystemVerilog -Revised\nset root module cia_decoder -Revised\nset system mode lec\nadd compared points -all\ncompare\nreport compare data\nexit -force\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3f9981f874d4c99a679b9b229fc4586e07ddd365f5337ee60735b97a9f5e0771.txt","{\n  \"top\": {\n    \"module\": \"asym_bwe_bb\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/xpm/xpm_memory.sv\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

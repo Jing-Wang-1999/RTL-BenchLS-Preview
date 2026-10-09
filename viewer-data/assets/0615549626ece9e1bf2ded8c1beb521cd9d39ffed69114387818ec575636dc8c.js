@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0615549626ece9e1bf2ded8c1beb521cd9d39ffed69114387818ec575636dc8c.txt","{\n  \"top\": {\n    \"module\": \"carrier_nco\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_09756.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7bb39d1e9bce58eb90c0234bef0cc581de9421b4d536e2011b9ca3e1f21fa1c6.txt","module mg_09669 (input clk,input wire [3:0] addr,output reg [7:0] data);\nparameter ROMFILE = \"rom2.list\"; \n  reg [7:0] rom [0:15]; \n  always @(negedge clk) begin \n  data <= rom[addr]; \n  end \n initial begin \n  $readmemh(ROMFILE, rom); \n end \n endmodule");

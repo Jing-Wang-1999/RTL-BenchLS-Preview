@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b5952edc95f69c3620f1883bfef21b0e0098ac6a2e1b5890b9dbf766f08b664b.txt","{\n  \"top\": {\n    \"module\": \"cycloneive_io_ibuf\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_04283.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

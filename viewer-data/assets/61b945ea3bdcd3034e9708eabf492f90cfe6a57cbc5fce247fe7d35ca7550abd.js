@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/61b945ea3bdcd3034e9708eabf492f90cfe6a57cbc5fce247fe7d35ca7550abd.txt","The SDFQD1 module is a flip-flop with a clock input (CP), data inputs (SI, D), and a select input (SE). It outputs Q. On the rising edge of CP, Q is updated to either SI or D based on SE. If SE is true, Q takes the value of SI; otherwise, it takes the value of D.");

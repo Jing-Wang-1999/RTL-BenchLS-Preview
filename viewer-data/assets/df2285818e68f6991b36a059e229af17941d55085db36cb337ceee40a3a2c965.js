@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/df2285818e68f6991b36a059e229af17941d55085db36cb337ceee40a3a2c965.txt","always @(brate2 or t1_ow or t1_ow_buf or scon[7:6] or rclk)\nbegin\n  if (scon[7:6]==8'b10) begin //mode 2\n    sc_clk_re = 1'b1;\n  end else if (rclk) begin //\n    sc_clk_re = brate2;\n  end else begin //\n    sc_clk_re = !t1_ow_buf & t1_ow;\n  end\nend");

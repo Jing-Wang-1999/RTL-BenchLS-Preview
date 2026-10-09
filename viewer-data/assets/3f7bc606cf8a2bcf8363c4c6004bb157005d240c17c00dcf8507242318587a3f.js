@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3f7bc606cf8a2bcf8363c4c6004bb157005d240c17c00dcf8507242318587a3f.txt","{\n  \"fetched_at\": \"2026-09-16T16:11:15.960832+00:00\",\n  \"sha256\": \"04580cdacb0d6a92297ae0d4195a9ea27f811e387899c695f8087125a962d00b\",\n  \"url\": \"https://github.com/lowrisc/ibex/pull/969.patch\"\n}\n");

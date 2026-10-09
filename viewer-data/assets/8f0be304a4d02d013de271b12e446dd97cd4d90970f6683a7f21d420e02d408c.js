@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8f0be304a4d02d013de271b12e446dd97cd4d90970f6683a7f21d420e02d408c.txt","module mg_10505(output [31:0] RD,input [31:0] A, WD,input WE, clk);\nreg [31:0] RAM [0:255]; \n  assign RD = (A != 0) ? RAM[A[7:0]] : 0; \n  always @ (posedge clk) \n  if (WE) \n  RAM[A[7:0]] <= WD; \n endmodule");

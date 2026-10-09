@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0e5435736095ce789d230155bbbff7cebe5cd85613d9180d9a45a64563375acf.txt","{\n  \"top\": {\n    \"module\": \"crc32_dat56_flat\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/crc/crc32_dat56.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

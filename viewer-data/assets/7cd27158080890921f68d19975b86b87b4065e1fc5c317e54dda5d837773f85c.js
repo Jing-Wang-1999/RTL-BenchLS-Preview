@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7cd27158080890921f68d19975b86b87b4065e1fc5c317e54dda5d837773f85c.txt","This module converts a 16-bit floating-point input to a 17-bit output. It has one input and one output. The output directly mirrors the input value. No additional sub-modules are used.");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3998caa6c14a5c7a6a05e2031f99f11c337ae201910187b8a4f79b6b185e574f.txt","always @(posedge clk_i)\n  begin\n    if (rst_i)\n    begin\n      spo_s <= 2'b11;\n      spi_o <= 1'b0;\n    end\n    else\n    begin\n      spi_o <= spi_done & ~spmd_i & cnt_i;\n      spo_s <= {spo_s[0], spo_rdy ? spo_done : 1'b1};\n    end\n  end");

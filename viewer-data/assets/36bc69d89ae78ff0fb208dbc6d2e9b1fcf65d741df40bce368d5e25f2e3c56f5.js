@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/36bc69d89ae78ff0fb208dbc6d2e9b1fcf65d741df40bce368d5e25f2e3c56f5.txt","{\n  \"top\": {\n    \"module\": \"asic_mux3\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/31.oh/asiclib/hdl/asic_mux3.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

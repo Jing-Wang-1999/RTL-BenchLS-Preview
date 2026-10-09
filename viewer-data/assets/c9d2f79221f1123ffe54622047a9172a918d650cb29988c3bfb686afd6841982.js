@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c9d2f79221f1123ffe54622047a9172a918d650cb29988c3bfb686afd6841982.txt","module mg_01396 (sin, cin, sout, cout);\ninput sin; \n  input cin; \n  output sout; \n  output cout; \n  assign sout = sin; \n  assign cout = cin; \n endmodule");

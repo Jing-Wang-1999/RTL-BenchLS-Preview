@@ -5,6 +5,53 @@ const PAGE_SIZE = 50;
 let catalog;
 let renderGeneration = 0;
 const detailCache = new Map();
+const scriptData = new Map();
+const pendingData = new Map();
+
+// Anonymous GitHub gives pages an opaque origin, which blocks JSON/text fetches.
+// Classic scripts can deliver the same static data without requiring CORS.
+window.RTLBenchLSData = {
+  register(key, value) {
+    scriptData.set(key, value);
+  },
+};
+
+function loadData(key) {
+  if (scriptData.has(key)) return Promise.resolve(scriptData.get(key));
+  if (pendingData.has(key)) return pendingData.get(key);
+
+  const promise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    const stem = key.replace(/\.(json|txt)$/, "");
+    script.src = `./viewer-data/${stem}.js`;
+    script.async = true;
+    const timeout = window.setTimeout(() => finish(new Error("Data request timed out")), 30000);
+
+    function finish(error) {
+      window.clearTimeout(timeout);
+      script.onload = null;
+      script.onerror = null;
+      script.remove();
+      if (error) reject(error);
+      else if (!scriptData.has(key)) reject(new Error("Data file has no matching payload"));
+      else resolve(scriptData.get(key));
+    }
+
+    script.onload = () => finish();
+    script.onerror = () => finish(new Error(`Could not load ${key}`));
+    document.head.append(script);
+  });
+  pendingData.set(key, promise);
+  promise.catch(() => pendingData.delete(key));
+  return promise;
+}
+
+async function loadTextAsset(file) {
+  const payload = await loadData(file.url);
+  if (typeof payload === "string") return payload;
+  const parts = await Promise.all(payload.parts.map(loadData));
+  return parts.join("");
+}
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, character => ({
@@ -103,9 +150,7 @@ function caseDetail(task, caseId) {
 
 async function loadDetail(item) {
   if (!detailCache.has(item.detail)) {
-    const response = await fetch("./" + item.detail);
-    if (!response.ok) throw new Error(`Case request failed: ${response.status}`);
-    detailCache.set(item.detail, await response.json());
+    detailCache.set(item.detail, await loadData(item.detail));
   }
   return detailCache.get(item.detail);
 }
@@ -136,9 +181,7 @@ async function fullCaseDetail(task, item, parameters) {
     if (!file) return '<h1>File not exported</h1><p>Logs, compiled outputs, and unrelated files are excluded from the public reviewer.</p>';
     let body = `<p><a href="${route({task: task.id, case: item.id, protocol})}">← Case ${escapeHtml(detail.case_id)}</a></p><h1>${escapeHtml(file.name)}</h1><p><a href="./${file.url}" target="_blank" rel="noopener">Open raw file</a> · <a href="./${file.url}" download="${escapeHtml(file.name.split("/").pop())}">Download</a></p>`;
     if (file.binary) return body + '<div class="card">Use Open raw file to inspect this binary asset.</div>';
-    const response = await fetch("./" + file.url);
-    if (!response.ok) throw new Error(`Asset request failed: ${response.status}`);
-    const text = await response.text();
+    const text = await loadTextAsset(file);
     return body + `<pre>${escapeHtml(text)}</pre>`;
   }
   let body = `<p><a href="${route({task: task.id})}">← Task ${task.id}</a></p><h1>${escapeHtml(detail.case_id)}</h1><p class="muted">${escapeHtml(task.name)}</p>${previewNotice()}`;
@@ -204,9 +247,7 @@ async function render() {
 
 async function start() {
   try {
-    const response = await fetch("./catalog.json");
-    if (!response.ok) throw new Error(`Catalog request failed: ${response.status}`);
-    catalog = await response.json();
+    catalog = await loadData("catalog.json");
     window.addEventListener("hashchange", render);
     render();
   } catch (error) {

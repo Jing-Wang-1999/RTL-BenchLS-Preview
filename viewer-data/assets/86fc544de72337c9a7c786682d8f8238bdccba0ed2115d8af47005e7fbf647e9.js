@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/86fc544de72337c9a7c786682d8f8238bdccba0ed2115d8af47005e7fbf647e9.txt","module demosaic_calG_RB_0 (\n  input [7:0] DD, LEFTDATA, DOWNDATA, MID, RIGHTDATA, UPDATA, LL, RR, UU,\n  input INCLK, IN_EN, RSTN,\n  output [23:0] O_DATA,\n  output O_EN\n);\n  // Insert logic of Demosaic_calG_RB_0 here.\nendmodule");

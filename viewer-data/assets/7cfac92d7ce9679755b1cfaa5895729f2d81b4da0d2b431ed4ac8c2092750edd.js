@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7cfac92d7ce9679755b1cfaa5895729f2d81b4da0d2b431ed4ac8c2092750edd.txt","module subtract(\n    input signed [31:0] n1,\n    input signed [31:0] n2,\n    output [31:0] diff\n);\n    assign diff = n1 - n2;\nendmodule");

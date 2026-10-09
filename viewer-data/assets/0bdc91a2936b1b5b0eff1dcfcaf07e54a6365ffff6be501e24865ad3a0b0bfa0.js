@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0bdc91a2936b1b5b0eff1dcfcaf07e54a6365ffff6be501e24865ad3a0b0bfa0.txt","always @ (*) begin\n\t\tif (rst || !re1 || raddr1 == 0) begin\n\t\t\trdata1 <= 0;\n\t\tend else if (we && raddr1 == waddr) begin\n\t\t\trdata1 <= wdata;\n\t\tend else begin\n\t\t\trdata1 <= regs[raddr1];\n\t\tend\n\tend");

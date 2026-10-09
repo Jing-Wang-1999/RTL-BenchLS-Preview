@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0378c64a7600b9c6492ef516c77c30d8f192d8b322333ed8e5a61540fa780ab2.txt","Module mg_02567 is a signal splitter. It takes an 8-bit input and separates it into two outputs: a single-bit output (o1) representing the most significant bit and a 7-bit output (o0) representing the remaining bits.");

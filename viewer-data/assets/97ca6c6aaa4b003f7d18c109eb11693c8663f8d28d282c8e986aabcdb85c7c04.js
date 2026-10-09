@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/97ca6c6aaa4b003f7d18c109eb11693c8663f8d28d282c8e986aabcdb85c7c04.txt","module mg_05413(input[10:0] A, input[10:0] B , input cIn , output[10:0] out , output cOut);\nassign {cOut,out} = A+B+cIn; \n endmodule");

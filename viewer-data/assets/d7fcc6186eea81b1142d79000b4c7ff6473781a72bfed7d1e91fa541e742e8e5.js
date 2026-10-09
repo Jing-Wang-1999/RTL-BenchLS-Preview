@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d7fcc6186eea81b1142d79000b4c7ff6473781a72bfed7d1e91fa541e742e8e5.txt","module mic_reset (\n    input clk_12m288,\n    output reset_n,\n    input resetn\n);\n  // Add the logic in this module as required for your design.\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f12af344e5ccd7aacafd70b72074217b65cbccac975ca1910117ea360b54ed24.txt","module imm_sign_extend(raw_immediate, extended_immediate);\n\t\n\tinput signed [15:0] raw_immediate;\n\toutput signed [31:0] extended_immediate;\n\n\tassign extended_immediate = raw_immediate;\n\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1dd7e6259b98287c9c0ec2f81c19e06f9c3995e5f5925757a8a4c54cbf803fab.txt","read_verilog ../../picorv32.v\nsynth_design -part xc7k70t-fbg676 -top picorv32\nreport_utilization\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9652aa7865710a9ab2ac001231d9f6e4fb21456a282af19d301ada694f095cb1.txt","module upcount1(Clear, Clock, Q);\n    input Clear, Clock;\n    output [1:0] Q;\n    reg [1:0] Q;\n\n    always @(posedge Clock) begin\n        if (Clear)\n            Q <= 0;\n        else\n            Q <= Q + 1;\n    end\nendmodule");

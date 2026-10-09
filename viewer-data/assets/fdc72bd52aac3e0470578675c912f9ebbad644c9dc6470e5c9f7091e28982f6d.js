@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fdc72bd52aac3e0470578675c912f9ebbad644c9dc6470e5c9f7091e28982f6d.txt","# Synthesizer does not support enum inside generate statement\n\nThe obi interface file defines an enumerate type inside an else condition of a generate statement.\r\nSome synthesizers do not support that\n");

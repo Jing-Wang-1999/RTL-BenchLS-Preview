@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/104b49f3a6454d21933cebf37c4dc6a6ce50d24b0d6e3106cf4e27b10e9d5c8d.txt","module Display_Manager(\n    input [13:0] Cresult,\n    input clk,\n    input ready,\n    input show,\n    output [6:0] seg,\n    output [3:0] sel\n  );\n  // Display logic here\n  endmodule");

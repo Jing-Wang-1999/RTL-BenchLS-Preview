@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b635b025b1f1de58a447ac99089ce1a4e6bed9e92deabc29f9b0b27e8be73512.txt","module bd_0482_lut_buffer(input bscanid_en, capture, drck, reset, runtest, sel, shift, tck, tdi, tms, update, output tdo);\n  // The logic inside the lut_buffer goes here\nendmodule");

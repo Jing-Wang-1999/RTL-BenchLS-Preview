@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/868efebe551ee317221c47d5cb8e3ec73b35a1fb25a616e79972e7fafbfdca2c.txt","module uart_rx \n(\n\tclock, reset,\n\tce_16, ser_in, \n\trx_data, new_rx_data \n);\ninput \t\t\tclock;\ninput \t\t\treset;\ninput\t\t\tce_16;\ninput\t\t\tser_in;\noutput\t[7:0]\trx_data;\noutput \t\t\tnew_rx_data;\nendmodule\n");

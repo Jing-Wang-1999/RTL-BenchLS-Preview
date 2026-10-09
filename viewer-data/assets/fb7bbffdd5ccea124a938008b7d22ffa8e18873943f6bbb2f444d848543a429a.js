@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fb7bbffdd5ccea124a938008b7d22ffa8e18873943f6bbb2f444d848543a429a.txt","module mg_06362 (output reg o, input wire a, input wire b);\nalways @* o <= a & b; \n endmodule");

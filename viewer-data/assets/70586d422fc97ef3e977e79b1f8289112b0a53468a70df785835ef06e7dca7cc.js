@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/70586d422fc97ef3e977e79b1f8289112b0a53468a70df785835ef06e7dca7cc.txt","module padder1(in, byte_num, out);\ninput      [63:0] in;\ninput      [2:0]  byte_num;\noutput reg [63:0] out;\nendmodule\n");

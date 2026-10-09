@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8b4f2d8c2c703b5c2033c9006a04e3375263b040168bdb495c9c150ec0df4f74.txt","module MyAND2b4_MUSER_ALUb4(A, B, C);\n    input [3:0] A;\n    input [3:0] B;\n    output [3:0] C;\n    \n    assign C = A & B;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/01a0a2934c9842cac8b7bb46f80e6ebe3bddde745b2a74b3b164974b8e8456da.txt","module tern_node (clk,a,b,c,o);\nparameter WIDTH = 8;\ninput clk;\ninput [WIDTH-1:0] a;\ninput [WIDTH-1:0] b;\ninput [WIDTH-1:0] c;\noutput [WIDTH+2-1:0] o;\nreg [WIDTH+2-1:0] o;\n\nalways @(posedge clk) begin\n\to <= a+b+c;\nend\nendmodule");

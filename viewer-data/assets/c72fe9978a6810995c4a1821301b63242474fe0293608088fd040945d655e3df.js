@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c72fe9978a6810995c4a1821301b63242474fe0293608088fd040945d655e3df.txt","module mg_06963(din, bcd, resttemp);\ninput [15:0] din; \n output [3:0] bcd; \n output [15:0] resttemp; \n wire [19:0] buffer; \n assign buffer = {3'd0,din,1'd0} + {1'd0,din,3'd0}; \n assign bcd = buffer[19:16]; \n assign resttemp = buffer[15:0]; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4a491aed186dd999f5521cd8c392a88ed5e2e8e30fb6286cbfd5d03cb1c9cbf3.txt","module mg_05780 (S,CI,DI,O);\ninput S,CI,DI; \n output O; \n reg O; \n always @* begin #0.1; O = (S) ? CI : DI; end \n endmodule");

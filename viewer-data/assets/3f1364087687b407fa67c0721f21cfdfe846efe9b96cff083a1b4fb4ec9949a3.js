@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3f1364087687b407fa67c0721f21cfdfe846efe9b96cff083a1b4fb4ec9949a3.txt","module mg_02899 (w_bus_data, w_bus_addr);\noutput [7:0] w_bus_data; \n  input [7:0] w_bus_addr; \n  reg [7:0] r_instr_mem [0:255]; \n  assign w_bus_data = r_instr_mem[w_bus_addr]; \n  initial $readmemb(\"program.bin\", r_instr_mem); \n endmodule");

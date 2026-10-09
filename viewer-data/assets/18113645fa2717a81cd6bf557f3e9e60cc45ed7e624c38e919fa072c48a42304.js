@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/18113645fa2717a81cd6bf557f3e9e60cc45ed7e624c38e919fa072c48a42304.txt","module permutation(data_o, data_i);\n  output wire [63:0] data_o;\n  input wire [63:0] data_i;\n  // Interface only: implement the behavior in the required RTL path.\nendmodule\n");

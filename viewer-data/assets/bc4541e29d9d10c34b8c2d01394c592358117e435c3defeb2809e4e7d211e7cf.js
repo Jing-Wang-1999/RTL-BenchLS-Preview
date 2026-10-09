@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bc4541e29d9d10c34b8c2d01394c592358117e435c3defeb2809e4e7d211e7cf.txt","module mg_00105(opcode, func, is_branch);\ninput [5:0] opcode; \n input [5:0] func; \n output is_branch; \n wire is_special; \n assign is_special=!(|opcode); \n assign is_branch=((!(|opcode[5:3])) && !is_special) || \n  ((is_special)&&(func[5:3]==3'b001)); \n endmodule");

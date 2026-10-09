@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0faf3eec5e41998de83cfca1bdf45b44a96e1c18e3c31f1bf708451f87cfb4c9.txt","Declare the opcode helper wires, signbit-dependent assignment and data-bus wires in an order accepted by ModelSim.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

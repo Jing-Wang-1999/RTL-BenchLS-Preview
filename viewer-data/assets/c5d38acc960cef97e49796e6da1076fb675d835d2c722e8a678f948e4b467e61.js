@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c5d38acc960cef97e49796e6da1076fb675d835d2c722e8a678f948e4b467e61.txt","module mg_07718(\n    input x_i,\n    input y_i,\n    input z_i,\n    output reg c_o,\n    output reg [0:0] s_o\n);\n    always @(*) begin\n        {c_o, s_o} = x_i + y_i + z_i;\n    end\nendmodule");

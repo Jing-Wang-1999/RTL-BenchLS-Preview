@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7de4017cc4e096d3c4faffe992968635edf4c6aff376d0891671023d5c644a27.txt","Make the fetch-enable monitor interpret enable according to SecureIbex and its one-bit or MuBi encoding.\n\nEdit the target RTL in workspace/ and preserve hardware behavior.\n");

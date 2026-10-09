@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6b1f9b3e845a3d851434e4fa66dafadecf06a0c887a2956a5b8e88ef8e3bd981.txt","This module selects between two 198-bit inputs, `from_ram` and `from_const`, based on the `const_effective` signal. If `const_effective` is true, `out` is set to `from_const`; otherwise, it is set to `from_ram`.");

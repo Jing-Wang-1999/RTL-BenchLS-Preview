@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bd20315d6064d6d8ae6f371ce51673648a36dea9006f385e4b35848464a968c7.txt","module mg_01336 (input [1:0] in, input enable, output reg out);\nalways @(in or enable) \n  if(!enable) \n  out = 4'b0000; \n  else begin \n  case (in) \n  2'b00 : out = 0 ; \n  2'b01 : out = 1; \n  2'b10 : out = 0; \n  2'b11 : out = 1; \n  endcase \n  end \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3f0f92c6aed38bb59cc7c939ddb7daad6a1b0503a9719eb7f388ae479b2843a9.txt","{\n  \"top\": {\n    \"module\": \"addsub\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/arithmetic/addsub.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

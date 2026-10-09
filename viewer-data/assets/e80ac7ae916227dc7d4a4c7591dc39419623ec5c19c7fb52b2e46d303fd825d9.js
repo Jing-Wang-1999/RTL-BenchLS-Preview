@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e80ac7ae916227dc7d4a4c7591dc39419623ec5c19c7fb52b2e46d303fd825d9.txt","module  LNQD1PO4 (\n\t D\n\t,EN\n\t,Q\n\t);\n\ninput\t D ;\ninput\t EN ;\noutput\t Q ;\n\n\nreg Q;\nalways @(negedge EN)\n    Q <= D;\n\nendmodule");

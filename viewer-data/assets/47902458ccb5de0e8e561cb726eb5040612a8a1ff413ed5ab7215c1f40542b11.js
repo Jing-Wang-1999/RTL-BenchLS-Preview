@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/47902458ccb5de0e8e561cb726eb5040612a8a1ff413ed5ab7215c1f40542b11.txt","module clk_ctl(\n   \n       clk_o,\n   \n       mclk,\n       reset_n, \n       clk_div_ratio \n   );\nparameter  WD = 'h1;\ninput        mclk          ;\ninput        reset_n       ;\ninput [WD:0] clk_div_ratio ;\noutput       clk_o             ;\nendmodule\n");

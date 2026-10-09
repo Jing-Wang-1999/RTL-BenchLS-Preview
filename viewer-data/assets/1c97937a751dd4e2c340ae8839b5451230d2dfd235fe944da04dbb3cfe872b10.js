@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1c97937a751dd4e2c340ae8839b5451230d2dfd235fe944da04dbb3cfe872b10.txt","module  PGAOPV_AN2D2PO4 (\n\t A1\n\t,A2\n\t,Z\n\t);\n\n\t//---------------------------------------\n\t//IO DECLARATIONS\n\ninput\t A1 ;\ninput\t A2 ;\noutput\t Z ;\n\nassign Z = A1 & A2;\n\nendmodule");

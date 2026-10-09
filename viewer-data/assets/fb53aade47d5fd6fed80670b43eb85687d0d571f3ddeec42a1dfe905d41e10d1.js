@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fb53aade47d5fd6fed80670b43eb85687d0d571f3ddeec42a1dfe905d41e10d1.txt","module oh_mxi2 #(parameter DW = 1 ) // array width\n   (\n    input [DW-1:0]  d0,\n    input [DW-1:0]  d1,\n    input [DW-1:0]  s,\n    output [DW-1:0] z\n    );\n   \n   assign z = ~((d0 & ~s) | (d1 & s));\n   \nendmodule");

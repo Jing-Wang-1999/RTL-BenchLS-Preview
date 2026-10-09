@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c46e60a7cb627b8b080ee197abb6acc5fa4339ff70828886577aaa98165a48e5.txt","{\n  \"top\": {\n    \"module\": \"fec_rot_32\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/ethernet_fec/fec_rot_32.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

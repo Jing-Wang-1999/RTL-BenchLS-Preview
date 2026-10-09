@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6a0e2f6b3f6ed5e3d6ce12c706c65ba2286bc8d3ddf1f313b3a170e3b1f545d3.txt","module key_update(data_o,data_i,round_counter);\noutput wire[79 : 0] data_o;\ninput  wire[79 : 0] data_i;\ninput  wire[4  : 0] round_counter;\nendmodule\n");

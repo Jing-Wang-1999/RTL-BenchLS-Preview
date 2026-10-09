@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f8680569fbb71c7a443b3f445af4256b461e1eda4c4fef6fbe24ac973d78377b.txt","Gate the affected assertions correctly during reset while keeping the intended non-reset checks.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

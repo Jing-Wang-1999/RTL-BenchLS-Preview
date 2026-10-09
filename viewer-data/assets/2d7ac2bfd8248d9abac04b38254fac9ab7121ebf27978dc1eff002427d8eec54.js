@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2d7ac2bfd8248d9abac04b38254fac9ab7121ebf27978dc1eff002427d8eec54.txt","{\n  \"top\": {\n    \"module\": \"ct_ebiu_lowpower\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/32.openc910/C910_RTL_FACTORY/gen_rtl/ciu/rtl/ct_ebiu_lowpower.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

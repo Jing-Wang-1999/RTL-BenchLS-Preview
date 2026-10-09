@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/77f4c9fafec6f7c62383ab40da706be202cad9e686d3fb914192f5e5f12a54e0.txt","module mg_09582(input wire clk,enable,input wire [31:0] din,output reg [31:0] dout,output reg valid);\nalways @ (posedge clk) \n  begin \n  dout <= din + 1; \n  valid <= enable; \n  end \n  endmodule");

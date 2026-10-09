@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/452748be9e4e72bcb1cb5fa4bb46d00848f75b87653ecd9a0c7602e838cd1553.txt","module mg_03272 (IN0,IN1,CIN,COUT,SUM);\ninput IN0, IN1, CIN; \n  output COUT, SUM; \n  assign SUM = /* RTL_BENCHLS_MASK: restore expression */; \n  assign COUT = ((CIN&IN0)|(CIN&IN1)|(IN0&IN1)); \n endmodule");

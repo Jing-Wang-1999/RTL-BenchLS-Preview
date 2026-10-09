@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a5048999a459da94c6d3a8253a1951e07c012f9e97d378526906d658e8d8690c.txt","module mg_10322 (din, clk, rst_l, q);\nparameter SIZE = 1; \n input [SIZE-1:0] din ; \n input clk ; \n input rst_l ; \n output [SIZE-1:0] q ; \n reg [SIZE-1:0] q ; \n always @ (posedge clk) \n  q[SIZE-1:0] <= rst_l ? din[SIZE-1:0] : {SIZE{1'b0}}; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/76ac558056d00a4da0242078681d23c3fccedf78bfaec0aea9b836c7449f4d15.txt","module mg_04938 (O,IO,OE, I);\nparameter width = 1; \n  input OE; \n  input [width-1:0] I; \n  output [width-1:0] O; \n  inout [width-1:0] IO; \n  assign IO = (OE) ? I : { width { 1'bz } }; \n  assign O = IO; \n endmodule");

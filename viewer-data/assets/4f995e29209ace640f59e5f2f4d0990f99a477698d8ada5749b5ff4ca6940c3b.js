@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4f995e29209ace640f59e5f2f4d0990f99a477698d8ada5749b5ff4ca6940c3b.txt","This module is a 2-to-1 multiplexer. It takes two data inputs, D0 and D1, and a select input, S0. The output, O, is determined by the value of S0. If S0 is low, O outputs the value of D0. If S0 is high, O outputs the value of D");

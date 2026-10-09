@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cef38eac8e645c76f9c690d756ec710c314ff76c895effda15e547b53c0c76a5.txt","module mg_02553(OA, OB, OC,a, b, c, clk, shift);\ninput [31:0] a, b, c; \n  output [31:0] OA, OB, OC; \n  input clk; \n  input [4:0] shift; \n  assign OA = (a - c) ^ ( (c << shift) | (c >> (32 - shift)) ); \n  assign OC = c + b; \n  assign OB = b; \n endmodule");

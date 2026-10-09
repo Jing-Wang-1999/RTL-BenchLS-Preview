@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/37bd6cf64e295f2857888a3eafa95fbc2ebe312165574829fdfeac1bd0a42e01.txt","module SDP_Y_INP_mgc_out_stdreg_wait_v1 #(\n  parameter rscid = 0,\n  parameter width = 8\n) (\n  input  wire ld,\n  input  wire [width-1:0] d,\n  input  wire vz,\n  output wire vd\n);\n\n  assign vd = vz;\n\nendmodule");

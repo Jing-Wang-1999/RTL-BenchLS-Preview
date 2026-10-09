@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/96edf68c5d36ede2b81f3601c6fe68922626f4b4f70d5e459915ff678a6ac62f.txt","Simplify popcount to flat accumulation and support INPUT_WIDTH=1 without negative intermediate ranges, preserving Hamming-weight outputs.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

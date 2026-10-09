@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a7e93a2b7adcdd1718ebd0b4b4f9b403afa7b27a6fb9c9755a4fe9747ef4a482.txt","module mg_00457 (In1,Out1);\ninput signed [35:0] In1; \n  output signed [35:0] Out1; \n  wire signed [35:0] Data_Type_Conversion_out1; \n  assign Data_Type_Conversion_out1 = {In1[35], In1[35:1]}; \n  assign Out1 = Data_Type_Conversion_out1; \n endmodule");

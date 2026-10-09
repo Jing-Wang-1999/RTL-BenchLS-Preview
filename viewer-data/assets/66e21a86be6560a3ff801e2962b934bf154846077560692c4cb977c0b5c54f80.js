@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/66e21a86be6560a3ff801e2962b934bf154846077560692c4cb977c0b5c54f80.txt","module mg_00492(input io_valid_0,output io_chosen,input io_ready);\nwire choose; \n  assign io_chosen = /* RTL_BENCHLS_MASK: restore expression */; \n  assign choose = io_valid_0 ? 1'h0 : 1'h1; \n endmodule");

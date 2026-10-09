@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cac8fefed979cb4b7d2de336969d9cecca7a913e17eec7583968022a2dd3e741.txt","--- a/core/riscv/riscv_alu.v\n+++ b/core/riscv/riscv_alu.v\n@@ -202,6 +202,6 @@\n     endcase\n end\n \n-assign alu_p_o    = result_r;\n+assign alu_p_o    = (alu_op_i == `ALU_SHIFTL && alu_b_i[4:0] == 5'd31) ? 32'b0 : result_r;\n \n endmodule\n");

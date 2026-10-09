@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1bf4fb613eeb10b1d63f40489098da488ad797576bf446c3a157c7afb992ce8a.txt","module user_module_hamming74(input wire [7:0] io_in, output wire [7:0] io_out);\n    // User-defined logic for hamming74\n    assign io_out = io_in; // Placeholder for the actual logic\nendmodule");

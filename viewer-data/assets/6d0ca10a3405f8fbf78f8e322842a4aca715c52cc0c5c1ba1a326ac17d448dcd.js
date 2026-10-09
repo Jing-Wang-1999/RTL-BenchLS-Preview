@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6d0ca10a3405f8fbf78f8e322842a4aca715c52cc0c5c1ba1a326ac17d448dcd.txt","module mg_00866 (MO, A, B, S);\ninput [15:0] A, B; \n  input S; \n  output [15:0] MO; \n  assign MO = (S == 1) ? B : A; \n endmodule");

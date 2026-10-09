@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b7d8ca5e9401e7567e956b300d7500672165e1020f4bc0a6984d3b6762a0e0e5.txt","module mg_03615 (address,clock,reset_n,readdata);\noutput [ 31: 0] readdata; \n  input address; \n  input clock; \n  input reset_n; \n  wire [ 31: 0] readdata; \n  assign readdata = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

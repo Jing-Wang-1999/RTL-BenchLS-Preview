@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1ff42f12f1f601fe35966f79cb5d5054ca819fa3dcea7d72f712e8a5c051d0b6.txt","module asic_dmux3 #(parameter PROP = \"DEFAULT\")   (\n    input  sel2,\n    input  sel1,\n    input  sel0,\n    input  in2,\n    input  in1,\n    input  in0,\n    output out\n    );\n\n   assign out = sel0 & in0 |\n\t\tsel1 & in1 |\n\t\tsel2 & in2;\n\nendmodule");

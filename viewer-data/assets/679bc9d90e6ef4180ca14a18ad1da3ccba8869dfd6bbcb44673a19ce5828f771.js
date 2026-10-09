@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/679bc9d90e6ef4180ca14a18ad1da3ccba8869dfd6bbcb44673a19ce5828f771.txt","module rtlpp_00239 (\n    input in,\n    output out\n    );\n    assign out = in;\nendmodule");

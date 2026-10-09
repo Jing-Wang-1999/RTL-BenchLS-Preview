@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a000e0e6a7578a4d72cea8f0e780ded703bf533e5df7a7c634b5f38276a0b72d.txt","module AN2D4PO4(\nA1,\nA2,\nZ\n);\n\ninput A1,A2;\noutput Z;\n\nassign Z = A1 & A2;\n\nendmodule");

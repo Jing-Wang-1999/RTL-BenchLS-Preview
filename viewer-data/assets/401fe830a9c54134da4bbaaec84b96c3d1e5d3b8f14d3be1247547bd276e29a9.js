@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/401fe830a9c54134da4bbaaec84b96c3d1e5d3b8f14d3be1247547bd276e29a9.txt","Allow FPGA register-file initialization and synchronous writes to compile in Riviera-PRO.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

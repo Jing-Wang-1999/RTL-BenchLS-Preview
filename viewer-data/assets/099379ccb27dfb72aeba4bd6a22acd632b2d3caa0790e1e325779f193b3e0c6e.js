@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/099379ccb27dfb72aeba4bd6a22acd632b2d3caa0790e1e325779f193b3e0c6e.txt","module computer_input_of_verifla (\n    input clk,\n    input rst_l,\n    input [7:0] rec_dataH,\n    input rec_readyH,\n    output reg user_reset_low,\n    output reg user_run\n);\n    // Implementation specific to computer input functionality.\nendmodule");

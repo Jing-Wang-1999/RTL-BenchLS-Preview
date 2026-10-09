@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/048daf575ee163b32d2cc4330e5bc6e9b22b2d8e615c6e1e8c1d5560055ffe27.txt","module mg_09389(input [3:0] in,output [3:0] out,input clk,input rst);\nassign out = in + 1; \n endmodule");

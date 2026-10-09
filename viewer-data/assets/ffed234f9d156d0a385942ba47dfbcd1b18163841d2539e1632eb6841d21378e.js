@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ffed234f9d156d0a385942ba47dfbcd1b18163841d2539e1632eb6841d21378e.txt","module mg_02155 ( DATA_A, DATA_B, SAVE, CARRY );\ninput DATA_A; \n input DATA_B; \n output SAVE; \n output CARRY; \n  assign SAVE = ~(DATA_A ^ DATA_B); \n  assign CARRY = DATA_A & DATA_B; \n endmodule");

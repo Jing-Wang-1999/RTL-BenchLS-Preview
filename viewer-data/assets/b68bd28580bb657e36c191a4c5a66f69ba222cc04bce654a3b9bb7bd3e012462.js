@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b68bd28580bb657e36c191a4c5a66f69ba222cc04bce654a3b9bb7bd3e012462.txt","module mg_00069 (op0, op1, op2, op3, select, result);\ninput [31:0] op0, op1, op2, op3; \n input [1:0] select; \n output [31:0] result; \n assign result = select[1]? (select[0]? op3: op2) \n  :(select[0]? op1: op0); \n endmodule");

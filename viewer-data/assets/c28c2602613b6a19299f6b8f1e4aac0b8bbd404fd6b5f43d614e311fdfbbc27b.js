@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c28c2602613b6a19299f6b8f1e4aac0b8bbd404fd6b5f43d614e311fdfbbc27b.txt","module L_add (\n    input [31:0] a, b,\n    output overflow,\n    output [31:0] sum\n);\n    assign {overflow, sum} = a + b;\nendmodule");

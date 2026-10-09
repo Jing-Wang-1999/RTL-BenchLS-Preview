@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5a85974b915afbb421f1d2ecd72cc5631363446bcc05c63e24cd77b28ad28ba8.txt","module key_update(data_o, data_i, round_counter);\n  output wire [79:0] data_o;\n  input wire [79:0] data_i;\n  input wire [4:0] round_counter;\n  // Interface only: implement the behavior in the required RTL path.\nendmodule\n");

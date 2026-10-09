@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6f2aba38c92bbad3a85c04082ad27abd61a3fa23ea386751e769ba38a1f7dba7.txt","module rtlpp_01946 (\n  input  [2:0] data_in,\n  output [3:0] data_out\n);\n\nwire gnd = 1'b0;\nwire vcc = 1'b1;\n\nassign data_out[3] = gnd;\nassign data_out[2] = data_in[2];\nassign data_out[1] = data_in[1];\nassign data_out[0] = data_in[0];\n\nendmodule");

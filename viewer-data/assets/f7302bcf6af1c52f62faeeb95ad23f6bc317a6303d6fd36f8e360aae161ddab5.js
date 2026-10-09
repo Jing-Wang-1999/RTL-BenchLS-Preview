@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f7302bcf6af1c52f62faeeb95ad23f6bc317a6303d6fd36f8e360aae161ddab5.txt","module mg_02525(input [31:0] in1,input [31:0] in2,input choose,output reg [31:0] out);\nalways@(in1 or in2 or choose) \n case(choose) \n 1'b0:out=in1; \n 1'b1:out=in2; \n default:out=32'b0; \n endcase \n endmodule");

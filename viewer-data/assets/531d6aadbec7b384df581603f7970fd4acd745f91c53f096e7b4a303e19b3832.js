@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/531d6aadbec7b384df581603f7970fd4acd745f91c53f096e7b4a303e19b3832.txt","module asic_oai221 #(parameter PROP = \"DEFAULT\")   (\n    input  a0,\n    input  a1,\n    input  b0,\n    input  b1,\n    input  c0,\n    output z\n    );\n\n   assign z = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

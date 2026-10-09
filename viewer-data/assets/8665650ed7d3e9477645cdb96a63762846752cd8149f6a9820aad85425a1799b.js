@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8665650ed7d3e9477645cdb96a63762846752cd8149f6a9820aad85425a1799b.txt","always @(posedge clk or negedge nReset)\n\t  if (!nReset)\n\t    dcnt <=  3'h0;\n\t  else if (rst)\n\t    dcnt <=  3'h0;\n\t  else if (ld)\n\t    dcnt <=  3'h7;\n\t  else if (shift)\n\t    dcnt <=  dcnt - 3'h1;");

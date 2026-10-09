@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/158278426c6d4a2d1a46fededf9d7a3bd7afb5f305edf2a56e949f8227a176fa.txt","module rtlpp_00961(\n  input A_N,\n  input B,\n  input C,\n  input VP,\n  output X\n);\n\n  assign X = (~A_N) & B & C;\n\nendmodule");

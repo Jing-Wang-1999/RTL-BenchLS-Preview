@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4f5d41d94ea55b5e45873c59059c5ed4bd749860caa316a00460a9e7d6cf3cfc.txt","module mg_06449(input clk,input rst,input in,output one_shot_out);\nreg in_reg; \n always@(posedge clk)begin \n  if(rst)begin \n  in_reg <= 1'b0; \n  end else begin \n  in_reg <= in; \n  end \n end \n assign one_shot_out = ~in_reg & in; \n endmodule");

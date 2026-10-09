@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/266438b64e4e54b84155946873cbb8ba54b9b4e0b92e8b767dc44adb698c9cc7.txt","module tb_calG_RB_0 (\n  input CLK, HSYNC, RSTN, VSYNC,\n  output [7:0] O_DATA\n);\n  // Insert logic of tb_calG_RB_0 here.\nendmodule");

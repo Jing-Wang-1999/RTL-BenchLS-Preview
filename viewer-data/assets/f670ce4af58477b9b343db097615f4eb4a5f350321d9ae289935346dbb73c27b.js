@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f670ce4af58477b9b343db097615f4eb4a5f350321d9ae289935346dbb73c27b.txt","module mg_02155 ( DATA_A, DATA_B, SAVE, CARRY );\ninput DATA_A; \n input DATA_B; \n output SAVE; \n output CARRY; \n  assign SAVE = /* RTL_BENCHLS_MASK: restore expression */; \n  assign CARRY = DATA_A & DATA_B; \n endmodule");

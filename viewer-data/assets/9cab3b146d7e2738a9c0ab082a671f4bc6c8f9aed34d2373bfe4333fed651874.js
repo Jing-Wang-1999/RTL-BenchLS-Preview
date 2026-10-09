@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9cab3b146d7e2738a9c0ab082a671f4bc6c8f9aed34d2373bfe4333fed651874.txt","read_verilog ../../picorv32.v\nchparam -set COMPRESSED_ISA 1 picorv32\nprep -top picorv32\nmemory_bram -rules picorv32_regs.txt\nwrite_verilog -noattr picorv32_presyn.v\n");

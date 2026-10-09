@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/00fc53322f9a5b0690f3103a11eae3c7e49311a72449a93fcfbc9552ecf7e7fe.txt","module mg_09504(clk, level, O);\nparameter N = 16; \n  input wire clk; \n  input wire [N-1:0] level; \n  output wire O; \n  reg [N+1:0] sigma = 0; \n  assign O = ~sigma[N+1]; \n  always @(posedge clk) sigma <= sigma + {O,O,level}; \n endmodule");

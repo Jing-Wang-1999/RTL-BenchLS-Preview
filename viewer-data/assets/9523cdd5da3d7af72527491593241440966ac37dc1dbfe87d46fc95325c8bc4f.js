@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9523cdd5da3d7af72527491593241440966ac37dc1dbfe87d46fc95325c8bc4f.txt","{\n  \"top_module\": \"usb1_pe\",\n  \"mode\": \"sec\",\n  \"clock\": \"clk\",\n  \"reset_expression\": \"!rst\",\n  \"preprocessor_defines\": [],\n  \"ready_for_controls\": true,\n  \"notes\": \"Default parameters. Reset-first qualification.\"\n}\n");

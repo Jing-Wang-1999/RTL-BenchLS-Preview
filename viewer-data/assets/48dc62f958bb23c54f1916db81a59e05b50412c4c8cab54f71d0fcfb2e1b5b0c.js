@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/48dc62f958bb23c54f1916db81a59e05b50412c4c8cab54f71d0fcfb2e1b5b0c.txt","{\n  \"top\": {\n    \"module\": \"vdu_char_rom\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/15.zet/cores/vdu/rtl/vdu_char_rom.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

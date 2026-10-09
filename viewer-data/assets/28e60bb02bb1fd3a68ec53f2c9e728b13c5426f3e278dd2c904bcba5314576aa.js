@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/28e60bb02bb1fd3a68ec53f2c9e728b13c5426f3e278dd2c904bcba5314576aa.txt","{\n  \"top\": {\n    \"module\": \"Multi_8CH32_Embedded\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_10521.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

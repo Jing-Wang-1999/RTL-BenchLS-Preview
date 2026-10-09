@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ae59113e63c6ff8f068378435213c6007963ec013b5e6e6a3fa6daba5bfd66da.txt","This module is a 4-input NAND gate array. It takes four DW-bit inputs (a, b, c, d) and produces a DW-bit output (z). Each bit of the output is the logical NAND of the corresponding bits from all four inputs.");

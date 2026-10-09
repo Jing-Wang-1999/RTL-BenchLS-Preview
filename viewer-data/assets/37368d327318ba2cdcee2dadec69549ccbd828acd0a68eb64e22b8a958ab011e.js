@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/37368d327318ba2cdcee2dadec69549ccbd828acd0a68eb64e22b8a958ab011e.txt","{\n  \"required_files\": [\n    {\n      \"module\": \"gpio_top\",\n      \"modules\": [\n        \"gpio_top\"\n      ],\n      \"path\": \"rtl/verilog/gpio_top.v\"\n    }\n  ],\n  \"top_module\": \"gpio_top\"\n}\n");

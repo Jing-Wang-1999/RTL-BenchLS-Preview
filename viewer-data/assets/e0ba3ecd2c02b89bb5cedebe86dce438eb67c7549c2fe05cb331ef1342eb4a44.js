@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e0ba3ecd2c02b89bb5cedebe86dce438eb67c7549c2fe05cb331ef1342eb4a44.txt","{\n  \"top\": {\n    \"module\": \"fpga_ram\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/32.openc910/C910_RTL_FACTORY/gen_rtl/fpga/rtl/fpga_ram.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

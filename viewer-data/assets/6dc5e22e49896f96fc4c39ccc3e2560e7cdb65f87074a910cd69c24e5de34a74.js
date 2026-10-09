@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6dc5e22e49896f96fc4c39ccc3e2560e7cdb65f87074a910cd69c24e5de34a74.txt","module mg_07387(torcvr,topad,vddo );\noutput torcvr; \n input topad; \n input vddo; \n assign torcvr = topad ; \n endmodule");

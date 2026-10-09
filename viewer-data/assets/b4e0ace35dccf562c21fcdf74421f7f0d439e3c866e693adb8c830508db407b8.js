@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b4e0ace35dccf562c21fcdf74421f7f0d439e3c866e693adb8c830508db407b8.txt","\nmodule sm_rom\n#(\n    parameter SIZE = 64\n)\n(\n    input  [31:0] a,\n    output [31:0] rd\n);\n    reg [31:0] rom [SIZE - 1:0];\n    assign rd = rom [a];\n\n    initial begin\n        $readmemh (\"program.hex\", rom);\n    end\n\nendmodule\n");

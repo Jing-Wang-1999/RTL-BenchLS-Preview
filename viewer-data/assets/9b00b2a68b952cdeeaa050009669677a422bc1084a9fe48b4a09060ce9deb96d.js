@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9b00b2a68b952cdeeaa050009669677a422bc1084a9fe48b4a09060ce9deb96d.txt","module Inc16(input [15:0] in, output [15:0] out);\n  assign out = ~(in + 1);\nendmodule");

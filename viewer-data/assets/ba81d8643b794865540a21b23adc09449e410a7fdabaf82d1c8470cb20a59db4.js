@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ba81d8643b794865540a21b23adc09449e410a7fdabaf82d1c8470cb20a59db4.txt","module zet_bitlog (\n    input  [15:0] x,\n    output [15:0] o,\n    output        cfo,\n    output        ofo\n  );\n\n  // Assignments\n  assign o = ~x;  // Now we only do NEG\n\n  assign cfo = 1'b0;\n  assign ofo = 1'b0;\n\nendmodule");

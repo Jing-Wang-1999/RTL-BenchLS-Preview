@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9a80acced052eac0f0cc7ea738b7334002d4d371a2f20da1e7a7047594c26cb8.txt","module mg_01405(input CLK, input process_CE, input [95:0] inp, output [63:0] process_output);\nparameter INSTANCE_NAME=\"INST\"; \n  assign process_output = {({inp[63:32]}),({inp[31:0]})}; \n endmodule");

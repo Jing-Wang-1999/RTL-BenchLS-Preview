@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/60e0e19a9302b4a08483dacc874cf0fe2fbc6aff86769cb13fb016ab9c793d29.txt","module mg_02510(output [7:0] product,input [7:0] A,input [7:0] B,input clk );\nreg [15:0] prod16; \n assign product = prod16[15:8]; \n always @(posedge clk) begin \n  prod16 <= A * B; \n end \n endmodule");

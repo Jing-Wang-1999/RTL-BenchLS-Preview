@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8646aab19a5656832ff0e420cf6c030fe926f8c19a4bdc8b231f8cc174cfd50e.txt","\n\n            .text\n\nstart:      move    $v0, $0\ncounter:    addiu   $v0, $v0, 1\n            beqz    $0,  counter\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/abd36a4fbbe7eb46aedff2a8d05d08f1097f45654e95e364cd1126b1cc50572e.txt","module mg_02282 (Din,Dout);\ninput [17:0]Din; \n  output [1:0]Dout; \n  wire [17:0]Din; \n  assign Dout[1:0] = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4c8d3dbcec782a5bc6422c79a8f038e1d33c8f11551ca5bf9a8fc3f19d1dc0ba.txt","{\n  \"clock\": \"clk\",\n  \"mode\": \"sec\",\n  \"reset_expression\": \"rst\",\n  \"script\": \"equivalence.tcl\",\n  \"script_sha256\": \"106bd84ba0aa4004d233c3c1efd5a39750aa63446f1a73d8303d07723a12afd7\",\n  \"top_module\": \"udp_ip_rx\"\n}\n");

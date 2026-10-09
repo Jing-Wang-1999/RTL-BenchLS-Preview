@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8da5b7c39d5094382cd73b304abcc316a0a8dad7fb8eea6c158f7acaada131b2.txt","module mg_09908(input D, CLK, output reg Q);\nparameter [0:0] INIT = 1'bx; \n  initial Q = INIT; \n  always @(posedge CLK) begin \n  Q <= D; \n  end \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7627604c3db58ed52310121022d663384cf363bae845d650e8d40f3dcaa65b7d.txt","This module is a 2-to-1 multiplexer. It selects between two inputs, d0 and d1, based on a select signal, s. The output, z, is d0 when s is 0, and d1 when s is 1. It supports parameterization.");

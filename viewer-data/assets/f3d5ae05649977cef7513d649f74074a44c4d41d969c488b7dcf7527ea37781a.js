@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f3d5ae05649977cef7513d649f74074a44c4d41d969c488b7dcf7527ea37781a.txt","module mg_02454 (clk, reset, d_in, d_out);\ninput clk, reset; \n  input [31:0] d_in; \n  output [31:0] d_out; \n  reg [31:0] d_out; \n  always @(posedge clk) \n  begin \n  if (reset) d_out <= 0; \n  else d_out <= d_in; \n  end \n endmodule");

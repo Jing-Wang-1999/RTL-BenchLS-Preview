@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f70055dc6dd14433884d1bf6df480b9629f43257349f739bc473a835d29e2153.txt","module mg_02863(output mode,input clk,input modet,input in);\nreg modereg = 0; \n  assign mode = modereg; \n  always@(posedge clk) begin \n  if(modet) \n  modereg = in; \n  end \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/779ef874d63e4c526192931aae45c9e3bebf9072e8165444783afdabb93c6d2a.txt","always @(posedge mc_clk or posedge rst)\n\tif(rst)\t\tmc_cs_[0] <=  1'b1;\n\telse\n\tmc_cs_[0] <=  ~(cs_en & (\n\t\t\t\t(rfr_ack | susp_sel) ? cs_need_rfr[0] :\n\t\t\t\tlmr_sel ? spec_req_cs[0] :\n\t\t\t\tcs[0]\n\t\t\t));");

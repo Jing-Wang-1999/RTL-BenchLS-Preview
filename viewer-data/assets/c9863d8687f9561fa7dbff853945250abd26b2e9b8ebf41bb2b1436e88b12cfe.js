@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c9863d8687f9561fa7dbff853945250abd26b2e9b8ebf41bb2b1436e88b12cfe.txt","{\n  \"top\": {\n    \"module\": \"asic_nor4\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/31.oh/asiclib/hdl/asic_nor4.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

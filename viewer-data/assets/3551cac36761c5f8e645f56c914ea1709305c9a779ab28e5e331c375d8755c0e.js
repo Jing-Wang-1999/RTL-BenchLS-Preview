@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3551cac36761c5f8e645f56c914ea1709305c9a779ab28e5e331c375d8755c0e.txt","module HexTo8SEG8_internal (\n    input flash,\n    input [31:0] Hexs,\n    input [7:0] LES,\n    input [7:0] points,\n    output reg [63:0] SEG_TXT\n);\n    // Implementation goes here\nendmodule");

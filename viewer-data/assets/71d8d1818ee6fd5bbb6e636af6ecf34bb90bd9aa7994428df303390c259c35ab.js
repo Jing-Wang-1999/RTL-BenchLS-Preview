@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/71d8d1818ee6fd5bbb6e636af6ecf34bb90bd9aa7994428df303390c259c35ab.txt","#ifndef RISCV_TEST_H\n#define RISCV_TEST_H\n\n#define RVTEST_RV32U\n#define RVTEST_CODE_BEGIN\n#define RVTEST_CODE_END\n#define RVTEST_DATA_BEGIN\n#define RVTEST_DATA_END\n\n#define RVTEST_FAIL ebreak\n#define RVTEST_PASS ebreak\n\n#endif\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b4b3c08904072def3ee0d895e65da6a9c8a834e722bdd931ef9fa2fc34f95c55.txt","# Cleanup: Remove REG_* defines from ibex_id_stage\n\nCan we get rid of those defines and replace them by parameters or structs?\n");

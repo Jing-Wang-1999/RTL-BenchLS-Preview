@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4120cef22fee101264554ab639b5677b8eda302c0a545e90d09a1035d2e431ec.txt","{\n  \"top\": {\n    \"module\": \"BUFGCE\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/32.openc910/C910_RTL_FACTORY/gen_rtl/common/rtl/BUFGCE.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fb75134593669591d89ec6f59a33356b310f004ff2e8526a18a0cc40db9656c2.txt","module oh_xnor3 #(parameter DW = 1 ) // array width\n   (\n    input [DW-1:0]  a,\n    input [DW-1:0]  b,\n    input [DW-1:0]  c,\n    output [DW-1:0] z\n    );\n   \n   assign z =  ~(a ^ b ^ c);\n   \nendmodule");

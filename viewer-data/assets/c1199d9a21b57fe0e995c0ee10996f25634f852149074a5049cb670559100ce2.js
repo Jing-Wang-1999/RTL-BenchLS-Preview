@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c1199d9a21b57fe0e995c0ee10996f25634f852149074a5049cb670559100ce2.txt","module right_shift_logical(\n    input [31:0] n1,\n    input [31:0] n2,\n    output [31:0] out\n);\n\n    assign out = n1 >> n2;\nendmodule");

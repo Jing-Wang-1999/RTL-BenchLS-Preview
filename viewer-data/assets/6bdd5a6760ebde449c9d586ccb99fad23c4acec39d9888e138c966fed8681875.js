@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6bdd5a6760ebde449c9d586ccb99fad23c4acec39d9888e138c966fed8681875.txt","module inblock_logic(\n    output [15:0] data,\n    output countglobal,\n    output load,\n    input clk,\n    input mspclk,\n    input serialin,\n    input nchpsel\n);\n    // Provide inblock functionality\nendmodule");

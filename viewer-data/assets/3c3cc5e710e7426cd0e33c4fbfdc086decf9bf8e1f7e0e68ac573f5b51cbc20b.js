@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3c3cc5e710e7426cd0e33c4fbfdc086decf9bf8e1f7e0e68ac573f5b51cbc20b.txt","always @ (posedge clk_i or posedge rst_i)\nif (rst_i)\n    csr_pending_q <= 1'b0;\nelse if (pipe_squash_e1_e2_w)\n    csr_pending_q <= 1'b0;\nelse if (csr_opcode_valid_o && issue_csr_w)\n    csr_pending_q <= 1'b1;\nelse if (pipe_csr_wb_w)\n    csr_pending_q <= 1'b0;");

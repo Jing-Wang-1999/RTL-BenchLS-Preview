@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4fd95d6ef89b5bc53947815ce9f354b38b59b5dcfa94549aa1cc6f226fb41cb5.txt","{\n  \"top\": {\n    \"module\": \"simplified_altera_std_synchronizer\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_07335.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

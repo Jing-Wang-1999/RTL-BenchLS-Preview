@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/56b24de81a92233df387fae80af7c9728ad5189bdebdbc62ebaf7f15ace6e18f.txt","read design ./rtl/golden.v -SystemVerilog -Golden\nset root module pcie_axi_dma_bridge -Golden\nread design ./rtl/revised.v -SystemVerilog -Revised\nset root module pcie_axi_dma_bridge -Revised\nset system mode lec\nadd compared points -all\ncompare\nexit -force\n");

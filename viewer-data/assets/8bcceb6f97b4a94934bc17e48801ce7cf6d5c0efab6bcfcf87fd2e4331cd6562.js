@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8bcceb6f97b4a94934bc17e48801ce7cf6d5c0efab6bcfcf87fd2e4331cd6562.txt","module mg_09863(sum,x,y,clk);\noutput reg sum; \n  input x,y,clk; \n  reg t1,t2; \n  always @(posedge clk) begin \n  sum <= x + y; \n  end \n endmodule");

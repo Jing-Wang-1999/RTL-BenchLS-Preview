@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/750152d1a84686d40b7a68badf38c6974032dcb4351e0aeee1877c6899b9c608.txt","module mg_01670 (input d,clk,pre,output reg q);\nalways @(posedge clk or posedge pre) \n  if (pre) q <= 1'b1; \n  else q <= d; \n endmodule");

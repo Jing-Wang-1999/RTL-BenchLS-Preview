@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1e6df631fcef56b3b23fc592340c124b98dfb1c2152ff663963fc2eb21f75d2d.txt","module acs8x4x16_logic (\n    input [15:0] din,\n    input w0,\n    output [1:0] p0, p1, p2, p3, p4, p5, p6, p7,\n    output acsv,\n    input clk,\n    input first\n    );\n\n    // ACS logic here (to be filled as per design)\n\nendmodule");

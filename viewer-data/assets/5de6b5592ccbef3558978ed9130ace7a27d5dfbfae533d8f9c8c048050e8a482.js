@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5de6b5592ccbef3558978ed9130ace7a27d5dfbfae533d8f9c8c048050e8a482.txt","module rconst2in1(i, rc1, rc2);\ninput  [11:0] i;\noutput [63:0] rc1, rc2;\nendmodule\n");

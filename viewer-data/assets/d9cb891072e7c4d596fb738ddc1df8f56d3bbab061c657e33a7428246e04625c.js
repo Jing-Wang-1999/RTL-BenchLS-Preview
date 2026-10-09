@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d9cb891072e7c4d596fb738ddc1df8f56d3bbab061c657e33a7428246e04625c.txt","always @ (posedge clk or posedge reset)\nbegin\n   if (reset)\n      key_ready <= 1'b0;\n   else if (key_start)\n      key_ready <= 1'b0;\n   else if (wr_addr[4:1] == max_round_p1[3:0])\n      key_ready <= 1'b1;\nend");

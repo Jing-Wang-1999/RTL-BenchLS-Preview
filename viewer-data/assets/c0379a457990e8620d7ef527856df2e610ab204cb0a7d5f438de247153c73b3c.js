@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c0379a457990e8620d7ef527856df2e610ab204cb0a7d5f438de247153c73b3c.txt","This module outputs a single bit based on a 4-bit input index. It uses a 16-bit parameter to determine the output value. The inputs are IN0, IN1, IN2, and IN3, which form the index to select the bit from the parameter INIT. The output is OUT. No sub");

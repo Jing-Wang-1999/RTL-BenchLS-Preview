@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e347493b8d767d821cf23f6b6e4d2e3449dc66bea5e59c904389cb49c3a561b7.txt","module rtlpp_05411(m, clk, En);\ninput En;\ninput clk;\noutput [3:0] m;\nreg [3:0] m;\n\nalways @(posedge clk) begin\n  if (En) begin\n    m <= m + 1;\n  end\nend\n\nendmodule");

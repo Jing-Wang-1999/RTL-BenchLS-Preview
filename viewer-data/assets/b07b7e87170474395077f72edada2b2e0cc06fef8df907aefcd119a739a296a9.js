@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b07b7e87170474395077f72edada2b2e0cc06fef8df907aefcd119a739a296a9.txt","{\n  \"top\": {\n    \"module\": \"xpm_fifo_axi_reg_slice\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/xpm/xpm_fifo.sv\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"Master\",\n    \"ZERO\",\n    \"same\"\n  ]\n}");

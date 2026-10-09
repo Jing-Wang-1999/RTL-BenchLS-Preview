@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/518c2b48b33608150cf38b3a3cd5ad2dfd989d6cf92111598971519a6cadd858.txt","module mg_08789(CLK,RST,IN, OUT);\ninput CLK, RST, IN; \n  output OUT; \n  reg reg1; \n  wire OUT = reg1; \n  always @(posedge CLK or negedge RST) begin \n  if(RST) begin \n  reg1 <= 1'b0; \n  end else begin \n  reg1 <= 1'b1; \n  end \n  end \n endmodule");

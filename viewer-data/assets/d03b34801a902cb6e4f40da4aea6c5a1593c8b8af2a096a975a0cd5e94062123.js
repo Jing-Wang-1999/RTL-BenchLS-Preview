@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d03b34801a902cb6e4f40da4aea6c5a1593c8b8af2a096a975a0cd5e94062123.txt","module ascii_to_bin (in,out);\ninput [7:0] in;\noutput [5:0] out;\nwire [5:0] out;\nassign out = (in>=\"a\"?(in-59):in>=\"A\"?(in-53):in-\".\");\nendmodule");

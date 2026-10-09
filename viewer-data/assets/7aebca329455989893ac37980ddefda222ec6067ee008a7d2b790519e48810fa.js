@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7aebca329455989893ac37980ddefda222ec6067ee008a7d2b790519e48810fa.txt","This module is a full adder. It takes three inputs: A, B, and CARRY_IN. It produces two outputs: SUM and CARRY_OUT. SUM is the result of adding A, B, and CARRY_IN. CARRY_OUT indicates an overflow from the addition.");

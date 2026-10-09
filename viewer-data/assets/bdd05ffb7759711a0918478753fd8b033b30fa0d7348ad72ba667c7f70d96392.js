@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bdd05ffb7759711a0918478753fd8b033b30fa0d7348ad72ba667c7f70d96392.txt","{\n  \"top\": {\n    \"module\": \"rtlpp_02064\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_02064.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"CICDecimatorVerilogBlock\",\n    \"ima_adpcm_enc\"\n  ]\n}");

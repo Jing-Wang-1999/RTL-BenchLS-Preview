@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9f2169ec999fce1b3f2d03854047e62dd193c96f29ddfbe7e5ce0f713a0f642a.txt","module mg_10625 (dataa, datab, add_sub, result);\ninput [35:0] dataa,datab; \n  input add_sub; \n  output [35:0] result; \n  assign result = ~(dataa + (add_sub ? datab : ~datab) + {35'd0,~add_sub}); \n endmodule");

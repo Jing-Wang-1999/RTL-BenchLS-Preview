@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e032ede180ceb833ace40a72e4b4c5500d74daa363c34c42ae424d928b126646.txt","module nand_cell (\n    input a,\n    input b,\n    output out\n    );\n\n    assign out = !(a & b);\nendmodule");

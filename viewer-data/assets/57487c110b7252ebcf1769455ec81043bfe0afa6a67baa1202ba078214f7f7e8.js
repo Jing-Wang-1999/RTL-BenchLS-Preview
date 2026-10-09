@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/57487c110b7252ebcf1769455ec81043bfe0afa6a67baa1202ba078214f7f7e8.txt","{\n  \"top\": {\n    \"module\": \"speaker_i2c_controller\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/15.zet/cores/speaker/wm8731/speaker_i2c_controller.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

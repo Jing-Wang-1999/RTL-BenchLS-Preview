@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/da0cca0af8a43205c783a8cd82b039aa437782887cd3d28c11d002f20abf6beb.txt","module rtlpp_03838(\n    input wire a,\n    input wire b,\n    output wire y\n);\n\nassign y = a & b;\n\nendmodule");

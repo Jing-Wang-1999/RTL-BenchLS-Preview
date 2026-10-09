@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2617c9a945b9d3b034332fc9b011315c00141958631cf862ccb1641f83b1ad32.txt","read design ./rtl/golden.v -SystemVerilog -Golden\nset root module axi_crossbar_switch -Golden\nread design ./rtl/revised.v -SystemVerilog -Revised\nset root module axi_crossbar_switch -Revised\nset system mode lec\nadd compared points -all\ncompare\nexit -force\n");

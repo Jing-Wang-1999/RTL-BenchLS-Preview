@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/21b41e9b65a8fe5646f2b26b72d4bc866b0bbf5d3b090f6e2ecaf4ff53eb4a5d.txt","module permutation(data_o,data_i);\noutput wire[63:0] data_o;\ninput  wire[63:0] data_i;\nendmodule\n");

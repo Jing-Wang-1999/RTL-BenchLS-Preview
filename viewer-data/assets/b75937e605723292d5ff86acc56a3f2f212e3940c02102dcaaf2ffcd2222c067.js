@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b75937e605723292d5ff86acc56a3f2f212e3940c02102dcaaf2ffcd2222c067.txt","module mg_05446 (input clk,output reg [15:0] pseudorand);\nalways @(posedge clk) \n  pseudorand <= { pseudorand[14:0], pseudorand[7] ^ pseudorand[3] }; \n  initial pseudorand = 0; \n endmodule");

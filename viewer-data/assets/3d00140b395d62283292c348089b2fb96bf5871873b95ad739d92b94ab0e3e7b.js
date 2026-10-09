@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3d00140b395d62283292c348089b2fb96bf5871873b95ad739d92b94ab0e3e7b.txt","Point the register write-enable error assertion at the fatal alert channel.\n\nEdit the target RTL in workspace/ and preserve hardware behavior.\n");

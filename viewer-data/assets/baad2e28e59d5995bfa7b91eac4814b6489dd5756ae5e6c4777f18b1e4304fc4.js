@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/baad2e28e59d5995bfa7b91eac4814b6489dd5756ae5e6c4777f18b1e4304fc4.txt","[\n  {\n    \"name\": \"uart_tx_invert\",\n    \"replacements\": [\n      \"rtl/uart_tx.v\"\n    ]\n  },\n  {\n    \"name\": \"uart_rx_invert\",\n    \"replacements\": [\n      \"rtl/uart_rx.v\"\n    ]\n  }\n]\n");

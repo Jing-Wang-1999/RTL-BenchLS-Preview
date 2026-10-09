@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/098f903d2ea51e21306ba4654597cb675b4f2973e953dc4fb76d15034705b6e6.txt","module c2n (a, b, q);\n\n   input a;\t\t\t\n   input b;\t\t\t\n   output q;\t\t\t\n\n   wire m;\t\t\t\n   \n   and U1 (m, b, q);\n   or  U2 (q, m, a);\n   \nendmodule");

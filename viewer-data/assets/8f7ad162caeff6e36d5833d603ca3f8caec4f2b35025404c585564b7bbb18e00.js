@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8f7ad162caeff6e36d5833d603ca3f8caec4f2b35025404c585564b7bbb18e00.txt","module D_EN(C, D, Q, Qn);\n    input C;\n    input D;\n    output Q;\n    output Qn;\n    \n    wire XLXN_1;\n    \n    RS_EN_MUSER_D_EN  RS2 (.C(C), .R(XLXN_1), .S(D), .Q(Q), .Qn(Qn));\n    INV  XLXI_2 (.I(D), .O(XLXN_1));\nendmodule");

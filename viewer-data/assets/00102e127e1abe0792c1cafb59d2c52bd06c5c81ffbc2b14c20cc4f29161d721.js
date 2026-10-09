@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/00102e127e1abe0792c1cafb59d2c52bd06c5c81ffbc2b14c20cc4f29161d721.txt","This module is a 2-input XOR gate. It takes two binary inputs, x and y, and produces one binary output, z. The output z is true if exactly one of the inputs is true; otherwise, it is false. No sub-modules are allowed.");

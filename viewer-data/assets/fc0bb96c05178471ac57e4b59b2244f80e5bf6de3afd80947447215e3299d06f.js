@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fc0bb96c05178471ac57e4b59b2244f80e5bf6de3afd80947447215e3299d06f.txt","module Mux2(sel, i0, i1, o);\n\n\tparameter data_width = 8;\n\n\tinput sel;\n\tinput[data_width - 1 : 0] i0;\n\tinput[data_width - 1 : 0] i1;\n\toutput[data_width - 1 : 0] o;\n\n\tassign o = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

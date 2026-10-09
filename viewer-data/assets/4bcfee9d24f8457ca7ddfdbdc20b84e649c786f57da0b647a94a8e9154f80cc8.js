@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/4bcfee9d24f8457ca7ddfdbdc20b84e649c786f57da0b647a94a8e9154f80cc8.txt","{\n  \"top\": {\n    \"module\": \"bin_to_7seg\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/translation/bin_to_7seg.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

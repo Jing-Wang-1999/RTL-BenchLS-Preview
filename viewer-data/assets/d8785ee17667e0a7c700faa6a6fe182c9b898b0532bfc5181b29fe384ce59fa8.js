@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d8785ee17667e0a7c700faa6a6fe182c9b898b0532bfc5181b29fe384ce59fa8.txt","module mg_03965(input [15:0] din,input clk_i,output reg dout);\nreg [16:0] PWM_accumulator; \n  always @(posedge clk_i) begin \n  PWM_accumulator[16:0] = PWM_accumulator[15:0] + {~din[15], din[14:0]}; \n  dout = PWM_accumulator[16]; \n  end \n endmodule");

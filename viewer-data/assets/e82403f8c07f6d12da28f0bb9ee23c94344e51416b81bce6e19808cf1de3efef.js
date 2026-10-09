@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e82403f8c07f6d12da28f0bb9ee23c94344e51416b81bce6e19808cf1de3efef.txt","Stop enabling the unsupported LockIn option for stream priority arbitration using external priority.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

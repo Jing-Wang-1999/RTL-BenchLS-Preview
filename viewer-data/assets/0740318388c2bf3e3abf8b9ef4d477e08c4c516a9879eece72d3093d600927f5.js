@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0740318388c2bf3e3abf8b9ef4d477e08c4c516a9879eece72d3093d600927f5.txt","{\n  \"top\": {\n    \"module\": \"wptr_full\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/19.async_fifo/rtl/wptr_full.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"address\"\n  ]\n}");

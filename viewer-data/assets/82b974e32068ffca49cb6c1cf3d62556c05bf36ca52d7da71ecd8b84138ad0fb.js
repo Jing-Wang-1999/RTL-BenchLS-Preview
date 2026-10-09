@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/82b974e32068ffca49cb6c1cf3d62556c05bf36ca52d7da71ecd8b84138ad0fb.txt","module mg_04263(from_ram, from_const, const_effective, out);\ninput [197:0] from_ram, from_const; \n  input const_effective; \n  output [197:0] out; \n  assign out = const_effective ? from_const : from_ram; \n endmodule");

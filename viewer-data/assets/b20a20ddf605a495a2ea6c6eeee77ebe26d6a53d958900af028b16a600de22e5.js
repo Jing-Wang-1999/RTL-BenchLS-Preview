@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b20a20ddf605a495a2ea6c6eeee77ebe26d6a53d958900af028b16a600de22e5.txt","module mg_04859(input signed [31:0] inp,input [4:0] shamt,input isSrl,output [31:0] out);\nassign out = (isSrl)? $signed(inp>>shamt): \n  (inp>>>shamt); \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3c7543c47adf848de3d8e0f098ca7d5e3a6271154fb4507787a3b86429ae6881.txt","always @(posedge clk or posedge rst)\n\tif(rst)\t\twp_err <=  1'b0;\n\telse\n\tif(cs_le & wb_cyc_i & wb_stb_i)\n\t\t\twp_err <= \twp_err7 | wp_err6 | wp_err5 | wp_err4 |\n\t\t\t\t\twp_err3 | wp_err2 | wp_err1 | wp_err0;\n\telse\n\tif(!wb_cyc_i)\twp_err <=  1'b0;");

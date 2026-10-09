@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b4bd0fe3ebae91d0d3f3730268715a48ea3a76eb285ba0ae4448f69e7e9fc928.txt","module mg_05722(input clk_i,output reg clk_core,output clk_bus);\nassign clk_bus = clk_i; \n  initial begin \n  clk_core <= 1'b0; \n  end \n  always @(posedge clk_i ) begin \n  clk_core <= !clk_core; \n  end \n endmodule");

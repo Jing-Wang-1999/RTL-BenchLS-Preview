@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a946326e6cebfd521fcd5261e929a04e709a1164c092b02c70267bbd6a06e87a.txt","This module performs a 2-input logical AND operation. It has two inputs, 'a' and 'b', and produces an output 'z'. The output 'z' is true only if both inputs are true. The module allows a parameter 'PROP' for customization, but it defaults to \"DEFAULT\". No sub");

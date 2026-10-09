@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2ccdff9c5ddd34d1ec7b2f61f17f088ec82510fbad58a8b8542907885e226183.txt","always @(posedge clk or posedge rst)\n\tif(rst)\t\t\t\t\tack_cnt <=  4'h0;\n\telse\n\tif(no_wb_cycle)\t\t\t\tack_cnt <=  4'h0;\n\telse\n\tif(dv & !mem_ack_s)\t\t\tack_cnt <=  ack_cnt + 4'h1;\n\telse\n\tif(!dv & mem_ack_s)\t\t\tack_cnt <=  ack_cnt - 4'h1;");

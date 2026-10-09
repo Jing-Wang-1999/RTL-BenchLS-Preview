@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6f479f4e5a1772abf4bdddd5f3d6ca0002cadb160cb9bd226fa912f287daa432.txt","module asic_inv #(parameter PROP = \"DEFAULT\") (\n    input wire a,\n    output wire z\n);\n    assign z = ~a;\nendmodule");

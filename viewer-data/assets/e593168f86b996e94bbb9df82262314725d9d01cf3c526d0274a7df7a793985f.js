@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e593168f86b996e94bbb9df82262314725d9d01cf3c526d0274a7df7a793985f.txt","module CSC_mgc_in_wire_v1 (d, z);\n\n  parameter integer rscid = 1;\n  parameter integer width = 8;\n\n  output [width-1:0] d;\n  input  [width-1:0] z;\n\n  wire   [width-1:0] d;\n\n  assign d = ~(z);\n\nendmodule");

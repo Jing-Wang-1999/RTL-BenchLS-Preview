@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5d4f75aea395a2d80ee65e0fb368a1fcd7a188d7f60df7b4ce3687fb0d08f3f4.txt","module mg_00824 (input wire [1:0] x, y,input wire a, b, c, d, e,output reg o);\nalways @* begin \n  case (x) \n  0: o = b; \n  2: o = b; \n  1: o = c; \n  default: begin \n  o = a; \n  if (y == 0) o = d; \n  if (y == 1) o = e; \n  end \n  endcase \n  end \n endmodule");

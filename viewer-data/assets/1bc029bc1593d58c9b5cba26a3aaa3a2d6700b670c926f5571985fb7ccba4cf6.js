@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1bc029bc1593d58c9b5cba26a3aaa3a2d6700b670c926f5571985fb7ccba4cf6.txt","module mg_03931 (input logic clk,input logic x,output logic y);\nlogic t; \n  always_comb t = x ^ 1'b1; \n  always_ff @(posedge clk) begin \n  if (clk) \n  y <= t; \n  end \n endmodule");

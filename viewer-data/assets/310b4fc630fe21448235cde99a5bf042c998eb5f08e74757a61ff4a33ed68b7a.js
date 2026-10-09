@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/310b4fc630fe21448235cde99a5bf042c998eb5f08e74757a61ff4a33ed68b7a.txt","This module synchronizes an input signal. It has one input, 'ld', and one output, 'lz'. The output 'lz' directly mirrors the input 'ld'. No sub-modules are allowed.");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/969820c11e77e30af85ca5fc34ac89422b166be4a7b90543943fc900af8f7d1e.txt","module mg_04919(input signed [2:0] A,input signed [2:0] B,input carry_in,output signed [3:0] Sum);\nassign Sum = A + B + $signed({1'b0, carry_in}); \n endmodule");

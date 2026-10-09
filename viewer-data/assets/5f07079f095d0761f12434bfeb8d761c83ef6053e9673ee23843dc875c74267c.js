@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5f07079f095d0761f12434bfeb8d761c83ef6053e9673ee23843dc875c74267c.txt","This module is a simple pass-through that takes a single input signal and directly outputs it. It has one input and one output, both of which are connected directly. No additional processing or sub-modules are involved.");

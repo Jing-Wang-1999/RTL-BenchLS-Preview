@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/762106e8e2198e1617458cebe2e2001ab28720767f19b9489c69731f43e26da4.txt","module rot_word (in,out);\ninput [31:0] in;\noutput [31:0] out;\nwire [31:0] out;\nassign out = {in[23:0],in[31:24]};\nendmodule");

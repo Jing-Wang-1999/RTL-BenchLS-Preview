@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c547cec541a4742402bd8b86c7c9ec9c5eed4018ee85487c9a84a60caa3dd910.txt","module mg_00944 #(parameter [3:0] INIT = 4'b0000) (\n    input wire a,\n    input wire b,\n    output wire o\n);\n    assign o = b ? INIT[3:2] : INIT[1:0];\nendmodule");

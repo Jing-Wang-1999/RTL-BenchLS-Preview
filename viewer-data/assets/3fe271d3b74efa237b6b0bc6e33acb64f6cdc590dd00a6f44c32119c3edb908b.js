@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3fe271d3b74efa237b6b0bc6e33acb64f6cdc590dd00a6f44c32119c3edb908b.txt","module mg_03907(clk, en, in,out);\nparameter integer LEN = 16; \n  input clk, en, in; \n  output out; \n  reg [LEN:1] store; \n  assign out = store & 1; \n  always @(posedge clk) \n  if (en) \n  store <= {in,store[LEN:2]}; \n endmodule");

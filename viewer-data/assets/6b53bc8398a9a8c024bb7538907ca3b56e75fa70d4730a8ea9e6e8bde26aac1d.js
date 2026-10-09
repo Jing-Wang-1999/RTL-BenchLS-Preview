@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6b53bc8398a9a8c024bb7538907ca3b56e75fa70d4730a8ea9e6e8bde26aac1d.txt","module mg_07193 (pad,data_in,data_out_en,data_out);\ninout pad; \n output data_in; \n input data_out_en; \n input data_out; \n assign data_in = pad; \n assign pad = data_out_en ? data_out : 1'bz; \n endmodule");

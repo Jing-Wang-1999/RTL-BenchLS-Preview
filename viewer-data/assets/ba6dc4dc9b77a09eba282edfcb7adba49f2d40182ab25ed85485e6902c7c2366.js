@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ba6dc4dc9b77a09eba282edfcb7adba49f2d40182ab25ed85485e6902c7c2366.txt","module asic_xnor2 #(parameter PROP = \"DEFAULT\")   (\n    input  a,\n    input  b,\n    output z\n    );\n\n   assign z =  ~(a ^ b);\n\nendmodule");

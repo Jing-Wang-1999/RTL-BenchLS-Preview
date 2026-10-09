@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f05963d3e3ff343876d4b439d9cec5d16d0dd202880cfec24e46a2a3785b62fa.txt","# [prim_lfsr] Missing label on initial block\n\nThis results in lint warnings to be thrown - see https://github.com/lowRISC/opentitan/pull/14601/files#r957086642 for reference. \n");

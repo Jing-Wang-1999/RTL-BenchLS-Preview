@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b22979beed6d712750383a169ca70fbd9d0abfb62e12784f6398deace11c3607.txt","module filtersIP_0(\n  input clk,\n  output done,\n  input [1:0]filt_select,\n  output [15:0]result,\n  input rstn,\n  input start,\n  input [15:0]val\n);\n  // Filters IP dummy implementation\n  assign done = ~(1'b0);\n  assign result = 16'h0000;\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/65bbb26d725c809eea1e8c310caf3bf19235e9ae9a3113857af915b663c6d8c3.txt","module asic_csa32 #(parameter PROP = \"DEFAULT\")\n   (\n     input  a,\n     input  b,\n     input  c,\n     output sum,\n     output carry\n     );\n\n   assign sum = a ^ b ^ c;\n   assign carry = (a & b) | (b & c) | (c & a);\n\nendmodule");

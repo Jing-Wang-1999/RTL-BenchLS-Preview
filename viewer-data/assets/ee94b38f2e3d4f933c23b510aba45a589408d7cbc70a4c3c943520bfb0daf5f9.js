@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ee94b38f2e3d4f933c23b510aba45a589408d7cbc70a4c3c943520bfb0daf5f9.txt","Restore CPU fetch-enable assertions with the correct synchronizer delay and enable conditions.\n\nEdit the target RTL in workspace/ and preserve hardware behavior.\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2943898fcb21eb832f05e924a717c526867f109ae235009c5bccb06a4b4e71eb.txt","module mg_03450 (input clk,input inc,output reg [7:0] o);\ninitial o = 8'd0; \n  always @(posedge clk) if (inc) o <= o + 1; \n endmodule");

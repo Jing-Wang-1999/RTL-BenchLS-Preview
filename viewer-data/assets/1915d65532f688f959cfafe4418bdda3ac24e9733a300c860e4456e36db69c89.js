@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1915d65532f688f959cfafe4418bdda3ac24e9733a300c860e4456e36db69c89.txt","{ \"signal\": [\n    { \"name\": \"trigger\", \"wave\": \"14\" },\n    { \"name\": \"in_in\", \"wave\": \"=4\", \"data\": [\"00011\", \"\"] }\n  ],\n  \"config\": {\n    \"hscale\": 1.25\n  }\n}\n");

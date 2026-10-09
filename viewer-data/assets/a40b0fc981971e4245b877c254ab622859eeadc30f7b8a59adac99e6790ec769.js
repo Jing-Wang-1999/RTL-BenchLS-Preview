@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a40b0fc981971e4245b877c254ab622859eeadc30f7b8a59adac99e6790ec769.txt","module mg_04091 (\n    input out_0r,\n    input inp_0a,\n    input [17:0] inp_0d,\n    output out_0a,\n    output [15:0] out_0d,\n    output inp_0r\n);\n    assign out_0a = inp_0a;\n    assign out_0d = inp_0d[16:1];\n    assign inp_0r = out_0r;\nendmodule");

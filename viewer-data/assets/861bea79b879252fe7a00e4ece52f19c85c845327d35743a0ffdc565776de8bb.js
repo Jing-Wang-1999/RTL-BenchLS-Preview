@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/861bea79b879252fe7a00e4ece52f19c85c845327d35743a0ffdc565776de8bb.txt","Add the missing countermeasure annotations to the listed IP RTL at the corresponding implementation sites.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0ca1e585ea92381102c95bad6d58981a174eae76ff0a9ab4907bc55228706d26.txt","The supplied original CIA PDF consists of scanned pages. Read Specifications CIA.pdf for the authoritative document; no reliable text extraction is available.\n");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d7948f40aa4c4ed0349282bdc079eb96a47d47121a694924ca43360d8b5872be.txt","module mg_01348(output wire [7:0] reg_0x03);\nassign reg_0x03=/* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7f3d435fe78c1e04673c7a645437423f7f93b4696f47f2d933022dd369bc543d.txt","module INV(I, O);\n    input I;\n    output O;\n\n    assign O = /* RTL_BENCHLS_MASK: restore expression */;\nendmodule");

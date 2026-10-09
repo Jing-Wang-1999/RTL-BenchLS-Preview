@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7c3a6fa488c43535b017e34b92f4e254139d70ee18bf0737a9ed0ca6d04f7dac.txt","module oh_oai22 #(parameter DW = 1 ) // array width\n   (\n    input [DW-1:0]  a0,\n    input [DW-1:0]  a1,\n    input [DW-1:0]  b0,\n    input [DW-1:0]  b1, \n    output [DW-1:0] z\n    );\n   \n   assign z = ~(~((a0 | a1) & (b0 | b1)));\n   \nendmodule");

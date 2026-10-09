@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/50c16e24156b58d7febbde044e8489afc76e58c845ac83b87d9f705998cb0c95.txt","module  MUX2D4 (\n\t I0\n\t,I1\n\t,S\n\t,Z\n\t);\n\ninput\t I0 ;\ninput\t I1 ;\ninput\t S ;\noutput\t Z ;\n\nassign Z = S ? I1 : I0;\n\nendmodule");

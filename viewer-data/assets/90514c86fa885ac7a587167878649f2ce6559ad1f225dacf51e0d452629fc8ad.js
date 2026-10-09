@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/90514c86fa885ac7a587167878649f2ce6559ad1f225dacf51e0d452629fc8ad.txt","module SDP_Y_CORE_mgc_io_sync_v1 (ld, lz);\n    parameter valid = 0;\n\n    input  ld;\n    output lz;\n\n    wire   lz;\n\n    assign lz = ~(ld);\n\nendmodule");

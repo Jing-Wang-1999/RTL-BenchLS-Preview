@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e2d90c4fb60425085beec5dd5ed24b8b0d5453e74de4820eb9c6000a42b4bf07.txt","{\n  \"top_module\": \"svpwm\",\n  \"mode\": \"sec\",\n  \"clock\": \"clk\",\n  \"reset_expression\": \"!rstn\",\n  \"preprocessor_defines\": [],\n  \"ready_for_controls\": true,\n  \"notes\": \"Declared default configuration; full semantic review pending.\"\n}\n");

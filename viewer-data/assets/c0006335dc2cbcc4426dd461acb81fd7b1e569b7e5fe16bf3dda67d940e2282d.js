@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c0006335dc2cbcc4426dd461acb81fd7b1e569b7e5fe16bf3dda67d940e2282d.txt","module asic_delay #(parameter PROP = \"DEFAULT\")   (\n    input  a,\n    output z\n    );\n\n   assign z = a;\n\nendmodule");

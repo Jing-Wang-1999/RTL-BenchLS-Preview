@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/633c9783dcc2ea7be44b5721d44c03affe7af17e7105ebe82ef8d22af7a9b1bb.txt","set_io clk J3\nset_io LED0 B5\nset_io LED1 B4\nset_io LED2 A2\nset_io LED3 A1\nset_io LED4 C5\nset_io LED5 C4\nset_io LED6 B3\nset_io LED7 C3\n");

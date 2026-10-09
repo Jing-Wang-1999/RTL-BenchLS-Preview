@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1c74020f48e558f7ea1c874a402e1cd2ea820b3b872dd6aa7c0594e1836e708a.txt","module mg_04133 ( input T, input I, output O, inout IO );\nassign O = IO; \n  assign IO = T ? 1'bz : I; \n endmodule");

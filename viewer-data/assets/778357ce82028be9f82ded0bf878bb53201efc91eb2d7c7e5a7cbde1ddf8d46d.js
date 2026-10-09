@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/778357ce82028be9f82ded0bf878bb53201efc91eb2d7c7e5a7cbde1ddf8d46d.txt","module mg_02967(o,oe);\noutput [31:0] o; \n  assign o = 32'h12345679; \n  output [31:0] oe; \n  assign oe = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

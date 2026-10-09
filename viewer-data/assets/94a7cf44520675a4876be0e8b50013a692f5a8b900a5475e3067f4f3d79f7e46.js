@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/94a7cf44520675a4876be0e8b50013a692f5a8b900a5475e3067f4f3d79f7e46.txt","--- cia/cia_timer.v\n+++ cia/cia_timer.v\n@@ -72,7 +72,7 @@\n       // force load resets the counter\n       cnt_n = {1'b0, lch_i};\n     else\n-      cnt_n = cnt_o - tick_n;\n+      cnt_n = cnt_o + tick_n;\n \n     cnt_z = cnt_n[16]; // borrow out\n   end\n");

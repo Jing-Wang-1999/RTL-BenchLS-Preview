@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/86d27ce6ae26074a951c454adbe58b0e9af8ee0eaa079836567e4d40cd21e7a9.txt","module CDMA_mgc_in_wire_v1 (d, z);\n\n  parameter integer rscid = 1;\n  parameter integer width = 8;\n\n  output [width-1:0] d;\n  input  [width-1:0] z;\n\n  wire   [width-1:0] d;\n\n  assign d = z;\n\nendmodule");

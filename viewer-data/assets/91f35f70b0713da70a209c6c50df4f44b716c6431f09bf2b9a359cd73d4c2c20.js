@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/91f35f70b0713da70a209c6c50df4f44b716c6431f09bf2b9a359cd73d4c2c20.txt","module rtlpp_04094 (\n    input d,\n    input clk,\n    output q\n);\n\nreg q_int;\n\nalways @(posedge clk) begin\n    q_int <= d;\nend\n\nassign q = q_int;\n\nendmodule");

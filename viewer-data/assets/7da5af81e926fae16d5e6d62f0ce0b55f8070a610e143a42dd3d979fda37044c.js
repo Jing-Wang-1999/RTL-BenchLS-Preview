@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7da5af81e926fae16d5e6d62f0ce0b55f8070a610e143a42dd3d979fda37044c.txt","This module multiplies two 8-bit signed inputs, `in0` and `in1`, to produce a 16-bit signed output, `out`. The first input is zero-extended to 9 bits before the multiplication. The operation uses a signed multiplier.");

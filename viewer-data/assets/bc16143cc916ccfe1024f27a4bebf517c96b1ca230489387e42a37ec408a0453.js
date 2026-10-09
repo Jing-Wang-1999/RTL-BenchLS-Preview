@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bc16143cc916ccfe1024f27a4bebf517c96b1ca230489387e42a37ec408a0453.txt","{\n  \"top\": {\n    \"module\": \"gray_to_bin\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/storage/gray_to_bin.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

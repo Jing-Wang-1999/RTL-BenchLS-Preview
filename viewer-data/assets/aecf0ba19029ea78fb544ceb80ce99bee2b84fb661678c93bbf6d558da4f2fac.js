@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/aecf0ba19029ea78fb544ceb80ce99bee2b84fb661678c93bbf6d558da4f2fac.txt","module mg_04298(addr, mod, eff_addr);\ninput [31:0] addr; \n  output [7:0] mod; \n  output [31:0] eff_addr; \n  assign mod = /* RTL_BENCHLS_MASK: restore expression */; \n  assign eff_addr = (mod == 8'h01) ? {8'h00,addr[23:0]} : {12'h000,addr[19:0]}; \n endmodule");

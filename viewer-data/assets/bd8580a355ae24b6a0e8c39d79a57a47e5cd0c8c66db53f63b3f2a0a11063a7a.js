@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bd8580a355ae24b6a0e8c39d79a57a47e5cd0c8c66db53f63b3f2a0a11063a7a.txt","This module performs a logical OR operation on two input signals, 'a' and 'b'. The result is output as 'z'. It has one parameter, 'PROP', for customization. No sub-modules are allowed.");

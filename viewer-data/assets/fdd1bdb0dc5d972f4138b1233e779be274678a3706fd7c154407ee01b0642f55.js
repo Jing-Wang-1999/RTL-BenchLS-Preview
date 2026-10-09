@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fdd1bdb0dc5d972f4138b1233e779be274678a3706fd7c154407ee01b0642f55.txt","always @(posedge clk or posedge rst)\n\tif(rst)\t\t\t\t\tbank0_open <=  1'b0;\n\telse\n\tif((bank_adr == 2'h0) & bank_set)\tbank0_open <=  1'b1;\n\telse\n\tif((bank_adr == 2'h0) & bank_clr)\tbank0_open <=  1'b0;\n\telse\n\tif(bank_clr_all)\t\t\tbank0_open <=  1'b0;");

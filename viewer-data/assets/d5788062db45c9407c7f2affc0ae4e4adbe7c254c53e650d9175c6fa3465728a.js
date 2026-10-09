@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d5788062db45c9407c7f2affc0ae4e4adbe7c254c53e650d9175c6fa3465728a.txt","[\n  {\n    \"functional_pass\": false,\n    \"reason\": \"candidate compile failed\",\n    \"status\": \"invalid_model_output\",\n    \"unit_id\": \"riscv_alu\"\n  }\n]\n");

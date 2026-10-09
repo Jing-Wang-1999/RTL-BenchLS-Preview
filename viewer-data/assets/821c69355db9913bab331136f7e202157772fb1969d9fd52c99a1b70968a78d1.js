@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/821c69355db9913bab331136f7e202157772fb1969d9fd52c99a1b70968a78d1.txt","always @(posedge s_axis_aclk) begin\n    if (s_axis_aresetn == 1'b0) begin\n      active <= 1'b0;\n    end else if (req_valid == 1'b1) begin\n      active <= 1'b1;\n    end else if (fifo_eot_beat == 1'b1) begin\n      active <= 1'b0;\n    end\n  end");

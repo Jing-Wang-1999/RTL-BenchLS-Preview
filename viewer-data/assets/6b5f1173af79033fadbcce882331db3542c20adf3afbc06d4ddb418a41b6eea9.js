@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6b5f1173af79033fadbcce882331db3542c20adf3afbc06d4ddb418a41b6eea9.txt","module mg_05914 (input A,input B,input CARRY_IN,output SUM,output CARRY_OUT);\nassign SUM = (A ^ B) ^ CARRY_IN; \n  assign CARRY_OUT = (A & ~B & CARRY_IN) | (~A & B & CARRY_IN) | (A & B); \n endmodule");

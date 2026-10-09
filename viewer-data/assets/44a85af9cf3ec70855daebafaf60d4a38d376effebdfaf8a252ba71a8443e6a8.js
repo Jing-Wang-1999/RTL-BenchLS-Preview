@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/44a85af9cf3ec70855daebafaf60d4a38d376effebdfaf8a252ba71a8443e6a8.txt","The module computes the sum of three single-bit inputs: x_i, y_i, and z_i. It produces a two-bit output, where c_o represents the carry-out and s_o represents the sum. The module performs binary addition.");

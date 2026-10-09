@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ba9db01fa25a17c48f91a63f6bb867c350d0d3f679fbf93d369d46f253423860.txt","`timescale 1ns / 1ps\n\nmodule alu(\n    input wire[31:0] a,\n    input wire[31:0] b,\n    input wire[4:0] shamt,\n    input wire[3:0] op,\n    output reg[31:0] y,\n    output reg overflow,\n    output wire zero\n    );\nendmodule\n");

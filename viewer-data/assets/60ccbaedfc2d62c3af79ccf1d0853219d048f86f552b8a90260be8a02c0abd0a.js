@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/60ccbaedfc2d62c3af79ccf1d0853219d048f86f552b8a90260be8a02c0abd0a.txt","module OAI22_X1 (input A1, input A2, input B1, input B2, output Z);\n    assign Z = ~((A1 | A2) & (B1 | B2));\nendmodule");

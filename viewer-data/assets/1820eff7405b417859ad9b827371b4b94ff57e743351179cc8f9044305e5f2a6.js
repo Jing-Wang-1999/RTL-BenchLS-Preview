@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1820eff7405b417859ad9b827371b4b94ff57e743351179cc8f9044305e5f2a6.txt","module mg_04322(a, b, y);\ninput [1:0] a; \n  input [1:0] b; \n  output y; \n  assign y = a == ($signed(b) >>> 1); \n endmodule");

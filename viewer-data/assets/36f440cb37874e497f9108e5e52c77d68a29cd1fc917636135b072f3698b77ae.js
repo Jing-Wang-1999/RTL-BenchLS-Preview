@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/36f440cb37874e497f9108e5e52c77d68a29cd1fc917636135b072f3698b77ae.txt","module mg_06230(clk, rst, clk_ena, d);\ninput clk, rst, clk_ena; \n  output d; \n  reg tmp; \n  always @(posedge clk or posedge rst) \n  begin \n  if(rst) \n  tmp <= 'b0; \n  else if(clk_ena) \n  tmp <= 'b1; \n  end \n  assign d = tmp; \n endmodule");

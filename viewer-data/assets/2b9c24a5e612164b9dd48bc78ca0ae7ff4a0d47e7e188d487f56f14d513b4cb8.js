@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2b9c24a5e612164b9dd48bc78ca0ae7ff4a0d47e7e188d487f56f14d513b4cb8.txt","module mg_03826 (\n    input [3:0] a,\n    input [3:0] b,\n    input c_in,\n    output [3:0] sum,\n    output c_out\n);\n    wire [4:0] full_sum;\n\n    assign full_sum = a + b + c_in;\n    assign sum = full_sum[3:0];\n    assign c_out = full_sum[4];\n\nendmodule");

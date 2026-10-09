@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/74712f94b7e3e58a17f7bdb44dbe89609437991c9da6b6b68b38bbc5dfb3f0e6.txt","always @ (posedge clk or posedge reset)\nbegin\n   if (reset)\n      round[3:0] <= 1'b0;\n   else if (nstate[1:0] == IDLE)\n      round[3:0] <= 4'b0;\n   else if (state[1:0] == START)\n      round[3:0] <= round[3:0] + 1'b1;\nend");

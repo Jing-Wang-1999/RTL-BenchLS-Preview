@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1db15f3de51c54cc1e50c3f8d920bbc33b4bd4e144f56600f494e46cd46255f2.txt","module asic_tiehi #(parameter PROP = \"DEFAULT\")   (\n    output z\n    );\n\n   assign z = ~(1'b1);\n\nendmodule");

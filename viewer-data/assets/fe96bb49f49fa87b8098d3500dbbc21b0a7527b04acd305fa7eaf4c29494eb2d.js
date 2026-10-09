@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fe96bb49f49fa87b8098d3500dbbc21b0a7527b04acd305fa7eaf4c29494eb2d.txt","module mg_00144(output [3:0] addr,input clk,input din,input en);\nreg [3:0] addrreg = 0; \n  assign addr = addrreg; \n  always @(posedge clk) begin \n  if(en) begin \n  addrreg[3:1] <= addrreg[2:0]; \n  addrreg[0] <= din; \n  end \n  end \n endmodule");

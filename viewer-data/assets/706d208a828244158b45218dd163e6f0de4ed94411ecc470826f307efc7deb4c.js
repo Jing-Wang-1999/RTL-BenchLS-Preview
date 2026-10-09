@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/706d208a828244158b45218dd163e6f0de4ed94411ecc470826f307efc7deb4c.txt","module mg_02679 (input clk,input [1:0] adr,input [1:0] din,output reg [1:0] q);\nreg [1:0] ram [3:0]; \n  always@(posedge clk) \n  {ram[adr], q} <= {din, ram[adr]}; \n endmodule");

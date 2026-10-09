@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0eafc26780e0517b100ee8530a350d61f436403cd5ad3e0e2ad75340068e325a.txt","--- \n+++ \n@@ -338,7 +338,7 @@\n   assign y[0] = y_i;\n   assign z[0] = theta_i;\n   assign x_o = x[`ITERATIONS-1];\n-  assign y_o = y[`ITERATIONS-1];\n+  assign y_o = y[`ITERATIONS-1] ^ 17'h04000;\n   assign theta_o = z[`ITERATIONS-1];\n `endif // GENERATE_LOOP\n \n");

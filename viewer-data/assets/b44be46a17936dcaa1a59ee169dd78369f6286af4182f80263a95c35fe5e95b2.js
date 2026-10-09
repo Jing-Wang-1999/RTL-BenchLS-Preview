@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b44be46a17936dcaa1a59ee169dd78369f6286af4182f80263a95c35fe5e95b2.txt","module mg_05074(output [2:0] cycle,input clk,input enn);\nreg [2:0] register = 3'b000; \n  assign cycle = register; \n  always @(posedge clk) begin \n  if(!enn) \n  register <= register + 1; \n  else \n  register = 0; \n  end \n endmodule");

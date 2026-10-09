@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2ab39f38a0aca872772185cfc8d86ccab8c904b33f9c4944ded546c489e8a266.txt","module instr_splitter_j(instruction, imm_address);\n\t\n\tinput [31:0] instruction;\n\toutput [25:0] imm_address;\n\t\n\tassign imm_address = instruction[25:0];\n\nendmodule");

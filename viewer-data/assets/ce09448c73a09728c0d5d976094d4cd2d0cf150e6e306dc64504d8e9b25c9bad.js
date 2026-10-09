@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ce09448c73a09728c0d5d976094d4cd2d0cf150e6e306dc64504d8e9b25c9bad.txt","This module has one input and one output. It directly connects the input to the output, effectively passing the input signal through unchanged. No sub-modules are allowed.");

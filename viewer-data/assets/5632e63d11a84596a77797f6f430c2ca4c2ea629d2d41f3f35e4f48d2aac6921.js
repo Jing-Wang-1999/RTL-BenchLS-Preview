@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5632e63d11a84596a77797f6f430c2ca4c2ea629d2d41f3f35e4f48d2aac6921.txt","module mg_02674(input clk, input d, output q, input rst);\nreg down; \n assign q = d & !down; \n always @(posedge clk) \n begin \n  if(q) \n  down <= 1; \n  if(!d) \n  down <= 0; \n  if(rst) \n  down <= 0; \n end \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/75342575a7a7b9c8ca8cb476b268dee60e5be14b091332ea817a3012faa70435.txt","module mg_04291(bw_pll_2x_clk_local ,bw_pll_2xclk );\noutput bw_pll_2x_clk_local ; \n input bw_pll_2xclk ; \n assign bw_pll_2x_clk_local = bw_pll_2xclk; \n endmodule");

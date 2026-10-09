@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8be9708143c575f91c12cbdc6bc423805bc28e93f5eddb51955f5ec1094d8289.txt","Add a PC-stability assertion checking that the CPU does not advance after lifecycle CPU enable is disabled, allowing synchronization and stable-check delay.\n\nEdit the target RTL in workspace/ and preserve hardware behavior.\n");

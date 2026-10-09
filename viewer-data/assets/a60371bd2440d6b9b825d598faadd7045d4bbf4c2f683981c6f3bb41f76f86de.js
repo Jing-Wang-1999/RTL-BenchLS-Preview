@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a60371bd2440d6b9b825d598faadd7045d4bbf4c2f683981c6f3bb41f76f86de.txt","always @(posedge rclk)\n\t  if (rrst) begin\n\t      rptr      <=  0;\n\t      rptr_gray <=  0;\n\t  end else if (rreq) begin\n\t      rptr      <=  rptr +1'h1;\n\t      rptr_gray <=  bin2gray(rptr +1'h1);\n\t  end");

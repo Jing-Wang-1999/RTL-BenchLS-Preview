@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a18f341b9236e9716db4d487d2197b12819d0c2a993608e57b30bdb80ea51517.txt","{\n  \"top\": {\n    \"module\": \"clock_follow\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/synchronization/clock_follow.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

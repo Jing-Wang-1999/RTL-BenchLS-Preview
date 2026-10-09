@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3ceefcfe741ee1965dd784990db4f72e5ed1055468cfe51a2328ddc91db21fdd.txt","{\n  \"top\": {\n    \"module\": \"mg_07142\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/MG-Verilog_sec_input/designs/mg_07142.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"cyclone10gx\",\n    \"cyclonev\"\n  ]\n}");

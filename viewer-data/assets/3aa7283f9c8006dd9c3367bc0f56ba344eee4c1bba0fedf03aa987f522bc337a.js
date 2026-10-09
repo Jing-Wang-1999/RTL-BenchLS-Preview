@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/3aa7283f9c8006dd9c3367bc0f56ba344eee4c1bba0fedf03aa987f522bc337a.txt","module mg_03016 (x, y);\nparameter new_msb= 9; \n parameter new_lsb= 1; \n parameter x_width= 16; \n parameter y_width= 8; \n input [x_width-1:0] x; \n output [y_width-1:0] y; \n assign y = x[new_msb:new_lsb]; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8bd689793172173c1543f0be95980ab08b76eabdfe888ed38a65d8f10f4b8caf.txt","module LUT5(O, I0, I1, I2, I3, I4);\n  parameter INIT = 0;\n  input I0, I1, I2, I3, I4;\n  output O;\n  wire [31:0] lutdata;\n  assign lutdata = INIT;\n  wire [4:0] idx;\n  assign idx = { I4, I3, I2, I1, I0 };\n  assign O = lutdata[idx];\nendmodule");

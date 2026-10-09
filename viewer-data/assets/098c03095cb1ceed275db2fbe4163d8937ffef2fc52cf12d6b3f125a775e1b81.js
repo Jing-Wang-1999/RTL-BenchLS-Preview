@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/098c03095cb1ceed275db2fbe4163d8937ffef2fc52cf12d6b3f125a775e1b81.txt","module mg_02234(input clk,input cein,output ceout);\nreg q; \n  initial q = 0; \n  assign ceout = cein & q; \n  always @(posedge clk) begin \n  if(cein) \n  q = ~q; \n  end \n endmodule");

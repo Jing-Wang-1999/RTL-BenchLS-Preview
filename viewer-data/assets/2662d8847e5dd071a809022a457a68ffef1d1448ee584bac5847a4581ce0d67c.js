@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2662d8847e5dd071a809022a457a68ffef1d1448ee584bac5847a4581ce0d67c.txt","module Synchronizer (\n    input clk,\n    input din,\n    output dout\n);\n    reg sync1, sync2;\n    always @(posedge clk) begin\n        sync1 <= din;\n        sync2 <= sync1;\n    end\n    assign dout = sync2;\nendmodule");

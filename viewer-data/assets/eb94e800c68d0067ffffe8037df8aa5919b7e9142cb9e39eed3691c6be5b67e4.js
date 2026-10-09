@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/eb94e800c68d0067ffffe8037df8aa5919b7e9142cb9e39eed3691c6be5b67e4.txt","module dff_rn(input wire rst_n, input wire clk, input wire d, output reg q);\n    always @(posedge clk or negedge rst_n) begin\n        if (!rst_n)\n            q <= 1'b0;\n        else\n            q <= d;\n    end\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/14f6f4fd943b8950a13abc3f993662e928ca33f86c05ea722d358b252b1f35e4.txt","module mg_01004 (data ,clk ,reset ,q);\ninput data, clk, reset ; \n output q; \n (*ASYNC_REG = \"TRUE\" *) reg q; \n always @ ( posedge clk or posedge reset) begin \n  if (reset) begin \n  q <= 1'b1; \n  end else begin \n  q <= data; \n  end \n end \n endmodule");

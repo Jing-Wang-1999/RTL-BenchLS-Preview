@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/328e42d3e00ae69e4234a1d29305afdb41a7b75c9454b85302f698b1c3897506.txt","module origen_159912(\n    input [5:0] sel,\n    output reg txd\n);\n\nalways @(*) begin\n    if (sel < 40) begin\n        txd = sel[0]; // Even numbers have LSB 0, odd numbers have LSB 1\n    end else begin\n        txd = 1'b1;\n    end\nend\n\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5f68eb83a0c0dc0955e420d51d181694e872b82a0a0f478bf56657ce84d952ee.txt","module mg_07133( CLK, W_OUT_REG, DIN, OUT_REG);\nparameter out_width = 7; \n input CLK; \n input W_OUT_REG; \n input [31:0] DIN; \n output reg [out_width:0] OUT_REG; \n  always @(posedge CLK) if (W_OUT_REG) OUT_REG <= DIN[out_width:0]; \n endmodule");

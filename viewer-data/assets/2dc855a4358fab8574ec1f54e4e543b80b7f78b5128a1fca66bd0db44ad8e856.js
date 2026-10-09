@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2dc855a4358fab8574ec1f54e4e543b80b7f78b5128a1fca66bd0db44ad8e856.txt","module mg_07510(Sel,S0,S1,S2,S3,out);\ninput [1:0] Sel; \n input [31:0] S0,S1,S2,S3; \n output [31:0]out; \n assign out = (Sel[1]?(Sel[0]?S3:S2) : (Sel[0]?S1:S0)); \n endmodule");

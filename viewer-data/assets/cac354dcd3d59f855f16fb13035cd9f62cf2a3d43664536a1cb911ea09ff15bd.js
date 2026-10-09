@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cac354dcd3d59f855f16fb13035cd9f62cf2a3d43664536a1cb911ea09ff15bd.txt","module autovcoder_104339 (\n    input wire [31:0] A,\n    input wire [4:0] cnt,\n    output reg [31:0] B\n);\n\n    always @(*) begin\n        B = A >> cnt;\n    end\n\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0f78ef2cc6e86a19eaa6926ba760a41a91b8eef4d2269a4905af4c2cf60733bc.txt","Express the three SPI state defaults as hold-current-state assignments for coverage-tool recognition; prove reachable behavior preservation.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

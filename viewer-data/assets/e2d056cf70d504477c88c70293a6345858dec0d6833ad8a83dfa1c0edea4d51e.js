@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e2d056cf70d504477c88c70293a6345858dec0d6833ad8a83dfa1c0edea4d51e.txt","module asic_and2 #(parameter PROP = \"DEFAULT\")  (\n   input  a,\n   input  b,\n   output z\n   );\n\n   assign z = a & b;\n\nendmodule");

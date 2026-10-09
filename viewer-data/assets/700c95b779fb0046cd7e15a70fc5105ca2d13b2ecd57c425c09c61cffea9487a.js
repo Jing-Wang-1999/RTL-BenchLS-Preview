@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/700c95b779fb0046cd7e15a70fc5105ca2d13b2ecd57c425c09c61cffea9487a.txt","{\n  \"top\": {\n    \"module\": \"oh_datagate\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/31.oh/stdlib/rtl/oh_datagate.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1856fb21fe75baea60cae53891a2e0a802cedcc264452ba2a7118be70cd76927.txt","{\n  \"top\": {\n    \"module\": \"reference_arbiter\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/arbitration/arbiter_tb.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

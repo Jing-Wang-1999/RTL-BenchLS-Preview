@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d6b9a978c7d2391f59d57bbaef8a19927c1bc5b4e6e1ca122cbf818513eadda8.txt","Repair the functional fault in design.v using the specification and retained RTL context. Return the complete corrected RTL with the same top module. Only the default configuration is scored.\n");

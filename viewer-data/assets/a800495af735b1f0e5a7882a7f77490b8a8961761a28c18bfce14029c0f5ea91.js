@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a800495af735b1f0e5a7882a7f77490b8a8961761a28c18bfce14029c0f5ea91.txt","module UINT16_TO_FP17_mgc_in_wire_wait_v1 (\n  input ld,\n  input vz,\n  input [7:0] z,\n  output vd,\n  output [7:0] d\n);\n\n  assign vd = vz;\n  assign d = z;\n\nendmodule");

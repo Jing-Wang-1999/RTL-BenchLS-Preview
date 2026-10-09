@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ab8a4026440be75ad9fb489e398cb2fb15414a0fdbf4f57a844a60251513ed85.txt","module oh_dffq #(parameter DW = 1) // array width\n   (\n    input [DW-1:0] \td,\n    input [DW-1:0] \tclk,\n    output reg [DW-1:0] q\n    );\n   \n   always @ (posedge clk)\n     q <= d;\n   \nendmodule");

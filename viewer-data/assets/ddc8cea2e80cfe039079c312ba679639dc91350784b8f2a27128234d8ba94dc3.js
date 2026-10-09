@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ddc8cea2e80cfe039079c312ba679639dc91350784b8f2a27128234d8ba94dc3.txt","always @ *\nbegin\n    pending_r = pending_q;\n\n    if ((request_w && mem_accept_o) && !mem_ack_o)\n        pending_r = pending_r + 5'd1;\n    else if (!(request_w && mem_accept_o) && mem_ack_o)\n        pending_r = pending_r - 5'd1;\nend");

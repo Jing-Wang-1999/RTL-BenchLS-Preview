@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6e432e6e43cd9b6263dce8130dd909780ebc0c8f07a0023a864fc25358c9f31b.txt","always @ (posedge clk_i or posedge rst_i)\nif (rst_i)\n    req_cnt_q <= 8'b0;\nelse if (inport_valid_i && inport_write_i && inport_accept_o)\nbegin\n    if (req_cnt_q != 8'b0)\n        req_cnt_q <= req_cnt_q - 8'd1;\n    else\n        req_cnt_q <= inport_len_i;\nend");

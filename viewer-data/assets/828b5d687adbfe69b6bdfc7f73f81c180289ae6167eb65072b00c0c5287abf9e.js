@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/828b5d687adbfe69b6bdfc7f73f81c180289ae6167eb65072b00c0c5287abf9e.txt","module Instruction_Register(instructionIn, instructionOut, update);\n  input [3:0] instructionIn;\n  output [3:0] instructionOut;\n  input update;\n\n  // Define Instruction Register behavior here...\nendmodule");

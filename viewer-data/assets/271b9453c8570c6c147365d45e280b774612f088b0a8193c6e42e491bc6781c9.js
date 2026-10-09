@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/271b9453c8570c6c147365d45e280b774612f088b0a8193c6e42e491bc6781c9.txt","module Mux2(sel, i0, i1, o);\n\n\tparameter data_width = 8;\n\n\tinput sel;\n\tinput[data_width - 1 : 0] i0;\n\tinput[data_width - 1 : 0] i1;\n\toutput[data_width - 1 : 0] o;\n\n\tassign o = sel == 0 ? i0 : i1;\n\nendmodule");

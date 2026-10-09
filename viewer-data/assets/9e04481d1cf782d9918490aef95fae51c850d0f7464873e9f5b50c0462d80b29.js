@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9e04481d1cf782d9918490aef95fae51c850d0f7464873e9f5b50c0462d80b29.txt","{\n  \"top\": {\n    \"module\": \"dcache_core_tag_ram\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/30.ultraembedded-riscv/top_cache_axi/src_v/dcache_core_tag_ram.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

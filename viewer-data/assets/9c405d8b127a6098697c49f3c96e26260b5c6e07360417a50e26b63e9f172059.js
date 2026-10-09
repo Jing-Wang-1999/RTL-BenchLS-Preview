@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9c405d8b127a6098697c49f3c96e26260b5c6e07360417a50e26b63e9f172059.txt","module mg_05864(one,two,sign,y2,y1,y0);\ninput y2,y1,y0; \n output one,two,sign; \n wire [1:0]k; \n xor x1(one,y0,y1); \n xor x2(k[1],y2,y1); \n not n1(k[0],one); \n and a1(two,k[0],k[1]); \n assign sign=/* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

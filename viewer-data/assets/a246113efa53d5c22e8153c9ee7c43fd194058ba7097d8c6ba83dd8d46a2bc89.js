@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a246113efa53d5c22e8153c9ee7c43fd194058ba7097d8c6ba83dd8d46a2bc89.txt","module asic_isohi\n  #(parameter PROP = \"DEFAULT\")\n   (\n    input  iso, // isolation signal\n    input  in, // input\n    output out  // out = iso | in\n    );\n\n   assign out = /* RTL_BENCHLS_MASK: restore expression */;\n\nendmodule");

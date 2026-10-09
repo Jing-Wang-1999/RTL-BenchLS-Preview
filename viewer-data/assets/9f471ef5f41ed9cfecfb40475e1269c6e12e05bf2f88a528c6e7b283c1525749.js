@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9f471ef5f41ed9cfecfb40475e1269c6e12e05bf2f88a528c6e7b283c1525749.txt","module mg_03071(input wire clk, input wire [31:0] in, output out);\nlogic [63:0] d; \n  always_ff @(posedge clk) \n  d <= {d[31:0], in[0] ? in : 32'b0}; \n  wire tmp0 = (|d[38:0]); \n  assign out = (d[39] | tmp0); \n endmodule");

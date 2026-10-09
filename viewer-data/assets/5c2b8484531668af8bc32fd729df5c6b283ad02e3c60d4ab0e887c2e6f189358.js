@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5c2b8484531668af8bc32fd729df5c6b283ad02e3c60d4ab0e887c2e6f189358.txt","module  NV_BLKBOX_BUFFER (\n\t Y\n\t,A\n\t);\n\n\noutput\t Y ;\ninput\t A ;\n\nassign Y = ~(A);\nendmodule");

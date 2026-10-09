@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7a64a116398172c10ddb61fa017b8a8711ac698625080b4dd7845d4a6b055961.txt","module mg_03598 (out);\nparameter SIZE = 1; \n output [SIZE-1:0] out; \n assign out = {SIZE{1'b0}}; \n endmodule");

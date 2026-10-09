@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/fdaf93a428e6a3d8040f5f2299276291a94908a531cfec6d6e1c3845f951fe5e.txt","module mg_04680 ( a, b, soma, cout);\ninput a, b; \n  output soma, cout; \n  assign soma = /* RTL_BENCHLS_MASK: restore expression */; \n  assign cout = a * b; \n endmodule");

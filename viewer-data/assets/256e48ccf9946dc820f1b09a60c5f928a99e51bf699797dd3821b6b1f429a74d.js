@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/256e48ccf9946dc820f1b09a60c5f928a99e51bf699797dd3821b6b1f429a74d.txt","module mg_08041(clk, cs, ns);\ninput clk; \n input [7:0] cs; \n output [7:0] ns; \n integer is; \n always @(posedge clk) \n  is <= cs; \n assign ns = is; \n endmodule");

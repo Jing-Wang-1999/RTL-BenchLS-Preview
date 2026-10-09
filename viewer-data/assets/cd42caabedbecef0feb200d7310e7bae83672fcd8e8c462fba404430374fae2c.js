@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cd42caabedbecef0feb200d7310e7bae83672fcd8e8c462fba404430374fae2c.txt","module mg_07443( clk, iA, iC, ioS );\ninput clk, iA, iC ; \n  inout ioS ; \n  assign ioS = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

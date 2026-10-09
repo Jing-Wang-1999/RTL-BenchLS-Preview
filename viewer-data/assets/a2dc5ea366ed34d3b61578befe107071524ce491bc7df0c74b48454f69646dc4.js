@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a2dc5ea366ed34d3b61578befe107071524ce491bc7df0c74b48454f69646dc4.txt","The module is a 2-to-4 line decoder with enable. It has a 2-bit input, W, and a single enable input, En. The output is a 4-bit vector, Y. When En is high, the module decodes W to activate one of the four outputs, setting it high while others remain");

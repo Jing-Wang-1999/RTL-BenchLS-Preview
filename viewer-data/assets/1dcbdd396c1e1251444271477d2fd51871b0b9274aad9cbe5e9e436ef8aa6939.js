@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/1dcbdd396c1e1251444271477d2fd51871b0b9274aad9cbe5e9e436ef8aa6939.txt","{\n  \"top\": {\n    \"module\": \"test_pattern\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/storage/test_pattern.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

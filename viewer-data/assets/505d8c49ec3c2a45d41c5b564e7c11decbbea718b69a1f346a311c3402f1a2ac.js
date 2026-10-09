@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/505d8c49ec3c2a45d41c5b564e7c11decbbea718b69a1f346a311c3402f1a2ac.txt","[\n  {\n    \"functional_pass\": false,\n    \"reason\": \"candidate compile failed\",\n    \"status\": \"invalid_model_output\",\n    \"unit_id\": \"riscv_multiplier\"\n  }\n]\n");

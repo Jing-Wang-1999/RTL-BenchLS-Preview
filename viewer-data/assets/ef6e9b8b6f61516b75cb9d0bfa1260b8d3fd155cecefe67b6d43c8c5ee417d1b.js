@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ef6e9b8b6f61516b75cb9d0bfa1260b8d3fd155cecefe67b6d43c8c5ee417d1b.txt","always @ (posedge clk)\nbegin\n\tif (rst)\n\t\tcount_out <= 0;\n\telse if (enable_reg) \n\t\tcount_out <= preset;\n\telse if (count_nonzero)\n\t\tcount_out <= count_out - 1; \nend");

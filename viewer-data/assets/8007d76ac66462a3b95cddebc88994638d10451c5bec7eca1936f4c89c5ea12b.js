@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8007d76ac66462a3b95cddebc88994638d10451c5bec7eca1936f4c89c5ea12b.txt","module ctu_mux21(\n    input s,\n    input d0,\n    input d1,\n    output z\n);\nassign z = s ? d0 : d1;\nendmodule");

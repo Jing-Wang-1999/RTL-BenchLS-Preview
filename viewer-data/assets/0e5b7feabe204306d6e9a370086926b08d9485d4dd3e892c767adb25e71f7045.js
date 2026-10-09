@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0e5b7feabe204306d6e9a370086926b08d9485d4dd3e892c767adb25e71f7045.txt","{\n  \"top\": {\n    \"module\": \"bandwidth_throttle\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/3.nvdia-hw/verif/synth_tb/tb_top.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

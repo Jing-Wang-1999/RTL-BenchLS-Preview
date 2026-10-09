@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cc54edda3f15e04c614b55397c19748d084de2d952f7f96e1dd9dd15527f2640.txt","{\n  \"top\": {\n    \"module\": \"mg_06620\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/MG-Verilog_sec_input/designs/mg_06620.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"system_controller_altera\",\n    \"system_controller_xilinx\"\n  ]\n}");

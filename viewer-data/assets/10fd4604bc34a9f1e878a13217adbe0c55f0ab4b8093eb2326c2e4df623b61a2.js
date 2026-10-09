@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/10fd4604bc34a9f1e878a13217adbe0c55f0ab4b8093eb2326c2e4df623b61a2.txt","{\n  \"top\": {\n    \"module\": \"Half_Adder\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_09681.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

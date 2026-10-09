@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/54bc3c3ed263f92b59d7f40c6f5866aa43574cf1a175f5b8d35bec5ab7ff45a1.txt","module mg_03606 (\n    input [1:0] control,\n    output dp\n);\n    assign dp = 1'b1;\nendmodule");

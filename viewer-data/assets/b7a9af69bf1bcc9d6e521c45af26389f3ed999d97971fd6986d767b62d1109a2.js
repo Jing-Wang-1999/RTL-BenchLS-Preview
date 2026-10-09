@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/b7a9af69bf1bcc9d6e521c45af26389f3ed999d97971fd6986d767b62d1109a2.txt","module design_1_clk_wiz_0_embedded\n   (clk_in1, clk_out1, locked, reset);\n  input clk_in1;\n  output clk_out1;\n  output locked;\n  input reset;\n\n  // Add the internal logic of the clk_wiz module here\nendmodule");

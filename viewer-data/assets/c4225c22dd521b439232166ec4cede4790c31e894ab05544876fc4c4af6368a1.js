@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c4225c22dd521b439232166ec4cede4790c31e894ab05544876fc4c4af6368a1.txt","{\n  \"required_files\": [\n    {\n      \"module\": \"wb_lpc_host\",\n      \"modules\": [\n        \"wb_lpc_host\"\n      ],\n      \"path\": \"rtl/verilog/wb_lpc_host.v\"\n    }\n  ],\n  \"top_module\": \"wb_lpc_host\",\n  \"top_parameter_overrides\": {}\n}\n");

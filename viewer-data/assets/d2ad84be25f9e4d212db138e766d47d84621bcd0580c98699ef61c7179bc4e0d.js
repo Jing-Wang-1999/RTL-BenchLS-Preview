@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d2ad84be25f9e4d212db138e766d47d84621bcd0580c98699ef61c7179bc4e0d.txt","module salt_to_bin (in,out);\ninput [15:0] in;\noutput [11:0] out;\nwire [11:0] out;\nascii_to_bin x (.in(in[15:8]),.out(out[5:0]) );\nascii_to_bin y (.in(in[7:0]),.out(out[11:6]) );\nendmodule");

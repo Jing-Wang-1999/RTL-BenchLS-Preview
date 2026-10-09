@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/794d974419a4b5a1844e6dd6a40f80aa01696bf26c66123c49c492fd24609fab.txt","module mg_07390 (input wire clk,input wire ena,input wire [ 7:0] A,input wire [ 7:0] B,output reg [15:0] Z);\nalways @(posedge clk) \n  if (ena) Z <= Z + (A * B); \n endmodule");

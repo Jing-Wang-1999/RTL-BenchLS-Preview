@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/006d5a612c5023cfeb310fae8b277afef4260016ab964fa712ca7acd5045f515.txt","module mg_00600(\n    input clk,\n    input ce,\n    output [7:0] op\n);\n\n    assign op = 8'b11001000;\n\nendmodule");

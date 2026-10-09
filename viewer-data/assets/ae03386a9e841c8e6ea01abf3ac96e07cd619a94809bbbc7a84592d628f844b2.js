@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ae03386a9e841c8e6ea01abf3ac96e07cd619a94809bbbc7a84592d628f844b2.txt","module util_vector_logic (\n  input [0:0] Op1,\n  output [0:0] Res\n);\n  assign Res = ~Op1;\nendmodule");

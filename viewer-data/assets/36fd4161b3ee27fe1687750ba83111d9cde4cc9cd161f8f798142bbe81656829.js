@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/36fd4161b3ee27fe1687750ba83111d9cde4cc9cd161f8f798142bbe81656829.txt","`ifndef AXICB_CHECKERS\n`define AXICB_CHECKERS\n\n`define CHECKER(condition, msg)\\\n    if (condition) begin \\\n        $display(\"\\033[1;31mERROR: %s\\033[0m\", msg); \\\n        $finish(1); \\\n    end\n\n`endif\n");

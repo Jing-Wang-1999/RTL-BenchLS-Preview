@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/af69ddb60c43d0e2a6c19ebd3a6a495ca45ee023b254b1525730a66d1626aeb3.txt","{\n  \"top\": {\n    \"module\": \"uart_baud_rate\",\n    \"file\": \"<upstream-pool>/rtl_w_verification/6.uart/rtl/uart.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

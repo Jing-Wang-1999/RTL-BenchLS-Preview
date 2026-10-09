@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7240fbe5bc90a76e518d74abc26fae1d025727d6a47ccbf0b25a6bc5327701c2.txt","module oh_oai21 #(parameter WIDTH = 1) (\n    input  wire [WIDTH-1:0] a0,\n    input  wire [WIDTH-1:0] a1,\n    input  wire [WIDTH-1:0] b0,\n    output wire [WIDTH-1:0] z\n);\n\n    assign z = ~((a0 | a1) & b0);\n\nendmodule");

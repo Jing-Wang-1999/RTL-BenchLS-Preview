@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/23d738c27657b311ab5acaccbf0d48587a30c3738ae2deea5f3066d2662d8c19.txt","module mg_05914 (\n    input wire A,\n    input wire B,\n    input wire CARRY_IN,\n    output wire SUM,\n    output wire CARRY_OUT\n);\n    assign SUM = A ^ B ^ CARRY_IN;\n    assign CARRY_OUT = (A & B) | (B & CARRY_IN) | (A & CARRY_IN);\nendmodule");

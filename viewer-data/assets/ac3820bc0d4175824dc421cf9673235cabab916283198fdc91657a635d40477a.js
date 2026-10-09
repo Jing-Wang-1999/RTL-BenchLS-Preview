@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/ac3820bc0d4175824dc421cf9673235cabab916283198fdc91657a635d40477a.txt","module MUXCY (O, CI, DI, S);\n\n    output O;\n    reg    O;\n\n    input  CI, DI, S;\n\n\talways @(CI or DI or S) begin\n\t    if (S)\n\t\tO <= CI;\n\t    else\n\t\tO <= DI;\n\tend\n\n\nendmodule");

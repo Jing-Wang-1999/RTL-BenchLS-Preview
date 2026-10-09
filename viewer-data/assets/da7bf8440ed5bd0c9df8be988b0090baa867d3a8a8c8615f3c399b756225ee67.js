@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/da7bf8440ed5bd0c9df8be988b0090baa867d3a8a8c8615f3c399b756225ee67.txt","module comparator(\n    input [55:0] a,\n    input [6:0] amask,\n    input [55:0] b,\n    output match\n);\n    wire [55:0] masked_b;\n    assign masked_b = b & ~amask;\n    assign match = (a & ~amask) == masked_b;\nendmodule");

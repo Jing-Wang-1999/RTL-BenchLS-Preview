@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8f7c1e8b2ec0180d08bfc46d6c44efcb979b06ce849107e91d52fc896267df0d.txt","module mg_03235 (input wire [3:0] addr,input wire clk,input wire wrenb,input wire din,output wire dout,output wire hit);\nreg [15:0] mem; \n always @(posedge clk) \n if (wrenb) mem <= {mem, din}; \n assign hit = mem[addr]; \n assign dout = mem[15]; \n endmodule");

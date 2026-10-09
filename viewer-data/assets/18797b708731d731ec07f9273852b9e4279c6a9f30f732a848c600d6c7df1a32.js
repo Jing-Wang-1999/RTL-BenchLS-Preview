@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/18797b708731d731ec07f9273852b9e4279c6a9f30f732a848c600d6c7df1a32.txt","{\n  \"top\": {\n    \"module\": \"twenty_to_five\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/muxing/twenty_to_five.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"block\"\n  ]\n}");

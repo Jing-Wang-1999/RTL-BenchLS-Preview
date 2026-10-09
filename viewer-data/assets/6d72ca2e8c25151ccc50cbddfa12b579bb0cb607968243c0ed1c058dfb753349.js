@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6d72ca2e8c25151ccc50cbddfa12b579bb0cb607968243c0ed1c058dfb753349.txt",".section .init\n.global main\n\n/* set stack pointer */\nlui sp, %hi(512)\naddi sp, sp, %lo(512)\n\n/* call main */\njal ra, main\n\n/* break */\nsbreak\n");

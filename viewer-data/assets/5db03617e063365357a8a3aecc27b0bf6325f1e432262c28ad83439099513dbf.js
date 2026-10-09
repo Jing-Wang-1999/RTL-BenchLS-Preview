@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5db03617e063365357a8a3aecc27b0bf6325f1e432262c28ad83439099513dbf.txt","module oks8_rlc (\n   c_o, \n   a_i\n) ;\n   parameter dw = 8; // Assuming a default value for W_DATA\n   input [dw:0] a_i;\n   output [dw:0]  c_o;\n   assign c_o = {a_i[dw-1:0],a_i[dw]};\nendmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2956b08ce4cd582b0a30d56d0095a8a48d5e29cc73f3e8e52c59b0ff36a6f3c4.txt","Make the default register-file parameter configuration elaborate without reversed empty part-selects; handle zero shadow registers explicitly.\n\nEdit the target RTL in workspace/ while preserving hardware behavior within the declared proof scope.\n");

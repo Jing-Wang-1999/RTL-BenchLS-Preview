@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/04e140cf7fe12e4d2e32becd12711a0f07856b6feed9fba198f590c02c7f663d.txt","module oh_nand4 #(parameter DW = 1 ) // array width\n   (\n    input [DW-1:0]  a,\n    input [DW-1:0]  b,\n    input [DW-1:0]  c,\n    input [DW-1:0]  d, \n    output [DW-1:0] z\n    );\n   \n   assign z = ~(a & b & c & d);\n   \nendmodule");

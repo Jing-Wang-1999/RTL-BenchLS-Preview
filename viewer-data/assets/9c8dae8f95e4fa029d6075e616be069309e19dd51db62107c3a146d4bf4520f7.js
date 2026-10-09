@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/9c8dae8f95e4fa029d6075e616be069309e19dd51db62107c3a146d4bf4520f7.txt","module IN_3VX2 (A, Q);\n\n   input     A;\n   output    Q;\n\n   assign Q = ~A;\n\nendmodule");

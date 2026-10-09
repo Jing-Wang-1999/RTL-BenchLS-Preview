@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c67ede98950b23218ebc4eabcd1f2fa734f4bebb544efd093c8de638d43cd443.txt","{\n  \"top_module\": \"sirv_qspi_physical\",\n  \"mode\": \"sec\",\n  \"clock\": \"clock\",\n  \"reset_expression\": \"reset\",\n  \"preprocessor_defines\": [],\n  \"ready_for_controls\": true,\n  \"notes\": \"Default parameters. Reset-first qualification.\"\n}\n");

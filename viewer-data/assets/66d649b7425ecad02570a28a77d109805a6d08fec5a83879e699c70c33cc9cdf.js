@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/66d649b7425ecad02570a28a77d109805a6d08fec5a83879e699c70c33cc9cdf.txt","module rtlpp_07272(t,clock,reset,q);\n  input t, clock, reset;\n  output reg q;\n\n  always @(negedge clock or negedge reset) begin \n    if (!reset)\n      q <= 0;\n    else \n      case (t)\n        0: q <= q;\n        1: q <= ~q;\n      endcase\n  end\nendmodule");

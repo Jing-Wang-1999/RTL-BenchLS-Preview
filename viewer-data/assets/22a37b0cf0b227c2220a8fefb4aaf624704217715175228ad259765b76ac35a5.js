@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/22a37b0cf0b227c2220a8fefb4aaf624704217715175228ad259765b76ac35a5.txt","module xlconstant_logic (\n    output [26:0] dout\n);\n    // Place logic here\nendmodule");

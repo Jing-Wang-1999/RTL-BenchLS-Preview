@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a5d486ee9991d262a9d26dd02ab227ce34864e805beb97e4a8eae0fbd8024325.txt","{\n  \"top\": {\n    \"module\": \"crc24_zer64x2_flat\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/crc/crc24_zer64x2_flat.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

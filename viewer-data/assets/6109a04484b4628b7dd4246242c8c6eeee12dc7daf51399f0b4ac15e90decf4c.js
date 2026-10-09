@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/6109a04484b4628b7dd4246242c8c6eeee12dc7daf51399f0b4ac15e90decf4c.txt","read design ./rtl/golden.v -SystemVerilog -Golden\nset root module lfsr -Golden\nread design ./rtl/revised.v -SystemVerilog -Revised\nset root module lfsr -Revised\nset system mode lec\nadd compared points -all\ncompare\nreport compare data\nexit -force\n");

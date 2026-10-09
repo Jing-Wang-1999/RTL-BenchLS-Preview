@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a4dfc247f08b1059fe78a3447fa65d796bf2f9d12eff0ee74bf4ddd0afddc145.txt","{\n  \"top\": {\n    \"module\": \"three_two_comp\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/6.basic_verilog/Advanced Synthesis Cookbook/arithmetic/three_two_comp.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

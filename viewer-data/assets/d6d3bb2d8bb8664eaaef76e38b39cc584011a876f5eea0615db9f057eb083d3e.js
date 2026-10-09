@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d6d3bb2d8bb8664eaaef76e38b39cc584011a876f5eea0615db9f057eb083d3e.txt","module MuxForWriteData (\n    input [31:0] AluData,\n    input DBDataSrc,\n    input [31:0] MemData,\n    output reg [31:0] Result\n);\n    // Mux logic here\nendmodule");

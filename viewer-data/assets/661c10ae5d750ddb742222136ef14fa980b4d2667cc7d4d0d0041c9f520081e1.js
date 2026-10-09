@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/661c10ae5d750ddb742222136ef14fa980b4d2667cc7d4d0d0041c9f520081e1.txt","always @(posedge clk) begin\n    if (resetn == 1'b0) begin\n      acked <= {NUM_M{1'b0}};\n    end else begin\n      if (s_valid & s_ready)\n        acked <= {NUM_M{1'b0}};\n      else\n        acked <= acked | (m_ready & m_valid);\n    end\n  end");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/e53c29b5a86d8b3e5e88dcc2116158bdb44dc518be807046f8b6f8e46a0a162d.txt","module mg_01367 (clk,we, din, dout);\nparameter WIDTH=32; \n input we; \n input clk; \n input [WIDTH-1:0] din; \n output [WIDTH-1:0] dout; \n reg [WIDTH-1:0] store; \n always @(posedge clk) \n  if(we) \n  store <= din; \n assign dout = store ; \n endmodule");

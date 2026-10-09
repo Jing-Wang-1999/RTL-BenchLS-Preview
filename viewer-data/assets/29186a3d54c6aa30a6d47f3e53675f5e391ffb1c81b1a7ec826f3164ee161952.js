@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/29186a3d54c6aa30a6d47f3e53675f5e391ffb1c81b1a7ec826f3164ee161952.txt","always @(posedge clk or posedge rst)\nbegin\n  if (rst)\n    pc <= #1 16'h0;\n  else if (pc_wr_r2)\n    pc <= #1 pc_buf;\n  else if (rd & !int_ack_t)\n    pc <= #1 pc_buf - 16'h8 + {13'h0, op_pos} + {14'h0, op_length};\nend");

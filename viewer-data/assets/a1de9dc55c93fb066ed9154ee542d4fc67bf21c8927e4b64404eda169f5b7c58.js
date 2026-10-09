@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a1de9dc55c93fb066ed9154ee542d4fc67bf21c8927e4b64404eda169f5b7c58.txt","{\n  \"top_module\": \"jpeg_dht_std_y_ac\",\n  \"mode\": \"lec\",\n  \"clock\": null,\n  \"reset_expression\": null,\n  \"preprocessor_defines\": [],\n  \"ready_for_controls\": true,\n  \"notes\": \"\"\n}\n");

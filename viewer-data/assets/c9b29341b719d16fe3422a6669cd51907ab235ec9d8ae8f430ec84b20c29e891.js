@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c9b29341b719d16fe3422a6669cd51907ab235ec9d8ae8f430ec84b20c29e891.txt","module board_logic(\n    output aux,\n    output main,\n    output diode,\n    input clk,\n    input [13:0] data,\n    input load,\n    input nFS,\n    input FS_Reset,\n    input countglobal,\n    output SD\n);\n    // Provide board functionality\nendmodule");

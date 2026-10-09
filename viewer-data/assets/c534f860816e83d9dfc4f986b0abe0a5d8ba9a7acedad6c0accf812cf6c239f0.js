@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/c534f860816e83d9dfc4f986b0abe0a5d8ba9a7acedad6c0accf812cf6c239f0.txt","module ROM(\n\tinput [11:0] Address,\n\tinput Clock,\n\toutput [7:0] Data\n);\n\t// Dummy definition: logic should be replaced with actual memory logic\n\tassign Data = 8'h00;\nendmodule");

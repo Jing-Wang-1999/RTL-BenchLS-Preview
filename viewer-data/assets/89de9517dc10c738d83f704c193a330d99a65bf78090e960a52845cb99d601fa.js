@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/89de9517dc10c738d83f704c193a330d99a65bf78090e960a52845cb99d601fa.txt","{\n  \"controls\": [\n    {\n      \"compile_pass\": true,\n      \"detected\": true,\n      \"name\": \"output_corrupt\"\n    }\n  ],\n  \"golden_score\": 1,\n  \"specification_review\": \"private/specification_review.json\",\n  \"total_points\": 1\n}\n");

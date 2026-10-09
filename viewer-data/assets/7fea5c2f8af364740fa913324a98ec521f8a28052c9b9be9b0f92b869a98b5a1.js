@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/7fea5c2f8af364740fa913324a98ec521f8a28052c9b9be9b0f92b869a98b5a1.txt","always @(posedge clk)\n\tif(!rst)\t\t\tgb <=  1'b0;\n\telse\n\tif(clr)\t\t\t\tgb <=  1'b0;\n\telse\n\tif((wp_p1 == rp) & we)\t\tgb <=  1'b1;\n\telse\n\tif(re)\t\t\t\tgb <=  1'b0;");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/91d44b0206ad6252e65b4cbcc38ba729c0f6e05a5147bd0831ddaf0e85e68230.txt","module mg_10386 (clk,reset,ena,result);\ninput clk; \n  input reset; \n  input ena; \n  output reg [7:0] result; \n  always @(posedge clk or posedge reset) \n  begin \n  if (reset) \n  result = 7; \n  else if (ena) \n  result = result - 1; \n  end \n endmodule");

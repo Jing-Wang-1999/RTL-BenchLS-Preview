@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/cdd566d5ba2eb44c2ab033f4a3138aa8bfbe4629cb079ed1f5fd1607401bfbed.txt","module asic_clkbuf #(parameter PROP = \"DEFAULT\")   (\n    input  a,\n    output z\n    );\n\n   assign z = a;\n\nendmodule");

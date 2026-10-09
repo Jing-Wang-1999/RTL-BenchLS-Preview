@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/5135295a99ed3f83ca6c83940daa195be23c43613b84470fcf83f76ff01ae46a.txt","{\n  \"top\": {\n    \"module\": \"asic_oai22\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/31.oh/asiclib/hdl/asic_oai22.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

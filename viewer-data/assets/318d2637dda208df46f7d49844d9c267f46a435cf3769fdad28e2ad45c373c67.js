@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/318d2637dda208df46f7d49844d9c267f46a435cf3769fdad28e2ad45c373c67.txt","module alt_iobuf (\n  input  i,\n  input  oe,\n  output o,\n  inout  io\n);\n  assign io = oe ? i : 1'bz;\n  assign o = io;\nendmodule");

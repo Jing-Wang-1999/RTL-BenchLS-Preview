@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/d59267bc69ab45cc8296a6894f1785f4688410da84700c312ecd35251b614d33.txt","module clk_div(\n    input clk_in,\n    output clk_out\n  );\n  // Clock divider logic here\n  endmodule");

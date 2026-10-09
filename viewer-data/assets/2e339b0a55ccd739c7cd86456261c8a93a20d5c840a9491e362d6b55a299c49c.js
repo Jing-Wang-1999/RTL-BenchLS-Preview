@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/2e339b0a55ccd739c7cd86456261c8a93a20d5c840a9491e362d6b55a299c49c.txt","{\n  \"top\": {\n    \"module\": \"asic_nand2\",\n    \"file\": \"<upstream-pool>/Infructructure-Agents/Star-repos/31.oh/asiclib/hdl/asic_nand2.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

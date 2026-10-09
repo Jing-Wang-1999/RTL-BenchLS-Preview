@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/8f02105185300b9579828be8b02473d02e6e550533098ed2b6000327aa4783d3.txt","+tree *\n-module dmi_test_wrapper\n\n-node dmi_test_wrapper.wrapper.i_jtag_tap.abits // Tied to AWID[5:0]\n");

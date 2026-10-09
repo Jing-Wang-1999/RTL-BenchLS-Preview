@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/f347c4f1ad204f56fc1f06e3bb51411f7e722c2686774def371c4da63be5e86f.txt","module mg_09146 (input wire clk,input wire clr,input wire [ 7:0] A,input wire [ 7:0] B,output reg [15:0] Z);\nreg [15:0] acc; \n  assign Z = (clr) ? (A * B) : (acc + (A * B)); \n  always @(posedge clk) \n  acc <= Z; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/35de7545ea546ebd64960fbee8f1c7a408b24e5db4e38232fb5bbf1fee8e134c.txt","module mg_02167 (sig_buf,sig);\noutput [163:0] sig_buf; \n input [163:0] sig; \n assign sig_buf = sig; \n endmodule");

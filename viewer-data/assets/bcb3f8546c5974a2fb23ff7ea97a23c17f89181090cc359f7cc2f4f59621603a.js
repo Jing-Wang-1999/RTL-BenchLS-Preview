@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/bcb3f8546c5974a2fb23ff7ea97a23c17f89181090cc359f7cc2f4f59621603a.txt","module mg_04951(input [1:0] in, input select, output reg out);\nalways @( in or select) \n  case (select) \n  0: out = in[0]; \n  1: out = in[1]; \n  endcase \n endmodule");

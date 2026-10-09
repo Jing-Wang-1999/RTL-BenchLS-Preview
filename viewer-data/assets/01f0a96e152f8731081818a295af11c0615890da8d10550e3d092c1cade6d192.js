@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/01f0a96e152f8731081818a295af11c0615890da8d10550e3d092c1cade6d192.txt","This module performs a 4-input XNOR operation. It takes four inputs: a, b, c, and d, and produces one output, z. The output z is true when an even number of inputs are true. The module allows parameter customization but defaults to \"DEFAULT\".");

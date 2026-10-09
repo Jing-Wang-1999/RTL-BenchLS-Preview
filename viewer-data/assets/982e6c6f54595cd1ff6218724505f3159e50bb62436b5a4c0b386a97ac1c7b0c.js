@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/982e6c6f54595cd1ff6218724505f3159e50bb62436b5a4c0b386a97ac1c7b0c.txt","module mg_06506 (input [6:0] at_code,output [6:0] xt_code);\nreg [7:0] rom[0:2**7-1]; \n assign xt_code = rom[at_code][6:0]; \n initial $readmemh(\"xt_codes.dat\", rom); \n endmodule");

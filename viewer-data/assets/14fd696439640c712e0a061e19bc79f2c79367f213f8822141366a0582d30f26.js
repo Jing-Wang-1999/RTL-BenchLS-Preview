@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/14fd696439640c712e0a061e19bc79f2c79367f213f8822141366a0582d30f26.txt","module mg_04597(in1, in2 , out);\noutput [15:0] out; \n  input [15:0] in1, in2; \n  wire [16:0] outTemp; \n  assign outTemp = in1 + in2; \n  assign out = /* RTL_BENCHLS_MASK: restore expression */; \n endmodule");

@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/0bd93b22774aa2d20e7b49f2de84e19d003ac5a9162a4bff2bf303c692665f45.txt","# oh_oai21\n\nParameter `DW=1` defines the width of inputs `a0`, `a1`, `b0` and output `z`. The module is combinational and computes `z = ~((a0 | a1) & b0)` bit by bit. It has no clock, reset, state, latency, or submodule.\n");

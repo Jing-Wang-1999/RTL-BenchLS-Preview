@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/61678204bd228358349b89dc76b7a2e4b95d3ac619035ab6018752b694cba2f7.txt","{\n  \"top\": {\n    \"module\": \"mg_09334\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/MG-Verilog_sec_input/designs/mg_09334.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": [\n    \"saturating_counter\"\n  ]\n}");

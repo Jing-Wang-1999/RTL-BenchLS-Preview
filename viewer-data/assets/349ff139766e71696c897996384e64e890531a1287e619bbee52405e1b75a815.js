@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/349ff139766e71696c897996384e64e890531a1287e619bbee52405e1b75a815.txt","{\n  \"top\": {\n    \"module\": \"sky130_osu_ring_oscillator_mpr2at_8_b0r1\",\n    \"file\": \"<upstream-pool>/RTL_Datasets/RTL-Dataset-RTLPP/RTL-PP_sec_input/designs/rtlpp_04679.v\"\n  },\n  \"deps\": [],\n  \"missing_deps\": []\n}");

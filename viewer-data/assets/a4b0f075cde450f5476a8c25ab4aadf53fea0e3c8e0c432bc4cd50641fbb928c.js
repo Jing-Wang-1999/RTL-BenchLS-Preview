@@ -1,0 +1,1 @@
+window.RTLBenchLSData.register("assets/a4b0f075cde450f5476a8c25ab4aadf53fea0e3c8e0c432bc4cd50641fbb928c.txt","module NOR2_X1 (input A1, input A2, output Z);\n    assign Z = ~(~(A1 | A2));\nendmodule");
