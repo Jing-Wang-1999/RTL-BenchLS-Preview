@@ -37,10 +37,15 @@ def build(root):
     output = root / "viewer-data"
     catalog = json.loads((root / "catalog.json").read_text(encoding="utf-8"))
     write_payload(output, "catalog.json", catalog)
+    status_path = root / "evaluation-status.json"
+    if status_path.exists():
+        write_payload(output, "evaluation-status.json", json.loads(status_path.read_text()))
     asset_paths = set()
     case_count = 0
     for task in catalog["tasks"]:
         for item in task["cases"]:
+            if not catalog.get("assets_included"):
+                continue
             detail = json.loads((root / item["detail"]).read_text(encoding="utf-8"))
             write_payload(output, item["detail"], detail)
             asset_paths.update(file["url"] for file in detail["files"] if not file["binary"])
@@ -62,7 +67,10 @@ def build(root):
         multipart_count += 1
 
     # Refresh the browser script after interface or data-loader changes.
-    interface_version = hashlib.sha256((root / "app.js").read_bytes()).hexdigest()[:12]
+    interface_source = (root / "app.js").read_bytes()
+    if status_path.exists():
+        interface_source += status_path.read_bytes()
+    interface_version = hashlib.sha256(interface_source).hexdigest()[:12]
     review = root / "review.html"
     source = review.read_text(encoding="utf-8")
     source = re.sub(r"app\.js\?v=[a-f0-9]+", f"app.js?v={interface_version}", source)

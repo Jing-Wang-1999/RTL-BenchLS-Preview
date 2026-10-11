@@ -3,10 +3,12 @@
 // Static files provide the catalog, case contracts, and content-addressed assets.
 const PAGE_SIZE = 50;
 let catalog;
+let evaluationStatus;
 let renderGeneration = 0;
 const detailCache = new Map();
 const scriptData = new Map();
 const pendingData = new Map();
+const interfaceVersion = new URL(document.currentScript.src).searchParams.get("v") || "current";
 
 // Anonymous GitHub gives pages an opaque origin, which blocks JSON/text fetches.
 // Classic scripts can deliver the same static data without requiring CORS.
@@ -23,7 +25,8 @@ function loadData(key) {
   const promise = new Promise((resolve, reject) => {
     const script = document.createElement("script");
     const stem = key.replace(/\.(json|txt)$/, "");
-    script.src = `./viewer-data/${stem}.js`;
+    const version = key === "evaluation-status.json" ? `?v=${interfaceVersion}` : "";
+    script.src = `./viewer-data/${stem}.js${version}`;
     script.async = true;
     const timeout = window.setTimeout(() => finish(new Error("Data request timed out")), 30000);
 
@@ -77,8 +80,51 @@ function previewNotice() {
   return `<p class="warn">Public inventory preview. Actual input files, golden RTL, and private verification assets are not published here. Case identifiers are preview identifiers; report them when describing a UI bug.</p>`;
 }
 
+const REPOSITORY = "https://anonymous.4open.science/r/RTL-BenchLS-A0AB/";
+const EVALUATION_LABELS = {
+  dual_qualified: "Both formal backends qualified",
+  retained_testbench: "Retained testbench scoring",
+  formal_incomplete: "Formal artifacts incomplete",
+  oracle_unresolved: "Oracle unresolved",
+};
+
+function evaluationBadge(item) {
+  const status = evaluationStatus.cases[item.id];
+  const style = status.status === "dual_qualified" ? "public" :
+    status.family === "formal" ? "evaluation-pending" : "";
+  return `<span class="pill ${style}">${escapeHtml(EVALUATION_LABELS[status.status])}</span>`;
+}
+
+function coverageSummary() {
+  const counts = evaluationStatus.formal_artifacts;
+  const date = evaluationStatus.validated_at.slice(0, 10);
+  return `<div class="card"><h2>Evaluation availability</h2><p>Validated release snapshot: ${escapeHtml(date)}. <strong>${counts.dual_packages.toLocaleString()}</strong> formal cases have qualified open-source and commercial packages; <strong>${counts.incomplete.toLocaleString()}</strong> formal cases remain incomplete, including ${counts.oracle_unresolved} unresolved oracles. <strong>${evaluationStatus.families.testbench.toLocaleString()}</strong> cases retain testbench scoring.</p><p>Use the evaluation filter to find qualified formal cases. Project-generation scores use the testpoints declared in each case’s retained protocol.</p><a href="${REPOSITORY}benchmark/workflow/README.md">Evaluation workflow ↗</a></div>`;
+}
+
+function evaluationPanel(task, item) {
+  const status = evaluationStatus.cases[item.id];
+  let body = `<h2>Evaluation availability</h2><div class="card">${evaluationBadge(item)}`;
+  if (status.status === "dual_qualified") {
+    const caseId = item.original_id || item.id;
+    const quotedCase = "'" + caseId.replaceAll("'", "'\"'\"'") + "'";
+    const command = `python3 benchmark/evaluation/artifacts.py stage --task ${task.id} --case ${quotedCase} --backend open_source --control positive --output /tmp/rtlbenchls-control`;
+    body += `<p>The released evaluator proves the equivalent control and rejects the negative control on both backends. Stage a fresh evaluator workspace from a local benchmark checkout:</p><pre>${escapeHtml(command)}</pre><p>The workspace includes <code>evaluation.json</code> with execution commands. Use <code>--backend commercial</code> for the commercial route; use <code>--control submission --submission solution.v</code> to evaluate a candidate.</p>`;
+  } else if (status.family === "formal") {
+    body += '<p>This case remains in the paper-aligned inventory, but its dual formal evaluator is incomplete. Retained reference scripts alone do not establish a qualified portable evaluator.</p>';
+  } else {
+    body += '<p>This case is scored by its retained testbench protocol and is exempt from the dual formal requirement. This label describes its scoring route, not a fresh testbench replay.</p>';
+    if (["1.2", "1.4"].includes(task.id)) {
+      body += '<p>The published case uses the testpoints and score denominator declared in its retained protocol.</p>';
+    }
+  }
+  if (status.manifest) {
+    body += `<p><a href="${REPOSITORY}${escapeHtml(status.manifest)}" target="_blank" rel="noopener">View released evaluation manifest ↗</a></p>`;
+  }
+  return body + "</div>";
+}
+
 function dashboard() {
-  let body = `<h1>Benchmark case browser</h1><p class="muted">Browse ${catalog.tasks.length} task entries and ${catalog.total_cases.toLocaleString()} benchmark cases.</p>${previewNotice()}`;
+  let body = `<h1>Benchmark case browser</h1><p class="muted">Browse ${catalog.tasks.length} task entries and ${catalog.total_cases.toLocaleString()} benchmark cases.</p>${coverageSummary()}${previewNotice()}`;
   for (const scope of ["module-level", "project-level"]) {
     body += `<h2>${escapeHtml(scope)}</h2><div class="grid">`;
     for (const task of catalog.tasks.filter(item => item.scope === scope)) {
@@ -99,24 +145,30 @@ function taskList(task, parameters) {
   const query = parameters.get("q") || "";
   const group = parameters.get("group") || "";
   const slice = parameters.get("slice") || "";
+  const evaluation = parameters.get("evaluation") || "";
   const groups = [...new Set(task.cases.map(item => item.group).filter(Boolean))].sort();
   const slices = [...new Set(task.cases.map(item => item.slice).filter(Boolean))].sort();
   const rows = task.cases.filter(item =>
     (!group || item.group === group) && (!slice || item.slice === slice) &&
+    (!evaluation || (evaluation === "formal_pending" ?
+      ["formal_incomplete", "oracle_unresolved"].includes(evaluationStatus.cases[item.id].status) :
+      evaluationStatus.cases[item.id].status === evaluation)) &&
     (!query || `${item.id} ${item.original_id || ""} ${item.parent} ${item.group} ${item.slice}`.toLowerCase().includes(query.toLowerCase()))
   );
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Math.min(totalPages, Math.max(1, Number(parameters.get("page")) || 1));
   const selected = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   let body = `<p><a href="#">← All tasks</a></p><h1>Task ${task.id}: ${escapeHtml(task.name)}</h1><p><strong>${task.count.toLocaleString()}</strong> cases · ${rows.length.toLocaleString()} match the filters</p>${contractTable(task.contract)}`;
-  body += `<form id="filters" class="card row"><input name="q" value="${escapeHtml(query)}" placeholder="Search case or parent"><select name="group">${options(groups, group, "All source groups")}</select><select name="slice">${options(slices, slice, "All slices")}</select><button>Filter</button></form>`;
-  body += `<div class="scroll"><table><thead><tr><th>Case</th><th>Parent</th><th>Source group</th><th>Balanced slice</th></tr></thead><tbody>`;
+  const evaluationOptions = [["", "All evaluation states"], ["dual_qualified", "Both formal backends qualified"], ["retained_testbench", "Retained testbench scoring"], ["formal_pending", "Formal artifacts incomplete"]].map(([value, label]) =>
+    `<option value="${value}"${value === evaluation ? " selected" : ""}>${label}</option>`).join("");
+  body += `<form id="filters" class="card row"><input name="q" value="${escapeHtml(query)}" placeholder="Search case or parent"><select name="group">${options(groups, group, "All source groups")}</select><select name="slice">${options(slices, slice, "All slices")}</select><select name="evaluation" aria-label="Evaluation availability">${evaluationOptions}</select><button>Filter</button></form>`;
+  body += `<div class="scroll"><table><thead><tr><th>Case</th><th>Parent</th><th>Source group</th><th>Balanced slice</th><th>Evaluation</th></tr></thead><tbody>`;
   for (const item of selected) {
-    body += `<tr><td><a href="${route({task: task.id, case: item.id})}">${escapeHtml(item.original_id || item.id)}</a></td><td>${escapeHtml(item.parent)}</td><td>${escapeHtml(item.group || "—")}</td><td>${escapeHtml(item.slice || "—")}</td></tr>`;
+    body += `<tr><td><a href="${route({task: task.id, case: item.id})}">${escapeHtml(item.original_id || item.id)}</a></td><td>${escapeHtml(item.parent)}</td><td>${escapeHtml(item.group || "—")}</td><td>${escapeHtml(item.slice || "—")}</td><td>${evaluationBadge(item)}</td></tr>`;
   }
-  if (!selected.length) body += '<tr><td colspan="4">No matching cases.</td></tr>';
+  if (!selected.length) body += '<tr><td colspan="5">No matching cases.</td></tr>';
   body += "</tbody></table></div><div class=\"pager\">";
-  const pageParameters = {task: task.id, q: query, group, slice};
+  const pageParameters = {task: task.id, q: query, group, slice, evaluation};
   body += page > 1 ? `<a href="${route({...pageParameters, page: page - 1})}">← Previous</a>` : "<span></span>";
   body += `<span>Page ${page} / ${totalPages}</span>`;
   body += page < totalPages ? `<a href="${route({...pageParameters, page: page + 1})}">Next →</a>` : "<span></span>";
@@ -134,6 +186,7 @@ function caseDetail(task, caseId) {
   if (item.group) body += `<span class="pill">${escapeHtml(item.group)}</span>`;
   if (item.slice) body += `<span class="pill">${escapeHtml(item.slice)}</span>`;
   body += previewNotice();
+  body += evaluationPanel(task, item);
   if (task.stages.length) {
     body += '<h2>Round-trip: Stage 1 → generated text → Stage 2</h2>';
     if (task.id === "2.3") {
@@ -187,6 +240,7 @@ async function fullCaseDetail(task, item, parameters) {
   let body = `<p><a href="${route({task: task.id})}">← Task ${task.id}</a></p><h1>${escapeHtml(detail.case_id)}</h1><p class="muted">${escapeHtml(task.name)}</p>${previewNotice()}`;
   body += `<div class="card"><table><tbody><tr><th>Browser ID</th><td>${escapeHtml(item.id)}</td></tr><tr><th>Parent</th><td>${escapeHtml(detail.parent_id || "—")}</td></tr><tr><th>Source group</th><td>${escapeHtml(item.group || "—")}</td></tr><tr><th>Balanced slice</th><td>${escapeHtml(item.slice || "—")}</td></tr></tbody></table></div>`;
   body += detail.entry_point || "";
+  body += evaluationPanel(task, item);
   body += detail.panels[protocol] || detail.panels.stored;
   return body + fileList(task, item, detail, parameters);
 }
@@ -247,7 +301,9 @@ async function render() {
 
 async function start() {
   try {
-    catalog = await loadData("catalog.json");
+    [catalog, evaluationStatus] = await Promise.all([
+      loadData("catalog.json"), loadData("evaluation-status.json"),
+    ]);
     window.addEventListener("hashchange", render);
     render();
   } catch (error) {

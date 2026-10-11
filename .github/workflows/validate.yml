@@ -1,0 +1,25 @@
+name: Validate preview
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Check browser scripts
+        run: |
+          node --check app.js
+          node --check home.js
+      - name: Check release status, membership and anonymous links
+        run: python3 -B scripts/check_release_status.py

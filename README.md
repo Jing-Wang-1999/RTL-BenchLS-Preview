@@ -1,9 +1,13 @@
 # RTL-BenchLS case preview
 
-This website introduces RTL-BenchLS through the paper's benchmark overview and
-design-size figures. Its separate case browser provides human review of 14 task
-entries and 18,851 case records, with filters, agent contracts, round-trip stages,
-file browsing, and reference/oracle access.
+We provide **18,851 cases** for RTL generation, completion, and debugging at
+Module-level and Project-level scopes, using Direct and Round-trip protocols.
+The benchmark includes **12 task formulations**, organized into **14 task
+entries** with the three Direct Project-level debugging subtypes listed separately.
+
+This website presents the benchmark overview and design-size figures. Its case
+browser provides filters, agent contracts, round-trip stages, file browsing,
+and reference/oracle access.
 
 ## Our website: [RTL-BenchLS overview and case browser](https://anonymous.4open.science/w/RTL-BenchLS-Preview-D301/)
 
@@ -16,6 +20,8 @@ Choose a task, filter by case ID, source group, or balanced slice, and open a
 case. The page identifies the agent input, expected output, reference RTL, and
 verification oracle. Task 2.3 retains both whole-module and masked-region
 protocol views. Open a file name to read or download its content.
+
+Use the evaluation filter to find cases with qualified formal evaluation packages.
 
 “Public” and “private” are evaluation boundaries: humans may inspect reference
 files, but evaluated models must not receive them. This website does not run
@@ -31,21 +37,8 @@ standalone prompt; those limitations remain visible.
 | `figures/` | Vector exports of paper figures |
 | `review.html`, `app.js`, `style.css` | Case browser |
 | `catalog.json` | Task index and case membership |
+| `evaluation-status.json` | Availability from validated public evaluation manifests |
+| `viewer-data/` | Script-loadable data for anonymous hosting |
 | `cases/` | Case-specific contracts and file lists |
 | `assets/` | Content-addressed specifications, RTL, scripts, and retained metadata |
 | `.nojekyll`, `robots.txt` | Static publication and indexing preferences |
-
-There are 214,829 file references backed by 73,738 unique assets. Duplicate
-contents are stored once. Logs, compiled outputs, credentials, and one oversized
-simulation trace CSV are excluded. Retained scripts may contain historical
-server paths; this preview is not a claim of portable verification replay.
-Source attribution and license terms remain with the retained files; this
-preview grants no new blanket license over upstream designs.
-
-The source exporter is maintained in the engineering project under
-`benchmark/review/build_public.py` and `benchmark/review/export_case_assets.py`.
-Regenerate from the validated case indexes, validate the complete export, then
-update only this dedicated preview repository. Report bugs with the task ID,
-original case ID, browser ID, and page URL. The homepage describes 12 task
-formulations; the browser has 14 entries because direct project debugging
-lists three subtypes separately.
