@@ -90,7 +90,7 @@ function verificationBadge(item) {
 function verificationPanel(task, item) {
   const status = evaluationStatus.cases[item.id];
   let body = `<h2>Verification files</h2><div class="card">${verificationBadge(item)}`;
-  if (status.status === "dual_qualified") {
+  if (status.package) {
     const caseId = item.original_id || item.id;
     const quotedCase = "'" + caseId.replaceAll("'", "'\"'\"'") + "'";
     const command = `python3 benchmark/evaluation/artifacts.py stage --task ${task.id} --case ${quotedCase} --backend open_source --control positive --output /tmp/rtlbenchls-control`;
@@ -116,7 +116,7 @@ function verificationPanel(task, item) {
     const command = `python3 benchmark/evaluation/simulation_suites.py evaluate --task ${task.id} --case ${quotedCase} --submission PROJECT_ROOT --output /tmp/rtlbenchls-behavior-points`;
     body += `<h3>Additional behavior testpoints</h3><p>${status.additional_behavior_points.length} independently scored behavior checks use Icarus Verilog and a separate versioned score.</p><pre>${escapeHtml(command)}</pre><p><a href="${REPOSITORY}benchmark/evaluation/project-generation/simulation-suites.jsonl" target="_blank" rel="noopener">View behavior testpoint definitions ↗</a></p>`;
   }
-  if (status.manifest && status.status === "dual_qualified") {
+  if (status.manifest && status.package) {
     body += `<p><a href="${REPOSITORY}${escapeHtml(status.manifest)}" target="_blank" rel="noopener">View released evaluation manifest ↗</a></p>`;
   }
   return body + "</div>";

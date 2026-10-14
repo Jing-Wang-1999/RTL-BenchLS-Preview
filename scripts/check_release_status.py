@@ -45,19 +45,17 @@ def main():
         raise ValueError('Preview and evaluation status memberships differ')
     if status['total_cases'] != catalog['total_cases']:
         raise ValueError('Stale snapshot case count')
-    allowed = {'dual_qualified': 'formal', 'formal_incomplete': 'formal',
-               'oracle_unresolved': 'formal', 'retained_testbench': 'testbench'}
+    if status['schema'] != 'rtl_benchls.verification_files.v2':
+        raise ValueError('Unexpected preview verification metadata schema')
+    if set(status) != {'schema', 'total_cases', 'cases'}:
+        raise ValueError('Engineering audit annotations in preview metadata')
     for case in status['cases'].values():
-        if allowed.get(case['status']) != case['family']:
-            raise ValueError('Invalid evaluation family/status pair')
-    counts = Counter(case['status'] for case in status['cases'].values())
-    formal = status['formal_artifacts']
-    if (counts['dual_qualified'] != formal['dual_packages']
-            or counts['oracle_unresolved'] != formal['oracle_unresolved']
-            or counts['formal_incomplete'] + counts['oracle_unresolved'] != formal['incomplete']
-            or counts['retained_testbench'] != status['families']['testbench']
-            or sum(status['families'].values()) != status['total_cases']):
-        raise ValueError('Stale evaluation status totals')
+        if case['family'] not in ('formal', 'testbench'):
+            raise ValueError('Invalid verification method')
+        if {'status', 'state', 'missing', 'oracle_status', 'reason'} & case.keys():
+            raise ValueError('Engineering audit annotations in preview case')
+        if case['family'] == 'testbench' and case.get('package'):
+            raise ValueError('Testbench case has an unexpected formal package')
     for filename, payload in [('catalog', catalog), ('evaluation-status', status)]:
         script = (ROOT / f'viewer-data/{filename}.js').read_text()
         prefix = f'window.RTLBenchLSData.register("{filename}.json",'
@@ -74,7 +72,7 @@ def main():
         for item in task['cases']:
             if not (ROOT / item['detail']).is_file():
                 raise ValueError('Missing case detail file')
-    print(json.dumps({'passed': True, 'cases': len(expected), 'statuses': dict(counts)}, indent=2))
+    print(json.dumps({'passed': True, 'cases': len(expected)}, indent=2))
 
 
 if __name__ == '__main__':
