@@ -28,6 +28,16 @@ def check_documentation():
 
 def main():
     check_documentation()
+    interface = ''.join((ROOT / name).read_text()
+                        for name in ('index.html', 'app.js', 'home.js', 'README.md'))
+    forbidden = (
+        'Evaluation availability', 'Validated release snapshot:',
+        'formal cases remain incomplete', 'Formal artifacts incomplete',
+        'Oracle unresolved', 'Both formal tools qualified',
+        'qualified-count', 'incomplete-count', 'coverageSummary',
+    )
+    if any(marker in interface for marker in forbidden):
+        raise ValueError('Internal engineering status in reviewer interface')
     catalog = json.loads((ROOT / 'catalog.json').read_text())
     status = json.loads((ROOT / 'evaluation-status.json').read_text())
     expected = {item['id'] for task in catalog['tasks'] for item in task['cases']}

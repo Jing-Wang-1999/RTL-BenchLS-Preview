@@ -21,13 +21,9 @@ case. The page identifies the agent input, expected output, reference RTL, and
 verification oracle. Task 2.3 retains both whole-module and masked-region
 protocol views. Open a file name to read or download its content.
 
-Use the evaluation filter to find cases with qualified formal evaluation packages.
-
 “Public” and “private” are evaluation boundaries: humans may inspect reference
 files, but evaluated models must not receive them. This website does not run
-models or verification tools. Some historical cases retain runner-assembled
-inputs, linked-parent references, or protocol summaries rather than an exact
-standalone prompt; those limitations remain visible.
+models or verification tools.
 
 ## Files and updates
 

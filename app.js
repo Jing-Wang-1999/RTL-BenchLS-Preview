@@ -81,50 +81,49 @@ function previewNotice() {
 }
 
 const REPOSITORY = "https://anonymous.4open.science/r/RTL-BenchLS-A0AB/";
-const EVALUATION_LABELS = {
-  dual_qualified: "Both formal backends qualified",
-  retained_testbench: "Retained testbench scoring",
-  formal_incomplete: "Formal artifacts incomplete",
-  oracle_unresolved: "Oracle unresolved",
-};
-
-function evaluationBadge(item) {
+function verificationBadge(item) {
   const status = evaluationStatus.cases[item.id];
-  const style = status.status === "dual_qualified" ? "public" :
-    status.family === "formal" ? "evaluation-pending" : "";
-  return `<span class="pill ${style}">${escapeHtml(EVALUATION_LABELS[status.status])}</span>`;
+  const label = status.family === "formal" ? "Formal verification" : "Testbench";
+  return `<span class="pill">${label}</span>`;
 }
 
-function coverageSummary() {
-  const counts = evaluationStatus.formal_artifacts;
-  const date = evaluationStatus.validated_at.slice(0, 10);
-  return `<div class="card"><h2>Evaluation availability</h2><p>Validated release snapshot: ${escapeHtml(date)}. <strong>${counts.dual_packages.toLocaleString()}</strong> formal cases have qualified open-source and commercial packages; <strong>${counts.incomplete.toLocaleString()}</strong> formal cases remain incomplete, including ${counts.oracle_unresolved} unresolved oracles. <strong>${evaluationStatus.families.testbench.toLocaleString()}</strong> cases retain testbench scoring.</p><p>Use the evaluation filter to find qualified formal cases. Project-generation scores use the testpoints declared in each case’s retained protocol.</p><a href="${REPOSITORY}benchmark/workflow/README.md">Evaluation workflow ↗</a></div>`;
-}
-
-function evaluationPanel(task, item) {
+function verificationPanel(task, item) {
   const status = evaluationStatus.cases[item.id];
-  let body = `<h2>Evaluation availability</h2><div class="card">${evaluationBadge(item)}`;
+  let body = `<h2>Verification files</h2><div class="card">${verificationBadge(item)}`;
   if (status.status === "dual_qualified") {
     const caseId = item.original_id || item.id;
     const quotedCase = "'" + caseId.replaceAll("'", "'\"'\"'") + "'";
     const command = `python3 benchmark/evaluation/artifacts.py stage --task ${task.id} --case ${quotedCase} --backend open_source --control positive --output /tmp/rtlbenchls-control`;
-    body += `<p>The released evaluator proves the equivalent control and rejects the negative control on both backends. Stage a fresh evaluator workspace from a local benchmark checkout:</p><pre>${escapeHtml(command)}</pre><p>The workspace includes <code>evaluation.json</code> with execution commands. Use <code>--backend commercial</code> for the commercial route; use <code>--control submission --submission solution.v</code> to evaluate a candidate.</p>`;
+    body += `<p>Stage the packaged verification files from a local benchmark checkout:</p><pre>${escapeHtml(command)}</pre><p>The workspace includes <code>evaluation.json</code> with execution commands. Use <code>--backend commercial</code> for the commercial route; use <code>--control submission --submission solution.v</code> to evaluate a candidate.</p>`;
   } else if (status.family === "formal") {
-    body += '<p>This case remains in the paper-aligned inventory, but its dual formal evaluator is incomplete. Retained reference scripts alone do not establish a qualified portable evaluator.</p>';
+    body += '<p>Use the file browser below to inspect the case reference and verification files.</p>';
   } else {
-    body += '<p>This case is scored by its retained testbench protocol and is exempt from the dual formal requirement. This label describes its scoring route, not a fresh testbench replay.</p>';
+    body += '<p>Evaluate the submission with the testpoints and score denominator declared in the case protocol.</p>';
     if (["1.2", "1.4"].includes(task.id)) {
       body += '<p>The published case uses the testpoints and score denominator declared in its retained protocol.</p>';
     }
   }
-  if (status.manifest) {
+  if (status.additional_project_points?.length) {
+    const caseId = item.original_id || item.id;
+    const quotedCase = "'" + caseId.replaceAll("'", "'\"'\"'") + "'";
+    const modules = status.additional_project_points.map(point => escapeHtml(point.module)).join(", ");
+    const command = `python3 benchmark/evaluation/project_points.py evaluate --task ${task.id} --case ${quotedCase} --submission PROJECT_ROOT --output /tmp/rtlbenchls-additional-points`;
+    body += `<h3>Additional generation testpoints</h3><p>${status.additional_project_points.length} module checks: ${modules}. Each check provides Yosys and commercial verification artifacts. These checks have a separate versioned score.</p><pre>${escapeHtml(command)}</pre><p><a href="${REPOSITORY}benchmark/evaluation/project-generation/points.jsonl" target="_blank" rel="noopener">View additional testpoint definitions ↗</a></p>`;
+  }
+  if (status.additional_behavior_points?.length) {
+    const caseId = item.original_id || item.id;
+    const quotedCase = "'" + caseId.replaceAll("'", "'\"'\"'") + "'";
+    const command = `python3 benchmark/evaluation/simulation_suites.py evaluate --task ${task.id} --case ${quotedCase} --submission PROJECT_ROOT --output /tmp/rtlbenchls-behavior-points`;
+    body += `<h3>Additional behavior testpoints</h3><p>${status.additional_behavior_points.length} independently scored behavior checks use Icarus Verilog and a separate versioned score.</p><pre>${escapeHtml(command)}</pre><p><a href="${REPOSITORY}benchmark/evaluation/project-generation/simulation-suites.jsonl" target="_blank" rel="noopener">View behavior testpoint definitions ↗</a></p>`;
+  }
+  if (status.manifest && status.status === "dual_qualified") {
     body += `<p><a href="${REPOSITORY}${escapeHtml(status.manifest)}" target="_blank" rel="noopener">View released evaluation manifest ↗</a></p>`;
   }
   return body + "</div>";
 }
 
 function dashboard() {
-  let body = `<h1>Benchmark case browser</h1><p class="muted">Browse ${catalog.tasks.length} task entries and ${catalog.total_cases.toLocaleString()} benchmark cases.</p>${coverageSummary()}${previewNotice()}`;
+  let body = `<h1>Benchmark case browser</h1><p class="muted">Browse ${catalog.tasks.length} task entries and ${catalog.total_cases.toLocaleString()} benchmark cases.</p>${previewNotice()}`;
   for (const scope of ["module-level", "project-level"]) {
     body += `<h2>${escapeHtml(scope)}</h2><div class="grid">`;
     for (const task of catalog.tasks.filter(item => item.scope === scope)) {
@@ -145,30 +144,28 @@ function taskList(task, parameters) {
   const query = parameters.get("q") || "";
   const group = parameters.get("group") || "";
   const slice = parameters.get("slice") || "";
-  const evaluation = parameters.get("evaluation") || "";
+  const verification = parameters.get("verification") || "";
   const groups = [...new Set(task.cases.map(item => item.group).filter(Boolean))].sort();
   const slices = [...new Set(task.cases.map(item => item.slice).filter(Boolean))].sort();
   const rows = task.cases.filter(item =>
     (!group || item.group === group) && (!slice || item.slice === slice) &&
-    (!evaluation || (evaluation === "formal_pending" ?
-      ["formal_incomplete", "oracle_unresolved"].includes(evaluationStatus.cases[item.id].status) :
-      evaluationStatus.cases[item.id].status === evaluation)) &&
+    (!verification || evaluationStatus.cases[item.id].family === verification) &&
     (!query || `${item.id} ${item.original_id || ""} ${item.parent} ${item.group} ${item.slice}`.toLowerCase().includes(query.toLowerCase()))
   );
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Math.min(totalPages, Math.max(1, Number(parameters.get("page")) || 1));
   const selected = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   let body = `<p><a href="#">← All tasks</a></p><h1>Task ${task.id}: ${escapeHtml(task.name)}</h1><p><strong>${task.count.toLocaleString()}</strong> cases · ${rows.length.toLocaleString()} match the filters</p>${contractTable(task.contract)}`;
-  const evaluationOptions = [["", "All evaluation states"], ["dual_qualified", "Both formal backends qualified"], ["retained_testbench", "Retained testbench scoring"], ["formal_pending", "Formal artifacts incomplete"]].map(([value, label]) =>
-    `<option value="${value}"${value === evaluation ? " selected" : ""}>${label}</option>`).join("");
-  body += `<form id="filters" class="card row"><input name="q" value="${escapeHtml(query)}" placeholder="Search case or parent"><select name="group">${options(groups, group, "All source groups")}</select><select name="slice">${options(slices, slice, "All slices")}</select><select name="evaluation" aria-label="Evaluation availability">${evaluationOptions}</select><button>Filter</button></form>`;
-  body += `<div class="scroll"><table><thead><tr><th>Case</th><th>Parent</th><th>Source group</th><th>Balanced slice</th><th>Evaluation</th></tr></thead><tbody>`;
+  const verificationOptions = [["", "All verification methods"], ["formal", "Formal verification"], ["testbench", "Testbench"]].map(([value, label]) =>
+    `<option value="${value}"${value === verification ? " selected" : ""}>${label}</option>`).join("");
+  body += `<form id="filters" class="card row"><input name="q" value="${escapeHtml(query)}" placeholder="Search case or parent"><select name="group">${options(groups, group, "All source groups")}</select><select name="slice">${options(slices, slice, "All slices")}</select><select name="verification" aria-label="Verification method">${verificationOptions}</select><button>Filter</button></form>`;
+  body += `<div class="scroll"><table><thead><tr><th>Case</th><th>Parent</th><th>Source group</th><th>Balanced slice</th><th>Verification</th></tr></thead><tbody>`;
   for (const item of selected) {
-    body += `<tr><td><a href="${route({task: task.id, case: item.id})}">${escapeHtml(item.original_id || item.id)}</a></td><td>${escapeHtml(item.parent)}</td><td>${escapeHtml(item.group || "—")}</td><td>${escapeHtml(item.slice || "—")}</td><td>${evaluationBadge(item)}</td></tr>`;
+    body += `<tr><td><a href="${route({task: task.id, case: item.id})}">${escapeHtml(item.original_id || item.id)}</a></td><td>${escapeHtml(item.parent)}</td><td>${escapeHtml(item.group || "—")}</td><td>${escapeHtml(item.slice || "—")}</td><td>${verificationBadge(item)}</td></tr>`;
   }
   if (!selected.length) body += '<tr><td colspan="5">No matching cases.</td></tr>';
   body += "</tbody></table></div><div class=\"pager\">";
-  const pageParameters = {task: task.id, q: query, group, slice, evaluation};
+  const pageParameters = {task: task.id, q: query, group, slice, verification};
   body += page > 1 ? `<a href="${route({...pageParameters, page: page - 1})}">← Previous</a>` : "<span></span>";
   body += `<span>Page ${page} / ${totalPages}</span>`;
   body += page < totalPages ? `<a href="${route({...pageParameters, page: page + 1})}">Next →</a>` : "<span></span>";
@@ -186,7 +183,7 @@ function caseDetail(task, caseId) {
   if (item.group) body += `<span class="pill">${escapeHtml(item.group)}</span>`;
   if (item.slice) body += `<span class="pill">${escapeHtml(item.slice)}</span>`;
   body += previewNotice();
-  body += evaluationPanel(task, item);
+  body += verificationPanel(task, item);
   if (task.stages.length) {
     body += '<h2>Round-trip: Stage 1 → generated text → Stage 2</h2>';
     if (task.id === "2.3") {
@@ -240,14 +237,14 @@ async function fullCaseDetail(task, item, parameters) {
   let body = `<p><a href="${route({task: task.id})}">← Task ${task.id}</a></p><h1>${escapeHtml(detail.case_id)}</h1><p class="muted">${escapeHtml(task.name)}</p>${previewNotice()}`;
   body += `<div class="card"><table><tbody><tr><th>Browser ID</th><td>${escapeHtml(item.id)}</td></tr><tr><th>Parent</th><td>${escapeHtml(detail.parent_id || "—")}</td></tr><tr><th>Source group</th><td>${escapeHtml(item.group || "—")}</td></tr><tr><th>Balanced slice</th><td>${escapeHtml(item.slice || "—")}</td></tr></tbody></table></div>`;
   body += detail.entry_point || "";
-  body += evaluationPanel(task, item);
+  body += verificationPanel(task, item);
   body += detail.panels[protocol] || detail.panels.stored;
   return body + fileList(task, item, detail, parameters);
 }
 
 function guide() {
   if (catalog.assets_included) {
-    return '<h1>Review guide</h1><div class="card"><p>Select a task, filter its case inventory, and open a case. Start with <strong>Agent entry point — start here</strong>: it identifies the starting instruction separately from supporting input files and required outputs. Task 1.2 also shows recorded Codex launch wording and a linked input-file sequence.</p><p>The case page separates the agent-facing input, expected output, model-hidden reference, and verification oracle. Round-trip module tasks have two separate stage panels. Open a file name to read or download a specification, RTL file, or verification script. Task 2.3 retains both whole-module and masked-region protocol views. Exact prompt-retention gaps are labeled as in the internal viewer.</p><p>Private/reference labels describe the evaluation boundary. Humans may inspect these files, but evaluated agents must not receive them. This static reviewer does not execute evaluations. Some historical cases retain linked-parent or runner-assembled inputs rather than a standalone workspace.</p><p>Experiment logs, compiler outputs, and credentials are excluded. Report bugs using the task, original case ID, browser ID, and page URL.</p><p>This site is public. Removing it later cannot retract copies already downloaded.</p></div>';
+    return '<h1>Review guide</h1><div class="card"><p>Select a task, filter its case inventory, and open a case. Start with <strong>Agent entry point — start here</strong>: it identifies the starting instruction separately from supporting input files and required outputs. Task 1.2 also shows recorded Codex launch wording and a linked input-file sequence.</p><p>The case page separates the agent-facing input, expected output, model-hidden reference, and verification oracle. Round-trip module tasks have two separate stage panels. Open a file name to read or download a specification, RTL file, or verification script. Task 2.3 retains both whole-module and masked-region protocol views.</p><p>Private/reference labels describe the evaluation boundary. Humans may inspect these files, but evaluated agents must not receive them. This static reviewer does not execute evaluations.</p><p>Experiment logs, compiler outputs, and credentials are excluded. Report bugs using the task, original case ID, browser ID, and page URL.</p></div>';
   }
   return `<h1>Review guide</h1><div class="card"><p>Select a task, filter its case inventory, and open a case to inspect the agent input, expected submission, and scoring contract. Round-trip case pages separate Stage 1 and Stage 2.</p><p>This is a metadata preview, not a downloadable benchmark release. Case pages show task-level contracts rather than exact retained prompts. All input files and private verification assets remain on the internal server.</p><p>To report a bug, include the task ID, browser case ID, page URL, and observed behavior. Preview IDs map to original case IDs in a private local manifest.</p><p>This link is public. Search-engine indexing is discouraged, but access is not restricted. Removing the deployment later cannot retract copies already downloaded.</p></div>`;
 }
